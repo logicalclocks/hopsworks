@@ -42,6 +42,8 @@ package io.hops.hopsworks.common.dao.jupyter.config;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
+import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
@@ -54,6 +56,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,6 +89,8 @@ public class JupyterConfigFilesGenerator {
   private Settings settings;
   @EJB
   private TfLibMappingUtil tfLibMappingUtil;
+  @Inject
+  private JupyterNbVCSController jupyterNbVCSController;
   
   public JupyterPaths generateJupyterPaths(Project project, String hdfsUser, String secretConfig) {
     return new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
@@ -181,16 +186,28 @@ public class JupyterConfigFilesGenerator {
   
   public String createJupyterNotebookConfig(Project project, String nameNodeEndpoint, int port,
       JupyterSettings js, String hdfsUser, String pythonKernelName, String certsDir, String allowOrigin)
-        throws IOException {
+        throws IOException, ServiceException {
     String[] nn = nameNodeEndpoint.split(":");
     String nameNodeIp = nn[0];
     String nameNodePort = nn[1];
-    
+  
+    String remoteGitURL = "";
+    String apiKey = "";
+    String baseBranch = "";
+    String headBranch = "";
+    if (js.isGitBackend() && js.getGitConfig() != null) {
+      remoteGitURL = js.getGitConfig().getRemoteGitURL();
+      apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
+      baseBranch = js.getGitConfig().getBaseBranch();
+      headBranch = js.getGitConfig().getHeadBranch();
+    }
+    JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
     return ConfigFileGenerator.instantiateFromTemplate(
         ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
         "project", project.getName(),
         "namenode_ip", nameNodeIp,
         "namenode_port", nameNodePort,
+        "contents_manager", jcm.getClassName(),
         "hopsworks_endpoint", this.settings.getRestEndpoint(),
         "elastic_endpoint", this.settings.getElasticEndpoint(),
         "port", String.valueOf(port),
@@ -203,7 +220,11 @@ public class JupyterConfigFilesGenerator {
         "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
         "allow_origin", allowOrigin,
         "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
-        "hopsworks_project_id", Integer.toString(project.getId())
+        "hopsworks_project_id", Integer.toString(project.getId()),
+        "remote_git_url", remoteGitURL,
+        "api_key", apiKey,
+        "base_branch", baseBranch,
+        "head_branch", headBranch
       ).toString();
   }
   
@@ -265,7 +286,8 @@ public class JupyterConfigFilesGenerator {
   
   // returns true if one of the conf files were created anew 
   private boolean createConfigFiles(JupyterPaths jp, String hdfsUser, String usersFullName, Project project,
-      String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin) throws IOException {
+      String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin)
+      throws IOException, ServiceException {
     
     String confDirPath = jp.getConfDirPath();
     String kernelsDir = jp.getKernelsDir();

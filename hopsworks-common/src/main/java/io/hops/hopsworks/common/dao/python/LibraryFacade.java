@@ -25,18 +25,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.persistence.Query;
 
 @Stateless
 public class LibraryFacade extends AbstractFacade<PythonDep> {
-
-  private static final Logger LOGGER = Logger.getLogger(LibraryFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -54,26 +49,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
     ALL,
     CPU,
     GPU
-  }
-
-  /**
-   * Get all the Python Deps for the given project and channel
-   *
-   * @param channelUrl
-   * @return
-   */
-  public List<PythonDep> findInstalledPythonDepsByCondaChannel(String channelUrl) {
-    TypedQuery<AnacondaRepo> query = em.createNamedQuery("AnacondaRepo.findByUrl", AnacondaRepo.class);
-    query.setParameter("url", channelUrl);
-    List<AnacondaRepo> res = query.getResultList();
-    if (res != null && res.size() > 0) {
-      // There should only be '1' url
-      AnacondaRepo r = res.get(0);
-      Collection<PythonDep> c = r.getPythonDepCollection();
-      List<PythonDep> list = new ArrayList<>(c);
-      return list;
-    }
-    return null;
   }
 
   public AnacondaRepo getRepo(String channelUrl, boolean create) throws ServiceException {
@@ -97,9 +72,10 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
     return repo;
   }
 
-  public PythonDep getDep(AnacondaRepo repo, MachineType machineType, CondaCommandFacade.CondaInstallType installType,
-      String dependency, String version, boolean create, boolean preinstalled,
-      CondaCommandFacade.CondaStatus status) throws ServiceException {
+  public PythonDep getOrCreateDep(AnacondaRepo repo, MachineType machineType,
+                                  CondaCommandFacade.CondaInstallType installType,
+                                  String dependency, String version, boolean create, boolean preinstalled) {
+
     TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
     deps.setParameter("version", version);
@@ -118,19 +94,11 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
         dep.setPreinstalled(preinstalled);
         dep.setInstallType(installType);
         dep.setMachineType(machineType);
-        dep.setStatus(status);
         em.persist(dep);
         em.flush();
       }
     }
-    // update status if changed
-    if (dep != null && !dep.getStatus().equals(status)) {
-      dep.setStatus(status);
-      em.merge(dep);
-    }
-    if (dep == null && create) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_REPO_ERROR, Level.SEVERE);
-    }
+
     return dep;
   }
   

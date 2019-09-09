@@ -1,3 +1,4 @@
+# coding: utf-8
 =begin
  Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
  are released under the following license:
@@ -36,6 +37,7 @@
  DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
+
 describe "On #{ENV['OS']}" do
   describe 'projects' do
     describe "#create" do
@@ -189,7 +191,38 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
         end
       end
+
+      context "project creation failure" do
+        before :all do
+          @failed_service = "elasticsearch"
+          @service_host = ENV['ELASTIC_API'].split(":").map(&:strip)[0]
+          with_valid_session
+        end
+        
+        after :all do
+          # Make sure we bring back the service
+          execute_remotely @service_host, "sudo systemctl start #{@failed_service}"
+          sleep 40
+        end
+        
+        it "Should be able to create a Project after a failed attempt" do
+          # First shutdown the service
+          execute_remotely @service_host, "sudo systemctl stop #{@failed_service}"
+          project_name = "doomed2fail_#{Time.now.to_i}"
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: project_name,
+                                                  services: ["JOBS","JUPYTER"]}
+          expect_status(500)
+          # Now bring back service and try again
+          execute_remotely @service_host, "sudo systemctl start #{@failed_service}"
+          # Give it some time to become ready
+          sleep 40
+          post "#{ENV['HOPSWORKS_API']}/project", {projectName: project_name,
+                                                   services: ["JOBS","JUPYTER"]}
+          expect_status(201)
+        end
+      end
     end
+    
     describe "#access" do
       context 'without authentication' do
         before :all do

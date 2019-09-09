@@ -92,9 +92,11 @@ import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -183,21 +185,31 @@ public class CertificatesController {
 
     return new AsyncResult<>(new CertsResult(project.getName(), user.getUsername()));
   }
-
-  public void revokeProjectCertificates(Project project) throws GenericException, HopsSecurityException, IOException {
+  
+  public void revokeProjectCertificates(Project project)
+      throws GenericException, HopsSecurityException, IOException {
+    revokeProjectCertificates(project, null);
+  }
+  
+  public void revokeProjectCertificates(Project project, Users owner)
+      throws GenericException, HopsSecurityException, IOException {
     String projectName = project.getName();
 
+    Set<Users> users2deleteCertificates = project.getProjectTeamCollection()
+        .stream().map(ProjectTeam::getUser).collect(Collectors.toSet());
+    if (owner != null) {
+      users2deleteCertificates.add(owner);
+    }
     // Iterate through Project members and delete their certificates
-    for (ProjectTeam team : project.getProjectTeamCollection()) {
-      String certificateIdentifier = projectName + Settings.HOPS_USERNAME_SEPARATOR + team.getUser()
-          .getUsername();
+    for (Users user2delete : users2deleteCertificates) {
+      String certificateIdentifier = projectName + Settings.HOPS_USERNAME_SEPARATOR + user2delete.getUsername();
       // Ordering here is important
       // *First* revoke and *then* delete the certificate
       revokeCertificate(certificateIdentifier, Endpoint.PROJECT);
 
       // Run custom handlers
       for (CertificateHandler certificateHandler : certificateHandlers) {
-        certificateHandler.revoke(project, team.getUser());
+        certificateHandler.revoke(project, user2delete);
       }
     }
   }

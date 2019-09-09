@@ -22,6 +22,7 @@ import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
@@ -38,6 +39,7 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -120,6 +122,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
@@ -143,6 +146,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore with specific Id",
     response = FeaturestoreDTO.class)
   public Response getFeaturestore(
@@ -170,6 +174,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore settings",
     response = FeaturestoreClientSettingsDTO.class)
   public Response getFeaturestoreSettings() {
@@ -200,6 +205,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore with specific name",
     response = FeaturestoreDTO.class)
   public Response getFeaturestoreByName(
@@ -232,6 +238,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getFeaturestoreId(
     @PathParam("featurestoreName")
       String featurestoreName)
@@ -332,6 +339,7 @@ public class FeaturestoreService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Upload json input for featurestore-util jobs")
   public Response newFeaturestoreUtil(
     @Context

@@ -13,18 +13,18 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.dao.user.security.apiKey;
 
-public enum ApiScope {
-  JOB,
-  DATASET_VIEW,
-  DATASET_CREATE,
-  DATASET_DELETE,
-  INFERENCE,
-  FEATURESTORE,
-  PROJECT;
-  
-  public static ApiScope fromString(String param) {
-    return valueOf(param.toUpperCase());
-  }
-}
+package io.hops.hopsworks.common.integrations;
+
+import javax.enterprise.inject.Alternative;
+import javax.enterprise.inject.Stereotype;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Alternative
+@Stereotype
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface NullJupyterNbVCSStereotype {}

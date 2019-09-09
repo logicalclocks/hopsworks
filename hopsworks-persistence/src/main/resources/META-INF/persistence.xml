@@ -148,6 +148,7 @@
     <class>io.hops.hopsworks.jwt.dao.JwtSigningKey</class>
 
     <class>io.hops.hopsworks.common.dao.user.security.secrets.Secret</class>
+    <class>io.hops.hopsworks.common.dao.jupyter.config.GitConfig</class>
 
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>

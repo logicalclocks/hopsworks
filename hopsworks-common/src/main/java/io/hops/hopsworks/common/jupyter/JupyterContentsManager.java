@@ -13,18 +13,21 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.dao.user.security.apiKey;
 
-public enum ApiScope {
-  JOB,
-  DATASET_VIEW,
-  DATASET_CREATE,
-  DATASET_DELETE,
-  INFERENCE,
-  FEATURESTORE,
-  PROJECT;
+package io.hops.hopsworks.common.jupyter;
+
+public enum JupyterContentsManager {
   
-  public static ApiScope fromString(String param) {
-    return valueOf(param.toUpperCase());
+  HDFS_CONTENTS_MANAGER("hdfscontents.hdfsmanager.HDFSContentsManager"),
+  LARGE_FILE_CONTENT_MANAGER("notebook.services.contents.largefilemanager.LargeFileManager");
+  
+  private final String className;
+  
+  JupyterContentsManager(String className) {
+    this.className = className;
+  }
+  
+  public String getClassName() {
+    return className;
   }
 }
