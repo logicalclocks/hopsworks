@@ -95,6 +95,7 @@ public class FeaturestoreClientSettingsDTO {
   private String featurestoreUtil4jExecutable = FeaturestoreConstants.FEATURESTORE_UTIL_4J_EXECUTABLE;
   private String featurestoreUtilPythonExecutable = FeaturestoreConstants.FEATURESTORE_UTIL_PYTHON_EXECUTABLE;
   private String s3BucketTrainingDatasetsFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
+  private List<String> featureImportConnectors = FeaturestoreConstants.FEATURE_IMPORT_CONNECTORS;
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -522,5 +523,14 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setS3BucketTrainingDatasetsFolder(String s3BucketTrainingDatasetsFolder) {
     this.s3BucketTrainingDatasetsFolder = s3BucketTrainingDatasetsFolder;
+  }
+  
+  @XmlElement
+  public List<String> getFeatureImportConnectors() {
+    return featureImportConnectors;
+  }
+  
+  public void setFeatureImportConnectors(List<String> featureImportConnectors) {
+    this.featureImportConnectors = featureImportConnectors;
   }
 }
