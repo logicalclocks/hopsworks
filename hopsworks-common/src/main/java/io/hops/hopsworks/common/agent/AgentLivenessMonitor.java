@@ -55,7 +55,7 @@ public class AgentLivenessMonitor {
   private static final Logger LOGGER = Logger.getLogger(AgentLivenessMonitor.class.getName());
   private final Map<String, LocalTime> agentsHeartbeat = new ConcurrentHashMap<>();
   private final ArrayBlockingQueue<String> agentsToRestart = new ArrayBlockingQueue<>(200);
-  private final static String KAGENT_COMMAND_TEMPLATE = "sudo %s kagent";
+  private final static String KAGENT_COMMAND_TEMPLATE = "sudo systemctl %s kagent";
   
   @EJB
   private Settings settings;
@@ -81,9 +81,9 @@ public class AgentLivenessMonitor {
     kagentUser = settings.getKagentUser();
     identityFile = Paths.get(System.getProperty("user.home"), ".ssh", "id_rsa");
     
-    restartCommand = String.format(KAGENT_COMMAND_TEMPLATE, settings.getServiceRestartScript());
-    stopCommand = String.format(KAGENT_COMMAND_TEMPLATE, settings.getServiceStopScript());
-    startCommand = String.format(KAGENT_COMMAND_TEMPLATE, settings.getServiceStartScript());
+    restartCommand = String.format(KAGENT_COMMAND_TEMPLATE, "restart");
+    stopCommand = String.format(KAGENT_COMMAND_TEMPLATE, "stop");
+    startCommand = String.format(KAGENT_COMMAND_TEMPLATE, "start");
     
     if (settings.isKagentLivenessMonitorEnabled()) {
       Long time = settings.getConfTimeValue(settings.getKagentLivenessThreshold());
