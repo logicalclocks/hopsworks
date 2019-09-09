@@ -260,7 +260,9 @@ public class ProjectTeamFacade {
     Project project = team.getProject();
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Users user = team.getUser();
-      featurestoreController.addUserOnlineFeatureStoreDB(project, user);
+//      if (user != null) {
+//        featurestoreController.addUserOnlineFeatureStoreDB(project, user);
+//      }
     }
   }
 

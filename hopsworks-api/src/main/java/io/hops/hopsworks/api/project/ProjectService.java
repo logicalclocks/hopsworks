@@ -61,6 +61,7 @@ import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -69,6 +70,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.pia.Pia;
 import io.hops.hopsworks.common.dao.project.pia.PiaFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -132,7 +134,8 @@ import java.util.logging.Logger;
 
 @Path("/project")
 @Stateless
-@JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+@JWTRequired(acceptedTokens = {Audience.API},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Api(value = "Project Service",
     description = "Project Service")
@@ -187,6 +190,10 @@ public class ProjectService {
   private PiaFacade piaFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  @EJB
+  private ProjectServiceFacade projectServiceFacade;
   @Inject
   private DelaProjectService delaService;
   @Inject
@@ -223,7 +230,8 @@ public class ProjectService {
 
   @GET
   @Path("/getProjectInfo/{projectName}")
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getProjectByName(@PathParam("projectName") String projectName) throws ProjectException {
@@ -267,7 +275,6 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
         info).build();
   }
-
 
   @GET
   @Path("{projectId}/getMoreInfo/{type: (ds|inode)}/{inodeId}")
@@ -407,7 +414,8 @@ public class ProjectService {
   @GET
   @Path("{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
-  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response findByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
 
@@ -494,7 +502,7 @@ public class ProjectService {
   }
 
   private void populateActiveServices(List<String> projectServices,
-                                      TourProjectType tourType) {
+      TourProjectType tourType) {
     for (ProjectServiceEnum service : tourType.getActiveServices()) {
       projectServices.add(service.name());
     }
@@ -546,8 +554,8 @@ public class ProjectService {
       demoType = TourProjectType.FEATURESTORE;
       projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
       populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
-      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for " +
-          "inserting data in the feature store.";
+      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for "
+          + "inserting data in the feature store.";
     }
     projectDTO.setServices(projectServices);
 
@@ -707,8 +715,9 @@ public class ProjectService {
     datasetFacade.persistDataset(newDS);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName()
-        , destProj, user, ActivityFlag.DATASET);
+    activityFacade.
+        persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName(),
+             destProj, user, ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);
 
@@ -747,8 +756,9 @@ public class ProjectService {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
+
   @Path("{projectId}/airflow")
-  public AirflowService airflow(@PathParam("projectId") Integer id)  {
+  public AirflowService airflow(@PathParam("projectId") Integer id) {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
@@ -792,7 +802,6 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 
-
   @GET
   @Path("{projectId}/pia")
   @Produces(MediaType.APPLICATION_JSON)
@@ -809,7 +818,8 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
   }
 
-  @ApiOperation(value = "Model inference sub-resource", tags = {"Inference"})
+  @ApiOperation(value = "Model inference sub-resource",
+      tags = {"Inference"})
   @Path("/{projectId}/inference")
   public InferenceResource infer(@PathParam("projectId") Integer projectId) {
     inference.setProjectId(projectId);

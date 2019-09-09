@@ -253,6 +253,8 @@ public class ProjectController {
   private JupyterFacade jupyterFacade;
   @EJB
   private AirflowManager airflowManager;
+  @EJB
+  private ProjectServiceFacade projectServiceFacade;
   
   
   /**
@@ -1823,9 +1825,9 @@ public class ProjectController {
               hdfsUsersController.removeProjectMember(newMember, project);
               throw new EJBException("Could not create certificates for user");
             }
-            
-            featurestoreController.addUserOnlineFeatureStoreDB(project, projectTeam.getUser());
-
+//            if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+//              featurestoreController.addUserOnlineFeatureStoreDB(project, projectTeam.getUser());
+//            }
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
               new Object[]{newMember.getEmail(),
                 project.getName()});
