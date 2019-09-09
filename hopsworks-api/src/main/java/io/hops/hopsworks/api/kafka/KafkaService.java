@@ -58,7 +58,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -179,7 +178,7 @@ public class KafkaService {
   @AllowedProjectRoles()
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, ServiceException, UserException, CryptoPasswordNotFoundException {
+    throws KafkaException, ProjectException, ServiceException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
 

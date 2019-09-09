@@ -68,7 +68,6 @@ import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -138,10 +137,16 @@ public class KafkaFacade {
   }
   
   private AdminClient getAdminClient(Project project, Users user) throws CryptoPasswordNotFoundException {
+    HopsUtils.copyProjectUserCerts(project, user.getUsername(),
+      settings.getHopsworksTmpCertDir(), null,
+      certificateMaterializer, settings.getHopsRpcTls());
     String projectSpecificUser = hdfsUsersController.getHdfsUserName(project,
       user);
     String certPassword = baseHadoopService.getProjectSpecificUserCertPassword(projectSpecificUser);
     Properties props = new Properties();
+    Set<String> brokers = settings.getKafkaBrokers();
+    String brokerAddress = brokers.iterator().next().split("://")[1];
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KAFKA_SECURITY_PROTOCOL);
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
       settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
@@ -275,23 +280,61 @@ public class KafkaFacade {
   }
   
   private void createTopicInKafka(Project project, Users user, TopicDTO topicDTO) throws KafkaException,
-    CryptoPasswordNotFoundException {
-    
+    ServiceException {
+  
+//    String topicName = topicDTO.getName();
+//    try {
+//
+//      AdminClient adminClient = getAdminClient(project, user);
+//
+//      Set<String> set = adminClient.listTopics().names().get();
+//
+//      LOGGER.info("Set of topics: " + set.toString());
+//
+//      if (set.contains(topicName)) {
+//        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+//          "topic name: " + topicName + ".... " + set.toString());
+//      }
+//      NewTopic newTopic =
+//        new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+//      CreateTopicsResult res = adminClient.createTopics(Collections.singleton(newTopic));
+//      while(res.all().isDone()) {}
+//      set = adminClient.listTopics().names().get();
+//
+//      LOGGER.info("New set of topics: " + set.toString());
+//    } finally {
+//      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
+//    }
+    // create the topic in kafka
     String topicName = topicDTO.getName();
-    AdminClient adminClient = getAdminClient(project, user);
-    
-    if (adminClient.describeTopics(Collections.singleton(topicDTO.getName())).values().size() != 0) {
+    ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
+      getHostName(),
+      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
+    ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
+    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+
+    try {
+      if (!AdminUtils.topicExists(zkUtils, topicName)) {
+        AdminUtils.createTopic(zkUtils, topicName,
+          topicDTO.getNumOfPartitions(),
+          topicDTO.getNumOfReplicas(),
+          new Properties(), RackAwareMode.Enforced$.MODULE$);
+      }
+    } catch (TopicExistsException ex) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-        "topic name: " + topicName);
+        "topic name: " + topicName, ex.getMessage());
+    } finally {
+      zkClient.close();
+      try {
+        zkConnection.close();
+      } catch (InterruptedException ex) {
+        LOGGER.log(Level.SEVERE, null, ex.getMessage());
+      }
     }
-    NewTopic newTopic =
-      new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-    adminClient.createTopics(Collections.singleton(newTopic));
   }
 
   public ProjectTopics createTopicInProject(Project project, Users user, TopicDTO topicDto, SchemaTopics schema)
-      throws KafkaException, CryptoPasswordNotFoundException {
-    
+      throws KafkaException, ProjectException, UserException, ServiceException {
     // create the topic in kafka
     createTopicInKafka(project, user, topicDto);
     /*
@@ -314,117 +357,6 @@ public class KafkaFacade {
     em.flush();
 
     return pt;
-    //add default topic acl for the existing project members
-    // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
-  }
-  
-  public ProjectTopics createTopicInProject(Integer projectId, TopicDTO topicDto)
-    throws ProjectException, KafkaException, ServiceException {
-    
-    if (projectId == null || topicDto == null) {
-      throw new IllegalArgumentException("projectId or topicDto were not provided.");
-    }
-    
-    Project project = em.find(Project.class, projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
-    }
-    
-    return createTopicInProject(project, topicDto);
-  }
-  
-  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
-    throws KafkaException, ServiceException {
-    
-    String topicName = topicDto.getName();
-    
-    List<ProjectTopics> res = em.createNamedQuery("ProjectTopics.findByTopicName", ProjectTopics.class)
-      .setParameter("topicName", topicName)
-      .getResultList();
-    
-    if (!res.isEmpty()) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
-    }
-    
-    List<ProjectTopics> topicsInProject = em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
-      .setParameter("project", project)
-      .getResultList();
-    
-    if (topicsInProject != null && (topicsInProject.size() >= project.getKafkaMaxNumTopics())) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
-        "topic name: " + topicName + ", project: " +project.getName());
-    }
-    
-    //check if the replication factor is not greater than the
-    //number of running brokers
-    try {
-      Set<String> brokerEndpoints = settings.getBrokerEndpoints();
-      if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
-          "maximum: " + brokerEndpoints.size());
-      }
-    } catch (InterruptedException | IOException | KeeperException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
-        "project: " + project.getName(), ex.getMessage(), ex);
-    }
-    
-    
-    // create the topic in kafka
-    ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
-      getHostName(),
-      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
-    ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
-    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-    
-    try {
-      if (!AdminUtils.topicExists(zkUtils, topicName)) {
-        AdminUtils.createTopic(zkUtils, topicName,
-          topicDto.getNumOfPartitions(),
-          topicDto.getNumOfReplicas(),
-          new Properties(), RackAwareMode.Enforced$.MODULE$);
-      }
-    } catch (TopicExistsException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-        "topic name: " + topicName, ex.getMessage());
-    } finally {
-      zkClient.close();
-      try {
-        zkConnection.close();
-      } catch (InterruptedException ex) {
-        LOGGER.log(Level.SEVERE, null, ex.getMessage());
-      }
-    }
-    
-    SchemaTopics schema = em.find(SchemaTopics.class,
-      new SchemaTopicsPK(topicDto.getSchemaName(),
-        topicDto.getSchemaVersion()));
-    
-    if (schema == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicName);
-    }
-    
-    /*
-     * What is the possibility of the program failing here? The topic is created
-     * on
-     * zookeeper, but not persisted onto db. User cannot access the topic,
-     * cannot
-     * create a topic of the same name. In such scenario, the zk timer should
-     * remove the topic from zk.
-     *
-     * One possibility is: schema has a global name space, it is not project
-     * specific.
-     * While the schema is selected by this topic, it could be deleted by
-     * another
-     * user. Hence the above schema query will be empty.
-     */
-    ProjectTopics pt = new ProjectTopics(topicName, project, schema);
-    
-    em.persist(pt);
-    em.flush();
-    
-    return pt;
-    //add default topic acl for the existing project members
-    // addAclsToTopic(topicName, projectId, project.getName(), "*", "allow", "*", "*", "Data owner");
   }
   
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {

@@ -49,7 +49,6 @@ import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -82,7 +81,7 @@ public class KafkaController {
   private Settings settings;
   
   public void createTopic(Project project, Users user, TopicDTO topicDto) throws KafkaException, ServiceException,
-    ProjectException, UserException, CryptoPasswordNotFoundException {
+    ProjectException, UserException {
     
     if (topicDto == null) {
       throw new IllegalArgumentException("topicDto was not provided.");

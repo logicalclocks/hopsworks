@@ -242,7 +242,7 @@ public class LocalhostServingController implements ServingController {
       serving.setInstances(1);
 
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, null);
+      kafkaServingHelper.setupKafkaServingTopic(user, project, newServing, serving, null);
 
       servingFacade.merge(serving);
     } else {
@@ -250,7 +250,7 @@ public class LocalhostServingController implements ServingController {
       // Get the status of the current instance
       ServingStatusEnum status = getServingStatus(oldDbServing);
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, oldDbServing);
+      kafkaServingHelper.setupKafkaServingTopic(user, project, newServing, serving, oldDbServing);
       // Update the object in the database
       Serving dbServing = servingFacade.updateDbObject(serving, project);
       if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING) {

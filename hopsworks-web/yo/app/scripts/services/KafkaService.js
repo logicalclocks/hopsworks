@@ -146,7 +146,7 @@ angular.module('hopsWorksApp')
               createTopic: function (projectId, topicDetails) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/topic/add',
+                  url: '/api/project/' + projectId + '/kafka/topics',
                   headers: {
                     'Content-Type': 'application/json'
                   },

@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.Settings;
@@ -70,7 +71,7 @@ public class KafkaServingHelper {
    * @throws ServiceException
    * @throws ServingException
    */
-  public void setupKafkaServingTopic(Project project, ServingWrapper servingWrapper,
+  public void setupKafkaServingTopic(Users user, Project project, ServingWrapper servingWrapper,
                                      Serving newDbServing, Serving oldDbServing)
       throws KafkaException, ProjectException, UserException, ServiceException, ServingException {
 
@@ -86,7 +87,7 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getName().equalsIgnoreCase("CREATE")) {
 
       // The user is creating a new Kafka Topic
-      ProjectTopics topic = setupKafkaTopic(project, servingWrapper);
+      ProjectTopics topic = setupKafkaTopic(project, user, servingWrapper);
       newDbServing.setKafkaTopic(topic);
 
     } else if (servingWrapper.getKafkaTopicDTO() != null &&
@@ -122,7 +123,8 @@ public class KafkaServingHelper {
     return new TopicDTO(serving.getKafkaTopic().getTopicName());
   }
 
-  private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws KafkaException,
+  private ProjectTopics setupKafkaTopic(Project project, Users user, ServingWrapper servingWrapper) throws
+    KafkaException,
       ServiceException, UserException, ProjectException {
 
     try {
@@ -160,7 +162,11 @@ public class KafkaServingHelper {
       Settings.INFERENCE_SCHEMAVERSION);
 
     ProjectTopics pt = null;
-    pt = kafkaFacade.createTopicInProject(project, topicDTO);
+    SchemaTopics schema =
+      kafkaFacade.findSchemaByNameAndVersion(topicDTO.getSchemaName(), topicDTO.getSchemaVersion()).orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDTO.getName()));
+  
+    pt = kafkaFacade.createTopicInProject(project, user, topicDTO, schema);
 
     // Add the ACLs for this topic. By default all users should be able to do everything
     AclDTO aclDto = new AclDTO(project.getName(),
