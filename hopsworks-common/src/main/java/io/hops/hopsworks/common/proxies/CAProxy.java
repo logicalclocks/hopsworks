@@ -158,8 +158,11 @@ public class CAProxy {
     } catch (URISyntaxException ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, null, ex);
     } catch (ClientProtocolException ex) {
-      LOG.log(Level.SEVERE, "Could not revoke X.509 " + certificateIdentifier, ex);
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR, Level.SEVERE,
+      LOG.log(Level.WARNING, "Could not revoke X.509 " + certificateIdentifier, ex);
+      if (ex.getCause() instanceof HopsSecurityException) {
+        throw (HopsSecurityException) ex.getCause();
+      }
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR, Level.WARNING,
           null, null, ex);
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, "Could not revoke X.509 " + certificateIdentifier, ex);
@@ -206,7 +209,7 @@ public class CAProxy {
       if (HttpStatus.SC_NO_CONTENT == status) {
         // The revoke endpoint returns NO_CONTENT if it cannot find the certificate.
         HopsSecurityException securityException = new HopsSecurityException(
-            RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.SEVERE);
+            RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.WARNING);
         throw new NotRetryableClientProtocolException(securityException);
       }
       if (HttpStatus.SC_BAD_REQUEST == status) {
