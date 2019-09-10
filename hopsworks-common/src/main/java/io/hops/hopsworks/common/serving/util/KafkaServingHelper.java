@@ -181,13 +181,10 @@ public class KafkaServingHelper {
 
   private ProjectTopics checkSchemaRequirements(Project project, ServingWrapper servingWrapper)
       throws KafkaException, ServingException {
-    ProjectTopics topic = kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName());
-
-    if (topic == null) {
-       // The requested topic does not exists.
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
-          "name: " + servingWrapper.getKafkaTopicDTO().getName());
-    }
+    ProjectTopics topic =
+      kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName()).orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
+          "name: " + servingWrapper.getKafkaTopicDTO().getName()));
 
     if (!topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
 

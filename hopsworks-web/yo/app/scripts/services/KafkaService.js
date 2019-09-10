@@ -205,7 +205,7 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeTopic: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/remove');
+                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName);
               },
               
               /**

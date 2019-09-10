@@ -188,14 +188,14 @@ public class KafkaFacade {
     return topics;
   }
 
-  public ProjectTopics findTopicByNameAndProject(Project project, String topicName) {
+  public Optional<ProjectTopics> findTopicByNameAndProject(Project project, String topicName) {
     try {
-      return em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
+      return Optional.of(em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
           .setParameter("project", project)
           .setParameter("topicName", topicName)
-          .getSingleResult();
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 
@@ -334,7 +334,7 @@ public class KafkaFacade {
   }
 
   public ProjectTopics createTopicInProject(Project project, Users user, TopicDTO topicDto, SchemaTopics schema)
-      throws KafkaException, ProjectException, UserException, ServiceException {
+      throws KafkaException, ServiceException {
     // create the topic in kafka
     createTopicInKafka(project, user, topicDto);
     /*
@@ -359,18 +359,7 @@ public class KafkaFacade {
     return pt;
   }
   
-  public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {
-
-    ProjectTopics pt = null;
-    try {
-      pt = em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", project)
-          .setParameter("topicName", topicName)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
-    }
-
+  public void removeTopicFromProject(ProjectTopics pt) throws ServiceException {
     //remove from database
     em.remove(pt);
     /*
@@ -384,6 +373,7 @@ public class KafkaFacade {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
+    //TODO: Refactor to AdminClient
     ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
         getHostName(),
         Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
@@ -391,7 +381,7 @@ public class KafkaFacade {
     ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
     try {
-      AdminUtils.deleteTopic(zkUtils, topicName);
+      AdminUtils.deleteTopic(zkUtils, pt.getTopicName());
     } finally {
       zkClient.close();
       try {

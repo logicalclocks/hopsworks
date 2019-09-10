@@ -122,6 +122,39 @@ public class KafkaService {
     return project;
   }
 
+  /*************  REFACTORED   ***********************/
+  @POST
+  @Path("/topics")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles()
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
+    throws KafkaException, ProjectException, ServiceException, UserException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    Users user = jWTHelper.getUserPrincipal(sc);
+  
+    kafkaController.createTopic(project, user, topicDto);
+  
+    json.setSuccessMessage("The Topic has been created.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  @DELETE
+  @Path("/topics/{topic}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles()
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response removeTopic(@PathParam("topic") String topicName) throws KafkaException, ServiceException {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    //remove the topic from the database and Kafka cluster
+    kafkaController.removeTopicFromProject(project, topicName);
+    json.setSuccessMessage("The topic has been removed.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  /********************** TODO ***************************/
+  
   /**
    * Gets the list of topics for this project
    *
@@ -169,37 +202,6 @@ public class KafkaService {
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @POST
-  @Path("/topics")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles()
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, ServiceException, UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(sc);
-
-    kafkaController.createTopic(project, user, topicDto);
-
-    json.setSuccessMessage("The Topic has been created.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-  }
-  
-
-  @DELETE
-  @Path("/topic/{topic}/remove")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeTopic(@PathParam("topic") String topicName) throws KafkaException, ServiceException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    //remove the topic from the database and Kafka cluster
-    kafkaFacade.removeTopicFromProject(this.project, topicName);
-    json.setSuccessMessage("The topic has been removed.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @GET

@@ -126,6 +126,15 @@ public class KafkaController {
     kafkaFacade.addAclsToTopic(topicDto.getName(), project.getId(), aclDto);
     
   }
+  
+  public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {
+    
+    ProjectTopics pt = kafkaFacade.findTopicByNameAndProject(project, topicName)
+      .orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName));
+    
+    kafkaFacade.removeTopicFromProject(pt);
+  }
 
   public String getKafkaCertPaths(Project project) {
     UserCerts userCert = userCerts.findUserCert(project.getName(), project.
