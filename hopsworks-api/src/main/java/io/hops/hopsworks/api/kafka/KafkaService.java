@@ -58,6 +58,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -153,6 +154,44 @@ public class KafkaService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
   
+  /*********************** IN PROGRESS ********************************/
+  @GET
+  @Path("/topics/{topic}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopicDetails(@PathParam("topic") String topicName, @Context SecurityContext sc)
+    throws KafkaException, CryptoPasswordNotFoundException {
+    
+    Users user = jWTHelper.getUserPrincipal(sc);
+    List<PartitionDetailsDTO> topic;
+    topic = kafkaController.getTopicDetails(project, user, topicName);
+    GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
+  }
+  
+  @PUT
+  @Path("/topics/{topic}/shared")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles()
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response shareTopic(@PathParam("topic") String topicName, SharedProjectDTO sharedProjectDTO)
+    throws KafkaException, ProjectException, UserException {
+    
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    
+    kafkaController.shareTopicWithProject(project, topicName, sharedProjectDTO.getId());
+    
+    AclDTO aclDto = new AclDTO(sharedProjectDTO.getName(),
+      Settings.KAFKA_ACL_WILDCARD,
+      "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+      Settings.KAFKA_ACL_WILDCARD);
+    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
+    json.setSuccessMessage("The topic has been shared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  
   /********************** TODO ***************************/
   
   /**
@@ -205,20 +244,6 @@ public class KafkaService {
   }
 
   @GET
-  @Path("/details/{topic}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicDetails(@PathParam("topic") String topicName, @Context SecurityContext sc) throws
-      Exception {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    List<PartitionDetailsDTO> topic;
-    topic = kafkaFacade.getTopicDetails(project, user, topicName);
-    GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @GET
   @Path("/topic/defaultValues")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -234,32 +259,7 @@ public class KafkaService {
   
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(values).build();
   }
-
-  @GET
-  @Path("/topic/{topic}/share/{projId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("projId") int projectId) throws
-      KafkaException, ProjectException, UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    //By default, all members of the project are granted full permissions on the topic
-    Project projectShared = projectFacade.find(projectId);
-    if (projectShared == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-        "Could not find project: " + projectId);
-    }
-    kafkaFacade.shareTopic(project, topicName, projectId);
-
-    AclDTO aclDto = new AclDTO(projectShared.getName(),
-            Settings.KAFKA_ACL_WILDCARD,
-            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-            Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
-    json.setSuccessMessage("The topic has been shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-  }
-
+  
   @DELETE
   @Path("/topic/{topic}/unshare/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)

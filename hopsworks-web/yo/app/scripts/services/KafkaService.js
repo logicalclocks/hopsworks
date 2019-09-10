@@ -77,7 +77,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A complete description of the requested topic.
                */
               getTopicDetails: function (projectId, topicName) {
-                return $http.get('/api/project/' + projectId + '/kafka/details/' + topicName);
+                return $http.get('/api/project/' + projectId + '/kafka/topics/' + topicName);
               },
               
               /**

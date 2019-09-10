@@ -50,6 +50,10 @@ public class SharedProjectDTO implements Serializable {
 
   public SharedProjectDTO() {
   }
+  
+  public SharedProjectDTO(Integer id) {
+    this.id = id;
+  }
 
   public SharedProjectDTO(String name) {
     this.name = name;

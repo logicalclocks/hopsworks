@@ -43,12 +43,15 @@ import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -79,6 +82,8 @@ public class KafkaController {
   private CertsFacade userCerts;
   @EJB
   private Settings settings;
+  @EJB
+  private ProjectFacade projectFacade;
   
   public void createTopic(Project project, Users user, TopicDTO topicDto) throws KafkaException, ServiceException,
     ProjectException, UserException {
@@ -134,6 +139,33 @@ public class KafkaController {
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName));
     
     kafkaFacade.removeTopicFromProject(pt);
+  }
+  
+  public List<PartitionDetailsDTO> getTopicDetails (Project project, Users user,
+    String topicName) throws KafkaException, CryptoPasswordNotFoundException {
+    List<TopicDTO> topics = kafkaFacade.findTopicsByProject(project);
+    //TODO: make sure the DTO is filled correctly
+    List<PartitionDetailsDTO> topicDetailDTO = new ArrayList<>();
+    if (topics != null && !topics.isEmpty()) {
+      for (TopicDTO topic : topics) {
+        if (topic.getName().equalsIgnoreCase(topicName)) {
+          topicDetailDTO.addAll(kafkaFacade.getTopicDetailsfromKafkaCluster(project, user, topicName));
+          return topicDetailDTO;
+        }
+      }
+    }
+    return topicDetailDTO;
+  }
+  
+  public void shareTopicWithProject(Project project, String topicName, Integer projectId) throws
+    ProjectException, KafkaException {
+    //By default, all members of the project are granted full permissions on the topic
+    if (projectFacade.find(projectId) == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
+        "Could not find project: " + projectId);
+    }
+    //TODO: refactor shareTopic
+    kafkaFacade.shareTopic(project, topicName, projectId);
   }
 
   public String getKafkaCertPaths(Project project) {

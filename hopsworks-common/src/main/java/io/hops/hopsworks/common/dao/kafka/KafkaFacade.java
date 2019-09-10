@@ -210,21 +210,6 @@ public class KafkaFacade {
     query.setParameter("projectId", projectId);
     return query.getResultList();
   }
-  
-  public List<PartitionDetailsDTO> getTopicDetails(Project project, Users user,
-    String topicName) throws Exception {
-    List<TopicDTO> topics = findTopicsByProject(project);
-    List<PartitionDetailsDTO> topicDetailDTO = new ArrayList<>();
-    if (topics != null && !topics.isEmpty()) {
-      for (TopicDTO topic : topics) {
-        if (topic.getName().equalsIgnoreCase(topicName)) {
-          topicDetailDTO.addAll(getTopicDetailsfromKafkaCluster(project, user, topicName));
-          return topicDetailDTO;
-        }
-      }
-    }
-    return topicDetailDTO;
-  }
 
   private int getPort(String zkIp) {
     return Integer.parseInt(zkIp.split(COLON_SEPARATOR)[1]);
