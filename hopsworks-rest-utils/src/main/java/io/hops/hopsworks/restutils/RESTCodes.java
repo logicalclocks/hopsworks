@@ -1318,7 +1318,8 @@ public class RESTCodes {
     FEATURESTORE_UTIL_ARGS_FAILURE(62, "Could not write featurestore util args to HDFS",
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_ONLINE_SECRETS_ERROR(63, "Could not get JDBC connection for the online featurestore",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST);
     
     
     private int code;

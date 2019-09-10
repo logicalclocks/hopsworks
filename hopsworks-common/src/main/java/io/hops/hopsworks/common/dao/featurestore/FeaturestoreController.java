@@ -186,6 +186,9 @@ public class FeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int addUserOnlineFeatureStoreDB(Project project, Users user) {
 
+    if (!settings.isOnlineFeaturestore())
+      return 1;
+    
     String role = getRole(project, user);
     String onlineFsPassword = securityUtils.generateSecureRandomString();
     String dbuser = onlineDbUsername(project, user);
@@ -251,12 +254,27 @@ public class FeaturestoreController {
     return onlineDbUsername(project.getName(), user.getUsername());
   }
 
+  /**
+   * The mysql username can be at most 32 characters in length. 
+   * Clip the username to 32 chars if it is longer than 32.
+   * 
+   * @param project projectname
+   * @param user username
+   * @return 
+   */
   private String onlineDbUsername(String project, String user) {
-    return project + "_" + user;
+    String username = project + "_" + user;
+    if (username.length() > 32) {
+      username = username.substring(0, 31);
+    }
+    return username;
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int updateUserOnlineFeatureStoreDB(Project project, Users user) {
+    if (!settings.isOnlineFeaturestore()) {
+      return 1;
+    }    
     String role = getRole(project, user);
     String[] args = new String[5];
     args[0] = "update";
@@ -281,6 +299,9 @@ public class FeaturestoreController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int rmUserOnlineFeatureStore(String project, Users user) {
+    if (!settings.isOnlineFeaturestore()) {
+      return 1;
+    }
     SecretId id = new SecretId(user.getUid(), onlineDbUsername(project, user.getUsername()));
     secretsFacade.deleteSecret(id);
     return rmOnlineFeatureStore(project, user.getUsername());
@@ -288,6 +309,9 @@ public class FeaturestoreController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int dropOnlineFeatureStore(String project) {
+    if (!settings.isOnlineFeaturestore()) {
+      return 1;
+    }    
     List<Secret> secrets = secretsFacade.findAll();
     for (Secret s : secrets) {
       if (s.getId().getName().startsWith(project + "_")) {

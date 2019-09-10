@@ -349,9 +349,14 @@ public class FeaturestoreStorageConnectorService {
     @Context
       SecurityContext sc)
     throws FeaturestoreException {
+    if (!settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.WARNING, "Online Featurestore is not enabled for this Hopsworks cluster.");      
+    }
+    
     Users user = jWTHelper.getUserPrincipal(sc);
-    Integer id = -1;
     String dbUsername = featurestoreController.onlineDbUsername(project, user);
+    
     String hostname = settings.getHopsworksIp();
     String password = "";
     try {
