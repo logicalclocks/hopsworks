@@ -329,6 +329,7 @@ public class ProjectController {
         try {
           projectHandler.preCreate(project);
         } catch (Exception e) {
+          cleanup(project, sessionId, null, true, owner);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR, Level.SEVERE,
             "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
         }
@@ -1109,7 +1110,7 @@ public class ProjectController {
           certificatesController.revokeProjectCertificates(project);
           cleanupLogger.logSuccess("Removed certificates");
         } catch (HopsSecurityException ex) {
-          if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
+          if (ex.getErrorCode() != RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND) {
             cleanupLogger.logError("Error when removing certificates during project cleanup");
             cleanupLogger.logError(ex.getMessage());
           }
@@ -1618,7 +1619,7 @@ public class ProjectController {
       try {
         certificatesController.revokeProjectCertificates(project, owner);
       } catch (HopsSecurityException ex) {
-        if (ex.getErrorCode() != RESTCodes.CAErrorCode.CERTNOTFOUND) {
+        if (ex.getErrorCode() != RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND) {
           LOGGER.log(Level.SEVERE, "Could not delete certificates during cleanup for project " + project.getName()
             + ". Manual cleanup is needed!!!", ex);
           throw ex;
@@ -2129,7 +2130,21 @@ public class ProjectController {
       MEMBER);
 
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
-    certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
+    try {
+      certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
+    } catch (HopsSecurityException ex) {
+      if (ex.getErrorCode() != RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND) {
+        LOGGER.log(Level.SEVERE, "Could not delete certificates when removing member "
+            + userToBeRemoved.getUsername() + " from project " + project.getName()
+            + ". Manual cleanup is needed!!!", ex);
+        throw ex;
+      }
+    } catch (IOException | GenericException ex) {
+      LOGGER.log(Level.SEVERE, "Could not delete certificates when removing member "
+          + userToBeRemoved.getUsername() + " from project " + project.getName()
+          + ". Manual cleanup is needed!!!", ex);
+      throw ex;
+    }
   }
 
   /**
