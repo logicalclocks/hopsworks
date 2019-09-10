@@ -26,18 +26,6 @@ angular.module('hopsWorksApp')
               getSecretPath: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/airflow/secretDir');
               },
-              purgeAirflowDagsLocal: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/purgeAirflowDagsLocal');
-              },
-              restartAirflow: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/restartWebserver');
-              },
-              copyFromHdfsToAirflow: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/copyFromHdfsToAirflow');
-              },
-              copyFromAirflowToHdfs: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/airflow/copyFromAirflowToHdfs');
-              },
               storeAirflowJWT: function (projectId) {
                 return $http.post('/api/project/' + projectId + "/airflow/jwt")
               },
