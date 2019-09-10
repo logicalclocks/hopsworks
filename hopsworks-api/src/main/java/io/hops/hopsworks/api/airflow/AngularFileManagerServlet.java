@@ -1,5 +1,6 @@
 /*
  * This file is part of Hopsworks
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,7 +16,6 @@
  * Original license is MIT license Copyright with (c) 2013 joni2back.
  * Author Paolo Biavati https://github.com/paolobiavati
  * https://github.com/joni2back/angular-filemanager/blob/master/LICENSE
- *
  */
 package io.hops.hopsworks.api.airflow;
 
@@ -70,6 +70,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpStatus;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -453,7 +454,7 @@ public class AngularFileManagerServlet extends HttpServlet {
       } catch (IOException ex) {
       }
       JSONObject json = new JSONObject();
-      json.put("result", resultList);
+      json.put("result", new JSONArray(resultList));
       return json;
     } catch (Exception e) {
       LOG.error("list:" + e.getMessage(), e);
@@ -600,7 +601,7 @@ public class AngularFileManagerServlet extends HttpServlet {
   private JSONObject createFolder(JSONObject params) throws ServletException {
     try {
       Path path = Paths.get(REPOSITORY_BASE_PATH, (String) params.get("newPath"));
-      LOG.debug("createFolder path: {} name: {}", path);
+      LOG.debug("createFolder path: {}", path);
       Files.createDirectories(path);
       return success(params);
     } catch (FileAlreadyExistsException ex) {
