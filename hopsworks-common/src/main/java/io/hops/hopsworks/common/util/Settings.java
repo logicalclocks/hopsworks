@@ -147,6 +147,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOCALHOST = "localhost";
+  private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
@@ -468,6 +469,7 @@ public class Settings implements Serializable {
     if (!cached) {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
+      ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
@@ -3272,6 +3274,14 @@ public class Settings implements Serializable {
   public synchronized String getKubeFilebeatImgVersion() {
     checkCache();
     return KUBE_FILEBEAT_IMG_VERSION;
+  }
+  
+  
+  private Boolean ONLINE_FEATURESTORE = false;
+  
+  public synchronized Boolean isOnlineFeaturestore() {
+    checkCache();
+    return ONLINE_FEATURESTORE;
   }
 
   private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
