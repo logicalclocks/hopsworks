@@ -45,9 +45,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
-import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -106,11 +104,7 @@ public class KafkaFacade {
   @EJB
   private ProjectFacade projectsFacade;
   @EJB
-  private CertificateMaterializer certificateMaterializer;
-  @EJB
   private BaseHadoopClientsService baseHadoopService;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
   
@@ -155,31 +149,6 @@ public class KafkaFacade {
 
   public AbstractFacade.CollectionInfo findTopicDtosByProject(Project project, ResourceRequest resourceRequest) {
     return null;
-  }
-  
-  /**
-   * Get all the Topics for the given project.
-   *
-   * @param project
-   * @return
-   */
-  @Deprecated
-  public List<TopicDTO> findTopicDtosByProject(Project project) {
-
-    List<ProjectTopics> res = em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
-        .setParameter("project", project)
-        .getResultList();
-
-    List<TopicDTO> topics = new ArrayList<>();
-    if(res != null && !res.isEmpty()) {
-      topics = new ArrayList<>();
-      for (ProjectTopics pt : res) {
-        topics.add(new TopicDTO(pt.getTopicName(),
-            pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-            pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
-      }
-    }
-    return topics;
   }
   
   public List<ProjectTopics> findTopicsByProject (Project project) {

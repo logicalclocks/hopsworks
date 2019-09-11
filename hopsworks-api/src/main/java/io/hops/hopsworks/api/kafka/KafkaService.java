@@ -204,7 +204,7 @@ public class KafkaService {
     @BeanParam Pagination pagination,
     @BeanParam TopicsBeanParam topicsBeanParam,
     @Context UriInfo uriInfo) {
-    List<TopicDTO> listTopics = kafkaFacade.findTopicDtosByProject(project);
+    List<TopicDTO> listTopics = kafkaController.findTopicDtosByProject(project);
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
 //    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
@@ -233,7 +233,7 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getProjectAndSharedTopics() {
-    List<TopicDTO> allTopics = kafkaFacade.findTopicDtosByProject(project);
+    List<TopicDTO> allTopics = kafkaController.findTopicDtosByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();

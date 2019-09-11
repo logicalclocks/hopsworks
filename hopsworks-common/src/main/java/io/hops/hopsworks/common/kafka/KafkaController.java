@@ -103,7 +103,7 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
     
-    if (kafkaFacade.findTopicDtosByProject(project).size() > project.getKafkaMaxNumTopics()) {
+    if (kafkaFacade.findTopicsByProject(project).size() > project.getKafkaMaxNumTopics()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " + project.getName());
     }
@@ -264,7 +264,7 @@ public class KafkaController {
   public void addProjectMemberToTopics(Project project, String member)
     throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
-    List<TopicDTO> topics = kafkaFacade.findTopicDtosByProject(project);
+    List<TopicDTO> topics = findTopicDtosByProject(project);
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {
