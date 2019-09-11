@@ -55,10 +55,8 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -154,22 +152,20 @@ public class KafkaService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
   
-  /*********************** IN PROGRESS ********************************/
   @GET
   @Path("/topics/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicDetails(@PathParam("topic") String topicName, @Context SecurityContext sc)
-    throws KafkaException, CryptoPasswordNotFoundException {
+  public Response getTopicDetails(@PathParam("topic") String topicName) throws KafkaException, InterruptedException,
+    ExecutionException {
     
-    Users user = jWTHelper.getUserPrincipal(sc);
-    List<PartitionDetailsDTO> topic;
-    topic = kafkaController.getTopicDetails(project, user, topicName);
+    List<PartitionDetailsDTO> topic = kafkaController.getTopicDetails(project, topicName).get();
     GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
   }
   
+  /*********************** IN PROGRESS ********************************/
   @PUT
   @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)

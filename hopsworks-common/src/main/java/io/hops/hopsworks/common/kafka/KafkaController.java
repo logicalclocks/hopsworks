@@ -51,24 +51,28 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.Node;
+import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.zookeeper.KeeperException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
@@ -142,20 +146,65 @@ public class KafkaController {
     kafkaFacade.removeTopicFromProject(pt);
   }
   
-  public List<PartitionDetailsDTO> getTopicDetails (Project project, Users user,
-    String topicName) throws KafkaException, CryptoPasswordNotFoundException {
-    List<TopicDTO> topics = kafkaFacade.findTopicDtosByProject(project);
-    //TODO: make sure the DTO is filled correctly
-    List<PartitionDetailsDTO> topicDetailDTO = new ArrayList<>();
-    if (topics != null && !topics.isEmpty()) {
-      for (TopicDTO topic : topics) {
-        if (topic.getName().equalsIgnoreCase(topicName)) {
-          topicDetailDTO.addAll(kafkaFacade.getTopicDetailsfromKafkaCluster(project, user, topicName));
-          return topicDetailDTO;
-        }
+  public List<TopicDTO> findTopicDtosByProject(Project project) {
+    List<ProjectTopics> ptList = kafkaFacade.findTopicsByProject(project);
+  
+    List<TopicDTO> topics = new ArrayList<>();
+    if(ptList != null && !ptList.isEmpty()) {
+      topics = new ArrayList<>();
+      for (ProjectTopics pt : ptList) {
+        topics.add(new TopicDTO(pt.getTopicName(),
+          pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+          pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
       }
     }
-    return topicDetailDTO;
+    return topics;
+  }
+  
+  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
+    return kafkaFacade.getTopicsFromKafkaCluster(Collections.singleton(topicName))
+      .all()
+      .thenApply((map) -> map.getOrDefault(topicName, null))
+      .thenApply((td) -> {
+        if (td != null) {
+          List<PartitionDetailsDTO> partitionDetails = new ArrayList<>();
+          List<TopicPartitionInfo> partitions = td.partitions();
+          for (TopicPartitionInfo partition : partitions) {
+            int id = partition.partition();
+            List<String> replicas = partition.replicas()
+              .stream()
+              .map(Node::host)
+              .collect(Collectors.toList());
+            List<String> inSyncReplicas = partition.isr()
+              .stream()
+              .map(Node::host)
+              .collect(Collectors.toList());
+            partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
+          }
+          partitionDetails.sort((PartitionDetailsDTO c1, PartitionDetailsDTO c2) -> {
+            if (c1.getId() < c2.getId()) {
+              return -1;
+            }
+            if (c1.getId() > c2.getId()) {
+              return 1;
+            }
+            return 0;
+          });
+          return partitionDetails;
+        } else {
+          return Collections.emptyList();
+        }
+      });
+  }
+  
+  public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails (Project project, String topicName) throws
+    KafkaException {
+    
+    kafkaFacade.findTopicByNameAndProject(project, topicName).orElseThrow(() ->
+      new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName)
+    );
+  
+    return getTopicDetailsFromKafkaCluster(topicName);
   }
   
   public void shareTopicWithProject(Project project, String topicName, Integer projectId) throws

@@ -39,15 +39,13 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
-import io.hops.hopsworks.common.api.RestDTO;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class PartitionDetailsDTO extends RestDTO<PartitionDetailsDTO> implements Serializable {
+public class PartitionDetailsDTO implements Serializable {
 
   private int id;
   private String leader;
