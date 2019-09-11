@@ -50,6 +50,7 @@ os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
 os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
 os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
 os.environ['HADOOP_HOME'] = "%%hadoop_home%%"
+os.environ['KAGENT_CERTS_DIR'] = "%%kagent_certs_dir%%"
 
 c.GitHandlersConfiguration.remote_git_url = "%%remote_git_url%%"
 c.GitHandlersConfiguration.api_key = "%%api_key%%"

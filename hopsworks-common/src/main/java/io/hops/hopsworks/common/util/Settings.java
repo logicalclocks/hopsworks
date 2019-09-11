@@ -276,6 +276,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
+  private static final String VARIABLE_KAGENT_CERTS_DIR = "kagent_certs_dir";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -672,6 +673,8 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
+  
+      KAGENT_CERTS_DIR = setStrVar(VARIABLE_KAGENT_CERTS_DIR, KAGENT_CERTS_DIR);
 
       cached = true;
     }
@@ -3429,6 +3432,13 @@ public class Settings implements Serializable {
 
   public Boolean isHopsUtilInsecure() {
     return isCloud() || isLocalHost();
+  }
+  
+  private String KAGENT_CERTS_DIR = "/srv/hops/kagent/host-certs";
+  
+  public synchronized String getKagentCertsDir() {
+    checkCache();
+    return KAGENT_CERTS_DIR;
   }
 
 }

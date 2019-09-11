@@ -224,7 +224,8 @@ public class JupyterConfigFilesGenerator {
         "remote_git_url", remoteGitURL,
         "api_key", apiKey,
         "base_branch", baseBranch,
-        "head_branch", headBranch
+        "head_branch", headBranch,
+        "kagent_certs_dir", settings.getKagentCertsDir()
       ).toString();
   }
   

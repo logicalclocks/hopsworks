@@ -151,6 +151,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()),
             HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "KAGENT_CERTS_DIR", settings.getKagentCertsDir(), HopsUtils.IGNORE);
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
 
