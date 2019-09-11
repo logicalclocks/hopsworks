@@ -1319,7 +1319,9 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_ONLINE_SECRETS_ERROR(63, "Could not get JDBC connection for the online featurestore",
         Response.Status.INTERNAL_SERVER_ERROR),
-    FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST);
+    FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST),
+    SYNC_TABLE_NOT_FOUND(65, "The Hive Table to Sync with the feature store was not " +
+      "found in the metastore", Response.Status.BAD_REQUEST);
     
     
     private int code;
