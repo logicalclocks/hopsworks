@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -85,8 +86,8 @@ public class KafkaController {
   @EJB
   private ProjectFacade projectFacade;
   
-  public void createTopic(Project project, Users user, TopicDTO topicDto) throws KafkaException, ServiceException,
-    ProjectException, UserException {
+  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException, ServiceException,
+    ProjectException, UserException, InterruptedException, ExecutionException {
     
     if (topicDto == null) {
       throw new IllegalArgumentException("topicDto was not provided.");
@@ -98,7 +99,7 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
     
-    if (kafkaFacade.findTopicsByProject(project).size() > project.getKafkaMaxNumTopics()) {
+    if (kafkaFacade.findTopicDtosByProject(project).size() > project.getKafkaMaxNumTopics()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " + project.getName());
     }
@@ -120,7 +121,7 @@ public class KafkaController {
         "project: " + project.getName(), ex.getMessage(), ex);
     }
     
-    kafkaFacade.createTopicInProject(project, user, topicDto, schema);
+    kafkaFacade.createTopicInProject(project, topicDto, schema);
   
     //By default, all members of the project are granted full permissions
     //on the topic
@@ -143,7 +144,7 @@ public class KafkaController {
   
   public List<PartitionDetailsDTO> getTopicDetails (Project project, Users user,
     String topicName) throws KafkaException, CryptoPasswordNotFoundException {
-    List<TopicDTO> topics = kafkaFacade.findTopicsByProject(project);
+    List<TopicDTO> topics = kafkaFacade.findTopicDtosByProject(project);
     //TODO: make sure the DTO is filled correctly
     List<PartitionDetailsDTO> topicDetailDTO = new ArrayList<>();
     if (topics != null && !topics.isEmpty()) {
@@ -214,7 +215,7 @@ public class KafkaController {
   public void addProjectMemberToTopics(Project project, String member)
     throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
-    List<TopicDTO> topics = kafkaFacade.findTopicsByProject(project);
+    List<TopicDTO> topics = kafkaFacade.findTopicDtosByProject(project);
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {

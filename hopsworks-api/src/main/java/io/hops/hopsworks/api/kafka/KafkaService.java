@@ -88,6 +88,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -131,11 +132,10 @@ public class KafkaService {
   @AllowedProjectRoles()
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, ServiceException, UserException {
+    throws KafkaException, ProjectException, ServiceException, UserException,
+      InterruptedException, ExecutionException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    Users user = jWTHelper.getUserPrincipal(sc);
-  
-    kafkaController.createTopic(project, user, topicDto);
+    kafkaController.createTopic(project, topicDto);
   
     json.setSuccessMessage("The Topic has been created.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -208,7 +208,7 @@ public class KafkaService {
     @BeanParam Pagination pagination,
     @BeanParam TopicsBeanParam topicsBeanParam,
     @Context UriInfo uriInfo) {
-    List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(project);
+    List<TopicDTO> listTopics = kafkaFacade.findTopicDtosByProject(project);
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
 //    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
@@ -237,7 +237,7 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getProjectAndSharedTopics() {
-    List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(project);
+    List<TopicDTO> allTopics = kafkaFacade.findTopicDtosByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();

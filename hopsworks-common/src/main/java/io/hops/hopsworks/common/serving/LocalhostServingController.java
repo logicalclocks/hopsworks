@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 /**
@@ -228,7 +229,8 @@ public class LocalhostServingController implements ServingController {
    */
   @Override
   public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
-      throws ProjectException, ServingException, KafkaException, ServiceException, UserException {
+      throws ProjectException, ServingException, KafkaException, UserException,
+    InterruptedException, ExecutionException {
     Serving serving = newServing.getServing();
     if (serving.getId() == null) {
       // Create request
@@ -242,7 +244,7 @@ public class LocalhostServingController implements ServingController {
       serving.setInstances(1);
 
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(user, project, newServing, serving, null);
+      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, null);
 
       servingFacade.merge(serving);
     } else {
@@ -250,7 +252,7 @@ public class LocalhostServingController implements ServingController {
       // Get the status of the current instance
       ServingStatusEnum status = getServingStatus(oldDbServing);
       // Setup the Kafka topic for logging
-      kafkaServingHelper.setupKafkaServingTopic(user, project, newServing, serving, oldDbServing);
+      kafkaServingHelper.setupKafkaServingTopic(project, newServing, serving, oldDbServing);
       // Update the object in the database
       Serving dbServing = servingFacade.updateDbObject(serving, project);
       if (status == ServingStatusEnum.RUNNING || status == ServingStatusEnum.UPDATING) {

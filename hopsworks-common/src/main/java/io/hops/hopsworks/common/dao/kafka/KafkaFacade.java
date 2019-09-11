@@ -56,28 +56,24 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import kafka.admin.AdminUtils;
-import kafka.admin.RackAwareMode;
-import kafka.common.TopicAlreadyMarkedForDeletionException;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
-import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.PartitionInfo;
 import org.apache.kafka.common.config.SslConfigs;
-import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.zookeeper.KeeperException;
 import org.elasticsearch.common.Strings;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -98,8 +94,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 public class KafkaFacade {
@@ -122,12 +120,15 @@ public class KafkaFacade {
   @EJB
   private UserFacade userFacade;
   
+  private AdminClient adminClient;
+  
   private static final String COLON_SEPARATOR = ":";
   public static final String SLASH_SEPARATOR = "//";
   public static final String KAFKA_SECURITY_PROTOCOL = "SSL";
   private static final String KAFKA_BROKER_EXTERNAL_PROTOCOL = "EXTERNAL";
   private static final String PROJECT_DELIMITER = "__";
   public static final String DLIMITER = "[\"]";
+  private static final String KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM = "";
 
   protected EntityManager getEntityManager() {
     return em;
@@ -136,31 +137,27 @@ public class KafkaFacade {
   public KafkaFacade() {
   }
   
-  private AdminClient getAdminClient(Project project, Users user) throws CryptoPasswordNotFoundException {
-    HopsUtils.copyProjectUserCerts(project, user.getUsername(),
-      settings.getHopsworksTmpCertDir(), null,
-      certificateMaterializer, settings.getHopsRpcTls());
-    String projectSpecificUser = hdfsUsersController.getHdfsUserName(project,
-      user);
-    String certPassword = baseHadoopService.getProjectSpecificUserCertPassword(projectSpecificUser);
+  @PostConstruct
+  private void init() {
+    adminClient = getAdminClient();
+  }
+  
+  private AdminClient getAdminClient()  {
     Properties props = new Properties();
     Set<String> brokers = settings.getKafkaBrokers();
     String brokerAddress = brokers.iterator().next().split("://")[1];
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KAFKA_SECURITY_PROTOCOL);
-    props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
-      settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
-        user.getUsername()));
-    props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, certPassword);
-    props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, settings.getHopsworksTmpCertDir() + File.separator
-      + HopsUtils.getProjectKeystoreName(project.getName(), user.getUsername()));
-    props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, certPassword);
-    props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, certPassword);
-    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
+    props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, baseHadoopService.getSuperKeystorePath());
+    props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
+    props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
+    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
     return AdminClient.create(props);
   }
 
-  public AbstractFacade.CollectionInfo findTopicsByProject(Project project, ResourceRequest resourceRequest) {
+  public AbstractFacade.CollectionInfo findTopicDtosByProject(Project project, ResourceRequest resourceRequest) {
     return null;
   }
   
@@ -170,7 +167,7 @@ public class KafkaFacade {
    * @param project
    * @return
    */
-  public List<TopicDTO> findTopicsByProject(Project project) {
+  public List<TopicDTO> findTopicDtosByProject(Project project) {
 
     List<ProjectTopics> res = em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
         .setParameter("project", project)
@@ -186,6 +183,12 @@ public class KafkaFacade {
       }
     }
     return topics;
+  }
+  
+  public List<ProjectTopics> findTopicsByProject (Project project) {
+    return em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
+      .setParameter("project", project)
+      .getResultList();
   }
 
   public Optional<ProjectTopics> findTopicByNameAndProject(Project project, String topicName) {
@@ -264,64 +267,25 @@ public class KafkaFacade {
     }
   }
   
-  private void createTopicInKafka(Project project, Users user, TopicDTO topicDTO) throws KafkaException,
-    ServiceException {
-  
-//    String topicName = topicDTO.getName();
-//    try {
-//
-//      AdminClient adminClient = getAdminClient(project, user);
-//
-//      Set<String> set = adminClient.listTopics().names().get();
-//
-//      LOGGER.info("Set of topics: " + set.toString());
-//
-//      if (set.contains(topicName)) {
-//        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-//          "topic name: " + topicName + ".... " + set.toString());
-//      }
-//      NewTopic newTopic =
-//        new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-//      CreateTopicsResult res = adminClient.createTopics(Collections.singleton(newTopic));
-//      while(res.all().isDone()) {}
-//      set = adminClient.listTopics().names().get();
-//
-//      LOGGER.info("New set of topics: " + set.toString());
-//    } finally {
-//      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-//    }
-    // create the topic in kafka
-    String topicName = topicDTO.getName();
-    ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
-      getHostName(),
-      Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
-    ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
-    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-    try {
-      if (!AdminUtils.topicExists(zkUtils, topicName)) {
-        AdminUtils.createTopic(zkUtils, topicName,
-          topicDTO.getNumOfPartitions(),
-          topicDTO.getNumOfReplicas(),
-          new Properties(), RackAwareMode.Enforced$.MODULE$);
+  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
+    return adminClient.listTopics().names().thenApply((set) -> {
+      if (set.contains(topicDTO.getName())) {
+        return null;
+      } else {
+        NewTopic newTopic =
+          new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+        return adminClient.createTopics(Collections.singleton(newTopic));
       }
-    } catch (TopicExistsException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-        "topic name: " + topicName, ex.getMessage());
-    } finally {
-      zkClient.close();
-      try {
-        zkConnection.close();
-      } catch (InterruptedException ex) {
-        LOGGER.log(Level.SEVERE, null, ex.getMessage());
-      }
-    }
+    });
   }
 
-  public ProjectTopics createTopicInProject(Project project, Users user, TopicDTO topicDto, SchemaTopics schema)
-      throws KafkaException, ServiceException {
+  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto, SchemaTopics schema)
+      throws KafkaException, InterruptedException, ExecutionException {
     // create the topic in kafka
-    createTopicInKafka(project, user, topicDto);
+    if (createTopicInKafka(topicDto).get() == null) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+                    "topic name: " + topicDto.getName());
+    }
     /*
      * What is the possibility of the program failing here? The topic is created
      * on
@@ -344,7 +308,7 @@ public class KafkaFacade {
     return pt;
   }
   
-  public void removeTopicFromProject(ProjectTopics pt) throws ServiceException {
+  public void removeTopicFromProject(ProjectTopics pt) {
     //remove from database
     em.remove(pt);
     /*
@@ -358,65 +322,22 @@ public class KafkaFacade {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
-    //TODO: Refactor to AdminClient
-    ZkClient zkClient = new ZkClient(getIp(settings.getZkConnectStr()).
-        getHostName(),
-        Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
-    ZkConnection zkConnection = new ZkConnection(settings.getZkConnectStr());
-    ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-
-    try {
-      AdminUtils.deleteTopic(zkUtils, pt.getTopicName());
-    } finally {
-      zkClient.close();
-      try {
-        zkConnection.close();
-      } catch (InterruptedException ex) {
-        Logger.getLogger(KafkaFacade.class.getName()).
-            log(Level.SEVERE, null, ex);
-      }
-    }
+    adminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
   }
 
-  public void removeAllTopicsFromProject(Project project) throws
-    InterruptedException, ServiceException {
+  public void removeAllTopicsFromProject(Project project) {
 
-    List<ProjectTopics> topics = em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
-        .setParameter("project", project)
-        .getResultList();
+    List<ProjectTopics> topics = findTopicsByProject(project);
 
     if (topics == null || topics.isEmpty()) {
       return;
     }
-
-    ZkClient zkClient = null;
-    ZkConnection zkConnection = null;
-
-    try {
-      zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
-          Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, Settings.ZOOKEEPER_CONNECTION_TIMEOUT_MS, ZKStringSerializer$.MODULE$);
-      zkConnection = new ZkConnection(settings.getZkConnectStr());
-      for (ProjectTopics topic : topics) {
-        //remove from database
-        em.remove(topic);
-
-        //remove from zookeeper
-        ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
-        try {
-          AdminUtils.deleteTopic(zkUtils, topic.getTopicName());
-        } catch (TopicAlreadyMarkedForDeletionException ex) {
-          //ignore this error, if the topic is already being removed it will end
-          //up in the state that we want.
-        }
-      }
-    } finally {
-      if (zkClient != null) {
-        zkClient.close();
-      }
-      if (zkConnection != null) {
-        zkConnection.close();
-      }
-    }
+    
+    List<String> topicNameList = topics.stream()
+      .map(ProjectTopics::getTopicName)
+      .collect(Collectors.toList());
+    
+    adminClient.deleteTopics(topicNameList);
   }
 
 
