@@ -41,10 +41,10 @@ angular.module('hopsWorksApp')
             self.storageConnectors = [];
             self.settings = null;
             self.featuregroups = [];
-            self.featuregroupsPageSize = 10;
-            self.trainingDatasetsPageSize = 10;
-            self.storageConnectorsPageSize = 10;
-            self.featuresPageSize = 10;
+            self.featuregroupsPageSize = 20;
+            self.trainingDatasetsPageSize = 20;
+            self.storageConnectorsPageSize = 20;
+            self.featuresPageSize = 20;
             self.currentPage = 1;
             self.featurestore = null;
             self.featureSearchTerm = "";
@@ -93,7 +93,7 @@ angular.module('hopsWorksApp')
             self.featuresFromDate = new Date();
             self.featuresFromDate.setMinutes(self.featuresFromDate.getMinutes() - 60*24*30*4);
             self.searchInFeaturegroups = true
-            self.searchInTrainingDatasets = true
+            self.searchInTrainingDatasets = false
             self.featureSearchFgFilter = ""
             self.featureSearchFgVersionFilter = ""
             self.fgFeatures = []
@@ -1169,7 +1169,7 @@ angular.module('hopsWorksApp')
              * @param dateStr the date string to format
              */
             self.createdOn = function(dateStr) {
-                return FeaturestoreService.formatDateAndTime(new Date(dateStr))
+                return FeaturestoreService.formatDate(new Date(dateStr))
             }
 
             /**
