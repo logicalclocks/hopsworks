@@ -240,9 +240,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAGENT_USER = "kagent_user";
   private static final String VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED = "kagent_liveness_monitor_enabled";
   private static final String VARIABLE_KAGENT_LIVENESS_THRESHOLD = "kagent_liveness_threshold";
-  private static final String VARIABLE_SERVICE_RESTART_SCRIPT = "service_restart_script";
-  private static final String VARIABLE_SERVICE_START_SCRIPT = "service_start_script";
-  private static final String VARIABLE_SERVICE_STOP_SCRIPT = "service_stop_script";
   private static final String VARIABLE_RESOURCE_DIRS = "resources";
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_MAX_STATUS_POLL_RETRY = "max_status_poll_retry";
@@ -567,12 +564,6 @@ public class Settings implements Serializable {
       KAGENT_LIVENESS_MONITOR_ENABLED = setBoolVar(VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED,
           KAGENT_LIVENESS_MONITOR_ENABLED);
       KAGENT_LIVENESS_THRESHOLD = setStrVar(VARIABLE_KAGENT_LIVENESS_THRESHOLD, KAGENT_LIVENESS_THRESHOLD);
-      SERVICE_RESTART_SCRIPT = setStrVar(VARIABLE_SERVICE_RESTART_SCRIPT,
-          SERVICE_RESTART_SCRIPT);
-      SERVICE_START_SCRIPT = setStrVar(VARIABLE_SERVICE_START_SCRIPT,
-          SERVICE_START_SCRIPT);
-      SERVICE_STOP_SCRIPT = setStrVar(VARIABLE_SERVICE_STOP_SCRIPT,
-          SERVICE_STOP_SCRIPT);
       DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
       INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
       INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
@@ -1660,24 +1651,6 @@ public class Settings implements Serializable {
   public synchronized String getKagentLivenessThreshold() {
     checkCache();
     return KAGENT_LIVENESS_THRESHOLD;
-  }
-
-  private String SERVICE_RESTART_SCRIPT = "/srv/hops/kagent/kagent/bin/restart-service.sh";
-  public synchronized String getServiceRestartScript() {
-    checkCache();
-    return SERVICE_RESTART_SCRIPT;
-  }
-
-  private String SERVICE_START_SCRIPT = "/srv/hops/kagent/kagent/bin/start-service.sh";
-  public synchronized String getServiceStartScript() {
-    checkCache();
-    return SERVICE_START_SCRIPT;
-  }
-
-  private String SERVICE_STOP_SCRIPT = "/srv/hops/kagent/kagent/bin/stop-service.sh";
-  public synchronized String getServiceStopScript() {
-    checkCache();
-    return SERVICE_STOP_SCRIPT;
   }
 
   private String HOPSWORKS_REST_ENDPOINT = "hopsworks0:8181";
