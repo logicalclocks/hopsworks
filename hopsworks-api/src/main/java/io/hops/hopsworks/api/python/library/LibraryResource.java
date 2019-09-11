@@ -58,14 +58,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Api(value = "Python Environment Library Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LibraryResource {
-
-  private static final Logger LOGGER = Logger.getLogger(LibraryResource.class.getName());
 
   @EJB
   private LibraryController libraryController;
@@ -94,7 +93,15 @@ public class LibraryResource {
   public Project getProject() {
     return project;
   }
-  
+
+  private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-]+");
+  private void validatePattern(String element) throws IllegalArgumentException {
+    Matcher matcher = VALIDATION_PATTERN.matcher(element);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Library names should follow the pattern: [a-zA-Z0-9_\\-]+");
+    }
+  }
+
   @ApiOperation(value = "Get the python libraries installed in this environment", response = LibraryDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -124,6 +131,7 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
     @Context UriInfo uriInfo) throws PythonException {
+    validatePattern(library);
     environmentController.checkCondaEnabled(project, pythonVersion);
     PythonDep dep = libraryController.getPythonDep(library, project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
@@ -143,6 +151,7 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response uninstall(@PathParam("library") String library)
     throws ServiceException, GenericException, ProjectException, PythonException {
+    validatePattern(library);
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (settings.getPreinstalledPythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
@@ -170,6 +179,10 @@ public class LibraryResource {
                           @Context UriInfo uriInfo,
                           @Context HttpServletRequest req)
     throws ServiceException, GenericException, PythonException, ProjectException {
+
+    validatePattern(library);
+    validatePattern(version);
+    // TODO(Fabio) validate URL
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (packageManager == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
@@ -186,9 +199,6 @@ public class LibraryResource {
         break;
       default:
         throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
-    }
-    if (version == null || version.isEmpty()) {
-      throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);
     }
     if (machine == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.MACHINE_TYPE_NOT_SPECIFIED, Level.FINE);
@@ -220,6 +230,8 @@ public class LibraryResource {
                          @QueryParam("query") String query,
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo) throws ServiceException, PythonException {
+    validatePattern(query);
+    // TODO(Fabio) validate channel
     environmentController.checkCondaEnabled(project, pythonVersion);
     LibrarySearchDTO librarySearchDTO;
     LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.fromString(search);
