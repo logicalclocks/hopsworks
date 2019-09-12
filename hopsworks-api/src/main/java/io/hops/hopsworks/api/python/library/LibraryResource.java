@@ -177,7 +177,6 @@ public class LibraryResource {
 
     validatePattern(library);
     validatePattern(version);
-    validateChannel(channel);
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (packageManager == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
@@ -190,6 +189,8 @@ public class LibraryResource {
       case CONDA:
         if(channel == null) {
           throw new PythonException(RESTCodes.PythonErrorCode.CONDA_INSTALL_REQUIRES_CHANNEL, Level.FINE);
+        } else {
+          validateChannel(channel);
         }
         break;
       default:
@@ -226,12 +227,12 @@ public class LibraryResource {
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo) throws ServiceException, PythonException {
     validatePattern(query);
-    validateChannel(channel);
     environmentController.checkCondaEnabled(project, pythonVersion);
     LibrarySearchDTO librarySearchDTO;
     LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.fromString(search);
     switch (packageManager) {
       case CONDA:
+        validateChannel(channel);
         librarySearchDTO = librariesSearchBuilder.buildCondaItems(uriInfo, query, project, channel);
         break;
       case PIP:
