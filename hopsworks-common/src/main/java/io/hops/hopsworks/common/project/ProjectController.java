@@ -681,11 +681,8 @@ public class ProjectController {
    * @return Project
    */
   public Project findProjectById(Integer id) throws ProjectException {
-    Project project = projectFacade.find(id);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
-    }
-    return project;
+    return projectFacade.find(id).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id));
   }
 
   // Used only during project creation
@@ -973,10 +970,9 @@ public class ProjectController {
   public void removeProject(String userMail, int projectId, String sessionId) throws ProjectException,
     GenericException {
 
-    Project project = projectFacade.find(projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    
     //Only project owner and admin is able to delete a project
     Users user = userFacade.findByEmail(userMail);
     if (!project.getOwner().equals(user) && !usersController.isUserInRole(user, "HOPS_ADMIN")) {
@@ -1894,14 +1890,13 @@ public class ProjectController {
   /**
    * Project info as data transfer object that can be sent to the user.
    *
-   * @param projectID of the project
+   *
+   * @param projectId of the project
    * @return project DTO that contains team members and services
    */
-  public ProjectDTO getProjectByID(Integer projectID) throws ProjectException {
-    Project project = projectFacade.find(projectID);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectID);
-    }
+  public ProjectDTO getProjectByID(Integer projectId) throws ProjectException {
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
     //find the project as an inode from hops database
     Inode inode = inodes.getInodeAtPath(Utils.getProjectPath(project.getName()));
 
@@ -2003,8 +1998,9 @@ public class ProjectController {
    * @param projectId
    * @return
    */
-  public QuotasDTO getQuotas(Integer projectId) {
-    Project project = projectFacade.find(projectId);
+  public QuotasDTO getQuotas(Integer projectId) throws ProjectException {
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
     return getQuotasInternal(project);
   }
 
@@ -2257,11 +2253,13 @@ public class ProjectController {
   /**
    * Retrieves all the project teams for a project
    *
-   * @param projectID
+   *
+   * @param projectId
    * @return a list of project team
    */
-  public List<ProjectTeam> findProjectTeamById(Integer projectID) {
-    Project project = projectFacade.find(projectID);
+  public List<ProjectTeam> findProjectTeamById(Integer projectId) throws ProjectException {
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));;
     return projectTeamFacade.findMembersByProject(project);
   }
 

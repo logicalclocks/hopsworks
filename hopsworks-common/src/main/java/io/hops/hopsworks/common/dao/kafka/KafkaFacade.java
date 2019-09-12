@@ -102,7 +102,7 @@ public class KafkaFacade {
   @EJB
   Settings settings;
   @EJB
-  private ProjectFacade projectsFacade;
+  private ProjectFacade projectFacade;
   @EJB
   private BaseHadoopClientsService baseHadoopService;
   @EJB
@@ -347,22 +347,14 @@ public class KafkaFacade {
         settings.getKafkaDefaultNumPartitions(),
         brokers.size());
   }
+  
+  public Optional<SharedTopics> findSharedTopicByProjectAndTopic (Integer projectId, String topicName) {
+    return Optional.ofNullable(em.find(SharedTopics.class,
+      new SharedTopicsPK(topicName, projectId)));
+  }
 
   public void shareTopic(Project owningProject, String topicName,
       Integer projectId) throws KafkaException {
-    if (owningProject.getId().equals(projectId)) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE);
-    }
-
-    ProjectTopics pt = null;
-    try {
-      pt = em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", owningProject)
-          .setParameter("topicName", topicName)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
-    }
 
     SharedTopics sharedTopics = em.find(SharedTopics.class,
         new SharedTopicsPK(topicName, projectId));
@@ -467,11 +459,12 @@ public class KafkaFacade {
     }
 
     //get the project id
-    Project topicOwnerProject = projectsFacade.find(projectId);
+    Project topicOwnerProject = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
     Project project;
 
     if (!topicOwnerProject.getName().equals(selectedProjectName)) {
-      project = projectsFacade.findByName(selectedProjectName);
+      project = projectFacade.findByName(selectedProjectName);
       if (project == null) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
           "for the topic" +

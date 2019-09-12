@@ -45,6 +45,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.elastic.ElasticHit;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -119,7 +120,7 @@ public class ElasticService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response projectSearch(@PathParam("projectId") Integer projectId,
-      @PathParam("searchTerm") String searchTerm) throws ServiceException {
+      @PathParam("searchTerm") String searchTerm) throws ServiceException, ProjectException {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
@@ -146,7 +147,7 @@ public class ElasticService {
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,
-      @PathParam("searchTerm") String searchTerm) throws ServiceException {
+      @PathParam("searchTerm") String searchTerm) throws ServiceException, ProjectException {
   
     if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");

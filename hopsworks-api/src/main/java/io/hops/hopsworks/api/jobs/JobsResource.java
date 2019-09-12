@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
@@ -114,8 +115,9 @@ public class JobsResource {
   private JobsBuilder jobsBuilder;
   
   private Project project;
-  public JobsResource setProject(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+  public JobsResource setProject(Integer projectId) throws ProjectException {
+    this.project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));;
     return this;
   }
   

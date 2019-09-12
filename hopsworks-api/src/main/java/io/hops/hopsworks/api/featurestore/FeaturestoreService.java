@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -83,6 +84,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBException;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
  * A Stateless RESTful service for the featurestore service on Hopsworks.
@@ -135,8 +137,9 @@ public class FeaturestoreService {
    *
    * @param projectId the id of the project
    */
-  public void setProjectId(Integer projectId) {
-    this.project = projectFacade.find(projectId);
+  public void setProjectId(Integer projectId) throws ProjectException {
+    this.project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
   }
 
   /**

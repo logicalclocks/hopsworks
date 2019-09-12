@@ -70,11 +70,8 @@ public class ProjectActivitiesResource {
   }
 
   private Project getProjectById() throws ProjectException {
-    Project project = projectFacade.find(this.projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
-    return project;
+    return projectFacade.find(this.projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
   }
 
   private Project getProjectByName() throws ProjectException {

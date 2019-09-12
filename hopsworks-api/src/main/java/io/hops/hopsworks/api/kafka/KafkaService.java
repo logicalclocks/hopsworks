@@ -56,7 +56,6 @@ import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -114,8 +113,9 @@ public class KafkaService {
   public KafkaService() {
   }
 
-  public void setProjectId(Integer projectId) {
-    this.project = this.projectFacade.find(projectId);
+  public void setProjectId(Integer projectId) throws ProjectException {
+    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
   }
 
   public Project getProject() {
@@ -176,13 +176,8 @@ public class KafkaService {
     
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     
-    kafkaController.shareTopicWithProject(project, topicName, sharedProjectDTO.getId());
+    kafkaController.shareTopicWithProject(project, topicName, sharedProjectDTO);
     
-    AclDTO aclDto = new AclDTO(sharedProjectDTO.getName(),
-      Settings.KAFKA_ACL_WILDCARD,
-      "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-      Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("The topic has been shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

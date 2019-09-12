@@ -231,13 +231,12 @@ public class SecretsController {
           "Visibility's Project ID is empty",
           "Secret " + secretName + " visibility is PROJECT but Project ID is null");
     }
-    Project project = projectFacade.find(projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-          "Project with ID " + projectId + " does not exist!",
-          "User " + caller.getUsername() + " requested shared Secret " + secretName +
-          " but Project with ID " + projectId + "does not exist");
-    }
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
+        "Project with ID " + projectId + " does not exist!",
+        "User " + caller.getUsername() + " requested shared Secret " + secretName +
+          " but Project with ID " + projectId + "does not exist"));
+    
     // Check if caller is member of the Project
     for (ProjectTeam projectTeam : project.getProjectTeamCollection()) {
       if (caller.getUid().equals(projectTeam.getUser().getUid())) {

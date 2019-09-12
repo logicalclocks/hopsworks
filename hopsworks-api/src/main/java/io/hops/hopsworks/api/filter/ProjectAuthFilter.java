@@ -88,7 +88,7 @@ public class ProjectAuthFilter implements ContainerRequestFilter {
       //
     }
 
-    Project project = id != null ? projectBean.find(id) : projectBean.findByName(projectName);
+    Project project = id != null ? projectBean.find(id).orElse(null) : projectBean.findByName(projectName);
     if (project == null) {
       jsonResponse.setErrorCode(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND.getCode());
       jsonResponse.setErrorMsg(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND.getMessage());

@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -207,15 +208,33 @@ public class KafkaController {
     return getTopicDetailsFromKafkaCluster(topicName);
   }
   
-  public void shareTopicWithProject(Project project, String topicName, Integer projectId) throws
-    ProjectException, KafkaException {
+  public void shareTopicWithProject(Project project, String topicName, SharedProjectDTO sharedProjectDTO) throws
+    ProjectException, KafkaException, UserException {
     //By default, all members of the project are granted full permissions on the topic
-    if (projectFacade.find(projectId) == null) {
+    if (project.getId().equals(sharedProjectDTO.getId())) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE);
+    }
+    
+    if (!kafkaFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
+    }
+    
+    if (!projectFacade.find(sharedProjectDTO.getId()).isPresent()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-        "Could not find project: " + projectId);
+        "Could not find project: " + sharedProjectDTO.getId());
+    }
+    
+    if (kafkaFacade.findSharedTopicByProjectAndTopic(project.getId(), topicName).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
     }
     //TODO: refactor shareTopic
-    kafkaFacade.shareTopic(project, topicName, projectId);
+    kafkaFacade.shareTopic(project, topicName, sharedProjectDTO.getId());
+  
+    AclDTO aclDto = new AclDTO(sharedProjectDTO.getName(),
+      Settings.KAFKA_ACL_WILDCARD,
+      "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
+      Settings.KAFKA_ACL_WILDCARD);
+    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
   }
 
   public String getKafkaCertPaths(Project project) {

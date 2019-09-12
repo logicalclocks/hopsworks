@@ -133,7 +133,7 @@ public class RequestService {
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
     //requesting project
-    Project project = projectFacade.find(requestDTO.getProjectId());
+    Project project = projectFacade.find(requestDTO.getProjectId()).orElse(null);
     Dataset dsInRequesting = datasetFacade.findByProjectAndInode(project, inode);
 
     if (dsInRequesting != null) {
@@ -230,10 +230,11 @@ public class RequestService {
     }
     //should be removed when users and user merg.
     Users user = jWTHelper.getUserPrincipal(sc);
-    Project project = projectFacade.find(requestDTO.getProjectId());
-    if(project == null){
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE);
-    }
+    Project project = projectFacade.find(requestDTO.getProjectId()).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND,
+        Level.FINE,
+        "projectId: " + requestDTO.getProjectId()));
+    
     ProjectTeam projectTeam = projectTeamFacade.findByPrimaryKey(project, user);
 
     if (projectTeam != null) {

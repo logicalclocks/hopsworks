@@ -116,10 +116,8 @@ public class ProjectsAdmin {
   @Path("/projects/{id}")
   public Response deleteProject(@Context HttpServletRequest req, @PathParam("id") Integer id) throws ProjectException,
       GenericException {
-    Project project = projectFacade.find(id);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
-    }
+    Project project = projectFacade.find(id).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id));
 
     String sessionId = req.getSession().getId();
     projectController.removeProject(project.getOwner().getEmail(), id, sessionId);
@@ -202,10 +200,9 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
   public Response getProjectAdminInfo(@PathParam("id") Integer projectId) throws ProjectException {
-    Project project = projectFacade.find(projectId);
-    if (project == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
-    }
+    Project project = projectFacade.find(projectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    
     ProjectAdminInfoDTO projectAdminInfoDTO = new ProjectAdminInfoDTO(project,
         projectController.getQuotasInternal(project));
 

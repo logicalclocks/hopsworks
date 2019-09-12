@@ -162,7 +162,7 @@ public class JupyterJWTManager {
       LOG.log(Level.FINEST, "Recovering Jupyter JWT " + materializedJWT.getIdentifier());
       
       // First lookup project and user in db
-      Project project = projectFacade.find(materializedJWT.getIdentifier().getProjectId());
+      Project project = projectFacade.find(materializedJWT.getIdentifier().getProjectId()).orElse(null);
       Users user = userFacade.find(materializedJWT.getIdentifier().getUserId());
       if (project == null || user == null) {
         LOG.log(Level.WARNING, "Tried to recover " + materializedJWT.getIdentifier() + " but could not find " +
