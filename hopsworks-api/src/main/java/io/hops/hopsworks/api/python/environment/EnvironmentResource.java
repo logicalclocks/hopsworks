@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.python.environment;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -141,7 +142,6 @@ public class EnvironmentResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response post(@PathParam("version") String version,
       @QueryParam("action") EnvironmentDTO.Operation action,
-      @QueryParam("pythonKernelEnable") Boolean pythonKernelEnable,
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws PythonException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -152,7 +152,7 @@ public class EnvironmentResource {
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:
-        environmentController.createEnv(version, pythonKernelEnable, project);
+        environmentController.createEnv(version, project);
         dto = buildEnvDTO(uriInfo,null, version);
         return Response.created(dto.getHref()).entity(dto).build();
       default:
@@ -173,7 +173,7 @@ public class EnvironmentResource {
     String cpuYmlPath = getYmlPath(environmentYmlDTO.getCpuYmlPath());
     String gpuYmlPath = getYmlPath(environmentYmlDTO.getGpuYmlPath());
     String version = environmentController.createEnvironmentFromYml(allYmlPath, cpuYmlPath, gpuYmlPath,
-      environmentYmlDTO.getInstallJupyter(), environmentYmlDTO.getPythonKernelEnable(), user, project);
+      environmentYmlDTO.getInstallJupyter(), user, project);
     EnvironmentDTO dto = buildEnvDTO(uriInfo, null, version);
     return Response.created(dto.getHref()).entity(dto).build();
   }
@@ -191,6 +191,9 @@ public class EnvironmentResource {
   }
 
   private String getYmlPath(String path) throws DatasetException, ProjectException {
+    if(Strings.isNullOrEmpty(path)) {
+      return null;
+    }
     DsPath ymlPath = pathValidator.validatePath(this.project, path);
     ymlPath.validatePathExists(inodes, false);
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
