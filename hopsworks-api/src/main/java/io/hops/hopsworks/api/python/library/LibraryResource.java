@@ -81,6 +81,9 @@ public class LibraryResource {
   @EJB
   private EnvironmentController environmentController;
 
+  private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.]+");
+  private static final Pattern CHANNEL_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-:/~?&\\.]+");
+
   private Project project;
   private String pythonVersion;
 
@@ -92,14 +95,6 @@ public class LibraryResource {
 
   public Project getProject() {
     return project;
-  }
-
-  private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-]+");
-  private void validatePattern(String element) throws IllegalArgumentException {
-    Matcher matcher = VALIDATION_PATTERN.matcher(element);
-    if (!matcher.matches()) {
-      throw new IllegalArgumentException("Library names should follow the pattern: [a-zA-Z0-9_\\-]+");
-    }
   }
 
   @ApiOperation(value = "Get the python libraries installed in this environment", response = LibraryDTO.class)
@@ -182,7 +177,7 @@ public class LibraryResource {
 
     validatePattern(library);
     validatePattern(version);
-    // TODO(Fabio) validate URL
+    validateChannel(channel);
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (packageManager == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
@@ -231,7 +226,7 @@ public class LibraryResource {
                          @QueryParam("channel") String channel,
                          @Context UriInfo uriInfo) throws ServiceException, PythonException {
     validatePattern(query);
-    // TODO(Fabio) validate channel
+    validateChannel(channel);
     environmentController.checkCondaEnabled(project, pythonVersion);
     LibrarySearchDTO librarySearchDTO;
     LibraryDTO.PackageManager packageManager = LibraryDTO.PackageManager.fromString(search);
@@ -253,5 +248,19 @@ public class LibraryResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public LibraryCommandsResource libraryCommandsResource() {
     return this.libraryCommandsResource.setProject(project, pythonVersion);
+  }
+
+  private void validatePattern(String element) throws IllegalArgumentException {
+    Matcher matcher = VALIDATION_PATTERN.matcher(element);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Library names should follow the pattern: [a-zA-Z0-9_\\-]+");
+    }
+  }
+
+  private void validateChannel(String channel) throws IllegalArgumentException {
+    Matcher matcher = CHANNEL_PATTERN.matcher(channel);
+    if (!matcher.matches()) {
+      throw new IllegalArgumentException("Library names should follow the pattern: [a-zA-Z0-9_\\-:/~?&]+");
+    }
   }
 }
