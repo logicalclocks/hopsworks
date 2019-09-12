@@ -70,6 +70,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
 
 /**
  * Class controlling the interaction with the feature_store table and required business logic
@@ -108,6 +111,11 @@ public class FeaturestoreController {
   private SecretsController secretsController;
   @EJB
   private ProjectTeamFacade projectTeamBean;
+  
+  
+  @PersistenceContext(unitName = "featurestorePU")
+  private EntityManager em;
+  
 
   /**
    * Retrieves a list of all featurestores for a particular project
@@ -137,6 +145,39 @@ public class FeaturestoreController {
     return featurestoresDsInproject.stream().map(ds -> ds.getFeaturestore()).collect(Collectors.toList());
   }
 
+  
+  private void createUser(String username, String password) {
+    try {
+      em.createNativeQuery("CREATE USER IF NOT EXISTS \\\"?1\\\"@'%' IDENTIFIED BY \\\" ?2\\\"")
+          .setParameter(1, username)
+          .setParameter(2, password);
+    } catch (NoResultException e) {
+      return ;
+    }    
+  }
+  
+  private void dropUser(String username) {
+    try {
+      em.createNativeQuery("DROP USER IF EXISTS \\\"?1\\\"@'%'")
+          .setParameter(1, username);
+    } catch (NoResultException e) {
+      return ;
+    }    
+  }
+
+
+  private void dropDatabase(String databaseName) {
+    // TODO
+    try {
+      em.createNativeQuery("DROP USER IF EXISTS \\\"?1\\\"@'%'")
+          .setParameter(1, username);
+    } catch (NoResultException e) {
+      return ;
+    }    
+  }
+
+  
+  
   /**
    * @param args
    * add|rm|update, databasename, db_user, [db_passwords_file|

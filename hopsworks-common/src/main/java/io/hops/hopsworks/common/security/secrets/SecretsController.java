@@ -121,7 +121,7 @@ public class SecretsController {
   }
   
   /**
-   * Gets all Secrets' names associated with a user. The actually secret is not
+   * Gets all Secrets' names associated with a user. The actual secret is not
    * returned, nor decrypted.
    *
    * @param user The user to fetch the Secrets for

@@ -345,9 +345,7 @@ public class FeaturestoreStorageConnectorService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get online featurestore storage connector for this feature store",
     response = FeaturestoreStorageConnectorDTO.class)
-  public Response getOnlineFeaturestoreStorageConnector(
-    @Context
-      SecurityContext sc)
+  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
@@ -360,16 +358,7 @@ public class FeaturestoreStorageConnectorService {
     String hostname = settings.getHopsworksIp();
     String password = "";
     try {
-      List<SecretPlaintext> passwords = secretsController.getAllForUser(user);
-      for (SecretPlaintext sp : passwords) {
-        if (sp.getKeyName().compareToIgnoreCase(dbUsername) == 0) {
-          password = sp.getPlaintext();
-        }
-      }
-      if (password.isEmpty()) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-          Level.WARNING, "Could not find a password for the JDBC connection to the online FS");
-      }
+      password = secretsController.get(user, dbUsername).getPlaintext();
     } catch (UserException e) {
       e.printStackTrace();
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
