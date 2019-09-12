@@ -75,8 +75,7 @@
                                                        md-placeholder="To"></md-datepicker>
                                     </label>
                                 </div>
-                                <div class="col-sm-3 form-group"
-                                     ng-if="newTrainingDatasetCtrl.fFilter != '' || newTrainingDatasetCtrl.featureSearchFgFilter != '' || newTrainingDatasetCtrl.featureSearchFgVersionFilter != ''">
+                                <div class="col-sm-3 form-group">
                                     <div class="pull-right btn-group">
                                         <label>Features per page:
                                             <input type="number" min="1"
@@ -171,11 +170,11 @@
                                         <td class="fs-table">
                                             <span ng-if="result.entity === 1">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px"> Feature in Feature Group</span>
+                                                <span style="margin-left:5px">Feature Group</span>
                                             </span>
                                             <span ng-if="result.entity === 0">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px"> Feature in Training Dataset</span>
+                                                <span style="margin-left:5px">Training Dataset</span>
                                             </span>
                                         </td>
                                         <td class="fs-table">{{result.name}}</td>
