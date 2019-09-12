@@ -150,7 +150,9 @@ public class ProjectMembersService {
       //add new members of the project
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-        featurestoreController.addUserOnlineFeatureStoreDB(project, user);
+        for (ProjectTeam pt : members.getProjectTeam()) {
+          featurestoreController.addUserOnlineFeatureStoreDB(project, pt.getUser());
+        }
       }
     }
 
@@ -198,13 +200,12 @@ public class ProjectMembersService {
     }
     projectController.updateMemberRole(project, user, email, role);
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      featurestoreController.updateUserOnlineFeatureStoreDB(project, user);
+      Users member = projectTeamFacade.findUserByEmail(email);      
+      featurestoreController.updateUserOnlineFeatureStoreDB(project, member);
     }
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        json).build();
-
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @DELETE
@@ -241,7 +242,8 @@ public class ProjectMembersService {
     projectController.removeMemberFromTeam(project, reqUser, email);
 
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      featurestoreController.rmUserOnlineFeatureStore(project.getName(), reqUser);
+      Users member = projectTeamFacade.findUserByEmail(email);      
+      featurestoreController.rmUserOnlineFeatureStore(project.getName(), member);
     }
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

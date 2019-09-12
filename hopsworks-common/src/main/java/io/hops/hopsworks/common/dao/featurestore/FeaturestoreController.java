@@ -185,9 +185,13 @@ public class FeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public int addUserOnlineFeatureStoreDB(Project project, Users user) {
-
-    if (!settings.isOnlineFeaturestore())
+    
+    if (!settings.isOnlineFeaturestore()) {
       return 1;
+    }
+    if (user == null) {
+      return -2;
+    }
     
     String role = getRole(project, user);
     String onlineFsPassword = securityUtils.generateSecureRandomString();

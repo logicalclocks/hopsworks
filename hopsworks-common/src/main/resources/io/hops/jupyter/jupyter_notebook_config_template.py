@@ -23,7 +23,7 @@ c.NotebookApp.base_url='/hopsworks-api/jupyter/%%port%%/'
 c.Application.log_level="WARN"
 c.JupyterConsoleApp.kernel_name="PySpark"
 
-c.KernelSpecManager.whitelist = {'pysparkkernel', 'sparkkernel', 'sparkrkernel','pythonwithpixiedustspark22'
+c.KernelSpecManager.whitelist = {'pysparkkernel', 'sparkkernel', 'sparkrkernel',
 %%python-kernel%% }
 c.KernelSpecManager.ensure_native_kernel=False
 
