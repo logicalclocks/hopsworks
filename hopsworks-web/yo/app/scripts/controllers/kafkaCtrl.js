@@ -352,11 +352,13 @@ angular.module('hopsWorksApp')
               ModalService.selectProject('lg', true, self.projectId,
                       "Select a Project to share the topic with.").then(
                       function (success) {
-                        var destProj = success.projectId;
+                        var destProj = {};
+                        destProj.id = success.projectId;
                         KafkaService.shareTopic(self.projectId, topicName, destProj).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
-                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with project: ' + destProj.name, ttl: 5000});
+                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with' +
+                                      ' project: ' + destProj.id, ttl: 5000});
                                 }, function (error) {
                                 if (typeof error.data.usrMsg !== 'undefined') {
                                     growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});

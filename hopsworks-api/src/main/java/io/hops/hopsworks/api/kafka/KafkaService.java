@@ -165,7 +165,6 @@ public class KafkaService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
   }
   
-  /*********************** IN PROGRESS ********************************/
   @PUT
   @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)
@@ -174,13 +173,15 @@ public class KafkaService {
   public Response shareTopic(@PathParam("topic") String topicName, SharedProjectDTO sharedProjectDTO)
     throws KafkaException, ProjectException, UserException {
     
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    
     kafkaController.shareTopicWithProject(project, topicName, sharedProjectDTO);
     
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The topic has been shared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
+  
+  /*********************** IN PROGRESS ********************************/
+
   
   
   /********************** TODO ***************************/
@@ -311,7 +312,7 @@ public class KafkaService {
   public Response addAclsToTopic(@PathParam("topic") String topicName, AclDTO aclDto) throws KafkaException,
       ProjectException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
+    kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("ACL has been added to the topic.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

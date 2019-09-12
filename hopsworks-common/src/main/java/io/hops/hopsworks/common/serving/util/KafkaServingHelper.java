@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.common.util.Settings;
@@ -50,6 +51,8 @@ public class KafkaServingHelper {
   private Settings settings;
 
   private SchemaTopics schemaTopics = null;
+  @EJB
+  private KafkaController kafkaController;
 
   @PostConstruct
   public void init() {
@@ -174,7 +177,7 @@ public class KafkaServingHelper {
         "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
         Settings.KAFKA_ACL_WILDCARD);
 
-    kafkaFacade.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
+    kafkaController.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
 
     return pt;
   }

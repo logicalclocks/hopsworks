@@ -216,7 +216,16 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               shareTopic: function (projectId, topicName, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topic/' + topicName + "/share/" + destProjectId);
+                var req = {
+                  method: 'PUT',
+                  url: '/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared',
+                  headers: {
+                    'Content-Type' : 'application/json'
+                  },
+                  data: destProjectId
+                };
+
+                return $http(req);
               },
               
               /**

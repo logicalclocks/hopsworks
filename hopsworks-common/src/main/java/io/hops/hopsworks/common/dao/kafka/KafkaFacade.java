@@ -45,6 +45,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -91,6 +92,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+
+
 @Stateless
 public class KafkaFacade {
 
@@ -107,17 +110,12 @@ public class KafkaFacade {
   private BaseHadoopClientsService baseHadoopService;
   @EJB
   private UserFacade userFacade;
+  //TODO: added temporarly to compile the unrefactored endpoints - remove
+  @EJB
+  private KafkaController kafkaController;
   
   private AdminClient adminClient;
   
-  private static final String COLON_SEPARATOR = ":";
-  public static final String SLASH_SEPARATOR = "//";
-  public static final String KAFKA_SECURITY_PROTOCOL = "SSL";
-  private static final String KAFKA_BROKER_EXTERNAL_PROTOCOL = "EXTERNAL";
-  private static final String PROJECT_DELIMITER = "__";
-  public static final String DLIMITER = "[\"]";
-  private static final String KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM = "";
-
   protected EntityManager getEntityManager() {
     return em;
   }
@@ -134,16 +132,18 @@ public class KafkaFacade {
     Properties props = new Properties();
     Set<String> brokers = settings.getKafkaBrokers();
     //Keep only INTERNAL protocol brokers
-    brokers.removeIf(seed -> seed.split(COLON_SEPARATOR)[0].equalsIgnoreCase(KAFKA_BROKER_EXTERNAL_PROTOCOL));
+    brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0].equalsIgnoreCase
+      (KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));
     String brokerAddress = brokers.iterator().next().split("://")[1];
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
-    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KAFKA_SECURITY_PROTOCOL);
+    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
     props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, baseHadoopService.getSuperKeystorePath());
     props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
     props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
-    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
+    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
+      KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
     return AdminClient.create(props);
   }
 
@@ -181,12 +181,12 @@ public class KafkaFacade {
   }
 
   private int getPort(String zkIp) {
-    return Integer.parseInt(zkIp.split(COLON_SEPARATOR)[1]);
+    return Integer.parseInt(zkIp.split(KafkaConst.COLON_SEPARATOR)[1]);
   }
 
   public InetAddress getIp(String zkIp) throws ServiceException {
 
-    String ip = zkIp.split(COLON_SEPARATOR)[0];
+    String ip = zkIp.split(KafkaConst.COLON_SEPARATOR)[0];
     try {
       return InetAddress.getByName(ip);
     } catch (UnknownHostException ex) {
@@ -334,7 +334,7 @@ public class KafkaFacade {
     em.createNamedQuery("TopicAcls.findAll", TopicAcls.class)
       .getResultList()
       .stream()
-      .filter(acl -> acl.getPrincipal().split(PROJECT_DELIMITER)[0].equals(project.getName()))
+      .filter(acl -> acl.getPrincipal().split(KafkaConst.PROJECT_DELIMITER)[0].equals(project.getName()))
       .forEach(acl -> em.remove(acl));
   }
 
@@ -353,15 +353,7 @@ public class KafkaFacade {
       new SharedTopicsPK(topicName, projectId)));
   }
 
-  public void shareTopic(Project owningProject, String topicName,
-      Integer projectId) throws KafkaException {
-
-    SharedTopics sharedTopics = em.find(SharedTopics.class,
-        new SharedTopicsPK(topicName, projectId));
-    if (sharedTopics != null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
-    }
-    //persist shared topic to database
+  public void shareTopic(Project owningProject, String topicName, Integer projectId) {
     SharedTopics st = new SharedTopics(topicName, owningProject.getId(), projectId);
     em.persist(st);
     em.flush();
@@ -438,92 +430,13 @@ public class KafkaFacade {
     }
     return aclUsers;
   }
-
-  public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto)
-    throws KafkaException, ProjectException, UserException {
-
-    addAclsToTopic(topicName, projectId,
-        dto.getProjectName(),
-        dto.getUserEmail(), dto.getPermissionType(),
-        dto.getOperationType(), dto.getHost(), dto.getRole());
-  }
-
-  private void addAclsToTopic(String topicName, Integer projectId,
-      String selectedProjectName, String userEmail, String permission_type,
-      String operation_type, String host, String role) throws ProjectException, KafkaException, UserException {
-
-    if(Strings.isNullOrEmpty(topicName) || projectId == null || projectId < 0 || userEmail == null){
-      throw new IllegalArgumentException("Topic, userEmail and projectId must be provided. ProjectId must be a " +
-        "non-negative " +
-        "number");
-    }
-
-    //get the project id
-    Project topicOwnerProject = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
-    Project project;
-
-    if (!topicOwnerProject.getName().equals(selectedProjectName)) {
-      project = projectFacade.findByName(selectedProjectName);
-      if (project == null) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
-          "for the topic" +
-          topicName + " was not found");
-      }
-    } else {
-      project = topicOwnerProject;
-    }
-
-    ProjectTopics pt = null;
-    try {
-      pt = em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", topicOwnerProject)
-          .setParameter("topicName", topicName)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName);
-    }
-
-    //if acl definition applies only for a specific user
-    if (!userEmail.equals("*")) {
-      //fetch the user name from database       
-      Users user = userFacade.findByEmail(userEmail);
-
-      if (user == null) {
-        throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail);
-      }
-
-      String principalName = selectedProjectName + PROJECT_DELIMITER + user.getUsername();
-
-      //Check if the requested ACL already exists
-      TopicAcls topicAcl = getTopicAcl(topicName, principalName, permission_type, operation_type, host, role);
-      if (topicAcl != null) {
-        if (topicAcl.getProjectTopics().getTopicName().equals(topicName)
-            && topicAcl.getHost().equals(host)
-            && topicAcl.getOperationType().equalsIgnoreCase(operation_type)
-            && topicAcl.getPermissionType().equalsIgnoreCase(permission_type)
-            && topicAcl.getRole().equalsIgnoreCase(role)) {
-          throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_ALREADY_EXISTS, Level.FINE,
-            "topicAcl:" + topicAcl.toString());
-        }
-      }
-      TopicAcls ta = new TopicAcls(pt, user, permission_type, operation_type, host, role, principalName);
-
-      em.persist(ta);
-      em.flush();
-    } else {
-      for (ProjectTeam p : project.getProjectTeamCollection()) {
-        Users selectedUser = p.getUser();
-        String principalName = selectedProjectName + PROJECT_DELIMITER + selectedUser.getUsername();
-        TopicAcls topicAcl = getTopicAcl(topicName, principalName, permission_type, operation_type, host, role);
-        //Check if new acl already exists for this user
-        if (topicAcl == null) {
-          TopicAcls ta = new TopicAcls(pt, selectedUser, permission_type, operation_type, host, role, principalName);
-          em.persist(ta);
-          em.flush();
-        }
-      }
-    }
+  
+  public void addAclsToTopic(ProjectTopics pt, Users user, String permissionType, String operationType, String host,
+    String role, String principalName) {
+    
+    TopicAcls ta = new TopicAcls(pt, user, permissionType, operationType, host, role, principalName);
+    em.persist(ta);
+    em.flush();
   }
 
   public void updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws KafkaException,
@@ -546,8 +459,9 @@ public class KafkaFacade {
     //remove previous acl
     em.remove(ta);
 
+    //TODO: ugly! to be refactored!
     //add the new acls  
-    addAclsToTopic(topicName, project.getId(), aclDto);
+    kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
   }
 
   public void removeAclFromTopic(String topicName, Integer aclId) throws KafkaException {
@@ -569,25 +483,24 @@ public class KafkaFacade {
       .setParameter("topicName", topicName)
       .getResultList()
       .stream()
-      .filter(acl -> acl.getPrincipal().split(PROJECT_DELIMITER)[0].equals(project.getName()))
+      .filter(acl -> acl.getPrincipal().split(KafkaConst.PROJECT_DELIMITER)[0].equals(project.getName()))
       .forEach(acl -> em.remove(acl));
   }
 
-  public TopicAcls getTopicAcl(String topicName,
+  public Optional<TopicAcls> getTopicAcls(String topicName,
       String principal, String permission_type,
       String operation_type, String host, String role) {
-    TypedQuery<TopicAcls> query = em.createNamedQuery(
+    return Optional.ofNullable(em.createNamedQuery(
         "TopicAcls.findAcl", TopicAcls.class)
         .setParameter("topicName", topicName)
         .setParameter("principal", principal)
         .setParameter("role", role)
         .setParameter("host", host)
         .setParameter("operationType", operation_type)
-        .setParameter("permissionType", permission_type);
-    if (query.getResultList() != null && query.getResultList().size() == 1) {
-      return query.getResultList().get(0);
-    }
-    return null;
+        .setParameter("permissionType", permission_type)
+        .getResultList())
+      .filter((list) -> list.size() == 1)
+      .map((list) -> list.get(0));
   }
 
   public List<AclDTO> getTopicAcls(String topicName, Project project) throws KafkaException {
@@ -609,7 +522,7 @@ public class KafkaFacade {
     List<AclDTO> aclDtos = new ArrayList<>();
     String projectName;
     for (TopicAcls ta : acls) {
-      projectName = ta.getPrincipal().split(PROJECT_DELIMITER)[0];
+      projectName = ta.getPrincipal().split(KafkaConst.PROJECT_DELIMITER)[0];
       aclDtos.add(new AclDTO(ta.getId(), projectName,
         ta.getUser().getEmail(), ta.getPermissionType(),
         ta.getOperationType(), ta.getHost(), ta.getRole()));
