@@ -175,8 +175,15 @@ public class LibraryResource {
                           @Context HttpServletRequest req)
     throws ServiceException, GenericException, PythonException, ProjectException {
 
+    if (version == null || version.isEmpty()) {
+      throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);
+    }
+    if (machine == null) {
+      throw new PythonException(RESTCodes.PythonErrorCode.MACHINE_TYPE_NOT_SPECIFIED, Level.FINE);
+    }
     validatePattern(library);
     validatePattern(version);
+
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (packageManager == null) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
@@ -196,9 +203,7 @@ public class LibraryResource {
       default:
         throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE);
     }
-    if (machine == null) {
-      throw new PythonException(RESTCodes.PythonErrorCode.MACHINE_TYPE_NOT_SPECIFIED, Level.FINE);
-    }
+
     //TODO account for ongoing operations
     for(PythonDep dep: project.getPythonDepCollection()) {
       if(dep.getDependency().equals(library)) {

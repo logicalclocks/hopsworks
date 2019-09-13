@@ -131,8 +131,12 @@ module CondaHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&machine=#{machine}&channel=#{channel}"
   end
 
-  def search_library(projectId, version, package_manager, lib, conda_channel)
-    get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{package_manager}?query=#{lib}&channel=#{conda_channel}"
+  def search_library(projectId, version, package_manager, lib, conda_channel="")
+    request_url = "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{package_manager}?query=#{lib}"
+    if not conda_channel.empty?
+      request_url += "&channel=#{conda_channel}"
+    end
+    get request_url
   end
 
   def uninstall_library(projectId, version, lib)
