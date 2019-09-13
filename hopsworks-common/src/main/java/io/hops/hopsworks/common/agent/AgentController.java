@@ -196,6 +196,7 @@ public class AgentController {
     host.setNumGpus(heartbeat.numGpus);
     host.setPrivateIp(heartbeat.privateIp);
     host.setCores(heartbeat.cores);
+    host.setMemoryCapacity(heartbeat.memoryCapacity);
     hostsFacade.storeHost(host);
   }
 
