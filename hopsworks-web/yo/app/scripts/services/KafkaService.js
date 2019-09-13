@@ -91,8 +91,8 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
               },
               
-              defaultTopicValues: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
+              defaultTopicValues: function () {
+                return $http.get('/api/admin/kafka/topics/settings/default');
               },
               
               validateSchema: function (projectId, schemaDetails){

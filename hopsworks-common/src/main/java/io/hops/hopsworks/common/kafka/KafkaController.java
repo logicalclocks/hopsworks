@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
@@ -317,6 +318,19 @@ public class KafkaController {
           kafkaFacade.addAclsToTopic(pt, selectedUser, permissionType, operationType, host, role, principalName);
         }
       }
+    }
+  }
+  
+  public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
+    try {
+      Set<String> brokers = settings.getBrokerEndpoints();
+      return new TopicDefaultValueDTO(
+        settings.getKafkaDefaultNumReplicas(),
+        settings.getKafkaDefaultNumPartitions(),
+        brokers.size());
+    } catch (InterruptedException | IOException | KeeperException ex) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
+        "", ex.getMessage(), ex);
     }
   }
   
