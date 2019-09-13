@@ -14,9 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup;
+package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroup;
+import com.google.common.base.Objects;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -24,27 +24,25 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 /**
- * Entity class representing the cached_feature_group table in Hopsworks database.
+ * Entity class representing the online_feature_group table in Hopsworks database.
  * An instance of this class represents a row in the database.
  */
 @Entity
-@Table(name = "cached_feature_group", catalog = "hopsworks")
+@Table(name = "online_feature_group", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "CachedFeaturegroup.findAll", query = "SELECT cachedFg FROM " +
-      "CachedFeaturegroup cachedFg"),
-    @NamedQuery(name = "CachedFeaturegroup.findById",
-        query = "SELECT cachedFg FROM CachedFeaturegroup cachedFg WHERE cachedFg.id = :id")})
-public class CachedFeaturegroup implements Serializable {
+    @NamedQuery(name = "OnlineFeaturegroup.findAll", query = "SELECT onlineFg FROM " +
+      "OnlineFeaturegroup onlineFg"),
+    @NamedQuery(name = "OnlineFeaturegroup.findById",
+        query = "SELECT onlineFg FROM OnlineFeaturegroup onlineFg WHERE onlineFg.id = :id")})
+public class OnlineFeaturegroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,52 +50,52 @@ public class CachedFeaturegroup implements Serializable {
   @Column(name = "id")
   private Integer id;
   @Basic(optional = false)
-  @Column(name = "offline_feature_group")
-  private Long hiveTableId;
-  @JoinColumn(name = "online_feature_group_id", referencedColumnName = "id")
-  @OneToOne
-  private OnlineFeaturegroup onlineFeaturegroup;
+  @Column(name = "db_name")
+  private String dbName;
+  @Basic(optional = false)
+  @Column(name = "table_name")
+  private String tableName;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
-  }
-
-  public Long getHiveTableId() {
-    return hiveTableId;
-  }
-
-  public void setHiveTableId(Long hiveTableId) {
-    this.hiveTableId = hiveTableId;
   }
 
   public Integer getId() {
     return id;
   }
   
-  public OnlineFeaturegroup getOnlineFeaturegroup() {
-    return onlineFeaturegroup;
+  public String getDbName() {
+    return dbName;
   }
   
-  public void setOnlineFeaturegroup(
-    OnlineFeaturegroup onlineFeaturegroup) {
-    this.onlineFeaturegroup = onlineFeaturegroup;
+  public void setDbName(String dbName) {
+    this.dbName = dbName;
+  }
+  
+  public String getTableName() {
+    return tableName;
+  }
+  
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
   }
   
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
-    CachedFeaturegroup that = (CachedFeaturegroup) o;
-
-    if (!id.equals(that.id)) return false;
-    return hiveTableId.equals(that.hiveTableId);
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof OnlineFeaturegroup)) {
+      return false;
+    }
+    OnlineFeaturegroup that = (OnlineFeaturegroup) o;
+    return Objects.equal(id, that.id) &&
+      Objects.equal(dbName, that.dbName) &&
+      Objects.equal(tableName, that.tableName);
   }
-
+  
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + hiveTableId.hashCode();
-    return result;
+    return Objects.hashCode(id, dbName, tableName);
   }
 }

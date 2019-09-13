@@ -426,6 +426,9 @@ angular.module('hopsWorksApp')
                 if(name === (self.projectName + "_Training_Datasets")){
                     return true
                 }
+                if(name.includes("_onlinefeaturestore")) {
+                    return true
+                }
                 return false
             }
 

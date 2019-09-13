@@ -37,7 +37,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "CachedFeaturegroupDTO"),
+    @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "OnlineFeaturegroupDTO"),
     @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "HopsfsTrainingDatasetDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 

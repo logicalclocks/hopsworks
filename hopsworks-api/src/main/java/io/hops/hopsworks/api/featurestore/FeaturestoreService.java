@@ -186,6 +186,7 @@ public class FeaturestoreService {
       + org.apache.hadoop.fs.Path.SEPARATOR
       + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
       + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
+    featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
       new GenericEntity<FeaturestoreClientSettingsDTO>(featurestoreClientSettingsDTO) {
       };

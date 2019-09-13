@@ -96,6 +96,7 @@ public class FeaturestoreClientSettingsDTO {
   private String featurestoreUtilPythonExecutable = FeaturestoreConstants.FEATURESTORE_UTIL_PYTHON_EXECUTABLE;
   private String s3BucketTrainingDatasetsFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
   private List<String> featureImportConnectors = FeaturestoreConstants.FEATURE_IMPORT_CONNECTORS;
+  private Boolean onlineFeaturestoreEnabled = false;
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -532,5 +533,14 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setFeatureImportConnectors(List<String> featureImportConnectors) {
     this.featureImportConnectors = featureImportConnectors;
+  }
+  
+  @XmlElement
+  public Boolean getOnlineFeaturestoreEnabled() {
+    return onlineFeaturestoreEnabled;
+  }
+  
+  public void setOnlineFeaturestoreEnabled(Boolean onlineFeaturestoreEnabled) {
+    this.onlineFeaturestoreEnabled = onlineFeaturestoreEnabled;
   }
 }

@@ -95,5 +95,12 @@ public class FeaturestoreConstants {
     "/user/spark/featurestore_util.py";
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS = Arrays.asList(new String[]{S3_CONNECTOR_TYPE});
+  public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
+  public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
+  public static final int ONLINE_FEATURE_STORE_PORT = 3306;
+  public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
+  public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
+  public static final String ONLINE_FEATURE_STORE_TYPE = "MySQL Cluster";
+  public static final String OFFLINE_FEATURE_STORE_TYPE = "Hive";
   
 }

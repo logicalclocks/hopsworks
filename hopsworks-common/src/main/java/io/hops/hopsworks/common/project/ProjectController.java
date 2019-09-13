@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -238,6 +239,8 @@ public class ProjectController {
   private HdfsDirectoryWithQuotaFeatureFacade hdfsDirectoryWithQuotaFeatureFacade;
   @EJB
   private FeaturestoreController featurestoreController;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @Inject
   private ServingController servingController;
   @Inject
@@ -1547,7 +1550,7 @@ public class ProjectController {
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj, owner);
         removeCertificatesFromMaterializer(project);
         //Delete online featurestore database
-        featurestoreController.dropOnlineFeatureStore(project.getName());
+        onlineFeaturestoreController.dropOnlineFeatureStore(project.getName());
         
         break;
       } catch (Exception ex) {
@@ -1648,7 +1651,7 @@ public class ProjectController {
       hiveController.dropDatabases(project, dfso, false);
 
       //Delete online featurestore database
-      featurestoreController.dropOnlineFeatureStore(project.getName());
+      onlineFeaturestoreController.dropOnlineFeatureStore(project.getName());
       
       //Delete elasticsearch template for this project
       removeElasticsearch(project);
@@ -1844,7 +1847,7 @@ public class ProjectController {
               throw new EJBException("Could not create certificates for user");
             }
 //            if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-//              featurestoreController.addUserOnlineFeatureStoreDB(project, projectTeam.getUser());
+//              featurestoreController.createOnlineFeaturestoreUser(project, projectTeam.getUser());
 //            }
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
               new Object[]{newMember.getEmail(),

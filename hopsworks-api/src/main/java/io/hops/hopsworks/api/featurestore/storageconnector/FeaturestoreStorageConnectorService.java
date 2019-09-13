@@ -24,6 +24,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorType;
@@ -32,11 +33,9 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -76,6 +75,8 @@ public class FeaturestoreStorageConnectorService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private FeaturestoreController featurestoreController;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @EJB
@@ -351,32 +352,13 @@ public class FeaturestoreStorageConnectorService {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.WARNING, "Online Featurestore is not enabled for this Hopsworks cluster.");      
     }
-    
     Users user = jWTHelper.getUserPrincipal(sc);
-    String dbUsername = featurestoreController.onlineDbUsername(project, user);
-    
-    String hostname = settings.getHopsworksIp();
-    String password = "";
-    try {
-      password = secretsController.get(user, dbUsername).getPlaintext();
-    } catch (UserException e) {
-      e.printStackTrace();
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-        Level.WARNING, "Problem getting secrets for the JDBC connection to the online FS");
-    }
-    String port = "3306";
-    String connectionString =
-      "jdbc://" + dbUsername + ":" + password + "@" + hostname + ":" + port + "/" + project.getName();
-    
-    FeaturestoreJdbcConnectorDTO dto = new FeaturestoreJdbcConnectorDTO();
-    dto.setArguments(connectionString);
-    dto.setDescription("Online Featurestore JDBC connection string");
-    dto.setStorageConnectorType(FeaturestoreStorageConnectorType.JDBC);
-    dto.setName("onlinefeaturestore");
-    dto.setFeaturestoreId(this.featurestore.getId());
-    
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
+      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
+      dbUsername, featurestore);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(dto) {
+      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(featurestoreStorageConnectorDTOGenericEntity).build();

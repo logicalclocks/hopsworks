@@ -333,6 +333,7 @@ public class FeaturegroupController {
         case CACHED_FEATURE_GROUP:
           //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
           cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
+          cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroupDTO, featurestore, user);
           break;
         case ON_DEMAND_FEATURE_GROUP:
           //Delete on_demand_feature_group will cascade will cascade to feature_group table

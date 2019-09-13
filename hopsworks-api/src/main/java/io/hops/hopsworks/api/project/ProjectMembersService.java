@@ -44,25 +44,29 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.project.MembersDTO;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.TensorBoardException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.project.MembersDTO;
-import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -79,11 +83,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -95,6 +99,8 @@ public class ProjectMembersService {
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
@@ -136,7 +142,7 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
-      ProjectException, UserException {
+    ProjectException, UserException, FeaturestoreException, IOException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -151,7 +157,10 @@ public class ProjectMembersService {
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
         for (ProjectTeam pt : members.getProjectTeam()) {
-          featurestoreController.addUserOnlineFeatureStoreDB(project, pt.getUser());
+          FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
+            featurestoreController.getFeaturestoreDbName(project));
+          Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
+          onlineFeaturestoreController.setupOnlineFeaturestoreUser(project, pt.getUser(), featurestore);
         }
       }
     }
@@ -201,7 +210,7 @@ public class ProjectMembersService {
     projectController.updateMemberRole(project, user, email, role);
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Users member = projectTeamFacade.findUserByEmail(email);      
-      featurestoreController.updateUserOnlineFeatureStoreDB(project, member);
+      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member);
     }
 
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
@@ -243,7 +252,7 @@ public class ProjectMembersService {
 
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Users member = projectTeamFacade.findUserByEmail(email);      
-      featurestoreController.rmUserOnlineFeatureStore(project.getName(), member);
+      onlineFeaturestoreController.rmUserOnlineFeatureStore(project.getName(), member);
     }
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

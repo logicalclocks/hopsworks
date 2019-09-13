@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.dao.featurestore;
 
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -27,7 +29,9 @@ import java.util.Date;
  */
 @XmlRootElement
 @XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
-  "created", "hdfsStorePath", "projectName", "projectId", "inodeId"})
+  "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "onlineFeaturestoreType",
+  "onlineFeaturestoreName", "onlineFeaturestoreSize", "offlineFeaturestoreType", "offlineFeaturestoreName",
+  "hiveEndpoint", "mysqlServerEndpoint"})
 public class FeaturestoreDTO {
   
   private Integer featurestoreId;
@@ -38,6 +42,13 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String featurestoreDescription;
   private Long inodeId;
+  private String onlineFeaturestoreType;
+  private String onlineFeaturestoreName;
+  private Double onlineFeaturestoreSize;
+  private String offlineFeaturestoreType;
+  private String offlineFeaturestoreName;
+  private String hiveEndpoint;
+  private String mysqlServerEndpoint;
   
   public FeaturestoreDTO() {
   }
@@ -51,6 +62,13 @@ public class FeaturestoreDTO {
     this.featurestoreDescription = null;
     this.featurestoreName = null;
     this.inodeId = null;
+    this.onlineFeaturestoreType = null;
+    this.onlineFeaturestoreName = null;
+    this.offlineFeaturestoreType = FeaturestoreConstants.OFFLINE_FEATURE_STORE_TYPE;
+    this.offlineFeaturestoreName = null;
+    this.hiveEndpoint = null;
+    this.mysqlServerEndpoint = null;
+    this.onlineFeaturestoreSize = 0.0;
   }
   
   @XmlElement
@@ -109,17 +127,83 @@ public class FeaturestoreDTO {
     this.inodeId = inodeId;
   }
   
+  @XmlElement
+  public String getOnlineFeaturestoreType() {
+    return onlineFeaturestoreType;
+  }
+  
+  @XmlElement
+  public String getOnlineFeaturestoreName() {
+    return onlineFeaturestoreName;
+  }
+  
+  @XmlElement
+  public String getOfflineFeaturestoreType() {
+    return offlineFeaturestoreType;
+  }
+  
+  @XmlElement
+  public String getOfflineFeaturestoreName() {
+    return offlineFeaturestoreName;
+  }
+  
+  public void setOfflineFeaturestoreName(String offlineFeaturestoreName) {
+    this.offlineFeaturestoreName = offlineFeaturestoreName;
+  }
+  
+  @XmlElement
+  public Double getOnlineFeaturestoreSize() {
+    return onlineFeaturestoreSize;
+  }
+  
+  public void setOnlineFeaturestoreSize(Double onlineFeaturestoreSize) {
+    this.onlineFeaturestoreSize = onlineFeaturestoreSize;
+  }
+  
+  @XmlElement
+  public String getHiveEndpoint() {
+    return hiveEndpoint;
+  }
+  
+  public void setHiveEndpoint(String hiveEndpoint) {
+    this.hiveEndpoint = hiveEndpoint;
+  }
+  
+  @XmlElement
+  public String getMysqlServerEndpoint() {
+    return mysqlServerEndpoint;
+  }
+  
+  public void setMysqlServerEndpoint(String mysqlServerEndpoint) {
+    this.mysqlServerEndpoint = mysqlServerEndpoint;
+  }
+  
+  public void setOnlineFeaturestoreType(String onlineFeaturestoreType) {
+    this.onlineFeaturestoreType = onlineFeaturestoreType;
+  }
+  
+  public void setOnlineFeaturestoreName(String onlineFeaturestoreName) {
+    this.onlineFeaturestoreName = onlineFeaturestoreName;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreDTO{" +
       "featurestoreId=" + featurestoreId +
       ", featurestoreName='" + featurestoreName + '\'' +
-      ", created='" + created + '\'' +
+      ", created=" + created +
       ", hdfsStorePath='" + hdfsStorePath + '\'' +
       ", projectName='" + projectName + '\'' +
       ", projectId=" + projectId +
       ", featurestoreDescription='" + featurestoreDescription + '\'' +
       ", inodeId=" + inodeId +
+      ", onlineFeaturestoreType='" + onlineFeaturestoreType + '\'' +
+      ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
+      ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
+      ", offlineFeaturestoreType='" + offlineFeaturestoreType + '\'' +
+      ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
+      ", hiveEndpoint='" + hiveEndpoint + '\'' +
+      ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +
       '}';
   }
 }

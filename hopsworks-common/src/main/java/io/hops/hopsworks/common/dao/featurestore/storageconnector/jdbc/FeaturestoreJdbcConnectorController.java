@@ -19,6 +19,8 @@ package io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -109,14 +111,13 @@ public class FeaturestoreJdbcConnectorController {
   }
   
   /**
-   * Utility function for creating default JDBC connectors for a Featurestore-project in Hopsworks
-   * for a featurestore
+   * Utility function for creating default JDBC connector for the offline Featurestore-project in Hopsworks
    *
    * @param featurestore the featurestore
    * @param databaseName name of the Hive database
    * @throws FeaturestoreException
    */
-  public void createDefaultJdbcConnectorForFeaturestore(Featurestore featurestore, String databaseName,
+  public void createDefaultJdbcConnectorForOfflineFeaturestore(Featurestore featurestore, String databaseName,
     String description) throws FeaturestoreException {
     String hiveEndpoint = settings.getHiveServerHostName(false);
     String connectionString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
@@ -296,6 +297,37 @@ public class FeaturestoreJdbcConnectorController {
       throws FeaturestoreException {
     FeaturestoreJdbcConnector featurestoreJdbcConnector = verifyJdbcConnectorId(id, featurestore);
     return new FeaturestoreJdbcConnectorDTO(featurestoreJdbcConnector);
+  }
+  
+  /**
+   * Utility function for create a JDBC connection to the online featurestore for a particlar user.
+   *
+   * @param project the project that owns the online db
+   * @param onlineDbUsername the db-username of the connection
+   * @param featurestore the featurestore metadata
+   * @return DTO of the newly created connector
+   * @throws FeaturestoreException
+   */
+  public FeaturestoreJdbcConnectorDTO createJdbcConnectorForOnlineFeaturestore(Project project, String onlineDbUsername,
+    Featurestore featurestore) throws FeaturestoreException {
+    String hostname = settings.getHopsworksIp();
+    String port = Integer.toString(FeaturestoreConstants.ONLINE_FEATURE_STORE_PORT);
+    String dbName = project.getName();
+    String connectionString =
+      "jdbc:mysql://" + hostname + ":" + port + "/" + dbName;
+    String arguments = FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
+      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
+      FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername;
+    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
+    featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
+    featurestoreJdbcConnectorDTO.setDescription("JDBC connection to Hopsworks Project Online " +
+      "Feature Store NDB Database for user: " + onlineDbUsername);
+    featurestoreJdbcConnectorDTO.setArguments(arguments);
+    featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.JDBC);
+    featurestoreJdbcConnectorDTO.setName(onlineDbUsername +
+      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
+    featurestoreJdbcConnectorDTO.setFeaturestoreId(featurestore.getId());
+    return createFeaturestoreJdbcConnector(featurestore, featurestoreJdbcConnectorDTO);
   }
 
 }

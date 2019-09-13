@@ -88,7 +88,7 @@ public class FolderNameValidator {
       throw new IllegalArgumentException("Project name is null");
     }
     if (name.length() > 30) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_PROJECT_NAME_TOO_LONG, Level.FINE);      
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_PROJECT_NAME_TOO_LONG, Level.FINE);
     }
 
     for (String reservedName : projectUtils.getReservedProjectNames()) {
