@@ -157,6 +157,7 @@
             <p:column headerText="Hostname">  
               <h:outputText value="#{command.hostId}" />
             </p:column>
+            <p:column headerText="Timestamp" sortBy="#{command.created}"><h:outputText value="#{command.created}"/></p:column>
             <p:column headerText="Operation"><h:outputText value="#{command.op}"/></p:column>
             <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>                  
             <p:column headerText="Command"  style="width:750px;"><h:outputText value="#{command.toString()}"/></p:column>
@@ -184,6 +185,7 @@
             <p:column headerText="Hostname">  
               <h:outputText value="#{command.hostId}" />
             </p:column>
+            <p:column headerText="Timestamp" sortBy="#{command.created}"><h:outputText value="#{command.created}"/></p:column>
             <p:column headerText="Operation"><h:outputText value="#{command.op}"/></p:column>
             <p:column headerText="Status"><h:outputText value="#{command.status}"/></p:column>                  
             <p:column headerText="Command"  style="width:750px;"><h:outputText value="#{command.toString()}"/></p:column>
