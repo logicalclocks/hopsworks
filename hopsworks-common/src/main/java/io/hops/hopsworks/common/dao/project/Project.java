@@ -87,6 +87,8 @@ import javax.persistence.ManyToMany;
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Project.findAll", query = "SELECT t FROM Project t"),
+  @NamedQuery(name = "Project.findById",
+      query = "SELECT t FROM Project t WHERE t.id = :id"),
   @NamedQuery(name = "Project.findByName",
       query = "SELECT t FROM Project t WHERE t.name = :name"),
   @NamedQuery(name = "Project.findByOwner",

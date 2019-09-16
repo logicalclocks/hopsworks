@@ -163,14 +163,14 @@ public class KafkaService {
   }
   
   @PUT
-  @Path("/topics/{topic}/shared")
+  @Path("/topics/{topic}/shared/{destProjectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles()
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, SharedProjectDTO sharedProjectDTO)
+  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectId") Integer destProjectId)
     throws KafkaException, ProjectException, UserException {
     
-    kafkaController.shareTopicWithProject(project, topicName, sharedProjectDTO);
+    kafkaController.shareTopicWithProject(project, topicName, destProjectId);
     
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The topic has been shared.");
@@ -179,6 +179,50 @@ public class KafkaService {
   
   /*********************** IN PROGRESS ********************************/
 
+  @DELETE
+  @Path("/topics/{topic}/shared/{destProjectId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles()
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response unshareTopicFromProject(@PathParam("topic") String topicName,
+    @PathParam("destProjectId") Integer destProjectId) throws KafkaException, ProjectException {
+    
+    LOGGER.info("Unshare topic: " + topicName + ", with: " + destProjectId);
+    kafkaController.unshareTopic(project, topicName, destProjectId);
+    
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSuccessMessage("Topic has been unshared.");
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+
+//  @DELETE
+//  @Path("/topic/{topic}/unshare/{projectId}")
+//  @Produces(MediaType.APPLICATION_JSON)
+//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+//  public Response unShareTopic(@PathParam("topic") String topicName, @PathParam("projectId") int projectId) throws
+//    KafkaException {
+//    RESTApiJsonResponse json = new RESTApiJsonResponse();
+//
+//    kafkaFacade.unShareTopic(topicName, project.getId());
+//    kafkaFacade.removeAclFromTopic(topicName, project);
+//    json.setSuccessMessage("Topic has been removed from shared.");
+//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+//  }
+//
+//  @DELETE
+//  @Path("/topic/{topic}/unshare")
+//  @Produces(MediaType.APPLICATION_JSON)
+//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+//  public Response unShareTopicFromProject(@PathParam("topic") String topicName) throws KafkaException {
+//    RESTApiJsonResponse json = new RESTApiJsonResponse();
+//
+//    kafkaFacade.unShareTopic(topicName, project.getId());
+//    kafkaFacade.removeAclFromTopic(topicName, project);
+//    json.setSuccessMessage("Topic has been removed from shared.");
+//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+//  }
   
   
   /********************** TODO ***************************/
@@ -230,35 +274,6 @@ public class KafkaService {
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-  
-  @DELETE
-  @Path("/topic/{topic}/unshare/{projectId}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unShareTopic(@PathParam("topic") String topicName, @PathParam("projectId") int projectId) throws
-      KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    kafkaFacade.unShareTopic(topicName, project.getId());
-    kafkaFacade.removeAclFromTopic(topicName, project);
-    json.setSuccessMessage("Topic has been removed from shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-  }
-
-  @DELETE
-  @Path("/topic/{topic}/unshare")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unShareTopicFromProject(@PathParam("topic") String topicName) throws KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    kafkaFacade.unShareTopic(topicName, project.getId());
-    kafkaFacade.removeAclFromTopic(topicName, project);
-    json.setSuccessMessage("Topic has been removed from shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @GET

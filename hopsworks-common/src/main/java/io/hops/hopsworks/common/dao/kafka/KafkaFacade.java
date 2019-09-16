@@ -359,12 +359,8 @@ public class KafkaFacade {
     em.flush();
   }
   
-  public void unShareTopic(String topicName, Integer ownerProjectId) throws KafkaException {
-    SharedTopics pt = em.find(SharedTopics.class, new SharedTopicsPK(topicName, ownerProjectId));
-    if (pt == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE, "topic: " + topicName);
-    }
-    em.remove(pt);
+  public void unshareTopic(SharedTopics st) {
+    em.remove(st);
   }
 
   public List<SharedProjectDTO> topicIsSharedTo(String topicName,

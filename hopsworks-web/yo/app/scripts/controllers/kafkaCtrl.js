@@ -352,13 +352,11 @@ angular.module('hopsWorksApp')
               ModalService.selectProject('lg', true, self.projectId,
                       "Select a Project to share the topic with.").then(
                       function (success) {
-                        var destProj = {};
-                        destProj.id = success.projectId;
-                        KafkaService.shareTopic(self.projectId, topicName, destProj).then(
+                        KafkaService.shareTopic(self.projectId, topicName, success.projectId).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
-                                  growl.success(success.data.successMessage, {title: 'Topic shared successfully with' +
-                                      ' project: ' + destProj.id, ttl: 5000});
+                                  growl.success(success.data.successMessage, {
+                                      title: 'Topic shared successfully.',ttl: 5000});
                                 }, function (error) {
                                 if (typeof error.data.usrMsg !== 'undefined') {
                                     growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
@@ -371,26 +369,28 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
-            
-            //operation done from topic
-            self.unshareTopic = function(topicName, project) {
 
-                        KafkaService.unshareTopic(self.projectId, topicName, project.id).then(
-                                function (success) {
-                                  self.topicIsSharedTo(topicName);
-                                  growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) from project: ' + project.name, ttl: 2000});
-                                }, function (error) {
-                                if (typeof error.data.usrMsg !== 'undefined') {
-                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                                } else {
-                                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                                }
-                        });
-            };
+              //operation done from topic
+              self.unshareTopic = function (topicName, project) {
+                  KafkaService.unshareTopic(self.projectId, topicName, project.id).then(
+                      function (success) {
+                          self.topicIsSharedTo(topicName);
+                          growl.success(success.data.successMessage, {
+                              title: 'Topic share removed (unshared) from project: ' + project.name,
+                              ttl: 2000
+                          });
+                      }, function (error) {
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                          }
+                      });
+              };
             
             //operation done from project
-            self.unshareTopicFromProject =function (topicName){
-                KafkaService.unshareTopicFromProject(self.projectId, topicName).then(
+            self.unshareTopicFromProject = function (ownerProjectId, topicName){
+                KafkaService.unshareTopic(ownerProjectId, topicName, self.projectId).then(
                         function (success) {
                                   self.getAllSharedTopics();
                                   growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) from project:.', ttl: 2000});

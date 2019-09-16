@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
-import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -212,10 +211,10 @@ public class KafkaController {
     return getTopicDetailsFromKafkaCluster(topicName);
   }
   
-  public void shareTopicWithProject(Project project, String topicName, SharedProjectDTO sharedProjectDTO) throws
+  public void shareTopicWithProject(Project project, String topicName, Integer destProjectId) throws
     ProjectException, KafkaException, UserException {
     
-    if (project.getId().equals(sharedProjectDTO.getId())) {
+    if (project.getId().equals(destProjectId)) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE);
     }
     
@@ -223,17 +222,17 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
     
-    if (!projectFacade.find(sharedProjectDTO.getId()).isPresent()) {
+    if (!projectFacade.find(destProjectId).isPresent()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-        "Could not find project: " + sharedProjectDTO.getId());
+        "Could not find project: " + destProjectId);
     }
     
-    if (kafkaFacade.findSharedTopicByProjectAndTopic(project.getId(), topicName).isPresent()) {
+    if (kafkaFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
     }
-    kafkaFacade.shareTopic(project, topicName, sharedProjectDTO.getId());
+    kafkaFacade.shareTopic(project, topicName, destProjectId);
     //By default, all members of the project are granted full permissions on the topic
-    addFullPermissionAclsToTopic(sharedProjectDTO.getId(), topicName, project.getId());
+    addFullPermissionAclsToTopic(destProjectId, topicName, project.getId());
   }
   
   private void addFullPermissionAclsToTopic(Integer aclProjectId, String topicName, Integer projectId)
@@ -334,6 +333,21 @@ public class KafkaController {
     }
   }
   
+  public void unshareTopic(Project ownerProject, String topicName, Integer destProjectId)
+    throws ProjectException, KafkaException {
+    
+    Project destProject = projectFacade.findById(destProjectId).orElseThrow(() ->
+      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + destProjectId));
+    
+    SharedTopics st = kafkaFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).orElseThrow(() ->
+      new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
+        "topic: " + topicName + ", project: " + destProjectId));
+    
+    kafkaFacade.unshareTopic(st);
+    
+    kafkaFacade.removeAclFromTopic(topicName, destProject);
+  }
+  
   public String getKafkaCertPaths(Project project) {
     UserCerts userCert = userCerts.findUserCert(project.getName(), project.
         getOwner().getUsername());
@@ -427,7 +441,7 @@ public class KafkaController {
     List<SharedTopics> res = kafkaFacade.findSharedTopicsByProject(projectId);
     List<TopicDTO> topics = new ArrayList<>();
     for (SharedTopics pt : res) {
-      topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName()));
+      topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), pt.getProjectId()));
     }
     return topics;
   }
