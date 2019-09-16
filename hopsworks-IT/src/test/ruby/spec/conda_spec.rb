@@ -198,6 +198,30 @@ describe "On #{ENV['OS']}" do
             expect(lib_name[:versions].count).to be >= 1
           end
 
+          it 'should fail to search if library contains forbidden chars - conda' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'conda', '`touch /tmp/hello`', 'defaults')
+            expect_status(422)
+          end
+
+          it 'should fail to search if library contains forbidden chars - pip' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'pip', '`touch /tmp/hello`')
+            expect_status(422)
+          end
+
+          it 'should fail to search if package manager contains forbidden chars' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'pip&', 'hello')
+            expect_status(422)
+          end
+
+          it 'should fail to search if channel contains forbidden chars' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            search_library(@project[:id], @project[:python_version], 'conda', 'hello', 'https%3A%2F%2Fhello.com%2F%20%26test')
+            expect_status(422)
+          end
+
           it 'should fail to install library if package manager not set' do
             @project = create_env_and_update_project(@project, python_version, true)
             install_library(@project[:id], @project[:python_version], 'dropbox', '', '9.0.0', 'CPU', conda_channel)
@@ -219,6 +243,31 @@ describe "On #{ENV['OS']}" do
           it 'should fail to install library if env version wrong' do
             @project = create_env_and_update_project(@project, python_version, true)
             install_library(@project[:id], python_version_2, 'dropbox', 'conda', '9.0.0', 'CPU', conda_channel)
+            expect_status(404)
+          end
+
+          it 'should fail to install library if library contains forbidden chars url encoded' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], '%26%20touch%20%2Ftmp%2Ftest', 'conda', '9.0.0', 'CPU', conda_channel)
+            expect_status(422)
+          end
+
+          it 'should fail to install library if version number contains forbidden chars' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'dropbox', 'conda', 'rm -rf *', 'CPU', conda_channel)
+            expect_status(422)
+          end
+
+          it 'should fail to install library if conda channel contains forbidden chars' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], @project[:python_version], 'dropbox', 'conda',
+                            '9.0.0', 'CPU', 'https%3A%2F%2Fhello.com%2F%20%26test')
+            expect_status(422)
+          end
+
+          it 'should fail if you try to use another package manager' do
+            @project = create_env_and_update_project(@project, python_version, true)
+            install_library(@project[:id], python_version_2, 'dropbox', 'cargo', '9.0.0', 'CPU', conda_channel)
             expect_status(404)
           end
 

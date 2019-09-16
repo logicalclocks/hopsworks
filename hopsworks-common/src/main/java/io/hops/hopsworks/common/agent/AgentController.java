@@ -509,7 +509,6 @@ public class AgentController {
     }
     for (final SystemCommand sc : heartbeat.systemCommands) {
       final Integer id = sc.getId();
-      final SystemCommandFacade.OP op = sc.getOp();
       final SystemCommandFacade.STATUS status = sc.getStatus();
       final SystemCommand systemCommand = systemCommandFacade.findById(id);
       if (systemCommand == null) {
