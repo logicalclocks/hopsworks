@@ -42,8 +42,6 @@ package io.hops.hopsworks.api.kafka;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
@@ -66,7 +64,6 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -80,7 +77,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -100,10 +96,6 @@ public class KafkaService {
   private KafkaFacade kafkaFacade;
   @EJB
   private KafkaController kafkaController;
-  @EJB
-  private JWTHelper jWTHelper;
-  @EJB
-  private KafkaBuilder kafkaBuilder;
 
   private Project project;
 
@@ -143,7 +135,6 @@ public class KafkaService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removeTopic(@PathParam("topic") String topicName) throws KafkaException, ServiceException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    //remove the topic from the database and Kafka cluster
     kafkaController.removeTopicFromProject(project, topicName);
     json.setSuccessMessage("The topic has been removed.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -177,8 +168,6 @@ public class KafkaService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
   
-  /*********************** IN PROGRESS ********************************/
-
   @DELETE
   @Path("/topics/{topic}/shared/{destProjectId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -194,35 +183,9 @@ public class KafkaService {
     json.setSuccessMessage("Topic has been unshared.");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-
-//  @DELETE
-//  @Path("/topic/{topic}/unshare/{projectId}")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response unShareTopic(@PathParam("topic") String topicName, @PathParam("projectId") int projectId) throws
-//    KafkaException {
-//    RESTApiJsonResponse json = new RESTApiJsonResponse();
-//
-//    kafkaFacade.unShareTopic(topicName, project.getId());
-//    kafkaFacade.removeAclFromTopic(topicName, project);
-//    json.setSuccessMessage("Topic has been removed from shared.");
-//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-//  }
-//
-//  @DELETE
-//  @Path("/topic/{topic}/unshare")
-//  @Produces(MediaType.APPLICATION_JSON)
-//  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-//  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-//  public Response unShareTopicFromProject(@PathParam("topic") String topicName) throws KafkaException {
-//    RESTApiJsonResponse json = new RESTApiJsonResponse();
-//
-//    kafkaFacade.unShareTopic(topicName, project.getId());
-//    kafkaFacade.removeAclFromTopic(topicName, project);
-//    json.setSuccessMessage("Topic has been removed from shared.");
-//    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
-//  }
+  
+  /*********************** IN PROGRESS ********************************/
+  
   
   
   /********************** TODO ***************************/
@@ -237,20 +200,10 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics(
-    @BeanParam Pagination pagination,
-    @BeanParam TopicsBeanParam topicsBeanParam,
-    @Context UriInfo uriInfo) {
+  public Response getTopics() {
     List<TopicDTO> listTopics = kafkaController.findTopicDtosByProject(project);
     GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-//    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
-//    resourceRequest.setOffset(pagination.getOffset());
-//    resourceRequest.setLimit(pagination.getLimit());
-//    resourceRequest.setSort(topicsBeanParam.getSortBySet());
-//    resourceRequest.setFilter(topicsBeanParam.getFilter());
-//    TopicDTO topicDTO = kafkaBuilder.buildItemsTopic(uriInfo, Optional.of(resourceRequest), project);
-//    return Response.ok().entity(topicDTO).build();
   }
 
   @GET
