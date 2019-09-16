@@ -29,13 +29,10 @@ import javax.ws.rs.core.UriInfo;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LibrarySearchBuilder {
-
-  private static final Logger LOGGER = Logger.getLogger(LibrarySearchBuilder.class.getName());
 
   @EJB
   private LibraryController libraryController;

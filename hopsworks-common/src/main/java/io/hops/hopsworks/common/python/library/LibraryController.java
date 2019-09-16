@@ -69,11 +69,11 @@ public class LibraryController {
   private LibraryFacade libraryFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-  
+
   public PythonDep getPythonDep(String dependency, Project project) {
     return libraryFacade.findByDependencyAndProject(dependency, project);
   }
-  
+
   public void uninstallLibrary(Project project, String libName) throws ServiceException, GenericException {
     for (PythonDep dep : project.getPythonDepCollection()) {
       if (dep.getDependency().equals(libName)) {
@@ -83,7 +83,7 @@ public class LibraryController {
       }
     }
   }
-  
+
   public List<PythonDep> listProject(Project proj) {
     List<PythonDep> libs = new ArrayList<>();
     Collection<PythonDep> objs = proj.getPythonDepCollection();
@@ -286,7 +286,7 @@ public class LibraryController {
           "errCode: " + errCode + ", " + processResult.getStderr());
       }
       if (errCode == 1 || errCode == 23) { // 1 for conda, 23 for pip
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.WARNING,
+        throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_NOT_FOUND, Level.FINE,
           "errCode: " + errCode + ", " + processResult.getStderr());
       } else if (errCode != 0) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_LIST_LIB_ERROR, Level.WARNING,
@@ -297,8 +297,7 @@ public class LibraryController {
         "lib: " + library, ex.getMessage(), ex);
     }
     String result = processResult.getStdout();
-    String[] lines = (result != null && !result.isEmpty())? result.split("\n") : new String[0];
-    return lines;
+    return (result != null && !result.isEmpty())? result.split("\n") : new String[0];
   }
   
 }
