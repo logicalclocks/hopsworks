@@ -37,7 +37,7 @@ angular.module('hopsWorksApp')
             self.newJobName = self.projectId + "_newjob";
 
             //State
-            self.showCart = false
+            self.showCart = true
             self.configureJob = true;
             self.fgFilter = "";
             self.fFilter = "";
@@ -48,7 +48,7 @@ angular.module('hopsWorksApp')
             self.featuresToDate.setMinutes(self.featuresToDate.getMinutes() + 60 * 24);
             self.featuresFromDate = new Date();
             self.featuresFromDate.setMinutes(self.featuresFromDate.getMinutes() - 60 * 24 * 30 * 4);
-            self.featuresPageSize = 10;
+            self.featuresPageSize = 20;
             self.selectFeatureStage = true;
             self.phase = 0
             self.working = false

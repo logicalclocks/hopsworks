@@ -396,8 +396,7 @@
                                                        md-placeholder="To"></md-datepicker>
                                     </label>
                                 </div>
-                                <div class="col-sm-3 form-group"
-                                     ng-if="featurestoreCtrl.fFilter != '' || featurestoreCtrl.featureSearchFgFilter != '' || featurestoreCtrl.featureSearchFgVersionFilter != ''">
+                                <div class="col-sm-3 form-group">
                                     <div class="pull-right btn-group">
                                         <label>Features per page:
                                             <input type="number" min="1"
@@ -509,11 +508,11 @@
                                         <td class="fs-table">
                                             <span ng-if="result.entity === 1">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px"> Feature in Feature Group</span>
+                                                <span style="margin-left:5px">Feature Group</span>
                                             </span>
                                             <span ng-if="result.entity === 0">
                                                 <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px"> Feature in Training Dataset</span>
+                                                <span style="margin-left:5px">Training Dataset</span>
                                             </span>
                                         </td>
                                         <td class="fs-table">{{result.name}}</td>
@@ -644,7 +643,7 @@
                                 <div class="fs_card card">
                                     <div class="fs_card card-block">
                                         <h4 class="fs_card card-title fs_card_title" style="color:#555">Details</h4>
-                                        <ul class="list-unstyled">
+                                        <ul class="list-unstyled" style="overflow-wrap: break-word">
                                             <li>
                                                 <span style="font-weight:700">Id:</span>
                                                 {{featurestoreCtrl.featurestore.featurestoreId}}

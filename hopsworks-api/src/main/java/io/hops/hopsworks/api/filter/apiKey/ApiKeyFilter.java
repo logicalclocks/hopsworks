@@ -40,6 +40,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -50,9 +51,10 @@ import java.util.logging.Logger;
 @ApiKeyRequired
 @Priority(Priorities.AUTHENTICATION - 1)
 public class ApiKeyFilter implements ContainerRequestFilter {
-  private final static Logger LOGGER = Logger.getLogger(ApiKeyFilter.class.getName());
-  private final static String WWW_AUTHENTICATE_VALUE = "ApiKey realm=\"Cauth Realm\"";
-  public final static String API_KEY = "ApiKey ";
+  private static final Logger LOGGER = Logger.getLogger(ApiKeyFilter.class.getName());
+  private static final String WWW_AUTHENTICATE_VALUE = "ApiKey realm=\"Cauth Realm\"";
+
+  public static final String API_KEY = "ApiKey ";
   
   @EJB
   private ApiKeyController apiKeyController;
@@ -77,7 +79,7 @@ public class ApiKeyFilter implements ContainerRequestFilter {
       return;
     }
     if (authorizationHeader.startsWith(BEARER)) {
-      LOGGER.log(Level.INFO, "{0}token found, leaving Api key interceptor", BEARER);
+      LOGGER.log(Level.FINEST, "{0}token found, leaving Api key interceptor", BEARER);
       return;
     }
     if (!authorizationHeader.startsWith(API_KEY)) {
@@ -111,7 +113,7 @@ public class ApiKeyFilter implements ContainerRequestFilter {
   
   private void checkRole(List<String> userRoles) throws ApiKeyException {
     Set<String> annotationRoles = getAllowedRoles();
-    if (annotationRoles == null || annotationRoles.isEmpty() || userRoles == null || userRoles.isEmpty()) {
+    if (annotationRoles.isEmpty() || userRoles == null || userRoles.isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_ROLE_CONTROL_EXCEPTION, Level.FINE);
     }
     annotationRoles.retainAll(userRoles);
@@ -122,7 +124,7 @@ public class ApiKeyFilter implements ContainerRequestFilter {
   
   private void checkScope(Set<ApiScope> scopes) throws ApiKeyException {
     Set<ApiScope> annotationScopes = getAllowedScopes();
-    if (annotationScopes == null || annotationScopes.isEmpty() || scopes == null || scopes.isEmpty()) {
+    if (annotationScopes.isEmpty() || scopes == null || scopes.isEmpty()) {
       throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_SCOPE_CONTROL_EXCEPTION, Level.FINE);
     }
     annotationScopes.retainAll(scopes);
@@ -134,19 +136,17 @@ public class ApiKeyFilter implements ContainerRequestFilter {
   private Set<String> getAllowedRoles() {
     ApiKeyRequired rolesAnnotation = getAnnotation();
     if (rolesAnnotation == null) {
-      return null;
+      return Collections.emptySet();
     }
-    Set<String> rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.allowedUserRoles()));
-    return rolesSet;
+    return new HashSet<>(Arrays.asList(rolesAnnotation.allowedUserRoles()));
   }
   
   private Set<ApiScope> getAllowedScopes() {
     ApiKeyRequired scopeAnnotation = getAnnotation();
     if (scopeAnnotation == null) {
-      return null;
+      return Collections.emptySet();
     }
-    Set<ApiScope> scopesSet = new HashSet<>(Arrays.asList(scopeAnnotation.acceptedScopes()));
-    return scopesSet;
+    return new HashSet<>(Arrays.asList(scopeAnnotation.acceptedScopes()));
   }
   
   private ApiKeyRequired getAnnotation() {
@@ -154,7 +154,6 @@ public class ApiKeyFilter implements ContainerRequestFilter {
     Method method = resourceInfo.getResourceMethod();
     ApiKeyRequired methodRolesAnnotation = method.getAnnotation(ApiKeyRequired.class);
     ApiKeyRequired classRolesAnnotation = resourceClass.getAnnotation(ApiKeyRequired.class);
-    ApiKeyRequired rolesAnnotation = methodRolesAnnotation != null ? methodRolesAnnotation : classRolesAnnotation;
-    return rolesAnnotation;
+    return methodRolesAnnotation != null ? methodRolesAnnotation : classRolesAnnotation;
   }
 }
