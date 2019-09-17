@@ -88,7 +88,7 @@ public class FeaturestoreClientSettingsDTO {
   private String hopsfsConnectorDtoType = FeaturestoreConstants.HOPSFS_CONNECTOR_DTO_TYPE;
   private String featuregroupType = FeaturestoreConstants.FEATUREGROUP_TYPE;
   private String trainingDatasetType = FeaturestoreConstants.TRAINING_DATASET_TYPE;
-  private List<String> suggestedFeatureTypes = FeaturestoreConstants.SUGGESTED_FEATURE_TYPES;
+  private List<String> suggestedHiveFeatureTypes = FeaturestoreConstants.SUGGESTED_HIVE_FEATURE_TYPES;
   private String featurestoreUtil4jMainClass = FeaturestoreConstants.FEATURESTORE_UTIL_4J_MAIN_CLASS;
   private String featurestoreUtil4jArgsDataset = FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET;
   private String featurestoreUtilPythonMainClass = FeaturestoreConstants.FEATURESTORE_UTIL_PYTHON_MAIN_CLASS;
@@ -97,6 +97,7 @@ public class FeaturestoreClientSettingsDTO {
   private String s3BucketTrainingDatasetsFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
   private List<String> featureImportConnectors = FeaturestoreConstants.FEATURE_IMPORT_CONNECTORS;
   private Boolean onlineFeaturestoreEnabled = false;
+  private List<String> suggestedMysqlFeatureTypes = FeaturestoreConstants.SUGGESTED_MYSQL_DATA_TYPES;
   
   
   public FeaturestoreClientSettingsDTO() {
@@ -464,12 +465,12 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public List<String> getSuggestedFeatureTypes() {
-    return suggestedFeatureTypes;
+  public List<String> getSuggestedHiveFeatureTypes() {
+    return suggestedHiveFeatureTypes;
   }
   
-  public void setSuggestedFeatureTypes(List<String> suggestedFeatureTypes) {
-    this.suggestedFeatureTypes = suggestedFeatureTypes;
+  public void setSuggestedHiveFeatureTypes(List<String> suggestedHiveFeatureTypes) {
+    this.suggestedHiveFeatureTypes = suggestedHiveFeatureTypes;
   }
   
   @XmlElement
@@ -542,5 +543,14 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setOnlineFeaturestoreEnabled(Boolean onlineFeaturestoreEnabled) {
     this.onlineFeaturestoreEnabled = onlineFeaturestoreEnabled;
+  }
+  
+  @XmlElement
+  public List<String> getSuggestedMysqlFeatureTypes() {
+    return suggestedMysqlFeatureTypes;
+  }
+  
+  public void setSuggestedMysqlFeatureTypes(List<String> suggestedMysqlFeatureTypes) {
+    this.suggestedMysqlFeatureTypes = suggestedMysqlFeatureTypes;
   }
 }

@@ -311,8 +311,7 @@ public class FeaturestoreService {
   /**
    * Storage Connectors sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the storage connector service
    * @throws FeaturestoreException
    */

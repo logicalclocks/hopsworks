@@ -32,8 +32,17 @@ public class OnlineFeaturegroupDTO {
   private Integer id;
   private String dbName;
   private String tableName;
+  private String tableType;
+  private Integer tableRows;
+  private Double size;
   
   public OnlineFeaturegroupDTO() {
+  }
+  
+  public OnlineFeaturegroupDTO(OnlineFeaturegroup onlineFeaturegroup) {
+    this.id = onlineFeaturegroup.getId();
+    this.dbName = onlineFeaturegroup.getDbName();
+    this.tableName = onlineFeaturegroup.getTableName();
   }
   
   public OnlineFeaturegroupDTO(Integer id, String dbName, String tableName) {
@@ -69,12 +78,42 @@ public class OnlineFeaturegroupDTO {
     this.tableName = tableName;
   }
   
+  @XmlElement
+  public String getTableType() {
+    return tableType;
+  }
+  
+  public void setTableType(String tableType) {
+    this.tableType = tableType;
+  }
+  
+  @XmlElement
+  public Integer getTableRows() {
+    return tableRows;
+  }
+  
+  public void setTableRows(Integer tableRows) {
+    this.tableRows = tableRows;
+  }
+  
+  @XmlElement
+  public Double getSize() {
+    return size;
+  }
+  
+  public void setSize(Double size) {
+    this.size = size;
+  }
+  
   @Override
   public String toString() {
     return "OnlineFeaturegroupDTO{" +
       "id=" + id +
       ", dbName='" + dbName + '\'' +
       ", tableName='" + tableName + '\'' +
+      ", tableType='" + tableType + '\'' +
+      ", tableRows=" + tableRows +
+      ", size=" + size +
       '}';
   }
 }

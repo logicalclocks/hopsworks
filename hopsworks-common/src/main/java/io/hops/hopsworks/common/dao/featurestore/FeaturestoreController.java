@@ -206,7 +206,7 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     if (settings.isOnlineFeaturestore()) {
-      onlineFeaturestoreController.setupOnlineFeaturestoreUser(project, user, featurestore);
+      onlineFeaturestoreController.setupOnlineFeaturestore(project, user, featurestore);
     }
     return featurestore;
   }

@@ -44,7 +44,6 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
@@ -56,6 +55,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.project.MembersDTO;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -102,11 +102,14 @@ public class ProjectMembersService {
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
-  private FeaturestoreController featurestoreController;
+  private Settings settings;
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  
   private Integer projectId;
 
   public ProjectMembersService() {
@@ -155,12 +158,15 @@ public class ProjectMembersService {
     if (project != null) {
       //add new members of the project
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+      //if online-featurestore service is enabled in the project, give new member access to it
+      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
+        settings.isOnlineFeaturestore()) {
         for (ProjectTeam pt : members.getProjectTeam()) {
+          onlineFeaturestoreController.createDatabaseUser(pt.getUser(), project);
           FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
             featurestoreController.getFeaturestoreDbName(project));
-          Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-          onlineFeaturestoreController.setupOnlineFeaturestoreUser(project, pt.getUser(), featurestore);
+          onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, pt.getUser(),
+            featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
         }
       }
     }
@@ -193,7 +199,7 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
-      @Context SecurityContext sc) throws ProjectException, UserException {
+      @Context SecurityContext sc) throws ProjectException, UserException, FeaturestoreException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -208,11 +214,16 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
     projectController.updateMemberRole(project, user, email, role);
-    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      Users member = projectTeamFacade.findUserByEmail(email);      
-      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member);
+    //Update user-privileges on the online feature store
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)
+      && settings.isOnlineFeaturestore()) {
+      Users member = projectTeamFacade.findUserByEmail(email);
+      onlineFeaturestoreController.createDatabaseUser(member, project);
+      FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
+        featurestoreController.getFeaturestoreDbName(project));
+      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member,
+        featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
     }
-
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -224,8 +235,8 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
-      throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
-      JobException, TensorBoardException {
+    throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
+    JobException, TensorBoardException, FeaturestoreException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users reqUser = jWTHelper.getUserPrincipal(sc);
@@ -252,7 +263,7 @@ public class ProjectMembersService {
 
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Users member = projectTeamFacade.findUserByEmail(email);      
-      onlineFeaturestoreController.rmUserOnlineFeatureStore(project.getName(), member);
+      onlineFeaturestoreController.removeOnlineFeaturestoreUser(project, member);
     }
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

@@ -118,7 +118,7 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
       ArrayList<FeatureDTO> featureDTOs = new ArrayList<>();
       for (Object[] featureObject : featureObjects) {
         FeatureDTO featureDTO = new FeatureDTO((String) featureObject[0], (String) featureObject[1],
-            (String) featureObject[2], false, true);
+            (String) featureObject[2], false, true, null);
         featureDTOs.add(featureDTO);
       }
       return featureDTOs;
@@ -254,6 +254,18 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
   @Override
   protected EntityManager getEntityManager() {
     return em;
+  }
+  
+
+  /**
+   * Updates an existing Cached Feature Group
+   *
+   * @param cachedFeaturegroup the entity to update
+   * @return the updated entity
+   */
+  public CachedFeaturegroup updateMetadata(CachedFeaturegroup cachedFeaturegroup) {
+    em.merge(cachedFeaturegroup);
+    return cachedFeaturegroup;
   }
 
 }

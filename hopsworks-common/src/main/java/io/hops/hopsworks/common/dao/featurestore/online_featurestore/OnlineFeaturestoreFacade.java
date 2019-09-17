@@ -16,23 +16,31 @@
 
 package io.hops.hopsworks.common.dao.featurestore.online_featurestore;
 
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * A facade for the online feature store databases (separate from the Hopsworks databases.
+ * A facade for the online feature store databases (separate from the Hopsworks databases).
  * This interface is supposed to be used for any DDL queries on online feature store databases. DML and analytic
  * queries are done through JDBC and client-libraries.
+ *
+ * Online-Featurestore has its own JDBC Connection Pool defined in persistence unit `featurestorePU`
  */
 @Stateless
 public class OnlineFeaturestoreFacade {
-  private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreFacade.class.getName());
   @PersistenceContext(unitName = "featurestorePU")
   private EntityManager em;
+  private static final Logger LOGGER = Logger.getLogger(FeaturestoreFacade.class.getName());
   
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
@@ -51,5 +59,191 @@ public class OnlineFeaturestoreFacade {
     } catch (NoResultException e) {
       return null;
     }
+  }
+  
+  /**
+   * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
+   *
+   * @param dbName the name of the database
+   * @param tableName the name of the table
+   * @return the size in MB
+   */
+  public Double getTblSize(String tableName, String dbName) {
+    try {
+      return ((BigDecimal) em.createNativeQuery(
+        "SELECT round(((`TABLES`.`data_length` + `TABLES`.`index_length`) / 1024 / 1024), 2) `size` " +
+          "FROM information_schema.`TABLES` WHERE table_schema=? AND table_name=?;")
+        .setParameter(1, dbName)
+        .setParameter(2, tableName)
+        .getSingleResult()).doubleValue();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+  
+  /**
+   * Gets the features of a online featuregroup from the MySQL metadata
+   *
+   * @param tableName the name of the table of the online featuregroup
+   * @param db the name of the mysql database
+   * @return list of featureDTOs with name,type,comment
+   */
+  public List<FeatureDTO> getMySQLFeatures(String tableName, String db) {
+    List<Object[]> featureObjects = em.createNativeQuery("SELECT `COLUMNS`.`COLUMN_NAME`, `COLUMNS`.`COLUMN_TYPE`, " +
+      "`COLUMNS`.`COLUMN_COMMENT` FROM " +
+      "INFORMATION_SCHEMA.`COLUMNS` WHERE `COLUMNS`.`TABLE_NAME`=? AND `COLUMNS`.`TABLE_SCHEMA`=?;")
+      .setParameter(1, tableName)
+      .setParameter(2, db).getResultList();
+    ArrayList<FeatureDTO> featureDTOs = new ArrayList<>();
+    for (Object[] featureObject : featureObjects) {
+      FeatureDTO featureDTO = new FeatureDTO((String) featureObject[0], (String) featureObject[1],
+        (String) featureObject[2]);
+      featureDTOs.add(featureDTO);
+    }
+    return featureDTOs;
+  }
+  
+  /**
+   * Gets the features of a online featuregroup from the MySQL metadata
+   *
+   * @param tableName the name of the table of the online featuregroup
+   * @param db the name of the mysql database
+   * @return list of featureDTOs with name,type,comment
+   */
+  public String getMySQLSchema(String tableName, String db) {
+    List<Object[]> schemaObjects = em.createNativeQuery("SHOW CREATE TABLE `" + db + "`.`" + tableName + "`;")
+      .getResultList();
+    return (String) schemaObjects.get(0)[1];
+  }
+  
+  /**
+   * Gets the type of a MySQL table
+   *
+   * @param tableName name of the table
+   * @param db database where the table resides
+   * @return the table type
+   */
+  public String getMySQLTableType(String tableName, String db) {
+    return (String) em.createNativeQuery("SELECT `TABLES`.`TABLE_TYPE` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
+      + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
+      .setParameter(1, tableName)
+      .setParameter(2, db)
+      .getSingleResult();
+  }
+  
+  /**
+   * Gets the number of rows in a MySQL table
+   *
+   * @param tableName name of the table
+   * @param db database where the table resides
+   * @return the table type
+   */
+  public Integer getMySQLTableRows(String tableName, String db) {
+    return ((BigInteger) em.createNativeQuery("SELECT `TABLES`.`TABLE_ROWS` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
+      + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
+      .setParameter(1, tableName)
+      .setParameter(2, db)
+      .getSingleResult()).intValue();
+  }
+  
+  /**
+   * Create an Online Featurestore Database. Fails if the database already exists.
+   *
+   * @param db name of the table
+   */
+  public void createOnlineFeaturestoreDatabase(String db) {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    //Don't add 'IF EXISTS', this call should fail if the database already exists
+    em.createNativeQuery("CREATE DATABASE " + db + ";").executeUpdate();
+  }
+  
+  /**
+   * Removes an Online Featurestore Database
+   *
+   * @param db name of the table
+   */
+  public void removeOnlineFeaturestoreDatabase(String db) {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    em.createNativeQuery("DROP DATABASE IF EXISTS " + db + ";").executeUpdate();
+  }
+  
+  /**
+   * Create an Online Featurestore Databasse User
+   *
+   * @param user the database username
+   * @param pw the database user password
+   */
+  public void createOnlineFeaturestoreUser(String user, String pw) {
+    LOGGER.severe("CREATING DB USER with PW: " + pw);
+    em.createNativeQuery("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;")
+      .setParameter(1, user)
+      .setParameter(2, pw)
+      .executeUpdate();
+  }
+  
+  /**
+   * Revokes user privileges for a user on a specific online featurestore
+   *
+   * @param dbName name of the MYSQL database
+   * @param dbUser the database username to revoke privileges for
+   */
+  public void revokeUserPrivileges(String dbName, String dbUser) {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    try{
+      em.createNativeQuery("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";").executeUpdate();
+    } catch (Exception e) {
+      //This is fine since it might mean that the user does not have the privileges or does not exist
+    }
+  }
+  
+  /**
+   * Grant database privileges of a "data owner" role in a online featurestore
+   *
+   * @param dbName name of the online featurestore database
+   * @param dbUser the database-username
+   */
+  public void grantDataOwnerPrivileges(String dbName, String dbUser) {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    em.createNativeQuery("GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";").executeUpdate();
+  }
+  
+  /**
+   * Grant database privileges of a "data scientist" role in a online featurestore
+   *
+   * @param dbName name of the online featurestore database
+   * @param dbUser the database-username
+   */
+  public void grantDataScientistPrivileges(String dbName, String dbUser) {
+    em.createNativeQuery("GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";").executeUpdate();
+  }
+  
+  /**
+   * Removes a database user for an online featurestore
+   *
+   * @param dbUser the database-username
+   */
+  public void removeOnlineFeaturestoreUser(String dbUser) {
+    //Prepared statements with parameters can only be done for
+    //WHERE/HAVING Clauses, not names of tables or databases
+    em.createNativeQuery("DROP USER IF EXISTS ?")
+      .setParameter(1, dbUser)
+      .executeUpdate();
+  }
+  
+  /**
+   * Get all users for a particular mysql online feature store database
+   *
+   * @param dbName name of the online featurestore database
+   * @return a list of db-usernames for the database
+   */
+  public List<String> getDatabaseUsers(String dbName) {
+    List<String> users = em.createNativeQuery("SELECT `User` FROM `mysql`.`user` WHERE `User` LIKE ?")
+      .setParameter(1, dbName + "_%")
+      .getResultList();
+    return users;
   }
 }

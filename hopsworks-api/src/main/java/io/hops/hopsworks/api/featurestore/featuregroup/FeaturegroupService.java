@@ -27,6 +27,9 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.FeaturegroupPreview;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -241,7 +244,7 @@ public class FeaturegroupService {
    * Endpoint for retrieving a preview of a featuregroup with a specified id in a specified featurestore
    *
    * @param featuregroupId id of the featuregroup
-   * @return JSON representation of SELECT * from featuregroup LIMIT 20
+   * @return JSON representation of SELECT * from featuregroup LIMIT 20 on online and offline feature tables
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
@@ -252,7 +255,7 @@ public class FeaturegroupService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Preview feature data of a featuregroup",
-      response = RowValueQueryResult.class,
+      response = FeaturegroupPreview.class,
       responseContainer = "List")
   public Response getFeatureGroupPreview(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
@@ -262,10 +265,10 @@ public class FeaturegroupService {
     try {
       FeaturegroupDTO featuregroupDTO =
           featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-      List<RowValueQueryResult> featuresPreview =
+      FeaturegroupPreview featuresPreview =
           featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, user);
-      GenericEntity<List<RowValueQueryResult>> featuresdataGeneric =
-          new GenericEntity<List<RowValueQueryResult>>(featuresPreview) {};
+      GenericEntity<FeaturegroupPreview> featuresdataGeneric =
+          new GenericEntity<FeaturegroupPreview>(featuresPreview) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuresdataGeneric).build();
     } catch (SQLException e) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP.getMessage(), e);
@@ -382,13 +385,18 @@ public class FeaturegroupService {
       @PathParam("featuregroupId") Integer featuregroupId,
       @ApiParam(value = "updateMetadata", example = "true", defaultValue = "false")  @QueryParam("updateMetadata")
           Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
-      @QueryParam("updateStats") Boolean updateStats, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException {
-    if(featuregroupDTO == null){
+      @QueryParam("updateStats") Boolean updateStats, @ApiParam(value = "enableOnline", example = "true",
+    defaultValue = "false") @QueryParam("enableOnline") Boolean enableOnline,
+    @ApiParam(value = "disableOnline", example = "true", defaultValue = "false") @QueryParam("disableOnline")
+      Boolean disableOnline, FeaturegroupDTO featuregroupDTO)
+    throws FeaturestoreException, SQLException {
+    if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }
     updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
     updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
+    enableOnline = featurestoreUtil.enableOnlineGetOrDefault(enableOnline);
+    disableOnline = featurestoreUtil.disableOnlineGetOrDefault(disableOnline);
     verifyIdProvided(featuregroupId);
     featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -396,12 +404,21 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
-    if(updateMetadata || updateStats){
+    if(updateMetadata || updateStats || enableOnline || disableOnline){
       if(updateMetadata) {
         updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
       }
       if(updateStats){
         updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
+      }
+      if(enableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        !((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
+        featuregroupDTO.setDescription(oldFeaturegroupDTO.getDescription());
+        updatedFeaturegroupDTO = featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+      }
+      if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
+        updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
       }
       activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
         project, user, ActivityFlag.SERVICE);

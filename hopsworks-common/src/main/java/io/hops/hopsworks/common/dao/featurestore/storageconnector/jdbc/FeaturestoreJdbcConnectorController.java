@@ -310,6 +310,14 @@ public class FeaturestoreJdbcConnectorController {
    */
   public FeaturestoreJdbcConnectorDTO createJdbcConnectorForOnlineFeaturestore(Project project, String onlineDbUsername,
     Featurestore featurestore) throws FeaturestoreException {
+    String connectorName = onlineDbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
+    List<FeaturestoreStorageConnectorDTO> featurestoreConnectors = getJdbcConnectorsForFeaturestore(featurestore);
+    for (FeaturestoreStorageConnectorDTO storageConnector: featurestoreConnectors) {
+      if(connectorName.equalsIgnoreCase(storageConnector.getName())){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          "a storage connector with that name already exists");
+      }
+    }
     String hostname = settings.getHopsworksIp();
     String port = Integer.toString(FeaturestoreConstants.ONLINE_FEATURE_STORE_PORT);
     String dbName = project.getName();
@@ -324,8 +332,7 @@ public class FeaturestoreJdbcConnectorController {
       "Feature Store NDB Database for user: " + onlineDbUsername);
     featurestoreJdbcConnectorDTO.setArguments(arguments);
     featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.JDBC);
-    featurestoreJdbcConnectorDTO.setName(onlineDbUsername +
-      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
+    featurestoreJdbcConnectorDTO.setName(connectorName);
     featurestoreJdbcConnectorDTO.setFeaturestoreId(featurestore.getId());
     return createFeaturestoreJdbcConnector(featurestore, featurestoreJdbcConnectorDTO);
   }

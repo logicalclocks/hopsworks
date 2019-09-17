@@ -755,6 +755,14 @@ angular.module('hopsWorksApp')
                 if(self.featuregroupsSortKey == "featuregroupType"){
                     return featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType
                 }
+                if(self.featuregroupsSortKey == "onlineEnabled"){
+                    if(featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == self.cachedFeaturegroupType
+                        && featuregroup.versionToGroups[featuregroup.activeVersion].onlineFeaturegroupEnabled){
+                       return "Yes"
+                    } else {
+                        return "No"
+                    }
+                }
                 return featuregroup.name
             }
 

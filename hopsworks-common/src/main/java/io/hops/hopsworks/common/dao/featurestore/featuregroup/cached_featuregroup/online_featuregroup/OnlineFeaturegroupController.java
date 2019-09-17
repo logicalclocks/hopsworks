@@ -17,17 +17,18 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Class controlling the interaction with the online_feature_group table and required business logic
@@ -36,6 +37,8 @@ import java.sql.SQLException;
 public class OnlineFeaturegroupController {
   @EJB
   private OnlineFeaturegroupFacade onlineFeaturegroupFacade;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   
   /**
    * Persists metadata of a new online feature group in the online_feature_group table
@@ -44,6 +47,7 @@ public class OnlineFeaturegroupController {
    * @param tableName name of the MySQL table where the online feature group data is stored
    * @return Entity of the created online feature group
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private OnlineFeaturegroup persistOnlineFeaturegroupMetadata(String dbName, String tableName) {
     OnlineFeaturegroup onlineFeaturegroup = new OnlineFeaturegroup();
     onlineFeaturegroup.setDbName(dbName);
@@ -52,17 +56,109 @@ public class OnlineFeaturegroupController {
     return onlineFeaturegroup;
   }
   
+  /**
+   * Drops an online feature group, both the data-table in the database and the metadata record
+   *
+   * @param onlineFeaturegroup the online featuregroup to delete
+   * @param featurestore the featurestore where the online featuregroup resides
+   * @param user the user making the request
+   * @throws SQLException
+   * @throws FeaturestoreException
+   */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void dropMySQLTable(
-    FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
-    FeaturestoreException, HopsSecurityException {
-    //TODO
+    OnlineFeaturegroup onlineFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
+    FeaturestoreException {
+    //Drop data table
+    String query = "DROP TABLE " + onlineFeaturegroup.getTableName() + ";";
+    onlineFeaturestoreController.executeUpdateJDBCQuery(query, onlineFeaturegroup.getDbName(),
+      featurestore.getProject(), user);
+    //Drop metadata
+    removeOnlineFeaturegroupMetadata(onlineFeaturegroup);
   }
   
-  public OnlineFeaturegroup createMySQLTable(CachedFeaturegroupDTO cachedFeaturegroupDTO, Featurestore featurestore,
-    Users user) {
-    //TODO
-    return null;
+  /**
+   * Removes the metadata of an online feature group
+   *
+   * @param onlineFeaturegroup the online featuregroup
+   * @return the deleted entity
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public OnlineFeaturegroup removeOnlineFeaturegroupMetadata(OnlineFeaturegroup onlineFeaturegroup){
+    onlineFeaturegroupFacade.remove(onlineFeaturegroup);
+    return onlineFeaturegroup;
+  }
+  
+  /**
+   * Creates a new table in the online feature store database
+   *
+   * @param featurestore the featurestore that the featuregroup belongs to
+   * @param user the user making the request
+   * @param featureStr DDL string
+   * @param tableName name of the table to create
+   * @return the created entity
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public OnlineFeaturegroup createMySQLTable(Featurestore featurestore,
+    Users user, String featureStr, String tableName) throws FeaturestoreException, SQLException {
+    String db = featurestore.getProject().getName();
+    String query = "CREATE TABLE " + db + ".`" + tableName + "` " + featureStr;
+    onlineFeaturestoreController.executeUpdateJDBCQuery(query, db, featurestore.getProject(), user);
+    return persistOnlineFeaturegroupMetadata(db, tableName);
+  }
+  
+  /**
+   * Converts a Online Featuregroup entity into a DTO representation
+   *
+   * @param onlineFeaturegroup the online featuregroup to convert
+   * @return a DTO representation of the online feature group
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public OnlineFeaturegroupDTO convertOnlineFeaturegroupToDTO(OnlineFeaturegroup onlineFeaturegroup){
+    OnlineFeaturegroupDTO onlineFeaturegroupDTO = new OnlineFeaturegroupDTO(onlineFeaturegroup);
+    onlineFeaturegroupDTO.setTableType(
+      onlineFeaturestoreController.getOnlineFeaturegroupTableType(onlineFeaturegroupDTO));
+    onlineFeaturegroupDTO.setSize(
+      onlineFeaturestoreController.getTblSize(onlineFeaturegroupDTO));
+    onlineFeaturegroupDTO.setTableRows(
+      onlineFeaturestoreController.getOnlineFeaturegroupTableRows(onlineFeaturegroupDTO));
+    return onlineFeaturegroupDTO;
+  }
+  
+  /**
+   * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
+   *
+   * @param onlineFeaturegroup the online featuregroup to get type information for
+   * @return a list of Feature DTOs with the type information
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
+    return onlineFeaturestoreController.getOnlineFeaturegroupFeatures(onlineFeaturegroup);
+  }
+  
+  /**
+   * Gets the SQL schema of an online feature group
+   *
+   * @param onlineFeaturegroupDTO the online featuregroup to get the SQL schema of
+   * @return a String with the "SHOW CREATE TABLE" result
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public String getOnlineFeaturegroupSchema(OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
+    return onlineFeaturestoreController.getOnlineFeaturegroupSchema(onlineFeaturegroupDTO);
+  }
+  
+  /**
+   * Previews the contents of a online feature group (runs SELECT * LIMIT 20)
+   *
+   * @param onlineFeaturegroupDTO the online featuregroup to get the SQL schema of
+   * @return the preview result
+   * @throws FeaturestoreException
+   * @throws SQLException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public List<RowValueQueryResult> getOnlineFeaturegroupPreview(OnlineFeaturegroupDTO onlineFeaturegroupDTO,
+    Users user, Featurestore featurestore) throws FeaturestoreException, SQLException {
+    return onlineFeaturestoreController.getOnlineFeaturegroupPreview(onlineFeaturegroupDTO, user, featurestore);
   }
   
 }

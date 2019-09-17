@@ -182,7 +182,7 @@ public class RESTCodes {
     RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
         Response.Status.BAD_REQUEST),
     PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR),
-    PROJECT_PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 29 characters.",
+    PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 29 characters.",
         Response.Status.BAD_REQUEST);
     
 
@@ -1220,7 +1220,7 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_CREATE_FEATURESTORE(6, "Could not create feature store and corresponding Hive database",
         Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_PREVIEW_FEATUREGROUP(7, "Could not preview the contents of the feature group Hive table",
+    COULD_NOT_PREVIEW_FEATUREGROUP(7, "Could not preview the contents of the feature group ",
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_NOT_FOUND(8, "Featurestore wasn't found.",
         Response.Status.BAD_REQUEST),
@@ -1324,7 +1324,26 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST),
     SYNC_TABLE_NOT_FOUND(65, "The Hive Table to Sync with the feature store was not " +
-      "found in the metastore", Response.Status.BAD_REQUEST);
+      "found in the metastore", Response.Status.BAD_REQUEST),
+    COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE(66, "Could not initiate connecton to " +
+      "MySQL Server", Response.Status.INTERNAL_SERVER_ERROR),
+    MYSQL_JDBC_UPDATE_STATEMENT_ERROR(67, "MySQL JDBC Update Statement failed",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    MYSQL_JDBC_READ_QUERY_ERROR(68, "MySQL JDBC Read Query failed",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS(69, "Online Feature Serving is only" +
+      "supported for feature groups that are cached inside Hopsworks", Response.Status.BAD_REQUEST),
+    ERROR_CREATING_ONLINE_FEATURESTORE_DB(70, "An error occurred when trying to create " +
+      "the MySQL database for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_CREATING_ONLINE_FEATURESTORE_USER(71, "An error occurred when trying to create " +
+      "the MySQL database user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_DELETING_ONLINE_FEATURESTORE_DB(72, "An error occurred when trying to delete " +
+      "the MySQL database for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_DELETING_ONLINE_FEATURESTORE_USER(73, "An error occurred when trying to delete " +
+      "the MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES(74, "An error occurred when trying to " +
+      "grant/revoke privileges to a MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR);
+    
     
     
     private int code;

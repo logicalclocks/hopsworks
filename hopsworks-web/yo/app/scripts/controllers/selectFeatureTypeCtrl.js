@@ -30,15 +30,18 @@ angular.module('hopsWorksApp')
             self.settings = settings
 
             //Constants
-            self.hiveDataTypes = self.settings.suggestedFeatureTypes
+            self.hiveDataTypes = self.settings.suggestedHiveFeatureTypes
+            self.mysqlDataTypes = self.settings.suggestedMysqlFeatureTypes
 
             //State
             self.customType;
-            self.predefinedType;
+            self.predefinedHiveType;
+            self.predefinedMysqlType;
             self.duplicateTypeSelection = 1;
             self.noSelection = 1;
             self.wrong_values = 1;
-            $scope.selected = self.hiveDataTypes[0]
+            self.predefinedHiveType = self.hiveDataTypes[0]
+            self.predefinedMysqlType = self.hiveDataTypes[0]
 
 
 
@@ -50,11 +53,20 @@ angular.module('hopsWorksApp')
                 self.duplicateTypeSelection = 1;
                 self.noSelection = 1;
                 self.wrong_values = 1;
-                if(self.customType && self.predefinedType != "None") {
+                if(self.customType && self.predefinedHiveType != "None") {
                     self.duplicateTypeSelection = -1;
                     self.wrong_values = -1;
                 }
-                if(!self.customType && (self.predefinedType == "None" || !self.predefinedType)) {
+                if(self.customType && self.predefinedMysqlType != "None") {
+                    self.duplicateTypeSelection = -1;
+                    self.wrong_values = -1;
+                }
+                if(self.predefinedHiveType != "None" && self.predefinedMysqlType != "None") {
+                    self.duplicateTypeSelection = -1;
+                    self.wrong_values = -1;
+                }
+                if(!self.customType && (self.predefinedHiveType == "None" || !self.predefinedHiveType) &&
+                    (self.predefinedMysqlType == "None" || !self.predefinedMysqlType)) {
                     self.noSelection = -1;
                     self.wrong_values = -1;
                 }
@@ -63,8 +75,12 @@ angular.module('hopsWorksApp')
                 }
                 if(self.customType){
                     $uibModalInstance.close(self.customType);
-                } else {
-                    $uibModalInstance.close(self.predefinedType);
+                }
+                if(self.predefinedHiveType != "None"){
+                    $uibModalInstance.close(self.predefinedHiveType);
+                }
+                if(self.predefinedMysqlType != "None") {
+                    $uibModalInstance.close(self.predefinedMysqlType);
                 }
             };
 

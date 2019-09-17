@@ -80,7 +80,7 @@ public class SecretsController {
    * @param user User to add the Secret
    * @param secretName Identifier of the secret
    * @param secret The secret itself
-   * @param visibility Visibility of a Secret. It can be private or shared among members of a project
+   * @param visibilityType Visibility of a Secret. It can be private or shared among members of a project
    * @throws UserException
    */
   public void add(Users user, String secretName, String secret, VisibilityType visibilityType,

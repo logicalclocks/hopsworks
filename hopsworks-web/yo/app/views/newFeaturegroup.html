@@ -179,23 +179,51 @@
                                             <div class="col-sm-12" style="margin-bottom: 20px">
                                                 <div class="col-sm-3">
                                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                                       uib-tooltip='The data type of the feature'></i>
+                                                       uib-tooltip='The data type of the offline feature (Hive data type)'></i>
                                                     <label style="margin-left:10px">
                                                         <button style="margin-top: 5px;" id="selectArchiveButton"
                                                                 class="btn btn-sm btn-default"
                                                                 ng-click="newFeaturegroupCtrl.selectFeatureType(newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index])">
-                                                            <span>Feature type:</span>
+                                                            <span>Offline (Hive) Feature type:</span>
                                                         </button>
                                                     </label>
                                                 </div>
                                                 <div class="col-sm-9">
                                                     <input type="text" class="form-control"
                                                            ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].type"
-                                                           placeholder="Select a feature type" readonly>
+                                                           placeholder="Select a offline (Hive) feature type" readonly>
                                                     <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesTypeWrongValue[$index] === -1"
                                                          style="color: red">
                                                         <p>
-                                                            You must select a feature type
+                                                            You must select an offline feature type
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="view-info">
+                                        <div class="col-md-12">
+                                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                                <div class="col-sm-3">
+                                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                                       uib-tooltip='The data type of the online feature (MySQL data type)'></i>
+                                                    <label style="margin-left:10px">
+                                                        <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                                class="btn btn-sm btn-default"
+                                                                ng-click="newFeaturegroupCtrl.selectOnlineFeatureType(newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index])">
+                                                            <span>Online (MySQL) Feature type:</span>
+                                                        </button>
+                                                    </label>
+                                                </div>
+                                                <div class="col-sm-9">
+                                                    <input type="text" class="form-control"
+                                                           ng-model="newFeaturegroupCtrl.cachedFeaturegroupFeatures[$index].onlineType"
+                                                           placeholder="Select a online (MySQL) feature type" readonly>
+                                                    <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupFeaturesOnlineTypeWrongValue[$index] === -1"
+                                                         style="color: red">
+                                                        <p>
+                                                            You must select an online feature type
                                                         </p>
                                                     </div>
                                                 </div>
@@ -538,15 +566,41 @@
                                                          dir="rtl"
                                                          ng-if="newFeaturegroupCtrl.cachedSqlQuery && newFeaturegroupCtrl.cachedSqlQuery != undefined && newFeaturegroupCtrl.cachedSqlQuery != null"
                                             >
-                                                <span>Configure Spark Job for creating the training dataset</span>
+                                                <span>Configure Spark Job for creating the feature group using
+                                                    the SQL string</span>
+                                            </md-checkbox>
+                                            <md-checkbox class="md-primary"
+                                                         ng-checked="newFeaturegroupCtrl.onlineFg"
+                                                         ng-click="newFeaturegroupCtrl.setOnlineFg()"
+                                                         aria-label="If this box is checked, online feature serving will be enabled for this feature group.
+                                                                     This means that a MySQL in-memory table with real-time response time is created."
+                                                         style="margin-left:20px;"
+                                                         dir="rtl"
+                                                         ng-if="newFeaturegroupCtrl.settings.onlineFeaturestoreEnabled"
+                                            >
+                                                <span>Enable Online Feature Serving for this Feature Group</span>
                                             </md-checkbox>
                                         </div>
                                         <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
                                                 class="btn btn-default btn-success"
                                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
                                         >
-                                            Update
+                                            Update Metadata
                                             <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+
+                                        <button ng-click="newFeaturegroupCtrl.enableOnlineServing()"
+                                                class="btn btn-default btn-success"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && !newFeaturegroupCtrl.onlineFg">
+                                            Enable Online Serving
+                                            <i ng-if="newFeaturegroupCtrl.enableServingWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
+                                        </button>
+                                        <button ng-click="newFeaturegroupCtrl.disableOnlineServing()"
+                                                class="btn btn-default btn-danger"
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && newFeaturegroupCtrl.onlineFg">
+                                            Disable Online Serving
+                                            <i ng-if="newFeaturegroupCtrl.disableServingWorking" style="margin-top: 2px"
+                                               class="fa fa-spinner fa-spin pull-right" ></i>
                                         </button>
                                     </div>
                                     <div  class="col-sm-4 alert alert-warning" role="alert"

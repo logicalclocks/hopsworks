@@ -68,7 +68,7 @@ public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegr
     em.merge(onDemandFeaturegroup);
     return onDemandFeaturegroup;
   }
-
+  
   /**
    * Gets the entity manager of the facade
    *

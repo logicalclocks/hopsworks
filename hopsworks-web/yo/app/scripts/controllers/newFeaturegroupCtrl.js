@@ -42,7 +42,10 @@ angular.module('hopsWorksApp')
             self.onDemandPhase = 0;
             self.cachedFgWorking = false;
             self.onDemandFgWorking = false;
+            self.enableServingWorking = false;
+            self.disableServingWorking = false;
             self.version = 1;
+            self.onlineFg = false;
 
             //User Input values for Cached Feature Groups
             self.cachedFeaturegroupName = ""
@@ -74,6 +77,7 @@ angular.module('hopsWorksApp')
             self.cachedFeaturegroupFeaturesWrongValue = 1;
             self.cachedFeaturegroupFeaturesNameWrongValue = [];
             self.cachedFeaturegroupFeaturesTypeWrongValue = [];
+            self.cachedFeaturegroupFeaturesOnlineTypeWrongValue = [];
             self.cachedFeaturegroupFeaturesDocWrongValue = [];
             //SQL Flags
             self.cachedFeaturegroupSqlWrongValue = 1
@@ -217,6 +221,9 @@ angular.module('hopsWorksApp')
                     }
                     if (self.featuregroup.featuregroupType === self.cachedFeaturegroupType) {
                         self.activeTab = 0
+                        if(self.featuregroup.onlineFeaturegroupEnabled != null){
+                            self.onlineFg = self.featuregroup.onlineFeaturegroupEnabled
+                        }
                     }
                     self.cached_fg_accordion1.isOpen = true
                     self.cached_fg_accordion1.visible = true
@@ -300,9 +307,10 @@ angular.module('hopsWorksApp')
                         var argsList = args.split(",")
                         var newArgs = []
                         for (var j = 0; j < argsList.length; j++) {
+                            var argValue = argsList[j].split("=")
                             newArgs.push({
-                                "name": argsList[j],
-                                "value": "DEFAULT"
+                                "name": argValue[0],
+                                "value": argValue.length > 1 ? argValue[1] : "DEFAULT"
                             })
                         }
                         self.jdbcConnectors.push({
@@ -423,12 +431,14 @@ angular.module('hopsWorksApp')
                 self.cachedFeaturegroupFeatures.push({
                     'name': '',
                     'type': '',
+                    'onlineType': '',
                     'description': "",
                     primary: false,
                     partition: false
                 });
                 self.cachedFeaturegroupFeaturesNameWrongValue.push(1);
                 self.cachedFeaturegroupFeaturesTypeWrongValue.push(1);
+                self.cachedFeaturegroupFeaturesOnlineTypeWrongValue.push(1);
             };
 
             /**
@@ -439,6 +449,7 @@ angular.module('hopsWorksApp')
                 self.cachedFeaturegroupFeatures.splice(index, 1);
                 self.cachedFeaturegroupFeaturesNameWrongValue.splice(index, 1);
                 self.cachedFeaturegroupFeaturesTypeWrongValue.splice(index, 1);
+                self.cachedFeaturegroupFeaturesOnlineTypeWrongValue.splice(index, 1);
             };
 
             /**
@@ -449,6 +460,7 @@ angular.module('hopsWorksApp')
                 self.onDemandFeaturegroupFeatures.push({
                     'name': '',
                     'type': '',
+                    'onlineType': null,
                     'description': "",
                     primary: false,
                     partition: false
@@ -477,6 +489,22 @@ angular.module('hopsWorksApp')
                 ModalService.selectFeatureType('lg', self.settings).then(
                     function (success) {
                         feature.type = success
+                    },
+                    function (error) {
+                        // Users changed their minds.
+                    });
+            };
+
+            /**
+             * Function called when the user clicks the "Feature type" button, opens up a modal where the user
+             * can select a pre-defined Hive type or define a custom type.
+             *
+             * @param feature the feature to define the type for
+             */
+            self.selectOnlineFeatureType = function (feature) {
+                ModalService.selectFeatureType('lg', self.settings).then(
+                    function (success) {
+                        feature.onlineType = success
                     },
                     function (error) {
                         // Users changed their minds.
@@ -632,13 +660,19 @@ angular.module('hopsWorksApp')
                 self.cachedFeaturegroupSqlWrongValue = 1
                 self.cachedFeaturegroupHiveDbWrongValue = 1;
                 self.cachedFeaturegroupJdbcConnectorWrongValue = 1;
-                self.cachedFgWorking = true;
+                if(!self.enableServingWorking){
+                    self.cachedFgWorking = true;
+                }
                 for (i = 0; i < self.cachedFeaturegroupFeaturesNameWrongValue.length; i++) {
                     self.cachedFeaturegroupFeaturesNameWrongValue[i] = 1
                 }
 
                 for (i = 0; i < self.cachedFeaturegroupFeaturesTypeWrongValue.length; i++) {
                     self.cachedFeaturegroupFeaturesTypeWrongValue[i] = 1
+                }
+
+                for (i = 0; i < self.cachedFeaturegroupFeaturesOnlineTypeWrongValue.length; i++) {
+                    self.cachedFeaturegroupFeaturesOnlineTypeWrongValue[i] = 1
                 }
 
                 for (i = 0; i < self.cachedFeaturegroupFeaturesDocWrongValue.length; i++) {
@@ -677,6 +711,13 @@ angular.module('hopsWorksApp')
                     }
                     if (self.cachedFeaturegroupFeatures[i].type === "") {
                         self.cachedFeaturegroupFeaturesTypeWrongValue[i] = -1
+                        self.cachedFeaturegroupWrong_values = -1;
+                        self.cachedFeaturegroupFeaturesWrongValue = -1;
+                    }
+                    if ((self.cachedFeaturegroupFeatures[i].onlineType == undefined ||
+                        self.cachedFeaturegroupFeatures[i].onlineType == null ||
+                        self.cachedFeaturegroupFeatures[i].onlineType === "") && (self.onlineFg || self.enableServingWorking)) {
+                        self.cachedFeaturegroupFeaturesOnlineTypeWrongValue[i] = -1
                         self.cachedFeaturegroupWrong_values = -1;
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
                     }
@@ -816,6 +857,77 @@ angular.module('hopsWorksApp')
             }
 
             /**
+             * Function called when the "enable online serving" button for a cached feature group is pressed
+             */
+            self.enableOnlineServing = function () {
+                self.enableServingWorking = true;
+                self.validateCachedFeaturegroupInputs()
+                if (self.cachedFeaturegroupWrong_values === -1) {
+                    self.enableServingWorking = false;
+                    return;
+                }
+                var featuregroupJson = {
+                    "name": self.cachedFeaturegroupName,
+                    "description": self.cachedFeaturegroupDoc,
+                    "features": self.cachedFeaturegroupFeatures,
+                    "version": self.version,
+                    "featuregroupType": self.cachedFeaturegroupType,
+                    "type": self.cachedFeaturegroupDTOType,
+                    "jobs": [],
+                    "onlineFeaturegroupEnabled": self.onlineFg
+                }
+                FeaturestoreService.enableOnlineServing(self.projectId, self.featurestore,
+                    self.oldFeaturegroupId, featuregroupJson).then(
+                    function (success) {
+                        self.enableServingWorking = false;
+                        self.exitToFeaturestore()
+                        growl.success("Online feature serving enabled for feature group",
+                            {title: 'Success', ttl: 1000});
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to enable online serving for feature group',
+                            ttl: 15000
+                        });
+                        self.enableServingWorking = false;
+                    });
+                growl.info("Enabled online serving for featuregroup...",
+                    {title: 'Enabling online serving for featuregroup', ttl: 1000})
+            }
+
+            /**
+             * Function called when the "disable online serving" button for a cached feature group is pressed
+             */
+            self.disableOnlineServing = function () {
+                self.disableServingWorking = true;
+                var featuregroupJson = {
+                    "name": self.cachedFeaturegroupName,
+                    "description": self.cachedFeaturegroupDoc,
+                    "features": self.cachedFeaturegroupFeatures,
+                    "version": self.version,
+                    "featuregroupType": self.cachedFeaturegroupType,
+                    "type": self.cachedFeaturegroupDTOType,
+                    "jobs": [],
+                    "onlineFeaturegroupEnabled": self.onlineFg
+                }
+                FeaturestoreService.disableOnlineServing(self.projectId, self.featurestore,
+                    self.oldFeaturegroupId, featuregroupJson).then(
+                    function (success) {
+                        self.disableServingWorking = false;
+                        self.exitToFeaturestore()
+                        growl.success("Online feature serving disabled for feature group",
+                            {title: 'Success', ttl: 1000});
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to disable online serving for feature group',
+                            ttl: 15000
+                        });
+                        self.disableServingWorking = false;
+                    });
+                growl.info("Disable online serving for featuregroup...",
+                    {title: 'Disable online serving for featuregroup', ttl: 1000})
+            }
+
+            /**
              * Function called when the "update feature group" button is pressed for a cached feature group.
              * Validates parameters and then sends a POST or PUT request to the backend to update the featuregroup
              */
@@ -832,9 +944,10 @@ angular.module('hopsWorksApp')
                     "version": self.version,
                     "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
-                    "jobs": []
+                    "jobs": [],
+                    "onlineFeaturegroupEnabled": self.onlineFg
                 }
-                ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive' +
+                ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive/MySQL' +
                     ' metadata' +
                     ' (description, feature group name, and features schema) ' +
                     'will delete the existing data.',
@@ -890,7 +1003,8 @@ angular.module('hopsWorksApp')
                     "version": self.version,
                     "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
-                    "jobs": []
+                    "jobs": [],
+                    "onlineFeaturegroupEnabled": self.onlineFg
                 }
                 if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined
                     && self.configureJob) {
@@ -1133,6 +1247,17 @@ angular.module('hopsWorksApp')
                     self.configureJob = false
                 } else {
                     self.configureJob = true
+                }
+            }
+
+            /**
+             * Boolean parameter indicating whether online feature serving should be enabled for the feature group
+             */
+            self.setOnlineFg = function() {
+                if(self.onlineFg) {
+                    self.onlineFg = false
+                } else {
+                    self.onlineFg = true
                 }
             }
 

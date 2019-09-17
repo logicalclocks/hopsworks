@@ -54,7 +54,7 @@ public class CachedFeaturegroup implements Serializable {
   @Basic(optional = false)
   @Column(name = "offline_feature_group")
   private Long hiveTableId;
-  @JoinColumn(name = "online_feature_group_id", referencedColumnName = "id")
+  @JoinColumn(name = "online_feature_group", referencedColumnName = "id")
   @OneToOne
   private OnlineFeaturegroup onlineFeaturegroup;
 

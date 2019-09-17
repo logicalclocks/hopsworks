@@ -72,7 +72,7 @@ public class FeaturestoreConstants {
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
-  public static final List<String> SUGGESTED_FEATURE_TYPES = Arrays.asList(new String[]{
+  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList(new String[]{
     "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
     "DECIMAL", "TIMESTAMP", "DATE", "STRING",
     "BOOLEAN", "BINARY",
@@ -102,5 +102,13 @@ public class FeaturestoreConstants {
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
   public static final String ONLINE_FEATURE_STORE_TYPE = "MySQL Cluster";
   public static final String OFFLINE_FEATURE_STORE_TYPE = "Hive";
+  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList(new String[]{
+    "None", "INT(11)", "TINYINT(1)", "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
+    "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
+    "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)", "BLOB", "TEXT",
+    "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT", "JSON"
+  });
+  public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
+  public static final int ONLINE_FEATURESTORE_PW_LENGTH = 64;
   
 }

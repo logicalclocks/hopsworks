@@ -152,4 +152,32 @@ public class FeaturestoreUtil {
       return updateStats;
     }
   }
+  
+  /**
+   * Return default enableOnline query parameter value if not specified
+   *
+   * @param enableOnline the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean enableOnlineGetOrDefault(Boolean enableOnline) {
+    if(enableOnline == null){
+      return false;
+    } else {
+      return enableOnline;
+    }
+  }
+  
+  /**
+   * Return default disableOnline query parameter value if not specified
+   *
+   * @param disableOnline the query parameter provided by the user
+   * @return the default value
+   */
+  public Boolean disableOnlineGetOrDefault(Boolean disableOnline) {
+    if(disableOnline == null){
+      return false;
+    } else {
+      return disableOnline;
+    }
+  }
 }

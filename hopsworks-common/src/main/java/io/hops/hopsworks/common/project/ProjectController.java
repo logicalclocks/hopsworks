@@ -1550,7 +1550,7 @@ public class ProjectController {
         removeProjectInt(project, usersToClean, groupsToClean, projectCreationFutures, decreaseCreatedProj, owner);
         removeCertificatesFromMaterializer(project);
         //Delete online featurestore database
-        onlineFeaturestoreController.dropOnlineFeatureStore(project.getName());
+        onlineFeaturestoreController.removeOnlineFeatureStore(project);
         
         break;
       } catch (Exception ex) {
@@ -1574,7 +1574,8 @@ public class ProjectController {
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj, Users owner)
     throws IOException, InterruptedException, ExecutionException,
-    HopsSecurityException, ServiceException, ProjectException, GenericException, TensorBoardException {
+    HopsSecurityException, ServiceException, ProjectException, GenericException, TensorBoardException,
+    FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1651,7 +1652,7 @@ public class ProjectController {
       hiveController.dropDatabases(project, dfso, false);
 
       //Delete online featurestore database
-      onlineFeaturestoreController.dropOnlineFeatureStore(project.getName());
+      onlineFeaturestoreController.removeOnlineFeatureStore(project);
       
       //Delete elasticsearch template for this project
       removeElasticsearch(project);

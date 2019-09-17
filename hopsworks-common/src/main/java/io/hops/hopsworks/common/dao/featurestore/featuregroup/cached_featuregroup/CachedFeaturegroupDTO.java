@@ -40,6 +40,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   private HiveTableType hiveTableType;
   private Long inodeId;
   private OnlineFeaturegroupDTO onlineFeaturegroupDTO;
+  private Boolean onlineFeaturegroupEnabled = false;
 
 
   public CachedFeaturegroupDTO() {
@@ -107,6 +108,15 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     this.onlineFeaturegroupDTO = onlineFeaturegroupDTO;
   }
   
+  @XmlElement
+  public Boolean getOnlineFeaturegroupEnabled() {
+    return onlineFeaturegroupEnabled;
+  }
+  
+  public void setOnlineFeaturegroupEnabled(Boolean onlineFeaturegroupEnabled) {
+    this.onlineFeaturegroupEnabled = onlineFeaturegroupEnabled;
+  }
+  
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
@@ -116,6 +126,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
       ", hiveTableType=" + hiveTableType +
       ", inodeId=" + inodeId +
       ", onlineFeaturegroupDTO=" + onlineFeaturegroupDTO +
+      ", onlineFeaturegroupEnabled=" + onlineFeaturegroupEnabled +
       '}';
   }
 }

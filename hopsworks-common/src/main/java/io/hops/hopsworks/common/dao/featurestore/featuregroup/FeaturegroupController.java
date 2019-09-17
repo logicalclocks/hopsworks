@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.FeaturegroupPreview;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupController;
@@ -187,6 +188,7 @@ public class FeaturegroupController {
    * @param project the project that owns the jobs
    * @return a list of job entities
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
     if(jobDTOs != null) {
       return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
@@ -203,6 +205,7 @@ public class FeaturegroupController {
    * @param featuregroup the entity to convert
    * @return a DTO representation of the entity
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup) {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {
@@ -231,6 +234,7 @@ public class FeaturegroupController {
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id) {
     Featuregroup featuregroup = verifyFeaturegroupId(id, featurestore);
     return convertFeaturegrouptoDTO(featuregroup);
@@ -259,6 +263,53 @@ public class FeaturegroupController {
     }
     return convertFeaturegrouptoDTO(featuregroup);
   }
+  
+  /**
+   * Enable online feature serving of a feature group that is currently only offline
+   *
+   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroupDTO the updated featuregroup metadata
+   * @return DTO of the updated feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+    Users user) throws FeaturestoreException, SQLException {
+    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
+        ", Online feature serving is only supported for featuregroups of type: "
+          + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to enable feature serving on a " +
+          "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+    }
+    cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, ((CachedFeaturegroupDTO) featuregroupDTO),
+      featuregroup, user);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+  
+  /**
+   * Disable online feature serving of a feature group
+   *
+   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroupDTO the updated featuregroup metadata
+   * @return DTO of the updated feature group
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO disableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+    Users user) throws FeaturestoreException, SQLException {
+    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
+        ", Online feature serving is only supported for featuregroups of type: "
+          + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to a feature serving operation on a " +
+          "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+    }
+    cachedFeaturegroupController.disableFeaturegroupOnline(featurestore, featuregroup, user);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
 
   /**
    * Updates stats for a featuregroup
@@ -285,6 +336,7 @@ public class FeaturegroupController {
    *
    * @param featuregroupDTO DTO containing the feature group statistics
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void verifyStatisticsInput(FeaturegroupDTO featuregroupDTO) {
     if (featuregroupDTO.getFeatureCorrelationMatrix() != null &&
         featuregroupDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
@@ -333,7 +385,8 @@ public class FeaturegroupController {
         case CACHED_FEATURE_GROUP:
           //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
           cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
-          cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroupDTO, featurestore, user);
+          //Delete mysql table and metadata
+          cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), featurestore, user);
           break;
         case ON_DEMAND_FEATURE_GROUP:
           //Delete on_demand_feature_group will cascade will cascade to feature_group table
@@ -352,18 +405,18 @@ public class FeaturegroupController {
   }
 
   /**
-   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table
+   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive and MySQL Tables
    *
    * @param featuregroupDTO DTO of the featuregroup to preview
    * @param featurestore    the feature store where the feature group resides
    * @param user            the user making the request
-   * @return list of feature-rows from the Hive table where the featuregroup is stored
+   * @return A DTO object with the first 20 rows of the offline and online feature tables
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<RowValueQueryResult> getFeaturegroupPreview(
+  public FeaturegroupPreview getFeaturegroupPreview(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
       FeaturestoreException, HopsSecurityException {
     switch (featuregroupDTO.getFeaturegroupType()) {
@@ -417,6 +470,7 @@ public class FeaturegroupController {
    * @param featurestore the featurestore to query
    * @return the featuregroup with the id if it passed the validation
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private Featuregroup verifyFeaturegroupId(Integer featuregroupId, Featurestore featurestore) {
     Featuregroup featuregroup = null;
     if(featurestore != null){
@@ -438,6 +492,7 @@ public class FeaturegroupController {
    * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
     throws FeaturestoreException {
     if (featurestore == null) {
@@ -523,6 +578,7 @@ public class FeaturegroupController {
    * @param onDemandFeaturegroup the on-demand feature group that the feature group is linked to (if any)
    * @return the created entity
    */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
   private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, HdfsUsers hdfsUser, Users user,
     FeaturegroupDTO featuregroupDTO, CachedFeaturegroup cachedFeaturegroup, OnDemandFeaturegroup onDemandFeaturegroup) {
     Featuregroup featuregroup = new Featuregroup();

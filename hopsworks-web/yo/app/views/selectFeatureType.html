@@ -26,15 +26,17 @@
     <div class="view-info">
         <div class="col-md-12">
             <div class="col-sm-12" style="margin-bottom: 20px">
-                <div class="col-sm-3">
-                    <label class="control-label">Pre-defined types</label>
+                <div class="col-sm-5">
+                    <label class="control-label">Pre-defined Hive data types</label>
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                       uib-tooltip='Pre-defined feature types'
+                       uib-tooltip='Pre-defined Hive feature types'
                        style="margin-left: 10px"></i>
                 </div>
-                <div class="col-sm-9">
-                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedType">
-                        <ui-select-match placeholder="Select a pre-defined feature type">
+                <div class="col-sm-7">
+                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedHiveType"
+                               style="z-index: 100"
+                    >
+                        <ui-select-match placeholder="Select a pre-defined Hive feature type">
                             <span>{{$select.selected}}</span>
                         </ui-select-match>
                         <ui-select-choices repeat="item in selectFeatureTypeCtrl.hiveDataTypes">
@@ -48,15 +50,39 @@
     <div class="view-info">
         <div class="col-md-12">
             <div class="col-sm-12" style="margin-bottom: 20px">
-                <div class="col-sm-3">
+                <div class="col-sm-5">
+                    <label class="control-label">Pre-defined MySQL data types</label>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Pre-defined MySQL feature types'
+                       style="margin-left: 10px"></i>
+                </div>
+                <div class="col-sm-7">
+                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedMysqlType"
+                               style="z-index: 99"
+                    >
+                        <ui-select-match placeholder="Select a pre-defined MySQL feature type">
+                            <span>{{$select.selected}}</span>
+                        </ui-select-match>
+                        <ui-select-choices repeat="item in selectFeatureTypeCtrl.mysqlDataTypes">
+                            <span ng-bind="item"></span>
+                        </ui-select-choices>
+                    </ui-select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="view-info">
+        <div class="col-md-12">
+            <div class="col-sm-12" style="margin-bottom: 20px">
+                <div class="col-sm-5">
                     <label class="control-label">Custom types</label>
                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                        uib-tooltip='Enter a custom datatype,e.g array<struct<Name:string>>'
                        style="margin-left: 10px"></i>
                 </div>
-                <div class="col-sm-9">
+                <div class="col-sm-7">
                     <input type="text" class="form-control" placeholder="Enter a custom feature type"
-                           ng-model="selectFeatureTypeCtrl.customType">
+                           ng-model="selectFeatureTypeCtrl.customType", style="z-index: 98">
                 </div>
             </div>
         </div>
@@ -66,10 +92,11 @@
         <div class="col-md-12">
             <div class="col-sm-12">
                 <div ng-if="selectFeatureTypeCtrl.duplicateTypeSelection === -1" style="color: red">
-                    {{"Select either a predefined type or a custom type, not both"}}
+                    Select <span style="font-weight:bold">one</span> of (1) a predefined Hive data type;
+                    (2) a pre-defined MySQL data type; or (3) a custom type.
                 </div>
                 <div ng-if="selectFeatureTypeCtrl.noSelection === -1" style="color: red">
-                    {{"You have not selected a feature type"}}
+                    "You have not selected a feature type"
                 </div>
             </div>
         </div>
