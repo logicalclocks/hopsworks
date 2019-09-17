@@ -425,6 +425,17 @@ public class KafkaService {
     }
   }
   
+  @POST
+  @Path("/{topic}/schema/version/{version}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateSchemaVersion(@PathParam("topic") String topic, @PathParam("version") Integer version)
+  throws KafkaException {
+    kafkaController.updateTopicSchemaVersion(project, topic, version);
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+  }
+  
 
   //This API used to select a schema and its version from the list
   //of available schemas when listing all the available schemas.
