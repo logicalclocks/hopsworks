@@ -434,6 +434,7 @@ angular.module('hopsWorksApp')
 
               self.getAllTopics();
               self.getAllSharedTopics();
+              self.listSchemas();
              };
             
             self.init();
@@ -453,6 +454,16 @@ angular.module('hopsWorksApp')
               self.showSchemas = 1;
               self.showTopics = -1;
               self.listSchemas();
+            };
+
+            self.updateSchemaVersion = function(topicName, schemaVersion) {
+                KafkaService.updateTopicSchemaVersion(self.projectId, topicName, schemaVersion).then(
+                    function(success) {
+                        growl.success("", {title: 'Schema version successfully updated.', ttl: 5000});
+                    }, function (error) {
+                        growl.error("", {title: "Error updating schema version", ttl: 8000, referenceId: 10});
+                    }
+                )
             };
               
           }]);
