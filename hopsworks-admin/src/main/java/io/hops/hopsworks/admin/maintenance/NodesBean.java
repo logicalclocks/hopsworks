@@ -38,17 +38,21 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
+import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.File;
 import java.io.IOException;
+
+import io.hops.hopsworks.exceptions.ServiceException;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.event.SelectEvent;
@@ -58,16 +62,11 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -84,6 +83,8 @@ public class NodesBean implements Serializable {
   private static final long serialVersionUID = 1L;
   private final Logger logger = Logger.getLogger(NodesBean.class.getName());
 
+  @EJB
+  private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
   private HostsFacade hostsFacade;
   @EJB
@@ -103,7 +104,7 @@ public class NodesBean implements Serializable {
   private final Map<String, Object> dialogOptions;
   private String newNodeHostname;
   private String newNodeHostIp;
-  private Hosts toBeDeletedNode;
+  private List<Hosts> selectedHosts;
 
   private String output;
   private Future<String> future;
@@ -182,7 +183,7 @@ public class NodesBean implements Serializable {
 
   @PostConstruct
   public void init() {
-    allNodes = hostsFacade.findAllHosts();
+    allNodes = hostsFacade.findAll();
   }
 
   public List<Hosts> getAllNodes() {
@@ -209,12 +210,12 @@ public class NodesBean implements Serializable {
     this.newNodeHostIp = newNodeHostIp;
   }
 
-  public Hosts getToBeDeletedNode() {
-    return toBeDeletedNode;
+  public List<Hosts> getSelectedHosts() {
+    return selectedHosts;
   }
 
-  public void setToBeDeletedNode(Hosts toBeDeletedNode) {
-    this.toBeDeletedNode = toBeDeletedNode;
+  public void setSelectedHosts(List<Hosts> selectedHosts) {
+    this.selectedHosts = selectedHosts;
   }
 
   public void onRowEdit(RowEditEvent event) {
@@ -238,32 +239,6 @@ public class NodesBean implements Serializable {
 
   public void dialogAddNewNode() {
     RequestContext.getCurrentInstance().openDialog("addNewNodeDialog", dialogOptions, null);
-  }
-
-  public String anacondaLastSynchronized() {
-    String file = settings.getHopsworksDomainDir() + "/docroot/anaconda.tgz";
-    return lastModifiedFileDate(file);
-  }
-
-  private String lastModifiedFileDate(String fullPath) {
-    File f = new File(fullPath);
-    if (!f.isFile()) {
-      return "Not available!!";
-    }
-    Path p = Paths.get(fullPath);
-    FileTime fileTime;
-    try {
-      fileTime = Files.getLastModifiedTime(p);
-      DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy - hh:mm:ss");
-      return "Last synchronized: " + dateFormat.format(fileTime.toMillis());
-    } catch (IOException e) {
-      return "Cannot get the last modified time - " + e.getLocalizedMessage();
-    }
-  }
-
-  public String anacondaGpuLastSynchronized() {
-    String file = settings.getHopsworksDomainDir() + "/bin/anaconda-gpu.tgz";
-    return lastModifiedFileDate(file);
   }
 
   public String condaStyle(String hostname) {
@@ -320,15 +295,17 @@ public class NodesBean implements Serializable {
   }
 
   public void deleteNode() {
-    if (toBeDeletedNode != null) {
-      boolean deleted = hostsFacade.removeByHostname(toBeDeletedNode.getHostname());
-      if (deleted) {
-        allNodes.remove(toBeDeletedNode);
-        logger.log(Level.INFO, "Removed Host with ID " + toBeDeletedNode.getHostname() + " from the database");
-        MessagesController.addInfoMessage("Node deleted");
-      } else {
-        logger.log(Level.WARNING, "Could not delete Host " + toBeDeletedNode.getHostname() + " from the database");
-        MessagesController.addErrorMessage("Could not delete node");
+    if (selectedHosts != null && !selectedHosts.isEmpty()) {
+      for (Hosts host : selectedHosts) {
+        boolean deleted = hostsFacade.removeByHostname(host.getHostname());
+        if (deleted) {
+          allNodes.remove(host);
+          logger.log(Level.INFO, "Removed Host with ID " + host.getHostname() + " from the database");
+          MessagesController.addInfoMessage("Node deleted");
+        } else {
+          logger.log(Level.WARNING, "Could not delete Host " + host.getHostname() + " from the database");
+          MessagesController.addErrorMessage("Could not delete node");
+        }
       }
     }
   }
@@ -339,6 +316,120 @@ public class NodesBean implements Serializable {
     logger.log(Level.INFO, "Issued key rotation command");
   }
 
+  public void restartKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.RESTART);
+  }
+
+  public void startKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.START);
+  }
+
+  public void stopKagents(List<Hosts> hosts) {
+    performKagentAction(hosts, KagentAction.STOP);
+  }
+
+  private void performKagentAction(List<Hosts> hosts, KagentAction action) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = submitKagentAction(action, hosts);
+    if (asyncResults != null) {
+      boolean hadFailure = false;
+      for (Map.Entry<Hosts, Future<RemoteCommandResult>> entry : asyncResults.entrySet()) {
+        Future asyncResult = entry.getValue();
+        try {
+          if (asyncResult != null) {
+            asyncResult.get();
+          } else {
+            throw new ExecutionException(new Throwable("Command failed"));
+          }
+        } catch (InterruptedException | ExecutionException ex) {
+          FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
+              "Failed to " + action.name() + " agent",
+              "Failed to " + action.name() + " agent@" + entry.getKey());
+          FacesContext.getCurrentInstance().addMessage(null, message);
+          hadFailure = true;
+        }
+      }
+      if (!hadFailure) {
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
+            "All agents have " + action.effect + " successfully",
+            "");
+        FacesContext.getCurrentInstance().addMessage(null, message);
+      }
+    }
+  }
+
+  private Map<Hosts, Future<RemoteCommandResult>> submitKagentAction(KagentAction action, List<Hosts> hosts) {
+    if (hosts == null || hosts.isEmpty()) {
+      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "No hosts selected",
+          "Hosts list is null");
+      FacesContext.getCurrentInstance().addMessage(null, message);
+      return null;
+    }
+    switch (action) {
+      case START:
+        return startAgentsInternal(hosts);
+      case STOP:
+        return stopAgentsInternal(hosts);
+      case RESTART:
+        return restartAgentsInternal(hosts);
+      default:
+        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Unknown action",
+            "Unknown action to perform on kagent");
+        FacesContext.getCurrentInstance().addMessage(null, message);
+        return null;
+    }
+  }
+
+  private Map<Hosts, Future<RemoteCommandResult>> startAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.startAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+
+  private Map<Hosts, Future<RemoteCommandResult>> stopAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.stopAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+
+  private Map<Hosts, Future<RemoteCommandResult>> restartAgentsInternal(List<Hosts> hosts) {
+    Map<Hosts, Future<RemoteCommandResult>> asyncResults = new HashMap<>(hosts.size());
+    for (Hosts host : hosts) {
+      try {
+        Future<RemoteCommandResult> asyncResult = agentLivenessMonitor.restartAsync(host);
+        asyncResults.put(host, asyncResult);
+      } catch (ServiceException ex) {
+        asyncResults.put(host, null);
+      }
+    }
+    return asyncResults;
+  }
+
+  enum KagentAction {
+    START("started"),
+    STOP("stopped"),
+    RESTART("restarted");
+
+    private final String effect;
+
+    KagentAction(String effect) {
+      this.effect = effect;
+    }
+  }
+
   public String getOutput() {
     if (!isOutput()) {
       return "No Output to show for command executions.";
@@ -347,10 +438,14 @@ public class NodesBean implements Serializable {
   }
 
   public boolean isOutput() {
-    if (this.output == null || this.output.isEmpty()) {
-      return false;
+    return !(this.output == null || this.output.isEmpty());
+  }
+
+  public String formatMemoryCapacity(Hosts host) {
+    if (host.getMemoryCapacity() == null) {
+      return "N/A";
     }
-    return true;
+    return FormatUtils.storage(host.getMemoryCapacity());
   }
 
 }

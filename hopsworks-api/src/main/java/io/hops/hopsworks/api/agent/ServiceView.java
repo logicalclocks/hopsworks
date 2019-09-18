@@ -21,30 +21,17 @@ import io.hops.hopsworks.common.dao.host.Status;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @ApiModel(value = "Status report for running services on host")
 @XmlRootElement
 public class ServiceView {
-  private String cluster;
   private String service;
   private String group;
-  @XmlElement(name = "web-port")
-  private String webPort;
   private Integer pid;
   private Status status;
   
   public ServiceView() {
-  }
-  
-  @ApiModelProperty(value = "Name of the cluster", required = true)
-  public String getCluster() {
-    return cluster;
-  }
-  
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
   }
   
   @ApiModelProperty(value = "Service name", required = true)
@@ -63,15 +50,6 @@ public class ServiceView {
   
   public void setGroup(String group) {
     this.group = group;
-  }
-  
-  @ApiModelProperty(value = "Service web port if available")
-  public String getWebPort() {
-    return webPort;
-  }
-  
-  public void setWebPort(String webPort) {
-    this.webPort = webPort;
   }
   
   @ApiModelProperty(value = "Process ID", required = true)
@@ -93,6 +71,6 @@ public class ServiceView {
   }
   
   public AgentController.AgentServiceDTO toAgentServiceDTO() {
-    return new AgentController.AgentServiceDTO(cluster, service, group, webPort, pid, status);
+    return new AgentController.AgentServiceDTO(service, group, pid, status);
   }
 }

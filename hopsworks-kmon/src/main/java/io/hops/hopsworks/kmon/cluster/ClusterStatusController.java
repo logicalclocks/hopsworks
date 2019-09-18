@@ -48,9 +48,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
+
+import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.kmon.struct.ClusterInfo; 
-import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.kmon.struct.GroupInfo;
 
 @ManagedBean
@@ -59,11 +60,12 @@ public class ClusterStatusController {
 
   @EJB
   private HostServicesFacade hostServicesFacade;
+  @EJB
+  private HostsFacade hostsFacade;
   @ManagedProperty("#{param.cluster}")
   private String cluster;
   private static final Logger LOGGER = Logger.getLogger(ClusterStatusController.class.getName());
   private List<GroupInfo> group = new ArrayList<>();
-  private Health clusterHealth;
   private boolean found;
   private ClusterInfo clusterInfo;
 
@@ -97,23 +99,14 @@ public class ClusterStatusController {
     return group;
   }
 
-  public Health getClusterHealth() {
-    loadCluster();
-    return clusterHealth;
-  }
-
   public void loadServices() {
-    clusterHealth = Health.Good;
-    List<String> groupList = hostServicesFacade.findGroups(cluster);
+    List<String> groupList = hostServicesFacade.findGroups();
     if (!groupList.isEmpty()) {
       found = true;
     }
-    for (String s : groupList) {
-      GroupInfo groupInfo = new GroupInfo(s);
-      Health health = groupInfo.addServices(hostServicesFacade.findHostServicesByGroup(cluster, s));
-      if (health == Health.Bad) {
-        clusterHealth = Health.Bad;
-      }
+    for (String g : groupList) {
+      GroupInfo groupInfo = new GroupInfo(g);
+      groupInfo.addServices(hostServicesFacade.findGroupServices(g));
       group.add(groupInfo);
     }
   }
@@ -122,13 +115,12 @@ public class ClusterStatusController {
     if (clusterInfo != null) {
       return;
     }
-    clusterInfo = new ClusterInfo(cluster);
-    clusterInfo.setNumberOfHosts(hostServicesFacade.countHosts(cluster));
-    clusterInfo.setTotalCores(hostServicesFacade.totalCores(cluster));
-    clusterInfo.setTotalGPUs(hostServicesFacade.totalGPUs(cluster));
-    clusterInfo.setTotalMemoryCapacity(hostServicesFacade.totalMemoryCapacity(cluster));
-    clusterInfo.setTotalDiskCapacity(hostServicesFacade.totalDiskCapacity(cluster));
-    clusterInfo.addServices(hostServicesFacade.findHostServicesByCluster(cluster));
+    clusterInfo = new ClusterInfo();
+    clusterInfo.setNumberOfHosts(hostsFacade.countHosts());
+    clusterInfo.setTotalCores(hostsFacade.totalCores());
+    clusterInfo.setTotalGPUs(hostsFacade.totalGPUs());
+    clusterInfo.setTotalMemoryCapacity(hostsFacade.totalMemoryCapacity());
+    clusterInfo.addServices(hostServicesFacade.findAll());
     found = true;
   }
 

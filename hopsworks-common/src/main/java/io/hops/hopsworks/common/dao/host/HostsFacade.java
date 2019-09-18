@@ -89,23 +89,6 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     }
   }
 
-  public List<Hosts> find(String cluster, String group, String service,
-          Status status) {
-    TypedQuery<Hosts> query = em.createNamedQuery(
-            "Hosts.findBy-Cluster.Service.Role.Status", Hosts.class)
-            .setParameter("cluster", cluster).setParameter("group", group)
-            .setParameter("service", service).setParameter("status", status);
-    return query.getResultList();
-  }
-
-  public List<Hosts> find(String cluster, String group, String service) {
-    TypedQuery<Hosts> query = em.createNamedQuery(
-            "Hosts.findBy-Cluster.Service.Role", Hosts.class)
-            .setParameter("cluster", cluster).setParameter("group", group)
-            .setParameter("service", service);
-    return query.getResultList();
-  }
-
   public String findCPUHost() {
     List<Hosts> hosts = findAllHosts();
     for(Hosts host: hosts){
@@ -162,5 +145,25 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     }
 
     return query.getResultList();
+  }
+
+  public Long countHosts() {
+    TypedQuery<Long> query = em.createNamedQuery("Host.Count", Long.class);
+    return query.getSingleResult();
+  }
+
+  public Long totalCores() {
+    TypedQuery<Long> query = em.createNamedQuery("Host.TotalCores", Long.class);
+    return query.getSingleResult();
+  }
+
+  public Long totalGPUs() {
+    TypedQuery<Long> query = em.createNamedQuery("Host.TotalGPUs", Long.class);
+    return query.getSingleResult();
+  }
+
+  public Long totalMemoryCapacity() {
+    TypedQuery<Long> query = em.createNamedQuery("Host.TotalMemoryCapacity", Long.class);
+    return query.getSingleResult();
   }
 }

@@ -64,11 +64,6 @@
         <f:facet name="left" rendered="#{roleEnforcementPoint.loggedIn}">
           <p:commandButton value="Hopsworks" action="#{facesContext.externalContext.redirect('/hopsworks')}" ajax="false" process="@monitorToolbarForm" icon="ui-icon-extlink"/>
           <p:commandButton value="Admin Home" action="#{facesContext.externalContext.redirect('/hopsworks-admin/security/protected/admin/adminIndex.xhtml')}" ajax="false" process="@monitorToolbarForm" icon="ui-icon-arrowrefresh-1-w"/>
-          <span class="ui-separator">
-            <span class="ui-icon ui-icon-grip-dotted-vertical" />
-          </span>
-          <p:commandButton value="Clusters" action='clusters' ajax="false" process="@monitorToolbarForm"/>
-          <p:commandButton value="Hosts" action="hosts" ajax="false" process="@monitorToolbarForm"/>
         </f:facet>
         <f:facet name="right">
           <p:menuButton value=" #{loginBean.loginUsername()}" id="userBtn">

@@ -41,7 +41,8 @@ package io.hops.hopsworks.kmon.struct;
 
 import io.hops.hopsworks.common.dao.host.Status;
 import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +74,7 @@ public class GroupInfo {
 
   public Map getStatus() {
 
-    Map<Status, Integer> statusMap = new TreeMap<Status, Integer>();
+    Map<Status, Integer> statusMap = new TreeMap<>();
     if (started > 0) {
       statusMap.put(Status.Started, started);
     }
@@ -105,26 +106,25 @@ public class GroupInfo {
     return Health.Good;
   }
 
-  public Health addServices(List<HostServicesInfo> services) {
-    for (HostServicesInfo serviceHostInfo : services) {
-      if (serviceHostInfo.getHostServices().getService().equals("")) {
+  public void addServices(List<HostServices> services) {
+    for (HostServices serviceHostInfo : services) {
+      if (serviceHostInfo.getService().equals("")) {
         continue;
       }
-      this.services.add(serviceHostInfo.getHostServices().getService());
+      this.services.add(serviceHostInfo.getService());
       if (serviceHostInfo.getStatus() == Status.Started) {
         started += 1;
       } else {
-        badServices.add(serviceHostInfo.getHostServices().getService());
+        badServices.add(serviceHostInfo.getService());
         if (serviceHostInfo.getStatus() == Status.Stopped) {
           stopped += 1;
         } else {
           timedOut += 1;
         }
       }
-      addService(serviceHostInfo.getHostServices().getService());
+      addService(serviceHostInfo.getService());
     }
     health = (stopped + timedOut > 0) ? Health.Bad : Health.Good;
-    return health;
   }
 
   private void addService(String service) {

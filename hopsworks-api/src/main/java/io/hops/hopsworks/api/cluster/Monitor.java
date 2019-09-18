@@ -121,7 +121,7 @@ public class Monitor {
   @Path("/groups/{groupName}/services/{serviceName}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName) {
-    List<HostServices> list = hostServicesFacade.findGroups(groupName, serviceName);
+    List<HostServices> list = hostServicesFacade.findServices(serviceName);
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(services).build();
@@ -161,7 +161,7 @@ public class Monitor {
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action) throws 
       GenericException {
-    String result = hostServicesFacade.serviceOp(groupName, action.getAction());
+    String result = hostServicesFacade.groupOp(groupName, action.getAction());
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(result);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -175,7 +175,7 @@ public class Monitor {
   public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
       ServicesActionDTO action) throws GenericException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage(hostServicesFacade.serviceOp(groupName, serviceName, action.getAction()));
+    json.setSuccessMessage(hostServicesFacade.serviceOp(serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 

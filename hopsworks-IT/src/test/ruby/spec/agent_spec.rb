@@ -101,12 +101,11 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to heartbeat" do
           post @register_resource, {"host-id": @hostname, password: "pass123"}
-          post @heartbeat_resource, {"host-id": @hostname, "num-gpus": 0, "agent-time": 1, "load1": 0.1,
-                                     "load5": 0.1, "load15": 0.1, "memory-used": 1123, "disk-capacity": 100,
-                                     "cores": 4, "memory-capacity": 2, "disk-used": 20}
+          post @heartbeat_resource, {"host-id": @hostname, "num-gpus": 0, "agent-time": 1,
+                                     "cores": 4, "memory-capacity": 2}
           expect_status(200)
           host = find_by_hostid(@hostname)
-          expect(host.memory_used).to eq(1123)
+          expect(host.cores).to eq(4)
         end
       end
     end
