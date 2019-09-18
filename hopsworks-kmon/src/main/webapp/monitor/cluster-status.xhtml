@@ -60,14 +60,9 @@
         <p:panelGrid>  
           <p:row>  
             <p:column>
-              <p:commandLink id="groups" action="clusters" ajax="false">  
-                <h:outputText value="Clusters" />
+              <p:commandLink id="groups" action="#{urlController.clusterStatus()}" ajax="false">
+                <h:outputText value="Cluster" />
               </p:commandLink> 
-              <h:outputText value=" &raquo; "/>
-              <p:commandLink action="#{urlController.clusterStatus(commandController.cluster)}" ajax="false">  
-                <h:outputText value="#{commandController.cluster}" />  
-                <f:param name="cluster" value="#{commandController.cluster}"/>
-              </p:commandLink>                   
             </p:column>
           </p:row>
         </p:panelGrid>
@@ -83,39 +78,12 @@
 
       <p:outputPanel rendered="#{clusterStatusController.found}">         
 
-        <!-- Second Toolbar-->
-        <h:form>  
-          <p:toolbar styleClass="SecondToolbar#{clusterStatusController.clusterHealth}">  
-            <p:toolbarGroup align="left">  
-              <p:commandLink  action="#{urlController.clusterStatus(clusterStatusController.cluster)}" ajax="false">
-                <h:outputText value="#{clusterStatusController.cluster}"/>
-              </p:commandLink>
-
-            </p:toolbarGroup>  
-
-            <p:toolbarGroup align="right">  
-              <p:menuButton value="Actions" disabled="true">  
-                <p:menuitem value="Start..." url="???" /> 
-                <p:menuitem value="Stop..." url="???" /> 
-              </p:menuButton>  
-            </p:toolbarGroup>  
-
-          </p:toolbar>  
-        </h:form>
-
         <p:spacer width="1" height="10" />
 
         <h:form styleClass="styleInfoPanel">
           <p:panel header="Cluster Info">
 
             <p:dataTable id="clusterinfo" var="clusterInfo" value="#{clusterStatusController.clusterInfo}">
-
-              <p:column  headerText="Cluster name">  
-                <p:commandLink styleClass="Health-#{clusterInfo.clusterHealth}" id="id#{clusterInfo.name}" 
-                               action="#{urlController.clusterStatus(clusterInfo.name)}" ajax="false">  
-                  <h:outputText value="#{clusterInfo.name}" />
-                </p:commandLink> 
-              </p:column> 
 
               <p:column headerText="Health"  styleClass="Health-#{clusterInfo.clusterHealth}">
                 <h:outputText value="#{clusterInfo.clusterHealth}"/>
@@ -124,8 +92,7 @@
               <p:column headerText="Hosts"><h:outputText value="#{clusterInfo.numberOfHosts}"/></p:column>
               <p:column headerText="Cores"><h:outputText value="#{clusterInfo.totalCores}"/></p:column>
               <p:column headerText="GPUs"><h:outputText value="#{clusterInfo.totalGPUs}"/></p:column>
-              <p:column headerText="Disk Capacity"><h:outputText value="#{clusterInfo.totalDiskCapacity}"/></p:column>
-              <p:column headerText="Memory Capacity"><h:outputText value="#{clusterInfo.totalMemoryCapacity}"/></p:column> 
+              <p:column headerText="Memory Capacity"><h:outputText value="#{clusterInfo.totalMemoryCapacity}"/></p:column>
 
             </p:dataTable>  
           </p:panel>    
@@ -147,7 +114,6 @@
                   <p:commandLink styleClass="Health-#{group.serviceHealth(service)}" 
                                  action="#{urlController.groupInstances}" ajax="false">
                     <h:outputText value="${group.serviceCount(service)} ${service}"/>
-                    <f:param name="cluster" value="#{clusterStatusController.cluster}"/>
                     <f:param name="service" value="#{service}"/>
                     <f:param name="group" value="#{group.name}"/>
                   </p:commandLink>

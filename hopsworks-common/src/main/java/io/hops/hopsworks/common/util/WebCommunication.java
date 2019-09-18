@@ -50,7 +50,6 @@ import javax.ejb.Asynchronous;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -64,17 +63,12 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status.Family;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
@@ -129,105 +123,51 @@ public class WebCommunication {
    * @param operation start | stop | restart
    * @param hostAddress
    * @param agentPassword
-   * @param cluster
    * @param service
    * @param service
    * @return
    */
   public String serviceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws GenericException {
-    String url = createUrl(operation, hostAddress, cluster, group, service);
+      String agentPassword, String group, String service) throws GenericException {
+    String url = createUrl(operation, hostAddress, group, service);
     return fetchContent(url, agentPassword);
   }
 
   @Asynchronous
   public Future<String> asyncServiceOp(String operation, String hostAddress,
-      String agentPassword, String cluster, String group, String service) throws GenericException {
-    String url = createUrl(operation, hostAddress, cluster, group, service);
+      String agentPassword, String group, String service) throws GenericException {
+    String url = createUrl(operation, hostAddress, group, service);
     return new AsyncResult<>(fetchContent(url, agentPassword));
   }
   
   public String getConfig(String hostAddress, String agentPassword,
-      String cluster, String group, String service) throws GenericException {
-    String url = createUrl("config", hostAddress, cluster, group, service);
+      String group, String service) throws GenericException {
+    String url = createUrl("config", hostAddress, group, service);
     return fetchContent(url, agentPassword);
   }
 
-  public String getServiceLog(String hostAddress, String agentPassword,
-      String cluster, String group, String service, int lines) throws GenericException {
-    String url = createUrl("log", hostAddress, cluster, group, service, String.
-            valueOf(lines));
-    return fetchLog(url, agentPassword);
-  }
-
-  public String getGroupLog(String hostAddress, String agentPassword,
-      String cluster, String group, int lines) throws GenericException {
-    String url = createUrl("log", hostAddress, cluster, group, String.valueOf(
-            lines));
-    return fetchLog(url, agentPassword);
-  }
-
-  public String getAgentLog(String hostAddress, String agentPassword, int lines) throws GenericException {
-    String url = createUrl("agentlog", hostAddress, String.valueOf(lines));
-    return fetchLog(url, agentPassword);
-  }
-
-  public List<NodesTableItem> getNdbinfoNodesTable(String hostAddress,
-      String agentPassword) throws GenericException {
-    List<NodesTableItem> resultList = new ArrayList<NodesTableItem>();
-
-    String url = createUrl("mysql", hostAddress, "ndbinfo", "nodes");
-    String jsonString = fetchContent(url, agentPassword);
-    InputStream stream = new ByteArrayInputStream(jsonString.getBytes(          StandardCharsets.UTF_8));
-    try {
-      JsonArray json = Json.createReader(stream).readArray();
-      if (json.get(0).equals("Error")) {
-        resultList.add(new NodesTableItem(null, json.getString(1), null, null,
-                null));
-        return resultList;
-      }
-      for (int i = 0; i < json.size(); i++) {
-        JsonArray node = json.getJsonArray(i);
-        Integer nodeId = node.getInt(0);
-        Long uptime = node.getJsonNumber(1).longValue();
-        String status = node.getString(2);
-        Integer startPhase = node.getInt(3);
-        Integer configGeneration = node.getInt(4);
-        resultList.add(new NodesTableItem(nodeId, status, uptime, startPhase,
-                configGeneration));
-      }
-    } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Exception: {0}", ex);
-      resultList.add(new NodesTableItem(null, "Error", null, null, null));
-    }
-    return resultList;
-  }
-
   public String executeRun(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/run", hostAddress, agentPassword, cluster, group,
-            service, command, params);
+                           String group, String service, String command,
+                           String[] params) throws Exception {
+    return execute("execute/run", hostAddress, agentPassword, group, service, command, params);
   }
 
   public String executeStart(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/start", hostAddress, agentPassword, cluster, group,
-            service, command, params);
+                             String group, String service, String command,
+                             String[] params) throws Exception {
+    return execute("execute/start", hostAddress, agentPassword, group, service, command, params);
   }
 
   public String executeContinue(String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
-          String[] params) throws Exception {
-    return execute("execute/continue", hostAddress, agentPassword, cluster,
-            group, service, command, params);
+                                String group, String service, String command,
+                                String[] params) throws Exception {
+    return execute("execute/continue", hostAddress, agentPassword, group, service, command, params);
   }
 
   private String execute(String path, String hostAddress, String agentPassword,
-          String cluster, String group, String service, String command,
+          String group, String service, String command,
           String[] params) throws Exception {
-    String url = createUrl(path, hostAddress, cluster, group, service, command);
+    String url = createUrl(path, hostAddress, group, service, command);
     String optionsAndParams = "";
     for (String param : params) {
       optionsAndParams += optionsAndParams.isEmpty() ? param : " " + param;
@@ -283,12 +223,6 @@ public class WebCommunication {
       logger.log(Level.SEVERE, null, e);
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-  }
-
-  private String fetchLog(String url, String agentPassword) throws GenericException {
-    String log = fetchContent(url, agentPassword);
-    log = FormatUtils.stdoutToHtml(log);
-    return log;
   }
 
   private Response getWebResource(String url, String agentPassword) throws NoSuchAlgorithmException,

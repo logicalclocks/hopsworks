@@ -39,9 +39,11 @@
 
 package io.hops.hopsworks.kmon.group;
 
-import io.hops.hopsworks.kmon.struct.GroupType;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -49,19 +51,16 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import io.hops.hopsworks.kmon.service.GroupServiceMapper;
-import io.hops.hopsworks.kmon.struct.ServiceType;
+
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.host.Health;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServicesInfo;
 import io.hops.hopsworks.kmon.struct.ServiceInstancesInfo;
 
 @ManagedBean
 @RequestScoped
 public class GroupStatusController {
 
-  @ManagedProperty("#{param.cluster}")
-  private String cluster;
   @ManagedProperty("#{param.group}")
   private String group;
 
@@ -69,15 +68,15 @@ public class GroupStatusController {
   private HostServicesFacade hostServicesFacade;
 
   private Health health;
-  private List<ServiceInstancesInfo> groupServices = new ArrayList<ServiceInstancesInfo>();
-  private static final Logger logger = Logger.getLogger(GroupStatusController.class.getName());
+  private List<ServiceInstancesInfo> groupServices = new ArrayList<>();
+  private static final Logger LOGGER = Logger.getLogger(GroupStatusController.class.getName());
 
   public GroupStatusController() {
   }
 
   @PostConstruct
   public void init() {
-    logger.info("GroupStatusController: cluster: " + cluster + "; group: " + group);
+    LOGGER.log(Level.FINE, "GroupStatusController: group: " + group);
     loadServices();
   }
 
@@ -89,14 +88,6 @@ public class GroupStatusController {
     this.group = group;
   }
 
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
-
-  public String getCluster() {
-    return cluster;
-  }
-
   public Health getHealth() {
     return health;
   }
@@ -105,50 +96,33 @@ public class GroupStatusController {
     return groupServices;
   }
 
-  public boolean renderTerminalLink() {
-    return group.equalsIgnoreCase(GroupType.HDFS.toString())
-        || group.equalsIgnoreCase(GroupType.NDB.toString());
-  }
-
   public boolean renderInstancesLink() {
-//    return !group.equalsIgnoreCase(GroupType.Spark.toString());
     return true;
-  }
-
-  public boolean renderNdbInfoTable() {
-    return group.equals(GroupType.NDB.toString());
-  }
-
-  public boolean renderLog() {
-    return group.equals(GroupType.NDB.toString());
-  }
-
-  public boolean renderConfiguration() {
-    return group.equals(GroupType.NDB.toString());
   }
 
   private void loadServices() {
     health = Health.Good;
-    try {
-      for (ServiceType service : GroupServiceMapper.getServices(group)) {
-        groupServices.add(createServiceInstancesInfo(cluster, group, service));
-      }
-    } catch (Exception ex) {
-      logger.log(Level.SEVERE, "Invalid service type: {0}", group);
-    }
+    groupServices.addAll(createGroupInstancesInfo(group));
   }
 
-  private ServiceInstancesInfo createServiceInstancesInfo(String cluster, String group, ServiceType service) {
-    ServiceInstancesInfo groupInstancesInfo = new ServiceInstancesInfo(GroupServiceMapper.getServiceFullName(service),
-        service);
-    List<HostServicesInfo> serviceHosts = hostServicesFacade.findHostServices(cluster, group, service.toString());
-    for (HostServicesInfo serviceHost : serviceHosts) {
-      groupInstancesInfo.addInstanceInfo(serviceHost.getStatus(), serviceHost.getHealth());
+  private Collection<ServiceInstancesInfo> createGroupInstancesInfo(String group) {
+    List<HostServices> serviceHosts = hostServicesFacade.findGroupServices(group);
+    Map<String, ServiceInstancesInfo> serviceInstancesInfoMap = new HashMap<>();
+
+    for (HostServices hostService : serviceHosts) {
+      if (!serviceInstancesInfoMap.containsKey(hostService.getService())) {
+        serviceInstancesInfoMap.put(hostService.getService(), new ServiceInstancesInfo(hostService.getService()));
+      }
+
+      serviceInstancesInfoMap.get(hostService.getService())
+          .addInstanceInfo(hostService.getStatus(), hostService.getHealth());
+
+      if (hostService.getHealth() == Health.Bad) {
+        health = Health.Bad;
+      }
     }
-    if (groupInstancesInfo.getOverallHealth() == Health.Bad) {
-      health = Health.Bad;
-    }
-    return groupInstancesInfo;
+
+    return serviceInstancesInfoMap.values();
   }
 
 }

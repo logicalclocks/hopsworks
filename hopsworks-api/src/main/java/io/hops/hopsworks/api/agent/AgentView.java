@@ -41,17 +41,8 @@ public class AgentView {
   // Heartbeat
   @XmlElement(name = "agent-time")
   private Long agentTime;
-  private Double load1;
-  private Double load5;
-  private Double load15;
   @XmlElement(name = "num-gpus")
   private Integer numGpus;
-  @XmlElement(name = "disk-used")
-  private Long diskUsed;
-  @XmlElement(name = "disk-capacity")
-  private Long diskCapacity;
-  @XmlElement(name = "memory-used")
-  private Long memoryUsed;
   @XmlElement(name = "memory-capacity")
   private Long memoryCapacity;
   private Integer cores;
@@ -105,69 +96,6 @@ public class AgentView {
   
   public void setAgentTime(Long agentTime) {
     this.agentTime = agentTime;
-  }
-  
-  @ApiModelProperty(value = "load1 of host", required = true)
-  public Double getLoad1() {
-    return load1;
-  }
-  
-  public void setLoad1(Double load1) {
-    this.load1 = load1;
-  }
-  
-  @ApiModelProperty(value = "load5 of host", required = true)
-  public Double getLoad5() {
-    return load5;
-  }
-  
-  public void setLoad5(Double load5) {
-    this.load5 = load5;
-  }
-  
-  @ApiModelProperty(value = "load15 of host", required = true)
-  public Double getLoad15() {
-    return load15;
-  }
-  
-  public void setLoad15(Double load15) {
-    this.load15 = load15;
-  }
-  
-  @ApiModelProperty(value = "Number of available GPUs in host", required = true)
-  public Integer getNumGpus() {
-    return numGpus;
-  }
-  
-  public void setNumGpus(Integer numGpus) {
-    this.numGpus = numGpus;
-  }
-  
-  @ApiModelProperty(value = "Used disk space of host", required = true)
-  public Long getDiskUsed() {
-    return diskUsed;
-  }
-  
-  public void setDiskUsed(Long diskUsed) {
-    this.diskUsed = diskUsed;
-  }
-  
-  @ApiModelProperty(value = "Total disk capacity of host", required = true)
-  public Long getDiskCapacity() {
-    return diskCapacity;
-  }
-  
-  public void setDiskCapacity(Long diskCapacity) {
-    this.diskCapacity = diskCapacity;
-  }
-  
-  @ApiModelProperty(value = "Memory used in host", required = true)
-  public Long getMemoryUsed() {
-    return memoryUsed;
-  }
-  
-  public void setMemoryUsed(Long memoryUsed) {
-    this.memoryUsed = memoryUsed;
   }
   
   @ApiModelProperty(value = "Total memory capacity of host", required = true)
@@ -264,9 +192,8 @@ public class AgentView {
       }
     }
     
-    return new AgentController.AgentHeartbeatDTO(hostId, agentTime, load1, load5, load15, numGpus, diskUsed,
-        diskCapacity, memoryUsed, memoryCapacity, cores, privateIp, services, systemCommands, condaCommands,
-        condaReport, recover);
+    return new AgentController.AgentHeartbeatDTO(hostId, agentTime, numGpus, memoryCapacity,
+        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover);
   }
   
   @Override

@@ -46,20 +46,30 @@ public class InstanceInfo implements Serializable {
 
   private String name;
   private String host;
-  private String cluster;
-  private String service;
+  private String ip;
   private String group;
+  private String service;
   private Status status;
   private String health;
+  private int pid;
+  private String uptime;
 
-  public InstanceInfo(String cluster, String group, String service, String host,
-          Status status, String health) {
-
-    this.name = service + " @" + host;
+  public InstanceInfo(String group, String service, String host, Status status, String health) {
+    this.name = service;
     this.host = host;
-    this.cluster = cluster;
     this.group = group;
     this.service = service;
+    this.status = status;
+    this.health = health;
+  }
+
+  public InstanceInfo(String group, String service, String host, String ip, Status status, String health) {
+
+    this.name = service;
+    this.host = host;
+    this.ip = ip;
+    this.service = service;
+    this.group = group;
     this.status = status;
     this.health = health;
   }
@@ -70,6 +80,10 @@ public class InstanceInfo implements Serializable {
 
   public String getHost() {
     return host;
+  }
+
+  public String getIp() {
+    return ip;
   }
 
   public Status getStatus() {
@@ -84,16 +98,32 @@ public class InstanceInfo implements Serializable {
     return service;
   }
 
+  public void setService(String service) {
+    this.service = service;
+  }
+  
+  public int getPid() {
+    return pid;
+  }
+
+  public void setPid(int pid) {
+    this.pid = pid;
+  }
+
+  public String getUptime() {
+    return uptime;
+  }
+
+  public void setUptime(String uptime) {
+    this.uptime = uptime;
+  }
+
   public String getGroup() {
     return group;
   }
 
-  public String getCluster() {
-    return cluster;
-  }
-
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
+  public void setGroup(String service) {
+    this.group = service;
   }
 
 }

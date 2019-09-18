@@ -128,18 +128,7 @@ public class AgentResource {
         throw new IllegalArgumentException("Unknown action: " + action + " on AgentResource");
     }
   }
-  
-  @ApiOperation(value = "Endpoint to handle alerts from kagent")
-  @POST
-  @Path("/alert")
-  @Consumes(MediaType.APPLICATION_JSON)
-  public Response alert(
-      @ApiParam(value = "Alert sent by agent", required = true) AlertView alertView) throws ServiceException {
-  
-    agentController.alert(alertView.toAlert(), alertView.getHostId());
-    return Response.ok().build();
-  }
-  
+
   private AgentView heartbeatReplyToAgentView(HeartbeatReplyDTO hbReply) {
     final List<SystemCommandView> systemCommands = new ArrayList<>(hbReply.getSystemCommands().size());
     final SystemCommandView.Builder scvBuilder = new SystemCommandView.Builder();
