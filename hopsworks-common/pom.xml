@@ -308,7 +308,7 @@
     <dependency>
       <groupId>io.hops.hive</groupId>
       <artifactId>hive-jdbc</artifactId>
-      <version>3.0.0.1</version>
+      <version>${hive.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
