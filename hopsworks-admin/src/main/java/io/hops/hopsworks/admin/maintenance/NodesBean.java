@@ -50,8 +50,6 @@ import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
@@ -244,20 +242,6 @@ public class NodesBean implements Serializable {
 
   public void dialogAddNewNode() {
     RequestContext.getCurrentInstance().openDialog("addNewNodeDialog", dialogOptions, null);
-  }
-
-  public String condaStyle(String hostname) {
-    Optional<Hosts> optional = hostsFacade.findByHostname(hostname);
-    if (optional.isPresent()) {
-      Hosts h = optional.get();
-      List<CondaCommands> listCommands = condaCommandsFacade.findByHost(h);
-      for (CondaCommands cc : listCommands) {
-        if (cc.getStatus() == CondaStatus.FAILED) {
-          return "condaOutOfSync";
-        }
-      }
-    }
-    return "condaSync";
   }
 
   public void rsyncAnacondaLibs(String hostname) {

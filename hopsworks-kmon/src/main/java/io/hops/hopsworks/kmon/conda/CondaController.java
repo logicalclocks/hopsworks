@@ -21,15 +21,10 @@ package io.hops.hopsworks.kmon.conda;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 
 import javax.annotation.PostConstruct;
@@ -39,12 +34,9 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @ManagedBean
@@ -108,112 +100,6 @@ public class CondaController implements Serializable {
     condaCommandFacade.removeCondaCommand(command.getId());
     message("deleting");
     loadCommands();
-  }
-
-  public void execCommand(CondaCommands command) throws ServiceException {
-    // ssh to the host, run the command, print out the results to the terminal.
-
-    try {
-      if (command.getStatus() != CondaStatus.FAILED) {
-        FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
-            "You can only execute failed commands.", "Not executed");
-        FacesContext.getCurrentInstance().addMessage(null, message);
-        return;
-      }
-
-      if (command.getOp() == null) {
-        this.output = "Conda command was null. Report a bug.";
-      } else {
-        message("executing");
-        CondaOp op = command.getOp();
-        if (op.isEnvOp()) {
-          // anaconda environment command: <host> <op> <proj> <arg> <offline> <hadoop_home>
-          String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-command-ssh.sh";
-          String hostname = command.getHostId().getHostIp();
-          String projectName = command.getProj();
-          String arg = command.getArg();
-          String offline = "";
-          String hadoopHome = settings.getHadoopSymbolicLinkDir();
-          ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-              .addCommand(prog)
-              .addCommand(hostname)
-              .addCommand(op.toString())
-              .addCommand(projectName)
-              .addCommand(arg)
-              .addCommand(offline)
-              .addCommand(hadoopHome)
-              .redirectErrorStream(true)
-              .setWaitTimeout(10L, TimeUnit.MINUTES)
-              .build();
-
-          logger.log(Level.FINE, "Executing " + processDescriptor.toString());
-  
-          ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-          
-          if (!processResult.processExited()) {
-            this.output = "COMMAND TIMED OUT: \r\n" + processResult.getStdout();
-            return;
-          }
-          
-          if (processResult.getExitCode() == 0) {
-            // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
-            condaCommandFacade.removeCondaCommand(command.getId());
-
-
-            this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            commandsController.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
-                command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
-                command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
-
-          } else {
-            this.output = "FAILED. \r\n" + processResult.getStdout();
-          }
-        } else { // Conda operation
-          String prog = settings.getHopsworksDomainDir() + "/bin/conda-command-ssh.sh";
-          String hostname = command.getHostId().getHostIp();
-          String projectName = command.getProj();
-          String channelUrl = command.getChannelUrl();
-          
-          ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-              .addCommand(prog)
-              .addCommand(hostname)
-              .addCommand(op.toString())
-              .addCommand(projectName)
-              .addCommand(channelUrl)
-              .addCommand(command.getInstallType().toString())
-              .addCommand(command.getLib())
-              .addCommand(command.getVersion())
-              .redirectErrorStream(true)
-              .build();
-          logger.log(Level.FINE, "Executing: {0}", processDescriptor.toString());
-          
-          ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-          if (!processResult.processExited()) {
-            this.output = "COMMAND TIMED OUT: \r\n" + processResult.getStdout();
-            return;
-          }
-          if (processResult.getExitCode() == 0) {
-            // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
-
-            condaCommandFacade.removeCondaCommand(command.getId());
-            this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            commandsController.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
-                command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
-                command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
-            loadCommands();
-          } else {
-            this.output = "FAILED. \r\n" + processResult.getStdout();
-          }
-        }
-      }
-      logger.log(Level.INFO, "Output: {0}", this.output);
-
-    } catch (IOException ex) {
-      Logger.getLogger(HopsUtils.class.getName()).log(Level.SEVERE, null, ex);
-    }
-
   }
 
   public List<CondaCommands> getFailedCondaCommands() {
@@ -334,15 +220,6 @@ public class CondaController implements Serializable {
     return diskUsage;
   }
   
-  public void cleanupConda() {
-    try {
-      environmentController.cleanupConda();
-    } catch (Exception e) {
-      logger.warning("Problem cleaning up Conda");
-      logger.warning(e.getMessage());
-      message(e.getMessage());
-    }
-  }
   
   public void cleanupAnaconda() {
   }

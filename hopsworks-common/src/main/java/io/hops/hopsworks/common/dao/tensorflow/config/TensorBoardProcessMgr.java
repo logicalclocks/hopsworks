@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -47,7 +48,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -84,6 +84,8 @@ public class TensorBoardProcessMgr {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private HttpClient httpClient;
+  @EJB
+  private ProjectUtils projectUtils;
 
   /**
    * Start the TensorBoard process
@@ -98,9 +100,9 @@ public class TensorBoardProcessMgr {
                                          String tfLdLibraryPath, String tensorBoardDirectory)
           throws TensorBoardException {
 
-    String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
+    String prog = settings.getSudoersDir() + "/tensorboard.sh";
     Integer port = 0;
-    BigInteger pid = null;
+    String cid = null;
     String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
     String tbSecretDir = tbBasePath + tensorBoardDirectory;
     String certsPath = "";
@@ -143,6 +145,7 @@ public class TensorBoardProcessMgr {
         port = ThreadLocalRandom.current().nextInt(40000, 59999);
   
         ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
           .addCommand(prog)
           .addCommand("start")
           .addCommand(hdfsUser.getName())
@@ -150,9 +153,8 @@ public class TensorBoardProcessMgr {
           .addCommand(tbSecretDir)
           .addCommand(port.toString())
           .addCommand(anacondaEnvironmentPath)
-          .addCommand(settings.getHadoopVersion())
-          .addCommand(settings.getJavaHome())
           .addCommand(tfLdLibraryPath)
+          .addCommand(projectUtils.getFullDockerImageName(project))
           .ignoreOutErrStreams(true)
           .build();
         LOGGER.log(Level.FINE, processDescriptor.toString());
@@ -166,10 +168,9 @@ public class TensorBoardProcessMgr {
         File pidFile = new File(pidPath);
         // Read the pid for TensorBoard server
         if(pidFile.exists()) {
-          String pidContents = Files.readFirstLine(pidFile, Charset.defaultCharset());
-          pid = BigInteger.valueOf(Long.parseLong(pidContents));
+          cid = Files.readFirstLine(pidFile, Charset.defaultCharset());
         }
-        if(exitValue == 0 && pid != null) {
+        if(exitValue == 0 && cid != null) {
           TensorBoardDTO tensorBoardDTO = new TensorBoardDTO();
           String host = null;
           try {
@@ -178,12 +179,12 @@ public class TensorBoardProcessMgr {
             LOGGER.log(Level.SEVERE, null, ex);
           }
           tensorBoardDTO.setEndpoint(host + ":" + port);
-          tensorBoardDTO.setPid(pid);
+          tensorBoardDTO.setCid(cid);
           return tensorBoardDTO;
         } else {
           LOGGER.log(Level.SEVERE,"Failed starting TensorBoard got exitcode " + exitValue + " retrying on new port");
-          if(pid != null) {
-            this.killTensorBoard(pid);
+          if(cid != null) {
+            this.killTensorBoard(cid);
           }
         }
       } catch (Exception ex) {
@@ -206,18 +207,19 @@ public class TensorBoardProcessMgr {
 
   /**
    * Kill the TensorBoard process
-   * @param pid
+   * @param cid
    * @return
    */
-  public int killTensorBoard(BigInteger pid) {
+  public int killTensorBoard(String cid) {
 
-    String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
+    String prog = settings.getSudoersDir() + "/tensorboard.sh";
     int exitValue;
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("kill")
-        .addCommand(pid.toString())
+        .addCommand(cid)
         .ignoreOutErrStreams(true)
         .build();
     LOGGER.log(Level.FINE, processDescriptor.toString());
@@ -242,13 +244,14 @@ public class TensorBoardProcessMgr {
    */
   public int killTensorBoard(TensorBoard tb) {
 
-    String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
+    String prog = settings.getSudoersDir() + "/tensorboard.sh";
     int exitValue;
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+        .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("kill")
-        .addCommand(tb.getPid().toString())
+        .addCommand(tb.getCid())
         .ignoreOutErrStreams(true)
         .build();
     LOGGER.log(Level.FINE, processDescriptor.toString());
@@ -298,9 +301,10 @@ public class TensorBoardProcessMgr {
   public void removeTensorBoardDirectory(String tensorBoardDirectoryPath) throws TensorBoardException {
 
     // Remove directory
-    String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
+    String prog = settings.getSudoersDir() + "/tensorboard.sh";
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand("/usr/bin/sudo")
             .addCommand(prog)
             .addCommand("cleanup")
             .addCommand(tensorBoardDirectoryPath)

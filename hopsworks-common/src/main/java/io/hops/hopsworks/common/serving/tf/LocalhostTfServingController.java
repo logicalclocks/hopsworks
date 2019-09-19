@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.serving.tf;
 
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
@@ -44,8 +43,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
-import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
+import io.hops.hopsworks.common.util.ProjectUtils;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
 
 /**
  * Localhost Tensorflow Serving Controller
@@ -67,7 +67,7 @@ public class LocalhostTfServingController {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
-  private InodeFacade inodeFacade;
+  private ProjectUtils projectUtils;
   
   public int getMaxNumInstances() {
     return 1;
@@ -151,8 +151,9 @@ public class LocalhostTfServingController {
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("kill")
-        .addCommand(String.valueOf(serving.getLocalPid()))
-        .addCommand(String.valueOf(serving.getLocalPort()))
+        .addCommand(serving.getCid())
+        .addCommand(serving.getName())
+        .addCommand(serving.getProject().getName().toLowerCase())
         .addCommand(secretDir.toString())
         .ignoreOutErrStreams(true)
         .build();
@@ -165,7 +166,7 @@ public class LocalhostTfServingController {
         "serving id: " + serving.getId(), ex.getMessage(), ex);
     }
 
-    serving.setLocalPid(PID_STOPPED);
+    serving.setCid(CID_STOPPED);
     serving.setLocalPort(-1);
     servingFacade.updateDbObject(serving, project);
 
@@ -208,8 +209,9 @@ public class LocalhostTfServingController {
         .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
         .addCommand(serving.isBatchingEnabled() ? "1" : "0")
         .addCommand(project.getName().toLowerCase())
+        .addCommand(projectUtils.getFullDockerImageName(project))
         .setWaitTimeout(2L, TimeUnit.MINUTES)
-        .ignoreOutErrStreams(true)
+        .ignoreOutErrStreams(false)
         .build();
     logger.log(Level.INFO, processDescriptor.toString());
 
@@ -231,22 +233,22 @@ public class LocalhostTfServingController {
 
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
-        serving.setLocalPid(PID_STOPPED);
+        serving.setCid(CID_STOPPED);
         servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
       }
 
       // Read the pid for TensorFlow Serving server
-      Path pidFilePath = Paths.get(secretDir.toString(), "tfserving.pid");
-      String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
+      Path cidFilePath = Paths.get(secretDir.toString(), "tfserving.pid");
+      String cid = Files.readFirstLine(cidFilePath.toFile(), Charset.defaultCharset());
 
       // Update the info in the db
-      serving.setLocalPid(Integer.valueOf(pidContents));
+      serving.setCid(cid);
       serving.setLocalPort(restPort);
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
-      serving.setLocalPid(PID_STOPPED);
+      serving.setCid(CID_STOPPED);
       servingFacade.updateDbObject(serving, project);
 
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,

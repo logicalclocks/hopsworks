@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.agent;
 
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
@@ -168,23 +167,6 @@ public class CondaCommandView {
 
   public void setInstallJupyter(Boolean installJupyter) {
     this.installJupyter = installJupyter;
-  }
-
-  public CondaCommands toCondaCommands() {
-    final CondaCommands cc = new CondaCommands();
-    cc.setOp(op);
-    cc.setUser(user);
-    cc.setProj(project);
-    cc.setId(id);
-    cc.setArg(arg);
-    cc.setStatus(status);
-    cc.setVersion(version);
-    cc.setChannelUrl(channelUrl);
-    cc.setInstallType(installType);
-    cc.setLib(lib);
-    cc.setEnvironmentYml(environmentYml);
-    cc.setInstallJupyter(installJupyter);
-    return cc;
   }
   
   public static class Builder {

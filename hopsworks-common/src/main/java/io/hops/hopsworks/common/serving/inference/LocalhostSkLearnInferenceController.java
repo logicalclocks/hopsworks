@@ -39,7 +39,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 
-import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
 /**
  * SkLearn Localhost Inference Controller
  *
@@ -67,7 +67,7 @@ public class LocalhostSkLearnInferenceController implements SkLearnInferenceCont
   public Pair<Integer, String> infer(Serving serving, Integer modelVersion,
                                      String verb, String inferenceRequestJson) throws InferenceException {
 
-    if (serving.getLocalPid().equals(PID_STOPPED)) {
+    if (serving.getCid().equals(CID_STOPPED)) {
       throw new InferenceException(RESTCodes.InferenceErrorCode.SERVING_NOT_RUNNING, Level.FINE);
     }
 

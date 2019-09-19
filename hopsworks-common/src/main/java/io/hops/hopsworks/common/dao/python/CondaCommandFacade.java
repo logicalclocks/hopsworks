@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.dao.python;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
@@ -95,7 +94,7 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     List<CondaCommands> commands = getCommandsForProject(proj);
     for (CondaCommands cc : commands) {
       // delete the conda library command if it has the same name as the input library name
-      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.YML) || cc.getOp().equals(CondaOp.EXPORT)) {
+      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.EXPORT)) {
         em.remove(cc);
       }
     }
@@ -109,19 +108,6 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     } else {
       LOGGER.log(Level.FINE, "Could not remove CondaCommand with id: {0}", commandId);
     }
-  }
-  
-  public List<CondaCommands> findUnfinishedByHost(Hosts host) {
-    TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findNotFinishedByHost",
-      CondaCommands.class);
-    query.setParameter("host", host);
-    return query.getResultList();
-  }
-  
-  public List<CondaCommands> findByHost(Hosts host) {
-    TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByHost", CondaCommands.class);
-    query.setParameter("host", host);
-    return query.getResultList();
   }
   
   public List<CondaCommands> findByStatus(CondaStatus status) {

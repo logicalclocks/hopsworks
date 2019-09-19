@@ -66,7 +66,7 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
 
   private String bestDir;
 
-  private String[] environment;
+  private String environment;
 
   private String program;
 
@@ -228,11 +228,11 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
     this.program = program;
   }
 
-  public String[] getEnvironment() {
+  public String getEnvironment() {
     return environment;
   }
 
-  public void setEnvironment(String[] environment) {
+  public void setEnvironment(String environment) {
     this.environment = environment;
   }
 

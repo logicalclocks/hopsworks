@@ -30,7 +30,6 @@ import io.hops.hopsworks.exceptions.CAException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -52,6 +51,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.HttpStatus;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

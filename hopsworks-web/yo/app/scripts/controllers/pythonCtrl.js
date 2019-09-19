@@ -614,7 +614,7 @@ angular.module('hopsWorksApp')
                     };
                 } else {
                     var data = {
-                        "channelUrl": "PyPi",
+                        "channelUrl": "pypi",
                         "installType": installType,
                         "machineType": machineType,
                         "lib": lib,

@@ -44,8 +44,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
-import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
+import io.hops.hopsworks.common.util.ProjectUtils;
 
 /**
  * Localhost SkLearn Serving Controller
@@ -66,6 +67,8 @@ public class LocalhostSkLearnServingController {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private ProjectUtils projectUtils;
   
   public int getMaxNumInstances() {
     return 1;
@@ -93,12 +96,13 @@ public class LocalhostSkLearnServingController {
         .addCommand("/usr/bin/sudo")
         .addCommand(script)
         .addCommand("kill")
-        .addCommand(String.valueOf(serving.getLocalPid()))
-        .addCommand(String.valueOf(serving.getLocalPort()))
+        .addCommand(serving.getCid())
+        .addCommand(serving.getName())
+        .addCommand(serving.getProject().getName().toLowerCase())
         .addCommand(secretDir.toString())
         .ignoreOutErrStreams(true)
         .build();
-    logger.log(Level.INFO, processDescriptor.toString());
+    logger.log(Level.FINE, processDescriptor.toString());
     try {
       osProcessExecutor.execute(processDescriptor);
     } catch (IOException ex) {
@@ -106,7 +110,7 @@ public class LocalhostSkLearnServingController {
         "serving id: " + serving.getId(), ex.getMessage(), ex);
     }
 
-    serving.setLocalPid(PID_STOPPED);
+    serving.setCid(CID_STOPPED);
     serving.setLocalPort(-1);
     servingFacade.updateDbObject(serving, project);
 
@@ -147,17 +151,18 @@ public class LocalhostSkLearnServingController {
         .addCommand(certificateMaterializer.getUserTransientTruststorePath(project, user))
         .addCommand(certificateMaterializer.getUserTransientPasswordPath(project, user))
         .addCommand(serving.getName())
+        .addCommand(projectUtils.getFullDockerImageName(project))
         .setWaitTimeout(2L, TimeUnit.MINUTES)
         .ignoreOutErrStreams(true)
         .build();
-    logger.log(Level.INFO, processDescriptor.toString());
+    logger.log(Level.FINE, processDescriptor.toString());
     try {
       // Materialized TLS certificates so that user can read from HDFS inside python script
       certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         // Startup process failed for some reason
-        serving.setLocalPid(PID_STOPPED);
+        serving.setCid(CID_STOPPED);
         servingFacade.updateDbObject(serving, project);
         throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
       }
@@ -167,12 +172,12 @@ public class LocalhostSkLearnServingController {
       String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
 
       // Update the info in the db
-      serving.setLocalPid(Integer.valueOf(pidContents));
+      serving.setCid(pidContents);
       serving.setLocalPort(port);
       servingFacade.updateDbObject(serving, project);
     } catch (Exception ex) {
       // Startup process failed for some reason
-      serving.setLocalPid(PID_STOPPED);
+      serving.setCid(CID_STOPPED);
       servingFacade.updateDbObject(serving, project);
 
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null,

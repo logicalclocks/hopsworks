@@ -16,16 +16,11 @@
 package io.hops.hopsworks.persistence.entity.python;
 
 public enum CondaOp {
-  CLONE,
   CREATE,
-  BACKUP,
   REMOVE,
-  LIST,
   INSTALL,
   UNINSTALL,
-  UPGRADE,
-  CLEAN,
-  YML,
+//  YML,
   EXPORT;
   
   public boolean isEnvOp() {
@@ -33,9 +28,8 @@ public enum CondaOp {
   }
   
   public static boolean isEnvOp(CondaOp arg) {
-    if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE) == 0 || arg.compareTo(CondaOp.YML) == 0 ||
-      arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.BACKUP) == 0 || arg.compareTo(CondaOp.CLEAN) == 0
-      || arg.compareTo(CondaOp.EXPORT) == 0) {
+    if (arg.compareTo(CondaOp.CREATE) == 0 || //arg.compareTo(CondaOp.YML) == 0 ||
+      arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.EXPORT) == 0) {
       return true;
     }
     return false;

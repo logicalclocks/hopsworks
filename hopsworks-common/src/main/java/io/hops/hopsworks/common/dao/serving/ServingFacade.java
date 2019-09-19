@@ -104,8 +104,8 @@ public class ServingFacade {
 
     dbServing.setKafkaTopic(newServing.getKafkaTopic());
 
-    if (newServing.getLocalPid() != null) {
-      dbServing.setLocalPid(newServing.getLocalPid());
+    if (newServing.getCid() != null) {
+      dbServing.setCid(newServing.getCid());
     }
     if (newServing.getLocalDir() != null) {
       dbServing.setLocalDir(newServing.getLocalDir());

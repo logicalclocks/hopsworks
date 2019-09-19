@@ -194,10 +194,10 @@ public class SparkYarnRunnerBuilder {
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
             jobUser, tfLibraryPath, extraJavaOptions, kafkaBrokersString));
 
-    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
-    finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
-    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE", "true");
-    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_STAGING_DIR", stagingPath);
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
+    finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_YARN_MODE, "true");
+    finalJobProps.put(Settings.SPARK_YARN_APPMASTER_YARN_STAGING_DIR, stagingPath);
 
     //Parse properties from Spark config file
     Properties sparkProperties = new Properties();

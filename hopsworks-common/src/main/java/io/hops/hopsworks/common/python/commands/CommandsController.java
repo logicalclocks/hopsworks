@@ -145,40 +145,33 @@ public class CommandsController {
                    MachineType machineType, Project proj, String channelUrl, String lib, String version)
     throws ServiceException, GenericException {
     
-    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.size() == 0) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_TYPE_NOT_FOUND, Level.INFO,
-        "capability:" + machineType.name());
-    }
     PythonDep dep;
     try {
       // 1. test if anacondaRepoUrl exists. If not, add it.
       AnacondaRepo repo = libraryFacade.getRepo(channelUrl, true);
       // 2. Test if pythonDep exists. If not, add it.
       dep = libraryFacade.getOrCreateDep(repo, machineType, installType, lib, version, true, false);
-      
+
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
       if (depsInProj.contains(dep) && op == CondaOp.INSTALL) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.FINE,
-          "dep: " + dep.getDependency());
+            "dep: " + dep.getDependency());
       }
-      if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
+      if (op == CondaOp.INSTALL) {
         depsInProj.remove(dep);// if upgrade
         depsInProj.add(dep);
       }
       proj.setPythonDepCollection(depsInProj);
       projectFacade.update(proj);
-  
-      for (Hosts h : hosts) {
-        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(), user, op,
-            CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
-            new Date(), "", null, false, projectUtils.getCurrentCondaEnvironment(proj));
-        condaCommandFacade.save(cc);
-      }
+
+      CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
+          CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
+          new Date(), "", null, false, projectUtils.getDockerImageName(proj));
+      condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",
-        ex.getMessage(), ex);
+          ex.getMessage(), ex);
     }
     return dep;
   }
@@ -190,7 +183,7 @@ public class CommandsController {
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
-    CondaInstallType installType, MachineType machineType, String arg, String proj,
+    CondaInstallType installType, MachineType machineType, String arg, Project p,
     Users user, CondaOp opType, String lib, String version, String channel) throws ServiceException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
@@ -202,7 +195,6 @@ public class CommandsController {
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
         if (!CondaOp.isEnvOp(opType)) {
-          Project p = projectFacade.findByName(proj);
           Collection<CondaCommands> ongoingCommands = p.getCondaCommandsCollection();
           boolean finished = true;
           for (CondaCommands c : ongoingCommands) {

@@ -330,7 +330,7 @@ public class JupyterService {
         
         dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
           jupyterSettings, allowOrigin);
-        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getPid(), dto.getPort(),
+        jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getCid(), dto.getPort(),
           JUPYTER_JWT_AUD);
         HopsUtils.materializeCertificatesForUserCustomDir(project.getName(), user.getUsername(),
             settings.getHdfsTmpCertDir(), dfso, certificateMaterializer, settings, dto.getCertificatesDir());
@@ -340,11 +340,11 @@ public class JupyterService {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
         jupyterManager.waitForStartup(project, hopsworksUser);
       } catch (ServiceException | TimeoutException ex) {
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
       } catch (IOException ex) {
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
           ex.getMessage(), null, ex);
       } finally {
@@ -363,14 +363,14 @@ public class JupyterService {
         expirationDate = cal.getTime();
 
         jp = jupyterFacade.saveServer(externalIp, project, configSecret,
-          dto.getPort(), user.getId(), dto.getToken(), dto.getPid(), expirationDate);
+          dto.getPort(), user.getId(), dto.getToken(), dto.getCid(), expirationDate);
 
         //set minutes left until notebook server is killed
         Duration durationLeft = Duration.between(new Date().toInstant(), jp.getExpires().toInstant());
         jp.setMinutesUntilExpiration(durationLeft.toMinutes());
       } catch(Exception e) {
         LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
       }
       
       if (jp == null) {
@@ -384,7 +384,7 @@ public class JupyterService {
             jupyterNbVCSController.pull(jp, jupyterSettings);
           }
         } catch (ServiceException ex) {
-          jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(),
+          jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(),
               dto.getPort());
           throw ex;
         }
@@ -409,7 +409,7 @@ public class JupyterService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
         "hdfsUser: " + hdfsUsername);
     }
-    jupyterController.shutdown(project, hdfsUsername, user, jp.getSecret(), jp.getPid(), jp.getPort());
+    jupyterController.shutdown(project, hdfsUsername, user, jp.getSecret(), jp.getCid(), jp.getPort());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
   

@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.FlinkConfigurationUtil;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
@@ -158,6 +159,7 @@ public class FlinkYarnRunnerBuilder {
     // Add HopsUtil
 //    cluster.addHopsLocalResources("hops-util.jar", settings.getHopsUtilHdfsPath());
   
+    cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings),settings.getDockerMounts());
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
     builder.setFlinkCluster(cluster);

@@ -186,11 +186,6 @@ public class AgentView {
     }
     
     final List<CondaCommands> condaCommands = new ArrayList<>();
-    if (this.condaCommands != null) {
-      for (final CondaCommandView ccv : this.condaCommands) {
-        condaCommands.add(ccv.toCondaCommands());
-      }
-    }
     
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, numGpus, memoryCapacity,
         cores, privateIp, services, systemCommands, condaCommands, condaReport, recover);

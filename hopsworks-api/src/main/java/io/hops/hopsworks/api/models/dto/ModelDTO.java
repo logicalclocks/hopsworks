@@ -43,7 +43,7 @@ public class ModelDTO extends RestDTO<ModelDTO> {
 
   private String description;
 
-  private String[] environment;
+  private String environment;
 
   private String program;
 
@@ -109,11 +109,11 @@ public class ModelDTO extends RestDTO<ModelDTO> {
     this.id = id;
   }
 
-  public String[] getEnvironment() {
+  public String getEnvironment() {
     return environment;
   }
 
-  public void setEnvironment(String[] environment) {
+  public void setEnvironment(String environment) {
     this.environment = environment;
   }
 

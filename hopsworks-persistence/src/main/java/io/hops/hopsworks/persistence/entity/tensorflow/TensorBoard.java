@@ -61,7 +61,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.Date;
 
 @Entity
@@ -90,8 +89,8 @@ public class TensorBoard implements Serializable {
   @Column(name = "hdfs_user_id")
   private int hdfsUserId;
 
-  @Column(name = "pid")
-  private BigInteger pid;
+  @Column(name = "cid")
+  private String cid;
 
   @Size(min = 1,
           max = 100)
@@ -143,10 +142,10 @@ public class TensorBoard implements Serializable {
     this.setTensorBoardPK(tensorBoardPK);
   }
 
-  public TensorBoard(TensorBoardPK tensorBoardPK, BigInteger pid, String endpoint, String mlId,
+  public TensorBoard(TensorBoardPK tensorBoardPK, String cid, String endpoint, String mlId,
                            Date lastAccessed, String hdfsLogdir, String secret, int hdfsUserId) {
     this.setTensorBoardPK(tensorBoardPK);
-    this.setPid(pid);
+    this.setCid(cid);
     this.setEndpoint(endpoint);
     this.setMlId(mlId);
     this.setLastAccessed(lastAccessed);
@@ -163,12 +162,12 @@ public class TensorBoard implements Serializable {
     this.tensorBoardPK = tensorBoardPK;
   }
 
-  public BigInteger getPid() {
-    return pid;
+  public String getCid() {
+    return cid;
   }
 
-  public void setPid(BigInteger pid) {
-    this.pid = pid;
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
   public String getEndpoint() {

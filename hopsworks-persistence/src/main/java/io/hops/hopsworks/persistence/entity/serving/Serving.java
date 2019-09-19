@@ -52,7 +52,7 @@ import java.util.Date;
     @NamedQuery(name = "Serving.findByProjectAndId", query = "SELECT t FROM Serving t " +
       "WHERE t.project = :project AND t.id = :id"),
     @NamedQuery(name = "Serving.findByCreated", query = "SELECT t FROM Serving t WHERE t.created = :created"),
-    @NamedQuery(name = "Serving.findLocalhostRunning", query = "SELECT t FROM Serving t WHERE t.localPid != -2"),
+    @NamedQuery(name = "Serving.findLocalhostRunning", query = "SELECT t FROM Serving t WHERE t.cid != \"stopped\""),
     @NamedQuery(name = "Serving.expiredLocks", query = "SELECT t FROM Serving t " +
         "WHERE t.lockTimestamp is not NULL AND t.lockTimestamp < :lockts"),
     @NamedQuery(name = "Serving.findByProjectAndName", query = "SELECT t FROM Serving t " +
@@ -111,8 +111,8 @@ public class Serving implements Serializable {
   @Column(name = "local_port")
   private Integer localPort;
   @Basic(optional = true)
-  @Column(name = "local_pid")
-  private Integer localPid;
+  @Column(name = "cid")
+  private String cid;
   @Basic(optional = true)
   @Column(name = "local_dir")
   private String localDir;
@@ -214,12 +214,12 @@ public class Serving implements Serializable {
     this.localPort = localPort;
   }
 
-  public Integer getLocalPid() {
-    return localPid;
+  public String getCid() {
+    return cid;
   }
 
-  public void setLocalPid(Integer localPid) {
-    this.localPid = localPid;
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
   public String getLocalDir() {
@@ -292,7 +292,7 @@ public class Serving implements Serializable {
       return false;
     if (kafkaTopic != null ? !kafkaTopic.equals(serving.kafkaTopic) : serving.kafkaTopic != null) return false;
     if (localPort != null ? !localPort.equals(serving.localPort) : serving.localPort != null) return false;
-    if (localPid != null ? !localPid.equals(serving.localPid) : serving.localPid != null) return false;
+    if (cid != null ? !cid.equals(serving.cid) : serving.cid != null) return false;
     if (servingType != null ? !servingType.equals(serving.servingType) : serving.servingType != null) return false;
     return localDir != null ? localDir.equals(serving.localDir) : serving.localDir == null;
   }
@@ -313,7 +313,7 @@ public class Serving implements Serializable {
     result = 31 * result + (lockTimestamp != null ? lockTimestamp.hashCode() : 0);
     result = 31 * result + (kafkaTopic != null ? kafkaTopic.hashCode() : 0);
     result = 31 * result + (localPort != null ? localPort.hashCode() : 0);
-    result = 31 * result + (localPid != null ? localPid.hashCode() : 0);
+    result = 31 * result + (cid != null ? cid.hashCode() : 0);
     result = 31 * result + (localDir != null ? localDir.hashCode() : 0);
     result = 31 * result + (servingType!= null ? servingType.hashCode() : 0);
     return result;

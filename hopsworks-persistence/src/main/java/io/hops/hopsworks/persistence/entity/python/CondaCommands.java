@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.persistence.entity.python;
 
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -111,13 +110,7 @@ import javax.xml.bind.annotation.XmlRootElement;
           = "SELECT c FROM CondaCommands c WHERE c.created = :created"),
   @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
           query
-          = "DELETE FROM CondaCommands c WHERE c.status = :status"),
-  @NamedQuery(name = "CondaCommands.findByHost",
-          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host"),
-  @NamedQuery(name = "CondaCommands.findNotFinishedByHost",
-          query = "SELECT c FROM CondaCommands c WHERE c.hostId = :host AND c.status != "
-            + "io.hops.hopsworks.persistence.entity.python.CondaStatus.SUCCESS "
-            + "AND c.status != io.hops.hopsworks.persistence.entity.python.CondaStatus.FAILED")})
+          = "DELETE FROM CondaCommands c WHERE c.status = :status")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -139,8 +132,8 @@ public class CondaCommands implements Serializable {
   @NotNull
   @Size(min = 1,
           max = 255)
-  @Column(name = "proj")
-  private String proj;
+  @Column(name = "docker_image")
+  private String dockerImage;
   @Size(max = 255)
   @Column(name = "channel_url")
   private String channelUrl;
@@ -190,10 +183,6 @@ public class CondaCommands implements Serializable {
           referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project projectId;
-  @JoinColumn(name = "host_id",
-          referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Hosts hostId;
   @Size(min = 1,
           max = 10000)
   @Column(name = "environment_yml")
@@ -201,23 +190,21 @@ public class CondaCommands implements Serializable {
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
-
+    
   public CondaCommands() {
   }
 
-  public CondaCommands(Hosts h, String user, Users userId, CondaOp op,
+  public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType,
                        MachineType machineType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
-                       String environmentName) {
-    this.hostId = h;
+                       String dockerImage) {
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
     }
     this.user = user;
     this.userId = userId;
     this.op = op;
-    this.proj = environmentName;
     this.projectId = project;
     this.status = status;
     this.installType = installType;
@@ -229,6 +216,7 @@ public class CondaCommands implements Serializable {
     this.arg = arg;
     this.environmentYml = environmentYml;
     this.installJupyter = installJupyter;
+    this.dockerImage = dockerImage;
   }
 
   public Integer getId() {
@@ -245,14 +233,6 @@ public class CondaCommands implements Serializable {
 
   public void setUser(String user) {
     this.user = user;
-  }
-
-  public String getProj() {
-    return proj;
-  }
-
-  public void setProj(String proj) {
-    this.proj = proj;
   }
 
   public String getChannelUrl() {
@@ -304,14 +284,6 @@ public class CondaCommands implements Serializable {
     this.projectId = projectId;
   }
 
-  public Hosts getHostId() {
-    return hostId;
-  }
-
-  public void setHostId(Hosts hostId) {
-    this.hostId = hostId;
-  }
-
   public CondaOp getOp() {
     return op;
   }
@@ -360,6 +332,14 @@ public class CondaCommands implements Serializable {
     this.installJupyter = installJupyter;
   }
 
+  public String getDockerImage() {
+    return dockerImage;
+  }
+
+  public void setDockerImage(String dockerImage) {
+    this.dockerImage = dockerImage;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;
@@ -383,7 +363,7 @@ public class CondaCommands implements Serializable {
 
   @Override
   public String toString() {
-    return "[ id=" + id + ", proj=" + proj  + ", op=" + op + ", installType=" + installType 
+    return "[ id=" + id + ", proj=" + projectId.getName()  + ", op=" + op + ", installType=" + installType 
         + ", hostType=" + machineType + ", lib=" + lib + ", version=" + version + ", arg=" + arg 
         + ", channel=" + channelUrl + " ]";
   }
