@@ -43,6 +43,8 @@ import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -50,11 +52,14 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -169,4 +174,18 @@ public class KafkaController {
     return topics;
   }
 
+  public void updateTopicSchemaVersion(Project project, String topicName, Integer schemaVersion) throws KafkaException {
+    ProjectTopics pt = kafkaFacade.getTopicByProjectAndTopicName(project, topicName)
+      .orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topicName));
+    
+    String schemaName = pt.getSchemaTopics().getSchemaTopicsPK().getName();
+  
+    SchemaTopics st = kafkaFacade.getSchemaByNameAndVersion(schemaName, schemaVersion)
+      .orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
+        "schema: " + schemaName + ", version: " + schemaVersion));
+    
+    kafkaFacade.updateTopicSchemaVersion(pt, st);
+  }
 }

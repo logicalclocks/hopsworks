@@ -39,12 +39,11 @@
 
 package io.hops.hopsworks.kmon.url;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.faces.application.NavigationHandler;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
 
 @ManagedBean
 @RequestScoped
@@ -56,16 +55,14 @@ public class UrlController {
   private String service;
   @ManagedProperty("#{param.group}")
   private String group;
-  @ManagedProperty("#{param.cluster}")
-  private String cluster;
   @ManagedProperty("#{param.status}")
   private String status;
   @ManagedProperty("#{param.target}")
   private String target;
-  private static final Logger logger = Logger.getLogger(UrlController.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(UrlController.class.getName());
 
   public UrlController() {
-    logger.info("UrlController - hostname: " + hostname + " ; cluster: " + cluster + "; group: " + group
+    LOGGER.log(Level.FINE, "UrlController - hostname: " + hostname + "; group: " + group
         + " ; service: " + service + " ; status: " + status + " ; target: " + target);
   }
 
@@ -93,14 +90,6 @@ public class UrlController {
     this.hostname = hostname;
   }
 
-  public void setCluster(String cluster) {
-    this.cluster = cluster;
-  }
-
-  public String getCluster() {
-    return cluster;
-  }
-
   public void setStatus(String status) {
     this.status = status;
   }
@@ -117,42 +106,18 @@ public class UrlController {
     this.target = target;
   }
 
-  public String host() {
-    return "host?faces-redirect=true&hostname=" + hostname;
-  }
-
-  public String clustersStatus(){
-    return "clusters?faces-redirect=true";
-  }
-  
-  public String clusterStatus() {
-    return "cluster-status?faces-redirect=true&cluster=" + cluster;
-  }
-
-  public String clusterStatus(String cluster) {
-    return "cluster-status?faces-redirect=true&cluster=" + cluster;
-  }
-  
-  public String groupInstance() {
-    return "services-instances-status?faces-redirect=true&hostname=" 
-        + hostname + "&cluster=" + cluster + "&group=" + group;
-  }
-
-  public String clusterActionHistory() {
-    return "cluster-actionhistory?faces-redirect=true&cluster=" + cluster;
-  }
-
   public String groupStatus() {
-    return "group-status?faces-redirect=true&cluster=" + cluster + "&group=" + group;
+    return "group-status?faces-redirect=true&group=" + group;
+  }
+
+  public String clusterStatus() {
+    return "cluster-status";
   }
 
   public String groupInstances() {
     String url = "service-instances?faces-redirect=true";
     if (hostname != null) {
       url += "&hostname=" + hostname;
-    }
-    if (cluster != null) {
-      url += "&cluster=" + cluster;
     }
     if (group != null) {
       url += "&group=" + group;
@@ -164,34 +129,5 @@ public class UrlController {
       url += "&status=" + status;
     }
     return url;
-  }
-
-  public String groupActionHistory() {
-    return "group-actionhistory?faces-redirect=true&cluster=" + cluster + "&group=" + group;
-  }
-
-  public String groupTerminal() {
-    return "group-terminal?faces-redirect=true&cluster=" + cluster + "&group=" + group;
-  }
-
-  public String serviceStatus() {
-    return "service-status?faces-redirect=true&hostname=" + hostname + "&cluster="
-            + cluster + "&group=" + group + "&service=" + service;
-  }
-
-  public String serviceActionHistory() {
-    return "service-actionhistory?faces-redirect=true&hostname=" + hostname
-            + "&cluster=" + cluster + "&group=" + group + "&service=" + service;
-  }
-
-  public void redirectToEditGraphs() {
-    String outcome = "edit-graphs?faces-redirect=true";
-    if (target != null) {
-      outcome += "&target=" + target;
-    }
-    FacesContext context = FacesContext.getCurrentInstance();
-    NavigationHandler navigationHandler = context.getApplication().
-            getNavigationHandler();
-    navigationHandler.handleNavigation(context, null, outcome);
   }
 }

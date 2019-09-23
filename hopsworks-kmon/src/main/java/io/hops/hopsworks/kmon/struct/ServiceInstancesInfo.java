@@ -46,18 +46,12 @@ import java.util.TreeMap;
 
 public class ServiceInstancesInfo {
 
-  private String fullName;
   private String serviceName;
   private SortedMap<Status, Integer> statusMap = new TreeMap<>();
   private SortedMap<Health, Integer> healthMap = new TreeMap<>();
 
-  public ServiceInstancesInfo(String fullName, ServiceType service) {
-    this.fullName = fullName;
-    this.serviceName = service.toString();
-  }
-
-  public String getFullName() {
-    return fullName;
+  public ServiceInstancesInfo(String service) {
+    this.serviceName = service;
   }
 
   public String getServiceName() {
@@ -69,14 +63,6 @@ public class ServiceInstancesInfo {
       return Health.Good;
     }
     return Health.Bad;
-  }
-
-  public String[] getStatusEntries() {
-    return statusMap.entrySet().toArray(new String[statusMap.size()]);
-  }
-
-  public Integer getStatusCount(Status status) {
-    return statusMap.get(status);
   }
 
   public SortedMap<Status, Integer> getStatusMap() {
@@ -98,14 +84,6 @@ public class ServiceInstancesInfo {
       healthMap.put(health, count);
     } else {
       healthMap.put(health, 1);
-    }
-  }
-
-  public Health getOverallHealth() {
-    if (healthMap.containsKey(Health.Bad)) {
-      return Health.Bad;
-    } else {
-      return Health.Good;
     }
   }
 }

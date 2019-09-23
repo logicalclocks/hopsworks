@@ -92,6 +92,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -981,5 +982,31 @@ public class KafkaFacade {
     return partitionDetails;
   }
   
-
+  public Optional<ProjectTopics> getTopicByProjectAndTopicName(Project project, String topicName) {
+    try {
+      return Optional.of(em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
+        .setParameter("project", project)
+        .setParameter("topicName", topicName)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
+  public Optional<SchemaTopics> getSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
+    try {
+      return Optional.of(em.createNamedQuery("SchemaTopics.findByNameAndVersion", SchemaTopics.class)
+        .setParameter("name", schemaName)
+        .setParameter("version", schemaVersion)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
+  public void updateTopicSchemaVersion(ProjectTopics pt, SchemaTopics st) {
+    pt.setSchemaTopics(new SchemaTopics(st.schemaTopicsPK.getName(), st.schemaTopicsPK.getVersion()));
+    em.merge(pt);
+    em.flush();
+  }
 }

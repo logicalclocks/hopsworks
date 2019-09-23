@@ -631,7 +631,8 @@ public class RESTCodes {
     CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved",
       Response.Status.METHOD_NOT_ALLOWED),
     DELETE_RESERVED_SCHEMA(17, "The schema is reserved and cannot be deleted",
-      Response.Status.METHOD_NOT_ALLOWED);
+      Response.Status.METHOD_NOT_ALLOWED),
+    SCHEMA_VERSION_NOT_FOUND(18, "Specified version of the schema not found", Response.Status.NOT_FOUND);
 
 
     private Integer code;

@@ -110,17 +110,31 @@
             </p:column>
 
             <p:column>
-              <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-kmon/monitor/clusters.xhtml')}">
+              <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-api/grafana')}">
+
+                <p:graphicImage id="grafana"
+                                value="/resources/images/users/grafana.png"
+                                width="100"
+                                height="100"
+                                title="Grafana">
+                </p:graphicImage>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Grafana"></p:outputLabel>
+            </p:column>
+
+            <p:column>
+              <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-kmon/monitor/cluster-status.xhtml')}">
 
                 <p:graphicImage id="monitoring"
                                 value="/resources/images/users/monitor.png"
                                 width="100"
                                 height="100"
-                                title="Monitoring and Control">
+                                title="Services">
                 </p:graphicImage>
               </h:commandLink>
               <br></br>
-              <p:outputLabel style="text-align: left"  value="Monitoring and Control"></p:outputLabel>
+              <p:outputLabel style="text-align: left"  value="Services"></p:outputLabel>
             </p:column>
 
             <p:column>

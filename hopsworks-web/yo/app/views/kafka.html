@@ -104,8 +104,9 @@
             <table st-table="rowCollection" class="table table-striped" ng-show="kafkaCtrl.topics.length > 0">
               <thead>
                 <tr>
-                  <th st-sort="topicName" class="col-sm-7">Topic Name</th>
-                  <th class="col-sm-1">Schema (v)  </th>
+                  <th st-sort="topicName" class="col-sm-6">Topic Name</th>
+                  <th class="col-sm-1">Schema</th>
+                  <th class="col-sm-1">Version</th>
                   <th class="col-sm-1">ACL</th>
                   <th class="col-sm-1">Share</th>
                   <th class="col-sm-1">Advanced</th>
@@ -254,8 +255,21 @@
             </table>
 
             </td>
-            <td class="col-sm-1" style="vertical-align: top !important;">
-              {{row.schemaName}} ({{row.schemaVersion}})
+            <td class="col-sm-1 form-inline" style="vertical-align: top !important;">
+              {{row.schemaName}}
+            </td>
+
+            <td class="col-sm-1 form-inline" style="vertical-align: top !important;">
+              <ui-select style="min-width: 70px;" name="schema_topic_version" theme="select2" style="margin-left: 10px"
+                         ng-model="row.schemaVersion"
+                         ng-change="kafkaCtrl.updateSchemaVersion(row.name, row.schemaVersion)" required>
+
+                <ui-select-match placeholder="version">{{$select.selected}}</ui-select-match>
+
+                <ui-select-choices repeat="version in (kafkaCtrl.schemas | filter:{name:row.schemaName})[0].versions | orderBy: version | filter: $select.search">
+                  <div ng-bind-html="version | highlight: $select.search"></div>
+                </ui-select-choices>
+              </ui-select>
             </td>
 
             <td class="col-sm-1" style="vertical-align: top !important;">
