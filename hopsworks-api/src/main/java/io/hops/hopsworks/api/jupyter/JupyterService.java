@@ -61,6 +61,8 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.jobs.spark.SparkController;
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.jupyter.JupyterJWTManager;
 import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
@@ -73,6 +75,7 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -154,6 +157,8 @@ public class JupyterService {
   private JupyterJWTManager jupyterJWTManager;
   @Inject
   private JupyterNbVCSController jupyterNbVCSController;
+  @EJB
+  private SparkController sparkController;
 
   private Integer projectId;
   // No @EJB annotation for Project, it's injected explicitly in ProjectService.
@@ -283,7 +288,7 @@ public class JupyterService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startNotebookServer(JupyterSettings jupyterSettings, @Context HttpServletRequest req,
       @Context SecurityContext sc, @Context UriInfo uriInfo) throws ProjectException, HopsSecurityException,
-    ServiceException {
+    ServiceException, GenericException {
     
     Users hopsworksUser = jWTHelper.getUserPrincipal(sc);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, hopsworksUser);
@@ -314,6 +319,10 @@ public class JupyterService {
       String allowOrigin = settings.getJupyterOriginScheme() + "://" + allowOriginHost + allowOriginPortStr;
       try {
         jupyterSettingsFacade.update(jupyterSettings);
+        //Inspect dependencies
+        sparkController
+          .inspectDependencies(project, hopsworksUser, (SparkJobConfiguration) jupyterSettings.getJobConfig());
+        
         dto = jupyterManager.startJupyterServer(project, configSecret, hdfsUser, hopsworksUser,
           jupyterSettings, allowOrigin);
         jupyterJWTManager.materializeJWT(hopsworksUser, project, jupyterSettings, dto.getPid(), dto.getPort(),

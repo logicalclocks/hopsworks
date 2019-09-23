@@ -50,7 +50,6 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
-import io.hops.hopsworks.exceptions.ServiceException;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
 import org.apache.hadoop.yarn.client.api.YarnClient;
@@ -119,7 +118,7 @@ public class SparkYarnRunnerBuilder {
       String jobUser, String usersFullName, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
       Settings settings)
-    throws IOException, ServiceException {
+    throws IOException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -129,7 +128,6 @@ public class SparkYarnRunnerBuilder {
     builder.setJobType(jobType);
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
-    builder.setJobUser(jobUser);
 
     /**
      * * 1. Set stagingPath **
@@ -198,10 +196,9 @@ public class SparkYarnRunnerBuilder {
     }
 
     String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);
-
-    Map<String, String> finalJobProps = new HashMap<>();
-    finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, usersFullName, tfLibraryPath, extraJavaOptions));
+  
+    Map<String, String> finalJobProps = new HashMap<>(sparkConfigurationUtil.setFrameworkProperties(project,
+      job.getJobConfig(), settings, jobUser, usersFullName, tfLibraryPath, extraJavaOptions));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
