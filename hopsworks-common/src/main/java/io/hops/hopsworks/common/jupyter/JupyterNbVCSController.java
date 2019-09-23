@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.ServiceException;
 
@@ -28,8 +29,9 @@ public interface JupyterNbVCSController {
   Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI) throws ServiceException;
   String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException;
   
-  RepositoryStatus cloneOrPullRemoteRepository(JupyterProject jupyterProject) throws ServiceException;
-  RepositoryStatus commit(JupyterProject jupyterProject, Users user, String commitMessage) throws ServiceException;
-  RepositoryStatus push(JupyterProject jupyterProject) throws ServiceException;
-  RepositoryStatus status(JupyterProject jupyterProject) throws ServiceException;
+  RepositoryStatus init(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  RepositoryStatus status(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  RepositoryStatus pull(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  RepositoryStatus push(JupyterProject jupyterProject, JupyterSettings jupyterSettings, Users user)
+      throws ServiceException;
 }

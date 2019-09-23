@@ -193,13 +193,9 @@ public class JupyterConfigFilesGenerator {
   
     String remoteGitURL = "";
     String apiKey = "";
-    String baseBranch = "";
-    String headBranch = "";
     if (js.isGitBackend() && js.getGitConfig() != null) {
       remoteGitURL = js.getGitConfig().getRemoteGitURL();
       apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
-      baseBranch = js.getGitConfig().getBaseBranch();
-      headBranch = js.getGitConfig().getHeadBranch();
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
     return ConfigFileGenerator.instantiateFromTemplate(
@@ -221,10 +217,7 @@ public class JupyterConfigFilesGenerator {
         "allow_origin", allowOrigin,
         "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
         "hopsworks_project_id", Integer.toString(project.getId()),
-        "remote_git_url", remoteGitURL,
-        "api_key", apiKey,
-        "base_branch", baseBranch,
-        "head_branch", headBranch
+        "api_key", apiKey
       ).toString();
   }
   
