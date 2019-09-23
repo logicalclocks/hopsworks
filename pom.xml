@@ -118,6 +118,9 @@
     <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.deploy.skip>true</maven.deploy.skip>
+
+    <!-- Dependencies -->
+    <hive.version>3.0.0.2</hive.version>
   </properties>
 
   <dependencies>
