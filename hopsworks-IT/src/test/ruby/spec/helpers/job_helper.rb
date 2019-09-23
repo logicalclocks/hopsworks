@@ -81,36 +81,34 @@ module JobHelper
       end
 
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-      expect_status(201)
 
     else
         if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
           copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/TensorFlow/minimal_mnist_classifier_on_hops.ipynb",
           "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
         end
-
-        job_conf = {
-          "type":"sparkJobConfiguration",
-          "appName":"#{job_name}",
-          "amQueue":"default",
-          "amMemory":1024,
-          "amVCores":1,
-          "jobType":"PYSPARK",
-          "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb",
-          "mainClass":"org.apache.spark.deploy.PythonRunner",
-          "args":"10",
-          "spark.executor.instances":1,
-          "spark.executor.cores":1,
-          "spark.executor.memory":1500,
-          "spark.executor.gpus":0,
-          "spark.dynamicAllocation.enabled": true,
-          "spark.dynamicAllocation.minExecutors":1,
-          "spark.dynamicAllocation.maxExecutors":1,
-          "spark.dynamicAllocation.initialExecutors":1
-        }
-
+        if job_conf.nil?
+          job_conf = {
+            "type":"sparkJobConfiguration",
+            "appName":"#{job_name}",
+            "amQueue":"default",
+            "amMemory":1024,
+            "amVCores":1,
+            "jobType":"PYSPARK",
+            "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb",
+            "mainClass":"org.apache.spark.deploy.PythonRunner",
+            "args":"10",
+            "spark.executor.instances":1,
+            "spark.executor.cores":1,
+            "spark.executor.memory":1500,
+            "spark.executor.gpus":0,
+            "spark.dynamicAllocation.enabled": true,
+            "spark.dynamicAllocation.minExecutors":1,
+            "spark.dynamicAllocation.maxExecutors":1,
+            "spark.dynamicAllocation.initialExecutors":1
+          }
+        end
         put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-        expect_status(201)
     end
   end
 
