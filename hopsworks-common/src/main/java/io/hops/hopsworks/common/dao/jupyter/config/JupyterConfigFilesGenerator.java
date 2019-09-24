@@ -301,7 +301,7 @@ public class JupyterConfigFilesGenerator {
     
     if (!jupyter_config_file.exists()) {
       String pythonKernelName = pythonKernelName(project.getPythonVersion());
-      if (settings.isPythonKernelEnabled() && !project.getPythonVersion().contains("X")) {
+      if (settings.isPythonKernelEnabled()) {
         String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
         File pythonKernelFile = new File(pythonKernelPath, JUPYTER_CUSTOM_KERNEL);
         

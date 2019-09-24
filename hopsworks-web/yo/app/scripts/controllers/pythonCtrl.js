@@ -33,6 +33,9 @@ angular.module('hopsWorksApp')
             self.enabled = false;
             self.installed = false;
 
+            self.loading = false;
+            self.loadingText = "";
+
             $scope.activeForm;
 
             self.condaResultsMsgShowing = false;
@@ -42,8 +45,6 @@ angular.module('hopsWorksApp')
             self.pipResultsMsgShowing = false;
 
             self.pipResultsMsg = "";
-
-            self.pythonVersionOpen = false;
 
             self.exporting = false;
             self.kibanaUI = "";
@@ -67,8 +68,6 @@ angular.module('hopsWorksApp')
             self.numEnvs = 0;
 
             self.isRetryingFailedCondaOps = false;
-
-            self.pythonKernelEnabled = "true";
 
             self.pythonVersion = "0.0";
 
@@ -100,6 +99,15 @@ angular.module('hopsWorksApp')
                 "installType": "CONDA",
                 "lib": "",
                 "version": ""
+            };
+
+            self.startLoading = function(label) {
+                self.loading = true;
+                self.loadingText = label;
+            };
+            self.stopLoading = function() {
+                self.loading = false;
+                self.loadingText = "";
             };
 
             $scope.sortBy = function(sortType) {
@@ -175,6 +183,13 @@ angular.module('hopsWorksApp')
                 return status;
             };
 
+            self.getOp = function (row) {
+                for (var i = 0; i < row.commands.count; i++) {
+                    return row.commands.items[i].op
+                }
+                return "UNKNOWN"
+            };
+
             self.getVersion = function (row) {
                 return typeof row.pythonVersion !== 'undefined'? row.pythonVersion : row.version;
             };
@@ -224,6 +239,9 @@ angular.module('hopsWorksApp')
                         for (var i = 0; i < count; i++) {
                             if (typeof envs[i].commands !== 'undefined' && envs[i].commands.count > 0) {
                                 opsStatusList.push(envs[i]);
+                            }
+                            if(envs[i].commands.items && envs[i].commands.items[0].op === 'YML') {
+                                self.pythonVersion = envs[i].pythonVersion;
                             }
                         }
                         PythonService.getLibraries(self.projectId, self.pythonVersion).then(
@@ -293,8 +311,10 @@ angular.module('hopsWorksApp')
 
             self.enable = function (version) {
                 self.enabling = true;
-                PythonService.createEnvironmentFromVersion(self.projectId, version, self.pythonKernelEnabled).then(
+                self.startLoading("Creating Anaconda environment ...")
+                PythonService.createEnvironmentFromVersion(self.projectId, version).then(
                     function (success) {
+                        self.stopLoading()
                         self.enabled = true;
                         self.enabling = false;
                         self.getInstalled();
@@ -305,18 +325,37 @@ angular.module('hopsWorksApp')
                         });
                     },
                     function (error) {
+                        self.stopLoading()
                         self.enabling = false;
                         showErrorGrowl(error);
                     });
             };
 
+            self.deleteEnvironment = function () {
+                PythonService.removeEnvironment(self.projectId, self.pythonVersion).then(
+                    function (success) {
+                        self.enabled = true;
+                        self.enabling = false;
+                        self.getInstalled();
+                        growl.success("Anaconda removed for this project.", {
+                            title: 'Done',
+                            ttl: 5000
+                        });
+                        $route.reload();
+                    },
+                    function (error) {
+                        self.enabling = false;
+                        showErrorGrowl(error);
+                    });
+            }
+
             self.destroyAnaconda = function () {
 
-                ModalService.confirm('sm', 'Remove Conda Environment?',
-                    'WARNING: This will shutdown any running Jupyter notebooks. You can re-create your conda environment again later.')
+                ModalService.confirm('sm', 'Remove Environment?',
+                    "WARNING: Deleting this environment may cause running Jobs and Jupyter Notebooks using the environment in your project to fail. If you want to proceed press 'OK'.")
                     .then(function (success) {
                         self.enabling = true;
-                        growl.success("Removing Conda environment for this project.....", {
+                        growl.success("Removing Anaconda environment for this project.....", {
                             title: 'Done',
                             ttl: 2000
                         });
@@ -392,12 +431,14 @@ angular.module('hopsWorksApp')
             self.selectYmlFile = function () {
                 ModalService.selectEnvironmentYml('lg', self.selectFileRegexes['yml'.toUpperCase()], self.selectFileErrorMsgs['yml'.toUpperCase()]).then(
                     function (success) {
+                        self.startLoading("Issuing commands to create environment ...")
 
                         self.environmentYmlDef = success;
                         self.enabling = true;
 
                         PythonService.createEnvironmentFromYml(self.projectId, self.environmentYmlDef).then(
                             function (success) {
+                                self.stopLoading()
                                 self.enabled = true;
                                 self.enabling = false;
                                 self.getInstalled();
@@ -407,6 +448,7 @@ angular.module('hopsWorksApp')
                                     ttl: 5000
                                 });
                             }, function (error) {
+                                self.stopLoading()
                                 self.enabling = false;
                                 showErrorGrowl(error);
                             });
