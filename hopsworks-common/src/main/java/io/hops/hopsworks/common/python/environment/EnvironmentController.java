@@ -111,14 +111,7 @@ public class EnvironmentController {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
     if (!project.getCondaEnv()) {
-      String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
-        LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
-      if (!elasticController.indexExists(indexName)) {
-        elasticController.createIndex(indexName);
-      }
-      // Kibana index pattern for conda commands logs
-      elasticController
-        .createIndexPattern(project, project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+      createKibanaIndex(project);
       copyOnWriteCondaEnv(project);
     }
   }
@@ -330,26 +323,23 @@ public class EnvironmentController {
   }
   
   public String createEnvironmentFromYml(String allYmlPath, String cpuYmlPath, String gpuYmlPath,
-    boolean installJupyter, boolean pythonKernelEnable, Users user, Project project) throws PythonException,
-    ServiceException {
+    boolean installJupyter, Users user, Project project) throws PythonException,
+      ServiceException, ProjectException {
     if ((project.getConda() || project.getCondaEnv())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
     String username = hdfsUsersController.getHdfsUserName(project, user);
   
-    String version = "%%";
-    if (!pythonKernelEnable) {
-      // 'X' indicates that the python kernel should not be enabled in Conda
-      version = version + "X";
-    }
-  
+    String version = "0.0";
     if (allYmlPath != null && !allYmlPath.isEmpty()) {
       if (!allYmlPath.substring(allYmlPath.length() - 4).equals(".yml")) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "wrong allYmlPath length");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE,
+            "allYmlPath is not a valid .yml file");
       }
       String allYml = getYmlFromPath(new Path(allYmlPath), username);
       String pythonVersion = findPythonVersion(allYml);
-      version.replaceAll("%%", pythonVersion);
+      version = pythonVersion;
+      createKibanaIndex(project);
       createProjectInDb(project, version, LibraryFacade.MachineType.ALL, allYml, installJupyter);
       project.setPythonVersion(version);
       projectFacade.update(project);
@@ -358,13 +348,13 @@ public class EnvironmentController {
       if (cpuYmlPath != null && !cpuYmlPath.isEmpty() && !cpuYmlPath.substring(cpuYmlPath.length() - 4)
         .equals(".yml")) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE,
-          "misconfigured cpu information");
+          "cpuYmlPath is not a valid .yml file");
       }
     
       if (gpuYmlPath != null && !gpuYmlPath.isEmpty() && !gpuYmlPath.substring(gpuYmlPath.length() - 4)
         .equals(".yml")) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "misconfigured "
-          + "gpu information");
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "" +
+            "gpuYmlPath is not a valid .yml file");
       }
     
       String cpuYml = (cpuYmlPath != null && !cpuYmlPath.isEmpty()) ? getYmlFromPath(new Path(cpuYmlPath), username)
@@ -374,10 +364,12 @@ public class EnvironmentController {
     
       String pythonVersionCPUYml = findPythonVersion(cpuYml);
       String pythonVersionGPUYml = findPythonVersion(gpuYml);
-      if (pythonVersionCPUYml.equals(pythonVersionGPUYml)) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE, "python version mismatch.");
+      if (!pythonVersionCPUYml.equals(pythonVersionGPUYml)) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML, Level.FINE,
+            "python version mismatch between .yml files.");
       }
-      version.replaceAll("%%", pythonVersionCPUYml);
+      version = pythonVersionCPUYml;
+      createKibanaIndex(project);
       createProjectInDb(project, version, LibraryFacade.MachineType.CPU, cpuYml, installJupyter);
       createProjectInDb(project, version, LibraryFacade.MachineType.GPU, gpuYml, installJupyter);
     
@@ -402,14 +394,10 @@ public class EnvironmentController {
     }
   }
   
-  public void createEnv(String version, boolean enablePythonKernel, Project project) throws PythonException,
+  public void createEnv(String version, Project project) throws PythonException,
     ServiceException {
     if (project.getConda() || project.getCondaEnv()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
-    }
-    if (!enablePythonKernel) {
-      // 'X' indicates that the python kernel should not be enabled in Conda
-      version = version + "X";
     }
     createProjectInDb(project, version, LibraryFacade.MachineType.ALL, null, false);
     project.setPythonVersion(version);
@@ -493,6 +481,17 @@ public class EnvironmentController {
         + " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
     }
     
+  }
+
+  public void createKibanaIndex(Project project) throws ServiceException, ProjectException {
+    String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
+        LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
+    if (!elasticController.indexExists(indexName)) {
+      elasticController.createIndex(indexName);
+    }
+    // Kibana index pattern for conda commands logs
+    elasticController
+        .createIndexPattern(project, project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
   }
 
 }

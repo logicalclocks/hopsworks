@@ -35,8 +35,8 @@ angular.module('hopsWorksApp')
               getLibrary: function (projectId, pythonVersion, lib) {
                 return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + lib);
               },
-              createEnvironmentFromVersion: function (projectId, version, pythonKernelEnabled) {
-                return $http.post('/api/project/' + projectId + '/python/environments/' + version + '?action=create&pythonKernelEnable=' + pythonKernelEnabled);
+              createEnvironmentFromVersion: function (projectId, version) {
+                return $http.post('/api/project/' + projectId + '/python/environments/' + version + '?action=create');
               },
               createEnvironmentFromYml: function (projectId, environment) {
                 var regReq = {

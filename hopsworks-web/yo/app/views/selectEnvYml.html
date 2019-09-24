@@ -49,7 +49,7 @@
     <div class="col-md-2">
       <button id="selectCpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'CPU'">
           <span>
-            Select CPU .yml</span>
+            Select CPU .yml </span>
       </button>
     </div>
     <div class="col-md-9 col-md-offset-1">
@@ -62,7 +62,7 @@
     <div class="col-md-2">
       <button id="selectAllYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'ALL'">
           <span>
-            Select .yml</span>
+            Select .yml </span>
       </button>
     </div>
     <div class="col-md-9 col-md-offset-1">
@@ -75,7 +75,7 @@
     <div class="col-md-2">
       <button id="selectGpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'GPU'">
           <span>
-            Select GPU .yml</span>
+            Select GPU .yml </span>
       </button>
     </div>
     <div class="col-md-9 col-md-offset-1">
@@ -83,15 +83,6 @@
       <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath = ''" type="text" class="form-control" id="gpuYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath" required/>
     </div>
   </div>
-
-  <div><span> <label>Enable Python Kernel:
-                              <input type="checkbox" ng-init="selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable = true" ng-model="selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable"></label>
-                            <i class="fa" ng-class="{'fa-exclamation-triangle' : selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable == true, 'fa-info' : selectEnvYmlCtrl.environmentYmlDef.pythonKernelEnable == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project."
-                               style="margin-left: 10px"></i></span>
-  </div>
-
-  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
-
   <div>
     <span>
       <label>Install Jupyter:
@@ -102,7 +93,7 @@
     </span>
   </div>
 
-  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonDepsCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
+  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
           <span>
             Create environment</span>
   </button>
