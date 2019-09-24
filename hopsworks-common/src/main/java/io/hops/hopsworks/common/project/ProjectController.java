@@ -1647,12 +1647,12 @@ public class ProjectController {
 
       //change owner for files in shared datasets
       fixSharedDatasets(project, dfso);
-
-      //Delete Hive database - will automatically cleanup all the Hive's metadata
-      hiveController.dropDatabases(project, dfso, false);
-
+  
       //Delete online featurestore database
       onlineFeaturestoreController.removeOnlineFeatureStore(project);
+      
+      //Delete Hive database - will automatically cleanup all the Hive's metadata
+      hiveController.dropDatabases(project, dfso, false);
       
       //Delete elasticsearch template for this project
       removeElasticsearch(project);

@@ -31,7 +31,7 @@ import java.util.Date;
 @XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
   "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "onlineFeaturestoreType",
   "onlineFeaturestoreName", "onlineFeaturestoreSize", "offlineFeaturestoreType", "offlineFeaturestoreName",
-  "hiveEndpoint", "mysqlServerEndpoint"})
+  "hiveEndpoint", "mysqlServerEndpoint", "onlineEnabled"})
 public class FeaturestoreDTO {
   
   private Integer featurestoreId;
@@ -49,6 +49,7 @@ public class FeaturestoreDTO {
   private String offlineFeaturestoreName;
   private String hiveEndpoint;
   private String mysqlServerEndpoint;
+  private Boolean onlineEnabled = false;
   
   public FeaturestoreDTO() {
   }
@@ -69,6 +70,7 @@ public class FeaturestoreDTO {
     this.hiveEndpoint = null;
     this.mysqlServerEndpoint = null;
     this.onlineFeaturestoreSize = 0.0;
+    this.onlineEnabled = false;
   }
   
   @XmlElement
@@ -186,6 +188,15 @@ public class FeaturestoreDTO {
     this.onlineFeaturestoreName = onlineFeaturestoreName;
   }
   
+  @XmlElement
+  public Boolean getOnlineEnabled() {
+    return onlineEnabled;
+  }
+  
+  public void setOnlineEnabled(Boolean onlineEnabled) {
+    this.onlineEnabled = onlineEnabled;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreDTO{" +
@@ -204,6 +215,7 @@ public class FeaturestoreDTO {
       ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
       ", hiveEndpoint='" + hiveEndpoint + '\'' +
       ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +
+      ", onlineEnabled=" + onlineEnabled +
       '}';
   }
 }

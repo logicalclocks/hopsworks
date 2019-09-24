@@ -147,7 +147,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_IP = "rm_ip";
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOCALHOST = "localhost";
-  private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
@@ -335,6 +334,8 @@ public class Settings implements Serializable {
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
+  private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
+  private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -466,7 +467,6 @@ public class Settings implements Serializable {
     if (!cached) {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
-      ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
@@ -665,6 +665,8 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
+      FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
+      ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
 
       cached = true;
     }
@@ -3412,6 +3414,13 @@ public class Settings implements Serializable {
 
   public Boolean isHopsUtilInsecure() {
     return isCloud() || isLocalHost();
+  }
+  
+  private String FEATURESTORE_JDBC_URL = "jdbc:mysql://" + HOPSWORKS_IP + ":3306/";
+  
+  public synchronized String getFeaturestoreJdbcUrl() {
+    checkCache();
+    return FEATURESTORE_JDBC_URL;
   }
 
 }

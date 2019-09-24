@@ -97,7 +97,6 @@ public class FeaturestoreConstants {
   public static final List<String> FEATURE_IMPORT_CONNECTORS = Arrays.asList(new String[]{S3_CONNECTOR_TYPE});
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
-  public static final int ONLINE_FEATURE_STORE_PORT = 3306;
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
   public static final String ONLINE_FEATURE_STORE_TYPE = "MySQL Cluster";
@@ -110,5 +109,6 @@ public class FeaturestoreConstants {
   });
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 64;
+  public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
   
 }

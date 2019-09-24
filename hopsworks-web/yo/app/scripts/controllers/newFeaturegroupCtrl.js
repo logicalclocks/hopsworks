@@ -1216,7 +1216,8 @@ angular.module('hopsWorksApp')
                     "featureCorrelation": false,
                     "clusterAnalysis": false,
                     "featureHistograms": false,
-                    "statColumns": []
+                    "statColumns": [],
+                    "online": self.onlineFg
                 }
                 return argsJson
             }

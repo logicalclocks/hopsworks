@@ -1343,7 +1343,10 @@ public class RESTCodes {
     ERROR_DELETING_ONLINE_FEATURESTORE_USER(73, "An error occurred when trying to delete " +
       "the MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES(74, "An error occurred when trying to " +
-      "grant/revoke privileges to a MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR);
+      "grant/revoke privileges to a MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ONLINE_FEATUREGROUP_CANNOT_BE_PARTITIONED(75, "An error occurred when trying to " +
+      "create the MySQL table for the online feature group. User-defined partitioning is not supported for MySQL " +
+      "tables", Response.Status.INTERNAL_SERVER_ERROR);
     
     
     

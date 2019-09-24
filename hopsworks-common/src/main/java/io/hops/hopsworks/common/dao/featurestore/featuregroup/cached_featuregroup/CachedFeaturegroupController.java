@@ -682,9 +682,9 @@ public class CachedFeaturegroupController {
         partitionStringBuilder.append(feature.getName());
         partitionStringBuilder.append("` ");
         if(!mysqlTable){
-          schemaStringBuilder.append(feature.getType());
+          partitionStringBuilder.append(feature.getType());
         } else {
-          schemaStringBuilder.append(feature.getOnlineType());
+          partitionStringBuilder.append(feature.getOnlineType());
         }
         partitionStringBuilder.append(" COMMENT '");
         partitionStringBuilder.append(feature.getDescription());

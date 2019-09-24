@@ -58,6 +58,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -536,7 +537,7 @@ public class DatasetController {
       //a hive database
       if (datasetName.endsWith(".db")) {
         String projectName;
-        if (datasetName.endsWith("_featurestore.db")) {
+        if (datasetName.endsWith(FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX + ".db")) {
           projectName = datasetName.substring(0, datasetName.lastIndexOf("_"));
         } else {
           projectName = datasetName.substring(0, datasetName.lastIndexOf("."));

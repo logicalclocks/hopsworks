@@ -31,9 +31,11 @@ import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -94,6 +96,8 @@ public class FeaturestoreService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
@@ -240,9 +244,9 @@ public class FeaturestoreService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getFeaturestoreId(
-    @PathParam("featurestoreName")
-      String featurestoreName)
+  @ApiOperation(value = "Get featurestore Metadata",
+    response = FeaturestoreClientSettingsDTO.class)
+  public Response getFeaturestoreId(@Context SecurityContext sc, @PathParam("featurestoreName") String featurestoreName)
     throws FeaturestoreException {
     if (Strings.isNullOrEmpty(featurestoreName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
@@ -255,9 +259,14 @@ public class FeaturestoreService {
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector =
+      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
+        dbUsername, featurestore);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
-        new FeaturestoreClientSettingsDTO(), storageConnectors);
+        new FeaturestoreClientSettingsDTO(), storageConnectors, onlineFeaturestoreConnector);
     GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
       new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {
       };

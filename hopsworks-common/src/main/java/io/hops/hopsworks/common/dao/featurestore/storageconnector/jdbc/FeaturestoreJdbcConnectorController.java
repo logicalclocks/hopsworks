@@ -318,11 +318,8 @@ public class FeaturestoreJdbcConnectorController {
           "a storage connector with that name already exists");
       }
     }
-    String hostname = settings.getHopsworksIp();
-    String port = Integer.toString(FeaturestoreConstants.ONLINE_FEATURE_STORE_PORT);
     String dbName = project.getName();
-    String connectionString =
-      "jdbc:mysql://" + hostname + ":" + port + "/" + dbName;
+    String connectionString = settings.getFeaturestoreJdbcUrl() + dbName;
     String arguments = FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
       FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
       FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername;

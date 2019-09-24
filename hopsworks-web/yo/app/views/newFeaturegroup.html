@@ -202,7 +202,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="view-info">
+                                    <div class="view-info" ng-if="newFeaturegroupCtrl.featurestore.onlineEnabled">
                                         <div class="col-md-12">
                                             <div class="col-sm-12" style="margin-bottom: 20px">
                                                 <div class="col-sm-3">
@@ -548,39 +548,38 @@
                                     </span>
                                 </div>
                                 <div class="row">
-                                    <div class="col-sm-6">
-                                        <div class="form-group"
-                                             ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'">
+                                    <div class="col-sm-9">
                                             <button ng-click="newFeaturegroupCtrl.createCachedFeaturegroup()"
                                                     class="btn btn-default btn-success"
+                                                    ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
                                             >
                                                 Create
                                                 <i ng-if="newFeaturegroupCtrl.cachedFgWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                                             </button>
-                                            <md-checkbox class="md-primary"
-                                                         ng-checked="newFeaturegroupCtrl.configureJob"
-                                                         ng-click="newFeaturegroupCtrl.setConfigureJob()"
-                                                         aria-label="If this box is checked, a Spark job for creating
+
+                                        <md-checkbox class="md-primary"
+                                                     ng-checked="newFeaturegroupCtrl.configureJob"
+                                                     ng-click="newFeaturegroupCtrl.setConfigureJob()"
+                                                     aria-label="If this box is checked, a Spark job for creating
                                                          the Feature Group will be configured automatically using the provided SQL string"
-                                                         style="margin-left:20px;"
-                                                         dir="rtl"
-                                                         ng-if="newFeaturegroupCtrl.cachedSqlQuery && newFeaturegroupCtrl.cachedSqlQuery != undefined && newFeaturegroupCtrl.cachedSqlQuery != null"
-                                            >
+                                                     style="margin-left:20px;"
+                                                     dir="rtl"
+                                                     ng-if="(newFeaturegroupCtrl.cachedSqlQuery && newFeaturegroupCtrl.cachedSqlQuery != undefined && newFeaturegroupCtrl.cachedSqlQuery != null) && (newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION')"
+                                        >
                                                 <span>Configure Spark Job for creating the feature group using
                                                     the SQL string</span>
-                                            </md-checkbox>
-                                            <md-checkbox class="md-primary"
-                                                         ng-checked="newFeaturegroupCtrl.onlineFg"
-                                                         ng-click="newFeaturegroupCtrl.setOnlineFg()"
-                                                         aria-label="If this box is checked, online feature serving will be enabled for this feature group.
+                                        </md-checkbox>
+                                        <md-checkbox class="md-primary"
+                                                     ng-checked="newFeaturegroupCtrl.onlineFg"
+                                                     ng-click="newFeaturegroupCtrl.setOnlineFg()"
+                                                     aria-label="If this box is checked, online feature serving will be enabled for this feature group.
                                                                      This means that a MySQL in-memory table with real-time response time is created."
-                                                         style="margin-left:20px;"
-                                                         dir="rtl"
-                                                         ng-if="newFeaturegroupCtrl.settings.onlineFeaturestoreEnabled"
-                                            >
-                                                <span>Enable Online Feature Serving for this Feature Group</span>
-                                            </md-checkbox>
-                                        </div>
+                                                     style="margin-left:20px;"
+                                                     dir="rtl"
+                                                     ng-if="newFeaturegroupCtrl.featurestore.onlineEnabled && newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
+                                        >
+                                            <span>Enable Online Feature Serving for this Feature Group</span>
+                                        </md-checkbox>
                                         <button ng-click="newFeaturegroupCtrl.updateCachedFeaturegroup()"
                                                 class="btn btn-default btn-success"
                                                 ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
@@ -591,23 +590,21 @@
 
                                         <button ng-click="newFeaturegroupCtrl.enableOnlineServing()"
                                                 class="btn btn-default btn-success"
-                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && !newFeaturegroupCtrl.onlineFg">
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && !newFeaturegroupCtrl.onlineFg && newFeaturegroupCtrl.featurestore.onlineEnabled">
                                             Enable Online Serving
                                             <i ng-if="newFeaturegroupCtrl.enableServingWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin pull-right" ></i>
                                         </button>
                                         <button ng-click="newFeaturegroupCtrl.disableOnlineServing()"
                                                 class="btn btn-default btn-danger"
-                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && newFeaturegroupCtrl.onlineFg">
+                                                ng-if="newFeaturegroupCtrl.featuregroupOperation === 'UPDATE' && newFeaturegroupCtrl.onlineFg && newFeaturegroupCtrl.featurestore.onlineEnabled">
                                             Disable Online Serving
                                             <i ng-if="newFeaturegroupCtrl.disableServingWorking" style="margin-top: 2px"
                                                class="fa fa-spinner fa-spin pull-right" ></i>
                                         </button>
                                     </div>
-                                    <div  class="col-sm-4 alert alert-warning" role="alert"
+                                    <div  class="col-sm-3 alert alert-warning" role="alert"
                                           ng-show="newFeaturegroupCtrl.cachedFeaturegroupWrong_values === -1" >
                                         There are errors in your input configuration, see error messages above.
-                                    </div>
-                                    <div class="col-sm-2">
                                     </div>
                                 </div>
                             </div>

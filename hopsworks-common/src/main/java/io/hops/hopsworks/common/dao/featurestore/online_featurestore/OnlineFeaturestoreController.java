@@ -104,8 +104,6 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     String jdbcString = "";
-    String hostname = settings.getHopsworksIp();
-    String port = Integer.toString(FeaturestoreConstants.ONLINE_FEATURE_STORE_PORT);
     String dbName = project.getName();
     String dbUsername = onlineDbUsername(project, user);
     String password = "";
@@ -115,7 +113,7 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
         Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
     }
-    jdbcString = "jdbc:mysql://" + hostname + ":" + port + "/" + dbName;
+    jdbcString = settings.getFeaturestoreJdbcUrl() + dbName;
     try {
       return DriverManager.getConnection(jdbcString, dbUsername, password);
     } catch (SQLException e) {
@@ -347,8 +345,8 @@ public class OnlineFeaturestoreController {
   public void updateUserOnlineFeatureStoreDB(Project project, Users user, Featurestore featurestore)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Feature Store is not enabled");
+      //Nothing to update
+      return;
     }
     String dbuser = onlineDbUsername(project, user);
     String db = project.getName();
@@ -401,8 +399,8 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeOnlineFeatureStore(Project project) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Feature Store is not enabled");
+      //Nothing to remove
+      return;
     }
     List<Secret> secrets = secretsFacade.findAll();
     for (Secret s : secrets) {
@@ -440,8 +438,8 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeOnlineFeaturestoreUser(Project project, Users user) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Feature Store is not enabled");
+      //Nothing to remove
+      return;
     }
     String dbUser = onlineDbUsername(project.getName(), user.getUsername());
     SecretId id = new SecretId(user.getUid(), dbUser);
@@ -475,7 +473,11 @@ public class OnlineFeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public Double getDbSize(String dbName) {
-    return onlineFeaturestoreFacade.getDbSize(dbName);
+    Double dbSize = onlineFeaturestoreFacade.getDbSize(dbName);
+    if(dbSize == null){
+      return 0.0;
+    }
+    return dbSize;
   }
   
   /**
@@ -553,6 +555,18 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private String generateRandomUserPw() {
     return RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
+  }
+  
+  
+  /**
+   * Checks if a mysql database exists
+   *
+   * @param dbName the name of the database
+   * @return true or false depending on if the database exists or not
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public Boolean checkIfDatabaseExists(String dbName) {
+    return onlineFeaturestoreFacade.checkIfDatabaseExists(dbName);
   }
   
 }

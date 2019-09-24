@@ -90,7 +90,7 @@ public class FeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeaturestoreDTO> getFeaturestoresForProject(Project project) {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
-    return featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(Collectors.toList());
+    return featurestores.stream().map(fs -> convertFeaturestoreToDTO(fs)).collect(Collectors.toList());
   }
 
   /**
@@ -119,7 +119,7 @@ public class FeaturestoreController {
   public FeaturestoreDTO getFeaturestoreForProjectWithName(Project project, String featurestoreName)
       throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
-    List<FeaturestoreDTO> featurestoreDTOs = featurestores.stream().map(fs -> convertFeaturestoretoDTO(fs)).collect(
+    List<FeaturestoreDTO> featurestoreDTOs = featurestores.stream().map(fs -> convertFeaturestoreToDTO(fs)).collect(
         Collectors.toList());
     List<FeaturestoreDTO> featurestoresDTOWithName = featurestoreDTOs.stream().filter(fs -> fs.getFeaturestoreName().
         equals(featurestoreName))
@@ -150,7 +150,7 @@ public class FeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
           Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName());
     }
-    return convertFeaturestoretoDTO(featurestoresWithId.get(0));
+    return convertFeaturestoreToDTO(featurestoresWithId.get(0));
   }
 
   /**
@@ -218,7 +218,7 @@ public class FeaturestoreController {
    * @param featurestore the featurestore entity
    * @return a DTO representation of the featurestore
    */
-  public FeaturestoreDTO convertFeaturestoretoDTO(Featurestore featurestore) {
+  public FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
     String hiveDbDescription = featurestoreFacade.getHiveDatabaseDescription(featurestore.getHiveDbId());
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
     featurestoreDTO.setFeaturestoreDescription(hiveDbDescription);
@@ -231,15 +231,14 @@ public class FeaturestoreController {
     String hiveEndpoint = settings.getHiveServerHostName(false);
     featurestoreDTO.setHiveEndpoint(hiveEndpoint);
     featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
-    if(settings.isOnlineFeaturestore()){
-      String hostname = settings.getHopsworksIp();
-      String port = Integer.toString(FeaturestoreConstants.ONLINE_FEATURE_STORE_PORT);
-      String mysqlEndpoint = hostname + ":" + port;
-      featurestoreDTO.setMysqlServerEndpoint(mysqlEndpoint);
+    if(settings.isOnlineFeaturestore() &&
+      onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+      featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
       featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
         featurestore.getProject().getName()));
       featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
+      featurestoreDTO.setOnlineEnabled(true);
     }
     return featurestoreDTO;
   }
@@ -251,7 +250,7 @@ public class FeaturestoreController {
    * @return the hive database name of the featurestore in the project
    */
   public String getFeaturestoreDbName(Project project) {
-    return project.getName() + "_featurestore";
+    return project.getName() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
   }
 
   /**

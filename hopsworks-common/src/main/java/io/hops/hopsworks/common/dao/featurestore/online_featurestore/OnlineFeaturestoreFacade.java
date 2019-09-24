@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.dao.featurestore.online_featurestore;
 
-import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeatureDTO;
 
 import javax.ejb.Stateless;
@@ -27,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * A facade for the online feature store databases (separate from the Hopsworks databases).
@@ -40,7 +38,6 @@ import java.util.logging.Logger;
 public class OnlineFeaturestoreFacade {
   @PersistenceContext(unitName = "featurestorePU")
   private EntityManager em;
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreFacade.class.getName());
   
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
@@ -57,7 +54,7 @@ public class OnlineFeaturestoreFacade {
         .setParameter(1, dbName)
         .getSingleResult()).doubleValue();
     } catch (NoResultException e) {
-      return null;
+      return 0.0;
     }
   }
   
@@ -77,7 +74,7 @@ public class OnlineFeaturestoreFacade {
         .setParameter(2, tableName)
         .getSingleResult()).doubleValue();
     } catch (NoResultException e) {
-      return null;
+      return 0.0;
     }
   }
   
@@ -124,11 +121,15 @@ public class OnlineFeaturestoreFacade {
    * @return the table type
    */
   public String getMySQLTableType(String tableName, String db) {
-    return (String) em.createNativeQuery("SELECT `TABLES`.`TABLE_TYPE` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
-      + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
-      .setParameter(1, tableName)
-      .setParameter(2, db)
-      .getSingleResult();
+    try {
+      return (String) em.createNativeQuery("SELECT `TABLES`.`TABLE_TYPE` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
+        + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
+        .setParameter(1, tableName)
+        .setParameter(2, db)
+        .getSingleResult();
+    } catch (NoResultException e) {
+      return "-";
+    }
   }
   
   /**
@@ -139,11 +140,15 @@ public class OnlineFeaturestoreFacade {
    * @return the table type
    */
   public Integer getMySQLTableRows(String tableName, String db) {
-    return ((BigInteger) em.createNativeQuery("SELECT `TABLES`.`TABLE_ROWS` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
-      + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
-      .setParameter(1, tableName)
-      .setParameter(2, db)
-      .getSingleResult()).intValue();
+    try {
+      return ((BigInteger) em.createNativeQuery("SELECT `TABLES`.`TABLE_ROWS` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
+        + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
+        .setParameter(1, tableName)
+        .setParameter(2, db)
+        .getSingleResult()).intValue();
+    } catch (NoResultException e) {
+      return 0;
+    }
   }
   
   /**
@@ -176,7 +181,6 @@ public class OnlineFeaturestoreFacade {
    * @param pw the database user password
    */
   public void createOnlineFeaturestoreUser(String user, String pw) {
-    LOGGER.severe("CREATING DB USER with PW: " + pw);
     em.createNativeQuery("CREATE USER IF NOT EXISTS ? IDENTIFIED BY ?;")
       .setParameter(1, user)
       .setParameter(2, pw)
@@ -246,4 +250,29 @@ public class OnlineFeaturestoreFacade {
       .getResultList();
     return users;
   }
+  
+
+  /**
+   * Checks if a mysql database exists
+   *
+   * @param dbName the name of the database
+   * @return true or false depending on if the database exists or not
+   */
+  public Boolean checkIfDatabaseExists(String dbName) {
+    try {
+      String db = (String) em.createNativeQuery("SELECT `SCHEMA_NAME` FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE " +
+        "`SCHEMA_NAME`=?")
+        .setParameter(1, dbName)
+        .getSingleResult();
+      if(db != null){
+        return true;
+      } else {
+        return false;
+      }
+    }
+    catch (NoResultException e) {
+      return false;
+    }
+  }
+  
 }
