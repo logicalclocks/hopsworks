@@ -128,7 +128,44 @@
                       <div>Conda Channel: <a uib-tooltip="You can search a different conda channel by entering a new channel name here." tooltip-placement="top"
                                              href="#" data-inputclass="xwdith" editable-text="pythonCtrl.condaChannel">{{ pythonCtrl.condaChannel || 'default' }}</a></div>
                     </div>
-
+                  <fieldset>
+                    <div class="control-group">
+                      <div class="row"></div>
+                      <form name="condaNestedForm"
+                            ng-submit="pythonCtrl.install(condaLib, 'conda', pythonCtrl.machineTypeVal, condaVersion)">
+                        <div class="form-group has-feedback row" style="margin-top: 40px;">
+                          <div class="col-md-5">
+                            <div class="row">
+                              <div class="col-xs-9">
+                                <input type="text" class="form-control"
+                                       placeholder="Library name ..."
+                                       required ng-model="condaLib"/>
+                              </div>
+                              <div class="col-xs-3">
+                                <input name="condaVersionInput" type="text" class="form-control has-error"
+                                       placeholder="version"
+                                       ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
+                                       required ng-model="condaVersion"/>
+                                <div class="invalid-feedback">
+                                  <span ng-show="condaNestedForm.condaVersionInput.$dirty && condaNestedForm.condaVersionInput.$error.pattern"
+                                        class="text-danger ng-hide">Wrong version pattern.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-5">
+                            <div class="btn-group row">
+                              <button type="submit" class="btn btn-primary" value="Submit">
+                                <i ng-if="pythonCtrl.installing[condaLib]" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                                Install <i class="fa fa-download"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </fieldset>
                   <fieldset>
                     <div class="control-group">
                       <div class="row"></div>
@@ -313,10 +350,46 @@
                       </div>
                     </div>
                   </div>
-
                   <fieldset>
                     <div class="control-group">
-
+                      <div class="row"></div>
+                      <form name="pipNnestedForm"
+                            ng-submit="pythonCtrl.install(pipLib, 'pip', pythonCtrl.machineTypeVal, pipVersion)">
+                        <div class="form-group has-feedback row" style="margin-top: 40px;">
+                          <div class="col-md-5">
+                            <div class="row">
+                              <div class="col-xs-9">
+                                <input type="text" class="form-control"
+                                       placeholder="Library name ..."
+                                       required ng-model="pipLib"/>
+                              </div>
+                              <div class="col-xs-3">
+                                <input name="pipVersionInput" type="text" class="form-control"
+                                       placeholder="version"
+                                       ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
+                                       required ng-model="pipVersion"/>
+                                <div class="invalid-feedback">
+                                  <span ng-show="pipNnestedForm.pipVersionInput.$dirty && pipNnestedForm.pipVersionInput.$error.pattern"
+                                        class="text-danger ng-hide">Wrong version pattern.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-5">
+                            <div class="btn-group row">
+                              <button type="submit" class="btn btn-primary" value="Submit">
+                                <i ng-if="pythonCtrl.installing[pipLib]" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                                Install <i class="fa fa-download"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </fieldset>
+                  <fieldset>
+                    <div class="control-group">
                       <div class="row"></div>
                       <form name="nestedForm">
                         <div class="form-group row" style="margin-top: 40px;">
