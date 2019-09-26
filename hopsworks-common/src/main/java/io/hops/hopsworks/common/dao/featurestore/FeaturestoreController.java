@@ -21,18 +21,15 @@ import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.dao.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -67,16 +64,13 @@ public class FeaturestoreController {
   @EJB
   private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private DistributedFsService distributedFsService;
+  private FeaturestoreUtils featurestoreUtils;
 
   private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private static Marshaller featurestoreUtilJobArgsMarshaller = null;
   private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
       + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
   private static final String HDFS_FILE_PATH = "hdfs://%s";
-  
 
   /**
    * Retrieves a list of all featurestores for a particular project
@@ -246,7 +240,7 @@ public class FeaturestoreController {
    */
   public String writeUtilArgsToHdfs(Users user, Project project, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
       throws FeaturestoreException, JAXBException {
-    if(featurestoreUtilJobArgsMarshaller == null){
+    if (featurestoreUtilJobArgsMarshaller == null) {
       try {
         featurestoreUtilJobArgsJaxbContext =
             JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
@@ -262,35 +256,14 @@ public class FeaturestoreController {
     featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
     Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
         featurestoreUtilJobDTO.getFileName()));
-    writeToHDFS(project, user, hdfsPath, sw.toString());
-    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
-  }
 
-  /**
-   * Writes a string to a new file in HDFS
-   *
-   * @param project              project of the user
-   * @param user                 user making the request
-   * @param path2file            the hdfs path
-   * @param content              the content to write
-   * @throws FeaturestoreException
-   */
-  private void writeToHDFS(Project project, Users user, Path path2file, String content) throws FeaturestoreException {
-    DistributedFileSystemOps udfso = null;
     try {
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      udfso = distributedFsService.getDfsOps(hdfsUsername);
-      try (FSDataOutputStream outStream = udfso.create(path2file)) {
-        outStream.writeBytes(content);
-        outStream.hflush();
-      }
+      featurestoreUtils.writeToHDFS(project, user, hdfsPath, sw.toString());
     } catch (IOException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
-        Level.WARNING, "Failed to write featurestore util args to HDFS",  ex.getMessage(), ex);
-    } finally {
-      if (udfso != null) {
-        distributedFsService.closeDfsClient(udfso);
-      }
+          Level.WARNING, "Failed to write featurestore util args to HDFS", ex.getMessage(), ex);
     }
+
+    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
   }
 }

@@ -1323,9 +1323,11 @@ public class RESTCodes {
     COULD_NOT_CREATE_DATA_VALIDATION_RULES(64, "Failed to create data validation rules",
         Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_READ_DATA_VALIDATION_RESULT(65, "Failed to read data validation result",
-        Response.Status.INTERNAL_SERVER_ERROR);
-    
-    
+        Response.Status.INTERNAL_SERVER_ERROR),
+    IMPORT_JOB_ALREADY_RUNNING(66, "A job to import this featuregroup is already running",
+        Response.Status.BAD_REQUEST),
+    IMPORT_CONF_ERROR(67, "Error writing import job configuration", Response.Status.INTERNAL_SERVER_ERROR);
+
     private int code;
     private String message;
     private Response.Status respStatus;

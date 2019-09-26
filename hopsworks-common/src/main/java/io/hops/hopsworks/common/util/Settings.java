@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -2000,6 +2001,21 @@ public class Settings implements Serializable {
   public synchronized String getResourceDirs() {
     checkCache();
     return RESOURCE_DIRS;
+  }
+
+  private static final String FEATURESTORE_IMPORT_PARENT_DIR = "featurestore_import";
+  public static final String FEATURESTORE_IMPORT_CONF = "configurations";
+  public static final String FEATURESTORE_IMPORT_JOB_NAME = "ft_import.py";
+
+  public String getBaseFeaturestoreJobImportDir(Project project) {
+    return Utils.getProjectPath(project.getName()) + Path.SEPARATOR +
+        Settings.BaseDataset.RESOURCES.getName() + Path.SEPARATOR +
+        Settings.FEATURESTORE_IMPORT_PARENT_DIR + Path.SEPARATOR;
+  }
+
+  public synchronized String getFeaturestoreImportJobPath() {
+    checkCache();
+    return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_IMPORT_JOB_NAME;
   }
 
   public Settings() {

@@ -94,6 +94,7 @@ public class FeaturestoreConstants {
   public static final String FEATURESTORE_UTIL_PYTHON_EXECUTABLE =
     "/user/spark/featurestore_util.py";
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
-  public static final List<String> FEATURE_IMPORT_CONNECTORS = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE});
+  public static final List<String> FEATURE_IMPORT_CONNECTORS
+      = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE});
   
 }
