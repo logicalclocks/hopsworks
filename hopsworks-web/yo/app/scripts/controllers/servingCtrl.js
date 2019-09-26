@@ -488,147 +488,43 @@ angular.module('hopsWorksApp')
                 $interval.cancel(self.poller);
             });
 
-      self.containsServingStatus = function (status) {
+            self.poller = $interval(function () {
+                self.getAllServings();
+            }, 5000);
 
-        for (var j = 0; j < self.servings.length; j++) {
-          if (self.servings[j].status === status) {
-            return true;
-          }
+            /**
+             * Called when the serving UI is loaded
+             */
+            self.init = function () {
+                ServingService.getConfiguration().then(
+                    function (success) {
+                        self.sliderOptions.options.ceil = success.data.maxNumInstances;
+                        self.kafkaSchemaName = success.data.kafkaTopicSchema;
+                        self.kafkaSchemaVersion = success.data.kafkaTopicSchemaVersion;
+                    },
+                    function (error) {
+                        self.ignorePoll = false;
+                        growl.error(error.data.errorMsg, {
+                            title: 'Error',
+                            ttl: 15000
+                        });
+                    }
+                );
+
+                KafkaService.defaultTopicValues(self.projectId).then(
+                    function (success) {
+                        self.kafkaDefaultNumPartitions = success.data.numOfPartitions;
+                        self.kafkaDefaultNumReplicas = success.data.numOfReplicas;
+                        self.kafkaMaxNumReplicas = success.data.maxNumOfReplicas;
+                    },
+                    function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Error',
+                            ttl: 15000
+                        });
+                    }
+                )
+            };
+            self.init();
         }
-
-        return false;
-      };
-
-      self.getAllServings();
-
-      self.createOrUpdate = function () {
-        self.sendingRequest = true;
-        self.editServing.requestedInstances = self.sliderOptions.value;
-
-        // Check that all the fields are populated
-        if (self.editServing.modelPath === "" || self.editServing.modelPath == null ||
-          self.editServing.modelName === "" || self.editServing.modelName == null ||
-          self.editServing.modelVersion === "" || self.editServing.modelVersion == null) {
-          growl.error("Please fill out all the fields", {
-            title: 'Error',
-            ttl: 15000
-          });
-          return;
-        }
-
-        ServingService.createOrUpdate(self.projectId, self.editServing).then(
-          function (success) {
-            self.getAllServings();
-            self.hideCreateServingForm();
-            self.sendingRequest = false;
-          },
-          function (error) {
-            if (error.data !== undefined) {
-              growl.error(error.data.errorMsg, {
-                title: 'Error',
-                ttl: 15000
-              });
-            }
-            self.sendingRequest = false;
-          });
-      };
-
-      self.updateServing = function (serving) {
-        angular.copy(serving, self.editServing);
-        self.editServing.modelVersion = self.editServing.modelVersion.toString();
-        self.sliderOptions.value = serving.requestedInstances;
-        self.validatePath(serving.modelPath, serving.modelName);
-        self.showCreateServingForm();
-      };
-
-      self.deleteServing = function (serving) {
-
-        ServingService.deleteServing(self.projectId, serving.id).then(
-          function (success) {
-            self.getAllServings();
-          },
-          function (error) {
-            growl.error(error.data.errorMsg, {
-              title: 'Error',
-              ttl: 15000
-            });
-          });
-      };
-
-      self.startOrStopServing = function (serving, action) {
-        if (action === 'START') {
-          self.ignorePoll = true;
-          serving.status = 'Starting';
-        } else {
-          self.ignorePoll = true;
-          serving.status = 'Stopping';
-        }
-
-        ServingService.startOrStop(self.projectId, serving.id, action).then(
-          function (success) {
-            self.ignorePoll = false;
-          },
-          function (error) {
-            self.ignorePoll = false;
-            growl.error(error.data.errorMsg, {
-              title: 'Error',
-              ttl: 15000
-            });
-          });
-
-      };
-
-      self.showServingLogs = function (serving) {
-         var projectName = UtilsService.getProjectName();
-         self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId +
-             "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
-             "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
-             "query:(language:lucene,query:'modelname:" + serving.modelName + "'),sort:!(_score,desc))";
-         self.showLogs = true;
-      };
-
-      self.showMainUI = function() {
-         self.showLogs = false;
-      };
-
-      $scope.$on('$destroy', function () {
-        $interval.cancel(self.poller);
-      });
-
-      self.poller = $interval(function () {
-        self.getAllServings();
-      }, 5000);
-
-      self.init = function () {
-        ServingService.getConfiguration().then(
-          function (success) {
-            self.sliderOptions.options.ceil = success.data.maxNumInstances;
-            self.kafkaSchemaName = success.data.kafkaTopicSchema;
-            self.kafkaSchemaVersion = success.data.kafkaTopicVersion;
-          },
-          function (error) {
-            self.ignorePoll = false;
-            growl.error(error.data.errorMsg, {
-              title: 'Error',
-              ttl: 15000
-            });
-          }
-        );
-
-        KafkaService.defaultTopicValues(self.projectId).then(
-          function (success) {
-            self.kafkaDefaultNumPartitions = success.data.numOfPartitions;
-            self.kafkaDefaultNumReplicas = success.data.numOfReplicas;
-            self.kafkaMaxNumReplicas = success.data.maxNumOfReplicas;
-          },
-          function (error) {
-            growl.error(error.data.errorMsg, {
-              title: 'Error',
-              ttl: 15000
-            });
-          }
-        )
-      };
-      self.init();
-    }
-  ]);
+    ]);
