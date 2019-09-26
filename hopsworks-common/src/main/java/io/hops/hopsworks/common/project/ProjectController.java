@@ -189,8 +189,6 @@ public class ProjectController {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
-  protected UsersController usersController;
-  @EJB
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
@@ -251,10 +249,6 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
-  @EJB
-  protected JobController jobController;
-  @EJB
-  protected ExecutionController executionController;
   @EJB
   private EmailBean emailBean;
   @EJB
@@ -411,7 +405,7 @@ public class ProjectController {
 
       if (environmentController.condaEnabledHosts()) {
         try {
-          environmentController.createEnv("3.6", true, project);//TODO: use variables for version
+          environmentController.createEnv("3.6", project);//TODO: use variables for version
         } catch (PythonException | EJBException ex) {
           cleanup(project, sessionId, projectCreationFutures);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
