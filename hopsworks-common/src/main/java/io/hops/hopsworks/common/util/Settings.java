@@ -39,6 +39,7 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
+import io.hops.hopsworks.common.dao.featurestore.datavalidation.DataValidationController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -273,6 +274,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
+  private static final String VARIABLE_HOPS_VERIFICATION_VERSION = "hops_verification_version";
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
@@ -613,6 +615,7 @@ public class Settings implements Serializable {
       CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
+      HOPS_VERIFICATION_VERSION = setStrVar(VARIABLE_HOPS_VERIFICATION_VERSION, HOPS_VERIFICATION_VERSION);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
@@ -1961,7 +1964,9 @@ public class Settings implements Serializable {
     JUPYTER("Jupyter", "Contains Jupyter notebooks."),
     SERVING("Models", "Contains models to be used for serving."),
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
-    TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store");
+    TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store"),
+    DATAVALIDATION(DataValidationController.DATA_VALIDATION_DATASET,
+        "Contains rules and results for Features validation");
 
     private final String name;
     private final String description;
@@ -3283,6 +3288,29 @@ public class Settings implements Serializable {
   public synchronized String getJupyterHost() {
     checkCache();
     return JUPYTER_HOST;
+  }
+  
+  private String HOPS_VERIFICATION_VERSION = "1.0.0-SNAPSHOT";
+  
+  public synchronized String getHopsVerificationVersion() {
+    checkCache();
+    return HOPS_VERIFICATION_VERSION;
+  }
+  
+  private volatile String HOPS_VERIFICATION_MAIN_CLASS = null;
+  public void setHopsVerificationMainClass(String mainClass) {
+    synchronized (Settings.class) {
+      HOPS_VERIFICATION_MAIN_CLASS = mainClass;
+    }
+  }
+  
+  public String getHopsVerificationMainClass() {
+    if (HOPS_VERIFICATION_MAIN_CLASS == null) {
+      synchronized (Settings.class) {
+        return HOPS_VERIFICATION_MAIN_CLASS;
+      }
+    }
+    return HOPS_VERIFICATION_MAIN_CLASS;
   }
 
   private String JWT_SIGNATURE_ALGORITHM = "HS512";

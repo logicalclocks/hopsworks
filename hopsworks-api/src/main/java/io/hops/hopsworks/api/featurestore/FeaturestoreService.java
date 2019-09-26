@@ -38,6 +38,7 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.util.Settings;
@@ -100,6 +101,10 @@ public class FeaturestoreService {
   private TrainingDatasetService trainingDatasetService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private DataValidationResource dataValidationService;
 
   private Project project;
 
@@ -259,6 +264,12 @@ public class FeaturestoreService {
         .build();
   }
 
+  
+  @Path("{featureStoreId}/datavalidation")
+  public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
+    return this.dataValidationService.setFeatureStore(featureStoreId);
+  }
+  
   /**
    * Feature Groups sub-resource
    *

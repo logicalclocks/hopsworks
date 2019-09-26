@@ -1,0 +1,199 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div ng-controlller="MainCtrl as MainCtrl">
+    <div ng-include="'nav.html'"></div>
+    <div id="wrapper" class="toggled" ng-controller="DataValidationCtrl as dataValidationCtrl">
+        <div class="overlay"></div>
+        <div ng-include="'navProject.html'"></div>
+        <div class="content-wrapper">
+            <div growl reference="dv_growl" class="pull-right"></div>
+            <div class="content" style="background-color: white">
+                <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" style='margin-left: 0px;'>
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <button type="button" ng-click="dataValidationCtrl.toggleNewDataValidationPage()"
+                                class="btn btn-default btn-success control-label" style="margin: 10px">
+                                Toggle new data validation<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                                </i>
+                            </button>
+                        </div>
+                        <div class="col-md-4 pull-right">
+                            <h3>
+                                <span class="label label-default">{{dataValidationCtrl.featureGroup.name}}</span>
+                                <span class="fa fa-times-circle" ng-click="dataValidationCtrl.returnToFeaturestore()"
+                                    uib-tooltip="Return to Feature Store main page."> </span>
+                            </h3>
+                        </div>
+                    </div>
+                    <hr class="col-xs-12 col-sm-12 col-md-12 col-lg-12" />
+                </div>
+
+                <!-- Create new Data validation Project -->
+                <div style='margin-left: 0px;' ng-if="dataValidationCtrl.showCreateNewDataValidationPage == true">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card-group">
+                                <div class="col-md-5" style="width: 23rem; height: 15rem;"
+                                    ng-repeat="rule in dataValidationCtrl.valid_predicates">
+                                    <div class="card" style="height: 14rem;">
+                                        <div class="card-block">
+                                            <h3 class="card-title">{{rule.friendlyName}}</h3>
+                                            <p class="card-text" style="height: 5rem;">{{rule.description}}</p>
+                                            <a class="btn btn-primary"
+                                                ng-click="dataValidationCtrl.addRule2DataValidation(rule)">
+                                                Add</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col">
+                            <!-- Validation rules cart -->
+                            <div class="pull-left" style="margin-left:20px">
+                                <div class="row">
+                                    <a ng-click="dataValidationCtrl.toggleCart()"
+                                        style="color:rgb(51, 51, 51); font-size:20px;">
+                                        <i class="fa fa-shopping-cart fa-2x"></i>
+                                        Checkout Rules
+                                        <span class="shop-badge">
+                                            {{dataValidationCtrl.user_rules.length}}
+                                        </span>
+                                    </a>
+                                </div>
+                                <div class="shopping-cart row" ng-if="dataValidationCtrl.showCart" class="animate-if">
+                                    <div class="shopping-cart-header">
+                                        <i class="fa fa-shopping-cart fa-2x cart-icon"></i><span
+                                            class="shop-badge">{{dataValidationCtrl.user_rules.length}}</span>
+                                        <div class="shopping-cart-total pull-right">
+                                            <span class="lighter-text">Total:</span>
+                                            <span class="main-color-text">{{dataValidationCtrl.user_rules.length}}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <dir-pagination-controls pagination-id="rulebasket" class="pull-right" max-size="5"
+                                        direction-links="true" boundary-links="true">
+                                    </dir-pagination-controls>
+
+                                    <ul class="shopping-cart-items"
+                                        dir-paginate="rule in dataValidationCtrl.user_rules | itemsPerPage:5 "
+                                        pagination-id="rulebasket">
+                                        <li class="clearfix">
+                                            <button class="btn btn-xs btn-danger fa fa-trash fa-xs" uib-tooltip="Delete"
+                                                ng-click="dataValidationCtrl.removeRuleFromBasket($index);"></button>
+                                            <span class="item-name">{{rule.predicate}}</span>
+                                            <span class="item-price">Type: {{rule.constraintGroup.name}}</span>
+                                        </li>
+                                    </ul>
+                                    <a class="cart-button" ng-click="dataValidationCtrl.finishValidationRules()"
+                                        ng-disabled="dataValidationCtrl.user_rules.length === 0">Create validation
+                                        job</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" layout-align="left left" style='margin-left: 0px;'
+                ng-if="dataValidationCtrl.showCreateNewDataValidationPage == false">
+                <button type="button" ng-if="dataValidationCtrl.showValidationResult == false"
+                    ng-click="dataValidationCtrl.fetchValidationResult()" class="btn btn-default btn-info control-label"
+                    style="margin: 10px">
+                    Fetch validation result<i style="margin-left: 10px" class="glyphicon glyphicon-download">
+                    </i>
+                    <i ng-if="dataValidationCtrl.validationWorking" style="margin-top: 2px"
+                        class="fa fa-spinner fa-spin pull-right"></i>
+                </button>
+                <button type="button" ng-if="dataValidationCtrl.showValidationResult"
+                    ng-click="dataValidationCtrl.fetchValidationRules()" class="btn btn-default btn-info control-label"
+                    style="margin: 10px">
+                    Show rules<i style="margin-left: 10px" class="glyphicon glyphicon-eye-open">
+                    </i>
+                    <i ng-if="dataValidationCtrl.validationWorking" style="margin-top: 2px"
+                        class="fa fa-spinner fa-spin pull-right"></i>
+                </button>
+                <!-- Table to show existing rules -->
+                <div class="row" ng-if="dataValidationCtrl.showValidationResult == false">
+                    <div class="container">
+                        <table st-table="dataValidationCtrl.predicates" class="table table-stripped">
+                            <label class="text-muted">VALIDATION RULES</label>
+                            <thead>
+                                <tr>
+                                    <th class="col-sm-1">Feature</th>
+                                    <th class="col-sm-1">Predicate</th>
+                                    <th class="col-sm-1">Group</th>
+                                    <th class="col-sm-1">Arguments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="predicate in dataValidationCtrl.predicates">
+                                    <td>{{ predicate.feature }}</td>
+                                    <td>{{ predicate.predicate }}</td>
+                                    <td>{{ predicate.constraintGroup.name }} -
+                                        {{ predicate.constraintGroup.level }}
+                                    </td>
+                                    <td>{{ predicate.arguments }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Show validation result -->
+                <div class="row" ng-if="dataValidationCtrl.showValidationResult">
+                    <!-- Table to show existing rules -->
+                    <div class="row" ng-if="dataValidationCtrl.showValidationResult">
+                        <div class="container">
+                            <div class="row">
+                                <h3>Status:
+                                    <span class="badge alert-success"
+                                        ng-if="dataValidationCtrl.validationResult.status === 'SUCCESS'">Success</span>
+                                    <span class="badge alert-warning"
+                                        ng-if="dataValidationCtrl.validationResult.status === 'WARNING'">Warning</span>
+                                    <span class="badge alert-danger"
+                                        ng-if="dataValidationCtrl.validationResult.status === 'FAILURE'">Failure</span>
+                                </h3>
+                            </div>
+                            <div class="row">
+                                <table st-table="dataValidationCtrl.validationResult.constraintsResult"
+                                    class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-sm-1">Constraint</th>
+                                            <th class="col-sm-1">Status</th>
+                                            <th class="col-sm-1">Message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="result in dataValidationCtrl.validationResult.constraintsResult"
+                                            class="alert"
+                                            ng-class="{'alert-danger': result.constraintStatus === 'Failure', 'alert-success': result.constraintStatus === 'Success'}">
+                                            <td>{{ result.constraint }}</td>
+                                            <td>{{ result.constraintStatus }}</td>
+                                            <td>{{ result.constraintMessage }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
