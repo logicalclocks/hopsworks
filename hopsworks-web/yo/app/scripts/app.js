@@ -473,6 +473,16 @@ angular.module('hopsWorksApp', [
                             }]
                     }
                 })
+                .when('/project/:projectID/featurestore/datavalidation', {
+                  templateUrl: 'views/dataValidation.html',
+                  controller: 'ProjectCtrl as projectCtrl',
+                  resolve: {
+                    auth: ['$q', '$route', 'AuthGuardService',
+                          function ($q, $route, AuthGuardService) {
+                            return AuthGuardService.guardProject($q, $route.current.params.projectID);
+                          }]
+                  }
+                })
                 .otherwise({
                   redirectTo: '/'
                 });

@@ -1319,7 +1319,11 @@ public class RESTCodes {
     FEATURESTORE_UTIL_ARGS_FAILURE(62, "Could not write featurestore util args to HDFS",
         Response.Status.INTERNAL_SERVER_ERROR),
     SYNC_TABLE_NOT_FOUND(63, "The Hive Table to Sync with the feature store was not " +
-      "found in the metastore", Response.Status.BAD_REQUEST);
+      "found in the metastore", Response.Status.BAD_REQUEST),
+    COULD_NOT_CREATE_DATA_VALIDATION_RULES(64, "Failed to create data validation rules",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_READ_DATA_VALIDATION_RESULT(65, "Failed to read data validation result",
+        Response.Status.INTERNAL_SERVER_ERROR);
     
     
     private int code;
