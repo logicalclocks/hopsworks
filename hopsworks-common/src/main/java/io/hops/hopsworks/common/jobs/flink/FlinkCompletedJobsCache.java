@@ -62,7 +62,7 @@ public class FlinkCompletedJobsCache {
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void init() {
-    
+
     try {
       String archivePath = flinkController.getArchiveDir();
       cache = CacheBuilder.newBuilder().maximumSize(1000000).build(new CacheLoader<String, Project>() {
@@ -72,7 +72,7 @@ public class FlinkCompletedJobsCache {
           return flinkController.getProjectOfFlinkJob(archivePath, job);
         }
       });
-      
+
       //Fetch
       Map<String, Project> jobsProjects = flinkController.getProjectsOfFlinkJobs(archivePath);
       for (String job : jobsProjects.keySet()) {
