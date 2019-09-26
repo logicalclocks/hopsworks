@@ -48,14 +48,20 @@
     <div class="job-content-wrapper">
       <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
-    <div class="">
+    <div class="" ng-controller="PythonCtrl as pythonCtrl">
 
       <section>
         <div class="content-wrapper">
+          <div ng-if="pythonCtrl.loading" class="loadingwrap" style="z-index: 1000;">
+            <div class="loading-content">
+              <div class="loader-in-wrap"></div>
+              {{pythonCtrl.loadingText}}
+            </div>
+          </div>
           <h3 id="projectSetings" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
 
 
-          <div ng-controller="PythonCtrl as pythonCtrl"  ng-init="indextab = 0">
+          <div ng-init="indextab = 0">
 
             <uib-tabset active="indextab">
 
@@ -72,18 +78,12 @@
                         pre-installed libraries.</p>
                       <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
                       <p class="lead">
-                      <div><span> <label>Enable Python Kernel:
-                              <input type="checkbox" ng-init="pythonCtrl.pythonKernelEnabled = true" ng-model="pythonCtrl.pythonKernelEnabled"></label>
-                            <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonCtrl.pythonKernelEnabled == true, 'fa-info' : pythonCtrl.pythonKernelEnabled == false }" uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project."
-                               style="margin-left: 10px"></i></span>
-                      </div>
-
                       <div>
-                        <div class="btn-group" uib-dropdown is-open="pythonCtrl.pythonVersionOpen">
+                        <div class="btn-group" uib-dropdown style="z-index: 0;">
                           <button ng-disabled="pythonCtrl.enabling" id="single-button" type="button"
                                   class="btn btn-success btn-lg"
                                   uib-dropdown-toggle >
-                            Activate Anaconda &nbsp;<span class="caret"></span>
+                            Select version &nbsp;<span class="caret"></span>
                           </button>
                           <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
                             <li role="menuitem"><a ng-click="pythonCtrl.enable('2.7')">Python 2.7</a></li>
@@ -91,6 +91,7 @@
                             <li role="menuitem"><a ng-click="pythonCtrl.enable('3.6')">Python 3.6</a></li>
                           </ul>
                         </div>
+                      </div>
                       </p>
                       <br />
                       <p><b> Option 2: </b> Create environment from Anaconda .yml file.</p>
@@ -101,9 +102,7 @@
                       </button>
                     </div>
                   </div>
-                  <div class="row"></div>
 
-                </div>
                 </div>
                 <div class="col-md-offset-1" ng-show="pythonCtrl.enabled">
                   <h2>Install Python libraries using conda in Anaconda environment </h2>
@@ -124,21 +123,49 @@
                         Removing old Anaconda environment...
                       </div>
                     </div>
-                    <div class="col-md-offset-2 col-md-2  pull-right" style="margin-right: 60px">
-                      <button tooltip-placement="auto top"
-                              uib-tooltip="The project's Anaconda Environment will be deleted (but it can be recreated again)." 
-                              ng-click="pythonCtrl.destroyAnaconda()"
-                              type="button" class="btn btn-danger btn-sm" >
-                        Remove Anaconda
-                      </button>
-                    </div>
-
                   </div>
                     <div style="margin-top: 15px;">
                       <div>Conda Channel: <a uib-tooltip="You can search a different conda channel by entering a new channel name here." tooltip-placement="top"
                                              href="#" data-inputclass="xwdith" editable-text="pythonCtrl.condaChannel">{{ pythonCtrl.condaChannel || 'default' }}</a></div>
                     </div>
-
+                  <fieldset>
+                    <div class="control-group">
+                      <div class="row"></div>
+                      <form name="condaNestedForm"
+                            ng-submit="pythonCtrl.install(condaLib, 'conda', pythonCtrl.machineTypeVal, condaVersion)">
+                        <div class="form-group has-feedback row" style="margin-top: 40px;">
+                          <div class="col-md-5">
+                            <div class="row">
+                              <div class="col-xs-9">
+                                <input type="text" class="form-control"
+                                       placeholder="Library name ..."
+                                       required ng-model="condaLib"/>
+                              </div>
+                              <div class="col-xs-3">
+                                <input name="condaVersionInput" type="text" class="form-control has-error"
+                                       placeholder="version"
+                                       ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
+                                       required ng-model="condaVersion"/>
+                                <div class="invalid-feedback">
+                                  <span ng-show="condaNestedForm.condaVersionInput.$dirty && condaNestedForm.condaVersionInput.$error.pattern"
+                                        class="text-danger ng-hide">Wrong version pattern.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-5">
+                            <div class="btn-group row">
+                              <button type="submit" class="btn btn-primary" value="Submit">
+                                <i ng-if="pythonCtrl.installing[condaLib]" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                                Install <i class="fa fa-download"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </fieldset>
                   <fieldset>
                     <div class="control-group">
                       <div class="row"></div>
@@ -277,38 +304,30 @@
                         pre-installed libraries.</p>
                       <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
                       <p class="lead">
-                        <div><span> <label>Enable Python Kernel:
-                              <input type="checkbox" ng-init="pythonCtrl.pythonKernelEnabled = true" ng-model="pythonCtrl.pythonKernelEnabled"></label>
-                            <i class="fa" ng-class="{'fa-exclamation-triangle' : pythonCtrl.pythonKernelEnabled == true, 'fa-info' : pythonCtrl.pythonKernelEnabled == false }"
-                              uib-tooltip="Enabling the Python kernel risks that users who are not Data Owners can perform unauthorized copying of data out from a Project."
-                              style="margin-left: 10px"></i></span>
+                      <div>
+                        <div class="btn-group" uib-dropdown style="z-index: 0;">
+                          <button ng-disabled="pythonCtrl.enabling" id="single-button" type="button"
+                                  class="btn btn-success btn-lg"
+                                  uib-dropdown-toggle >
+                            Select version &nbsp;<span class="caret"></span>
+                          </button>
+                          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
+                            <li role="menuitem"><a ng-click="pythonCtrl.enable('2.7')">Python 2.7</a></li>
+                            <li class="divider"></li>
+                            <li role="menuitem"><a ng-click="pythonCtrl.enable('3.6')">Python 3.6</a></li>
+                          </ul>
                         </div>
-
-                        <div>
-                          <div class="btn-group" uib-dropdown is-open="pythonCtrl.pythonVersionOpen">
-                            <button ng-disabled="pythonCtrl.enabling" id="singleButton" type="button"
-                                    class="btn btn-success btn-lg"
-                              uib-dropdown-toggle>
-                              Activate Anaconda &nbsp;<span class="caret"></span>
-                            </button>
-                            <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
-                              <li role="menuitem"><a ng-click="pythonCtrl.createEnvironmentFromVersion('2.7')">Python 2.7</a></li>
-                              <li class="divider"></li>
-                              <li role="menuitem"><a ng-click="pythonCtrl.createEnvironmentFromVersion('3.6')">Python 3.6</a></li>
-                            </ul>
-                          </div>
-                        </div>
+                      </div>
                       </p>
                       <br />
                       <p><b> Option 2: </b> Create environment from Anaconda .yml file.</p>
 
                       <button ng-disabled="pythonCtrl.enabling" class="btn btn-success btn-lg" type="button"
-                        ng-click="pythonCtrl.selectYmlFile()">
+                              ng-click="pythonCtrl.selectYmlFile()">
                         Select .yml
                       </button>
                     </div>
                   </div>
-                  <div class="row"></div>
 
                 </div>
                 <div class="col-md-offset-1" ng-show="pythonCtrl.enabled">
@@ -320,22 +339,57 @@
                   <div class="row">
                     <div class="col-md-5 progress" ng-if="pythonCtrl.enabling">
                       <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
-                        aria-valuenow="{{pythonCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
-                        Installing Anaconda environment on all hosts
-                        <!--Number of hosts left: {{pythonCtrl.numEnvsNotEnabled}}-->
+                           aria-valuenow="{{pythonCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                        Creating new Anaconda environment...
                       </div>
                     </div>
-                    <div class="col-md-offset-2 col-md-2 pull-right" style="margin-right: 60px">
-                      <button tooltip-placement="auto top" uib-tooltip="The project's Anaconda Environment will be deleted (but it can be recreated again)."
-                        ng-click="pythonCtrl.destroyAnaconda()" type="button" class="btn btn-danger btn-sm">
-                        Remove Anaconda
-                      </button>
+                    <div class="col-md-5 progress" ng-if="pythonCtrl.removing">
+                      <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"
+                           aria-valuenow="{{pythonCtrl.progress()}}" aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                        Removing old Anaconda environment...
+                      </div>
                     </div>
                   </div>
-
                   <fieldset>
                     <div class="control-group">
-
+                      <div class="row"></div>
+                      <form name="pipNnestedForm"
+                            ng-submit="pythonCtrl.install(pipLib, 'pip', pythonCtrl.machineTypeVal, pipVersion)">
+                        <div class="form-group has-feedback row" style="margin-top: 40px;">
+                          <div class="col-md-5">
+                            <div class="row">
+                              <div class="col-xs-9">
+                                <input type="text" class="form-control"
+                                       placeholder="Library name ..."
+                                       required ng-model="pipLib"/>
+                              </div>
+                              <div class="col-xs-3">
+                                <input name="pipVersionInput" type="text" class="form-control"
+                                       placeholder="version"
+                                       ng-pattern="/^[a-zA-Z0-9\.\-\_]{1,50}$/"
+                                       required ng-model="pipVersion"/>
+                                <div class="invalid-feedback">
+                                  <span ng-show="pipNnestedForm.pipVersionInput.$dirty && pipNnestedForm.pipVersionInput.$error.pattern"
+                                        class="text-danger ng-hide">Wrong version pattern.</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-5">
+                            <div class="btn-group row">
+                              <button type="submit" class="btn btn-primary" value="Submit">
+                                <i ng-if="pythonCtrl.installing[pipLib]" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                                Install <i class="fa fa-download"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </fieldset>
+                  <fieldset>
+                    <div class="control-group">
                       <div class="row"></div>
                       <form name="nestedForm">
                         <div class="form-group row" style="margin-top: 40px;">
@@ -462,10 +516,20 @@
                 ng-click="pythonCtrl.getInstalled()">
                 <div>
                   <h2 style="margin-bottom: 30px;">Installed Python Libraries
-                    <button class="btn btn-success" style="float:right" type="button" ng-click="pythonCtrl.exportEnvironment()">
-                      <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="pythonCtrl.exporting"></span>
-                      Export Environment
-                    </button>
+                    <div style="float:right">
+                      <button tooltip-placement="auto top" style="float:left; margin-right: 10px;"
+                              uib-tooltip="Export the Anaconda environment of the project as a .yml file."
+                              class="btn btn-success" style="float:right" type="button" ng-click="pythonCtrl.exportEnvironment()">
+                        <span class="fa fa-spinner fa-spin" aria-hidden="true" ng-show="pythonCtrl.exporting"></span>
+                        Export Environment
+                      </button>
+                      <button tooltip-placement="auto top" style="float:right;"
+                              uib-tooltip="The Anaconda environment of the project will be deleted. A new environment can be created after deletion."
+                              ng-click="pythonCtrl.destroyAnaconda()"
+                              type="button" class="btn btn-danger" >
+                        Remove Environment
+                      </button>
+                    </div>
                   </h2>
                 </div>
                 <!--                <div class="row pull-left">
@@ -650,7 +714,7 @@
                                     ng-click="pythonCtrl.showCommandsLogs(row, false)">
                               <i class="fa fa-bars"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED'" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML'" type="submit"
                                     class="btn btn-md btn-danger"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Remove the conda command to clean up this environment"
@@ -659,10 +723,17 @@
                                  class="fa fa-spinner fa-spin pull-right"></i>
                               <i class="fa fa-trash"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED'" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) === 'YML'" type="submit"
+                                    class="btn btn-md btn-danger"
+                                    tooltip-placement="auto left"
+                                    uib-tooltip="Remove the conda command to clean up this environment"
+                                    ng-click="pythonCtrl.deleteEnvironment()">
+                              <i class="fa fa-trash"></i>
+                            </button>
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML'" type="submit"
                                     class="btn btn-md btn-warning"
                                     tooltip-placement="auto left"
-                                    uib-tooltip="Retry the conda command."
+                                    uib-tooltip="Retry the conda command"
                                     ng-click="pythonCtrl.retryFailedCondaOp(row)">
                               <i class="fa fa-repeat"></i>
                             </button>
@@ -675,7 +746,7 @@
                 <div class="" ng-if="pythonCtrl.showLogs === true">
                   <button ng-click="pythonCtrl.showMainUI(); $event.stopPropagation();" class="btn btn-primary btn-md fa fa-table"
                     style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
-                    onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'">Conda
+                    onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Conda
                     commands summary</button>
                   <iframe style="overflow-y: auto;" id="ui_iframe" ng-src="{{pythonCtrl.kibanaUI}}" width="99%"
                     height="80%"></iframe>

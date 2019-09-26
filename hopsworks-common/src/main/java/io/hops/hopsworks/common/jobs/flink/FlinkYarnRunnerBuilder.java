@@ -377,7 +377,6 @@ public class FlinkYarnRunnerBuilder {
 
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
-    builder.setJobUser(jobUser);
     builder.setFlinkCluster(cluster);
     
     String stagingPath = File.separator + "Projects" + File.separator + project

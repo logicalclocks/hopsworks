@@ -40,6 +40,7 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.util.Settings;
@@ -79,7 +80,7 @@ import java.util.List;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
 public class FeaturestoreService {
-  
+
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
@@ -104,19 +105,22 @@ public class FeaturestoreService {
   private TrainingDatasetService trainingDatasetService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
-  
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private DataValidationResource dataValidationService;
+
   private Project project;
-  
+
   /**
    * Set the project of the featurestore (provided by parent resource)
    *
-   * @param projectId
-   *   the id of the project
+   * @param projectId the id of the project
    */
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
-  
+
   /**
    * Endpoint for getting the list of featurestores for the project
    *
@@ -137,12 +141,11 @@ public class FeaturestoreService {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoresGeneric).build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore with a particular Id
    *
-   * @param featurestoreId
-   *   the id of the featurestore
+   * @param featurestoreId the id of the featurestore
    * @return JSON representation of the featurestore
    */
   @GET
@@ -166,11 +169,10 @@ public class FeaturestoreService {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreDTOGeneric).build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore's settings
-   * *
-   *
+   **
    * @return JSON representation of the featurestore settings
    */
   @GET
@@ -197,12 +199,11 @@ public class FeaturestoreService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
       .build();
   }
-  
+
   /**
    * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
    *
-   * @param featurestoreName
-   *   the name of the featurestore
+   * @param featurestoreName the name of the featurestore
    * @return JSON representation of the featurestore
    */
   @GET
@@ -227,14 +228,13 @@ public class FeaturestoreService {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreDTOGeneric).build();
   }
-  
+
   /**
    * Endpoint for getting all metadata for a feature store. This is a convenience endpoint only used by program-clients
    * that needs feature store metadata for query planning. This endpoint means that the client do not have to do
    * 3 requests to get all metadata (featurestore, featuregroups, training datasets)
    *
-   * @param featurestoreName
-   *   featurestoreName
+   * @param featurestoreName featurestoreName
    * @return a JSON representation of the featurestore metadata
    * @throws FeaturestoreException
    */
@@ -271,23 +271,26 @@ public class FeaturestoreService {
       new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featurestoreMetadataGeneric)
-      .build();
+        .entity(featurestoreMetadataGeneric)
+        .build();
   }
-  
+
+
+  @Path("{featureStoreId}/datavalidation")
+  public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
+    return this.dataValidationService.setFeatureStore(featureStoreId);
+  }
+
   /**
    * Feature Groups sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the feature groups service
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/featuregroups")
-  public FeaturegroupService featuregroupService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId)
-    throws FeaturestoreException {
+  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId)
+      throws FeaturestoreException {
     featuregroupService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
@@ -295,20 +298,17 @@ public class FeaturestoreService {
     featuregroupService.setFeaturestoreId(featurestoreId);
     return featuregroupService;
   }
-  
+
   /**
    * Training Datasets sub-resource
    *
-   * @param featurestoreId
-   *   id of the featurestore
+   * @param featurestoreId id of the featurestore
    * @return the training dataset service
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/trainingdatasets")
-  public TrainingDatasetService trainingDatasetService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId)
-    throws FeaturestoreException {
+  public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId)
+      throws FeaturestoreException {
     trainingDatasetService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
@@ -316,7 +316,7 @@ public class FeaturestoreService {
     trainingDatasetService.setFeaturestoreId(featurestoreId);
     return trainingDatasetService;
   }
-  
+
   /**
    * Storage Connectors sub-resource
    *
@@ -326,8 +326,7 @@ public class FeaturestoreService {
    */
   @Path("/{featurestoreId}/storageconnectors")
   public FeaturestoreStorageConnectorService storageConnectorService(
-    @PathParam("featurestoreId")
-      Integer featurestoreId) throws FeaturestoreException {
+      @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {
     featurestoreStorageConnectorService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
@@ -335,11 +334,10 @@ public class FeaturestoreService {
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
   }
-  
+
   /**
    * Endpoint for uploading job-arguments to hdfs for featurestore utility jobs
-   * *
-   *
+   **
    * @return HDFS path to the uploaded arguments
    */
   @POST
@@ -350,11 +348,9 @@ public class FeaturestoreService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Upload json input for featurestore-util jobs")
-  public Response newFeaturestoreUtil(
-    @Context
-      SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
-    throws FeaturestoreException, JAXBException {
-    if (featurestoreUtilJobDTO == null) {
+  public Response newFeaturestoreUtil(@Context SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
+      throws FeaturestoreException, JAXBException {
+    if(featurestoreUtilJobDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Feature Store Util Job cannot be null");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -362,5 +358,5 @@ public class FeaturestoreService {
     JsonResponse jsonResponse = noCacheResponse.buildJsonResponse(Response.Status.OK, hdfsPath);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jsonResponse).build();
   }
-  
+
 }

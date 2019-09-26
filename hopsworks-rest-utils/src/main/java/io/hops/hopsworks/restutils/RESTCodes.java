@@ -184,7 +184,7 @@ public class RESTCodes {
     PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR),
     PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 29 characters.",
         Response.Status.BAD_REQUEST);
-    
+
 
 
     private Integer code;
@@ -948,7 +948,7 @@ public class RESTCodes {
     BADREVOKATIONREQUEST(1, "No certificate identifier provided", Response.Status.BAD_REQUEST),
     CERTNOTFOUND(2, "Certificate file not found", Response.Status.NO_CONTENT),
     CERTEXISTS(3, "Certificate with the same identifier already exists", Response.Status.BAD_REQUEST);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -1346,10 +1346,14 @@ public class RESTCodes {
       "grant/revoke privileges to a MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
     ONLINE_FEATUREGROUP_CANNOT_BE_PARTITIONED(75, "An error occurred when trying to " +
       "create the MySQL table for the online feature group. User-defined partitioning is not supported for MySQL " +
-      "tables", Response.Status.INTERNAL_SERVER_ERROR);
-    
-    
-    
+      "tables", Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_CREATE_DATA_VALIDATION_RULES(64, "Failed to create data validation rules",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_READ_DATA_VALIDATION_RESULT(65, "Failed to read data validation result",
+        Response.Status.INTERNAL_SERVER_ERROR);
+
+
+
     private int code;
     private String message;
     private Response.Status respStatus;
@@ -1423,33 +1427,33 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   /**
    * Airflow specific error codes
    */
   public enum AirflowErrorCode implements RESTErrorCode {
-    
+
     JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
     JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR),
     AIRFLOW_DIRS_NOT_CREATED(3, "Airflow internal directories could not be created",
         Response.Status.INTERNAL_SERVER_ERROR);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
     private final int range = 290000;
-    
+
     AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
@@ -1459,7 +1463,7 @@ public class RESTCodes {
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public int getRange() {
       return range;
@@ -1516,45 +1520,45 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   public enum ResourceErrorCode implements RESTErrorCode {
-    
+
     INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
-    
+
     private int code;
     private String message;
     private Response.Status respStatus;
     public final int range = 310000;
-    
+
     ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public int getRange() {
       return range;
     }
   }
-  
+
   public enum ApiKeyErrorCode implements RESTErrorCode {
-    
+
     KEY_NOT_CREATED(1, "Api key could not be created", Response.Status.BAD_REQUEST),
     KEY_NOT_FOUND(2, "Api key not found", Response.Status.UNAUTHORIZED),
     KEY_ROLE_CONTROL_EXCEPTION(3, "No valid role found for this invocation", Response.Status.FORBIDDEN),
@@ -1564,33 +1568,33 @@ public class RESTCodes {
     KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_VALID(9, "Api key name not valid", Response.Status.BAD_REQUEST);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
     private final int range = 320000;
-  
+
     ApiKeyErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public int getRange() {
       return range;

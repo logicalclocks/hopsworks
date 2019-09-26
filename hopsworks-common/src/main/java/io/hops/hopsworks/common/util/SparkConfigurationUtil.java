@@ -341,7 +341,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       .append(File.pathSeparator)
       .append(settings.getHopsLeaderElectionJarPath())
       .append(File.pathSeparator)
-      .append(settings.getSparkDir() + "/jars/*");
+      .append(settings.getSparkDir())
+      .append("/jars/*");
 
     String applicationsJars = sparkJobConfiguration.getJars();
     if(!Strings.isNullOrEmpty(applicationsJars)) {

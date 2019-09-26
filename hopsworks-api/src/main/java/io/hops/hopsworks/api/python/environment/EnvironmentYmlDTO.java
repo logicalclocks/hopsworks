@@ -50,18 +50,16 @@ public class EnvironmentYmlDTO {
   private String allYmlPath;
   private String cpuYmlPath;
   private String gpuYmlPath;
-  private Boolean pythonKernelEnable;
   private Boolean installJupyter;
   
   public EnvironmentYmlDTO() {
   }
   
-  public EnvironmentYmlDTO(String allYmlPath, String cpuYmlPath, String gpuYmlPath, Boolean pythonKernelEnable,
+  public EnvironmentYmlDTO(String allYmlPath, String cpuYmlPath, String gpuYmlPath,
     Boolean installJupyter) {
     this.allYmlPath = allYmlPath;
     this.cpuYmlPath = cpuYmlPath;
     this.gpuYmlPath = gpuYmlPath;
-    this.pythonKernelEnable = pythonKernelEnable;
     this.installJupyter = installJupyter;
   }
   
@@ -92,15 +90,6 @@ public class EnvironmentYmlDTO {
     this.gpuYmlPath = gpuYmlPath;
   }
   
-  @ApiModelProperty(value = "Enable python kernel for the environment.")
-  public Boolean getPythonKernelEnable() {
-    return pythonKernelEnable;
-  }
-  
-  public void setPythonKernelEnable(Boolean pythonKernelEnable) {
-    this.pythonKernelEnable = pythonKernelEnable;
-  }
-  
   @ApiModelProperty(value = "Install Jupyter in the environment.")
   public Boolean getInstallJupyter() {
     return installJupyter;
@@ -116,7 +105,6 @@ public class EnvironmentYmlDTO {
       "allYmlPath='" + allYmlPath + '\'' +
       ", cpuYmlPath='" + cpuYmlPath + '\'' +
       ", gpuYmlPath='" + gpuYmlPath + '\'' +
-      ", pythonKernelEnable=" + pythonKernelEnable +
       ", installJupyter=" + installJupyter +
       '}';
   }

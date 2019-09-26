@@ -42,18 +42,18 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
+import io.hops.hopsworks.common.jobs.yarn.YarnJob;
+import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.exceptions.ServiceException;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.yarn.YarnJob;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
-import io.hops.hopsworks.common.util.Settings;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 /**
  * Orchestrates the execution of a Spark job: run job, update history object.
@@ -133,7 +133,7 @@ public class SparkJob extends YarnJob {
               jobUser, usersFullName,
               services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings);
 
-    } catch (ServiceException | IOException e) {
+    } catch (Exception e) {
       LOG.log(Level.WARNING,
           "Failed to create YarnRunner.", e);
       try {

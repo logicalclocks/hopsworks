@@ -309,7 +309,6 @@ angular.module('hopsWorksApp')
                         break;
                     case "ARCHIVES":
                         if (extension.toUpperCase() === "ZIP" || extension.toUpperCase() === "TGZ") {
-                            path = path + "#" + fileName;
                             if (self.archives === []) {
                                 self.archives = [path];
                             } else {
@@ -328,7 +327,6 @@ angular.module('hopsWorksApp')
                         }
                         break;
                     case "FILES":
-                        path = path + "#" + file
                         if (self.files === []) {
                             self.files = [path];
                         } else {
