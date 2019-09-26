@@ -50,6 +50,10 @@ public class CertsDTO {
   public CertsDTO() {
   }
 
+  public CertsDTO(String fileExtension) {
+    this.fileExtension = fileExtension;
+  }
+
   public CertsDTO(String fileExtension, String kStore, String tStore) {
     this.fileExtension = fileExtension;
     this.kStore = kStore;
