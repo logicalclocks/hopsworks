@@ -62,7 +62,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to add hopsfs connector to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, "Resources")
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -80,7 +80,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to add hopsfs connector without a valid dataset" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, "-")
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "-")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -92,7 +92,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to add s3 connector to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, "testbucket")
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -111,7 +111,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, nil)
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: nil)
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -123,7 +123,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to add jdbc connector to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, "jdbc://test2")
+          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
         it "should not be able to add jdbc connector without a connection string to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, nil)
+          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: nil)
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -153,7 +153,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to delete a hopsfs connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, "Resources")
+          json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           connector_id = parsed_json["id"]
@@ -168,7 +168,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to delete a s3 connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, "testbucket")
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           connector_id = parsed_json["id"]
@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to delete a JDBC connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, "jdbc://test2")
+          json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           connector_id = parsed_json["id"]
@@ -198,11 +198,11 @@ describe "On #{ENV['OS']}" do
         it "should be able to update hopsfs connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result1, connector_name1 = create_hopsfs_connector(project.id, featurestore_id, "Resources")
+          json_result1, connector_name1 = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           connector_id = parsed_json1["id"]
-          json_result2, connector_name2 = update_hopsfs_connector(project.id, featurestore_id, connector_id, "Experiments")
+          json_result2, connector_name2 = update_hopsfs_connector(project.id, featurestore_id, connector_id, datasetName: "Experiments")
           parsed_json2 = JSON.parse(json_result2)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -219,11 +219,11 @@ describe "On #{ENV['OS']}" do
         it "should be able to update S3 connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result1, connector_name1 = create_s3_connector(project.id, featurestore_id, "testbucket")
+          json_result1, connector_name1 = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           connector_id = parsed_json1["id"]
-          json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id, "testbucket2")
+          json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id, bucket: "testbucket2")
           parsed_json2 = JSON.parse(json_result2)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -241,11 +241,11 @@ describe "On #{ENV['OS']}" do
         it "should be able to update JDBC connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result1, connector_name1 = create_jdbc_connector(project.id, featurestore_id, "jdbc://test2")
+          json_result1, connector_name1 = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           connector_id = parsed_json1["id"]
-          json_result2, connector_name2 = update_jdbc_connector(project.id, featurestore_id, connector_id, "jdbc://test3")
+          json_result2, connector_name2 = update_jdbc_connector(project.id, featurestore_id, connector_id, connectionString: "jdbc://test3")
           parsed_json2 = JSON.parse(json_result2)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -262,14 +262,14 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "Create, delete and update operations on cached featuregroups in a specific featurestore" do
+    describe "Create, delete and update operations on offline cached featuregroups in a specific featurestore" do
 
       context 'with valid project, featurestore service enabled' do
         before :all do
           with_valid_project
         end
 
-        it "should be able to add a cached featuregroup to the featurestore" do
+        it "should be able to add a offline cached featuregroup to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -288,7 +288,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
-        it "should be able to add a cached featuregroup with hive partitioning to the featurestore" do
+        it "should be able to add a offline cached featuregroup with hive partitioning to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id)
@@ -307,10 +307,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
-        it "should not be able to add a cached featuregroup to the featurestore with a invalid hive table name" do
+        it "should not be able to add a cached offline featuregroup to the featurestore with a invalid hive table name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, nil, "TEST_!%$1--")
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil, featuregroup_name: "TEST_!%$1--")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -319,7 +319,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270038).to be true
         end
 
-        it "should not be able to add a cached featuregroup to the featurestore with invalid hive schema" do
+        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
@@ -328,7 +328,7 @@ describe "On #{ENV['OS']}" do
               description: "--",
               primary: false
           ]
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features, nil)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
           parsed_json = JSON.parse(json_result)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
@@ -336,7 +336,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270040).to be true
         end
 
-        it "should be able to preview a cached featuregroup in the featurestore" do
+        it "should be able to preview a offline cached featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -349,7 +349,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
-        it "should be able to get the hive schema of a cached featuregroup in the featurestore" do
+        it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -438,7 +438,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector_id = get_jdbc_connector_id
-          json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, "")
+          json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -472,7 +472,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           featuregroup_id = parsed_json["id"]
           featuregroup_version = parsed_json["version"]
-          json_result2, featuregroup_name2  = update_on_demand_featuregroup(project.id, featurestore_id, connector_id, featuregroup_id, featuregroup_version, nil, "testname")
+          json_result2, featuregroup_name2  = update_on_demand_featuregroup(project.id, featurestore_id, connector_id, featuregroup_id, featuregroup_version, query: nil, featuregroup_name: "testname")
           parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
           expect(parsed_json2["version"] == featuregroup_version).to be true
@@ -534,6 +534,144 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "Create, delete and update operations on online cached featuregroups in a specific featurestore" do
+
+      context 'with valid project, featurestore service enabled, and online feature store enabled' do
+        before :all do
+          if getVar("featurestore_online_enabled") == false
+            skip "Online Feature Store not enabled, skip online featurestore tests"
+          end
+          with_valid_project
+          with_jdbc_connector(@project[:id])
+        end
+
+        it "should be able to add a cached featuregroup with online feature serving to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("inodeId")).to be true
+          expect(parsed_json.key?("inputFormat")).to be true
+          expect(parsed_json.key?("hiveTableId")).to be true
+          expect(parsed_json.key?("hiveTableType")).to be true
+          expect(parsed_json.key?("featurestoreName")).to be true
+          expect(parsed_json.key?("featuregroupType")).to be true
+          expect(parsed_json.key?("onlineFeaturegroupEnabled")).to be true
+          expect(parsed_json.key?("onlineFeaturegroupDTO")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+          expect(parsed_json["name"] == featuregroup_name).to be true
+          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+        end
+
+        it "should be able to preview a online cached featuregroup in the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          preview_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview"
+          get preview_featuregroup_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json.key?("offlineFeaturegroupPreview")).to be true
+          expect(parsed_json.key?("onlineFeaturegroupPreview")).to be true
+          expect_status(200)
+        end
+
+        it "should be able to get the MySQL schema of a cached online featuregroup in the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/schema"
+          get get_featuregroup_schema_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json.key?("columns")).to be true
+          expect(parsed_json["columns"].length == 2) # length should be two since there should be Hive Schema, AND MySQL Schema
+          expect_status(200)
+        end
+
+        it "should be able to delete a cached online featuregroup from the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
+          delete delete_featuregroup_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status(200)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json["id"] == featuregroup_id).to be true
+        end
+
+        it "should be able to update the metadata of a cached online featuregroup from the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          featuregroup_version = parsed_json["version"]
+          update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+          expect_status(200)
+        end
+
+        it "should be able to enable online serving for a offline cached feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          featuregroup_version = parsed_json["version"]
+          enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+          expect_status(200)
+        end
+
+        it "should be able to disable online serving for a online cached feature group" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          featuregroup_version = parsed_json["version"]
+          disable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+          expect_status(200)
+        end
+
+        it "should be able to get online featurestore JDBC connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          get_online_featurestore_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/onlinefeaturestore"
+          get get_online_featurestore_connector_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json.key?("type")).to be true
+          expect(parsed_json.key?("description")).to be true
+          expect(parsed_json.key?("featurestoreId")).to be true
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json.key?("storageConnectorType")).to be true
+          expect(parsed_json.key?("arguments")).to be true
+          expect(parsed_json.key?("connectionString")).to be true
+          expect(parsed_json["featurestoreId"] == featurestore_id).to be true
+          expect(parsed_json["storageConnectorType"] == "JDBC").to be true
+          expect(parsed_json["name"]).to include("_onlinefeaturestore")
+          expect(parsed_json["connectionString"]).to include("jdbc:mysql:")
+          expect(parsed_json["arguments"]).to include("password=")
+          expect(parsed_json["arguments"]).to include("user=")
+          expect_status(200)
+        end
+      end
+    end
+
     describe "Create, delete and update operations on hopsfs training datasets in a specific featurestore" do
 
       context 'with valid project, featurestore service enabled' do
@@ -570,7 +708,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, "")
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, data_format: "")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true

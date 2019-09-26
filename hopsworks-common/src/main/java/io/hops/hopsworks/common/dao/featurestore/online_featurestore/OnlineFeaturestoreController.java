@@ -26,14 +26,16 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregrou
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.secrets.Secret;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -81,6 +83,10 @@ public class OnlineFeaturestoreController {
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
   private FeaturestoreController featurestoreController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private UserFacade userFacade;
   
   @PostConstruct
   public void init() {
@@ -122,7 +128,8 @@ public class OnlineFeaturestoreController {
           + e);
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE, Level.SEVERE,
-        "project: " + project.getName() + ", database: " + databaseName, e.getMessage(), e);
+        "project: " + project.getName() + ", database: " + databaseName + ", db user:" + dbUsername +
+                ", jdbcString: " + jdbcString, e.getMessage(), e);
     }
   }
   
@@ -293,14 +300,12 @@ public class OnlineFeaturestoreController {
     throws FeaturestoreException {
     String onlineFsPw = generateRandomUserPw();
     SecretId id = new SecretId(user.getUid(), dbuser);
-    Secret storedSecret = secretsFacade.findById(id);
-    if (storedSecret == null) {
-      try {
-        secretsController.add(user, dbuser, onlineFsPw, VisibilityType.PRIVATE, project.getId());
-      } catch (UserException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-          Level.SEVERE, "Problem adding online featurestore password to hopsworks secretsmgr");
-      }
+    try {
+      secretsController.delete(user, dbuser); //Delete if the secret already exsits
+      secretsController.add(user, dbuser, onlineFsPw, VisibilityType.PRIVATE, project.getId());
+    } catch (UserException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+              Level.SEVERE, "Problem adding online featurestore password to hopsworks secretsmgr");
     }
     return onlineFsPw;
   }
@@ -315,6 +320,16 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public String onlineDbUsername(Project project, Users user) {
     return onlineDbUsername(project.getName(), user.getUsername());
+  }
+  
+  /**
+   * Gets the featurestore MySQL DB name of a project
+   *
+   * @param project the project to get the MySQL-db name of the feature store for
+   * @return the MySQL database name of the featurestore in the project
+   */
+  public String getOnlineFeaturestoreDbName(Project project) {
+    return project.getName().toLowerCase();
   }
 
   /**
@@ -349,7 +364,7 @@ public class OnlineFeaturestoreController {
       return;
     }
     String dbuser = onlineDbUsername(project, user);
-    String db = project.getName();
+    String db = getOnlineFeaturestoreDbName(project);
     onlineFeaturestoreFacade.revokeUserPrivileges(db, dbuser);
     try{
       if (projectTeamFacade.findCurrentRole(project, user).equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
@@ -358,7 +373,7 @@ public class OnlineFeaturestoreController {
         onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser);
       }
       try{
-        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(project, dbuser, featurestore);
+        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
       } catch(Exception e) {
         //If the connector have already been created, skip this step
       }
@@ -402,10 +417,14 @@ public class OnlineFeaturestoreController {
       //Nothing to remove
       return;
     }
-    List<Secret> secrets = secretsFacade.findAll();
-    for (Secret s : secrets) {
-      if (s.getId().getName().startsWith(project + "_")) {
-        secretsFacade.deleteSecret(s.getId());
+    for (HdfsUsers hdfsUser: hdfsUsersController.getAllProjectHdfsUsers(project.getName())) {
+      Users user = userFacade.findByUsername(hdfsUser.getUsername());
+      String dbUser = onlineDbUsername(project, user);
+      try {
+        secretsController.delete(user, dbUser);
+      } catch (UserException e) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+                Level.SEVERE, "Problem removing user-secret to online featurestore");
       }
     }
     String db = project.getName();
@@ -452,7 +471,7 @@ public class OnlineFeaturestoreController {
         e.getMessage(), e);
     }
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-      featurestoreController.getFeaturestoreDbName(project));
+      featurestoreController.getOfflineFeaturestoreDbName(project));
     String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
       featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(

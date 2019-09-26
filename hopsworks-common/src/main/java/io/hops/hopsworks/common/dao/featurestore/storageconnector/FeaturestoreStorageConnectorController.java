@@ -221,7 +221,7 @@ public class FeaturestoreStorageConnectorController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector(Users user, Project project, String dbUsername,
-    Featurestore featurestore) throws FeaturestoreException {
+    Featurestore featurestore, String dbName) throws FeaturestoreException {
     
     //Step 1 Get the connector from the database
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = null;
@@ -232,8 +232,8 @@ public class FeaturestoreStorageConnectorController {
       connector.getName().equalsIgnoreCase(onlineFeaturestoreConnectorName)).collect(Collectors.toList());
     if(matchingConnectors.isEmpty()) {
       featurestoreJdbcConnectorDTO =
-        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(project, dbUsername,
-        featurestore);
+        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbUsername,
+        featurestore, dbName);
     } else {
       featurestoreJdbcConnectorDTO = (FeaturestoreJdbcConnectorDTO) matchingConnectors.get(0);
     }

@@ -261,9 +261,10 @@ public class FeaturestoreService {
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     Users user = jWTHelper.getUserPrincipal(sc);
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
     FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector =
       featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-        dbUsername, featurestore);
+        dbUsername, featurestore, dbName);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
         new FeaturestoreClientSettingsDTO(), storageConnectors, onlineFeaturestoreConnector);

@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorType;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -300,16 +299,16 @@ public class FeaturestoreJdbcConnectorController {
   }
   
   /**
-   * Utility function for create a JDBC connection to the online featurestore for a particlar user.
+   * Utility function for create a JDBC connection to the online featurestore for a particular user.
    *
-   * @param project the project that owns the online db
    * @param onlineDbUsername the db-username of the connection
    * @param featurestore the featurestore metadata
+   * @param dbName name of the MySQL database
    * @return DTO of the newly created connector
    * @throws FeaturestoreException
    */
-  public FeaturestoreJdbcConnectorDTO createJdbcConnectorForOnlineFeaturestore(Project project, String onlineDbUsername,
-    Featurestore featurestore) throws FeaturestoreException {
+  public FeaturestoreJdbcConnectorDTO createJdbcConnectorForOnlineFeaturestore(String onlineDbUsername,
+    Featurestore featurestore, String dbName) throws FeaturestoreException {
     String connectorName = onlineDbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> featurestoreConnectors = getJdbcConnectorsForFeaturestore(featurestore);
     for (FeaturestoreStorageConnectorDTO storageConnector: featurestoreConnectors) {
@@ -318,7 +317,6 @@ public class FeaturestoreJdbcConnectorController {
           "a storage connector with that name already exists");
       }
     }
-    String dbName = project.getName();
     String connectionString = settings.getFeaturestoreJdbcUrl() + dbName;
     String arguments = FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
       FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +

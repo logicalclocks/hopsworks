@@ -145,7 +145,7 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
-    ProjectException, UserException, FeaturestoreException, IOException {
+    ProjectException, UserException, FeaturestoreException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -164,7 +164,7 @@ public class ProjectMembersService {
         for (ProjectTeam pt : members.getProjectTeam()) {
           onlineFeaturestoreController.createDatabaseUser(pt.getUser(), project);
           FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-            featurestoreController.getFeaturestoreDbName(project));
+            featurestoreController.getOfflineFeaturestoreDbName(project));
           onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, pt.getUser(),
             featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
         }
@@ -220,7 +220,7 @@ public class ProjectMembersService {
       Users member = projectTeamFacade.findUserByEmail(email);
       onlineFeaturestoreController.createDatabaseUser(member, project);
       FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-        featurestoreController.getFeaturestoreDbName(project));
+        featurestoreController.getOfflineFeaturestoreDbName(project));
       onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member,
         featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
     }

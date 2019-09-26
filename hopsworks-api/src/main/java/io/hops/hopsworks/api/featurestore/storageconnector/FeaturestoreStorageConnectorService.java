@@ -354,9 +354,10 @@ public class FeaturestoreStorageConnectorService {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
       featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-      dbUsername, featurestore);
+      dbUsername, featurestore, dbName);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
       new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {
       };

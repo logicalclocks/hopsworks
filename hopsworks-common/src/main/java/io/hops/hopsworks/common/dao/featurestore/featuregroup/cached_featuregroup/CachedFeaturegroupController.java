@@ -236,7 +236,7 @@ public class CachedFeaturegroupController {
     Featurestore featurestore, Users user) throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     try {
       return executeReadHiveQuery(query, db, featurestore.getProject(), user);
     } catch(Exception e) {
@@ -300,7 +300,7 @@ public class CachedFeaturegroupController {
     Users user, String featureStr, String tableName)
     throws FeaturestoreException, SQLException, HopsSecurityException {
     //Create Hive Table
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
       featureStr + "STORED AS " + settings.getFeaturestoreDbDefaultStorageFormat();
     try{
@@ -386,7 +386,7 @@ public class CachedFeaturegroupController {
       throws SQLException, FeaturestoreException, HopsSecurityException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SHOW CREATE TABLE " + tbl;
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     return executeReadHiveQuery(query, db, project, user);
   }
 
@@ -404,7 +404,7 @@ public class CachedFeaturegroupController {
   public void dropHiveFeaturegroup(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
       FeaturestoreException, HopsSecurityException {
-    String db = featurestoreController.getFeaturestoreDbName(featurestore.getProject());
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     String tableName = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "DROP TABLE IF EXISTS `" + tableName + "`";
     try {

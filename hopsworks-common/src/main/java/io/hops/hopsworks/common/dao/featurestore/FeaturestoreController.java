@@ -194,9 +194,9 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE + featurestoreName, project,
       project.getOwner(), ActivityFlag.SERVICE);
     featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
-        getFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
+        getOfflineFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
-        getFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
+        getOfflineFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
     featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
       project.getName(), "JDBC connection to Hopsworks Project Hive Warehouse");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
@@ -249,8 +249,8 @@ public class FeaturestoreController {
    * @param project the project to get the hive-db name of the feature store for
    * @return the hive database name of the featurestore in the project
    */
-  public String getFeaturestoreDbName(Project project) {
-    return project.getName() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
+  public String getOfflineFeaturestoreDbName(Project project) {
+    return project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX;
   }
 
   /**

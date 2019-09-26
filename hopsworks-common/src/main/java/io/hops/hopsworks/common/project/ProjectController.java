@@ -847,7 +847,7 @@ public class ProjectController {
    */
   private void addServiceFeaturestore(Project project, Users user,
     DistributedFileSystemOps dfso) throws FeaturestoreException {
-    String featurestoreName = featurestoreController.getFeaturestoreDbName(project);
+    String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(project);
     try {
       //Create HiveDB for the featurestore
       hiveController.createDatabase(featurestoreName,
@@ -1980,7 +1980,8 @@ public class ProjectController {
 
     if (featurestoreDbSpaceQuotaInMb != null && projectServicesFacade.isServiceEnabledForProject(project,
       ProjectServiceEnum.FEATURESTORE)) {
-      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(featurestoreController.getFeaturestoreDbName(project)),
+      dfso.setHdfsSpaceQuotaInMBs(hiveController.getDbPath(
+        featurestoreController.getOfflineFeaturestoreDbName(project)),
         featurestoreDbSpaceQuotaInMb);
     }
   }
@@ -2728,7 +2729,8 @@ public class ProjectController {
           (!quotas.getFeaturestoreHdfsQuotaInBytes().equals(currentQuotas.getFeaturestoreHdfsQuotaInBytes()) ||
             !quotas.getFeaturestoreHdfsNsQuota().equals(currentQuotas.getFeaturestoreHdfsNsQuota()))) {
 
-          dfso.setHdfsQuotaBytes(hiveController.getDbPath(featurestoreController.getFeaturestoreDbName(newProjectState))
+          dfso.setHdfsQuotaBytes(hiveController.getDbPath(
+            featurestoreController.getOfflineFeaturestoreDbName(newProjectState))
             , quotas.getFeaturestoreHdfsNsQuota(), quotas.getFeaturestoreHdfsQuotaInBytes());
           quotaChanged = true;
         }

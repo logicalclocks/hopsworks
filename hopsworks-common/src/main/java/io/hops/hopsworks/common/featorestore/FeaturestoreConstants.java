@@ -108,7 +108,7 @@ public class FeaturestoreConstants {
     "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT", "JSON"
   });
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
-  public static final int ONLINE_FEATURESTORE_PW_LENGTH = 64;
+  public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
   
 }
