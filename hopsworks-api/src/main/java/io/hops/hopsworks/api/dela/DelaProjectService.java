@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
@@ -127,10 +126,9 @@ public class DelaProjectService {
   private Project project;
   private Integer projectId;
 
-  public void setProjectId(Integer projectId) throws ProjectException {
+  public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    this.project = projectFacade.find(projectId);
   }
 
   public Integer getProjectId() {

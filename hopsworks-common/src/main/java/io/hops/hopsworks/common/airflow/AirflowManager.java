@@ -175,7 +175,7 @@ public class AirflowManager {
     for (MaterializedJWT material : materializedJWTFacade.findAll4Airflow()) {
       LOG.log(Level.FINEST, "Recovering material: " + material.getIdentifier().getProjectId() + " - "
         + material.getIdentifier().getUserId());
-      project = projectFacade.find(material.getIdentifier().getProjectId()).orElse(null);
+      project = projectFacade.find(material.getIdentifier().getProjectId());
       user = userFacade.find(material.getIdentifier().getUserId());
       if (project == null || user == null) {
         LOG.log(Level.WARNING, "Error while recovering Project with ID: " + material.getIdentifier().getProjectId()

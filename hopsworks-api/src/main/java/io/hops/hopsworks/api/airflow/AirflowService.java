@@ -25,7 +25,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.AirflowException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -90,10 +89,9 @@ public class AirflowService {
   public AirflowService() {
   }
 
-  public void setProjectId(Integer projectId) throws ProjectException {
+  public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));;
+    this.project = this.projectFacade.find(projectId);
   }
 
   public Integer getProjectId() {

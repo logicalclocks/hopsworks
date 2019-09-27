@@ -50,7 +50,6 @@ import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
 import io.hops.hopsworks.exceptions.DelaException;
@@ -141,10 +140,9 @@ public class DelaClusterProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(content).build();
   }
   
-  public void setProjectId(Integer projectId) throws ProjectException {
+  public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    this.project = projectFacade.find(projectId);
   }
 
   public Integer getProjectId() {

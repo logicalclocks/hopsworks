@@ -222,7 +222,7 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
     
-    if (!projectFacade.find(destProjectId).isPresent()) {
+    if (!Optional.ofNullable(projectFacade.find(destProjectId)).isPresent()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
         "Could not find project: " + destProjectId);
     }
@@ -237,7 +237,7 @@ public class KafkaController {
   
   private void addFullPermissionAclsToTopic(Integer aclProjectId, String topicName, Integer projectId)
     throws ProjectException, KafkaException, UserException {
-    Project p = projectFacade.find(aclProjectId).orElseThrow(() ->
+    Project p = Optional.ofNullable(projectFacade.find(aclProjectId)).orElseThrow(() ->
       new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
       "Could not find project: " + aclProjectId));
     
@@ -273,12 +273,11 @@ public class KafkaController {
     }
   
     //get the project id
-    Project topicOwnerProject = projectFacade.find(projectId).orElseThrow(() ->
+    Project topicOwnerProject = Optional.ofNullable(projectFacade.find(projectId)).orElseThrow(() ->
       new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
     Project project;
   
     if (!topicOwnerProject.getName().equals(selectedProjectName)) {
-      //TODO: consider refactoring findByName
       project = Optional.ofNullable(projectFacade.findByName(selectedProjectName))
         .orElseThrow(() ->
           new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +

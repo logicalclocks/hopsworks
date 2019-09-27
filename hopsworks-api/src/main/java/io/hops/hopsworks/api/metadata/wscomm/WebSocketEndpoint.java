@@ -183,7 +183,7 @@ public class WebSocketEndpoint {
     Project proj;
     try {
       pId = Integer.valueOf(projectId);
-      proj = this.projectFacade.find(pId).orElse(null);
+      proj = this.projectFacade.find(pId);
     } catch (NumberFormatException e) {
       return null;
     }

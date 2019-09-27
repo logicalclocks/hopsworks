@@ -167,10 +167,9 @@ public class JupyterService {
   public JupyterService() {
   }
 
-  public void setProjectId(Integer projectId) throws ProjectException {
+  public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    this.project = this.projectFacade.find(projectId);
   }
 
   public Integer getProjectId() {

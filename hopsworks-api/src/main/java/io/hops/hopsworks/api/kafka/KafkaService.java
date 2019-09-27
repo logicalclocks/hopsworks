@@ -58,7 +58,6 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -79,7 +78,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -101,10 +99,9 @@ public class KafkaService {
 
   public KafkaService() {
   }
-
-  public void setProjectId(Integer projectId) throws ProjectException {
-    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+  
+  public void setProjectId(Integer projectId) {
+    this.project = this.projectFacade.find(projectId);
   }
 
   public Project getProject() {

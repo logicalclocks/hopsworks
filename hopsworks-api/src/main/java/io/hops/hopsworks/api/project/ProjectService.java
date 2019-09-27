@@ -251,9 +251,10 @@ public class ProjectService {
     MoreInfoDTO info = null;
 
     if (projectId != null) {
-      Project proj = projectFacade.find(projectId).orElseThrow(() ->
-        new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
-
+      Project proj = projectFacade.find(projectId);
+      if (proj == null) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+      }
       info = new MoreInfoDTO(proj);
     }
 
@@ -348,7 +349,7 @@ public class ProjectService {
       return null;
     }
     String group = inode.getHdfsGroup().getName();
-    Project project = projectFacade.find(projectId).orElse(null);
+    Project project = projectFacade.find(projectId);
     if (project != null && !project.getName().equals(hdfsUsersBean.getProjectName(group))) {
       return null;
     }
@@ -394,8 +395,10 @@ public class ProjectService {
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
-    Project project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+    Project project = projectFacade.find(projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+    }
 
     DataSetDTO dataset = new DataSetDTO(inode.getInodePK().getName(), inodeId, project);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
@@ -633,7 +636,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/dataset")
-  public DataSetService datasets(@PathParam("projectId") Integer id) throws ProjectException {
+  public DataSetService datasets(@PathParam("projectId") Integer id) {
     this.dataSet.setProjectId(id);
     return this.dataSet;
   }
@@ -645,7 +648,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/jobs")
-  public JobsResource jobs(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public JobsResource jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
   }
 
@@ -753,49 +756,49 @@ public class ProjectService {
   }
 
   @Path("{projectId}/kafka")
-  public KafkaService kafka(@PathParam("projectId") Integer id) throws ProjectException {
+  public KafkaService kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
     return this.kafka;
   }
 
   @Path("{projectId}/jupyter")
-  public JupyterService jupyter(@PathParam("projectId") Integer id) throws ProjectException {
+  public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
     return this.jupyter;
   }
 
   @Path("{projectId}/tensorboard")
-  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) throws ProjectException {
+  public TensorBoardService tensorboard(@PathParam("projectId") Integer id) {
     this.tensorboard.setProjectId(id);
     return this.tensorboard;
   }
 
   @Path("{projectId}/airflow")
-  public AirflowService airflow(@PathParam("projectId") Integer id) throws ProjectException {
+  public AirflowService airflow(@PathParam("projectId") Integer id)  {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
 
   @Path("{projectId}/serving")
-  public ServingService servingService(@PathParam("projectId") Integer id) throws ProjectException {
+  public ServingService servingService(@PathParam("projectId") Integer id) {
     this.servingService.setProjectId(id);
     return this.servingService;
   }
 
   @Path("{projectId}/python")
-  public PythonResource python(@PathParam("projectId") Integer id) throws ProjectException {
+  public PythonResource python(@PathParam("projectId") Integer id) {
     this.pythonResource.setProjectId(id);
     return this.pythonResource;
   }
 
   @Path("{projectId}/dela")
-  public DelaProjectService dela(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
   }
 
   @Path("{projectId}/delacluster")
-  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) throws ProjectException {
+  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }
@@ -834,13 +837,13 @@ public class ProjectService {
   @ApiOperation(value = "Model inference sub-resource",
       tags = {"Inference"})
   @Path("/{projectId}/inference")
-  public InferenceResource infer(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public InferenceResource infer(@PathParam("projectId") Integer projectId) {
     inference.setProjectId(projectId);
     return inference;
   }
 
   @Path("{projectId}/featurestores")
-  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) throws ProjectException {
+  public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }

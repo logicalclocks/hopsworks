@@ -238,9 +238,7 @@ public class ElasticController {
 
   }
 
-  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm)
-    throws ServiceException, ProjectException {
-    
+  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws ServiceException {
     Client client = getClient();
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
@@ -284,7 +282,7 @@ public class ElasticController {
   }
 
   public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
-    throws ServiceException, ProjectException {
+    throws ServiceException {
     Client client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
@@ -303,8 +301,7 @@ public class ElasticController {
       dsName = sharedDS[1];
       project = projectFacade.findByName(sharedDS[0]);
     } else {
-      project = projectFacade.find(projectId).orElseThrow(() ->
-        new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+      project = projectFacade.find(projectId);
     }
 
     Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
@@ -483,9 +480,8 @@ public class ElasticController {
   }
 
   private void projectSearchInSharedDatasets(Client client, Integer projectId,
-      String searchTerm, List<ElasticHit> elasticHits) throws ProjectException {
-    Project project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+      String searchTerm, List<ElasticHit> elasticHits) {
+    Project project = projectFacade.find(projectId);
     Collection<Dataset> datasets = project.getDatasetCollection();
     for (Dataset ds : datasets) {
       if (ds.isShared()) {

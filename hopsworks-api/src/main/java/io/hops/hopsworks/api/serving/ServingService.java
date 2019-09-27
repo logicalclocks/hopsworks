@@ -60,7 +60,6 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 
 /**
  * RESTful microservice for model servings on Hopsworks. Supports both Tensorflow and SKLearn models.
@@ -100,9 +99,8 @@ public class ServingService {
 
   public ServingService(){ }
 
-  public void setProjectId(Integer projectId) throws ProjectException {
-    this.project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+  public void setProjectId(Integer projectId) {
+    this.project = projectFacade.find(projectId);
   }
 
   @GET

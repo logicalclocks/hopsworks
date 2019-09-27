@@ -25,9 +25,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.serving.inference.InferenceController;
 import io.hops.hopsworks.exceptions.InferenceException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -43,7 +41,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -64,9 +61,8 @@ public class InferenceResource {
 
   private final static Logger logger = Logger.getLogger(InferenceResource.class.getName());
 
-  public void setProjectId(Integer projectId) throws ProjectException {
-    this.project = projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+  public void setProjectId(Integer projectId) {
+    this.project = projectFacade.find(projectId);
   }
 
   @POST

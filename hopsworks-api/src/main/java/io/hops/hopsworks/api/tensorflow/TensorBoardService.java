@@ -82,9 +82,8 @@ public class TensorBoardService {
   public TensorBoardService(){
   }
 
-  public void setProjectId(Integer projectId) throws ProjectException {
-    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
+  public void setProjectId(Integer projectId) {
+    this.project = this.projectFacade.find(projectId);
   }
 
   public Project getProject() {

@@ -71,8 +71,8 @@ public class ProjectFacade extends AbstractFacade<Project> {
     return query.getResultList();
   }
 
-  public Optional<Project> find(Integer id) {
-    return Optional.ofNullable(em.find(Project.class, id));
+  public Project find(Integer id) {
+    return em.find(Project.class, id);
   }
 
   public Project findByInodeId(Long parentId, String name) {

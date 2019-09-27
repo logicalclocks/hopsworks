@@ -190,10 +190,9 @@ public class DataSetService {
   public DataSetService() {
   }
 
-  public void setProjectId(Integer projectId) throws ProjectException {
+  public void setProjectId(Integer projectId) {
     this.projectId = projectId;
-    this.project = this.projectFacade.find(projectId).orElseThrow(() ->
-      new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));;
+    this.project = this.projectFacade.find(projectId);
   }
 
   public Integer getProjectId() {
@@ -410,7 +409,7 @@ public class DataSetService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
 
     // Check target project
-    Project proj = projectFacade.find(dataSet.getProjectId()).orElse(null);
+    Project proj = projectFacade.find(dataSet.getProjectId());
 
     Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
     if (dst != null) {//proj already have the dataset.
@@ -459,7 +458,7 @@ public class DataSetService {
     Dataset ds = dtoValidator.validateDTO(this.project, dataSet, true);
 
     for (int id : dataSet.getProjectIds()) {
-      Project proj = projectFacade.find(id).orElse(null);
+      Project proj = projectFacade.find(id);
       Dataset dst = datasetFacade.findByProjectAndInode(proj, ds.getInode());
       if (dst == null) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
