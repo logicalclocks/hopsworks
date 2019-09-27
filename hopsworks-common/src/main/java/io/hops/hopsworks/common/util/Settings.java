@@ -1702,7 +1702,7 @@ public class Settings implements Serializable {
     Users user = userFacade.findByEmail(ADMIN_EMAIL);
     if (user != null) {
       String DEFAULT_ADMIN_PWD = "12fa520ec8f65d3a6feacfa97a705e622e1fea95b80b521ec016e43874dfed5a";
-      return DEFAULT_ADMIN_PWD.equals(user.getPassword());
+      return !DEFAULT_ADMIN_PWD.equals(user.getPassword());
     }
     return false;
   }
