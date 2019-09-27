@@ -71,9 +71,14 @@ angular.module('hopsWorksApp')
 
             self.sendingRequest = false;
 
-            $scope.pageSize = 10;
-            $scope.sortKey = 'creationTime';
-            $scope.reverse = true;
+            self.pageSize = 10;
+            self.sortKey = 'created';
+            self.reverse = true;
+
+            self.sort = function(sortKey) {
+                self.reverse = (self.sortKey=== sortKey) ? !self.reverse : false;
+                self.sortKey = sortKey;
+            };
 
             var datasetService = DataSetService(self.projectId);
 

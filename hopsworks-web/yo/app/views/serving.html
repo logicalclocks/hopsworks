@@ -218,16 +218,43 @@
                         <table class="table table-hover">
                             <thead style="border:none;">
                             <th style="width: 6%"></th>
-                            <th style="width: 17%">Name</th>
-                            <th style="width: 11%">Type</th>
-                            <th style="width: 30%">Path</th>
-                            <th style="width: 4%">Version</th>
-                            <th style="width: 9%">Created</th>
-                            <th style="width: 6%">Status</th>
-                            <th style="width: 22%">Actions</th>
+                            <th style="width: 14%" ng-click="servingCtrl.sort('name')">
+                                Name
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'name'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 11%" ng-click="servingCtrl.sort('servingType')">
+                                Type
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'servingType'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 27%" ng-click="servingCtrl.sort('artifactPath')">
+                                Path
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'artifactPath'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 7%" ng-click="servingCtrl.sort('modelVersion')">
+                                Version
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'modelVersion'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 12%" ng-click="servingCtrl.sort('created')">
+                                Created
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'created'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 6%" ng-click="servingCtrl.sort('status')">
+                                Status
+                                <span class="glyphicon sort-icon" ng-show="servingCtrl.sortKey == 'status'"
+                                      ng-class="{'glyphicon-chevron-up':!servingCtrl.reverse,'glyphicon-chevron-down':servingCtrl.reverse}"></span>
+                            </th>
+                            <th style="width: 22%">
+                                Actions
+                            </th>
                             </thead>
                             <tbody>
-                            <tr dir-paginate="serving in servingCtrl.servings| orderBy :sortKey:reverse| itemsPerPage:pageSize">
+                            <tr dir-paginate="serving in servingCtrl.servings| orderBy :servingCtrl.sortKey:servingCtrl.reverse| itemsPerPage:servingCtrl.pageSize"
+                                pagination-id="servings_pagination">
                                 <td>
                                     <!-- Start -->
                                     <div class="btn-group" role="group" ng-if="serving.status === 'Stopped'">
@@ -271,7 +298,7 @@
                                 <td> {{serving.servingType}}</td>
                                 <td> {{serving.artifactPath}}</td>
                                 <td> {{serving.modelVersion}}</td>
-                                <td> {{serving.created | date:'short'}}</td>
+                                <td> {{serving.created | date:'medium'}}</td>
                                 </td>
                                 <td> {{serving.status}}</td>
                                 <td>
@@ -281,7 +308,7 @@
                                     <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
                                             style="margin-right: -3px;"
                                             ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
-                                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show logs"
+                                    <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show Logs"
                                             style="margin-right: -3px;"
                                             ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
                                     <button class="btn btn-primary glyphicon glyphicon-eye-open"
@@ -293,6 +320,7 @@
                             </tbody>
                         </table>
                         <dir-pagination-controls
+                                pagination-id="servings_pagination"
                                 class="pull-right"
                                 max-size="5"
                                 direction-links="true"
