@@ -1361,8 +1361,10 @@ public class RESTCodes {
     TRAININGDATASETJOB_FEATUREGROUP_DUPLICATE(83, "Multiple featuregroups contain feature",
       Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS(84, "Illegal training dataset name - version combination",
-      Response.Status.BAD_REQUEST);
-    
+      Response.Status.BAD_REQUEST),
+    S3_KEYS_FORBIDDEN(85, "IAM role is configured for this instance. AWS access/secret keys are not allowed",
+        Response.Status.BAD_REQUEST);
+
     private int code;
     private String message;
     private Response.Status respStatus;
