@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
+import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -39,31 +40,6 @@ public class NullJupyterNbVCSController implements JupyterNbVCSController {
   }
   
   @Override
-  public RepositoryStatus cloneOrPullRemoteRepository(JupyterProject jupyterProject)
-    throws ServiceException {
-    // Do nothing
-    return EMPTY_REPOSITORY_STATUS;
-  }
-  
-  @Override
-  public RepositoryStatus commit(JupyterProject jupyterProject, Users user, String commitMessage)
-      throws ServiceException {
-    // Do nothing
-    return EMPTY_REPOSITORY_STATUS;
-  }
-  
-  @Override
-  public RepositoryStatus push(JupyterProject jupyterProject) throws ServiceException {
-    // Do nothing
-    return EMPTY_REPOSITORY_STATUS;
-  }
-  
-  @Override
-  public RepositoryStatus status(JupyterProject jupyterProject) throws ServiceException {
-    return EMPTY_REPOSITORY_STATUS;
-  }
-  
-  @Override
   public boolean isGitAvailable() {
     return false;
   }
@@ -76,5 +52,28 @@ public class NullJupyterNbVCSController implements JupyterNbVCSController {
   @Override
   public String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException{
     return "";
+  }
+  
+  @Override
+  public RepositoryStatus init(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException {
+    return EMPTY_REPOSITORY_STATUS;
+  }
+  
+  @Override
+  public RepositoryStatus status(JupyterProject jupyterProject, JupyterSettings jupyterSettings)
+      throws ServiceException {
+    return EMPTY_REPOSITORY_STATUS;
+  }
+  
+  @Override
+  public RepositoryStatus pull(JupyterProject jupyterProject, JupyterSettings jupyterSettings)
+      throws ServiceException {
+    return EMPTY_REPOSITORY_STATUS;
+  }
+  
+  @Override
+  public RepositoryStatus push(JupyterProject jupyterProject, JupyterSettings jupyterSettings, Users user)
+      throws ServiceException {
+    return EMPTY_REPOSITORY_STATUS;
   }
 }

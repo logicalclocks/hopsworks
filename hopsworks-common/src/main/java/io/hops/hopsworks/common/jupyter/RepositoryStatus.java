@@ -24,16 +24,16 @@ public interface RepositoryStatus {
   }
   
   STATUS getStatus();
-  Integer getUntrackedFiles();
-  String getActiveBranch();
-  String getLastCommit();
+  Integer getModifiedFiles();
+  String getRepository();
+  String getBranch();
   
   public final class UnmodifiableRepositoryStatus implements RepositoryStatus {
   
     private final STATUS status = STATUS.UNINITIALIZED;
-    private final Integer untrackedFiles = -1;
-    private final String activeBranch = "UNKNOWN";
-    private final String lastCommit = "UNKNOWN";
+    private final Integer modifiedFiles = -1;
+    private final String repository = "UNKNOWN";
+    private final String branch = "UNKNOWN";
     
     @Override
     public STATUS getStatus() {
@@ -41,26 +41,26 @@ public interface RepositoryStatus {
     }
   
     @Override
-    public Integer getUntrackedFiles() {
-      return untrackedFiles;
+    public Integer getModifiedFiles() {
+      return modifiedFiles;
     }
   
     @Override
-    public String getActiveBranch() {
-      return activeBranch;
+    public String getRepository() {
+      return repository;
     }
   
     @Override
-    public String getLastCommit() {
-      return lastCommit;
+    public String getBranch() {
+      return branch;
     }
   }
   
   public class ModifiableRepositoryStatus implements RepositoryStatus {
     private STATUS status;
-    private Integer untrackedFiles;
-    private String activeBranch;
-    private String lastCommit;
+    private Integer modifiedFiles;
+    private String repository;
+    private String branch;
     
     public ModifiableRepositoryStatus() {}
     
@@ -74,30 +74,30 @@ public interface RepositoryStatus {
     }
     
     @Override
-    public Integer getUntrackedFiles() {
-      return untrackedFiles;
+    public Integer getModifiedFiles() {
+      return modifiedFiles;
     }
   
-    public void setUntrackedFiles(Integer untrackedFiles) {
-      this.untrackedFiles = untrackedFiles;
-    }
-    
-    @Override
-    public String getActiveBranch() {
-      return activeBranch;
-    }
-    
-    public void setActiveBranch(String activeBranch) {
-      this.activeBranch = activeBranch;
+    public void setModifiedFiles(Integer modifiedFiles) {
+      this.modifiedFiles = modifiedFiles;
     }
   
     @Override
-    public String getLastCommit() {
-      return lastCommit;
+    public String getRepository() {
+      return repository;
     }
   
-    public void setLastCommit(String lastCommit) {
-      this.lastCommit = lastCommit;
+    public void setRepository(String repository) {
+      this.repository = repository;
+    }
+  
+    @Override
+    public String getBranch() {
+      return branch;
+    }
+  
+    public void setBranch(String branch) {
+      this.branch = branch;
     }
   }
 }
