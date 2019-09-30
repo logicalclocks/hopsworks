@@ -62,7 +62,6 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
@@ -189,8 +188,6 @@ public class ProjectController {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
-  protected UsersController usersController;
-  @EJB
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
@@ -216,8 +213,6 @@ public class ProjectController {
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private EnvironmentController environmentController;
-  @Inject
-  private JupyterManager jupyterManager;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -251,10 +246,6 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
-  @EJB
-  protected JobController jobController;
-  @EJB
-  protected ExecutionController executionController;
   @EJB
   private EmailBean emailBean;
   @EJB
@@ -840,7 +831,7 @@ public class ProjectController {
 
     return certsResultFuture;
   }
-
+  
   /**
    * Add the featurestore service to the project,
    * 1. create the hive database for the featurestore
@@ -853,7 +844,8 @@ public class ProjectController {
    * @param dfso dfso
    */
   private void addServiceFeaturestore(Project project, Users user,
-    DistributedFileSystemOps dfso) throws FeaturestoreException {
+    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+    throws FeaturestoreException {
     String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(project);
     try {
       //Create HiveDB for the featurestore
@@ -869,17 +861,17 @@ public class ProjectController {
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
-          "project: " + project.getName(), ex.getMessage(), ex);
+        "project: " + project.getName(), ex.getMessage(), ex);
     }
-
+    
     // Add directory in resources to store the configurations for the feature import jobs
     try {
       udfso.mkdirs(new Path(settings.getBaseFeaturestoreJobImportDir(project), Settings.FEATURESTORE_IMPORT_CONF),
-          FsPermission.getFileDefault());
+        FsPermission.getFileDefault());
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not create featurestore import job configuration dir", e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
-          "project: " + project.getName(), e.getMessage(), e);
+        "project: " + project.getName(), e.getMessage(), e);
     }
   }
 

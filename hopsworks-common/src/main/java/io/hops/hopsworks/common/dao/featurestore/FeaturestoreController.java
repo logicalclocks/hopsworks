@@ -27,13 +27,9 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -59,12 +55,7 @@ import java.util.stream.Collectors;
  */
 @Stateless
 public class FeaturestoreController {
-
-  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
-      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
-  private static final String HDFS_FILE_PATH = "hdfs://%s";
-  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
-  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
+  
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
@@ -74,15 +65,12 @@ public class FeaturestoreController {
   @EJB
   private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
   @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private DistributedFsService distributedFsService;
-  @EJB
   private Settings settings;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
   private FeaturestoreUtils featurestoreUtils;
-
+  
   private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private static Marshaller featurestoreUtilJobArgsMarshaller = null;
   private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
