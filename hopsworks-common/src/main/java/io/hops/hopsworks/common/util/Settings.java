@@ -1829,8 +1829,8 @@ public class Settings implements Serializable {
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
   private static final String CA_TRUSTSTORE_NAME = "cacerts.jks";
-  public static final String CA_TRUSTSTORE_PEM_NAME = "cacerts.pem";
-  public static final String DOMAIN_CA_TRUSTSTORE = "domain_ca_truststore";
+  public static final String DOMAIN_CA_TRUSTSTORE_PEM = "cacerts.pem";
+  public static final String DOMAIN_CA_TRUSTSTORE = "cacerts.jks";
   //Glassfish truststore, used by hopsutil to initialize https connection to Hopsworks
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
@@ -1848,6 +1848,7 @@ public class Settings implements Serializable {
   public static final String HOPSWORKS_REST_ENDPOINT_PROPERTY = "hopsworks.restendpoint";
   public static final String HOPSUTIL_INSECURE_PROPERTY = "hopsutil.insecure";
   public static final String HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY = "hopsworks.elastic.endpoint";
+  public static final String HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY = "hopsworks.domain.truststore";
 
   private int FILE_PREVIEW_IMAGE_SIZE = 10000000;
   private int FILE_PREVIEW_TXT_SIZE = 100;
@@ -1906,10 +1907,6 @@ public class Settings implements Serializable {
     return "hdfs:///user/" + getSparkUser() + "/" + CA_TRUSTSTORE_NAME;
   }
   
-  public String getGlassfishTrustStorePemHdfs() {
-    return "hdfs:///user/" + getSparkUser() + "/" + CA_TRUSTSTORE_PEM_NAME;
-  }
-
   public String getGlassfishTrustStore() {
     return getHopsworksDomainDir() + File.separator + "config" + File.separator + CA_TRUSTSTORE_NAME;
   }
