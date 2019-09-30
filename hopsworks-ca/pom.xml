@@ -54,6 +54,10 @@
   <packaging>war</packaging>
   <description>Hopsworks Certificate Authority</description>
   <name>hopsworks-ca</name>
+
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
     
   <dependencies>
     <!--CA module needs to bring this dependency as hopsworks-common is added as EJB therefore the hopsworks-persistence-->

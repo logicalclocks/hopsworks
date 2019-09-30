@@ -1,0 +1,60 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div class="row" ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
+
+    <div class="col-sm-12 col-md-12 col-lg-12" layout-align="center center" style='margin-top:1px; margin-left: 0px;'>
+
+        <div class="row">
+            <div class="text-right col-md-4">JobManager memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, for the JobManager" style="margin-left: 10px"></i></div>
+            <div class="col-md-2"><input type="number" min="768"
+                                         ng-model="flinkConfigCtrl.jobConfig['jobmanager.heap.size']"
+                                         class="form-control"></div>
+        </div>
+        <div class="row">
+            <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" uib-tooltip="The number of Flink TaskManagers" style="margin-left: 10px"></i></div>
+            <div class="col-md-2"><input type="number" min="1"
+                                         ng-model="flinkConfigCtrl.jobConfig['numberOfTaskManagers']"
+                                         class="form-control"></div>
+        </div>
+        <div class="row">
+            <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, for each TaskManager." style="margin-left: 10px"></i></div>
+            <div class="col-md-2"><input type="number" min="768"
+                                         ng-model="flinkConfigCtrl.jobConfig['taskmanager.heap.size']"
+                                         class="form-control"></div>
+        </div>
+        <div class="row">
+            <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" uib-tooltip="The number of slots per TaskManager" style="margin-left: 10px"></i></div>
+            <div class="col-md-2"><input type="number" min="1"
+                                         ng-model="flinkConfigCtrl.jobConfig['taskmanager.numberOfTaskSlots']"
+                                         class="form-control"></div>
+        </div>
+        <div class="row">
+            <div class="row clusterparams">
+                <div class="text-right col-md-4">More Flink Properties <i class="fa fa-info-circle"
+                                                                          uib-tooltip="Enter additional line-separated Flink properties here. Use the equality symbol to separate parameters from values."
+                                                                          style="margin-left: 10px"></i>
+                </div>
+                <div class="col-md-2 jupyter-left">
+                    <textarea style="width: 100%;margin-left:-4px;" id="TextArea"
+                              ng-model="flinkConfigCtrl.jobConfig.properties"
+                              ng-keyup="flinkConfigCtrl.autoExpand($event)"
+                              title="state.checkpoints.dir=hdfs:///Projects/flinking/Logs&#10;env.java.opts=&#34;-Dkey=val&#34;">
+                    </textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

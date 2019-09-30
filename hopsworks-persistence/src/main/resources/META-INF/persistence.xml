@@ -47,9 +47,6 @@
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups</class>
     <class>io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers</class>
     <class>io.hops.hopsworks.common.dao.jobhistory.Execution</class>
-    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResult</class>
-    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppHeuristicResultDetails</class>
-    <class>io.hops.hopsworks.common.dao.jobhistory.YarnAppResult</class>
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationattemptstate</class>
     <class>io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate</class>
     <class>io.hops.hopsworks.common.dao.jobs.FilesToRemove</class>

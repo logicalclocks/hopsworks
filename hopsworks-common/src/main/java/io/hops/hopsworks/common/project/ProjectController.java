@@ -189,6 +189,8 @@ public class ProjectController {
   @EJB
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
+  protected UsersController usersController;
+  @EJB
   private UserFacade userFacade;
   @EJB
   private ActivityFacade activityFacade;
@@ -249,6 +251,10 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  protected JobController jobController;
+  @EJB
+  protected ExecutionController executionController;
   @EJB
   private EmailBean emailBean;
   @EJB
@@ -733,7 +739,7 @@ public class ProjectController {
       case FEATURESTORE:
         //Note: Order matters here. Training Dataset should be created before the Featurestore
         addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso);
-        addServiceFeaturestore(project, user, dfso);
+        addServiceFeaturestore(project, user, dfso, udfso);
         addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
@@ -840,6 +846,7 @@ public class ProjectController {
    * 1. create the hive database for the featurestore
    * 2. insert featurestore metadata in the hopsworks db
    * 3. create a hopsworks dataset for the featurestore
+   * 4. create a directory in resources to store json configurations for feature import jobs.
    *
    * @param project the project to add the featurestore service for
    * @param user the user adding the service
@@ -862,7 +869,17 @@ public class ProjectController {
     } catch (SQLException | IOException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
-        "project: " + project.getName(), ex.getMessage(), ex);
+          "project: " + project.getName(), ex.getMessage(), ex);
+    }
+
+    // Add directory in resources to store the configurations for the feature import jobs
+    try {
+      udfso.mkdirs(new Path(settings.getBaseFeaturestoreJobImportDir(project), Settings.FEATURESTORE_IMPORT_CONF),
+          FsPermission.getFileDefault());
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Could not create featurestore import job configuration dir", e);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
+          "project: " + project.getName(), e.getMessage(), e);
     }
   }
 
@@ -2481,6 +2498,10 @@ public class ProjectController {
     String projectName = project.getName().toLowerCase();
 
     elasticController.createIndexPattern(project, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
+    elasticController.createIndexPattern(project,
+      project.getName().toLowerCase() + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN);
+    elasticController.createIndexPattern(project,
+      project.getName().toLowerCase() + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN);
     // Create index and index-pattern for experiment service
     String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
     if (!elasticController.indexExists(indexName)) {
@@ -2555,19 +2576,22 @@ public class ProjectController {
       LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectNames);
       elasticController.deleteProjectSavedObjects(projectNames);
 
-      //2. Delete Kibana Index
+      //2. Delete logs Kibana Index
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
       LOGGER.log(Level.FINE, resp.toString(4));
       resp = elasticController.sendKibanaReq(params, "index-pattern",
         projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
       LOGGER.log(Level.FINE, resp.toString(4));
+      LOGGER.log(Level.FINE, "removeElasticsearch-2:{0}", projectName);
 
-      // 3. Cleanup Experiment related Kibana stuff
-      String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-      elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
-      elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
-      elasticController.sendKibanaReq(params, "dashboard", experimentsIndex + "_summary-dashboard", false);
-      LOGGER.log(Level.FINE, "removeElasticsearch-2");
+      //3. Delete beam job service and sdk worker Kibana indices
+      String beamjobserviceIndex = projectName + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN;
+      String beamsdkharnessIndex = projectName + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN;
+      resp = elasticController.sendKibanaReq(params, "index-pattern", beamjobserviceIndex, false);
+      LOGGER.log(Level.FINE, "Deleting beamjobserviceIndex resp:" + resp.toString(4));
+      resp = elasticController.sendKibanaReq(params, "index-pattern", beamsdkharnessIndex, false);
+      LOGGER.log(Level.FINE, "Deleting beamsdkharnessIndex resp:" + resp.toString(4));
+      LOGGER.log(Level.FINE, "removeElasticsearch-3:{0}", projectName);
     }
 
     if (projectServices.contains(ProjectServiceEnum.SERVING)) {

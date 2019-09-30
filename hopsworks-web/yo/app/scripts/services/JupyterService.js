@@ -99,37 +99,6 @@ angular.module('hopsWorksApp')
                 }
                 return $http(request);
               },
-              gitCloneOrPull: function (projectId) {
-                var request = {
-                  method: "POST",
-                  url: "/api/project/" + projectId + "/jupyter/git/init",
-                  headers : {
-                    'Content-Type': 'application/json'
-                  }
-                };
-                return $http(request);
-              },
-              gitCommit: function (projectId, message) {
-                var request = {
-                  method: "POST",
-                  url: "/api/project/" + projectId + "/jupyter/git/commit",
-                  params: {message: message},
-                  headers : {
-                    'Content-Type': 'application/json'
-                  }
-                };
-                return $http(request);
-              },
-              gitPush: function (projectId) {
-                var request = {
-                  method: "POST",
-                  url: "/api/project/" + projectId + "/jupyter/git/push",
-                  headers : {
-                    'Content-Type': 'application/json'
-                  }
-                };
-                return $http(request);
-              },
               gitStatus: function (projectId) {
                 return $http.get("/api/project/" + projectId + "/jupyter/git/status");
               }

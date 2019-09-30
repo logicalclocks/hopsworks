@@ -163,6 +163,7 @@ public class JupyterConfigFilesGenerator {
   public String pythonKernelName(String pythonVersion) {
     return "python" + pythonVersion.charAt(0);
   }
+
   
   public String pythonKernelPath(String kernelsDir, String pythonKernelName) {
     return kernelsDir + File.separator + pythonKernelName;
@@ -193,13 +194,9 @@ public class JupyterConfigFilesGenerator {
   
     String remoteGitURL = "";
     String apiKey = "";
-    String baseBranch = "";
-    String headBranch = "";
     if (js.isGitBackend() && js.getGitConfig() != null) {
       remoteGitURL = js.getGitConfig().getRemoteGitURL();
       apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
-      baseBranch = js.getGitConfig().getBaseBranch();
-      headBranch = js.getGitConfig().getHeadBranch();
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
     return ConfigFileGenerator.instantiateFromTemplate(
@@ -221,10 +218,8 @@ public class JupyterConfigFilesGenerator {
         "allow_origin", allowOrigin,
         "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
         "hopsworks_project_id", Integer.toString(project.getId()),
-        "remote_git_url", remoteGitURL,
         "api_key", apiKey,
-        "base_branch", baseBranch,
-        "head_branch", headBranch
+        "flink_conf_dir", String.valueOf(settings.getFlinkConfDir())
       ).toString();
   }
   
@@ -246,7 +241,7 @@ public class JupyterConfigFilesGenerator {
     finalSparkConfiguration.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
       "hdfs:///Projects/" + project.getName() + "/Resources");
   
-    finalSparkConfiguration.putAll(sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration,
+    finalSparkConfiguration.putAll(sparkConfigurationUtil.getFrameworkProperties(project, sparkJobConfiguration,
       settings, hdfsUser, usersFullName, tfLdLibraryPath, extraJavaOptions));
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());

@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.dao.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -80,6 +81,13 @@ public class FeaturestoreController {
   private Settings settings;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  private FeaturestoreUtils featurestoreUtils;
+
+  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
+  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
+  private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
+      + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
+  private static final String HDFS_FILE_PATH = "hdfs://%s";
 
   /**
    * Retrieves a list of all featurestores for a particular project
@@ -96,8 +104,7 @@ public class FeaturestoreController {
   /**
    * Helper function that lists all featurestores in the project (including featurestores shared with the project)
    *
-   * @param project
-   * the project to list featurestores for
+   * @param project the project to list featurestores for
    * @return a list of featurestore entities
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -107,7 +114,7 @@ public class FeaturestoreController {
         == DatasetType.FEATURESTORE).collect(Collectors.toList());
     return featurestoresDsInproject.stream().map(ds -> ds.getFeaturestore()).collect(Collectors.toList());
   }
-  
+
   /**
    * Retrieves a featurestore for a project with a specific name
    *
@@ -172,10 +179,9 @@ public class FeaturestoreController {
   /**
    * Creates a new featurestore in the database
    *
-   * @param project project of the new featurestore
-   * @param user user creating the new featurestore
-   * @param featurestoreName the name of the new featurestore
-   * @param trainingDatasetsFolder the Hopsworks dataset where training datasets are stored by default
+   * @param project                 project of the new featurestore
+   * @param featurestoreName        the name of the new featurestore
+   * @param trainingDatasetsFolder  the Hopsworks dataset where training datasets are stored by default
    * @return the created featurestore
    * @throws FeaturestoreException
    */
@@ -267,8 +273,8 @@ public class FeaturestoreController {
       throws FeaturestoreException, JAXBException {
     if (featurestoreUtilJobArgsMarshaller == null) {
       try {
-        featurestoreUtilJobArgsJaxbContext = JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class},
-            null);
+        featurestoreUtilJobArgsJaxbContext =
+            JAXBContextFactory.createContext(new Class[]{FeaturestoreUtilJobDTO.class}, null);
         featurestoreUtilJobArgsMarshaller = featurestoreUtilJobArgsJaxbContext.createMarshaller();
         featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
         featurestoreUtilJobArgsMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
@@ -281,35 +287,14 @@ public class FeaturestoreController {
     featurestoreUtilJobArgsMarshaller.marshal(featurestoreUtilJobDTO, sw);
     Path hdfsPath = new Path(String.format(FEATURESTORE_UTIL_ARGS_PATH, project.getName(),
         featurestoreUtilJobDTO.getFileName()));
-    writeToHDFS(project, user, hdfsPath, sw.toString());
-    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
-  }
 
-  /**
-   * Writes a string to a new file in HDFS
-   *
-   * @param project project of the user
-   * @param user user making the request
-   * @param path2file the hdfs path
-   * @param content the content to write
-   * @throws FeaturestoreException
-   */
-  private void writeToHDFS(Project project, Users user, Path path2file, String content) throws FeaturestoreException {
-    DistributedFileSystemOps udfso = null;
     try {
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      udfso = distributedFsService.getDfsOps(hdfsUsername);
-      try (FSDataOutputStream outStream = udfso.create(path2file)) {
-        outStream.writeBytes(content);
-        outStream.hflush();
-      }
+      featurestoreUtils.writeToHDFS(project, user, hdfsPath, sw.toString());
     } catch (IOException ex) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_UTIL_ARGS_FAILURE,
           Level.WARNING, "Failed to write featurestore util args to HDFS", ex.getMessage(), ex);
-    } finally {
-      if (udfso != null) {
-        distributedFsService.closeDfsClient(udfso);
-      }
     }
+
+    return String.format(HDFS_FILE_PATH, hdfsPath.toString());
   }
 }

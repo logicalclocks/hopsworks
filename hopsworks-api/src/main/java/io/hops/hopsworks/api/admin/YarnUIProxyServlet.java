@@ -314,10 +314,10 @@ public class YarnUIProxyServlet extends ProxyServlet {
         
         try {
           int contentSize = 0;
-          String hostname = method.getURI().getHost();
-          String source = "http://" + hostname + ":" + method.getURI().getPort();
+          String source = "http://" + method.getURI().getHost() + ":" + method.getURI().getPort();
+          String path = method.getPath();
           while ((inputLine = br.readLine()) != null) {
-            String outputLine = hopify(inputLine, source, isAdmin) + "\n";
+            String outputLine = hopify(inputLine, source, isAdmin, path) + "\n";
             byte[] output = outputLine.getBytes(Charset.forName("UTF-8"));
             servletOutputStream.write(output);
             contentSize += output.length;
@@ -355,7 +355,7 @@ public class YarnUIProxyServlet extends ProxyServlet {
     }
   }
   
-  private String hopify(String ui, String source, boolean isAdmin) {
+  private String hopify(String ui, String source, boolean isAdmin, String path) {
     if (!isAdmin) {
       ui = removeUnusable(ui);
     }
@@ -371,9 +371,9 @@ public class YarnUIProxyServlet extends ProxyServlet {
     ui = ui.replaceAll("(?<=(href|src)=\')(?=http)",
       "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(href|src)=\")(?=[a-zA-Z])",
-      "/hopsworks-api/yarnui/" + source + "/");
+        "/hopsworks-api/yarnui/" + source + "/" + path + "/");
     ui = ui.replaceAll("(?<=(href|src)=\')(?=[a-zA-Z])",
-      "/hopsworks-api/yarnui/" + source + "/");
+        "/hopsworks-api/yarnui/" + source + "/" + path + "/");
     ui = ui.replaceAll("(?<=(url: '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=(location\\.href = '))/(?=[a-zA-Z])", "/hopsworks-api/yarnui/");
     ui = ui.replaceAll("(?<=\"(stdout\"|stderr\") : \")(?=[a-zA-Z])",

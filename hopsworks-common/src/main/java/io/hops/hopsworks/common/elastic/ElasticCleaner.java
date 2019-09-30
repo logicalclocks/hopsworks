@@ -63,7 +63,7 @@ public class ElasticCleaner {
   /**
    * Periodically remove job/notebooks log indexes. Runs once per day and removed indices older than 7 days.
    *
-   * @param timer
+   * @param timer timer
    */
   @Schedule(persistent = false,
       minute = "0",
@@ -72,8 +72,11 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
     try {
-      Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX + ")|("
-          + Settings.ELASTIC_SERVING_INDEX_REGEX + ") | (" + Settings.ELASTIC_KAGENT_INDEX_REGEX + ")");
+      Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX
+        + ")|(" + Settings.ELASTIC_SERVING_INDEX_REGEX
+        + ")|(" + Settings.ELASTIC_KAGENT_INDEX_REGEX
+        + ")|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX
+        + ")|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")");
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();

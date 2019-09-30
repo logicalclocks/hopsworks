@@ -240,7 +240,50 @@
     <servlet-name>AirflowProxyServlet</servlet-name>
     <url-pattern>/airflow</url-pattern>
   </servlet-mapping>
-  
+
+  <!-- Flink proxy servlet -->
+  <servlet>
+    <servlet-name>FlinkProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.jobs.FlinkProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:80/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>FlinkProxyServlet</servlet-name>
+    <url-pattern>/flinkmaster/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>FlinkProxyServlet</servlet-name>
+    <url-pattern>/flinkmaster</url-pattern>
+  </servlet-mapping>
+
+  <!-- Flink proxy servlet -->
+  <servlet>
+    <servlet-name>FlinkHistoryServerProxyServlet</servlet-name>
+    <servlet-class>io.hops.hopsworks.api.jobs.FlinkHistoryServerProxyServlet</servlet-class>
+    <init-param>
+      <param-name>targetUri</param-name>
+      <param-value>http://localhost:29183/</param-value>
+    </init-param>
+    <init-param>
+      <param-name>log</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>FlinkHistoryServerProxyServlet</servlet-name>
+    <url-pattern>/flinkhistoryserver/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>FlinkHistoryServerProxyServlet</servlet-name>
+    <url-pattern>/flinkhistoryserver</url-pattern>
+  </servlet-mapping>
 
 
   <!-- Other servlets -->

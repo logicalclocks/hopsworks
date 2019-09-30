@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
 
-  public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
+  public Map<String, String> getFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                             Settings settings, String hdfsUser, String usersFullName,
                                                             String tfLdLibraryPath, Map<String,
                                                             String> extraJavaOptions) throws IOException {
@@ -151,6 +151,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()),
             HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "FLINK_CONF_DIR", settings.getFlinkConfDir(),
+      HopsUtils.IGNORE);
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
 
@@ -468,7 +470,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       }
     }
 
-    extraJavaOptions.put(Settings.SPARK_LOG4J_CONFIG, Settings.SPARK_LOG4J_PROPERTIES);
+    extraJavaOptions.put(Settings.JOB_LOG4J_CONFIG, Settings.JOB_LOG4J_PROPERTIES);
     extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, settings.getRestEndpoint());
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);

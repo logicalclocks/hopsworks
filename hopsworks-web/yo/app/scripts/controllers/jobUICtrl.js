@@ -78,9 +78,11 @@ angular.module('hopsWorksApp')
               if (self.appId === undefined || self.appId === null || self.appId === "") {
                 JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submissiontime:desc&offset=0&limit=1').then(
                         function (success) {
-                          self.appId = success.data.items[0].appId;
-                          getTensorBoardUrls();
-                          callback();
+                            if(typeof success.data.items !== 'undefined') {
+                                self.appId = success.data.items[0].appId;
+                                getTensorBoardUrls();
+                                callback();
+                            }
                         }, function (error) {
 
                         if (typeof error.data.usrMsg !== 'undefined') {
@@ -127,34 +129,48 @@ angular.module('hopsWorksApp')
 
 
             var getJobUIInt = function () {
-              console.log($route);
-              console.log($routeParams);
-              JobService.getExecutionUI(self.projectId, self.appId, self.isLivy).then(
+              //If job is not flink
+                if (!self.isLivy && (self.job.jobType === 'FLINK' || self.job.jobType === 'BEAM_FLINK')) {
+                    //Get Flink master url from job
+                    self.ui = '/hopsworks-api/flinkmaster/' + self.appId + '/';
+                    JobService.getFlinkMaster(self.appId).then(
+                        function (success) {
+                        }, function (error) {
+                            self.ui = '/hopsworks-api/flinkhistoryserver/';
+                    });
+                    var iframe = document.getElementById('ui_iframe');
+                    if (iframe) {
+                        iframe.src = $sce.trustAsResourceUrl(self.ui);
+                    }
+                    $timeout(stopLoading(), 2000);
+                } else {
+                  JobService.getExecutionUI(self.projectId, self.appId, self.isLivy).then(
                       function (success) {
-                        self.sessions = success.data;
-                        if (self.sessions.length > 0) {
-                          self.session = self.sessions[0];
-                          self.ui = self.session.url;
-                          self.current = "jobUI";
-                          if (self.ui !== "") {
-                            var iframe = document.getElementById('ui_iframe');
-                            if (iframe) {
-                              iframe.src = $sce.trustAsResourceUrl(self.ui);
-                            }
-                            $timeout(stopLoading(), 2000);
+                          self.sessions = success.data;
+                          if (self.sessions.length > 0) {
+                              self.session = self.sessions[0];
+                              self.ui = self.session.url;
+                              self.current = "jobUI";
+                              if (self.ui !== "") {
+                                  var iframe = document.getElementById('ui_iframe');
+                                  if (iframe) {
+                                      iframe.src = $sce.trustAsResourceUrl(self.ui);
+                                  }
+                                  $timeout(stopLoading(), 2000);
+                              }
                           }
-                        }
 
                       }, function (error) {
 
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                      }
-                stopLoading();
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
+                          stopLoading();
 
-              });
+                      });
+              }
             };
             self.jobUI = function () {
               if (self.job === undefined || self.job === null) {
@@ -167,6 +183,15 @@ angular.module('hopsWorksApp')
               startLoading("Loading Job UI...");
               getAppId(getJobUIInt);
             };
+
+            self.flinkHistoryServer = function (){
+                var iframe = document.getElementById('ui_iframe');
+                if (iframe) {
+                    iframe.src = $sce.trustAsResourceUrl('/hopsworks-api/flinkhistoryserver/');
+                }
+                $timeout(stopLoading(), 2000);
+            };
+
             self.yarnUI = function () {
 
               if (self.job === undefined || self.job === null) {

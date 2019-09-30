@@ -92,7 +92,6 @@ public class ErasureCodeJob extends HopsJob {
       jobSucceeded = false;
     }
     if (jobSucceeded) {
-      //TODO(Theofilos): push a message to the messaging service
       logger.log(Level.INFO, "File compression was successful");
       return;
     }

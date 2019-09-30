@@ -15,12 +15,15 @@
  */
 package io.hops.hopsworks.api.jobs.executions;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.common.jobs.flink.FlinkMasterAddrCache;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -38,6 +41,8 @@ public class ExecutionsBuilder {
   
   @EJB
   private ExecutionFacade executionFacade;
+  @EJB
+  private FlinkMasterAddrCache flinkMasterAddrCache;
   @EJB
   private UsersBuilder usersBuilder;
   
@@ -101,7 +106,17 @@ public class ExecutionsBuilder {
       dto.setUser(usersBuilder.build(uriInfo, resourceRequest, execution.getUser()));
       dto.setFilesToRemove(execution.getFilesToRemove());
       dto.setDuration(execution.getExecutionDuration());
+      // Get Flink Master URL if current execution hasn't finished
+      if ((execution.getJob().getJobType() == JobType.FLINK || execution.getJob().getJobType() == JobType.BEAM_FLINK) &&
+        !execution.getState().isFinalState() &&
+        !Strings.isNullOrEmpty(execution.getAppId())) {
+        String addr = flinkMasterAddrCache.get(execution.getAppId());
+        if (!Strings.isNullOrEmpty(addr)) {
+          dto.setFlinkMasterURL(addr);
+        }
+      }
     }
+    
     return dto;
   }
   

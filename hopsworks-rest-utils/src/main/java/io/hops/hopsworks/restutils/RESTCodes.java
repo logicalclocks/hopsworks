@@ -1347,12 +1347,13 @@ public class RESTCodes {
     ONLINE_FEATUREGROUP_CANNOT_BE_PARTITIONED(75, "An error occurred when trying to " +
       "create the MySQL table for the online feature group. User-defined partitioning is not supported for MySQL " +
       "tables", Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_CREATE_DATA_VALIDATION_RULES(64, "Failed to create data validation rules",
+    COULD_NOT_CREATE_DATA_VALIDATION_RULES(76, "Failed to create data validation rules",
         Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_READ_DATA_VALIDATION_RESULT(65, "Failed to read data validation result",
-        Response.Status.INTERNAL_SERVER_ERROR);
-
-
+    COULD_NOT_READ_DATA_VALIDATION_RESULT(77, "Failed to read data validation result",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    IMPORT_JOB_ALREADY_RUNNING(78, "A job to import this featuregroup is already running",
+        Response.Status.BAD_REQUEST),
+    IMPORT_CONF_ERROR(79, "Error writing import job configuration", Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

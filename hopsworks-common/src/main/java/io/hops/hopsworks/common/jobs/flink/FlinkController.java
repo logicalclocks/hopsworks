@@ -39,34 +39,52 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import java.io.File;
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
-import java.util.jar.Attributes;
-import java.util.jar.JarInputStream;
-import java.util.jar.Manifest;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-
-import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.JobException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.security.UserGroupInformation;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.security.UserNotFoundException;
+import org.apache.flink.client.program.ClusterClient;
+import org.apache.flink.yarn.YarnClusterDescriptor;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.yarn.api.records.ApplicationId;
+import org.apache.hadoop.yarn.client.api.YarnClient;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
+import org.apache.parquet.Strings;
+import org.yaml.snakeyaml.Yaml;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Interaction point between the Flink front- and backend.
@@ -74,14 +92,11 @@ import io.hops.hopsworks.common.util.Settings;
  */
 @Stateless
 public class FlinkController {
-
-  private static final Logger LOGGER = Logger.getLogger(FlinkController.class.
-      getName());
-
+  
+  private static final Logger LOGGER = Logger.getLogger(FlinkController.class.getName());
+  
   @EJB
   YarnJobsMonitor jobsMonitor;
-  @EJB
-  private DistributedFsService fops;
   @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
@@ -92,47 +107,32 @@ public class FlinkController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private Settings settings;
+  @EJB
+  private YarnClientService ycs;
+  @EJB
+  private ProjectFacade projectFacade;
+  @EJB
+  private InodeFacade inodeFacade;
 
-  /**
-   * Start the Flink job as the given user.
-   * <p/>
-   * @param job
-   * @param user
-   * @param sessionId
-   * @return
-   * Flink job.
-   */
-  public Execution startJob(final Jobs job, final Users user, String sessionId) throws GenericException, JobException {
+  
+  public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.FLINK) {
+    } else if (job.getJobType() != JobType.FLINK && job.getJobType() != JobType.BEAM_FLINK) {
       throw new IllegalArgumentException(
-          "Job configuration is not a Flink job configuration.");
-    } else if (!isFlinkJarAvailable()) {
-      throw new IllegalStateException("Flink is not installed on this system.");
+        "Job configuration is not a Flink or Beam job configuration.");
     }
-
+    
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     FlinkJob flinkjob = null;
     try {
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
-        flinkjob = proxyUser.doAs(new PrivilegedExceptionAction<FlinkJob>() {
-          @Override
-          public FlinkJob run() throws Exception {
-            return new FlinkJob(job, submitter, user,
-              settings.getHadoopSymbolicLinkDir(), settings.getFlinkDir(),
-              settings.getFlinkConfDir(),
-              settings.getFlinkConfFile(),
-              settings.getFlinkUser(),
-              hdfsUsersBean.getHdfsUserName(job.getProject(),
-                job.getCreator()),
-              settings.getHopsworksDomainDir(), jobsMonitor, settings, sessionId);
-          }
-        });
+        flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
+          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
@@ -151,77 +151,109 @@ public class FlinkController {
     
     return execution;
   }
-
+  
   /**
-   * Check if the Flink jar is in HDFS. If it's not, try and copy it there
-   * from the local filesystem. If it's still not there, then return false.
-   * <p/>
-   * @return
+   * Retrieves the Flink master address from a running Flink session in YARN.
+   *
+   * @param appId flink ApplicationId in YARN
+   * @return String of ip:port of flink master
    */
-  public boolean isFlinkJarAvailable() {
-    boolean isInHdfs;
-    DistributedFileSystemOps dfso = null;
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public String getFlinkMasterAddr(String appId) {
+    LOGGER.log(Level.INFO, "Getting Flink Master Addr for:" + appId);
+    Configuration conf = settings.getConfiguration();
+    org.apache.flink.configuration.Configuration flinkConf
+      = org.apache.flink.configuration.GlobalConfiguration.loadConfiguration(settings.getFlinkConfDir());
+    YarnConfiguration yarnConf = new YarnConfiguration(conf);
+    YarnClientWrapper yarnClientWrapper = null;
+    YarnClusterDescriptor cluster = null;
+    String flinkMasterURL = null;
     try {
-      dfso = fops.getDfsOps();
-      try {
-        isInHdfs = dfso.exists(settings.getHdfsFlinkJarPath());
-      } catch (IOException e) {
-        LOGGER.log(Level.WARNING, "Cannot get Flink jar file from HDFS: {0}",
-            settings.getHdfsFlinkJarPath());
-        //Can't connect to HDFS: return false
-        return false;
-      }
-      if (isInHdfs) {
-        return true;
-      }
-
-      File localFlinkJar = new File(settings.getLocalFlinkJarPath());
-      if (localFlinkJar.exists()) {
-        try {
-          String hdfsJarPath = settings.getHdfsFlinkJarPath();
-          dfso.copyToHDFSFromLocal(false, settings.getLocalFlinkJarPath(),
-              hdfsJarPath);
-        } catch (IOException e) {
-          return false;
-        }
-      } else {
-        LOGGER.log(Level.WARNING, "Cannot find Flink jar file locally: {0}",
-            settings.getLocalFlinkJarPath());
-        return false;
-      }
+      yarnConf.addResource(new File(settings.getHadoopConfDir() + "/yarn-site.xml").toURI().toURL());
+      yarnClientWrapper = ycs.getYarnClientSuper();
+      YarnClient yarnClient = yarnClientWrapper.getYarnClient();
+      cluster = new YarnClusterDescriptor(flinkConf,
+        yarnConf, settings.getFlinkConfDir(), yarnClient, true);
+      ClusterClient<ApplicationId> clusterClient = cluster.retrieve(ApplicationId.fromString(appId));
+      flinkMasterURL = clusterClient.getClusterConnectionInfo().getHostname() + ":" +
+        clusterClient.getClusterConnectionInfo().getPort();
+    } catch (Exception ex) {
+      LOGGER.log(Level.FINE, "Could not retrieve Flink Master URL for applicationID: " + appId, ex);
     } finally {
-      if (dfso != null) {
-        dfso.close();
+      if (cluster != null) {
+        cluster.close();
+      }
+      if (yarnClientWrapper != null) {
+        ycs.closeYarnClient(yarnClientWrapper);
       }
     }
-    return true;
+    return flinkMasterURL;
   }
-
+  
   /**
-   * Inspect the jar on the given path for execution. Returns a
-   * FlinkJobConfiguration object with a default
-   * configuration for this job.
-   * <p/>
-   * @param path
-   * @param udfso
-   * @return
+   * Used by flinkCompletedJobsCache() on startUp.
+   *
+   * @param archiveDir Path where Flink conf is.
+   *
+   * @return Map of "<job,project>"
    */
-  public FlinkJobConfiguration inspectProgram(String path, DistributedFileSystemOps udfso) throws JobException {
-    try (JarInputStream jis = new JarInputStream(udfso.open(path))) {
-      Manifest mf = jis.getManifest();
-      Attributes atts = mf.getMainAttributes();
-      FlinkJobConfiguration config = new FlinkJobConfiguration();
-      if (atts.containsKey(Attributes.Name.MAIN_CLASS)) {
-        config.setMainClass(atts.getValue(Attributes.Name.MAIN_CLASS));
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public Map<String, Project> getProjectsOfFlinkJobs(String archiveDir) {
+    if (Strings.isNullOrEmpty(archiveDir)) {
+      throw new IllegalArgumentException("Flink historyserver.archive.fs.dir property was not provided");
+    }
+    Map<String, Project> projectsJobs = new HashMap<>();
+    //Read all completed jobs from "historyserver.archive.fs.dir"
+    try {
+      List<Inode> jobs = inodeFacade.getChildren(archiveDir);
+      for (Inode job : jobs) {
+        if (job.getHdfsUser() != null) {
+          projectsJobs.put(job.getInodePK().getName(), projectFacade.findByName(job.getHdfsUser().getProject()));
+        }
       }
-      //Set Flink config params
-      config.setFlinkConfDir(settings.getFlinkConfDir());
-      config.setFlinkConfFile(settings.getFlinkConfFile());
-      config.setJarPath("hdfs://" + path);
-      return config;
-    } catch (IOException ex) {
-      throw new JobException(RESTCodes.JobErrorCode.JAR_INSPECTION_ERROR, Level.SEVERE,
-        "Failed to inspect jar at:" + path, ex.getMessage(), ex);
+    } catch (IOException e) {
+      LOGGER.log(Level.WARNING, "Could not find Flink jobs in history server archive " + archiveDir, e);
+    }
+    return projectsJobs;
+  }
+  
+  
+  /**
+   * Reads all the completed jobs from the "historyserver.archive.fs.dir" in flink-conf.yaml and creates a map with
+   * key the project and value a list of Flink jobs that ran in this project.
+   *
+   * @return a map with key the unique flink job id and value the project name.
+   */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public Project getProjectOfFlinkJob(String archivePath, String job) throws UserNotFoundException {
+    if (Strings.isNullOrEmpty(archivePath)) {
+      throw new IllegalArgumentException("Flink historyserver.archive.fs.dir property was not provided");
+    }
+    //Read all completed jobs from "historyserver.archive.fs.dir"
+    //Flink history server caches old jobs locally. Server is setup to restart once a day, but until it does we might
+    // can jobs that don't exist
+    Inode inode = inodeFacade.getInodeAtPath(archivePath + File.separator + job);
+    if (inode != null) {
+      HdfsUsers hdfsUser = inode.getHdfsUser();
+      if (hdfsUser != null) {
+        return projectFacade.findByName(hdfsUser.getProject());
+      }
+    }
+    throw new UserNotFoundException("Flink job belongs to a deleted project or a removed project member.");
+  }
+  
+  /**
+   * read historyserver.archive.fs.dir path from flink-conf.yaml
+   * @return the value of historyserver.archive.fs.dir
+   * @throws IOException If the flink conf file could be read.
+   */
+  public String getArchiveDir() throws IOException {
+    //R
+    Yaml yaml = new Yaml();
+    try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
+      Map<String, Object> obj = (Map<String, Object>) yaml.load(in);
+      return ((String) obj.get("historyserver.archive.fs.dir")).replace("hdfs://", "");
     }
   }
+  
 }

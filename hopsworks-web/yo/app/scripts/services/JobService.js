@@ -265,6 +265,15 @@ angular.module('hopsWorksApp')
                */
               getInspection: function (projectId, type, path) {
                   return $http.get('/api/project/' + projectId + '/jobs/' + type + '/inspection?path=' + path);
+              },
+              /**
+               * Get Flink Master (JobManager) UI.
+               * @param projectId
+               * @param path
+               * @returns {*}
+               */
+              getFlinkMaster: function (appId) {
+                return $http.get('/hopsworks-api/flinkmaster/' + appId +"/");
               }
 
             };

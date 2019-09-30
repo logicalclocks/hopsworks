@@ -50,7 +50,5 @@ os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
 os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
 os.environ['HADOOP_HOME'] = "%%hadoop_home%%"
 
-c.GitHandlersConfiguration.remote_git_url = "%%remote_git_url%%"
 c.GitHandlersConfiguration.api_key = "%%api_key%%"
-c.GitHandlersConfiguration.base_branch = "%%base_branch%%"
-c.GitHandlersConfiguration.head_branch = "%%head_branch%%"
+os.environ['FLINK_CONF_DIR'] = "%%flink_conf_dir%%"

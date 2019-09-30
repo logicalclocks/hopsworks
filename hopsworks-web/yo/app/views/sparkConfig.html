@@ -395,7 +395,7 @@
                                 </div>
                                 <div class="col-md-2 jupyter-left">
                                     <ui-select ng-model="jupyterCtrl.jupyterSettings.gitConfig.baseBranch" theme="bootstrap"
-                                                style="z-index:1";>
+                                                style="z-index:2";>
                                         <ui-select-match placeholder="Select branch...">
                                             <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.baseBranch"></span>
                                         </ui-select-match>
@@ -417,7 +417,7 @@
                                 </div>
                                 <div class="col-md-2 jupyter-left" ng-if="jupyterCtrl.gitNewHeadBranchPressed == false">
                                     <ui-select ng-model="jupyterCtrl.jupyterSettings.gitConfig.headBranch" theme="bootstrap"
-                                                style="z-index:0";>
+                                                style="z-index:1";>
                                         <ui-select-match placeholder="Select branch...">
                                             <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.headBranch"></span>
                                         </ui-select-match>

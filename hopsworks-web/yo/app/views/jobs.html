@@ -180,7 +180,7 @@
                         {{job.creationTime| date:'medium'}}
                       </td>
                       <td>
-                        {{job.jobType}}
+                        {{job.jobTypeName}}
                       </td>
                       <td>
                         {{job.creator.firstname}} {{job.creator.lastname}}
@@ -308,7 +308,6 @@
                           </button>
                           <button uib-tooltip="Job UI"
                                   type="button" class="btn btn-info glyphicon glyphicon-eye-open"
-                                  ng-disabled="job.state === undefined || job.state === null || job.state === 'APP_MASTER_START_FAILED' || job.state === 'INITIALIZATION_FAILED' || job.state === 'INITIALIZING'"
                                   ng-click="jobsCtrl.toggle(job, $index);jobsCtrl.showUI(job);
                                                   $event.stopPropagation();">
                           </button>

@@ -576,7 +576,7 @@ public class DatasetController {
         LOGGER.log(Level.SEVERE, "Could not get owner of file: " + path, ex);
       } finally {
         if (udfso != null) {
-          udfso.close();
+          dfs.closeDfsClient(udfso);
         }
       }
     }

@@ -187,9 +187,7 @@ public class JupyterController {
       // Do some sanity check before using jupyter settings
       if (jupyterProject != null && jupyterSettings != null) {
         if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()) {
-          jupyterNbVCSController.commit(jupyterProject, user,
-              "Auto-generated commit message due to Jupyter Notebook server shutdown");
-          jupyterNbVCSController.push(jupyterProject);
+          jupyterNbVCSController.push(jupyterProject, jupyterSettings, user);
         }
       }
       jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, pid, port);

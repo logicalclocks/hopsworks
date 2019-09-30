@@ -27,10 +27,10 @@ import java.util.List;
  * Constants for the Feature Store Service
  */
 public class FeaturestoreConstants {
-  
+
   private FeaturestoreConstants() {
   }
-  
+
   public static final int FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
   public static final String FEATURESTORE_REGEX = "^[a-zA-Z0-9_]+$";
   public static final int STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
@@ -94,7 +94,8 @@ public class FeaturestoreConstants {
   public static final String FEATURESTORE_UTIL_PYTHON_EXECUTABLE =
     "/user/spark/featurestore_util.py";
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
-  public static final List<String> FEATURE_IMPORT_CONNECTORS = Arrays.asList(new String[]{S3_CONNECTOR_TYPE});
+  public static final List<String> FEATURE_IMPORT_CONNECTORS
+      = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE});
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
@@ -110,5 +111,5 @@ public class FeaturestoreConstants {
   public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
   public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
   public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
-  
+
 }

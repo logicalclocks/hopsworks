@@ -34,10 +34,12 @@ public class JobsBeanParam {
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=jobtype:spark&filter_by=date_created_gt:2018-12-25T17:12:10",
-    allowableValues = "jobtype:spark, jobtype:pyspark, jobtype:flink,jobtype_neq:spark, jobtype_neq:pyspark, " +
-      "jobtype_neq:flink,filter_by=date_created:2018-12-25T17:12:10.058, " +
-      "filter_by=date_created_gt:2018-12-25T17:12:10.058, filter_by=date_created_lt:2018-12-25T17:12:10.058, " +
-      "filter_by=name:myetl, filter_by=creator:john, filter_by=latest_execution:finished",
+    allowableValues =
+      "filter_by=jobtype:spark,filter_by=jobtype:pyspark,filter_by=jobtype:flink,filter_by=jobtype:beam_flink," +
+      "filter_by=jobtype_neq:spark,filter_by=jobtype_neq:pyspark,filter_by=jobtype_neq:flink," +
+      "filter_by=jobtype_neq:beam_flink,filter_by=date_created:2018-12-25T17:12:10.058," +
+      "filter_by=date_created_gt:2018-12-25T17:12:10.058, filter_by=date_created_lt:2018-12-25T17:12:10.058," +
+      "filter_by=name:myetl,filter_by=creator:john,filter_by=latest_execution:finished",
     allowMultiple = true)
   private Set<FilterBy> filter;
   @BeanParam

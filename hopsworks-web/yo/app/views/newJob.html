@@ -85,7 +85,9 @@
                id="jobTypeDiv">
             <div class="btn-group">
               <label id="sparkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="1" ng-change="newJobCtrl.jobTypeChosen()">Spark</label>
-              <!--<label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>-->
+              <label id="flinkJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="3" ng-change="newJobCtrl.jobTypeChosen()">Flink</label>
+              <label id="beamJobType" class="btn btn-default" ng-model="newJobCtrl.jobtype" uib-btn-radio="4"
+                     ng-change="newJobCtrl.jobTypeChosen()">Beam<small>(Flink)</small></label>
             </div>
           </div>
 
@@ -93,7 +95,7 @@
           <!-- Select the main execution file -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion3.title}} {{newJobCtrl.accordion3.value}}"
                is-open="newJobCtrl.accordion3.isOpen"
-               ng-show="newJobCtrl.accordion3.visible">
+               ng-show="newJobCtrl.jobtype !== 3 && newJobCtrl.jobtype !== 4 && newJobCtrl.accordion3.visible">
             <button id="selectFileButton" class="btn btn-default" ng-click="newJobCtrl.selectFile(newJobCtrl.getJobType())" ng-show="newJobCtrl.jobtype == 1 || newJobCtrl.jobtype == 3 || newJobCtrl.jobtype == 2">
               <span>Select...</span>
             </button>
@@ -103,11 +105,11 @@
           <!-- Set up the job details -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}"
                is-open="newJobCtrl.accordion4.isOpen"
-               ng-show="newJobCtrl.accordion4.visible"
+               ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && newJobCtrl.accordion4.visible"
                id="chooseParametersAndArguments">
-            <!-- Spark, Flink, TensorFlow-->
-            <div ng-show="newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2 || newJobCtrl.jobtype === 3">
-              <div class="row" ng-show="newJobCtrl.jobtype !== 2">
+            <!-- Spark.PySpark -->
+            <div>
+              <div class="row" ng-show="newJobCtrl.jobtype === 1">
                 <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run in the selected JAR file." style="margin-left: 10px"></i></div>
                 <div class="col-md-8"><input type="text"
                                              ng-model="newJobCtrl.runConfig.mainClass" class="form-control"></div>
@@ -121,7 +123,8 @@
 
           </div>
           <!-- Set some run configuration -->
-          <div ng-controller="SparkConfigCtrl as sparkConfigCtrl">
+          <div ng-if="newJobCtrl.jobtype !== 3 && newJobCtrl.jobtype !== 4">
+          <div  ng-controller="SparkConfigCtrl as sparkConfigCtrl">
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}"
                is-open="newJobCtrl.accordion5.isOpen"
                ng-show="newJobCtrl.accordion5.visible"
@@ -129,34 +132,6 @@
 
             <div ng-include="'views/sparkConfig.html'"></div>
 
-            <!-- Flink -->
-            <div class="row" ng-show="newJobCtrl.jobtype === 3">
-              <div class="text-right col-md-4">Number of TaskManagers <i class="fa fa-info-circle" uib-tooltip="The number of Flink TaskManagers that should be requested for this job." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.numberOfTaskManagers" class="form-control"></div>
-            </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 3">
-              <div class="text-right col-md-4">Number of slots <i class="fa fa-info-circle" uib-tooltip="The number of slots per TaskManager that should be requested for this job." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.slots" class="form-control"></div>
-            </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 3">
-              <div class="text-right col-md-4">TaskManager memory (MB) <i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each TaskManager." style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="number" min="768" ng-model="newJobCtrl.runConfig.taskManagerMemory" class="form-control"></div>
-            </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 3">
-              <div class="text-right col-md-4">Job Parallelism <i class="fa fa-info-circle" uib-tooltip="In Flink programs, the parallelism determines how operations are split into individual tasks which are assigned to task slots. " style="margin-left: 10px"></i></div>
-              <div class="col-md-8"><input type="number" min="1" ng-model="newJobCtrl.runConfig.parallelism" class="form-control"></div>
-            </div>
-            <div class="row" ng-show="newJobCtrl.jobtype === 3">
-              <div class="text-right col-md-4">Job Type <i class="fa fa-info-circle" uib-tooltip="Choose between Streaming or Batch job." style="margin-left: 10px"></i></div>
-              <div class="col-md-1">
-                <select name="flinkjobtype"
-                        ng-model="newJobCtrl.flinkjobtype"
-                        ng-init="newJobCtrl.flinkjobtype = 'Streaming'">
-                  <option value="Streaming">Streaming</option>
-                  <option value="Batch">Batch</option>
-                </select>
-              </div>
-            </div>
             <div>
               <!-- Creation button -->
               <div>
@@ -168,6 +143,30 @@
             <br>
             <div  class="col-md-2 alert alert-warning" role="alert" ng-show="newJobCtrl.showUpdateWarning" >
               {{newJobCtrl.updateWarningMsg}}</div>
+          </div>
+        </div>
+        </div>
+        <div ng-if="newJobCtrl.jobtype === 3 || newJobCtrl.jobtype === 4">
+          <div  ng-controller="FlinkConfigCtrl as flinkConfigCtrl">
+            <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion5.title}} {{newJobCtrl.accordion5.value}}"
+                 is-open="newJobCtrl.accordion5.isOpen"
+                 ng-show="newJobCtrl.accordion5.visible"
+                 id="moreConfigs">
+
+              <div ng-include="'views/flinkConfig.html'"></div>
+
+              <div>
+                <!-- Creation button -->
+                <div>
+                  <button ng-click="newJobCtrl.createJob()" ng-class="(newJobCtrl.putAction == 'Create') ? 'btn btn-success' : 'btn btn-warning'">
+                    {{newJobCtrl.putAction}}
+                  </button>
+                </div>
+              </div>
+              <br>
+              <div  class="col-md-2 alert alert-warning" role="alert" ng-show="newJobCtrl.showUpdateWarning" >
+                {{newJobCtrl.updateWarningMsg}}</div>
+            </div>
           </div>
         </div>
       </div>

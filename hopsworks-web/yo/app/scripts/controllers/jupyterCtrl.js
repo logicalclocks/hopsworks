@@ -97,9 +97,9 @@ angular.module('hopsWorksApp')
             
             self.gitRepoStatus = {
                 status: 'UNKNOWN',
-                untrackedFiles: -1,
-                activeBranch: 'UNKNOWN',
-                lastCommit: 'UNKNOWN'
+                modifiedFiles: -1,
+                branch: 'UNKNOWN',
+                repository: 'UNKNOWN'
             };
 
             self.changeShutdownLevel = function() {
@@ -502,75 +502,6 @@ angular.module('hopsWorksApp')
                 );
             }
             
-            self.gitCloneOrPull = function() {
-                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
-                    growl.error("Git backend is either not enabled or unavailable",
-                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
-                    return;
-                }
-                self.gitWorking = true;
-                JupyterService.gitCloneOrPull(self.projectId).then(
-                    function(success) {
-                        self.gitRepoStatus = success.data;
-                        self.gitWorking = false;
-                        growl.info("Successfully updated local repository",
-                            {title: "Git operation succeed", ttl: 2000, referenceId: 10});
-                    }, function(error) {
-                        self.gitWorking = false;
-                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
-                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
-                    }
-                );
-            }
-
-            self.gitCommit = function() {
-                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
-                    growl.error("Git backend is either not enabled or unavailable",
-                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
-                    return;
-                }
-                self.gitWorking = true;
-                if (typeof self.gitCommitMessage === 'undefined') {
-                    self.gitCommitMessage = "Commit_" + new Date()
-                }
-                JupyterService.gitCommit(self.projectId, self.gitCommitMessage).then(
-                    function(success) {
-                        self.gitRepoStatus = success.data;
-                        self.gitWorking = false;
-                        delete self.gitCommitMessage;
-                        growl.info("Successfully committed changes",
-                            {title: "Git operation succeed", ttl: 2000, referenceId: 10});
-                    }, function(error) {
-                        self.gitWorking = false;
-                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
-                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
-                    }
-                );
-            }
-
-            self.gitPush = function() {
-                if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
-                    growl.error("Git backend is either not enabled or unavailable",
-                        {title: "Git operation could not complete", ttl: 5000, referenceId: 10});
-                    return;
-                }
-                self.gitWorking = true;
-                JupyterService.gitPush(self.projectId).then(
-                    function(success) {
-                        self.gitRepoStatus = success.data;
-                        self.gitWorking = false;
-                        var remote = self.jupyterSettings.gitConfig.remoteGitURL;
-                        var headBranch = self.jupyterSettings.gitConfig.headBranch;
-                        growl.info("Successfully pushed to " + remote + "/" + headBranch,
-                            {title: "Git operation succeed", ttl: 4000, referenceId: 10});
-                    }, function(error) {
-                        self.gitWorking = false;
-                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
-                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 10});
-                    }
-                );
-            }
-
             self.gitStatus = function () {
                 if (!self.jupyterSettings.gitAvailable || !self.jupyterSettings.gitBackend) {
                     growl.error("Git backend is either not enabled or unavailable",

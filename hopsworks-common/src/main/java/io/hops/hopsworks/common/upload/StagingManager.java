@@ -47,7 +47,7 @@ import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.flink.shaded.com.google.common.io.Files;
+import com.google.common.io.Files;
 
 /**
  * Basically provides a temporary folder in which to stage uploaded files.
