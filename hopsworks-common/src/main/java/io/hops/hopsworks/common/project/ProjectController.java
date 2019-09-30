@@ -729,7 +729,7 @@ public class ProjectController {
       case FEATURESTORE:
         //Note: Order matters here. Training Dataset should be created before the Featurestore
         addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso);
-        addServiceFeaturestore(project, user, dfso);
+        addServiceFeaturestore(project, user, dfso, udfso);
         addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
@@ -835,13 +835,15 @@ public class ProjectController {
    * 1. create the hive database for the featurestore
    * 2. insert featurestore metadata in the hopsworks db
    * 3. create a hopsworks dataset for the featurestore
+   * 4. create a directory in resources to store json configurations for feature import jobs.
    *
    * @param project the project to add the featurestore service for
    * @param user the user adding the service
    * @param dfso dfso
    */
   private void addServiceFeaturestore(Project project, Users user,
-                                      DistributedFileSystemOps dfso) throws FeaturestoreException {
+                                      DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+      throws FeaturestoreException {
     String featurestoreName = featurestoreController.getFeaturestoreDbName(project);
     try {
       //Create HiveDB for the featurestore
@@ -858,6 +860,16 @@ public class ProjectController {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
           "project: " + project.getName(), ex.getMessage(), ex);
+    }
+
+    // Add directory in resources to store the configurations for the feature import jobs
+    try {
+      udfso.mkdirs(new Path(settings.getBaseFeaturestoreJobImportDir(project), Settings.FEATURESTORE_IMPORT_CONF),
+          FsPermission.getFileDefault());
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Could not create featurestore import job configuration dir", e);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
+          "project: " + project.getName(), e.getMessage(), e);
     }
   }
 
