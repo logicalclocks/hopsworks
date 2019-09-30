@@ -231,7 +231,7 @@ angular.module('hopsWorksApp')
               },
               
               topicIsSharedTo: function (projectId, topicName){
-                  return $http.get('/api/project/' + projectId + '/kafka/'+topicName+'/sharedwith');
+                  return $http.get('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared');
               },
 
               updateTopicSchemaVersion: function (projectId, topicName, schemaVersion) {

@@ -65,6 +65,7 @@ import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -378,12 +379,13 @@ public class SystemAdminService {
     return Response.noContent().build();
   }
   
+  @ApiOperation(value = "Get kafka system settings")
   @GET
-  @Path("/kafka/topics/settings/default")
+  @Path("/kafka/settings")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response topicDefaultValues() throws KafkaException {
+  public Response getKafkaSettings() throws KafkaException {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
     
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(values).build();

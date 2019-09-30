@@ -134,6 +134,7 @@ public class KafkaFacade {
     //Keep only INTERNAL protocol brokers
     brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0].equalsIgnoreCase
       (KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));
+    LOGGER.info("Brokers are " + brokers.size() + ", set=" + brokers.toString());
     String brokerAddress = brokers.iterator().next().split("://")[1];
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
@@ -178,6 +179,12 @@ public class KafkaFacade {
         SharedTopics.class);
     query.setParameter("projectId", projectId);
     return query.getResultList();
+  }
+  
+  public List<SharedTopics> findSharedTopicsByTopicName (String topicName) {
+    return em.createNamedQuery("SharedTopics.findByTopicName", SharedTopics.class)
+      .setParameter("topicName", topicName)
+      .getResultList();
   }
 
   private int getPort(String zkIp) {
@@ -367,13 +374,13 @@ public class KafkaFacade {
       Integer projectId) {
 
     List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
-
-    TypedQuery<SharedTopics> query = em.createNamedQuery(
-        "SharedTopics.findByTopicNameAndProjectId", SharedTopics.class);
-    query.setParameter("topicName", topicName);
-    query.setParameter("projectId", projectId);
-    List<SharedTopics> projectIds = query.getResultList();
-
+  
+    List<SharedTopics> projectIds = em.createNamedQuery(
+      "SharedTopics.findByTopicAndOwnerProjectId", SharedTopics.class)
+      .setParameter("topicName", topicName)
+      .setParameter("ownerProjectId", projectId)
+      .getResultList();
+    
     for (SharedTopics st : projectIds) {
 
       Project project = em.find(Project.class, st.getSharedTopicsPK()
@@ -385,6 +392,14 @@ public class KafkaFacade {
     }
 
     return shareProjectDtos;
+  }
+  
+  public List<SharedTopics> findSharedTopicsByTopicAndOwnerProject (String topicName, Integer ownerProjectId) {
+    return em.createNamedQuery(
+      "SharedTopics.findByTopicAndOwnerProjectId", SharedTopics.class)
+      .setParameter("topicName", topicName)
+      .setParameter("ownerProjectId", ownerProjectId)
+      .getResultList();
   }
   
   public List<AclUserDTO> aclUsers(Integer projectId, String topicName) {

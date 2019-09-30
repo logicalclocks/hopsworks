@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -58,7 +59,6 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
@@ -99,7 +99,7 @@ public class KafkaController {
   @EJB
   private UserFacade userFacade;
   
-  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException, ServiceException,
+  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
     
     if (topicDto == null) {
@@ -141,7 +141,7 @@ public class KafkaController {
     addFullPermissionAclsToTopic(project.getName(), topicDto.getName(), project.getId());
   }
   
-  public void removeTopicFromProject(Project project, String topicName) throws KafkaException, ServiceException {
+  public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
     
     ProjectTopics pt = kafkaFacade.findTopicByNameAndProject(project, topicName)
       .orElseThrow(() ->
@@ -219,6 +219,10 @@ public class KafkaController {
     }
     
     if (!kafkaFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.PROJECT_IS_NOT_THE_OWNER_OF_THE_TOPIC, Level.FINE);
+    }
+    
+    if (!kafkaFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
     
@@ -230,6 +234,7 @@ public class KafkaController {
     if (kafkaFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
     }
+    
     kafkaFacade.shareTopic(project, topicName, destProjectId);
     //By default, all members of the project are granted full permissions on the topic
     addFullPermissionAclsToTopic(destProjectId, topicName, project.getId());
@@ -329,6 +334,38 @@ public class KafkaController {
     } catch (InterruptedException | IOException | KeeperException ex) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
         "", ex.getMessage(), ex);
+    }
+  }
+  
+  public List<SharedProjectDTO> getTopicSharedProjects (String topicName, Integer ownerProjectId) {
+    List<SharedTopics> projectIds = kafkaFacade.findSharedTopicsByTopicAndOwnerProject(topicName, ownerProjectId);
+  
+    List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
+    for (SharedTopics st : projectIds) {
+    
+      Project project = projectFacade.find(st.getSharedTopicsPK()
+        .getProjectId());
+      if (project != null) {
+        shareProjectDtos.add(new SharedProjectDTO(project.getName(),
+          project.getId()));
+      }
+    }
+  
+    return shareProjectDtos;
+  }
+  
+  public void unshareTopicFromAllProjects(Project ownerProject, String topicName)
+    throws KafkaException, ProjectException {
+    //check if ownerProject is the owner of the topic
+    if (!kafkaFacade.findTopicByNameAndProject(ownerProject, topicName).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic " + topicName +
+      " does not belong to project " + ownerProject.getName());
+    }
+    
+    List<SharedTopics> list = kafkaFacade.findSharedTopicsByTopicName(topicName);
+    
+    for (SharedTopics st : list) {
+      unshareTopic(ownerProject, topicName, st.getProjectId());
     }
   }
   
