@@ -23,22 +23,27 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.ImportControllerIface;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.importjob.FeaturegroupImportJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
+import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.util.Settings;
@@ -59,6 +64,7 @@ import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -67,6 +73,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.JAXBException;
 import java.util.List;
 
@@ -102,9 +110,11 @@ public class FeaturestoreService {
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
   @EJB
-  private ProjectTeamFacade projectTeamFacade;
-  @EJB
   private DataValidationResource dataValidationService;
+  @Inject
+  private ImportControllerIface importControllerIface;
+  @EJB
+  private JobsBuilder jobsBuilder;
 
   private Project project;
 
@@ -348,4 +358,34 @@ public class FeaturestoreService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jsonResponse).build();
   }
 
+
+  /**
+   * Endpoint for creating a job to import a feature group from external sources
+   *
+   * @param featuregroupImportJobDTO JSON to configure the job
+   * @return
+   */
+  @Path("/importjob")
+  @PUT
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Configure job to import featuregroup", response = JobDTO.class)
+  public Response createOrUpdateImportJob(@Context SecurityContext sc, @Context UriInfo uriInfo,
+      @ApiParam(value = "Job configuration", required = true) FeaturegroupImportJobDTO featuregroupImportJobDTO)
+      throws FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    if (featuregroupImportJobDTO == null) {
+      throw new IllegalArgumentException("Job specification not provided");
+    }
+    if (Strings.isNullOrEmpty(featuregroupImportJobDTO.getFeaturegroup())) {
+      throw new IllegalArgumentException("Featuregroup name not provided");
+    }
+    Jobs job = importControllerIface.createImportJob(user, project, featuregroupImportJobDTO);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
+    return Response.created(builder.build()).entity(dto).build();
+  }
 }
