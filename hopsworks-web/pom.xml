@@ -55,6 +55,10 @@
   <description>Hopsworks web app</description>
   <name>hopsworks-web</name>
 
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>javax</groupId>

@@ -50,8 +50,6 @@ angular.module('hopsWorksApp')
             var self = this;
             self.tourService = TourService;
             self.projectIsGuide = false;
-            self.flinkjobtype;
-            self.resourceType;
             //Set services as attributes
             self.ModalService = ModalService;
             self.growl = growl;
@@ -69,11 +67,13 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
+              "BEAM_FLINK": /.jar\b/,
               "PYSPARK": /(.py|.ipynb)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
+              "BEAM_FLINK": "Please select a JAR file.",
               "PYSPARK": "Please select a .py or .ipynb file."
             };
 
@@ -321,9 +321,10 @@ angular.module('hopsWorksApp')
                   self.kafkaGuideTransition();
                 }
               }
+
               self.runConfig.appName = self.jobname;
               self.runConfig.localResources = self.localResources;
-              if (self.getJobType() === "SPARK" || self.getJobType() === "FLINK") {
+              if (self.getJobType() === "SPARK") {
                 if (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === "") {
                   growl.warning("Please specify main class first", {ttl: 5000});
                   return;
@@ -413,6 +414,10 @@ angular.module('hopsWorksApp')
                 self.tourService.currentStep_TourSeven = 4;
               }
               self.phase = 2;
+              self.accordion1.isOpen = false; //Close job name panel
+              self.accordion1.value = " - " + self.jobname; //Set job name panel title
+              self.accordion2.isOpen = false; //Close job type panel
+              self.accordion3.value = ""; //Reset selected file
               self.accordion3.isOpen = true; //Open file selection
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
@@ -420,6 +425,10 @@ angular.module('hopsWorksApp')
                   self.accordion3.title = "App file (.jar, .py or .ipynb)";
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
+                  self.accordion3.visible = true; //Display file selection
+                  self.accordion4.isOpen = false; //Close job setup
+                  self.accordion4.visible = false; //Hide job setup
+                  self.accordion5.visible = false; // Hide job configuration
                   break;
                 case 2:
                   self.accordion3.title = "App file (.py or .ipynb)";
@@ -427,22 +436,35 @@ angular.module('hopsWorksApp')
                   selectedType = "PySpark";
                   break;
                 case 3:
-                  self.accordion3.title = "App file (.jar)";
+                case 4:
                   self.accordion4.title = "Job details";
-                  selectedType = "Flink";
+                  var jobConfig;
+                  if(self.jobtype === 3){
+                    selectedType = "Flink";
+                    jobConfig = 'flinkJobConfiguration';
+                  } else {
+                    selectedType = "Beam(Flink)";
+                    jobConfig = 'beamFlinkJobConfiguration';
+                  }
+                  self.accordion3.visible = false;
+                  self.accordion4.isOpen = true;
+                  self.accordion4.visible = true;
+                  self.accordion5.visible = true;
+                  self.accordion5.isOpen = true;
+                  self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
+                      "\"amQueue\":\"default\"," +
+                      "\"jobmanager.heap.size\":1024," +
+                      "\"amVCores\":1," +
+                      "\"numberOfTaskManagers\":1," +
+                      "\"taskmanager.heap.size\":1024," +
+                      "\"taskmanager.numberOfTaskSlots\":1}");
+                  $scope.jobConfig = self.runConfig;
                   break;
                 default:
                   break;
               }
-              self.accordion1.isOpen = false; //Close job name panel
-              self.accordion1.value = " - " + self.jobname; //Set job name panel title
-              self.accordion3.visible = true; //Display file selection
               self.accordion2.value = " - " + selectedType; //Set job type panel title
-              self.accordion2.isOpen = false; //Close job type panel
-              self.accordion4.isOpen = false; //Close job setup
-              self.accordion4.visible = false; //Hide job setup
-              self.accordion5.visible = false; // Hide job configuration
-              self.accordion3.value = ""; //Reset selected file
+
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 4;
               }
@@ -461,6 +483,8 @@ angular.module('hopsWorksApp')
                   return "PYSPARK";
                 case 3:
                   return "FLINK";
+                case 4:
+                  return "BEAM_FLINK";
                 default:
                   return null;
               }
@@ -598,20 +622,6 @@ angular.module('hopsWorksApp')
                     'pattern': null
                   });
                   break;
-                case "FLINK":
-                  self.flinkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs:///" + path).then(
-                          function (success) {
-                            self.runConfig = success.data;
-                            self.mainFileSelected(filename);
-                          }, function (error) {
-                          if (typeof error.data.usrMsg !== 'undefined') {
-                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                          } else {
-                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                          }
-                  });
-                  break;
                 default:
                   break;
               }
@@ -624,7 +634,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectFile = function (reason, parameter) {
-              ModalService.selectFile('lg', self.projectId, self.selectFileRegexes[reason],
+              ModalService.selectFile('lg',  self.projectId,  self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"], false).then(
                       function (success) {
                         self.onFileSelected(reason, success);
@@ -640,7 +650,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             this.selectDir = function (reason, parameter) {
-              ModalService.selectDir('lg', self.projectId, self.selectFileRegexes[reason],
+              ModalService.selectDir('lg',  self.projectId, self.selectFileRegexes[reason],
                       self.selectFileErrorMsgs["PYSPARK"]).then(
                       function (success) {
                         self.onFileSelected(reason, success);
@@ -710,7 +720,7 @@ angular.module('hopsWorksApp')
                 }
                 if (self.jobtype === 1 || self.jobtype === 2) {
                   self.sparkState = stored.sparkState;
-                } else if (self.jobtype === 3) {
+                } else if (self.jobtype === 3 || self.jobtype === 4) {
                   self.flinkState = stored.flinkState;
                 }
                 //GUI state

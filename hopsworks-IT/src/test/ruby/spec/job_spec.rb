@@ -17,6 +17,13 @@ describe "On #{ENV['OS']}" do
   job_spark_1 = "demo_job_1"
   job_spark_2 = "demo_job_2"
   job_spark_3 = "demo_job_3"
+  job_flink =  "job_flink"
+  job_flink_2 =  "job_flink_2"
+  job_flink_beam =  "job_flink_beam"
+  job_flink_beam_2 =  "job_flink_beam_2"
+  job_flink_properties_beam = "job_flink_properties_beam"
+  job_flink_properties = "job_flink_properties"
+
   describe 'job' do
     context 'without authentication' do
       before :all do
@@ -94,6 +101,23 @@ describe "On #{ENV['OS']}" do
         delete_job(@project[:id], job_spark_1)
         expect_status(404)
       end
+      it "should create one flink job" do
+        create_flink_job(@project, job_flink, nil, false)
+      end
+      it "should create one flink job with beam" do
+        create_flink_beam_job(@project, job_flink_beam, nil)
+      end
+      it "should create one flink job with properties" do
+        create_flink_job(@project, job_flink_properties, "key1=val1\nkey2=val2", false)
+      end
+      it "should create one flink job with beam and properties" do
+        create_flink_beam_job(@project, job_flink_properties_beam, "key1=val1\nkey2=val2")
+      end
+      it "should get a single flink job" do
+        create_flink_job(@project, job_flink, nil, false)
+        get_job(@project[:id], job_flink, nil)
+        expect_status(200)
+      end
       it "should fail to delete job as Data Scientist" do #this test must be the last in this `describe` unit
         create_sparktour_job(@project, job_spark_1, "jar", nil)
         member = create_user
@@ -102,6 +126,35 @@ describe "On #{ENV['OS']}" do
         delete_job(@project[:id], job_spark_1)
         expect_status(403)
       end
+    end
+    context 'with authentication test Flink and Beam jobs' do
+      before :all do
+        with_valid_tour_project("spark")
+        create_flink_job(@project, job_flink_beam, nil, true)
+      end
+      after :each do
+        clean_jobs(@project[:id])
+      end
+      it "start a flink session cluster, test proxy servlet" do
+        start_execution(@project[:id], job_flink_beam)
+        execution_id = json_body[:id]
+        app_id = ''
+        wait_for_execution do
+          get_execution(@project[:id], job_flink_beam, execution_id)
+          json_body[:state].eql? 'RUNNING'
+          app_id = json_body[:appId]
+        end
+        #Get flink master
+        get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
+        expect_status(200)
+        #Kill job
+        stop_execution(@project[:id], job_flink_beam)
+      end
+      # it "get flink history server" do
+      #   #Get flink master
+      #   get "#{ENV['HOPSWORKS_BASE_API']}/flinkhistoryserver/"
+      #   expect_status(200)
+      # end
     end
   end
   describe 'deleting running jobs' do
@@ -137,6 +190,29 @@ describe "On #{ENV['OS']}" do
         kafka_certs_dir = "/user/#{hdfs_super_user}/kafkacerts/#{hdfsUser}/#{appId}"
         expect(test_dir(kafka_certs_dir)).to be false
       end
+      it 'should delete flink job with non-finished execution and cleanup tmp files and get status of new job correctly' do
+        create_flink_job(@project, job_flink, nil, false)
+        start_execution(@project[:id], job_flink)
+        execution_id = json_body[:id]
+        hdfsUser = json_body[:hdfsUser]
+        appId = ''
+        wait_for_execution do
+          get_execution(@project[:id], job_flink, execution_id)
+          json_body[:state].eql? 'RUNNING'
+          appId = json_body[:appId]
+        end
+        #kill job
+        stop_execution(@project[:id], job_flink)
+        execution_id = json_body[:id]
+        wait_for_execution do
+          get_execution(@project[:id], job_flink, execution_id)
+          json_body[:state].eql? 'KILLED'
+        end
+        #check for cleanup files under /user/hdfs/kafkacerts
+        hdfs_super_user = Variables.find_by(id: "hdfs_user").value
+        kafka_certs_dir = "/user/#{hdfs_super_user}/kafkacerts/#{hdfsUser}/#{appId}"
+        expect(test_dir(kafka_certs_dir)).to be false
+      end
     end
   end
   describe 'job sort, filter, offset and limit' do
@@ -152,6 +228,10 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_5", "jar", nil)
         create_sparktour_job(@project, "demo_py_job_2", "py", nil)
         create_sparktour_job(@project, "demo_ipynb_job_2", "ipynb", nil)
+        create_flink_job(@project, job_flink, nil, false)
+        create_flink_job(@project, job_flink_2, nil, false)
+        create_flink_job(@project, job_flink_beam, nil, true)
+        create_flink_job(@project, job_flink_beam_2, nil, true)
       end
       after :all do
         clean_jobs(@project[:id])
@@ -337,10 +417,15 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           expect(json_body[:items].count).to eq 4
         end
-        it "should fail to find job with type flink" do
+        it "should find jobs with type flink" do
           get_jobs(@project[:id], "?filter_by=jobtype:flink")
           expect_status(200)
-          expect(json_body[:items]).to be nil
+          expect(json_body[:items].count).to be 2
+        end
+        it "should find jobs with type beam flink" do
+          get_jobs(@project[:id], "?filter_by=jobtype:beam_flink")
+          expect_status(200)
+          expect(json_body[:items].count).to be 2
         end
         it "should find jobs with name like 'demo'" do
           get_jobs(@project[:id], "?filter_by=name:demo")

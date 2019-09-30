@@ -15,6 +15,50 @@
 =end
 module JobHelper
 
+  def create_flink_job(project, job_name, properties, is_beam)
+    job_conf = get_flink_conf(job_name)
+    if properties.nil?
+      job_conf[:properties] = properties
+    end
+    if is_beam.eql? true
+      job_conf[:type] = "beamFlinkJobConfiguration"
+      job_conf[:jobType] = "BEAM_FLINK"
+    end
+
+    job_conf[:appName] = job_name
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    expect_status(201)
+  end
+
+  def create_flink_beam_job(project, job_name, properties)
+    job_conf = get_flink_conf(job_name)
+    if properties.nil?
+      job_conf[:properties] = properties
+    end
+
+    job_conf[:appName] = job_name
+    job_conf[:type] = "beamFlinkJobConfiguration"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    expect_status(201)
+  end
+
+  def get_flink_conf(job_name)
+    job_conf = {
+        "type":"flinkJobConfiguration",
+        "jobType": "FLINK",
+        "amQueue":"default",
+        "jobmanager.heap.size":1024,
+        "amVCores":1,
+        "jobManagerMemory":1024,
+        "numberOfTaskManagers":1,
+        "taskmanager.heap.size":1024,
+        "taskmanager.numberOfTaskSlots":1,
+        "appName":"#{job_name}",
+        "localResources":[]}
+
+  end
+
+
   def create_sparktour_job(project, job_name, type, job_conf)
 
     # need to enable python for conversion .ipynb to .py works

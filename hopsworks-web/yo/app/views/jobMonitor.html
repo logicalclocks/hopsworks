@@ -64,12 +64,28 @@
             <div class="row" style="margin-left: 10px; height: 100%; overflow-y: auto;">
 
               <div style="padding-bottom: 5px">
-                <span class="field-info" uib-tooltip="Show Job Spark Dashboard" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Flink Dashboard" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.jobUI();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md"
+                          ng-if="jobUICtrl.job.jobType === 'FLINK' || jobUICtrl.job.jobType === 'BEAM_FLINK'" > Dashboard
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Show Flink History Server" style="padding-top: 5px;padding-left:3px">
+                  <button style=""
+                          ng-click="jobUICtrl.flinkHistoryServer();
+                                    $event.stopPropagation();"
+                          class="btn btn-primary btn-md"
+                          ng-if="jobUICtrl.job.jobType === 'FLINK' || jobUICtrl.job.jobType === 'BEAM_FLINK'" > History Server
+                  </button>
+                </span>
+                <span class="field-info" uib-tooltip="Show Spark Dashboard" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.jobUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-bolt"
-                          ng-if="jobUICtrl.job.jobType !== 'FLINK'" > Spark
+                          ng-if="jobUICtrl.job.jobType !== 'FLINK' && jobUICtrl.job.jobType !== 'BEAM_FLINK'" > Spark
                   </button>
                 </span>
                 <span class="field-info" uib-tooltip="Show YARN App UI" style="padding-top: 5px;padding-left:3px">
@@ -79,14 +95,16 @@
                           class="btn btn-primary btn-md fa fa-yahoo ">ARN
                   </button>
                 </span>
-                <span class="field-info" uib-tooltip="Show Logs in Kibana" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Logs" style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.kibanaUI();
                                     $event.stopPropagation();"
                           class="btn btn-primary btn-md fa fa-files-o" > Logs
                   </button>
                 </span>
-                <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana" style="padding-top: 5px;padding-left:3px">
+                <span class="field-info" uib-tooltip="Show Job Monitoring in Grafana"
+                      ng-if="jobUICtrl.job.jobType !== 'FLINK' && jobUICtrl.job.jobType !== 'BEAM_FLINK'"
+                      style="padding-top: 5px;padding-left:3px">
                   <button style=""
                           ng-click="jobUICtrl.grafanaUI();
                                     $event.stopPropagation();"
@@ -118,7 +136,8 @@
                           class="btn btn-success btn-md glyphicon glyphicon-refresh">
                   </button>
                 </span>
-                <span ng-if="jobUICtrl.isLivy !== 'true'">
+                <span
+                        ng-if="jobUICtrl.isLivy !== 'true' && jobUICtrl.job.jobType !== 'FLINK' && jobUICtrl.job.jobType !== 'BEAM_FLINK'">
                   <ui-select name="appId" theme="select2"  ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
 
                     <ui-select-match placeholder="Select an appId">{{$select.selected.id}}</ui-select-match>
@@ -135,8 +154,13 @@
               <div ng-if="jobUICtrl.ui !== ''">
                 <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{jobUICtrl.ui}}" width="98%" height ="89%"></iframe>
               </div>
-              <div ng-if="jobUICtrl.ui === ''">This job has not run yet</div>
-
+              <div ng-if="jobUICtrl.ui === '' && jobUICtrl.job.jobType !== 'FLINK'
+                       && jobUICtrl.job.jobType !== 'BEAM_FLINK'">
+                This job has not run yet. Please select a previous execution(appId) from the drop down list on the right
+                .</div>
+              <div ng-if="jobUICtrl.ui === '' && (jobUICtrl.job.jobType === 'FLINK' || jobUICtrl.job.jobType === 'BEAM_FLINK')">
+                <iframe style="overflow-y: auto" id="ui_iframe_flink"  ng-src="/hopsworks-api/flinkhistoryserver/" width="98%"
+                        height ="89%"></iframe></div>
               <h3 class="text-muted" style="text-align: center;" ng-show="jobsCtrl.jobs.length < 1">
                 No Job selected.
               </h3>

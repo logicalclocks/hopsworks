@@ -46,8 +46,8 @@ import io.hops.hopsworks.common.dao.project.service.ProjectServices;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -64,7 +64,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -174,8 +173,6 @@ public class YarnExecutionFinalizer {
     String appDir = "hdfs://" + settings.getHdfsTmpCertDir() + "/" + exec.getHdfsUser() + File.separator + exec.
         getAppId();
     filesToRemove.add(appDir);
-    String certsAppDir = Paths.get(settings.getFlinkKafkaCertDir(), exec.getAppId()).toString();
-    filesToRemove.add(certsAppDir);
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
       for (String s : filesToRemove) {

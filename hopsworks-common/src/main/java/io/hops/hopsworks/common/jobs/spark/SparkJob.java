@@ -62,11 +62,11 @@ import java.util.logging.Logger;
 public class SparkJob extends YarnJob {
 
   private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
-  protected SparkYarnRunnerBuilder runnerbuilder;
+  private SparkYarnRunnerBuilder runnerbuilder;
 
-  public SparkJob(Jobs job, AsynchronousJobExecutor services,
-      Users user, final String hadoopDir,
-      String jobUser, YarnJobsMonitor jobsMonitor, Settings settings) {
+  SparkJob(Jobs job, AsynchronousJobExecutor services,
+    Users user, final String hadoopDir,
+    String jobUser, YarnJobsMonitor jobsMonitor, Settings settings) {
     super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(

@@ -69,6 +69,7 @@
     <!--suppress UnresolvedMavenProperty -->
     <glassfish.admin_port>${env.GLASSFISH_ADMIN_PORT}</glassfish.admin_port>
     <glassfish.domain>domain1</glassfish.domain>
+    <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <dependencies>
     <dependency>
@@ -317,7 +318,7 @@
         <dependency>
           <groupId>rubygems</groupId>
           <artifactId>activerecord</artifactId>
-          <version>4.2.6</version>
+          <version>4.2.7.1</version>
           <type>gem</type>
           <scope>test</scope>
         </dependency>

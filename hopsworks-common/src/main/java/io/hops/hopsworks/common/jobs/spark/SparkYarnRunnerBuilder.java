@@ -117,8 +117,7 @@ public class SparkYarnRunnerBuilder {
   public YarnRunner getYarnRunner(Project project,
       String jobUser, String usersFullName, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
-      Settings settings)
-    throws IOException {
+      Settings settings) throws IOException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -196,9 +195,10 @@ public class SparkYarnRunnerBuilder {
     }
 
     String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);
-  
-    Map<String, String> finalJobProps = new HashMap<>(sparkConfigurationUtil.setFrameworkProperties(project,
-      job.getJobConfig(), settings, jobUser, usersFullName, tfLibraryPath, extraJavaOptions));
+
+    Map<String, String> finalJobProps = new HashMap<>();
+    finalJobProps.putAll(sparkConfigurationUtil.getFrameworkProperties(project, job.getJobConfig(), settings,
+            jobUser, usersFullName, tfLibraryPath, extraJavaOptions));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);

@@ -54,7 +54,11 @@
   <packaging>war</packaging>
   <description>Hopsworks admin panel</description>
   <name>hopsworks-admin</name>
-    
+
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
+  
   <dependencies>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>

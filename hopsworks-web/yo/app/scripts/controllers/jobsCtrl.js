@@ -182,6 +182,9 @@ angular.module('hopsWorksApp')
                 case "FLINK":
                   jobType = 3;
                   break;
+                case 'BEAM_FLINK':
+                  jobType = 4;
+                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState;
               if (jobType === 1 || jobType === 2 ) {
@@ -191,16 +194,9 @@ angular.module('hopsWorksApp')
                 };
                 mainFileTxt = "App file";
                 mainFileVal = sparkState.selectedJar;
-                jobDetailsTxt = "Job details";
-              } else if (jobType === 3) {
-                flinkState = {
-                  "selectedJar": getFileName(self.currentjob.runConfig.appPath)
-                };
-                mainFileTxt = "JAR file";
-                mainFileVal = flinkState.selectedJar;
-                jobDetailsTxt = "Job details";
               }
-              var state = {
+                jobDetailsTxt = "Job details";
+                var state = {
                 "jobtype": jobType,
                 "jobname": self.currentjob.name,
                 "localResources": self.currentjob.runConfig.localResources,
@@ -294,6 +290,7 @@ angular.module('hopsWorksApp')
                             self.jobs[i].id = job.id;
                             self.jobs[i].creationTime = job.creationTime;
                             self.jobs[i].jobType = job.jobType;
+                            self.jobs[i].jobTypeName = job.config.jobTypeName;
                             self.jobs[i].creator = job.creator;
                             self.jobs[i].config = job.config;
 

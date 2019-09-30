@@ -80,7 +80,6 @@ RSpec.configure do |config|
   config.include CaHelper
   config.include HostsHelper
   config.include KafkaHelper
-  config.include AppserviceHelper
   config.include ServingHelper
   config.include HopsFSHelper
   config.include JobHelper

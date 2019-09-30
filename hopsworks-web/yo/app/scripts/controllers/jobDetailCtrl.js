@@ -99,7 +99,8 @@ angular.module('hopsWorksApp')
                     self.execFile = getFileName(job.runConfig.appPath);
               } else if (self.job.runConfig.jobType === "FLINK") {
                 self.jobtype = "Flink";
-                self.execFile = getFileName(job.runConfig.jarPath);
+              } else if (self.job.runConfig.jobType === 'BEAM_FLINK') {
+                  self.jobtype = 'Beam(Flink)';
               }
             };
             
@@ -113,7 +114,7 @@ angular.module('hopsWorksApp')
                 JobService.updateSchedule(self.projectId, self.jobtype.toUpperCase(), self.job.runConfig.schedule,job.name).then(
                         function (success) {
                           getConfiguration();
-                          self.close()
+                          self.close();
                           growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
                         }, function (error) {
                         if (typeof error.data.usrMsg !== 'undefined') {
