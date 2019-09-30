@@ -2479,6 +2479,10 @@ public class ProjectController {
     String projectName = project.getName().toLowerCase();
 
     elasticController.createIndexPattern(project, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
+    elasticController.createIndexPattern(project,
+      project.getName().toLowerCase() + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN);
+    elasticController.createIndexPattern(project,
+      project.getName().toLowerCase() + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN);
     // Create index and index-pattern for experiment service
     String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
     if (!elasticController.indexExists(indexName)) {
@@ -2553,19 +2557,22 @@ public class ProjectController {
       LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectNames);
       elasticController.deleteProjectSavedObjects(projectNames);
 
-      //2. Delete Kibana Index
+      //2. Delete logs Kibana Index
       JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
       LOGGER.log(Level.FINE, resp.toString(4));
       resp = elasticController.sendKibanaReq(params, "index-pattern",
           projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
       LOGGER.log(Level.FINE, resp.toString(4));
+      LOGGER.log(Level.FINE, "removeElasticsearch-2:{0}", projectName);
 
-      // 3. Cleanup Experiment related Kibana stuff
-      String experimentsIndex = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-      elasticController.sendKibanaReq(params, "index-pattern", experimentsIndex, false);
-      elasticController.sendKibanaReq(params, "search", experimentsIndex + "_summary-search", false);
-      elasticController.sendKibanaReq(params, "dashboard", experimentsIndex + "_summary-dashboard", false);
-      LOGGER.log(Level.FINE, "removeElasticsearch-2");
+      //3. Delete beam job service and sdk worker Kibana indices
+      String beamjobserviceIndex = projectName + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN;
+      String beamsdkharnessIndex = projectName + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN;
+      resp = elasticController.sendKibanaReq(params, "index-pattern", beamjobserviceIndex, false);
+      LOGGER.log(Level.FINE, "Deleting beamjobserviceIndex resp:" + resp.toString(4));
+      resp = elasticController.sendKibanaReq(params, "index-pattern", beamsdkharnessIndex, false);
+      LOGGER.log(Level.FINE, "Deleting beamsdkharnessIndex resp:" + resp.toString(4));
+      LOGGER.log(Level.FINE, "removeElasticsearch-3:{0}", projectName);
     }
 
     if (projectServices.contains(ProjectServiceEnum.SERVING)) {

@@ -31,6 +31,10 @@
     <description>Hopsworks REST Utils</description>
     <name>hopsworks-rest-utils</name>
 
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>javax</groupId>

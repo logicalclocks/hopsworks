@@ -39,14 +39,18 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.common.jobs.beam.BeamFlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
-import io.hops.hopsworks.common.util.Settings;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * Contains Flink-specific run information for a Flink job, on top of Yarn
@@ -54,84 +58,36 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@XmlSeeAlso({BeamFlinkJobConfiguration.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = BeamFlinkJobConfiguration.class, name = "BeamFlinkJobConfiguration")}
+)
 public class FlinkJobConfiguration extends YarnJobConfiguration {
-
-  @XmlElement
-  private String jarPath;
-  @XmlElement
-  private String mainClass;
-  @XmlElement
-  private String args;
-  @XmlElement
-  private String flinkConfDir;
-  @XmlElement
-  private String flinkConfFile;
-
+  
+  @XmlElement(name="jobmanager.heap.size")
+  private int jobManagerMemory = 1024;
   @XmlElement
   private int numberOfTaskManagers = 1;
+  @XmlElement(name="taskmanager.numberOfTaskSlots")
+  private int numberOfTaskSlots = 1;
+  @XmlElement(name="taskmanager.heap.size")
+  private int taskManagerMemory = 1024;
   @XmlElement
-  private int slots = 1;
-  @XmlElement
-  private int taskManagerMemory = 768;
-  @XmlElement
-  private int parallelism = 1;
-  @XmlElement
-  private String flinkjobtype;
+  private String properties;
 
   public FlinkJobConfiguration() {
-    super();
-    super.setAmMemory(Settings.FLINK_APP_MASTER_MEMORY);
   }
-
-  /**
-   * Get the path to the main executable jar.
-   *
-   * @return
-   */
-  public String getJarPath() {
-    return jarPath;
+  
+  public int getJobManagerMemory() {
+    return jobManagerMemory;
   }
-
-  /**
-   * Set the path to the main executable jar. No default value.
-   * <p/>
-   * @param jarPath
-   */
-  public void setJarPath(String jarPath) {
-    this.jarPath = jarPath;
+  
+  public void setJobManagerMemory(int jobManagerMemory) {
+    this.jobManagerMemory = jobManagerMemory;
   }
-
-  /**
-   * Get the name of the main class to be executed.
-   *
-   * @return
-   */
-  public String getMainClass() {
-    return mainClass;
-  }
-
-  /**
-   * Set the name of the main class to be executed. No default value.
-   * <p/>
-   * @param mainClass
-   */
-  public void setMainClass(String mainClass) {
-    this.mainClass = mainClass;
-  }
-
-  public String getArgs() {
-    return args;
-  }
-
-  /**
-   * Set the arguments to be passed to the job. No default value.
-   * <p/>
-   * @param args
-   */
-  public void setArgs(String args) {
-    this.args = args;
-  }
-
+  
   public int getNumberOfTaskManagers() {
     return numberOfTaskManagers;
   }
@@ -152,24 +108,24 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     this.numberOfTaskManagers = numberOfTaskManagers;
   }
 
-  public int getSlots() {
-    return slots;
+  public int getNumberOfTaskSlots() {
+    return numberOfTaskSlots;
   }
 
   /**
    * Set the number of slots to be requested for each task manager.
    * <p/>
-   * @param slots
+   * @param numberOfTaskSlots
    * @throws IllegalArgumentException If the number of slots is smaller than
    * 1.
    */
-  public void setSlots(int slots) throws
+  public void setNumberOfTaskSlots(int numberOfTaskSlots) throws
           IllegalArgumentException {
-    if (slots < 1) {
+    if (numberOfTaskSlots < 1) {
       throw new IllegalArgumentException(
               "Number of task manager slots has to be greater than or equal to 1.");
     }
-    this.slots = slots;
+    this.numberOfTaskSlots = numberOfTaskSlots;
   }
 
   public int getTaskManagerMemory() {
@@ -187,66 +143,28 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
           IllegalArgumentException {
     if (taskManagerMemory < 1) {
       throw new IllegalArgumentException(
-              "TaskManager memory must be greater than 1MB.");
+              "TaskManager memory must be greater than 512MB.");
     }
     this.taskManagerMemory = taskManagerMemory;
-  }
-
-  public String getFlinkjobtype() {
-    return flinkjobtype;
-  }
-
-  public void setFlinkjobtype(String flinkjobtype) {
-    this.flinkjobtype = flinkjobtype;
-  }
-
-  public int getParallelism() {
-    return parallelism;
-  }
-
-  public void setParallelism(int parallelism) {
-    this.parallelism = parallelism;
-  }
-
-  /**
-   * Get Flink Configuration Directory
-   *
-   * @return
-   */
-  public String getFlinkConfDir() {
-    return flinkConfDir;
-  }
-
-  /**
-   * Set Flink Configuration Directory
-   *
-   * @param flinkConfDir
-   */
-  public void setFlinkConfDir(String flinkConfDir) {
-    this.flinkConfDir = flinkConfDir;
-  }
-
-  /**
-   * Get Flink Configuration file path
-   *
-   * @return
-   */
-  public String getFlinkConfFile() {
-    return flinkConfFile;
-  }
-
-  /**
-   * Set Flink Configuration file path
-   *
-   * @param flinkConfFile
-   */
-  public void setFlinkConfFile(String flinkConfFile) {
-    this.flinkConfFile = flinkConfFile;
   }
 
   @Override
   @XmlElement(name="jobType")
   public JobType getJobType() {
     return JobType.FLINK;
+  }
+  
+  @Override
+  @XmlElement(name="jobTypeName")
+  public String getJobTypeName() {
+    return JobType.FLINK.getName();
+  }
+  
+  public String getProperties() {
+    return properties;
+  }
+  
+  public void setProperties(String properties) {
+    this.properties = properties;
   }
 }

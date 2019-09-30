@@ -53,7 +53,6 @@ import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
-import io.hops.hopsworks.common.jobs.flink.FlinkController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -68,6 +67,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
+
 public class JobController {
   
   @EJB
@@ -82,8 +83,6 @@ public class JobController {
   private DistributedFsService dfs;
   @EJB
   private SparkController sparkController;
-  @EJB
-  private FlinkController flinkController;
   @EJB
   private ExecutionController executionController;
 
@@ -182,8 +181,6 @@ public class JobController {
         case SPARK:
         case PYSPARK:
           return sparkController.inspectProgram(path, udfso);
-        case FLINK:
-          return flinkController.inspectProgram(path, udfso);
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }

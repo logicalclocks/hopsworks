@@ -39,11 +39,9 @@
 
 package io.hops.hopsworks.common.util;
 
-import com.google.common.io.Files;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
@@ -54,6 +52,7 @@ import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
 import io.hops.hopsworks.common.util.templates.IgnoreConfigReplacementPolicy;
 import io.hops.hopsworks.common.util.templates.OverwriteConfigReplacementPolicy;
+import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.net.util.Base64;
@@ -99,7 +98,7 @@ public class HopsUtils {
   private static final FsPermission materialPermissions = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
   // e.x. spark.files=hdfs://someFile,hdfs://anotherFile
-  private static final Pattern SPARK_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
+  private static final Pattern JOB_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
   public static final ConfigReplacementPolicy OVERWRITE = new OverwriteConfigReplacementPolicy();
   public static final ConfigReplacementPolicy IGNORE = new IgnoreConfigReplacementPolicy();
   public static final ConfigReplacementPolicy APPEND_SPACE = new AppendConfigReplacementPolicy(
@@ -299,42 +298,6 @@ public class HopsUtils {
         try {
           if (jobType != null) {
             switch (jobType) {
-              case FLINK:
-                File appDir = Paths.get(flinkCertsDir, applicationId).toFile();
-                if (!appDir.exists()) {
-                  appDir.mkdir();
-                }
-              
-                File f_k_cert = new File(appDir.toString() + File.separator +
-                    kCertName);
-                f_k_cert.setExecutable(false);
-                f_k_cert.setReadable(true, true);
-                f_k_cert.setWritable(false);
-                
-                File t_k_cert = new File(appDir.toString() + File.separator +
-                    tCertName);
-                t_k_cert.setExecutable(false);
-                t_k_cert.setReadable(true, true);
-                t_k_cert.setWritable(false);
-
-                if (!f_k_cert.exists()) {
-                  Files.write(certFiles.get(Settings.K_CERTIFICATE), f_k_cert);
-                  Files.write(certFiles.get(Settings.T_CERTIFICATE), t_k_cert);
-                }
-  
-  
-                File certPass = new File(appDir.toString() + File.separator +
-                    passName);
-                certPass.setExecutable(false);
-                certPass.setReadable(true, true);
-                certPass.setWritable(false);
-                FileUtils.writeStringToFile(certPass, userCert
-                    .getUserKeyPwd(), false);
-                jobSystemProperties.put(Settings.CRYPTO_MATERIAL_PASSWORD,
-                    certPass.toString());
-                jobSystemProperties.put(Settings.K_CERTIFICATE, f_k_cert.toString());
-                jobSystemProperties.put(Settings.T_CERTIFICATE, t_k_cert.toString());
-                break;
               case PYSPARK:
               case SPARK:
                 Map<String, File> certs = new HashMap<>();
@@ -601,33 +564,33 @@ public class HopsUtils {
    * @param sparkProps Spark properties in one string
    * @return Map of property name and value
    */
-  public static Map<String, String> parseSparkProperties(String sparkProps) {
-    Map<String, String> sparkProperties = new HashMap<>();
+  public static Map<String, String> parseUserProperties(String sparkProps) {
+    Map<String, String> properties = new HashMap<>();
     if (sparkProps != null) {
       Arrays.asList(NEW_LINE_PATTERN.split(sparkProps)).stream()
         .map(l -> l.trim())
         .forEach(l -> {
           // User defined properties should be in the form of property_name=value
-          Matcher propMatcher = SPARK_PROPS_PATTERN.matcher(l);
+          Matcher propMatcher = JOB_PROPS_PATTERN.matcher(l);
           if (propMatcher.matches()) {
-            sparkProperties.put(propMatcher.group(1), propMatcher.group(2));
+            properties.put(propMatcher.group(1), propMatcher.group(2));
           }
         });
     }
     if (LOG.isLoggable(Level.FINE)) {
       StringBuilder sb = new StringBuilder();
-      sb.append("User defined spark properties are: ");
-      if (sparkProperties.isEmpty()) {
+      sb.append("User defined job properties are: ");
+      if (properties.isEmpty()) {
         sb.append("NONE");
         LOG.log(Level.FINE, sb.toString());
       } else {
-        for (Map.Entry<String, String> prop : sparkProperties.entrySet()) {
+        for (Map.Entry<String, String> prop : properties.entrySet()) {
           sb.append(prop.getKey()).append("=").append(prop.getValue()).append("\n");
         }
         LOG.log(Level.FINE, sb.toString());
       }
     }
-    return sparkProperties;
+    return properties;
   }
   
   /**
@@ -636,7 +599,7 @@ public class HopsUtils {
    * @param sparkDir spark installation directory
    */
   public static Map<String, String> validateUserProperties(String sparkProps, String sparkDir) throws IOException {
-    Map<String, String> userProperties = parseSparkProperties(sparkProps);
+    Map<String, String> userProperties = parseUserProperties(sparkProps);
     Set<String> blackListedProps = readBlacklistedSparkProperties(sparkDir);
     for (String userProperty : userProperties.keySet()) {
       if (blackListedProps.contains(userProperty)) {
@@ -671,7 +634,7 @@ public class HopsUtils {
   /**
    * Merge system and user defined configuration properties based on the replacement policy of each property
    * @param hopsworksParams System/default properties
-   * @param userParameters User defined properties parsed by parseSparkProperties(String sparkProps)
+   * @param userParameters User defined properties parsed by parseUserProperties(String sparkProps)
    * @return A map with the replacement pattern and value for each property
    */
   public static Map<String, String> mergeHopsworksAndUserParams(Map<String, ConfigProperty> hopsworksParams,

@@ -302,31 +302,6 @@ public class HDFSUIProxyServlet extends ProxyServlet {
 
   }
 
-//  @Override
-//  protected String rewriteUrlFromResponse(HttpServletRequest servletRequest,
-//      String theUrl) {
-//    //TODO document example paths
-//    final String targetUri = getTargetUri(servletRequest);
-//    String curUrl = servletRequest.getRequestURL().toString();//no query
-//
-//    String pathInfo = servletRequest.getPathInfo();
-//    if (pathInfo != null) {
-//      assert curUrl.endsWith(pathInfo);
-//      curUrl = curUrl.substring(0, curUrl.length() - pathInfo.length());//take pathInfo off
-//    }
-//    if (theUrl.startsWith(targetUri)) {
-//      if (curUrl.endsWith("/") || theUrl.substring(targetUri.length()).startsWith("/")) {
-//        theUrl = curUrl + theUrl.substring(targetUri.length());
-//      } else {
-//        theUrl = curUrl + "/" + theUrl.substring(targetUri.length());
-//      }
-//    } else if (curUrl.endsWith("/") || theUrl.substring(targetUri.length()).startsWith("/")) {
-//      theUrl = curUrl + theUrl;
-//    } else {
-//      theUrl = curUrl + "/" + theUrl;
-//    }
-//    return theUrl;
-//  }
   protected String rewriteUrlFromRequest(HttpServletRequest servletRequest) {
     StringBuilder uri = new StringBuilder(500);
     if (servletRequest.getPathInfo() != null && servletRequest.getPathInfo().matches(

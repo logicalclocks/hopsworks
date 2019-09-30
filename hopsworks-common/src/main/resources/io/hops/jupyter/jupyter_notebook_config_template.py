@@ -52,3 +52,4 @@ os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
 os.environ['HADOOP_HOME'] = "%%hadoop_home%%"
 
 c.GitHandlersConfiguration.api_key = "%%api_key%%"
+os.environ['FLINK_CONF_DIR'] = "%%flink_conf_dir%%"

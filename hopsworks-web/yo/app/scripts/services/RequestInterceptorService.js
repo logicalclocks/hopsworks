@@ -45,7 +45,10 @@ angular.module('hopsWorksApp')
             return {
               request: function (config) {
 
-                var RESOURCE_SERVER = getApiLocationBase(); 
+                var RESOURCE_SERVER = getApiLocationBase();
+                if(config.url.indexOf('flink') !== -1){
+                  console.log(config.url);
+                }
                 //remove Authorization header for kerberos
                 if(config.url.indexOf('/api/remote/user') !== -1){
                   delete config.headers['Authorization'];
@@ -53,11 +56,15 @@ angular.module('hopsWorksApp')
                 }
                 var RESOURCE_NAME = '/api/';
                 var KIBANA_NAME = "/kibana";
+		var FLINK_HISTORYSERVER_NAME = 'flinkhistoryserver';
+                var FLINK_MASTER_NAME = 'flinkmaster';
 
                 var isApi = config.url.startsWith(RESOURCE_NAME) ||
-                            config.url.startsWith(KIBANA_NAME);
+                            config.url.startsWith(KIBANA_NAME) ||
+			    config.url.startsWith(FLINK_HISTORYSERVER_NAME)
+			    config.url.startsWith(FLINK_MASTER_NAME);
                 var isFullUrl = config.url.startsWith('http');
-                
+
                 if (!isFullUrl && isApi) {
                   config.url = RESOURCE_SERVER + config.url;
                   return config || $q.when(config);

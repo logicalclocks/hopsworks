@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.api.kibana;
 
-import com.google.api.client.repackaged.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -100,16 +100,18 @@ public class KibanaProxyServlet extends ProxyServlet {
       add("_experiments_summary-search");
       add("_experiments_summary-dashboard");
       add("_kagent");
+      add("_" + Settings.ELASTIC_BEAMJOBSERVER);
+      add("_" + Settings.ELASTIC_BEAMSDKWORKER);
     }
   };
 
   /**
    * Authorize user to access particular index.
    *
-   * @param servletRequest
-   * @param servletResponse
-   * @throws ServletException
-   * @throws IOException
+   * @param servletRequest servletRequest
+   * @param servletResponse servletResponse
+   * @throws ServletException ServletException
+   * @throws IOException IOException
    */
   @Override
   protected void service(HttpServletRequest servletRequest,
@@ -197,7 +199,6 @@ public class KibanaProxyServlet extends ProxyServlet {
       if (doResponseRedirectOrNotModifiedLogic(myRequestWrapper, servletResponse,
               proxyResponse, statusCode)) {
         //the response is already "committed" now without any body to send
-        //TODO copy response headers?
         return;
       }
 
@@ -276,7 +277,7 @@ public class KibanaProxyServlet extends ProxyServlet {
             JSONArray hits = null;
 
             String projectName = currentProjects.get(email);
-            List<String> projects = new ArrayList();
+            List<String> projects = new ArrayList<>();
             //If we don't have the current project, filter out based on all user's projects
             if (Strings.isNullOrEmpty(projectName)) {
               List<String> projectNames = projectController.findProjectNamesByUser(email, true);

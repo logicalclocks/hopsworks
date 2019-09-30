@@ -54,6 +54,10 @@
   <packaging>war</packaging>
   <description>Hopsworks rest api</description>
   <name>hopsworks-api</name>
+
+  <properties>
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
     
   <dependencies>
     

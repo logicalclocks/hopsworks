@@ -258,7 +258,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
     }
     return curr;
   }
-
+  
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private Inode getRootNode(String name) {
     long partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
@@ -300,6 +300,7 @@ public class InodeFacade extends AbstractFacade<Inode> {
   public Inode getInodeAtPath(String path) {
     return getInode(path);
   }
+  
 
   /**
    * Get the Inode representing the project root directory of the project with

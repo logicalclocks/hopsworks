@@ -267,6 +267,18 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       return JobType.SPARK;
     }
   }
+  
+  @Override
+  @XmlElement(name="jobTypeName")
+  public String getJobTypeName() {
+    if (this.mainClass == null) {
+      return null;
+    } else if(this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
+      return JobType.PYSPARK.getName();
+    } else {
+      return JobType.SPARK.getName();
+    }
+  }
 
   public String getPyFiles() {
     return pyFiles;

@@ -834,8 +834,8 @@ public class Settings implements Serializable {
   public static final String SPARK_TENSORFLOW_NUM_PS = "spark.tensorflow.num.ps";
 
   //Spark log4j and metrics properties
-  public static final String SPARK_LOG4J_CONFIG = "log4j.configuration";
-  public static final String SPARK_LOG4J_PROPERTIES = "log4j.properties";
+  public static final String JOB_LOG4J_CONFIG = "log4j.configuration";
+  public static final String JOB_LOG4J_PROPERTIES = "log4j.properties";
   //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
   public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
   public static final String SPARK_METRICS_PROPERTIES = "metrics.properties";
@@ -893,7 +893,7 @@ public class Settings implements Serializable {
 
   public String getFlinkConfDir() {
     String flinkDir = getFlinkDir();
-    return flinkDir + File.separator + FLINK_CONF_DIR;
+    return flinkDir + File.separator + FLINK_CONF_DIR + File.separator;
   }
 
   private final String FLINK_CONF_FILE = "flink-conf.yaml";
@@ -1208,12 +1208,18 @@ public class Settings implements Serializable {
   //Flink constants
   public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
-  public static final String FLINK_AM_MAIN
-      = "org.apache.flink.yarn.ApplicationMaster";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
   public static final String HOPS_DEEP_LEARNING_TOUR_DATA = "tensorflow_demo/data";
   public static final String HOPS_DEEP_LEARNING_TOUR_NOTEBOOKS = "tensorflow_demo/notebooks";
+  public static final String FLINK_AM_MAIN = "org.apache.flink.yarn.ApplicationMaster";
+  public static final String FLINK_ENV_JAVA_OPTS = "env.java.opts";
+  public static final String FLINK_ENV_JAVA_OPTS_JOBMANAGER = "env.java.opts.jobmanager";
+  public static final String FLINK_ENV_JAVA_OPTS_TASKMANAGER = "env.java.opts.taskmanager";
+  public static final String FLINK_STATE_CHECKPOINTS_DIR = "state.checkpoints.dir";
+  public static final String FLINK_WEB_UPLOAD_DIR = "web.upload.dir";
+  
+  
 
   //Featurestore constants
   public static final String HOPS_FEATURESTORE_TOUR_DATA = "featurestore_demo";
@@ -1233,16 +1239,12 @@ public class Settings implements Serializable {
     return getFlinkDir() + "/flink.jar";
   }
 
-  public synchronized String getHdfsFlinkJarPath() {
+  public synchronized String getFlinkJarPath() {
     return hdfsFlinkJarPath(getFlinkUser());
   }
 
   private String hdfsFlinkJarPath(String flinkUser) {
     return "hdfs:///user/" + flinkUser + "/flink.jar";
-  }
-
-  public String getHdfsFlinkJarPath(String flinkUser) {
-    return hdfsFlinkJarPath(flinkUser);
   }
 
   public synchronized String getFlinkDefaultClasspath() {
@@ -1852,11 +1854,18 @@ public class Settings implements Serializable {
 
   //Elastic log index pattern
   public static final String ELASTIC_LOGS_INDEX = "logs";
+  public static final String ELASTIC_BEAMJOBSERVER = "beamjobserver";
+  public static final String ELASTIC_BEAMSDKWORKER = "beamsdkworker";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
   public static final String ELASTIC_KAGENT_INDEX = "kagent";
   public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
   public static final String ELASTIC_KAGENT_INDEX_PATTERN = "_" + ELASTIC_KAGENT_INDEX + "-*";
+  public static final String ELASTIC_BEAMJOBSERVER_INDEX_PATTERN =
+    "_" + Settings.ELASTIC_BEAMJOBSERVER + "-*";
+  public static final String ELASTIC_BEAMSDKWORKER_INDEX_PATTERN =
+    "_" + Settings.ELASTIC_BEAMSDKWORKER + "-*";
+  
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
   public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
   public static final String ELASTIC_VISUALIZATION = "visualization";
@@ -1866,6 +1875,10 @@ public class Settings implements Serializable {
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_KAGENT_INDEX_REGEX = ".*_" + ELASTIC_KAGENT_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_BEAMJOBSERVER_INDEX_REGEX =
+    ".*_" + ELASTIC_BEAMJOBSERVER + "-\\d{4}.\\d{2}.\\d{2}";
+  public static final String ELASTIC_BEAMSDKWORKER_INDEX_REGEX =
+    ".*_" + ELASTIC_BEAMSDKWORKER + "-\\d{4}.\\d{2}.\\d{2}";
 
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -1877,10 +1890,6 @@ public class Settings implements Serializable {
 
   public String getHopsworksTrueTempCertDir() {
     return "/tmp/usercerts/";
-  }
-
-  public String getFlinkKafkaCertDir() {
-    return getHopsworksDomainDir() + File.separator + "config";
   }
 
   public String getGlassfishTrustStoreHdfs() {
