@@ -371,9 +371,13 @@ public class JupyterService {
       if (jp == null) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SAVE_SETTINGS_ERROR, Level.SEVERE);
       }
-      if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getStartupAutoPull()) {
+      if (jupyterSettings.isGitBackend()) {
         try {
-          jupyterNbVCSController.cloneOrPullRemoteRepository(jp);
+          // Init is idempotent, calling it on an already initialized repo won't affect it
+          jupyterNbVCSController.init(jp, jupyterSettings);
+          if (jupyterSettings.getGitConfig().getStartupAutoPull()) {
+            jupyterNbVCSController.pull(jp, jupyterSettings);
+          }
         } catch (ServiceException ex) {
           jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(),
               dto.getPort());
@@ -419,87 +423,6 @@ public class JupyterService {
     return Response.ok(config).build();
   }
   
-  @POST
-  @Path("/git/init")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response cloneOrPullJupyterPath(@Context SecurityContext sc) throws ProjectException, ServiceException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
-    if (jupyterProject == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
-    }
-    if (!jupyterManager.ping(jupyterProject)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
-          "Jupyter server is not running",
-          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
-    }
-    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
-    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
-    if (jupyterSettings.isGitBackend()) {
-      status = jupyterNbVCSController.cloneOrPullRemoteRepository(jupyterProject);
-    }
-    return Response.ok(status).build();
-  }
-  
-  @POST
-  @Path("/git/commit")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response commitJupyterNotebooks(@QueryParam("message") String message,
-      @Context SecurityContext sc) throws ProjectException, ServiceException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
-    if (jupyterProject == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
-    }
-    if (!jupyterManager.ping(jupyterProject)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
-          "Jupyter server is not running",
-          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
-    }
-    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
-    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
-    if (jupyterSettings.isGitBackend()) {
-      status = jupyterNbVCSController.commit(jupyterProject, user, message);
-    }
-    
-    return Response.ok(status).build();
-  }
-  
-  @POST
-  @Path("/git/push")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response pushJupyterNotebooksToRemote(@Context SecurityContext sc)
-    throws ProjectException, ServiceException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
-    JupyterProject jupyterProject = jupyterFacade.findByUser(projectUser);
-    if (jupyterProject == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.JUPYTER_SERVER_NOT_FOUND, Level.FINE,
-          "Could not found Jupyter server", "Could not found Jupyter server for Hopsworks user: " + projectUser);
-    }
-    if (!jupyterManager.ping(jupyterProject)) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_SERVERS_NOT_RUNNING, Level.FINE,
-          "Jupyter server is not running",
-          "Jupyter server for Hopsworks user: " + projectUser + " is not running");
-    }
-    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
-    RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
-    if (jupyterSettings.isGitBackend()) {
-      status = jupyterNbVCSController.push(jupyterProject);
-    }
-    return Response.ok(status).build();
-  }
-  
   @GET
   @Path("/git/status")
   @Produces(MediaType.APPLICATION_JSON)
@@ -522,7 +445,7 @@ public class JupyterService {
     JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
     RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
     if (jupyterSettings.isGitBackend()) {
-      status = jupyterNbVCSController.status(jupyterProject);
+      status = jupyterNbVCSController.status(jupyterProject, jupyterSettings);
     }
     return Response.ok(status).build();
   }

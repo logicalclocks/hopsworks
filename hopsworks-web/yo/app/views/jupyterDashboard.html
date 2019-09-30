@@ -109,113 +109,9 @@
           </div>
           <div ng-if="jupyterCtrl.ui === '' || sparkConfigCtrl.uneditableMode===true">
             <div ng-include="'views/sparkConfig.html'"></div>
-          </div>
+          </div>  
           <div class="row top-buffer" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false" class="animate-if">
-            <div class="col-md-8 panel panel-default jupyter-left" id="midScreen">
-              <div class="panel-heading" >
-                <div>
-                  <span style="font-weight: bold;">Jupyter Notebook Server Details</span>
-                </div>
-              </div>
-              <div class="panel-body">
-                <div>
-                  <div>Port <i class="fa fa-info-circle" uib-tooltip="Port number where this Jupyter Notebook Server is listening" style="margin-left: 20px"></i>
-                    <span style="margin-left: 10px;">  {{jupyterCtrl.config.port}}</span>
-                  </div>
-                </div>
-                <div>
-                  <div>Token <i class="fa fa-info-circle" uib-tooltip="Secret token used to authenticate with this Jupyter Notebook Server." style="margin-left: 10px"></i>
-                    <span style="margin-left: 10px;">{{jupyterCtrl.config.token}}</span>
-                  </div>
-                </div>
-                <div>
-                  <div>$PDIR <i class="fa fa-info-circle" uib-tooltip="Private local directory on this server for Python Notebooks." style="margin-left: 10px"></i>
-                    <span style="margin-left: 10px;">{{jupyterCtrl.jupyterSettings.privateDir}}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <br>
-                  <div>
-                    <span style="margin-left: 10px;">Find the Id of your application from your SparkSession object (i.e spark.sparkContext.applicationId) </span>
-                  </div>
-                </div>
-                <br/>
-                <div class="row" style="margin-left: 0px">
-                  <i class="fa fa-clock-o" aria-hidden="true"></i>
-                  Automatic Notebook Shutdown in <span style="font-weight: bold;" id="minuteSpan">{{jupyterCtrl.timeLeftInMinutes}}. </span>
-                  <hr>
-                </div>
-                <div class="row">
-                  <div class="col-md-4">
-                    Select hours to add to notebook
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-2">
-                    <div>
-                      <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
-                                 on-select="jupyterCtrl.updateShutdownLevel()" style="z-index: 1;" id="addHours">
-                        <ui-select-match >
-                          <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
-                        </ui-select-match>
-                        <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
-                          <span ng-bind="level.name | highlight: $select.search"></span>
-                        </ui-select-choices>
-                      </ui-select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Jupyter Git section-->
-            <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable && jupyterCtrl.jupyterSettings.gitBackend"
-              class="col-md-4 panel panel-default jupyter-left" id="git">
-              <div class="panel-heading">
-                <div>
-                  <span style="font-weight: bold;" id="header">Git repository</span>
-                  <i ng-if="jupyterCtrl.gitWorking"style="margin-top: 2px"
-                      class="fa fa-spinner fa-spin"></i>
-                </div>
-              </div>
-              <div class="panel-body">
-                <div>Status:
-                  <span style="margin-left: 58px;">{{jupyterCtrl.gitRepoStatus.status}}</span>
-                  <i ng-if="jupyterCtrl.gitRepoStatus.status.toUpperCase() !== 'CLEAN'"
-                    class="fa fa-exclamation-triangle"></i>
-                </div>
-                <div>Active branch:
-                  <span style="margin-left: 16px;">{{jupyterCtrl.gitRepoStatus.activeBranch}}</span>
-                </div>
-                <div>Untracked files:
-                  <span style="margin-left: 10px;">{{jupyterCtrl.gitRepoStatus.untrackedFiles}}</span>
-                </div>
-                <div>Last commit:
-                  <span style="margin-left: 25px;">{{jupyterCtrl.gitRepoStatus.lastCommit}}</span>
-                <hr>
-                </div>
-                <div class="row">
-                  <div class="col-md-3" style="padding-right: 0;">
-                    <button ng-click="jupyterCtrl.gitCloneOrPull()" class="btn btn-default" type="button">Pull</button>  
-                    <button ng-click="jupyterCtrl.gitPush()" class="btn btn-default" type="button">Push</button>  
-                    <button ng-click="jupyterCtrl.gitStatus()" class="btn btn-default" type="button">Status</button>
-                  </div>
-                  
-                  <div class="col-md-8">
-                    <div class="input-group">
-                      <span class="input-group-btn">
-                        <button ng-click="jupyterCtrl.gitCommit()" class="btn btn-warning" type="button">Commit</button>
-                      </span>
-                      <input ng-model="jupyterCtrl.gitCommitMessage" type="text" class="form-control" placeholder="Commit message">
-                    </div><!-- /input-group -->
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- End of Jupyter Git section -->
-
-            <div class="col-md-4 panel panel-default jupyter-left" id="applications">
+            <div class="col-md-4 panel panel-default jupyter-left" style="min-height: 212px;" id="applications">
               <div class="panel-heading" >
                 <div>
                   <span style="font-weight: bold;" id="monitor">Monitor and Manage Spark Sessions</span>
@@ -254,6 +150,61 @@
                 </div>
               </div>
             </div>
+
+            <!-- Jupyter Git section-->
+            <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable && jupyterCtrl.jupyterSettings.gitBackend"
+              class="col-md-4 panel panel-default jupyter-left" id="git">
+              <div class="panel-heading">
+                <div>
+                  <span style="font-weight: bold;" id="header">Git repository</span>
+                  <i ng-if="jupyterCtrl.gitWorking"style="margin-top: 2px"
+                      class="fa fa-spinner fa-spin"></i>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-md-2" style="text-align: right;">
+                    Repository:
+                  </div>
+                  <div class="col-md-5">
+                    <span><a target="_blank" href="{{jupyterCtrl.gitRepoStatus.repository}}">{{jupyterCtrl.gitRepoStatus.repository}}</a></span>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-2" style="text-align: right;">
+                      Active branch:
+                  </div>
+                  <div class="col-md-5">
+                    <span>{{jupyterCtrl.gitRepoStatus.branch}}</span>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-2" style="text-align: right;">
+                    Status:
+                  </div>
+                  <div class="col-md-5">
+                    <span>{{jupyterCtrl.gitRepoStatus.status}}</span>
+                    <i ng-if="jupyterCtrl.gitRepoStatus.status.toUpperCase() !== 'CLEAN'"
+                      class="fa fa-exclamation-triangle" uib-tooltip="You have uncommitted changes!"></i>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-2" style="text-align: right;">
+                    Modified files:
+                  </div>
+                  <div class="col-md-5">
+                    <span>{{jupyterCtrl.gitRepoStatus.modifiedFiles}}</span>
+                  </div>
+                  <hr/>
+                </div>
+                <div class="row">
+                  <div class="col-md-3" style="padding-right: 0;">
+                    <button ng-click="jupyterCtrl.gitStatus()" class="btn btn-default" type="button">Refresh</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- End of Jupyter Git section -->
           </div>
           <!--, top-buffer: jupyterCtrl.ui !== ''-->
           <div class="ds-sidenav" ng-class="{open: jupyterCtrl.tgState}" ng-if="jupyterCtrl.ui !== ''">
@@ -287,6 +238,28 @@
                                 </button>
                               </td>
                               <td style="text-align: right">Shutdown Notebook Server</td>
+                            </tr>
+                            <tr>
+                              <td style="border: none;" colspan="2">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                Automatic Notebook Shutdown in <span style="font-weight: bold;" id="minuteSpan">{{jupyterCtrl.timeLeftInMinutes}}. </span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="border: none; height: 400" colspan="2">
+                                  Select hours to add to notebook
+                                  
+                                      <ui-select ng-model="jupyterCtrl.shutdownLevelSelected" theme="bootstrap"
+                                                 on-select="jupyterCtrl.updateShutdownLevel()" style="z-index: 1; width: 200px;" id="addHours">
+                                        <ui-select-match >
+                                          <span ng-bind="jupyterCtrl.shutdownLevelSelected.name"></span>
+                                        </ui-select-match>
+                                        <ui-select-choices repeat="level in (jupyterCtrl.shutdown_levels | filter: $select.search) track by level.name">
+                                          <span ng-bind="level.name | highlight: $select.search"></span>
+                                        </ui-select-choices>
+                                      </ui-select>
+                                    
+                              </td>
                             </tr>
                             </tbody>
                           </table>
