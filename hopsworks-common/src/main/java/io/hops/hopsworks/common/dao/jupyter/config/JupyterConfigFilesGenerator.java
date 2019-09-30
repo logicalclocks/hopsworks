@@ -219,7 +219,7 @@ public class JupyterConfigFilesGenerator {
         "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
         "hopsworks_project_id", Integer.toString(project.getId()),
         "api_key", apiKey,
-        "flink_conf_dir", String.valueOf(settings.getFlinkConfDir())
+        "flink_conf_dir", String.valueOf(settings.getFlinkConfDir()),
         "requests_verify", String.valueOf(settings.getRequestsVerify()),
         "domain_ca_truststore_pem", settings.getSparkConfDir() + File.separator + Settings.CA_TRUSTSTORE_PEM_NAME
       ).toString();
