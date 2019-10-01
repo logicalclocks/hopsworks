@@ -1363,9 +1363,11 @@ public class RESTCodes {
     TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS(84, "Illegal training dataset name - version combination",
       Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_CONF_ERROR(85, "Error writing training dataset job configuration to hdfs",
-      Response.Status.INTERNAL_SERVER_ERROR),
+        Response.Status.INTERNAL_SERVER_ERROR),
     S3_KEYS_FORBIDDEN(86, "IAM role is configured for this instance. AWS access/secret keys are not allowed",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    MISSING_REDSHIFT_DRIVER(87, "Could not find Redshift JDBC driver. " +
+        "Please upload it in Resources/RedshiftJDBC42-no-awssdk.jar", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

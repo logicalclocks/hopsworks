@@ -21,10 +21,16 @@ import io.hops.hopsworks.common.util.Settings;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @XmlRootElement
-public class FeaturegroupImportJobDTO {
+public class FeaturegroupImportJobDTO implements Serializable {
+
+  @SerializedName("type")
+  private ImportType type;
 
   @XmlElement(name = "storage_connector")
   @SerializedName("storage_connector")
@@ -70,12 +76,15 @@ public class FeaturegroupImportJobDTO {
   @XmlElement(name = "data_format")
   @SerializedName("data_format")
   private String dataFormat;
-
+  private boolean online;
+  @XmlElement(name = "online_types")
+  @SerializedName("online_types")
+  private Map<String, String> onlineTypes = new HashMap<>();
+  private boolean offline;
   @XmlElement(name="am_cores")
   private int amCores = 1;
   @XmlElement(name="am_memory")
   private int amMemory = Settings.YARN_DEFAULT_APP_MASTER_MEMORY;
-
   @XmlElement(name="executor_cores")
   private int executorCores = 1;
   @XmlElement(name="executor_memory")
@@ -88,13 +97,15 @@ public class FeaturegroupImportJobDTO {
     // Empty constructor
   }
 
-  public FeaturegroupImportJobDTO(String storageConnector, String path, String featuregroup, List<String> primaryKey,
-                                  String description, String featurestore, Integer featuregroupVersion, String jobs,
-                                  Boolean descriptiveStatistics, Boolean featureCorrelation, Boolean featureHistograms,
-                                  Boolean clusterAnalysis, List<String> statsColumn, Integer numBins,
-                                  String corrMethod, Integer num_clusters, List<String> partitionBy,
-                                  String dataFormat, int amCores, int amMemory, int executorCores, int executorMemory,
-                                  int maxExecutors) {
+  public FeaturegroupImportJobDTO(ImportType type, String storageConnector, String path, String featuregroup,
+                                  List<String> primaryKey, String description, String featurestore,
+                                  Integer featuregroupVersion, String jobs, Boolean descriptiveStatistics,
+                                  Boolean featureCorrelation, Boolean featureHistograms, Boolean clusterAnalysis,
+                                  List<String> statsColumn, Integer numBins, String corrMethod, Integer num_clusters,
+                                  List<String> partitionBy, String dataFormat, boolean online,
+                                  Map<String, String> onlineTypes, boolean offline, int amCores, int amMemory,
+                                  int executorCores, int executorMemory, int maxExecutors) {
+    this.type = type;
     this.storageConnector = storageConnector;
     this.path = path;
     this.featuregroup = featuregroup;
@@ -113,11 +124,22 @@ public class FeaturegroupImportJobDTO {
     this.num_clusters = num_clusters;
     this.partitionBy = partitionBy;
     this.dataFormat = dataFormat;
+    this.online = online;
+    this.onlineTypes = onlineTypes;
+    this.offline = offline;
     this.amCores = amCores;
     this.amMemory = amMemory;
     this.executorCores = executorCores;
     this.executorMemory = executorMemory;
     this.maxExecutors = maxExecutors;
+  }
+
+  public ImportType getType() {
+    return type;
+  }
+
+  public void setType(ImportType type) {
+    this.type = type;
   }
 
   public String getStorageConnector() {
@@ -262,6 +284,30 @@ public class FeaturegroupImportJobDTO {
 
   public void setDataFormat(String dataFormat) {
     this.dataFormat = dataFormat;
+  }
+
+  public boolean isOnline() {
+    return online;
+  }
+
+  public void setOnline(boolean online) {
+    this.online = online;
+  }
+
+  public Map<String, String> getOnlineTypes() {
+    return onlineTypes;
+  }
+
+  public void setOnlineTypes(Map<String, String> onlineTypes) {
+    this.onlineTypes = onlineTypes;
+  }
+
+  public boolean isOffline() {
+    return offline;
+  }
+
+  public void setOffline(boolean offline) {
+    this.offline = offline;
   }
 
   public int getAmCores() {

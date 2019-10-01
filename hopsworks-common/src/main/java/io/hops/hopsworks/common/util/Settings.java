@@ -2019,6 +2019,8 @@ public class Settings implements Serializable {
         Settings.FEATURESTORE_IMPORT_PARENT_DIR + Path.SEPARATOR;
   }
 
+  public static final String REDSHIFT_JDBC_NAME = "RedshiftJDBC42-no-awssdk.jar";
+
   public synchronized String getFeaturestoreImportJobPath() {
     checkCache();
     return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_IMPORT_JOB_NAME;
