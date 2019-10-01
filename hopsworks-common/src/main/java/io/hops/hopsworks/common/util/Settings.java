@@ -2021,7 +2021,21 @@ public class Settings implements Serializable {
     checkCache();
     return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_IMPORT_JOB_NAME;
   }
-
+  
+  private static final String FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR = "featurestore-trainingdataset-job";
+  public static final String FEATURESTORE_TRAININGDATASET_JOB_CONF = "configurations";
+  public static final String FEATURESTORE_TRAININGDATASET_JOB_NAME = "ft_trainingdataset_job.py";
+  
+  public String getBaseFeaturestoreTrainingDatasetJobDir(Project project) {
+    return Utils.getProjectPath(project.getName()) + Settings.BaseDataset.RESOURCES.getName() + Path.SEPARATOR +
+      Settings.FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR + Path.SEPARATOR;
+  }
+  
+  public synchronized String getFeaturestoreTrainingDatasetJobPath() {
+    checkCache();
+    return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_TRAININGDATASET_JOB_NAME;
+  }
+  
   public Settings() {
   }
 
