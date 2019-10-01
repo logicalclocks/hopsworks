@@ -80,7 +80,6 @@ public class TrainingDatasetJobDTO {
   @XmlElement(name="max_executors")
   private int maxExecutors = 2;
   
-  
   public TrainingDatasetJobDTO(
     List<String> features, String trainingDataset, String featuregroupsVersionDict, String joinKey,
     String description, String featurestore, String dataFormat, int trainingDatasetVersion, Boolean

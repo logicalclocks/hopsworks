@@ -931,7 +931,7 @@ public class Settings implements Serializable {
     checkCache();
     return AIRFLOW_USER;
   }
-
+  
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
 

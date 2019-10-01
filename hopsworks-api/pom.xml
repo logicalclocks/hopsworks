@@ -262,6 +262,29 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>maven-replacer-plugin</artifactId>
+        <version>1.3.7</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <file>target/hopsworks-api/WEB-INF/beans.xml</file>
+          <replacements>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.CommunityStereotype</token>
+              <value>io.hops.hopsworks.common.integrations.EnterpriseStereotype</value>
+            </replacement>
+          </replacements>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

@@ -125,6 +125,12 @@
       <version>${project.version}</version>
       <type>war</type>
     </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>featurestore-ee</artifactId>
+      <version>${project.version}</version>
+      <type>ejb</type>
+    </dependency>
   </dependencies>
   <profiles>
     <profile>

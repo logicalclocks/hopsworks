@@ -1361,8 +1361,10 @@ public class RESTCodes {
     TRAININGDATASETJOB_FEATUREGROUP_DUPLICATE(83, "Multiple featuregroups contain feature",
       Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS(84, "Illegal training dataset name - version combination",
-      Response.Status.BAD_REQUEST);
-    
+      Response.Status.BAD_REQUEST),
+    TRAININGDATASETJOB_CONF_ERROR(85, "Error writing training dataset job configuration to hdfs",
+      Response.Status.INTERNAL_SERVER_ERROR);
+
     private int code;
     private String message;
     private Response.Status respStatus;
