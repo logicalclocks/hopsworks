@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregro
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.hive.HiveTableType;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
 /**
- * DTO containing the human-readable information of a cached featrue group in the Hopsworks feature store,
+ * DTO containing the human-readable information of a cached feature group in the Hopsworks feature store,
  * can be converted to JSON or XML representation using jaxb.
  */
 @XmlRootElement
@@ -38,6 +39,8 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   private String inputFormat;
   private HiveTableType hiveTableType;
   private Long inodeId;
+  private OnlineFeaturegroupDTO onlineFeaturegroupDTO;
+  private Boolean onlineFeaturegroupEnabled = false;
 
 
   public CachedFeaturegroupDTO() {
@@ -47,6 +50,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public CachedFeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup);
     this.hiveTableId = featuregroup.getCachedFeaturegroup().getHiveTableId();
+    this.onlineFeaturegroupDTO = null;
   }
 
   @XmlElement
@@ -94,6 +98,25 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     this.inodeId = inodeId;
   }
   
+  @XmlElement
+  public OnlineFeaturegroupDTO getOnlineFeaturegroupDTO() {
+    return onlineFeaturegroupDTO;
+  }
+  
+  public void setOnlineFeaturegroupDTO(
+    OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
+    this.onlineFeaturegroupDTO = onlineFeaturegroupDTO;
+  }
+  
+  @XmlElement
+  public Boolean getOnlineFeaturegroupEnabled() {
+    return onlineFeaturegroupEnabled;
+  }
+  
+  public void setOnlineFeaturegroupEnabled(Boolean onlineFeaturegroupEnabled) {
+    this.onlineFeaturegroupEnabled = onlineFeaturegroupEnabled;
+  }
+  
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
@@ -102,6 +125,8 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
       ", inputFormat='" + inputFormat + '\'' +
       ", hiveTableType=" + hiveTableType +
       ", inodeId=" + inodeId +
+      ", onlineFeaturegroupDTO=" + onlineFeaturegroupDTO +
+      ", onlineFeaturegroupEnabled=" + onlineFeaturegroupEnabled +
       '}';
   }
 }

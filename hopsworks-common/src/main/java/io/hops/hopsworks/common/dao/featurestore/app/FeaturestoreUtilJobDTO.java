@@ -50,13 +50,14 @@ public class FeaturestoreUtilJobDTO {
   private String hiveDatabase;
   private String jdbcString;
   private List<String> jdbcArguments;
+  private Boolean online = false;
 
   public FeaturestoreUtilJobDTO(
       List<FeatureDTO> features, List<FeaturegroupDTO> featuregroups, String featurestore, String trainingDataset,
       String featuregroup, String joinKey, String description, String dataFormat, int version, Boolean descriptiveStats,
       Boolean featureCorrelation, Boolean clusterAnalysis, Boolean featureHistograms, List<String> statColumns,
       String operation, String sqlQuery, String hiveDatabase, String jdbcString, List<String> jdbcArguments,
-      String fileName) {
+      String fileName, Boolean online) {
     this.features = features;
     this.featuregroups = featuregroups;
     this.featurestore = featurestore;
@@ -77,6 +78,7 @@ public class FeaturestoreUtilJobDTO {
     this.jdbcString = jdbcString;
     this.jdbcArguments = jdbcArguments;
     this.fileName = fileName;
+    this.online = online;
   }
 
   public FeaturestoreUtilJobDTO() {
@@ -260,5 +262,41 @@ public class FeaturestoreUtilJobDTO {
 
   public void setFileName(String fileName) {
     this.fileName = fileName;
+  }
+  
+  @XmlElement
+  public Boolean getOnline() {
+    return online;
+  }
+  
+  public void setOnline(Boolean online) {
+    this.online = online;
+  }
+  
+  @Override
+  public String toString() {
+    return "FeaturestoreUtilJobDTO{" +
+      "fileName='" + fileName + '\'' +
+      ", features=" + features +
+      ", featuregroups=" + featuregroups +
+      ", featurestore='" + featurestore + '\'' +
+      ", trainingDataset='" + trainingDataset + '\'' +
+      ", featuregroup='" + featuregroup + '\'' +
+      ", joinKey='" + joinKey + '\'' +
+      ", description='" + description + '\'' +
+      ", dataFormat='" + dataFormat + '\'' +
+      ", version=" + version +
+      ", descriptiveStats=" + descriptiveStats +
+      ", featureCorrelation=" + featureCorrelation +
+      ", clusterAnalysis=" + clusterAnalysis +
+      ", featureHistograms=" + featureHistograms +
+      ", statColumns=" + statColumns +
+      ", operation='" + operation + '\'' +
+      ", sqlQuery='" + sqlQuery + '\'' +
+      ", hiveDatabase='" + hiveDatabase + '\'' +
+      ", jdbcString='" + jdbcString + '\'' +
+      ", jdbcArguments=" + jdbcArguments +
+      ", online=" + online +
+      '}';
   }
 }

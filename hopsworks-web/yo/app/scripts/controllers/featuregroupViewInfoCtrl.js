@@ -38,14 +38,16 @@ angular.module('hopsWorksApp')
             self.sampleWorking = false;
             self.sizeWorking = false;
             self.size = "Not fetched"
-            self.schema ="Not fetched";
+            self.offlineSchema ="Not fetched";
+            self.onlineSchema = "Not fetched";
             self.pythonCode = ""
             self.scalaCode = ""
             self.schemaWorking = false;
             self.sampleWorking = false;
-            self.schema ="Not fetched"
-            self.sampleColumns = []
-            self.sample = []
+            self.offlineSampleColumns = []
+            self.offlineSample = []
+            self.onlineSampleColumns = []
+            self.onlineSample = []
             self.notFetchedSample = true;
 
             //Constants
@@ -73,7 +75,16 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.sampleWorking = false;
                         self.notFetchedSample = false;
-                        self.preprocessSample(success.data);
+                        if(success.data.offlineFeaturegroupPreview != null) {
+                            var preProcessedOfflineSample = self.preprocessSample(success.data.offlineFeaturegroupPreview);
+                            self.offlineSample = preProcessedOfflineSample[0]
+                            self.offlineSampleColumns = preProcessedOfflineSample[1]
+                        }
+                        if(success.data.onlineFeaturegroupPreview != null) {
+                            var preProcessedOnlineSample = self.preprocessSample(success.data.onlineFeaturegroupPreview);
+                            self.onlineSample = preProcessedOnlineSample[0]
+                            self.onlineSampleColumns = preProcessedOnlineSample[1]
+                        }
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to fetch data sample', ttl: 5000});
                         self.sampleWorking = false;
@@ -103,8 +114,7 @@ angular.module('hopsWorksApp')
                     }
                     samples.push(sampleRow)
                 }
-                self.sampleColumns = columns
-                self.sample = samples
+                return [samples, columns]
             }
 
             /**
@@ -138,7 +148,10 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getFeaturegroupSchema(self.projectId, self.featurestore, self.featuregroup).then(
                     function (success) {
                         self.schemaWorking = false;
-                        self.schema = success.data.columns[0].value;
+                        self.offlineSchema = success.data.columns[0].value;
+                        if(self.featuregroup.onlineFeaturegroupEnabled){
+                            self.onlineSchema = success.data.columns[1].value;
+                        }
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to fetch featuregroup schema', ttl: 5000});
                         self.schemaWorking = false;

@@ -53,6 +53,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
@@ -255,7 +256,7 @@ public class HiveController {
     Dataset projectDs = datasetController
       .getByProjectAndDsName(project, this.settings.getHiveWarehouse(), project.getName().toLowerCase() + ".db");
     Dataset featurestoreDs = datasetController.getByProjectAndDsName(project, this.settings.getHiveWarehouse(),
-      project.getName().toLowerCase() + "_featurestore.db");
+      project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX + ".db");
     if ((projectDs != null && projectDs.getType() == DatasetType.HIVEDB)
         || forceCleanup) {
       dropDatabase(project, dfso, project.getName());
@@ -263,7 +264,7 @@ public class HiveController {
 
     if ((featurestoreDs != null && featurestoreDs.getType() == DatasetType.FEATURESTORE)
         || forceCleanup) {
-      dropDatabase(project, dfso, project.getName() + "_featurestore");
+      dropDatabase(project, dfso, project.getName() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX);
     }
   }
 

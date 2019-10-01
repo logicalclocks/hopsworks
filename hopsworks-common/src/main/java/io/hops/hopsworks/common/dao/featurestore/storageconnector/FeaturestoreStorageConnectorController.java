@@ -23,13 +23,22 @@ import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.Featurest
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3ConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3ConnectorDTO;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * Controller class for operations on storage controller in the Hopsworks Feature Store
@@ -42,6 +51,8 @@ public class FeaturestoreStorageConnectorController {
   private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
   @EJB
   private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
+  @EJB
+  private SecretsController secretsController;
 
 
   /**
@@ -195,6 +206,48 @@ public class FeaturestoreStorageConnectorController {
             FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
             + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
+  }
+  
+  /**
+   * Gets the JDBC connector of the online featurestore for a particular user and project. This connector is different
+   * from other connectors in that it includes a password reference to the secretsmanager that needs to be resolved.
+   *
+   * @param user         the user making the request
+   * @param project      the project of the user
+   * @param dbUsername   the database username
+   * @param featurestore the featurestore metadata
+   * @return a JDBC DTO connector for the online featurestore.
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector(Users user, Project project, String dbUsername,
+    Featurestore featurestore, String dbName) throws FeaturestoreException {
+    
+    //Step 1 Get the connector from the database
+    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = null;
+    String onlineFeaturestoreConnectorName = dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
+    List<FeaturestoreStorageConnectorDTO> jdbcConnectorDTOS =
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+    List<FeaturestoreStorageConnectorDTO> matchingConnectors = jdbcConnectorDTOS.stream().filter(connector ->
+      connector.getName().equalsIgnoreCase(onlineFeaturestoreConnectorName)).collect(Collectors.toList());
+    if(matchingConnectors.isEmpty()) {
+      featurestoreJdbcConnectorDTO =
+        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbUsername,
+        featurestore, dbName);
+    } else {
+      featurestoreJdbcConnectorDTO = (FeaturestoreJdbcConnectorDTO) matchingConnectors.get(0);
+    }
+    
+    //Step 2: replace the placeholder with the password and return it
+    try {
+      String password = secretsController.get(user, dbUsername).getPlaintext();
+      featurestoreJdbcConnectorDTO.setArguments(featurestoreJdbcConnectorDTO.getArguments()
+        .replaceFirst(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE, password));
+    } catch (UserException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+        Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
+    }
+    return featurestoreJdbcConnectorDTO;
   }
 
 }

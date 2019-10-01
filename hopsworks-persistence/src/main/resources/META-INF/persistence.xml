@@ -128,6 +128,7 @@
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScope</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroup</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
@@ -170,11 +171,18 @@
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
       <property name="eclipselink.read-only" value="true"/>
-      <!--      <property name="eclipselink.logging.level" value="FINE"/>
-      <property name="eclipselink.logging.level.sql" value="FINE"/>
-      <property name="eclipselink.logging.parameters" value="true"/>
-      <property name="eclipselink.logging.logger" value="ServerLogger"/>
-      -->
+    </properties>
+  </persistence-unit>
+
+  <persistence-unit name="featurestorePU" transaction-type="JTA">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <jta-data-source>jdbc/featurestore</jta-data-source>
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    <shared-cache-mode>NONE</shared-cache-mode>
+    <validation-mode>NONE</validation-mode>
+    <properties>
+      <property name="eclipselink.target-database" value="MYSQL"/>
+      <property name="eclipselink.read-only" value="true"/>
     </properties>
   </persistence-unit>
 </persistence>

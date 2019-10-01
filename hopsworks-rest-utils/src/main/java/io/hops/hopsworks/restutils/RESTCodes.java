@@ -181,7 +181,10 @@ public class RESTCodes {
     QUOTA_REQUEST_NOT_COMPLETE(72, "Please specify both " + "namespace and space quota.", Response.Status.BAD_REQUEST),
     RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
         Response.Status.BAD_REQUEST),
-    PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR);
+    PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR),
+    PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 29 characters.",
+        Response.Status.BAD_REQUEST);
+
 
 
     private Integer code;
@@ -945,7 +948,7 @@ public class RESTCodes {
     BADREVOKATIONREQUEST(1, "No certificate identifier provided", Response.Status.BAD_REQUEST),
     CERTNOTFOUND(2, "Certificate file not found", Response.Status.NO_CONTENT),
     CERTEXISTS(3, "Certificate with the same identifier already exists", Response.Status.BAD_REQUEST);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -1218,7 +1221,7 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_CREATE_FEATURESTORE(6, "Could not create feature store and corresponding Hive database",
         Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_PREVIEW_FEATUREGROUP(7, "Could not preview the contents of the feature group Hive table",
+    COULD_NOT_PREVIEW_FEATUREGROUP(7, "Could not preview the contents of the feature group ",
         Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_NOT_FOUND(8, "Featurestore wasn't found.",
         Response.Status.BAD_REQUEST),
@@ -1318,15 +1321,39 @@ public class RESTCodes {
     FEATURESTORE_INITIALIZATION_ERROR(61, "Featurestore Initialization Error", Response.Status.INTERNAL_SERVER_ERROR),
     FEATURESTORE_UTIL_ARGS_FAILURE(62, "Could not write featurestore util args to HDFS",
         Response.Status.INTERNAL_SERVER_ERROR),
-    SYNC_TABLE_NOT_FOUND(63, "The Hive Table to Sync with the feature store was not " +
+    FEATURESTORE_ONLINE_SECRETS_ERROR(63, "Could not get JDBC connection for the online featurestore",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    FEATURESTORE_ONLINE_NOT_ENABLED(64, "Online featurestore not enabled", Response.Status.BAD_REQUEST),
+    SYNC_TABLE_NOT_FOUND(65, "The Hive Table to Sync with the feature store was not " +
       "found in the metastore", Response.Status.BAD_REQUEST),
-    COULD_NOT_CREATE_DATA_VALIDATION_RULES(64, "Failed to create data validation rules",
+    COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE(66, "Could not initiate connecton to " +
+      "MySQL Server", Response.Status.INTERNAL_SERVER_ERROR),
+    MYSQL_JDBC_UPDATE_STATEMENT_ERROR(67, "MySQL JDBC Update Statement failed",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    MYSQL_JDBC_READ_QUERY_ERROR(68, "MySQL JDBC Read Query failed",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS(69, "Online Feature Serving is only" +
+      "supported for feature groups that are cached inside Hopsworks", Response.Status.BAD_REQUEST),
+    ERROR_CREATING_ONLINE_FEATURESTORE_DB(70, "An error occurred when trying to create " +
+      "the MySQL database for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_CREATING_ONLINE_FEATURESTORE_USER(71, "An error occurred when trying to create " +
+      "the MySQL database user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_DELETING_ONLINE_FEATURESTORE_DB(72, "An error occurred when trying to delete " +
+      "the MySQL database for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_DELETING_ONLINE_FEATURESTORE_USER(73, "An error occurred when trying to delete " +
+      "the MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES(74, "An error occurred when trying to " +
+      "grant/revoke privileges to a MySQL user for an online feature store", Response.Status.INTERNAL_SERVER_ERROR),
+    ONLINE_FEATUREGROUP_CANNOT_BE_PARTITIONED(75, "An error occurred when trying to " +
+      "create the MySQL table for the online feature group. User-defined partitioning is not supported for MySQL " +
+      "tables", Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_CREATE_DATA_VALIDATION_RULES(76, "Failed to create data validation rules",
         Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_READ_DATA_VALIDATION_RESULT(65, "Failed to read data validation result",
+    COULD_NOT_READ_DATA_VALIDATION_RESULT(77, "Failed to read data validation result",
         Response.Status.INTERNAL_SERVER_ERROR),
-    IMPORT_JOB_ALREADY_RUNNING(66, "A job to import this featuregroup is already running",
+    IMPORT_JOB_ALREADY_RUNNING(78, "A job to import this featuregroup is already running",
         Response.Status.BAD_REQUEST),
-    IMPORT_CONF_ERROR(67, "Error writing import job configuration", Response.Status.INTERNAL_SERVER_ERROR);
+    IMPORT_CONF_ERROR(79, "Error writing import job configuration", Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
@@ -1401,33 +1428,33 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   /**
    * Airflow specific error codes
    */
   public enum AirflowErrorCode implements RESTErrorCode {
-    
+
     JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
     JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR),
     AIRFLOW_DIRS_NOT_CREATED(3, "Airflow internal directories could not be created",
         Response.Status.INTERNAL_SERVER_ERROR);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
     private final int range = 290000;
-    
+
     AirflowErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
@@ -1437,7 +1464,7 @@ public class RESTCodes {
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public int getRange() {
       return range;
@@ -1494,45 +1521,45 @@ public class RESTCodes {
       return range;
     }
   }
-  
+
   public enum ResourceErrorCode implements RESTErrorCode {
-    
+
     INVALID_QUERY_PARAMETER(0, "Invalid query.", Response.Status.NOT_FOUND);
-    
+
     private int code;
     private String message;
     private Response.Status respStatus;
     public final int range = 310000;
-    
+
     ResourceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public int getRange() {
       return range;
     }
   }
-  
+
   public enum ApiKeyErrorCode implements RESTErrorCode {
-    
+
     KEY_NOT_CREATED(1, "Api key could not be created", Response.Status.BAD_REQUEST),
     KEY_NOT_FOUND(2, "Api key not found", Response.Status.UNAUTHORIZED),
     KEY_ROLE_CONTROL_EXCEPTION(3, "No valid role found for this invocation", Response.Status.FORBIDDEN),
@@ -1542,33 +1569,33 @@ public class RESTCodes {
     KEY_NAME_EXIST(7, "Api key name already exists", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_SPECIFIED(8, "Api key name not specified", Response.Status.BAD_REQUEST),
     KEY_NAME_NOT_VALID(9, "Api key name not valid", Response.Status.BAD_REQUEST);
-    
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
     private final int range = 320000;
-  
+
     ApiKeyErrorCode(Integer code, String message, Response.StatusType respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-    
+
     @Override
     public Response.StatusType getRespStatus() {
       return respStatus;
     }
-    
+
     @Override
     public Integer getCode() {
       return code;
     }
-    
+
     @Override
     public String getMessage() {
       return message;
     }
-    
+
     @Override
     public int getRange() {
       return range;

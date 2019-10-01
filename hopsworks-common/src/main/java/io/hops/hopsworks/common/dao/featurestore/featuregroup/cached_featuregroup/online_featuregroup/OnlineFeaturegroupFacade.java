@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup;
+package io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
@@ -28,45 +28,34 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A facade for the on_demand_feature_group table in the Hopsworks database,
+ * A facade for the online_feature_group table in the Hopsworks database,
  * use this interface when performing database operations against the table.
  */
 @Stateless
-public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegroup> {
+public class OnlineFeaturegroupFacade extends AbstractFacade<OnlineFeaturegroup> {
   private static final Logger LOGGER = Logger.getLogger(
-    OnDemandFeaturegroupFacade.class.getName());
+    OnlineFeaturegroupFacade.class.getName());
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
-  public OnDemandFeaturegroupFacade() {
-    super(OnDemandFeaturegroup.class);
+  public OnlineFeaturegroupFacade() {
+    super(OnlineFeaturegroup.class);
   }
 
   /**
-   * A transaction to persist an on-demand featuregroup for the featurestore in the database
+   * A transaction to persist an online featuregroup for the featurestore in the database
    *
-   * @param onDemandFeaturegroup the on-demand featuregroup to persist
+   * @param onlineFeaturegroup the online featuregroup to persist
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(OnDemandFeaturegroup onDemandFeaturegroup) {
+  public void persist(OnlineFeaturegroup onlineFeaturegroup) {
     try {
-      em.persist(onDemandFeaturegroup);
+      em.persist(onlineFeaturegroup);
       em.flush();
     } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new on demand feature group", cve);
+      LOGGER.log(Level.WARNING, "Could not persist the new online feature group", cve);
       throw cve;
     }
-  }
-  
-  /**
-   * Updates an existing On Demand Feature Group
-   *
-   * @param onDemandFeaturegroup the entity to update
-   * @return the updated entity
-   */
-  public OnDemandFeaturegroup updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup) {
-    em.merge(onDemandFeaturegroup);
-    return onDemandFeaturegroup;
   }
   
   /**

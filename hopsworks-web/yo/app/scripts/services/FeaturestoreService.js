@@ -29,7 +29,7 @@ angular.module('hopsWorksApp')
                  * @returns a formatted date string
                  */
                 formatDate: function(inputDate) {
-                    return moment(inputDate).format('MMM Do YY')
+                    return moment(inputDate).format('MMM Do YY');
                 },
 
                 /**
@@ -39,7 +39,7 @@ angular.module('hopsWorksApp')
                  * @returns {*} a formatted time string
                  */
                 formatTime: function(inputDate) {
-                    return moment(inputDate).format('HH:mm')
+                    return moment(inputDate).format('HH:mm');
                 },
 
                 /**
@@ -194,7 +194,7 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * POST request to update the metadata of a featuregroup, keeping the same Hive schema
+                 * PUT request to update the metadata of a featuregroup, keeping the same Hive schema
                  *
                  * @param projectId the id of the project
                  * @param featurestore the featurestore where the featuregroup resides
@@ -205,6 +205,36 @@ angular.module('hopsWorksApp')
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
                         "?updateMetadata=true&updateStats=false",
+                        JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * PUT request to enable online serving for a featuregroup
+                 *
+                 * @param projectId the id of the project
+                 * @param featurestore the featurestore where the featuregroup resides
+                 * @param featuregroupId the id of the featuregroup to enable online serving for
+                 * @returns {HttpPromise}
+                 */
+                enableOnlineServing: function(projectId, featurestore, featuregroupId, featuregroupJson) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
+                        "?enableOnline=true&updateMetadata=false&updateStats=false",
+                        JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
+                 * PUT request to disable online serving for a featuregroup
+                 *
+                 * @param projectId the id of the project
+                 * @param featurestore the featurestore where the featuregroup resides
+                 * @param featuregroupId the id of the featuregroup to disable online feature serving for
+                 * @returns {HttpPromise}
+                 */
+                disableOnlineServing: function(projectId, featurestore, featuregroupId, featuregroupJson) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
+                        "?disableOnline=true&enableOnline=false&updateMetadata=false&updateStats=false",
                         JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
