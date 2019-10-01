@@ -29,6 +29,9 @@ glassfish-resources.xml
 nb-configuration.xml
 nbactions.xml
 
+### MacOS ###
+.DS_Store
+
 ### Intellj ###
 hopsworks-web/overlays/
 
