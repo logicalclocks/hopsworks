@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topics');
+                return $http.get('/api/project/' + projectId + '/kafka/topics?filter_by=shared:false');
               },
               /**
                * Get all the topics defined in the project with given id.
@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getSharedTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/sharedTopics');
+                return $http.get('/api/project/' + projectId + '/kafka/topics?filter_by=shared:true');
               },
               /**
                * Get all the topics defined in the project with given id.
@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getProjectAndSharedTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId  + '/kafka/projectAndSharedTopics');
+                return $http.get('/api/project/' + projectId  + '/kafka/topics")
               },
               /**
                * Get the details of the topic with given ID, under the given project.
@@ -92,7 +92,7 @@ angular.module('hopsWorksApp')
               },
               
               defaultTopicValues: function () {
-                return $http.get('/api/admin/kafka/topics/settings/default');
+                return $http.get('/api/admin/kafka/settings');
               },
               
               validateSchema: function (projectId, schemaDetails){

@@ -159,7 +159,8 @@ public class KafkaController {
       for (ProjectTopics pt : ptList) {
         topics.add(new TopicDTO(pt.getTopicName(),
           pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-          pt.getSchemaTopics().getSchemaTopicsPK().getVersion()));
+          pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
+          false));
       }
     }
     return topics;
@@ -477,7 +478,7 @@ public class KafkaController {
     List<SharedTopics> res = kafkaFacade.findSharedTopicsByProject(projectId);
     List<TopicDTO> topics = new ArrayList<>();
     for (SharedTopics pt : res) {
-      topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), pt.getProjectId()));
+      topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), pt.getProjectId(), true));
     }
     return topics;
   }

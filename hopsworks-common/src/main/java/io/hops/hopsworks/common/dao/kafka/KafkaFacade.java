@@ -38,12 +38,8 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
-import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
@@ -68,6 +64,7 @@ import org.apache.zookeeper.KeeperException;
 import org.elasticsearch.common.Strings;
 
 import javax.annotation.PostConstruct;
+import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -95,6 +92,7 @@ import java.util.stream.Collectors;
 
 
 @Stateless
+@DependsOn("Settings")
 public class KafkaFacade {
 
   private static final  Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
@@ -105,11 +103,7 @@ public class KafkaFacade {
   @EJB
   Settings settings;
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private BaseHadoopClientsService baseHadoopService;
-  @EJB
-  private UserFacade userFacade;
   //TODO: added temporarly to compile the unrefactored endpoints - remove
   @EJB
   private KafkaController kafkaController;
@@ -147,10 +141,6 @@ public class KafkaFacade {
       KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
     return AdminClient.create(props);
   }
-
-  public AbstractFacade.CollectionInfo findTopicDtosByProject(Project project, ResourceRequest resourceRequest) {
-    return null;
-  }
   
   public List<ProjectTopics> findTopicsByProject (Project project) {
     return em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
@@ -174,11 +164,9 @@ public class KafkaFacade {
    *
    */
   public List<SharedTopics> findSharedTopicsByProject(Integer projectId) {
-    TypedQuery<SharedTopics> query = em.createNamedQuery(
-        "SharedTopics.findByProjectId",
-        SharedTopics.class);
-    query.setParameter("projectId", projectId);
-    return query.getResultList();
+    return em.createNamedQuery("SharedTopics.findByProjectId", SharedTopics.class)
+      .setParameter("projectId", projectId)
+      .getResultList();
   }
   
   public List<SharedTopics> findSharedTopicsByTopicName (String topicName) {
@@ -729,15 +717,15 @@ public class KafkaFacade {
     em.flush();
   }
   
-  public enum TopicSorts {
-    NAME("NAME", "t.name", "ASC"),
-    SCHEMA_NAME("SCHEMA_NAME", "t.schemaName", "ASC");
+  public enum TopicsSorts {
+    NAME("NAME", "LOWER(t.name)", "ASC"),
+    SCHEMA_NAME("SCHEMA_NAME", "LOWER(t.schemaName)", "ASC");
     
     private final String value;
     private final String sql;
     private final String defaultParam;
   
-    private TopicSorts(String value, String sql, String defaultParam) {
+    private TopicsSorts(String value, String sql, String defaultParam) {
       this.value = value;
       this.sql = sql;
       this.defaultParam = defaultParam;
@@ -766,9 +754,7 @@ public class KafkaFacade {
   }
   
   public enum TopicsFilters {
-    PROJECT_TOPICS("","","",""),
-    SHARED_TOPICS("","","",""),
-    ALL_TOPICS("","","","");
+    SHARED("SHARED", "t.isShared = :shared", "shared", "false");
 
     private final String value;
     private final String sql;

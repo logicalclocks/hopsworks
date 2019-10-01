@@ -42,7 +42,9 @@ package io.hops.hopsworks.api.kafka;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
@@ -64,6 +66,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -95,6 +98,8 @@ public class KafkaService {
   private KafkaFacade kafkaFacade;
   @EJB
   private KafkaController kafkaController;
+  @EJB
+  private TopicsBuilder topicsBuilder;
 
   private Project project;
 
@@ -108,8 +113,24 @@ public class KafkaService {
   public Project getProject() {
     return project;
   }
-
-  /*************  REFACTORED   ***********************/
+  
+  @ApiOperation(value = "Get Kafka topics.")
+  @GET
+  @Path("/topics")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopics(@BeanParam Pagination pagination, @BeanParam TopicsBeanParam topicsBeanParam) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(topicsBeanParam.getSortBySet());
+    resourceRequest.setFilter(topicsBeanParam.getFilter());
+    List<TopicDTO> topicDTOList = topicsBuilder.buildItems(project, resourceRequest);
+    GenericEntity<List<TopicDTO>> entity = new GenericEntity<List<TopicDTO>>(topicDTOList) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(entity).build();
+  }
+  
   @ApiOperation(value = "Create a new Kafka topic.")
   @POST
   @Path("/topics")
@@ -212,51 +233,6 @@ public class KafkaService {
     List<SharedProjectDTO> projectDtoList = kafkaController.getTopicSharedProjects(topicName, project.getId());
     GenericEntity<List<SharedProjectDTO>> projectDtos = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectDtos).build();
-  }
-  
-  /*********************** IN PROGRESS ********************************/
-  
-  
-  
-  /********************** TODO ***************************/
-  
-  /**
-   * Gets the list of topics for this project
-   *
-   * @return 
-   */
-  @GET
-  @Path("/topics")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics() {
-    List<TopicDTO> listTopics = kafkaController.findTopicDtosByProject(project);
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @GET
-  @Path("/sharedTopics")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSharedTopics() {
-    List<TopicDTO> listTopics = kafkaController.findSharedTopicsByProject(project.getId());
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @GET
-  @Path("/projectAndSharedTopics")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getProjectAndSharedTopics() {
-    List<TopicDTO> allTopics = kafkaController.findTopicDtosByProject(project);
-    allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
   }
 
   @GET

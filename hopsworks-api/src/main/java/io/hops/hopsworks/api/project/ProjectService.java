@@ -774,7 +774,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/airflow")
-  public AirflowService airflow(@PathParam("projectId") Integer id)  {
+  public AirflowService airflow(@PathParam("projectId") Integer id) {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
