@@ -22,6 +22,6 @@ import javax.ejb.Stateless;
 
 @Stateless
 @CommunityStereotype
-public class TrainingDatasetJobController {
+public class TrainingDatasetJobController implements TrainingDatasetJobControllerIface {
 
 }
