@@ -43,6 +43,8 @@ import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreSt
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
+import io.hops.hopsworks.common.dao.featurestore.trainingdatasetjob.TrainingDatasetJobControllerIface;
+import io.hops.hopsworks.common.dao.featurestore.trainingdatasetjob.TrainingDatasetJobDTO;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -120,6 +122,8 @@ public class FeaturestoreService {
   private DataValidationResource dataValidationService;
   @Inject
   private ImportControllerIface importControllerIface;
+  @Inject
+  private TrainingDatasetJobControllerIface trainingDatasetJobControllerIface;
   @EJB
   private JobsBuilder jobsBuilder;
 
@@ -399,6 +403,36 @@ public class FeaturestoreService {
       throw new IllegalArgumentException("Featuregroup name not provided");
     }
     Jobs job = importControllerIface.createImportJob(user, project, featuregroupImportJobDTO);
+    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
+    return Response.created(builder.build()).entity(dto).build();
+  }
+  
+  /**
+   * Endpoint for creating a job to create a training dataset from a featurestore
+   *
+   * @param trainingDatasetJobDTO JSON to configure the job
+   * @return
+   */
+  @Path("/trainingdatasetjob")
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Configure job to create training dataset", response = JobDTO.class)
+  public Response createOrUpdateTrainingDatasetJob(@Context SecurityContext sc, @Context UriInfo uriInfo,
+    @ApiParam(value = "Job configuration", required = true) TrainingDatasetJobDTO trainingDatasetJobDTO)
+    throws FeaturestoreException, JAXBException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    if (trainingDatasetJobDTO == null) {
+      throw new IllegalArgumentException("Job specification not provided");
+    }
+    if (Strings.isNullOrEmpty(trainingDatasetJobDTO.getTrainingDataset())) {
+      throw new IllegalArgumentException("Training dataset name not provided");
+    }
+    Jobs job = trainingDatasetJobControllerIface.createTrainingDatasetJob(user, project, trainingDatasetJobDTO);
     JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
