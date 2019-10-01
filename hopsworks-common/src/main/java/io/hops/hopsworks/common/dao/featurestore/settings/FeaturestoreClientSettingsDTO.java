@@ -44,6 +44,7 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH;
   private int s3StorageConnectorSecretkeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
+  private boolean s3IAMRole = false;
   private int cachedFeaturegroupNameMaxLength = FeaturestoreConstants.CACHED_FEATUREGROUP_NAME_MAX_LENGTH;
   private int cachedFeaturegroupDescriptionMaxLength =
     FeaturestoreConstants.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH;
@@ -157,7 +158,16 @@ public class FeaturestoreClientSettingsDTO {
   public void setJdbcStorageConnectorArgumentsMaxLength(int jdbcStorageConnectorArgumentsMaxLength) {
     this.jdbcStorageConnectorArgumentsMaxLength = jdbcStorageConnectorArgumentsMaxLength;
   }
-  
+
+  @XmlElement
+  public boolean isS3IAMRole() {
+    return s3IAMRole;
+  }
+
+  public void setS3IAMRole(boolean s3IAMRole) {
+    this.s3IAMRole = s3IAMRole;
+  }
+
   @XmlElement
   public int getS3StorageConnectorBucketMaxLength() {
     return s3StorageConnectorBucketMaxLength;

@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -34,9 +35,12 @@ import java.util.stream.Collectors;
  */
 @Stateless
 public class FeaturestoreS3ConnectorController {
+
   @EJB
   private FeaturestoreS3ConnectorFacade featurestoreS3ConnectorFacade;
-  
+  @EJB
+  private Settings settings;
+
   /**
    * Stores an S3 connection as a backend for a feature store
    *
@@ -209,11 +213,13 @@ public class FeaturestoreS3ConnectorController {
    */
   private void verifyS3ConnectorAccessKey(String accessKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(accessKey) &&
-        accessKey.length()
-            > FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
+        accessKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY, Level.FINE,
           ", the S3 access key should not exceed: " +
             FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
+    } else if (!Strings.isNullOrEmpty(accessKey) && settings.isIAMRoleConfigured()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
+          "S3 access key not allowed");
     }
   }
 
@@ -225,11 +231,13 @@ public class FeaturestoreS3ConnectorController {
    */
   private void verifyS3ConnectorSecretKey(String secretKey) throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(secretKey) &&
-        secretKey.length() >
-          FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
+        secretKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY, Level.FINE,
           ", the S3 secret key should not exceed: " +
             FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
+    } else if (!Strings.isNullOrEmpty(secretKey) && settings.isIAMRoleConfigured()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
+          "S3 secret key not allowed");
     }
   }
 

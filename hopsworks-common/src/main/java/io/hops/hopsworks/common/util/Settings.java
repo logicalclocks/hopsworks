@@ -150,6 +150,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_CLOUD= "cloud";
+  private static final String VARIABLE_AWS_INSTANCE_ROLE = "";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
   private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
@@ -471,6 +472,7 @@ public class Settings implements Serializable {
       ADMIN_EMAIL = setVar(VARIABLE_ADMIN_EMAIL, ADMIN_EMAIL);
       LOCALHOST = setBoolVar(VARIABLE_LOCALHOST, LOCALHOST);
       CLOUD = setStrVar(VARIABLE_CLOUD, CLOUD);
+      IAM_ROLE_CONFIGURED = setBoolVar(VARIABLE_AWS_INSTANCE_ROLE, IAM_ROLE_CONFIGURED);
       PYTHON_KERNEL = setBoolVar(VARIABLE_PYTHON_KERNEL, PYTHON_KERNEL);
       JAVA_HOME = setVar(VARIABLE_JAVA_HOME, JAVA_HOME);
       TWOFACTOR_AUTH = setVar(VARIABLE_TWOFACTOR_AUTH, TWOFACTOR_AUTH);
@@ -3477,6 +3479,12 @@ public class Settings implements Serializable {
 
   public Boolean isCloud() {
     return !getCloudProvider().isEmpty();
+  }
+
+  private boolean IAM_ROLE_CONFIGURED = false;
+  public synchronized boolean isIAMRoleConfigured() {
+    checkCache();
+    return IAM_ROLE_CONFIGURED;
   }
 
   public Boolean isHopsUtilInsecure() {
