@@ -35,15 +35,18 @@ import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.importjob.FeaturegroupImportJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetController;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.util.Settings;
@@ -103,12 +106,16 @@ public class FeaturestoreService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
   private TrainingDatasetService trainingDatasetService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private DataValidationResource dataValidationService;
   @Inject
@@ -192,17 +199,18 @@ public class FeaturestoreService {
   public Response getFeaturestoreSettings() {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setFeaturestoreUtil4jExecutable("hdfs:///user" + org.apache.hadoop.fs.Path.SEPARATOR
-        + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
-        + settings.getHopsExamplesFeaturestoreUtil4JFilename());
+      + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
+      + settings.getHopsExamplesFeaturestoreUtil4JFilename());
     featurestoreClientSettingsDTO.setFeaturestoreUtilPythonExecutable("hdfs:///user"
-        + org.apache.hadoop.fs.Path.SEPARATOR
-        + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
-        + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
+      + org.apache.hadoop.fs.Path.SEPARATOR
+      + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
+      + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
+    featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
       new GenericEntity<FeaturestoreClientSettingsDTO>(featurestoreClientSettingsDTO) {
       };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
-        .build();
+      .build();
   }
 
   /**
@@ -249,37 +257,44 @@ public class FeaturestoreService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getFeaturestoreId(
-      @PathParam("featurestoreName")
-          String featurestoreName)
-      throws FeaturestoreException {
+  @ApiOperation(value = "Get featurestore Metadata",
+    response = FeaturestoreClientSettingsDTO.class)
+  public Response getFeaturestoreId(@Context SecurityContext sc, @PathParam("featurestoreName") String featurestoreName)
+    throws FeaturestoreException {
     if (Strings.isNullOrEmpty(featurestoreName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
     }
     FeaturestoreDTO featurestoreDTO =
-        featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
+      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
     List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore);
     List<TrainingDatasetDTO> trainingDatasets =
-        trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
+      trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
+    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector =
+      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
+        dbUsername, featurestore, dbName);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
-        new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
-          new FeaturestoreClientSettingsDTO(), storageConnectors);
+      new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
+        new FeaturestoreClientSettingsDTO(), storageConnectors, onlineFeaturestoreConnector);
     GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
-        new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {};
+      new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {
+      };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
         .entity(featurestoreMetadataGeneric)
         .build();
   }
 
-  
+
   @Path("{featureStoreId}/datavalidation")
   public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
     return this.dataValidationService.setFeatureStore(featureStoreId);
   }
-  
+
   /**
    * Feature Groups sub-resource
    *

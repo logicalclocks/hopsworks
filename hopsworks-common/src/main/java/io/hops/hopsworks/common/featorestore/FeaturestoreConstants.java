@@ -27,10 +27,10 @@ import java.util.List;
  * Constants for the Feature Store Service
  */
 public class FeaturestoreConstants {
-  
+
   private FeaturestoreConstants() {
   }
-  
+
   public static final int FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
   public static final String FEATURESTORE_REGEX = "^[a-zA-Z0-9_]+$";
   public static final int STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
@@ -72,7 +72,7 @@ public class FeaturestoreConstants {
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
-  public static final List<String> SUGGESTED_FEATURE_TYPES = Arrays.asList(new String[]{
+  public static final List<String> SUGGESTED_HIVE_FEATURE_TYPES = Arrays.asList(new String[]{
     "None","TINYINT", "SMALLINT", "INT", "BIGINT", "FLOAT", "DOUBLE",
     "DECIMAL", "TIMESTAMP", "DATE", "STRING",
     "BOOLEAN", "BINARY",
@@ -96,5 +96,20 @@ public class FeaturestoreConstants {
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
       = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE});
-  
+  public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
+  public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
+  public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
+  public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
+  public static final String ONLINE_FEATURE_STORE_TYPE = "MySQL Cluster";
+  public static final String OFFLINE_FEATURE_STORE_TYPE = "Hive";
+  public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList(new String[]{
+    "None", "INT(11)", "TINYINT(1)", "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
+    "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",
+    "VARCHAR(500)", "VARCHAR(1000)", "VARCHAR(2000)", "VARCHAR(5000)", "VARCHAR(10000)", "BLOB", "TEXT",
+    "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT", "JSON"
+  });
+  public static final int ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH = 32;
+  public static final int ONLINE_FEATURESTORE_PW_LENGTH = 32;
+  public static final String FEATURESTORE_HIVE_DB_SUFFIX = "_featurestore";
+
 }

@@ -36,7 +36,6 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -45,22 +44,29 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.project.MembersDTO;
+import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.TensorBoardException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.project.MembersDTO;
-import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -77,11 +83,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -92,9 +98,18 @@ public class ProjectMembersService {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
+  private ProjectServiceFacade projectServiceFacade;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private Settings settings;
+  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private FeaturestoreController featurestoreController;
+  
   private Integer projectId;
 
   public ProjectMembersService() {
@@ -109,25 +124,28 @@ public class ProjectMembersService {
   }
 
   private final static Logger logger = Logger.getLogger(
-          ProjectMembersService.class.
+      ProjectMembersService.class.
           getName());
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response findMembersByProjectID() {
     List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
-    GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {};
+    GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projects).build();
   }
 
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
-      ProjectException, UserException {
+    ProjectException, UserException, FeaturestoreException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -140,6 +158,17 @@ public class ProjectMembersService {
     if (project != null) {
       //add new members of the project
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
+      //if online-featurestore service is enabled in the project, give new member access to it
+      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
+        settings.isOnlineFeaturestore()) {
+        for (ProjectTeam pt : members.getProjectTeam()) {
+          onlineFeaturestoreController.createDatabaseUser(pt.getUser(), project);
+          FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
+            featurestoreController.getOfflineFeaturestoreDbName(project));
+          onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, pt.getUser(),
+            featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
+        }
+      }
     }
 
     if (members.getProjectTeam().size() > 1) {
@@ -160,16 +189,17 @@ public class ProjectMembersService {
     }
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
+        json).build();
   }
 
   @POST
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
-      @Context SecurityContext sc) throws ProjectException, UserException {
+      @Context SecurityContext sc) throws ProjectException, UserException, FeaturestoreException {
 
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -184,21 +214,29 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
     }
     projectController.updateMemberRole(project, user, email, role);
-
+    //Update user-privileges on the online feature store
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)
+      && settings.isOnlineFeaturestore()) {
+      Users member = projectTeamFacade.findUserByEmail(email);
+      onlineFeaturestoreController.createDatabaseUser(member, project);
+      FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
+        featurestoreController.getOfflineFeaturestoreDbName(project));
+      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member,
+        featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
+    }
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-            json).build();
-
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
 
   @DELETE
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response removeMembersByID(@PathParam("email") String email, @Context SecurityContext sc)
     throws ProjectException, ServiceException, HopsSecurityException, UserException, GenericException, IOException,
-    JobException, TensorBoardException {
+    JobException, TensorBoardException, FeaturestoreException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users reqUser = jWTHelper.getUserPrincipal(sc);
@@ -222,6 +260,11 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
     projectController.removeMemberFromTeam(project, reqUser, email);
+
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+      Users member = projectTeamFacade.findUserByEmail(email);      
+      onlineFeaturestoreController.removeOnlineFeaturestoreUser(project, member);
+    }
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

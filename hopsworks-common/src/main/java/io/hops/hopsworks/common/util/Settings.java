@@ -338,6 +338,8 @@ public class Settings implements Serializable {
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
+  private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
+  private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -669,6 +671,8 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
+      FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
+      ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
 
       cached = true;
     }
@@ -3282,6 +3286,14 @@ public class Settings implements Serializable {
     checkCache();
     return KUBE_FILEBEAT_IMG_VERSION;
   }
+  
+  
+  private Boolean ONLINE_FEATURESTORE = false;
+  
+  public synchronized Boolean isOnlineFeaturestore() {
+    checkCache();
+    return ONLINE_FEATURESTORE;
+  }
 
   private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
   public synchronized String getJupyterImgVersion() {
@@ -3461,6 +3473,13 @@ public class Settings implements Serializable {
 
   public Boolean isHopsUtilInsecure() {
     return isCloud() || isLocalHost();
+  }
+  
+  private String FEATURESTORE_JDBC_URL = "jdbc:mysql://" + HOPSWORKS_IP + ":3306/";
+  
+  public synchronized String getFeaturestoreJdbcUrl() {
+    checkCache();
+    return FEATURESTORE_JDBC_URL;
   }
 
 }

@@ -48,9 +48,10 @@ angular.module('hopsWorksApp')
                     var argsList = args.split(",")
                     var newArgs = []
                     for (var j = 0; j < argsList.length; j++) {
+                        var argValue = argsList[j].split("=")
                         newArgs.push({
-                            "name": argsList[j],
-                            "value": "DEFAULT"
+                            "name": argValue[0],
+                            "value": argValue.length > 1 ? argValue[1] : "DEFAULT"
                         })
                     }
                     self.preProcessedArgs = newArgs

@@ -94,7 +94,7 @@
                                       ng-show="featurestoreCtrl.featuregroupsSortKey == 'created'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.featuregroupsReverse,'glyphicon-chevron-down':!featurestoreCtrl.featuregroupsReverse}"></span>
                             </th>
-                            <th style="width: 20%" ng-click="featurestoreCtrl.featuregroupsSort('featuregroupType')"
+                            <th style="width: 10%" ng-click="featurestoreCtrl.featuregroupsSort('featuregroupType')"
                                 class="fs-table">
                                 Type
                                 <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -103,6 +103,16 @@
                                    style="margin-left: 10px"></i>
                                 <span class="glyphicon sort-icon"
                                       ng-show="featurestoreCtrl.featuregroupsSortKey == 'featuregroupType'"
+                                      ng-class="{'glyphicon-chevron-up':featurestoreCtrl.featuregroupsReverse,'glyphicon-chevron-down':!featurestoreCtrl.featuregroupsReverse}"></span>
+                            </th>
+                            <th style="width: 10%" class="fs-table"
+                                ng-click="featurestoreCtrl.featuregroupsSort('onlineEnabled')">
+                                Online
+                                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                   uib-tooltip="Feature groups that have the online-flag enabled can be used for real-time serving of features."
+                                   style="margin-left: 10px"></i>
+                                <span class="glyphicon sort-icon"
+                                      ng-show="featurestoreCtrl.featuregroupsSortKey == 'onlineEnabled'"
                                       ng-class="{'glyphicon-chevron-up':featurestoreCtrl.featuregroupsReverse,'glyphicon-chevron-down':!featurestoreCtrl.featuregroupsReverse}"></span>
                             </th>
                             <th style="width: 10%" class="fs-table">
@@ -128,6 +138,16 @@
                                 </span>
                                 <span ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == featurestoreCtrl.cachedFeaturegroupType">
                                     CACHED
+                                </span>
+                            </td>
+                            <td class="fs-table">
+                                <span
+                                        ng-if="!featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == featurestoreCtrl.cachedFeaturegroupType || !featuregroup.versionToGroups[featuregroup.activeVersion].onlineFeaturegroupEnabled">
+                                    No
+                                </span>
+                                <span
+                                        ng-if="featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == featurestoreCtrl.cachedFeaturegroupType && featuregroup.versionToGroups[featuregroup.activeVersion].onlineFeaturegroupEnabled">
+                                    Yes
                                 </span>
                             </td>
                             <td class="fs-table">
@@ -652,19 +672,47 @@
                                                 {{featurestoreCtrl.featurestore.featurestoreId}}
                                             </li>
                                             <li>
-                                                <span style="font-weight:700">Name:</span>
-                                                {{featurestoreCtrl.featurestore.featurestoreName}}
+                                                <span style="font-weight:700">Offline Featurestore Type:</span>
+                                                {{featurestoreCtrl.featurestore.offlineFeaturestoreType}}
                                             </li>
                                             <li>
-                                                <span style="font-weight:700">HDFS Path:</span>
+                                                <span style="font-weight:700">Offline Featurestore Name:</span>
+                                                {{featurestoreCtrl.featurestore.offlineFeaturestoreName}}
+                                            </li>
+                                            <li>
+                                                <span style="font-weight:700">Offline Featurestore HDFS Path:</span>
                                                 {{featurestoreCtrl.featurestore.hdfsStorePath}}
                                             </li>
                                             <li>
-                                                <span style="font-weight:700">Size:</span>
+                                                <span style="font-weight:700">Hive Endpoint:</span>
+                                                {{featurestoreCtrl.featurestore.hiveEndpoint}}
+                                            </li>
+                                            <li>
+                                                <span style="font-weight:700">Offline Featurestore Size:</span>
                                                 <i ng-if="featurestoreCtrl.featurestoreSizeWorking"
                                                    style="margin-top: 2px"
                                                    class="fa fa-spinner fa-spin pull-right"></i>
                                                 {{featurestoreCtrl.featurestoreSize}}
+                                            </li>
+                                            <li>
+                                                <span style="font-weight:700">Online Featurestore Enabled:</span>
+                                                {{featurestoreCtrl.featurestore.onlineEnabled}}
+                                            </li>
+                                            <li ng-if="featurestoreCtrl.featurestore.onlineEnabled">
+                                                <span style="font-weight:700">Online Featurestore Type:</span>
+                                                {{featurestoreCtrl.featurestore.onlineFeaturestoreType}}
+                                            </li>
+                                            <li ng-if="featurestoreCtrl.featurestore.onlineEnabled">
+                                                <span style="font-weight:700">Online Featurestore Name:</span>
+                                                {{featurestoreCtrl.featurestore.onlineFeaturestoreName}}
+                                            </li>
+                                            <li ng-if="featurestoreCtrl.featurestore.onlineEnabled">
+                                                <span style="font-weight:700">Online Featurestore Size:</span>
+                                                {{featurestoreCtrl.featurestore.onlineFeaturestoreSize}} MB
+                                            </li>
+                                            <li ng-if="featurestoreCtrl.featurestore.onlineEnabled">
+                                                <span style="font-weight:700">MySQL Server Endpoint:</span>
+                                                {{featurestoreCtrl.featurestore.mysqlServerEndpoint}}
                                             </li>
                                             <li>
                                                 <span style="font-weight:700">Created:</span>
@@ -687,7 +735,7 @@
                                     <small class="text-muted" ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
                                            style="margin-left:130px;">
                                         {{featurestoreCtrl.featurestoreHdfsUsage()}} of
-                                        {{featurestoreCtrl.featurestoreHdfsQuota()}} used (project Feature Store quota).
+                                        {{featurestoreCtrl.featurestoreHdfsQuota()}} used (Offline Feature Store quota).
                                     </small>
                                 </div>
                             </div>
@@ -710,7 +758,7 @@
                                 uib-tooltip="Add new storage connector"
                                 id="createNewStorageConnector"
                         >
-                            Add Connector
+                            Create New Storage Connector
                             <i style="margin-left: 10px" class="glyphicon glyphicon-plus">
                             </i>
                         </button>

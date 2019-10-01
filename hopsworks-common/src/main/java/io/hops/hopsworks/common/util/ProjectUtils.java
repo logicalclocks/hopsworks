@@ -68,7 +68,20 @@ public class ProjectUtils {
     reservedNames.add("python37");
     reservedNames.add("python38");
     reservedNames.add("python39");
+    //Online Feature Store creates MySQL db with the same name as the projectname
     reservedNames.add("hops-system");
+    reservedNames.add("hopsworks");
+    reservedNames.add("information_schema");
+    reservedNames.add("airflow");
+    reservedNames.add("glassfish_timers");
+    reservedNames.add("grafana");
+    reservedNames.add("hops");
+    reservedNames.add("metastore");
+    reservedNames.add("mysql");
+    reservedNames.add("ndbinfo");
+    reservedNames.add("performance_schema");
+    reservedNames.add("sqoop");
+    reservedNames.add("sys");
     return reservedNames;
   }
   

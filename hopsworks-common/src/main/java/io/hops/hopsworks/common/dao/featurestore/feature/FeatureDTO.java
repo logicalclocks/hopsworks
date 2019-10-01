@@ -25,23 +25,26 @@ import javax.xml.bind.annotation.XmlType;
  * using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"name", "type", "description", "primary", "partition"})
+@XmlType(propOrder = {"name", "type", "description", "primary", "partition", "onlineType"})
 public class FeatureDTO {
 
   private String name;
   private String type;
+  private String onlineType;
   private String description;
   private Boolean primary = false;
   private Boolean partition = false;
 
   public FeatureDTO(){}
 
-  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition) {
+  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
+    String onlineType) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
     this.partition = partition;
+    this.onlineType = onlineType;
   }
 
   public FeatureDTO(String name, String type, String description) {
@@ -74,7 +77,12 @@ public class FeatureDTO {
   public Boolean getPartition() {
     return partition;
   }
-
+  
+  @XmlElement
+  public String getOnlineType() {
+    return onlineType;
+  }
+  
   public void setPrimary(Boolean primary) {
     this.primary = primary;
   }
@@ -94,15 +102,20 @@ public class FeatureDTO {
   public void setPartition(Boolean partition) {
     this.partition = partition;
   }
-
+  
+  public void setOnlineType(String onlineType) {
+    this.onlineType = onlineType;
+  }
+  
   @Override
   public String toString() {
     return "FeatureDTO{" +
-        "name='" + name + '\'' +
-        ", type='" + type + '\'' +
-        ", description='" + description + '\'' +
-        ", primary=" + primary +
-        ", partition=" + partition +
-        '}';
+      "name='" + name + '\'' +
+      ", type='" + type + '\'' +
+      ", onlineType='" + onlineType + '\'' +
+      ", description='" + description + '\'' +
+      ", primary=" + primary +
+      ", partition=" + partition +
+      '}';
   }
 }

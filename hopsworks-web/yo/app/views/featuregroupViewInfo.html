@@ -156,7 +156,7 @@
                     </td>
                     <td class="fs-table">
 <pre>
-<code>{{featuregroupViewInfoCtrl.schema}}</code>
+<code>{{featuregroupViewInfoCtrl.offlineSchema}}</code>
 </pre>
                         <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px; text-align: center;"
                            class="fa fa-spinner fa-spin"></i>
@@ -177,23 +177,67 @@
                 </span>
             </div>
 
-            <h3 style="margin-left: 10px" ng-if="true">
-                Online feature serving has not been enabled for this feature group
-            </h3>
-
-            <!-- TODO when we add online feature store, add the info here-->
-            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="false">
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
                 <tbody class="fs-table">
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        Table Type
+                        MySQL Database
                     </td>
                     <td class="fs-table">
-                        -
+                        {{featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupDTO.dbName}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        MySQL Table Name
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupDTO.tableName}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        MySQL Table Type
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupDTO.tableType}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Size
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupDTO.size}} MB
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Number of Rows
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupDTO.tableRows}}
+                    </td>
+                </tr>
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        SQL Schema
+                    </td>
+                    <td class="fs-table">
+<pre>
+<code>{{featuregroupViewInfoCtrl.onlineSchema}}</code>
+</pre>
+                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px; text-align: center;"
+                           class="fa fa-spinner fa-spin"></i>
                     </td>
                 </tr>
                 </tbody>
             </table>
+
+            <h3 style="margin-left: 10px" ng-if="!featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
+                Online feature serving has not been enabled for this feature group
+            </h3>
         </div>
 
         <div uib-accordion-group class="panel-default"
@@ -334,7 +378,8 @@
             </div>
 
             <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
-                   ng-if="featuregroupViewInfoCtrl.featuregroup.features.length > 0">
+                   ng-if="featuregroupViewInfoCtrl.featuregroup.features.length > 0 &&
+                   !featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
                 <thead style="border:none;" class="fs-table">
                 <th class="fs-table" style="width: 20%">Feature Name</th>
                 <th class="fs-table" style="width: 20%">Feature Type</th>
@@ -352,6 +397,28 @@
                 </tr>
                 </tbody>
             </table>
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="featuregroupViewInfoCtrl.featuregroup.features.length > 0 &&
+                   featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 16%">Feature Name</th>
+                <th class="fs-table" style="width: 16%">Offline Feature Type</th>
+                <th class="fs-table" style="width: 16%">Online Feature Type</th>
+                <th class="fs-table" style="width: 16%">Feature Description</th>
+                <th class="fs-table" style="width: 16%">Primary Key</th>
+                <th class="fs-table" style="width: 16%">Partition Key</th>
+                </thead>
+                <tbody>
+                <tr class="fs-table" data-ng-repeat="feature in featuregroupViewInfoCtrl.featuregroup.features">
+                    <td class="fs-table"> {{feature.name}}</td>
+                    <td class="fs-table"> {{feature.type}}</td>
+                    <td class="fs-table"> {{feature.onlineType}}</td>
+                    <td class="fs-table"> {{feature.description}}</td>
+                    <td class="fs-table"> {{feature.primary}}</td>
+                    <td class="fs-table"> {{feature.partition}}</td>
+                </tr>
+                </tbody>
+            </table>
             <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.featuregroup.features.length == 0">
                 This feature group does not have a defined schema</h3>
         </div>
@@ -363,9 +430,9 @@
         >
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
-                   uib-tooltip='Previews the data in the cached feature group. (Runs a SELECT * LIMIT 20 to the Hive table)'></i>
+                   uib-tooltip='Previews the offline data in the cached feature group. (Runs a SELECT * LIMIT 20 to the Hive table)'></i>
                 <span style="margin-left: 20px">
-                    Data Preview
+                   Offline Feature Group Data Preview
                 </span>
             </div>
 
@@ -374,22 +441,24 @@
                     <i ng-if="featuregroupViewInfoCtrl.sampleWorking" style="margin-top: 2px; text-align: center"
                        class="fa fa-spinner fa-spin"></i>
                 </p>
-                <p ng-if="featuregroupViewInfoCtrl.sampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample"
-                   style="margin-left: 10px; magin-top:10px">
-                    Feature group is empty
-                </p>
+                <h3 style="margin-left: 10px; margin-top: 10px"
+                    ng-if="featuregroupViewInfoCtrl.offlineSampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample">
+                    Offline Feature group is empty
+                </h3>
             </div>
             <div>
                 <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
-                       ng-if="featuregroupViewInfoCtrl.sampleColumns.length > 0">
+                       ng-if="featuregroupViewInfoCtrl.offlineSampleColumns.length > 0">
                     <thead style="border:none;" class="fs-table">
-                    <th class="fs-table" ng-repeat="col in featuregroupViewInfoCtrl.sampleColumns  track by $index">
+                    <th class="fs-table"
+                        ng-repeat="col in featuregroupViewInfoCtrl.offlineSampleColumns  track by $index">
                         {{col}}
                     </th>
                     </thead>
                     <tbody class="fs-table">
-                    <tr ng-repeat="row in featuregroupViewInfoCtrl.sample" class="fs-table">
-                        <td ng-repeat="col in featuregroupViewInfoCtrl.sampleColumns track by $index" class="fs-table">
+                    <tr ng-repeat="row in featuregroupViewInfoCtrl.offlineSample" class="fs-table">
+                        <td ng-repeat="col in featuregroupViewInfoCtrl.offlineSampleColumns track by $index"
+                            class="fs-table">
                             {{row[col]}}
                         </td>
                     </tr>
@@ -400,4 +469,51 @@
             </div>
 
         </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="featuregroupViewInfoCtrl.featuregroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
+             style="overflow-x: scroll"
+        >
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Previews the online data in the cached feature group. (Runs a SELECT * LIMIT 20 to the MySQL table)'></i>
+                <span style="margin-left: 20px">
+                   Online Feature Group Data Preview
+                </span>
+            </div>
+
+            <div class="row" ng-if="featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
+                <p ng-if="featuregroupViewInfoCtrl.notFetchedSample" style="margin-left: 10px; magin-top:10px">
+                    <i ng-if="featuregroupViewInfoCtrl.sampleWorking" style="margin-top: 2px; text-align: center"
+                       class="fa fa-spinner fa-spin"></i>
+                </p>
+                <h3 style="margin-left: 10px; margin-top: 10px"
+                    ng-if="featuregroupViewInfoCtrl.onlineSampleColumns.length  === 0 && !featuregroupViewInfoCtrl.notFetchedSample">
+                    Online Feature group is empty
+                </h3>
+            </div>
+            <div ng-if="featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                       ng-if="featuregroupViewInfoCtrl.onlineSampleColumns.length > 0">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table"
+                        ng-repeat="col in featuregroupViewInfoCtrl.onlineSampleColumns  track by $index">
+                        {{col}}
+                    </th>
+                    </thead>
+                    <tbody class="fs-table">
+                    <tr ng-repeat="row in featuregroupViewInfoCtrl.onlineSample" class="fs-table">
+                        <td ng-repeat="col in featuregroupViewInfoCtrl.onlineSampleColumns track by $index"
+                            class="fs-table">
+                            {{row[col]}}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h3 style="margin-left: 10px" ng-if="!featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
+                Online feature serving has not been enabled for this feature group
+            </h3>
+        </div>
     </div>
+</div>
