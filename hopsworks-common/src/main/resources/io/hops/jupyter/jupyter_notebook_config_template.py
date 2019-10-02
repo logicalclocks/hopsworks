@@ -48,6 +48,8 @@ os.environ['ELASTIC_ENDPOINT'] = "%%elastic_endpoint%%"
 os.environ['HADOOP_USER_NAME'] = "%%hdfs_user%%"
 os.environ['JUPYTER_CERTS_DIR'] = "%%jupyter_certs_dir%%"
 os.environ['HOPSWORKS_PROJECT_ID'] = "%%hopsworks_project_id%%"
+os.environ['REQUESTS_VERIFY'] = "%%requests_verify%%"
+os.environ['DOMAIN_CA_TRUSTSTORE_PEM'] = "%%domain_ca_truststore_pem%%"
 os.environ['HADOOP_HOME'] = "%%hadoop_home%%"
 
 c.GitHandlersConfiguration.api_key = "%%api_key%%"
