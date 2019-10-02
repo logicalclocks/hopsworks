@@ -153,6 +153,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
             HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "FLINK_CONF_DIR", settings.getFlinkConfDir(),
       HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "REQUESTS_VERIFY", String.valueOf(settings.getRequestsVerify()),
+      HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE_PEM",
+      settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM, HopsUtils.IGNORE);
+  
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
 
@@ -481,6 +486,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
     extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, settings.getKafkaBrokersStr());
     extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, JobType.SPARK.name());
+    extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY,
+        settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE);
     if(jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());
     }
