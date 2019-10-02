@@ -83,6 +83,7 @@ public class KubeJupyterManager implements JupyterManager {
   public static final String JWT = "jwt";
   public static final String KERNELS = "kernels";
   public static final String FLINK = "flink";
+  public static final String SPARK = "spark";
   public static final String SEPARATOR = "-";
   public static final String JUPYTER_PREFIX = JUPYTER + SEPARATOR;
   public static final String CONF_SUFFIX = SEPARATOR + "conf";
@@ -176,7 +177,8 @@ public class KubeJupyterManager implements JupyterManager {
           jupyterPaths.getCertificatesDir(),
           hdfsUser,
           token,
-          settings.getFlinkConfDir()));
+          settings.getFlinkConfDir(),
+          settings.getSparkConfDir()));
       
       return new JupyterDTO(nodePort, token, PID, secretConfig, jupyterPaths.getCertificatesDir());
     } catch (KubernetesClientException | IOException e) {
@@ -216,7 +218,7 @@ public class KubeJupyterManager implements JupyterManager {
   
   private Container buildContainer(String jupyterHome, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir) {
+    String flinkConfDir, String sparkConfDir) {
     return new ContainerBuilder()
       .withName(JUPYTER)
       .withImage(settings.getKubeRegistry() + "/jupyter:" + settings.getJupyterImgVersion())
@@ -261,13 +263,18 @@ public class KubeJupyterManager implements JupyterManager {
           .withName(FLINK)
           .withReadOnly(true)
           .withMountPath("/srv/hops/flink/conf")
+          .build(),
+        new VolumeMountBuilder()
+          .withName(SPARK)
+          .withReadOnly(true)
+          .withMountPath("/srv/hops/spark/conf")
           .build())
       .withPorts(
         new ContainerPortBuilder()
           .withContainerPort(LOCAL_PORT)
           .build())
       .withCommand("jupyter-launch.sh")
-      .withArgs(jupyterHome, anacondaEnv, secretDir, certificatesDir, hadoopUser, token, flinkConfDir)
+      .withArgs(jupyterHome, anacondaEnv, secretDir, certificatesDir, hadoopUser, token, flinkConfDir, sparkConfDir)
       .build();
   }
   
@@ -331,16 +338,23 @@ public class KubeJupyterManager implements JupyterManager {
             new HostPathVolumeSourceBuilder()
               .withPath(settings.getFlinkConfDir())
               .build())
+          .build(),
+        new VolumeBuilder()
+          .withName(SPARK)
+          .withHostPath(
+            new HostPathVolumeSourceBuilder()
+              .withPath(settings.getSparkConfDir())
+              .build())
           .build())
       .build();
   }
   
   private Deployment buildDeployment(String name, String kubeProjectUser, String jupyterHome, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir) {
+    String flinkConfDir, String sparkConfDir) {
     
     Container container = buildContainer(jupyterHome, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir);
+      hadoopUser, token, flinkConfDir, sparkConfDir);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()
