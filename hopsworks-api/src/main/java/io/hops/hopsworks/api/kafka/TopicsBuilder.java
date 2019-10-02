@@ -1,6 +1,6 @@
 package io.hops.hopsworks.api.kafka;
 
-import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.api.CollectionsBuilder;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -21,25 +21,20 @@ import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.TopicsFilters;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class TopicsBuilder {
+public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   
   @EJB
   private KafkaController kafkaController;
   
-  public List<TopicDTO> buildItems(Project project, ResourceRequest resourceRequest) {
+  @Override
+  protected List<TopicDTO> getItems(Project project) {
     List<TopicDTO> allTopics = kafkaController.findTopicDtosByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
-    
-    for (AbstractFacade.FilterBy tFilter : resourceRequest.getFilter()) {
-      allTopics = filterTopics(tFilter, allTopics);
-    }
-    
-    allTopics = sortTopics(resourceRequest.getSort(), allTopics);
-    
     return allTopics;
   }
   
-  private List<TopicDTO> filterTopics(AbstractFacade.FilterBy filterBy, List<TopicDTO> list) {
+  @Override
+  protected List<TopicDTO> filterTopics(List<TopicDTO> list, AbstractFacade.FilterBy filterBy) {
     switch (TopicsFilters.valueOf(filterBy.getValue())) {
       case SHARED:
         boolean isShared = Boolean.valueOf(filterBy.getParam());
@@ -51,16 +46,21 @@ public class TopicsBuilder {
     }
   }
   
-  private List<TopicDTO> sortTopics(Set<? extends AbstractFacade.SortBy> sortBySet, List<TopicDTO> list) {
+  @Override
+  protected List<TopicDTO> sortTopics(List<TopicDTO> list, Set<? extends AbstractFacade.SortBy> sortBySet) {
     Iterator<? extends AbstractFacade.SortBy> it = sortBySet.iterator();
     Comparator<TopicDTO> comparator = null;
     while (it.hasNext()) {
-      switch (KafkaFacade.TopicsSorts.valueOf(it.next().getValue())) {
+      AbstractFacade.SortBy sort = it.next();
+      switch (KafkaFacade.TopicsSorts.valueOf(sort.getValue())) {
         case NAME:
           if (comparator == null) {
             comparator = Comparator.comparing(TopicDTO::getName);
           } else {
             comparator.thenComparing(TopicDTO::getName);
+          }
+          if (sort.getParam().getValue().equals("DESC")) {
+            comparator = comparator.reversed();
           }
           break;
         case SCHEMA_NAME:
@@ -69,10 +69,13 @@ public class TopicsBuilder {
           } else {
             comparator.thenComparing(TopicDTO::getSchemaName);
           }
+          if (sort.getParam().getValue().equals("DESC")) {
+            comparator = comparator.reversed();
+          }
           break;
       }
     }
-    
+  
     if (comparator == null) {
       return list;
     } else {
