@@ -73,6 +73,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -186,15 +187,7 @@ public class KafkaController {
               .collect(Collectors.toList());
             partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
           }
-          partitionDetails.sort((PartitionDetailsDTO c1, PartitionDetailsDTO c2) -> {
-            if (c1.getId() < c2.getId()) {
-              return -1;
-            }
-            if (c1.getId() > c2.getId()) {
-              return 1;
-            }
-            return 0;
-          });
+          partitionDetails.sort(Comparator.comparing(PartitionDetailsDTO::getId));
           return partitionDetails;
         } else {
           return Collections.emptyList();
