@@ -388,6 +388,6 @@ public class SystemAdminService {
   public Response getKafkaSettings() throws KafkaException {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
     
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(values).build();
+    return Response.ok().entity(values).build();
   }
 }

@@ -43,7 +43,7 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   
   @Override
   protected List<TopicDTO> getItems(Project project) {
-    List<TopicDTO> allTopics = kafkaController.findTopicDtosByProject(project);
+    List<TopicDTO> allTopics = kafkaController.findTopicsByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     return allTopics;
   }

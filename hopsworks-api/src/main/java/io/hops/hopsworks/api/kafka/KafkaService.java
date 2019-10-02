@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.kafka;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -93,8 +92,6 @@ public class KafkaService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
   private KafkaFacade kafkaFacade;
   @EJB
   private KafkaController kafkaController;
@@ -114,12 +111,12 @@ public class KafkaService {
     return project;
   }
   
-  @ApiOperation(value = "Get Kafka topics.")
+  @ApiOperation(value = "Retrieve Kafka topics metadata .")
   @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getTopics(@BeanParam Pagination pagination, @BeanParam TopicsBeanParam topicsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
@@ -128,7 +125,7 @@ public class KafkaService {
     resourceRequest.setFilter(topicsBeanParam.getFilter());
     List<TopicDTO> topicDTOList = topicsBuilder.buildItems(project, resourceRequest);
     GenericEntity<List<TopicDTO>> entity = new GenericEntity<List<TopicDTO>>(topicDTOList) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(entity).build();
+    return Response.ok().entity(entity).build();
   }
   
   @ApiOperation(value = "Create a new Kafka topic.")
@@ -145,7 +142,7 @@ public class KafkaService {
     kafkaController.createTopic(project, topicDto);
   
     json.setSuccessMessage("The Topic has been created.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
   
   @ApiOperation(value = "Delete a Kafka topic.")
@@ -158,7 +155,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaController.removeTopicFromProject(project, topicName);
     json.setSuccessMessage("The topic has been removed.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
   
   @ApiOperation(value = "Get Kafka topic details.")
@@ -166,13 +163,13 @@ public class KafkaService {
   @Path("/topics/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicDetails(@PathParam("topic") String topicName) throws KafkaException, InterruptedException,
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopic(@PathParam("topic") String topicName) throws KafkaException, InterruptedException,
     ExecutionException {
     
     List<PartitionDetailsDTO> topic = kafkaController.getTopicDetails(project, topicName).get();
     GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
+    return Response.ok().entity(topics).build();
   }
   
   @ApiOperation(value = "Share a Kafka topic with a project.")
@@ -188,7 +185,7 @@ public class KafkaService {
     
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("The topic has been shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
   
   @ApiOperation(value = "Unshare Kafka topic from all projects.")
@@ -204,10 +201,10 @@ public class KafkaService {
     
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Topic has been unshared from all projects.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
   
-  @ApiOperation(value = "Unshare Kafka topic from a project.")
+  @ApiOperation(value = "Unshare Kafka topic from a project (specified as destProjectId).")
   @DELETE
   @Path("/topics/{topic}/shared/{destProjectId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -220,10 +217,10 @@ public class KafkaService {
     
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Topic has been unshared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
   
-  @ApiOperation(value = "Get list of projects that a topic was shared with.")
+  @ApiOperation(value = "Get list of projects that a topic has been shared with.")
   @GET
   @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)
@@ -232,7 +229,7 @@ public class KafkaService {
   public Response topicIsSharedTo(@PathParam("topic") String topicName) {
     List<SharedProjectDTO> projectDtoList = kafkaController.getTopicSharedProjects(topicName, project.getId());
     GenericEntity<List<SharedProjectDTO>> projectDtos = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectDtos).build();
+    return Response.ok().entity(projectDtos).build();
   }
 
   @GET
@@ -243,7 +240,7 @@ public class KafkaService {
   public Response aclUsers(@PathParam("topicName") String topicName) {
     List<AclUserDTO> aclUsersDtos = kafkaFacade.aclUsers(project.getId(), topicName);
     GenericEntity<List<AclUserDTO>> aclUsers = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclUsers).build();
+    return Response.ok().entity(aclUsers).build();
   }
 
   @POST
@@ -257,7 +254,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("ACL has been added to the topic.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @DELETE
@@ -270,7 +267,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.removeAclFromTopic(topicName, aclId);
     json.setSuccessMessage("Topic acls has been removed.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @GET
@@ -281,7 +278,7 @@ public class KafkaService {
   public Response getTopicAcls(@PathParam("topic") String topicName) throws KafkaException {
     List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, project);
     GenericEntity<List<AclDTO>> aclDtos = new GenericEntity<List<AclDTO>>(aclDto) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
+    return Response.ok().entity(aclDtos).build();
   }
 
   @PUT
@@ -294,7 +291,7 @@ public class KafkaService {
     kafkaFacade.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("TopicAcl updated successfully");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   //validate the new schema
@@ -309,13 +306,13 @@ public class KafkaService {
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
         json.setErrorMsg("schema is invalid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       case INCOMPATIBLE:
         json.setErrorMsg("schema is not backward compatible");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       default:
         json.setSuccessMessage("schema is valid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return Response.ok().entity(json).build();
     }
   }
 
@@ -331,14 +328,14 @@ public class KafkaService {
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
         json.setErrorMsg("schema is invalid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       case INCOMPATIBLE:
         json.setErrorMsg("schema is not backward compatible");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       default:
         kafkaFacade.addSchemaForTopics(schemaData);
         json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return Response.ok().entity(json).build();
     }
   }
 
@@ -352,7 +349,7 @@ public class KafkaService {
   public Response listSchemasForTopics() {
     List<SchemaDTO> schemaDtos = kafkaFacade.listSchemasForTopics();
     GenericEntity<List<SchemaDTO>> schemas = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemas).build();
+    return Response.ok().entity(schemas).build();
   }
   
   
@@ -364,10 +361,10 @@ public class KafkaService {
   public Response getSchema(@PathParam("topic") String topic) {
     SchemaDTO schemaDto = kafkaFacade.getSchemaForTopic(topic);
     if (schemaDto != null) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+      return Response.ok().
         entity(schemaDto).build();
     } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
   }
   
@@ -379,7 +376,7 @@ public class KafkaService {
   public Response updateSchemaVersion(@PathParam("topic") String topic, @PathParam("version") Integer version)
   throws KafkaException {
     kafkaController.updateTopicSchemaVersion(project, topic, version);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return Response.ok().build();
   }
   
 
@@ -393,7 +390,7 @@ public class KafkaService {
   public Response getSchemaContent(@PathParam("schemaName") String schemaName,
       @PathParam("schemaVersion") Integer schemaVersion) throws KafkaException {
     SchemaDTO schemaDtos = kafkaFacade.getSchemaContent(schemaName, schemaVersion);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaDtos).build();
+    return Response.ok().entity(schemaDtos).build();
   }
 
   //delete the specified version of the given schema.
@@ -407,7 +404,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.deleteSchema(schemaName, version);
     json.setSuccessMessage("Schema version for topic removed successfuly");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
 }

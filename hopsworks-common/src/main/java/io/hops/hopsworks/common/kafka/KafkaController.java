@@ -118,10 +118,6 @@ public class KafkaController {
         "topic name: " + topicName + ", project: " + project.getName());
     }
     
-    SchemaTopics schema =
-      kafkaFacade.findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicName));
-    
     //check if the replication factor is not greater than the
     //number of running brokers
     try {
@@ -135,7 +131,7 @@ public class KafkaController {
         "project: " + project.getName(), ex.getMessage(), ex);
     }
     
-    kafkaFacade.createTopicInProject(project, topicDto, schema);
+    kafkaFacade.createTopicInProject(project, topicDto);
   
     //By default, all members of the project are granted full permissions
     //on the topic
@@ -151,12 +147,11 @@ public class KafkaController {
     kafkaFacade.removeTopicFromProject(pt);
   }
   
-  public List<TopicDTO> findTopicDtosByProject(Project project) {
+  public List<TopicDTO> findTopicsByProject(Project project) {
     List<ProjectTopics> ptList = kafkaFacade.findTopicsByProject(project);
   
     List<TopicDTO> topics = new ArrayList<>();
     if(ptList != null && !ptList.isEmpty()) {
-      topics = new ArrayList<>();
       for (ProjectTopics pt : ptList) {
         topics.add(new TopicDTO(pt.getTopicName(),
           pt.getSchemaTopics().getSchemaTopicsPK().getName(),
@@ -424,7 +419,7 @@ public class KafkaController {
   public void addProjectMemberToTopics(Project project, String member)
     throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
-    List<TopicDTO> topics = findTopicDtosByProject(project);
+    List<TopicDTO> topics = findTopicsByProject(project);
     List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {

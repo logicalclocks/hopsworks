@@ -104,7 +104,6 @@ public class KafkaFacade {
   Settings settings;
   @EJB
   private BaseHadoopClientsService baseHadoopService;
-  //TODO: added temporarly to compile the unrefactored endpoints - remove
   @EJB
   private KafkaController kafkaController;
   
@@ -240,13 +239,18 @@ public class KafkaFacade {
     });
   }
 
-  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto, SchemaTopics schema)
+  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
       throws KafkaException, InterruptedException, ExecutionException {
     // create the topic in kafka
     if (createTopicInKafka(topicDto).get() == null) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
                     "topic name: " + topicDto.getName());
     }
+  
+    SchemaTopics schema =
+      findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
+    
     /*
      * What is the possibility of the program failing here? The topic is created
      * on
@@ -458,8 +462,7 @@ public class KafkaFacade {
     //remove previous acl
     em.remove(ta);
 
-    //TODO: ugly! to be refactored!
-    //add the new acls  
+    //add the new acls
     kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
   }
 

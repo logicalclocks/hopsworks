@@ -164,12 +164,7 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
       Settings.INFERENCE_SCHEMAVERSION);
 
-    ProjectTopics pt = null;
-    SchemaTopics schema =
-      kafkaFacade.findSchemaByNameAndVersion(topicDTO.getSchemaName(), topicDTO.getSchemaVersion()).orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDTO.getName()));
-  
-    pt = kafkaFacade.createTopicInProject(project, topicDTO, schema);
+    ProjectTopics pt = kafkaFacade.createTopicInProject(project, topicDTO);
 
     // Add the ACLs for this topic. By default all users should be able to do everything
     AclDTO aclDto = new AclDTO(project.getName(),
