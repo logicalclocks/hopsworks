@@ -278,7 +278,8 @@ public class FeaturestoreService {
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector = null;
-    if(settings.isOnlineFeaturestore()) {
+    if(settings.isOnlineFeaturestore()
+      && onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
       Users user = jWTHelper.getUserPrincipal(sc);
       String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
       String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
