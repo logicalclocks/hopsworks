@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroupController;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
@@ -72,6 +73,8 @@ public class CachedFeaturegroupController {
   private FeaturestoreController featurestoreController;
   @EJB
   private OnlineFeaturegroupController onlineFeaturegroupController;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
@@ -769,6 +772,15 @@ public class CachedFeaturegroupController {
     Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO,
     Featuregroup featuregroup, Users user)
     throws FeaturestoreException, SQLException {
+    if(settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
+    }
+    if (!onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
+        "administrator.");
+    }
     //Create MySQL Table for Online Feature Group
     OnlineFeaturegroup onlineFeaturegroup = null;
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
@@ -799,6 +811,15 @@ public class CachedFeaturegroupController {
   public FeaturegroupDTO disableFeaturegroupOnline(
     Featurestore featurestore, Featuregroup featuregroup, Users user)
     throws FeaturestoreException, SQLException {
+    if(settings.isOnlineFeaturestore()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
+    }
+    if (!onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
+        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
+        "administrator.");
+    }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
       //Drop MySQL Table for Online Feature Group
