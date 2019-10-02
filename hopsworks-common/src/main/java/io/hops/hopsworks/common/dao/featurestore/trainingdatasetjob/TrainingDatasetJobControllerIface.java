@@ -29,6 +29,6 @@ public interface TrainingDatasetJobControllerIface {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default Jobs createTrainingDatasetJob(Users user, Project project, TrainingDatasetJobDTO
     trainingDatasetJobDTO) throws FeaturestoreException, JAXBException {
-    throw new RuntimeException("API not supported in the community edition");
+    throw new IllegalArgumentException("API not supported in the community edition");
   }
 }
