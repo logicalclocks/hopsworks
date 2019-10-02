@@ -35,8 +35,8 @@ import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreMetadataDTO;
 import io.hops.hopsworks.common.dao.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.importjob.FeaturegroupImportJobDTO;
+import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -278,6 +279,8 @@ public class FeaturestoreService {
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector = null;
+    FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
+    featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     if(settings.isOnlineFeaturestore()
       && onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
       Users user = jWTHelper.getUserPrincipal(sc);
@@ -286,10 +289,16 @@ public class FeaturestoreService {
       onlineFeaturestoreConnector =
         featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
           dbUsername, featurestore, dbName);
+      featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
+      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
+        featurestore.getProject().getName()));
+      featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
+      featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
+      featurestoreDTO.setOnlineEnabled(true);
     }
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
-        new FeaturestoreClientSettingsDTO(), storageConnectors, onlineFeaturestoreConnector);
+        featurestoreClientSettingsDTO, storageConnectors, onlineFeaturestoreConnector);
     GenericEntity<FeaturestoreMetadataDTO> featurestoreMetadataGeneric =
       new GenericEntity<FeaturestoreMetadataDTO>(featurestoreMetadataDTO) {
       };

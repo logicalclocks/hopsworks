@@ -772,7 +772,7 @@ public class CachedFeaturegroupController {
     Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO,
     Featuregroup featuregroup, Users user)
     throws FeaturestoreException, SQLException {
-    if(settings.isOnlineFeaturestore()) {
+    if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
