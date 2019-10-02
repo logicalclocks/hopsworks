@@ -30,6 +30,6 @@ public interface ImportControllerIface {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default public Jobs createImportJob(Users user, Project project, FeaturegroupImportJobDTO featuregroupImportJobDTO)
       throws FeaturestoreException {
-    throw new RuntimeException("API not supported in the community edition");
+    throw new IllegalArgumentException("API not supported in the community edition");
   }
 }
