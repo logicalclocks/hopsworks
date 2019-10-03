@@ -82,7 +82,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
           .build();
       jwt = verifier.verify(token);
     } catch (Exception exception) {
-      LOGGER.log(Level.INFO, "JWT Verification Exception: {0}", exception.getMessage());
+      LOGGER.log(Level.FINE, "JWT Verification Exception: {0}", exception.getMessage());
       responseEntity = responseEntity(Response.Status.UNAUTHORIZED, exception.getMessage());
       requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
           WWW_AUTHENTICATE_VALUE).entity(responseEntity).build());
@@ -102,7 +102,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     Set<String> allowedRolesSet = allowedRoles();
     if (allowedRolesSet != null && !allowedRolesSet.isEmpty()) {
       if (!intersect(allowedRolesSet, Arrays.asList(userRoles))) {
-        LOGGER.log(Level.INFO, "JWT Access Exception: Client not authorized for this invocation.");
+        LOGGER.log(Level.FINE, "JWT Access Exception: Client not authorized for this invocation.");
         responseEntity = responseEntity(Response.Status.FORBIDDEN, "Client not authorized for this invocation.");
         requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(responseEntity).build());
         return;
@@ -113,7 +113,7 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     Set<String> accepts = acceptedTokens();
     if (accepts != null && !accepts.isEmpty()) {
       if (!intersect(accepts, audience)) {
-        LOGGER.log(Level.INFO, "JWT Access Exception: Token not issued for this recipient.");
+        LOGGER.log(Level.FINE, "JWT Access Exception: Token not issued for this recipient.");
         responseEntity = responseEntity(Response.Status.FORBIDDEN, "Token not issued for this recipient.");
         requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity(responseEntity).build());
         return;

@@ -78,7 +78,7 @@ public class AuthFilter extends JWTFilter {
   public boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader != null && authorizationHeader.startsWith(ApiKeyFilter.API_KEY)) {
-      LOGGER.log(Level.INFO, "{0}found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
+      LOGGER.log(Level.FINEST, "{0}found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
       return false;
     }
     return true;
