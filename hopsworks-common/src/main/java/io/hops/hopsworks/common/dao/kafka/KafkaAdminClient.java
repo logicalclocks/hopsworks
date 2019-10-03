@@ -1,0 +1,76 @@
+package io.hops.hopsworks.common.dao.kafka;
+
+import io.hops.hopsworks.common.security.BaseHadoopClientsService;
+import io.hops.hopsworks.common.util.Settings;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
+import org.apache.kafka.clients.admin.DescribeTopicsResult;
+import org.apache.kafka.clients.admin.ListTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.config.SslConfigs;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import java.util.Collection;
+import java.util.Properties;
+import java.util.Set;
+
+@Singleton
+@DependsOn("Settings")
+@ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
+public class KafkaAdminClient {
+  
+  @EJB
+  private Settings settings;
+  @EJB
+  private BaseHadoopClientsService baseHadoopService;
+  
+  private AdminClient adminClient;
+  
+  @PostConstruct
+  private void init() {
+    adminClient = getAdminClient();
+  }
+  
+  private AdminClient getAdminClient()  {
+    Properties props = new Properties();
+    Set<String> brokers = settings.getKafkaBrokers();
+    //Keep only INTERNAL protocol brokers
+    brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0]
+      .equalsIgnoreCase(KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));
+    String brokerAddress = brokers.iterator().next().split("://")[1];
+    props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
+    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
+    props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
+    props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, baseHadoopService.getSuperKeystorePath());
+    props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
+    props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
+    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
+      KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
+    return AdminClient.create(props);
+  }
+  
+  public ListTopicsResult listTopics() {
+    return adminClient.listTopics();
+  }
+  
+  public CreateTopicsResult createTopics(Collection<NewTopic> newTopics) {
+    return adminClient.createTopics(newTopics);
+  }
+  
+  public DeleteTopicsResult deleteTopics(Collection<String> topics) {
+    return adminClient.deleteTopics(topics);
+  }
+  
+  public DescribeTopicsResult describeTopics(Collection<String> topics) {
+    return adminClient.describeTopics(topics);
+  }
+}

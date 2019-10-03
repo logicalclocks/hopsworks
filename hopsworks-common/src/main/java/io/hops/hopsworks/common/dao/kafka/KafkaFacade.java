@@ -42,38 +42,26 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.DescribeTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.config.SslConfigs;
-import org.apache.zookeeper.KeeperException;
 import org.elasticsearch.common.Strings;
 
-import javax.annotation.PostConstruct;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -82,8 +70,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,53 +78,22 @@ import java.util.stream.Collectors;
 
 
 @Stateless
-@DependsOn("Settings")
 public class KafkaFacade {
 
   private static final  Logger LOGGER = Logger.getLogger(KafkaFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-
-  @EJB
-  Settings settings;
-  @EJB
-  private BaseHadoopClientsService baseHadoopService;
   @EJB
   private KafkaController kafkaController;
-  
-  private AdminClient adminClient;
+  @EJB
+  private KafkaAdminClient kafkaAdminClient;
   
   protected EntityManager getEntityManager() {
     return em;
   }
 
   public KafkaFacade() {
-  }
-  
-  @PostConstruct
-  private void init() {
-    adminClient = getAdminClient();
-  }
-  
-  private AdminClient getAdminClient()  {
-    Properties props = new Properties();
-    Set<String> brokers = settings.getKafkaBrokers();
-    //Keep only INTERNAL protocol brokers
-    brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0].equalsIgnoreCase
-      (KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));
-    LOGGER.info("Brokers are " + brokers.size() + ", set=" + brokers.toString());
-    String brokerAddress = brokers.iterator().next().split("://")[1];
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
-    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
-    props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, baseHadoopService.getSuperTrustStorePath());
-    props.setProperty(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperTrustStorePassword());
-    props.setProperty(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, baseHadoopService.getSuperKeystorePath());
-    props.setProperty(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
-    props.setProperty(SslConfigs.SSL_KEY_PASSWORD_CONFIG, baseHadoopService.getSuperKeystorePassword());
-    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
-      KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
-    return AdminClient.create(props);
   }
   
   public List<ProjectTopics> findTopicsByProject (Project project) {
@@ -157,11 +112,7 @@ public class KafkaFacade {
       return Optional.empty();
     }
   }
-
-  /**
-   * Get all shared Topics for the given project.
-   *
-   */
+  
   public List<SharedTopics> findSharedTopicsByProject(Integer projectId) {
     return em.createNamedQuery("SharedTopics.findByProjectId", SharedTopics.class)
       .setParameter("projectId", projectId)
@@ -172,40 +123,6 @@ public class KafkaFacade {
     return em.createNamedQuery("SharedTopics.findByTopicName", SharedTopics.class)
       .setParameter("topicName", topicName)
       .getResultList();
-  }
-
-  private int getPort(String zkIp) {
-    return Integer.parseInt(zkIp.split(KafkaConst.COLON_SEPARATOR)[1]);
-  }
-
-  public InetAddress getIp(String zkIp) throws ServiceException {
-
-    String ip = zkIp.split(KafkaConst.COLON_SEPARATOR)[0];
-    try {
-      return InetAddress.getByName(ip);
-    } catch (UnknownHostException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, Level.SEVERE,
-        ex.getMessage());
-    }
-  }
-
-  //this should return list of projects the topic belongs to as owner or shared
-  public List<Project> findProjectforTopic(String topicName) {
-    TypedQuery<ProjectTopics> query = em.createNamedQuery(
-        "ProjectTopics.findByTopicName", ProjectTopics.class);
-    query.setParameter("topicName", topicName);
-
-    List<ProjectTopics> resp = query.getResultList();
-    List<Project> projects =  new ArrayList<>();;
-    if (resp != null && !resp.isEmpty()) {
-      for (ProjectTopics pt : resp) {
-        Project p = em.find(Project.class, pt.getProject());
-        if (p != null) {
-          projects.add(p);
-        }
-      }
-    }
-    return projects;
   }
   
   public Optional<ProjectTopics> findTopicByName(String topicName) {
@@ -228,28 +145,29 @@ public class KafkaFacade {
   }
   
   private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
-    return adminClient.listTopics().names().thenApply((set) -> {
+    return kafkaAdminClient.listTopics().names().thenApply((set) -> {
       if (set.contains(topicDTO.getName())) {
         return null;
       } else {
         NewTopic newTopic =
           new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-        return adminClient.createTopics(Collections.singleton(newTopic));
+        return kafkaAdminClient.createTopics(Collections.singleton(newTopic));
       }
     });
   }
 
   public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
       throws KafkaException, InterruptedException, ExecutionException {
+    
+    SchemaTopics schema =
+      findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
+    
     // create the topic in kafka
     if (createTopicInKafka(topicDto).get() == null) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
                     "topic name: " + topicDto.getName());
     }
-  
-    SchemaTopics schema =
-      findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
     
     /*
      * What is the possibility of the program failing here? The topic is created
@@ -287,7 +205,7 @@ public class KafkaFacade {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
-    adminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
+    kafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
   }
 
   public void removeAllTopicsFromProject(Project project) {
@@ -302,7 +220,7 @@ public class KafkaFacade {
       .map(ProjectTopics::getTopicName)
       .collect(Collectors.toList());
     
-    adminClient.deleteTopics(topicNameList);
+    kafkaAdminClient.deleteTopics(topicNameList);
   }
 
 
@@ -336,16 +254,6 @@ public class KafkaFacade {
       .filter(acl -> acl.getPrincipal().split(KafkaConst.PROJECT_DELIMITER)[0].equals(project.getName()))
       .forEach(acl -> em.remove(acl));
   }
-
-  public TopicDefaultValueDTO topicDefaultValues() throws InterruptedException, IOException, KeeperException {
-
-    Set<String> brokers = settings.getBrokerEndpoints();
-
-    return new TopicDefaultValueDTO(
-        settings.getKafkaDefaultNumReplicas(),
-        settings.getKafkaDefaultNumPartitions(),
-        brokers.size());
-  }
   
   public Optional<SharedTopics> findSharedTopicByProjectAndTopic (Integer projectId, String topicName) {
     return Optional.ofNullable(em.find(SharedTopics.class,
@@ -360,30 +268,6 @@ public class KafkaFacade {
   
   public void unshareTopic(SharedTopics st) {
     em.remove(st);
-  }
-
-  public List<SharedProjectDTO> topicIsSharedTo(String topicName,
-      Integer projectId) {
-
-    List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
-  
-    List<SharedTopics> projectIds = em.createNamedQuery(
-      "SharedTopics.findByTopicAndOwnerProjectId", SharedTopics.class)
-      .setParameter("topicName", topicName)
-      .setParameter("ownerProjectId", projectId)
-      .getResultList();
-    
-    for (SharedTopics st : projectIds) {
-
-      Project project = em.find(Project.class, st.getSharedTopicsPK()
-          .getProjectId());
-      if (project != null) {
-        shareProjectDtos.add(new SharedProjectDTO(project.getName(),
-            project.getId()));
-      }
-    }
-
-    return shareProjectDtos;
   }
   
   public List<SharedTopics> findSharedTopicsByTopicAndOwnerProject (String topicName, Integer ownerProjectId) {
@@ -689,7 +573,7 @@ public class KafkaFacade {
   }
 
   public DescribeTopicsResult getTopicsFromKafkaCluster(Collection<String> topicNames) {
-    return adminClient.describeTopics(topicNames);
+    return kafkaAdminClient.describeTopics(topicNames);
   }
   
   public Optional<ProjectTopics> getTopicByProjectAndTopicName(Project project, String topicName) {
