@@ -42,13 +42,17 @@ package io.hops.hopsworks.common.kafka;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
+import io.hops.hopsworks.common.dao.kafka.KafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
+import io.hops.hopsworks.common.dao.kafka.SchemaTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
@@ -62,6 +66,8 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
@@ -99,6 +105,14 @@ public class KafkaController {
   private ProjectFacade projectFacade;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
+  @EJB
+  private SharedTopicsFacade sharedTopicsFacade;
+  @EJB
+  private KafkaAdminClient kafkaAdminClient;
+  @EJB
+  private SchemaTopicsFacade schemaTopicsFacade;
   
   public void createTopic(Project project, TopicDTO topicDto) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
@@ -109,11 +123,11 @@ public class KafkaController {
     
     String topicName = topicDto.getName();
     
-    if (kafkaFacade.findTopicByName(topicDto.getName()).isPresent()) {
+    if (projectTopicsFacade.findTopicByName(topicDto.getName()).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
     
-    if (kafkaFacade.findTopicsByProject(project).size() > project.getKafkaMaxNumTopics()) {
+    if (projectTopicsFacade.findTopicsByProject(project).size() > project.getKafkaMaxNumTopics()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_LIMIT_REACHED, Level.FINE,
         "topic name: " + topicName + ", project: " + project.getName());
     }
@@ -131,7 +145,7 @@ public class KafkaController {
         "project: " + project.getName(), ex.getMessage(), ex);
     }
     
-    kafkaFacade.createTopicInProject(project, topicDto);
+    createTopicInProject(project, topicDto);
   
     //By default, all members of the project are granted full permissions
     //on the topic
@@ -140,30 +154,88 @@ public class KafkaController {
   
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
     
-    ProjectTopics pt = kafkaFacade.findTopicByNameAndProject(project, topicName)
+    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topicName)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName));
     
-    kafkaFacade.removeTopicFromProject(pt);
+    //remove from database
+    projectTopicsFacade.remove(pt);
+    /*
+     * What is the possibility of the program failing below? The topic is
+     * removed from
+     * db, but not yet from zk. *
+     * Possibilities:
+     * 1. ZkClient is unable to establish a connection, maybe due to timeouts.
+     * 2. In case delete.topic.enable is not set to true in the Kafka server
+     * configuration, delete topic marks a topic for deletion. Subsequent
+     * topic (with the same name) create operation fails.
+     */
+    //remove from zookeeper
+    kafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
   }
   
   public List<TopicDTO> findTopicsByProject(Project project) {
-    List<ProjectTopics> ptList = kafkaFacade.findTopicsByProject(project);
+    List<ProjectTopics> ptList = projectTopicsFacade.findTopicsByProject(project);
   
     List<TopicDTO> topics = new ArrayList<>();
-    if(ptList != null && !ptList.isEmpty()) {
-      for (ProjectTopics pt : ptList) {
-        topics.add(new TopicDTO(pt.getTopicName(),
-          pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-          pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
-          false));
-      }
+    for (ProjectTopics pt : ptList) {
+      topics.add(new TopicDTO(pt.getTopicName(),
+        pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+        pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
+        false));
     }
     return topics;
   }
   
+  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
+    throws KafkaException, InterruptedException, ExecutionException {
+    
+    SchemaTopics schema =
+      schemaTopicsFacade.findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion())
+        .orElseThrow(() ->
+          new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
+    
+    // create the topic in kafka
+    if (createTopicInKafka(topicDto).get() == null) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+        "topic name: " + topicDto.getName());
+    }
+    
+    /*
+     * What is the possibility of the program failing here? The topic is created
+     * on
+     * zookeeper, but not persisted onto db. User cannot access the topic,
+     * cannot
+     * create a topic of the same name. In such scenario, the zk timer should
+     * remove the topic from zk.
+     *
+     * One possibility is: schema has a global name space, it is not project
+     * specific.
+     * While the schema is selected by this topic, it could be deleted by
+     * another
+     * user. Hence the above schema query will be empty.
+     */
+    ProjectTopics pt = new ProjectTopics(topicDto.getName(), project, schema);
+    
+    projectTopicsFacade.save(pt);
+    
+    return pt;
+  }
+  
+  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
+    return kafkaAdminClient.listTopics().names().thenApply((set) -> {
+      if (set.contains(topicDTO.getName())) {
+        return null;
+      } else {
+        NewTopic newTopic =
+          new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+        return kafkaAdminClient.createTopics(Collections.singleton(newTopic));
+      }
+    });
+  }
+  
   private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
-    return kafkaFacade.getTopicsFromKafkaCluster(Collections.singleton(topicName))
+    return kafkaAdminClient.describeTopics(Collections.singleton(topicName))
       .all()
       .thenApply((map) -> map.getOrDefault(topicName, null))
       .thenApply((td) -> {
@@ -192,8 +264,8 @@ public class KafkaController {
   
   public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails (Project project, String topicName) throws
     KafkaException {
-    
-    kafkaFacade.findTopicByNameAndProject(project, topicName).orElseThrow(() ->
+  
+    projectTopicsFacade.findTopicByNameAndProject(project, topicName).orElseThrow(() ->
       new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName)
     );
   
@@ -207,11 +279,11 @@ public class KafkaController {
       throw new KafkaException(RESTCodes.KafkaErrorCode.DESTINATION_PROJECT_IS_TOPIC_OWNER, Level.FINE);
     }
     
-    if (!kafkaFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
+    if (!projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.PROJECT_IS_NOT_THE_OWNER_OF_THE_TOPIC, Level.FINE);
     }
     
-    if (!kafkaFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
+    if (!projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "topic: " + topicName);
     }
     
@@ -220,11 +292,11 @@ public class KafkaController {
         "Could not find project: " + destProjectId);
     }
     
-    if (kafkaFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).isPresent()) {
+    if (sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
     }
-    
-    kafkaFacade.shareTopic(project, topicName, destProjectId);
+  
+    sharedTopicsFacade.shareTopic(project, topicName, destProjectId);
     //By default, all members of the project are granted full permissions on the topic
     addFullPermissionAclsToTopic(destProjectId, topicName, project.getId());
   }
@@ -281,7 +353,7 @@ public class KafkaController {
       project = topicOwnerProject;
     }
     
-    ProjectTopics pt = kafkaFacade.findTopicByNameAndProject(topicOwnerProject, topicName)
+    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(topicOwnerProject, topicName)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName));
       
@@ -327,7 +399,8 @@ public class KafkaController {
   }
   
   public List<SharedProjectDTO> getTopicSharedProjects (String topicName, Integer ownerProjectId) {
-    List<SharedTopics> projectIds = kafkaFacade.findSharedTopicsByTopicAndOwnerProject(topicName, ownerProjectId);
+    List<SharedTopics> projectIds =
+      sharedTopicsFacade.findSharedTopicsByTopicAndOwnerProject(topicName, ownerProjectId);
   
     List<SharedProjectDTO> shareProjectDtos = new ArrayList<>();
     for (SharedTopics st : projectIds) {
@@ -346,12 +419,12 @@ public class KafkaController {
   public void unshareTopicFromAllProjects(Project ownerProject, String topicName)
     throws KafkaException, ProjectException {
     //check if ownerProject is the owner of the topic
-    if (!kafkaFacade.findTopicByNameAndProject(ownerProject, topicName).isPresent()) {
+    if (!projectTopicsFacade.findTopicByNameAndProject(ownerProject, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic " + topicName +
       " does not belong to project " + ownerProject.getName());
     }
     
-    List<SharedTopics> list = kafkaFacade.findSharedTopicsByTopicName(topicName);
+    List<SharedTopics> list = sharedTopicsFacade.findSharedTopicsByTopicName(topicName);
     
     for (SharedTopics st : list) {
       unshareTopic(ownerProject, topicName, st.getProjectId());
@@ -364,11 +437,11 @@ public class KafkaController {
     Project destProject = projectFacade.findById(destProjectId).orElseThrow(() ->
       new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + destProjectId));
     
-    SharedTopics st = kafkaFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).orElseThrow(() ->
+    SharedTopics st = sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).orElseThrow(() ->
       new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
         "topic: " + topicName + ", project: " + destProjectId));
-    
-    kafkaFacade.unshareTopic(st);
+  
+    sharedTopicsFacade.unshareTopic(st);
     
     kafkaFacade.removeAclFromTopic(topicName, destProject);
   }
@@ -420,7 +493,7 @@ public class KafkaController {
     throws KafkaException, ProjectException, UserException {
     //Get all topics (shared with project as well)
     List<TopicDTO> topics = findTopicsByProject(project);
-    List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
+    List<SharedTopics> sharedTopics = sharedTopicsFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     for (SharedTopics sharedTopic : sharedTopics) {
       addAclsToTopic(sharedTopic.getSharedTopicsPK().getTopicName(), sharedTopic.getProjectId(),
@@ -437,7 +510,7 @@ public class KafkaController {
   
   public void removeProjectMemberFromTopics(Project project, Users user) throws ProjectException {
     //Get all topics (shared with project as well)
-    List<SharedTopics> sharedTopics = kafkaFacade.findSharedTopicsByProject(project.getId());
+    List<SharedTopics> sharedTopics = sharedTopicsFacade.findSharedTopicsByProject(project.getId());
     //For every topic that has been shared with the current project, add the new member to its ACLs
     List<Integer> projectSharedTopics = new ArrayList<>();
 
@@ -463,7 +536,7 @@ public class KafkaController {
    * @return
    */
   public List<TopicDTO> findSharedTopicsByProject(Integer projectId) {
-    List<SharedTopics> res = kafkaFacade.findSharedTopicsByProject(projectId);
+    List<SharedTopics> res = sharedTopicsFacade.findSharedTopicsByProject(projectId);
     List<TopicDTO> topics = new ArrayList<>();
     for (SharedTopics pt : res) {
       topics.add(new TopicDTO(pt.getSharedTopicsPK().getTopicName(), pt.getProjectId(), true));
@@ -472,17 +545,17 @@ public class KafkaController {
   }
 
   public void updateTopicSchemaVersion(Project project, String topicName, Integer schemaVersion) throws KafkaException {
-    ProjectTopics pt = kafkaFacade.getTopicByProjectAndTopicName(project, topicName)
+    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topicName)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topicName));
     
     String schemaName = pt.getSchemaTopics().getSchemaTopicsPK().getName();
   
-    SchemaTopics st = kafkaFacade.getSchemaByNameAndVersion(schemaName, schemaVersion)
+    SchemaTopics st = schemaTopicsFacade.findSchemaByNameAndVersion(schemaName, schemaVersion)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
         "schema: " + schemaName + ", version: " + schemaVersion));
     
-    kafkaFacade.updateTopicSchemaVersion(pt, st);
+    projectTopicsFacade.updateTopicSchemaVersion(pt, st);
   }
 }

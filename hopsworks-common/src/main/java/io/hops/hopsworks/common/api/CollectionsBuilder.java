@@ -25,14 +25,14 @@ import java.util.stream.Stream;
 
 public abstract class CollectionsBuilder<T> {
   
-  protected abstract List<T> getItems(Project project);
+  protected abstract List<T> getAll(Project project);
   
   protected abstract List<T> filterTopics(List<T> list, AbstractFacade.FilterBy filterBy);
   
   protected abstract List<T> sortTopics(List<T> list, Set<? extends AbstractFacade.SortBy> sortBySet);
   
   public List<T> buildItems(Project project, ResourceRequest resourceRequest) {
-    List<T> list = getItems(project);
+    List<T> list = getAll(project);
   
     for (AbstractFacade.FilterBy tFilter : resourceRequest.getFilter()) {
       list = filterTopics(list, tFilter);

@@ -50,10 +50,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.DescribeTopicsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.common.KafkaFuture;
 import org.elasticsearch.common.Strings;
 
 import javax.ejb.EJB;
@@ -63,19 +59,13 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-
 
 @Stateless
 public class KafkaFacade {
@@ -86,8 +76,6 @@ public class KafkaFacade {
   private EntityManager em;
   @EJB
   private KafkaController kafkaController;
-  @EJB
-  private KafkaAdminClient kafkaAdminClient;
   
   protected EntityManager getEntityManager() {
     return em;
@@ -95,134 +83,6 @@ public class KafkaFacade {
 
   public KafkaFacade() {
   }
-  
-  public List<ProjectTopics> findTopicsByProject (Project project) {
-    return em.createNamedQuery("ProjectTopics.findByProject", ProjectTopics.class)
-      .setParameter("project", project)
-      .getResultList();
-  }
-
-  public Optional<ProjectTopics> findTopicByNameAndProject(Project project, String topicName) {
-    try {
-      return Optional.of(em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", project)
-          .setParameter("topicName", topicName)
-          .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-  
-  public List<SharedTopics> findSharedTopicsByProject(Integer projectId) {
-    return em.createNamedQuery("SharedTopics.findByProjectId", SharedTopics.class)
-      .setParameter("projectId", projectId)
-      .getResultList();
-  }
-  
-  public List<SharedTopics> findSharedTopicsByTopicName (String topicName) {
-    return em.createNamedQuery("SharedTopics.findByTopicName", SharedTopics.class)
-      .setParameter("topicName", topicName)
-      .getResultList();
-  }
-  
-  public Optional<ProjectTopics> findTopicByName(String topicName) {
-    try {
-      return Optional.of(em.createNamedQuery("ProjectTopics.findByTopicName", ProjectTopics.class)
-        .setParameter("topicName", topicName)
-        .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-  
-  public Optional<SchemaTopics> findSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
-    try {
-      return Optional.of(em.find(SchemaTopics.class,
-        new SchemaTopicsPK(schemaName, schemaVersion)));
-    } catch (NullPointerException e) {
-      return Optional.empty();
-    }
-  }
-  
-  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
-    return kafkaAdminClient.listTopics().names().thenApply((set) -> {
-      if (set.contains(topicDTO.getName())) {
-        return null;
-      } else {
-        NewTopic newTopic =
-          new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-        return kafkaAdminClient.createTopics(Collections.singleton(newTopic));
-      }
-    });
-  }
-
-  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
-      throws KafkaException, InterruptedException, ExecutionException {
-    
-    SchemaTopics schema =
-      findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion()).orElseThrow(() ->
-        new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
-    
-    // create the topic in kafka
-    if (createTopicInKafka(topicDto).get() == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-                    "topic name: " + topicDto.getName());
-    }
-    
-    /*
-     * What is the possibility of the program failing here? The topic is created
-     * on
-     * zookeeper, but not persisted onto db. User cannot access the topic,
-     * cannot
-     * create a topic of the same name. In such scenario, the zk timer should
-     * remove the topic from zk.
-     *
-     * One possibility is: schema has a global name space, it is not project
-     * specific.
-     * While the schema is selected by this topic, it could be deleted by
-     * another
-     * user. Hence the above schema query will be empty.
-     */
-    ProjectTopics pt = new ProjectTopics(topicDto.getName(), project, schema);
-
-    em.persist(pt);
-    em.flush();
-
-    return pt;
-  }
-  
-  public void removeTopicFromProject(ProjectTopics pt) {
-    //remove from database
-    em.remove(pt);
-    /*
-     * What is the possibility of the program failing below? The topic is
-     * removed from
-     * db, but not yet from zk. *
-     * Possibilities:
-     * 1. ZkClient is unable to establish a connection, maybe due to timeouts.
-     * 2. In case delete.topic.enable is not set to true in the Kafka server
-     * configuration, delete topic marks a topic for deletion. Subsequent
-     * topic (with the same name) create operation fails.
-     */
-    //remove from zookeeper
-    kafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
-  }
-
-  public void removeAllTopicsFromProject(Project project) {
-
-    List<ProjectTopics> topics = findTopicsByProject(project);
-
-    if (topics == null || topics.isEmpty()) {
-      return;
-    }
-    
-    List<String> topicNameList = topics.stream()
-      .map(ProjectTopics::getTopicName)
-      .collect(Collectors.toList());
-    
-    kafkaAdminClient.deleteTopics(topicNameList);
-  }
-
 
   public void removeAclsForUser(Users user, Integer projectId) throws ProjectException {
     Project project = em.find(Project.class, projectId);
@@ -253,29 +113,6 @@ public class KafkaFacade {
       .stream()
       .filter(acl -> acl.getPrincipal().split(KafkaConst.PROJECT_DELIMITER)[0].equals(project.getName()))
       .forEach(acl -> em.remove(acl));
-  }
-  
-  public Optional<SharedTopics> findSharedTopicByProjectAndTopic (Integer projectId, String topicName) {
-    return Optional.ofNullable(em.find(SharedTopics.class,
-      new SharedTopicsPK(topicName, projectId)));
-  }
-
-  public void shareTopic(Project owningProject, String topicName, Integer projectId) {
-    SharedTopics st = new SharedTopics(topicName, owningProject.getId(), projectId);
-    em.persist(st);
-    em.flush();
-  }
-  
-  public void unshareTopic(SharedTopics st) {
-    em.remove(st);
-  }
-  
-  public List<SharedTopics> findSharedTopicsByTopicAndOwnerProject (String topicName, Integer ownerProjectId) {
-    return em.createNamedQuery(
-      "SharedTopics.findByTopicAndOwnerProjectId", SharedTopics.class)
-      .setParameter("topicName", topicName)
-      .setParameter("ownerProjectId", ownerProjectId)
-      .getResultList();
   }
   
   public List<AclUserDTO> aclUsers(Integer projectId, String topicName) {
@@ -570,38 +407,6 @@ public class KafkaFacade {
       em.remove(schema);
       em.flush();
     }
-  }
-
-  public DescribeTopicsResult getTopicsFromKafkaCluster(Collection<String> topicNames) {
-    return kafkaAdminClient.describeTopics(topicNames);
-  }
-  
-  public Optional<ProjectTopics> getTopicByProjectAndTopicName(Project project, String topicName) {
-    try {
-      return Optional.of(em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-        .setParameter("project", project)
-        .setParameter("topicName", topicName)
-        .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-  
-  public Optional<SchemaTopics> getSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
-    try {
-      return Optional.of(em.createNamedQuery("SchemaTopics.findByNameAndVersion", SchemaTopics.class)
-        .setParameter("name", schemaName)
-        .setParameter("version", schemaVersion)
-        .getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-  
-  public void updateTopicSchemaVersion(ProjectTopics pt, SchemaTopics st) {
-    pt.setSchemaTopics(new SchemaTopics(st.schemaTopicsPK.getName(), st.schemaTopicsPK.getVersion()));
-    em.merge(pt);
-    em.flush();
   }
   
   public enum TopicsSorts {

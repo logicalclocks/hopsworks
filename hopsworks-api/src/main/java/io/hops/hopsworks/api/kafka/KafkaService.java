@@ -41,6 +41,8 @@ package io.hops.hopsworks.api.kafka;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
+import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -113,11 +115,30 @@ public class KafkaService {
   
   @ApiOperation(value = "Retrieve Kafka topics metadata .")
   @GET
+  @Path("/topics2")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopics2(@BeanParam Pagination pagination, @BeanParam
+    TopicsBeanParam topicsBeanParam) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(topicsBeanParam.getSortBySet());
+    resourceRequest.setFilter(topicsBeanParam.getFilter());
+    List<TopicDTO> topicDTOList = topicsBuilder.build(project, resourceRequest);
+    GenericEntity<List<TopicDTO>> entity = new GenericEntity<List<TopicDTO>>(topicDTOList) {};
+    return Response.ok().entity(entity).build();
+  }
+  
+  @ApiOperation(value = "Retrieve Kafka topics metadata .")
+  @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics(@BeanParam Pagination pagination, @BeanParam TopicsBeanParam topicsBeanParam) {
+  public Response getTopics(@BeanParam Pagination pagination, @BeanParam
+    TopicsBeanParam topicsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

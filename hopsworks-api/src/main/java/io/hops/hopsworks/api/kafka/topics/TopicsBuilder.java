@@ -13,11 +13,14 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.kafka;
+package io.hops.hopsworks.api.kafka.topics;
 
 import io.hops.hopsworks.common.api.CollectionsBuilder;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -26,6 +29,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -40,9 +44,11 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   
   @EJB
   private KafkaController kafkaController;
+  @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
   
   @Override
-  protected List<TopicDTO> getItems(Project project) {
+  protected List<TopicDTO> getAll(Project project) {
     List<TopicDTO> allTopics = kafkaController.findTopicsByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     return allTopics;
@@ -98,5 +104,23 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
         .sorted(comparator)
         .collect(Collectors.toList());
     }
+  }
+  
+  //TODO: SQL here is not working
+  public List<TopicDTO> build(Project project, ResourceRequest resourceRequest) {
+    List<ProjectTopics> ptList  = projectTopicsFacade.findTopicsByProject(project,
+      resourceRequest.getOffset(),
+      resourceRequest.getLimit(),
+      resourceRequest.getFilter(),
+      resourceRequest.getSort());
+  
+    List<TopicDTO> topics = new ArrayList<>();
+    for (ProjectTopics pt : ptList) {
+      topics.add(new TopicDTO(pt.getTopicName(),
+        pt.getSchemaTopics().getSchemaTopicsPK().getName(),
+        pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
+        false));
+    }
+    return topics;
   }
 }

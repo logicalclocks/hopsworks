@@ -63,7 +63,10 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.kafka.KafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
@@ -169,6 +172,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -256,7 +260,9 @@ public class ProjectController {
   @EJB
   private AirflowManager airflowManager;
   @EJB
-  private ProjectServiceFacade projectServiceFacade;
+  private KafkaAdminClient kafkaAdminClient;
+  @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
 
 
   /**
@@ -1733,7 +1739,13 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private void removeKafkaTopics(Project project) {
-    kafkaFacade.removeAllTopicsFromProject(project);
+    List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
+  
+    List<String> topicNameList = topics.stream()
+      .map(ProjectTopics::getTopicName)
+      .collect(Collectors.toList());
+  
+    kafkaAdminClient.deleteTopics(topicNameList);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

@@ -19,7 +19,7 @@ package io.hops.hopsworks.common.serving.util;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
-import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
@@ -35,7 +35,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.zookeeper.KeeperException;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
@@ -49,15 +48,11 @@ public class KafkaServingHelper {
   private KafkaFacade kafkaFacade;
   @EJB
   private Settings settings;
-
-  private SchemaTopics schemaTopics = null;
   @EJB
   private KafkaController kafkaController;
-
-  @PostConstruct
-  public void init() {
-    schemaTopics = kafkaFacade.getSchema(Settings.INFERENCE_SCHEMANAME, Settings.INFERENCE_SCHEMAVERSION);
-  }
+  @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
+  
   
   /**
    * Sets up the kafka topic for logging inference requests for models being served on Hopsworks. This kafka topic
@@ -164,7 +159,7 @@ public class KafkaServingHelper {
         servingWrapper.getKafkaTopicDTO().getNumOfPartitions(), Settings.INFERENCE_SCHEMANAME,
       Settings.INFERENCE_SCHEMAVERSION);
 
-    ProjectTopics pt = kafkaFacade.createTopicInProject(project, topicDTO);
+    ProjectTopics pt = kafkaController.createTopicInProject(project, topicDTO);
 
     // Add the ACLs for this topic. By default all users should be able to do everything
     AclDTO aclDto = new AclDTO(project.getName(),
@@ -180,7 +175,8 @@ public class KafkaServingHelper {
   private ProjectTopics checkSchemaRequirements(Project project, ServingWrapper servingWrapper)
       throws KafkaException, ServingException {
     ProjectTopics topic =
-      kafkaFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName()).orElseThrow(() ->
+      projectTopicsFacade.findTopicByNameAndProject(project, servingWrapper.getKafkaTopicDTO().getName())
+        .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
           "name: " + servingWrapper.getKafkaTopicDTO().getName()));
 
