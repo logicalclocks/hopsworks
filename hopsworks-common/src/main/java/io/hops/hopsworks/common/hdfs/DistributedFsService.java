@@ -61,6 +61,7 @@ import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
@@ -122,10 +123,8 @@ public class DistributedFsService {
     conf = new Configuration();
     conf.addResource(hadoopPath);
     conf.addResource(hdfsPath);
-    conf.set("fs.permissions.umask-mode", "000");
+    conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "0027");
     conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.getRPCEndpoint());
-//    conf.setStrings("dfs.namenodes.rpc.addresses", hdfsLeDescriptorsFacade.getActiveNN().getHostname());
-//    conf.setStrings("fs.defaultFS", "hdfs://"+hdfsLeDescriptorsFacade.getActiveNN().getHostname());
     if (settings.getHopsRpcTls()) {
       transientDir = settings.getHopsworksTmpCertDir();
     }

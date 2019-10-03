@@ -393,7 +393,7 @@ public class CertificateMaterializer {
    * @throws IOException
    */
   public void materializeCertificatesRemote(String userName, String projectName, String ownerName, String groupName,
-      FsPermission permissions, String remoteDirectory) throws IOException {
+      final FsPermission permissions, String remoteDirectory) throws IOException {
     if (remoteDirectory == null) {
       throw new IllegalArgumentException("Remote directory should not be null");
     }
@@ -965,7 +965,7 @@ public class CertificateMaterializer {
    * Materialize remote section
    */
   private void materializeRemoteInternal(MaterialKey key, String ownerName, String groupName,
-      FsPermission permissions, String remoteDirectory) throws IOException {
+      final FsPermission permissions, String remoteDirectory) throws IOException {
     
     RemoteMaterialReferences materialRef = null;
     RemoteMaterialRefID identifier = new RemoteMaterialRefID(key.getExtendedUsername(), remoteDirectory);
@@ -994,7 +994,6 @@ public class CertificateMaterializer {
             writeToHDFS(dfso, keyStore, material.getKeyStore().array());
             dfso.setOwner(keyStore, ownerName, groupName);
             dfso.setPermission(keyStore, permissions);
-            
             Path trustStore = new Path(remoteDirectory + Path.SEPARATOR + key.getExtendedUsername()
                 + TRUSTSTORE_SUFFIX);
             writeToHDFS(dfso, trustStore, material.getTrustStore().array());

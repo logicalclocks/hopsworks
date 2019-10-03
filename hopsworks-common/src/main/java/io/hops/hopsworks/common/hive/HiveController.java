@@ -55,11 +55,11 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 
 import javax.annotation.PostConstruct;
@@ -193,8 +193,7 @@ public class HiveController {
       hdfsUsersBean.addDatasetUsersGroups(user, project, dbDataset, dfso);
 
       // Make the dataset editable by default
-      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-          FsAction.NONE, true);
+      final FsPermission fsPermission = FsPermissions.rwxrwx___T;
       dfso.setPermission(dbPath, fsPermission);
 
       // Set the default quota
