@@ -151,7 +151,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
-  private static final String VARIABLE_AWS_INSTANCE_ROLE = "";
+  private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
   private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
   private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
