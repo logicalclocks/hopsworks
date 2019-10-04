@@ -45,7 +45,7 @@ public abstract class CollectionsBuilder<T> {
     return list;
   }
   
-  List<T> paginate(List<T> list, Integer limit, Integer offset) {
+  private List<T> paginate(List<T> list, Integer limit, Integer offset) {
     Stream<T> stream = list.stream();
     if (offset != null) {
       stream = stream.skip(offset);

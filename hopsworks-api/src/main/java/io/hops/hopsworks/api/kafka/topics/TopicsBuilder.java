@@ -16,11 +16,8 @@
 package io.hops.hopsworks.api.kafka.topics;
 
 import io.hops.hopsworks.common.api.CollectionsBuilder;
-import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -29,7 +26,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -44,8 +40,6 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   
   @EJB
   private KafkaController kafkaController;
-  @EJB
-  private ProjectTopicsFacade projectTopicsFacade;
   
   @Override
   protected List<TopicDTO> getAll(Project project) {
@@ -73,54 +67,29 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
     Comparator<TopicDTO> comparator = null;
     while (it.hasNext()) {
       AbstractFacade.SortBy sort = it.next();
+      Comparator order =
+        sort.getParam().getValue().equals("DESC") ? Comparator.reverseOrder() : Comparator.naturalOrder();
       switch (KafkaFacade.TopicsSorts.valueOf(sort.getValue())) {
         case NAME:
           if (comparator == null) {
-            comparator = Comparator.comparing(TopicDTO::getName);
+            comparator = Comparator.comparing(TopicDTO::getName, order);
           } else {
-            comparator.thenComparing(TopicDTO::getName);
-          }
-          if (sort.getParam().getValue().equals("DESC")) {
-            comparator = comparator.reversed();
+            comparator = comparator.thenComparing(TopicDTO::getName, order);
           }
           break;
         case SCHEMA_NAME:
           if (comparator == null) {
-            comparator = Comparator.comparing(TopicDTO::getSchemaName);
+            comparator = Comparator.comparing(TopicDTO::getSchemaName, order);
           } else {
-            comparator.thenComparing(TopicDTO::getSchemaName);
-          }
-          if (sort.getParam().getValue().equals("DESC")) {
-            comparator = comparator.reversed();
+            comparator = comparator.thenComparing(TopicDTO::getSchemaName, order);
           }
           break;
       }
     }
   
-    if (comparator == null) {
-      return list;
-    } else {
-      return list.stream()
-        .sorted(comparator)
-        .collect(Collectors.toList());
+    if (comparator != null) {
+      list.sort(comparator);
     }
-  }
-  
-  //TODO: SQL here is not working
-  public List<TopicDTO> build(Project project, ResourceRequest resourceRequest) {
-    List<ProjectTopics> ptList  = projectTopicsFacade.findTopicsByProject(project,
-      resourceRequest.getOffset(),
-      resourceRequest.getLimit(),
-      resourceRequest.getFilter(),
-      resourceRequest.getSort());
-  
-    List<TopicDTO> topics = new ArrayList<>();
-    for (ProjectTopics pt : ptList) {
-      topics.add(new TopicDTO(pt.getTopicName(),
-        pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-        pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
-        false));
-    }
-    return topics;
+    return list;
   }
 }
