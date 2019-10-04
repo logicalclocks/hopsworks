@@ -61,7 +61,7 @@ module KafkaHelper
   end
 
   def add_topic(project_id, schema_name, schema_version)
-    add_topic_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topic/add"
+    add_topic_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics"
     kafka_topic_name = "kafka_topic_#{random_id}"
     json_data = {
         name: kafka_topic_name,
@@ -83,7 +83,7 @@ module KafkaHelper
 
   def delete_topic(project_id, kafka_topic_name)
     delete_kafka_topic = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s +
-        "/kafka/topic/#{kafka_topic_name}/remove"
+        "/kafka/topics/#{kafka_topic_name}"
     delete delete_kafka_topic
   end
 

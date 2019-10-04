@@ -46,12 +46,12 @@ describe "On #{ENV['OS']}" do
           # create the target project
           target_project = create_project
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{org_project[:id]}/kafka/topic/#{@topic[:topic_name]}/share/#{target_project[:id]}"
+          put "#{ENV['HOPSWORKS_API']}/project/#{org_project[:id]}/kafka/topics/#{@topic[:topic_name]}/shared/#{target_project[:id]}"
           expect_status(200)
           expect_json(successMessage: "The topic has been shared.")
 
           # Check that the topic has been shared correctly
-          shared_topics = get "#{ENV['HOPSWORKS_API']}/project/#{target_project[:id]}/kafka/sharedTopics"
+          shared_topics = get "#{ENV['HOPSWORKS_API']}/project/#{target_project[:id]}/kafka/topics?filter_by=shared:true"
           shared_topic = JSON.parse(shared_topics).select{ |topic| topic['name'] == @topic[:topic_name]}
           expect(shared_topic.size).to eq 1
         end
