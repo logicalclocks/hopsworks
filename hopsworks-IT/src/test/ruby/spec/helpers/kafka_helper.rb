@@ -33,6 +33,13 @@ module KafkaHelper
     @schema
   end
 
+  def create_topics(project_id, schema_name, schema_version)
+    create_topic(project_id, schema_name, schema_version)
+    create_topic(project_id, schema_name, schema_version)
+    create_topic(project_id, schema_name, schema_version)
+    create_topic(project_id, schema_name, schema_version)
+  end
+
   def create_topic(project_id, schema_name=nil, schema_version = nil)
     if (schema_name.nil?)
       _, schema_name = add_schema(project_id)
@@ -40,6 +47,7 @@ module KafkaHelper
     end
     _, topic_name = add_topic(project_id, schema_name, schema_version)
     ProjectTopics.find_by(project_id:project_id, topic_name:topic_name)
+    return topic_name
   end
 
 
@@ -87,4 +95,12 @@ module KafkaHelper
     delete delete_kafka_topic
   end
 
+  def get_project_topics(project_id)
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:false"
+  end
+
+  def get_all_topics(project_id)
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics"
+  end
+  
 end

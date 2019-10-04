@@ -109,5 +109,37 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    context 'with valid project, kafka service enabled, a kafka schema, and three kafka topics' do
+      before :all do
+        with_valid_project
+        project = get_project
+        with_kafka_schema(project.id)
+        schema = get_schema
+	create_topics(project.id, schema.name, 1)
+      end
+
+      it "should return four own topics" do
+        project = get_project
+	get_project_topics(project.id)
+	expect(json_body.size).to eq(4)
+      end
+
+      it "should return four own topics and one shared" do
+      	first_project = get_project
+	
+	# create another project with one topic
+	second_project = create_project
+	topic_name = create_topic(second_project.id)
+		
+	# share topic with the first_project
+	put "#{ENV['HOPSWORKS_API']}/project/#{second_project[:id]}/kafka/topics/#{topic_name}/shared/#{first_project[:id]}"
+	expect_status(200)
+        expect_json(successMessage: "The topic has been shared.")
+
+	get_all_topics(first_project.id)
+        expect(json_body.size).to eq(5)
+      end
+    end
+
   end
 end
