@@ -167,6 +167,7 @@ public class FlinkYarnRunnerBuilder {
     
     addDynamicProperty(Settings.LOGSTASH_JOB_INFO,
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
+    addDynamicProperty("CONDA", settings.getCurrentCondaEnvironment(project));
   
     StringBuilder dynamicPropertiesEncoded = new StringBuilder();
   
