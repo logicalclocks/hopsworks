@@ -1624,7 +1624,13 @@ public class Settings implements Serializable {
     String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
     return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
   }
-
+  
+  //TODO(Theofilos): Used by Flink. Will be removed as part of refactoring *YarnRunnerBuilders.
+  public String getCurrentCondaEnvironment(Project project) {
+    return projectUtils.getCurrentCondaEnvironment(project);
+  }
+  
+  
   private Boolean ANACONDA_ENABLED = true;
 
   public synchronized Boolean isAnacondaEnabled() {
