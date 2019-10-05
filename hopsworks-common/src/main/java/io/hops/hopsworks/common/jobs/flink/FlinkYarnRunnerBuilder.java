@@ -164,7 +164,9 @@ public class FlinkYarnRunnerBuilder {
     builder.setFlinkCluster(cluster);
     builder.setFlinkClusterSpecification(clusterSpecification);
     builder.localResourcesBasePath(stagingPath);
-    
+  
+    //If "CONDA" is not the first in order of dynamic properties, the sdk_worker.sh script in chef needs to be updated.
+    addDynamicProperty("CONDA", settings.getCurrentCondaEnvironment(project));
     addDynamicProperty(Settings.LOGSTASH_JOB_INFO,
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
   
