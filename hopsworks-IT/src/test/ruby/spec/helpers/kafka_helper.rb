@@ -33,11 +33,12 @@ module KafkaHelper
     @schema
   end
 
-  def create_topics(project_id, schema_name, schema_version)
-    create_topic(project_id, schema_name, schema_version)
-    create_topic(project_id, schema_name, schema_version)
-    create_topic(project_id, schema_name, schema_version)
-    create_topic(project_id, schema_name, schema_version)
+  def create_topics(project_id, amount = 10, schema_name = nil , schema_version = nil)
+    for i in 1..amount 
+      create_topic(project_id, schema_name, schema_version)
+    end
+    get_project_topics(project_id)
+    json_body
   end
 
   def create_topic(project_id, schema_name=nil, schema_version = nil)
@@ -99,8 +100,16 @@ module KafkaHelper
     get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:false"
   end
 
-  def get_all_topics(project_id)
-    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics"
+  def get_all_topics(project_id, more = "")
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics" + more 
+  end
+
+  def share_topic(owner_project, topic_name, dest_project)
+	put "#{ENV['HOPSWORKS_API']}/project/#{owner_project[:id]}/kafka/topics/#{topic_name}/shared/#{dest_project[:id]}"
+  end
+
+  def get_shared_topics(project_id)
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:true"
   end
   
 end
