@@ -226,10 +226,11 @@ public class FeaturestoreController {
     featurestoreDTO.setHiveEndpoint(hiveEndpoint);
     featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
     if(settings.isOnlineFeaturestore() &&
-      onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+      onlineFeaturestoreController.checkIfDatabaseExists(
+          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
       featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
-        featurestore.getProject().getName()));
+          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
       featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
       featurestoreDTO.setOnlineEnabled(true);

@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.dao.featurestore.online_featurestore.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeature;
 import io.hops.hopsworks.common.dao.hdfs.HdfsDirectoryWithQuotaFeatureFacade;
@@ -1800,7 +1801,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<String> addMembers(Project project, Users owner, List<ProjectTeam> projectTeams) throws KafkaException,
-    ProjectException, UserException {
+    ProjectException, UserException, FeaturestoreException {
     List<String> failedList = new ArrayList<>();
     if (projectTeams == null) {
       return failedList;
@@ -1837,7 +1838,16 @@ public class ProjectController {
             if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
               kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
             }
-
+  
+            //if online-featurestore service is enabled in the project, give new member access to it
+            if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
+                settings.isOnlineFeaturestore()) {
+              onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(), project);
+              FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
+                  featurestoreController.getOfflineFeaturestoreDbName(project));
+              onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, projectTeam.getUser(),
+                  featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
+            }
 
             // TODO: This should now be a REST call
             Future<CertificatesController.CertsResult> certsResultFuture = null;
