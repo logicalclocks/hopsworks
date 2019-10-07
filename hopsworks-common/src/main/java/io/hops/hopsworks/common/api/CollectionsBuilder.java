@@ -47,10 +47,10 @@ public abstract class CollectionsBuilder<T> {
   
   private List<T> paginate(List<T> list, Integer limit, Integer offset) {
     Stream<T> stream = list.stream();
-    if (offset != null) {
+    if (offset != null && offset > 0) {
       stream = stream.skip(offset);
     }
-    if (limit != null) {
+    if (limit != null && limit > 0) {
       stream = stream.limit(limit);
     }
     return stream.collect(Collectors.toList());

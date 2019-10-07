@@ -73,9 +73,11 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.name = name;
   }
   
-  public TopicDTO(String name, Integer ownerProjectId, boolean isShared) {
+  public TopicDTO(String name, Integer ownerProjectId, String schemaName, int schemaVersion, boolean isShared) {
     this.name = name;
     this.ownerProjectId = ownerProjectId;
+    this.schemaName = schemaName;
+    this.schemaVersion = schemaVersion;
     this.isShared = isShared;
   }
 
