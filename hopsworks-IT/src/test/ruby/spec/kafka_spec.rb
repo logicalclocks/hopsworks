@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
 
           # Check that the topic has been shared correctly
 	  get_shared_topics(target_project.id) 
-          expect(json_body.size).to eq 1
+          expect(json_body[:items].count).to eq 1
         end
 
         it "should not be able to delete a kafka schema with a reserved name" do
@@ -120,7 +120,7 @@ describe "On #{ENV['OS']}" do
       it "should return ten own topics" do
         project = get_project
 	get_project_topics(project.id)
-	expect(json_body.size).to eq(10)
+	expect(json_body[:items].count).to eq(10)
       end
 
       it "should return eleven topics after sharing" do
@@ -137,7 +137,7 @@ describe "On #{ENV['OS']}" do
 
 	# get all topics for the first project
 	get_all_topics(first_project.id)
-        expect(json_body.size).to eq(11)
+        expect(json_body[:items].count).to eq(11)
       end
     end
     
@@ -162,107 +162,107 @@ describe "On #{ENV['OS']}" do
       
       	    # get all project topics for the first project
       	    get_project_topics(project.id)
-            expect(json_body.size).to eq(10)
+            expect(json_body[:items].count).to eq(10)
       	    # get all project topics for the first project
       	    get_shared_topics(project.id)
-            expect(json_body.size).to eq(1)
+	    expect(json_body[:items].count).to eq(1)
 	  end
 	end
         describe "Kafka topics sort" do
 	  it 'should get project topics sorted by name ascending' do
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
 	    project = get_project
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:asc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
 	  it 'should get project topics sorted by name descending' do
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase).reverse
 	    project = get_project
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:desc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
-	    expect(sorted_res).to eq(sorted.reverse)
+	    res = json_body[:items].map { |o| "#{o[:name]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by schema_name ascending' do
-	    topics = @project_topics.map { |o| "#{o[:schema_name]}" }
-	    sorted = topics.sort_by(&:downcase).reverse
+	  it 'should get project topics sorted by schemaName ascending' do
+	    topics = @project_topics[:items].map { |o| "#{o[:schemaName]}" }
+	    sorted = topics.sort_by(&:downcase)
 	    project = get_project
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=schema_name:asc")
-	    sorted_res = json_body.map { |o| "#{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted)
+	    res = json_body[:items].map { |o| "#{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by schema_name descending' do
-	    topics = @project_topics.map { |o| "#{o[:schema_name]}" }
+	  it 'should get project topics sorted by schemaName descending' do
+	    topics = @project_topics[:items].map { |o| "#{o[:schemaName]}" }
 	    sorted = topics.sort_by(&:downcase).reverse
 	    project = get_project
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=schema_name:desc")
-	    sorted_res = json_body.map { |o| "#{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted.reverse)
+	    res = json_body[:items].map { |o| "#{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by name and schema_name' do
+	  it 'should get project topics sorted by name and schemaName' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    sorted = topics.sort_by(&:downcase)
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:asc,schema_name:asc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted)
+	    res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by name and schema_name descending' do
+	  it 'should get project topics sorted by name and schemaName descending' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    sorted = topics.sort_by(&:downcase).reverse
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:desc,schema_name:desc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted)
+	    res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
 	  it 'should get project topics sorted by name ascending and schema_name descending' do
 	    project = get_project
-	    s = @project_topics.sort do |a, b|
+	    s = @project_topics[:items].sort do |a, b|
 		res = (a[:name].downcase <=> b[:name].downcase)
 		res = -(a[:schemaName].downcase <=> b[:schemaName].downcase) if res == 0
                 res
 	    end
-	    sorted = s.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted = s.map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:asc,schema_name:desc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted)
+	    res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by name descending and schema_name ascending' do
+	  it 'should get project topics sorted by name descending and schemaName ascending' do
 	    project = get_project
-	    s = @project_topics.sort do |a, b|
+	    s = @project_topics[:items].sort do |a, b|
 		res = -(a[:name].downcase <=> b[:name].downcase)
 		res = (a[:schemaName].downcase <=> b[:schemaName].downcase) if res == 0
                 res
 	    end
-	    sorted = s.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted = s.map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=name:desc,schema_name:asc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
-	    expect(sorted_res).to eq(sorted)
+	    res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
+	    expect(sorted).to eq(res)
 	  end
-	  it 'should get project topics sorted by schema_name ascending and name descending' do
+	  it 'should get project topics sorted by schemaName ascending and name descending' do
 	    project = get_project
-	    s = @project_topics.sort do |a, b|
+	    s = @project_topics[:items].sort do |a, b|
 		res = (a[:schemaName].downcase <=> b[:schemaName].downcase)
 		res = -(a[:name].downcase <=> b[:name].downcase) if res == 0
                 res
 	    end
-	    sorted = s.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted = s.map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=schema_name:asc,name:desc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
-	  it 'should get project topics sorted by schema_name descending and name ascending' do
+	  it 'should get project topics sorted by schemaName descending and name ascending' do
 	    project = get_project
-	    s = @project_topics.sort do |a, b|
+	    s = @project_topics[:items].sort do |a, b|
 		res = -(a[:schemaName].downcase <=> b[:schemaName].downcase)
 		res = (a[:name].downcase <=> b[:name].downcase) if res == 0
                 res
 	    end
-	    sorted = s.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted = s.map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    get_all_topics(project.id, "?filter_by=shared:false&sort_by=schema_name:desc,name:asc")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]} #{o[:schema_name]}" }
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]} #{o[:schemaName]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
 	end
@@ -270,58 +270,58 @@ describe "On #{ENV['OS']}" do
 	  it 'should get only limit=x users' do
 	    project = get_project
 	    get_all_topics(project.id, "?limit=1")
-	    expect(json_body.size).to eq(1)
+	    expect(json_body[:items].count).to eq(1)
 	    get_all_topics(project.id, "?limit=3")
-	    expect(json_body.size).to eq(3)
+	    expect(json_body[:items].count).to eq(3)
 	  end
 	  it 'should get topics with offset=y' do
   	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
-	    get_all_topics(project.id, "?offset=2&sort_by=name")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
+	    get_project_topics(project.id, "&offset=2&sort_by=name:asc")
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]}" }
 	    expect(sorted_res).to eq(sorted.drop(2))
 	  end
 	  it 'should get only limit=x topics with offset=y' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
-	    get_all_topics(project.id, "?offset=3&limit=5&sort_by=name")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
-	    expect(sorted_res).to eq(sorted.drop(3).take(5))
+	    get_project_topics(project.id, "&offset=3&limit=5&sort_by=name:asc")
+	    res = json_body[:items].map { |o| "#{o[:name]}" }
+	    expect(res).to eq(sorted.drop(3).take(5))
 	  end
 	  it 'should ignore if limit < 0' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
-	    get_all_topics(project.id, "?limit=-3&sort_by=name")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
+	    get_project_topics(project.id, "&limit=-3&sort_by=name:asc")
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
 	  it 'should ignore if offset < 0' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
-	    get_all_topics(project.id, "?offset=-3&sort_by=name")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
+	    get_project_topics(project.id, "&offset=-3&sort_by=name")
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
 	  it 'should ignore if limit = 0' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    sorted = topics.sort_by(&:downcase)
-	    get_all_topics(project.id, "?limit=0&sort_by=name")
-	    sorted_res = json_body.map { |o| "#{o[:topic_name]}" }
+	    get_project_topics(project.id, "&limit=0&sort_by=name:asc")
+	    sorted_res = json_body[:items].map { |o| "#{o[:name]}" }
 	    expect(sorted_res).to eq(sorted)
 	  end
 	  it 'should work for offset >= size' do
 	    project = get_project
-	    topics = @project_topics.map { |o| "#{o[:topic_name]}" }
+	    topics = @project_topics[:items].map { |o| "#{o[:name]}" }
 	    size = topics.size
-	    get_all_topics(project.id, "?offset=#{size}")
-	    expect(json_body).to eq([])
-	    get_all_topics(project.id, "?offset=#{size + 1}")
-	    expect(json_body).to eq([])
+	    get_project_topics(project.id, "&offset=#{size}")
+	    expect(json_body[:items]).to eq(nil)
+	    get_project_topics(project.id, "&offset=#{size + 1}")
+	    expect(json_body[:items]).to eq(nil)
 	  end
 	end
       end 

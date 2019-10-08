@@ -96,8 +96,8 @@ module KafkaHelper
     delete delete_kafka_topic
   end
 
-  def get_project_topics(project_id)
-    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:false"
+  def get_project_topics(project_id, more = "")
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:false" + more
   end
 
   def get_all_topics(project_id, more = "")
