@@ -575,7 +575,15 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
 
         get_secrets_name
-        expect_json_types(items: :null)
+        items = json_body[:items]
+        found = false
+        items.each do |item|
+          if item[:name].eql? secret_name
+            found = true
+          end
+        end
+
+        expect(found).to be false
       end
 
       it "should not be able to add duplicate Secret" do
@@ -597,7 +605,19 @@ describe "On #{ENV['OS']}" do
 
         get_secrets_name
         expect_json_types(items: :array_of_objects)
-        expect_json(items: -> (items){ expect(items.size()).to eq(NUM_OF_SECRETS)})
+        items = json_body[:items]
+        # Expect all secrets to be there
+        (1..NUM_OF_SECRETS).each do |idx|
+          secret_name = "secret-#{idx}"
+          found = false
+          items.each do |item|
+            if item[:name].eql? secret_name
+              found = true
+              break
+            end
+          end
+          expect(found).to be true
+        end
 
         delete_secrets
         expect_status(200)
