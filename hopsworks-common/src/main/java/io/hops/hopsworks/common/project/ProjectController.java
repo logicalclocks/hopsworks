@@ -260,6 +260,8 @@ public class ProjectController {
   @EJB
   private AirflowManager airflowManager;
   @EJB
+  private ProjectServiceFacade projectServiceFacade;
+  @EJB
   private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
