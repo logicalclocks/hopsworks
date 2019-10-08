@@ -101,7 +101,7 @@ public class OnlineFeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnlineFeaturegroup createMySQLTable(Featurestore featurestore,
     Users user, String featureStr, String tableName) throws FeaturestoreException, SQLException {
-    String db = featurestore.getProject().getName();
+    String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
     String query = "CREATE TABLE " + db + ".`" + tableName + "` " + featureStr;
     onlineFeaturestoreController.executeUpdateJDBCQuery(query, db, featurestore.getProject(), user);
     return persistOnlineFeaturegroupMetadata(db, tableName);

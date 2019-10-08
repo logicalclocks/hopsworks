@@ -352,7 +352,8 @@ public class FeaturestoreStorageConnectorService {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
-    if (!onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+    if (!onlineFeaturestoreController.checkIfDatabaseExists(
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
         "administrator.");
