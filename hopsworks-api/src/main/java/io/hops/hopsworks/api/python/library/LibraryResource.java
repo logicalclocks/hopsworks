@@ -206,7 +206,7 @@ public class LibraryResource {
 
     //TODO account for ongoing operations
     for(PythonDep dep: project.getPythonDepCollection()) {
-      if(dep.getDependency().equals(library)) {
+      if(dep.getDependency().equalsIgnoreCase(library)) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_INSTALL_FORBIDDEN, Level.FINE);
       }
     }

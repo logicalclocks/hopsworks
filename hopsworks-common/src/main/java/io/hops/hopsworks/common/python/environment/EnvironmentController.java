@@ -385,12 +385,15 @@ public class EnvironmentController {
     }
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
     String cpuHost = hostsFacade.findCPUHost();
+
+    Date date = new Date();
+
     if (cpuHost != null) {
-      exportEnvironment(cpuHost, "environment_cpu.yml", hdfsUser, project);
+      exportEnvironment(cpuHost, "environment_cpu_" + date.getTime() + ".yml", hdfsUser, project);
     }
     String gpuHost = hostsFacade.findGPUHost();
     if (gpuHost != null) {
-      exportEnvironment(gpuHost, "environment_gpu.yml", hdfsUser, project);
+      exportEnvironment(gpuHost, "environment_gpu_" + date.getTime() + ".yml", hdfsUser, project);
     }
   }
   
@@ -426,7 +429,6 @@ public class EnvironmentController {
             check the "install jupyter" option
           */
           ymlFileContents = Arrays.stream(ymlFileContents.split(System.lineSeparator()))
-            .filter(line -> !line.contains("mmlspark=="))
             .filter(line -> !line.contains("jupyter"))
             .filter(line -> !line.contains("sparkmagic"))
             .filter(line -> !line.contains("hdfscontents"))
@@ -450,11 +452,11 @@ public class EnvironmentController {
   private void exportEnvironment(String host, String environmentFile, String hdfsUser, Project project)
     throws ServiceException {
     
-    String secretDir = DigestUtils.sha256Hex(project.getName() + hdfsUser);
+    String secretDir = DigestUtils.sha256Hex(hdfsUser + environmentFile);
     String exportPath = settings.getStagingDir() + Settings.PRIVATE_DIRS + secretDir;
     File exportDir = new File(exportPath);
     exportDir.mkdirs();
-    
+
     String prog = settings.getHopsworksDomainDir() + "/bin/condaexport.sh";
     
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -480,7 +482,6 @@ public class EnvironmentController {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, "host: " + host + ","
         + " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
     }
-    
   }
 
   public void createKibanaIndex(Project project) throws ServiceException, ProjectException {
@@ -493,5 +494,4 @@ public class EnvironmentController {
     elasticController
         .createIndexPattern(project, project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
   }
-
 }

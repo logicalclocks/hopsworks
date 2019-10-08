@@ -22,11 +22,11 @@ module PythonHelper
       version = json_body[:items][0][:pythonVersion]
       if version != python_version
         delete_conda_env(project_id)
-        post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create"
         expect_status(201)
       end
     else
-      post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create&pythonKernelEnable=true"
+      post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/python/environments/#{python_version}?action=create"
       expect_status(201)
     end
   end
