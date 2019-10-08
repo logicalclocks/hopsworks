@@ -42,7 +42,7 @@ package io.hops.hopsworks.common.kafka;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
-import io.hops.hopsworks.common.dao.kafka.KafkaAdminClient;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
@@ -110,7 +110,7 @@ public class KafkaController {
   @EJB
   private SharedTopicsFacade sharedTopicsFacade;
   @EJB
-  private KafkaAdminClient kafkaAdminClient;
+  private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private SchemaTopicsFacade schemaTopicsFacade;
   
@@ -171,7 +171,7 @@ public class KafkaController {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
-    kafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
+    hopsKafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
   }
   
   public List<TopicDTO> findTopicsByProject(Project project) {
@@ -223,19 +223,19 @@ public class KafkaController {
   }
   
   private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
-    return kafkaAdminClient.listTopics().names().thenApply((set) -> {
+    return hopsKafkaAdminClient.listTopics().names().thenApply((set) -> {
       if (set.contains(topicDTO.getName())) {
         return null;
       } else {
         NewTopic newTopic =
           new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-        return kafkaAdminClient.createTopics(Collections.singleton(newTopic));
+        return hopsKafkaAdminClient.createTopics(Collections.singleton(newTopic));
       }
     });
   }
   
   private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
-    return kafkaAdminClient.describeTopics(Collections.singleton(topicName))
+    return hopsKafkaAdminClient.describeTopics(Collections.singleton(topicName))
       .all()
       .thenApply((map) -> map.getOrDefault(topicName, null))
       .thenApply((td) -> {

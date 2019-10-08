@@ -63,7 +63,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.kafka.KafkaAdminClient;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
@@ -260,7 +260,7 @@ public class ProjectController {
   @EJB
   private AirflowManager airflowManager;
   @EJB
-  private KafkaAdminClient kafkaAdminClient;
+  private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
 
@@ -1745,7 +1745,7 @@ public class ProjectController {
       .map(ProjectTopics::getTopicName)
       .collect(Collectors.toList());
   
-    kafkaAdminClient.deleteTopics(topicNameList);
+    hopsKafkaAdminClient.deleteTopics(topicNameList);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
