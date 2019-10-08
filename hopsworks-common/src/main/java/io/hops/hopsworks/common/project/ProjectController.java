@@ -85,6 +85,7 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hive.HiveController;
@@ -126,7 +127,6 @@ import io.hops.hopsworks.restutils.RESTException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationReport;
@@ -863,16 +863,6 @@ public class ProjectController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
-    
-    // Add directory in resources to store the configurations for the feature import jobs
-    try {
-      udfso.mkdirs(new Path(settings.getBaseFeaturestoreJobImportDir(project), Settings.FEATURESTORE_IMPORT_CONF),
-        FsPermission.getFileDefault());
-    } catch (IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not create featurestore import job configuration dir", e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
-        "project: " + project.getName(), e.getMessage(), e);
-    }
   }
 
 
@@ -948,9 +938,8 @@ public class ProjectController {
        * are getting registered in hdfs_metadata_log table
        */
       Path location = new Path(File.separator + rootDir);
-      FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL,
-        FsAction.READ_EXECUTE);
-      rootDirCreated = dfso.mkdir(location, fsPermission);
+      rootDirCreated = dfso.mkdir(location, FsPermission.getDirDefault());
+      dfso.setPermission(location, FsPermissions.rwxrwxr_x);
 
       // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
       dfso.setStoragePolicy(location, DistributedFileSystemOps.StoragePolicy.SMALL_FILES);

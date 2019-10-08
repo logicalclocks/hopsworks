@@ -183,7 +183,7 @@ public class DistributedFileSystemOps {
    * <p/>
    * @throws java.io.IOException
    */
-  public boolean mkdir(Path location, FsPermission filePermission) throws
+  public boolean mkdir(Path location, final FsPermission filePermission) throws
           IOException {
     return dfs.mkdir(location, filePermission);
   }
@@ -210,7 +210,7 @@ public class DistributedFileSystemOps {
    * <p/>
    * @throws java.io.IOException
    */
-  public boolean mkdirs(Path location, FsPermission filePermission) throws
+  public boolean mkdirs(Path location, final FsPermission filePermission) throws
           IOException {
     return dfs.mkdirs(location, filePermission);
   }
@@ -431,7 +431,7 @@ public class DistributedFileSystemOps {
    * @param permission
    * @throws IOException
    */
-  public void setPermission(Path path, FsPermission permission) throws
+  public void setPermission(Path path, final FsPermission permission) throws
           IOException {
     dfs.setPermission(path, permission);
   }
@@ -443,7 +443,7 @@ public class DistributedFileSystemOps {
    * @param permission
    * @throws IOException
    */
-  public void setPermission(Set<Path> paths, FsPermission permission) throws
+  public void setPermission(Set<Path> paths, final FsPermission permission) throws
           IOException {
     for (Path path : paths) {
       setPermission(path, permission);

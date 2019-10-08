@@ -61,6 +61,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -313,7 +314,7 @@ public class DatasetController {
     }
   }
 
-  public void recChangeOwnershipAndPermission(Path path, FsPermission permission,
+  public void recChangeOwnershipAndPermission(Path path, final FsPermission permission,
       String username, String group,
       DistributedFileSystemOps dfso,
       DistributedFileSystemOps udfso)
@@ -419,10 +420,7 @@ public class DatasetController {
       try (FSDataOutputStream fsOut = udfso.create(readMeFilePath)) {
         fsOut.writeBytes(readmeFile);
         fsOut.flush();
-        udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath),
-            new FsPermission(FsAction.ALL,
-                FsAction.READ_EXECUTE,
-                FsAction.NONE));
+        udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath), FsPermissions.rwxr_x___);
       } catch (IOException ex) {
         LOGGER.log(Level.WARNING, "README.md could not be generated for project"
             + " {0} and dataset {1}.", new Object[]{project, dsName});
