@@ -282,7 +282,8 @@ public class FeaturestoreService {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     if(settings.isOnlineFeaturestore()
-      && onlineFeaturestoreController.checkIfDatabaseExists(featurestore.getProject().getName())) {
+      && onlineFeaturestoreController.checkIfDatabaseExists(
+          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       Users user = jWTHelper.getUserPrincipal(sc);
       String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
       String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
@@ -291,7 +292,7 @@ public class FeaturestoreService {
           dbUsername, featurestore, dbName);
       featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
       featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
-        featurestore.getProject().getName()));
+          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
       featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
       featurestoreDTO.setOnlineEnabled(true);
