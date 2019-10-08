@@ -81,6 +81,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
@@ -119,16 +120,17 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics(@BeanParam Pagination pagination, @BeanParam
-    TopicsBeanParam topicsBeanParam) {
+  public Response getTopics(
+    @Context UriInfo uriInfo,
+    @BeanParam Pagination pagination,
+    @BeanParam TopicsBeanParam topicsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
     resourceRequest.setSort(topicsBeanParam.getSortBySet());
     resourceRequest.setFilter(topicsBeanParam.getFilter());
-    List<TopicDTO> topicDTOList = topicsBuilder.buildItems(project, resourceRequest);
-    GenericEntity<List<TopicDTO>> entity = new GenericEntity<List<TopicDTO>>(topicDTOList) {};
-    return Response.ok().entity(entity).build();
+    TopicDTO dto = topicsBuilder.build(uriInfo, resourceRequest, project);
+    return Response.ok().entity(dto).build();
   }
   
   @ApiOperation(value = "Create a new Kafka topic.")
@@ -167,12 +169,11 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopic(@PathParam("topic") String topicName) throws KafkaException, InterruptedException,
-    ExecutionException {
+  public Response getTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName)
+    throws KafkaException, InterruptedException, ExecutionException {
     
-    List<PartitionDetailsDTO> topic = kafkaController.getTopicDetails(project, topicName).get();
-    GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
-    return Response.ok().entity(topics).build();
+    PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
+    return Response.ok().entity(dto).build();
   }
   
   @ApiOperation(value = "Share a Kafka topic with a project.")
@@ -217,7 +218,6 @@ public class KafkaService {
     @PathParam("destProjectId") Integer destProjectId) throws KafkaException, ProjectException {
     
     kafkaController.unshareTopic(project, topicName, destProjectId);
-    
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Topic has been unshared.");
     return Response.ok().entity(json).build();
@@ -229,10 +229,9 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response topicIsSharedTo(@PathParam("topic") String topicName) {
-    List<SharedProjectDTO> projectDtoList = kafkaController.getTopicSharedProjects(topicName, project.getId());
-    GenericEntity<List<SharedProjectDTO>> projectDtos = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
-    return Response.ok().entity(projectDtos).build();
+  public Response topicIsSharedTo(@Context UriInfo uriInfo, @PathParam("topic") String topicName) {
+    SharedProjectDTO dto = topicsBuilder.buildSharedProject(uriInfo, project, topicName);
+    return Response.ok().entity(dto).build();
   }
 
   @GET

@@ -39,11 +39,13 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.api.RestDTO;
+
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class SharedProjectDTO implements Serializable {
+public class SharedProjectDTO extends RestDTO<SharedProjectDTO> implements Serializable {
 
   private String name;
   private Integer id;

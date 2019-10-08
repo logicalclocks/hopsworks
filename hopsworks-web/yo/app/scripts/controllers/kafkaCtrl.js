@@ -130,7 +130,7 @@ angular.module('hopsWorksApp')
             self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
-                        self.topics = success.data;
+                        self.topics = success.data.items;
                         self.numTopicsUsed = self.topics.length;
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
             self.getAllSharedTopics = function () {
               KafkaService.getSharedTopics(self.projectId).then(
                       function (success) {
-                        self.sharedTopics = success.data;
+                        self.sharedTopics = success.data.items;
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
@@ -159,7 +159,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  self.topics[i].partitionDetails= success.data;
+                                  self.topics[i].partitionDetails= success.data.items;
                                   return;
                               }
                           }
@@ -408,7 +408,7 @@ angular.module('hopsWorksApp')
                         function (success) {                         
                            for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  self.topics[i].shares=success.data;
+                                  self.topics[i].shares=success.data.items;
                                   return;
                               }
                           }

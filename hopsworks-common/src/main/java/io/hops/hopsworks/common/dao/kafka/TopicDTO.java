@@ -56,11 +56,11 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
   private String schemaName;
 
-  private int schemaVersion;
+  private Integer schemaVersion;
   
   private Integer ownerProjectId;
   
-  private boolean isShared;
+  private Boolean isShared;
 
   public TopicDTO() {
   }
@@ -73,7 +73,7 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.name = name;
   }
   
-  public TopicDTO(String name, Integer ownerProjectId, String schemaName, int schemaVersion, boolean isShared) {
+  public TopicDTO(String name, Integer ownerProjectId, String schemaName, Integer schemaVersion, Boolean isShared) {
     this.name = name;
     this.ownerProjectId = ownerProjectId;
     this.schemaName = schemaName;
@@ -87,7 +87,7 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.numOfPartitions = numOfPartitions;
   }
 
-  public TopicDTO(String name, String schemaName, int schemaVersion, boolean isShared) {
+  public TopicDTO(String name, String schemaName, Integer schemaVersion, Boolean isShared) {
     this.name = name;
     this.schemaName = schemaName;
     this.schemaVersion = schemaVersion;
@@ -95,7 +95,7 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   }
 
   public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions,
-          String schemaName, int schemaVersion) {
+          String schemaName, Integer schemaVersion) {
     this.name = name;
     this.numOfReplicas = numOfReplicas;
     this.numOfPartitions = numOfPartitions;
@@ -104,7 +104,7 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   }
   
   public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions,
-    String schemaName, int schemaVersion, Integer ownerProjectId, boolean isShared) {
+    String schemaName, Integer schemaVersion, Integer ownerProjectId, Boolean isShared) {
     this.name = name;
     this.numOfReplicas = numOfReplicas;
     this.numOfPartitions = numOfPartitions;
@@ -142,7 +142,7 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     return schemaName;
   }
 
-  public int getSchemaVersion() {
+  public Integer getSchemaVersion() {
     return schemaVersion;
   }
 
@@ -150,15 +150,15 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.schemaName = schemaName;
   }
 
-  public void setSchemaVersion(int schemaVersion) {
+  public void setSchemaVersion(Integer schemaVersion) {
     this.schemaVersion = schemaVersion;
   }
   
-  public boolean isShared() {
+  public Boolean isShared() {
     return isShared;
   }
   
-  public void setShared(boolean shared) {
+  public void setShared(Boolean shared) {
     isShared = shared;
   }
   

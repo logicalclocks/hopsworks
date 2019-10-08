@@ -16,20 +16,28 @@
 package io.hops.hopsworks.api.kafka.topics;
 
 import io.hops.hopsworks.common.api.CollectionsBuilder;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
+import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.exceptions.KafkaException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.TopicsFilters;
@@ -46,6 +54,69 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
     List<TopicDTO> allTopics = kafkaController.findTopicsByProject(project);
     allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
     return allTopics;
+  }
+  
+  public TopicDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+    URI href = uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.KAFKA.toString().toLowerCase())
+      .path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.KAFKA.toString().toLowerCase())
+      .path(ResourceRequest.Name.TOPICS.toString().toLowerCase())
+      .build();
+    TopicDTO dto = new TopicDTO();
+    dto.setHref(href);
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      List<TopicDTO> list = buildItems(project, resourceRequest);
+      dto.setCount(Integer.toUnsignedLong(list.size()));
+      list.forEach(topic -> dto.addItem(build(uriInfo, resourceRequest, topic, project)));
+    }
+    return dto;
+  }
+  
+  private UriBuilder topicUri(UriInfo uriInfo, Project project, String topicName) {
+    return uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(project.getId()))
+      .path(ResourceRequest.Name.KAFKA.toString().toLowerCase())
+      .path(ResourceRequest.Name.TOPICS.toString().toLowerCase())
+      .path(topicName);
+  }
+  
+  private UriBuilder sharedProjectUri(UriInfo uriInfo, Project project, String topicName) {
+    return topicUri(uriInfo, project, topicName)
+      .path(ResourceRequest.Name.SHARED.toString().toLowerCase());
+  }
+  
+  private TopicDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, TopicDTO topic, Project project) {
+    topic.setHref(topicUri(uriInfo, project, topic.getName()).build());
+    expand(topic, resourceRequest);
+    return topic;
+  }
+  
+  private void expand(TopicDTO dto, ResourceRequest resourceRequest) {
+    if (resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.KAFKA)) {
+      dto.setExpand(true);
+    }
+  }
+  
+  public PartitionDetailsDTO buildTopicDetails(UriInfo uriInfo, Project project, String topicName)
+    throws KafkaException, InterruptedException, ExecutionException {
+    
+    PartitionDetailsDTO dto = new PartitionDetailsDTO();
+    dto.setHref(topicUri(uriInfo, project, topicName).build());
+    List<PartitionDetailsDTO> list = kafkaController.getTopicDetails(project, topicName).get();
+    dto.setCount(Integer.toUnsignedLong(list.size()));
+    list.forEach(dto::addItem);
+    return dto;
+  }
+  
+  public SharedProjectDTO buildSharedProject(UriInfo uriInfo, Project project, String topicName) {
+    SharedProjectDTO dto = new SharedProjectDTO();
+    dto.setHref(sharedProjectUri(uriInfo, project, topicName).build());
+    List<SharedProjectDTO> list = kafkaController.getTopicSharedProjects(topicName, project.getId());
+    dto.setCount(Integer.toUnsignedLong(list.size()));
+    list.forEach(dto::addItem);
+    return dto;
   }
   
   @Override

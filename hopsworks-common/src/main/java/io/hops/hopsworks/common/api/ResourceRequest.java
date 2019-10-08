@@ -145,6 +145,8 @@ public class ResourceRequest {
     PROJECT,
     JOBS,
     KAFKA,
+    TOPICS,
+    SHARED,
     EXECUTIONS,
     DATASETS,
     REQUESTS,
