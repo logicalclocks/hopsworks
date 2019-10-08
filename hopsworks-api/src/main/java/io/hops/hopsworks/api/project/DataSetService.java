@@ -75,6 +75,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -96,7 +97,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -509,15 +509,15 @@ public class DataSetService {
       if (null != dataSet.getPermissions()) {
         switch (dataSet.getPermissions()) {
           case OWNER_ONLY:
-            fsPermission = new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE, false);
+            fsPermission = FsPermissions.rwxr_x___;
             ds.setEditable(DatasetPermissions.OWNER_ONLY);
             break;
           case GROUP_WRITABLE_SB:
-            fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, true);
+            fsPermission = FsPermissions.rwxrwx___T;
             ds.setEditable(DatasetPermissions.GROUP_WRITABLE_SB);
             break;
           case GROUP_WRITABLE:
-            fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, false);
+            fsPermission = FsPermissions.rwxrwx___;
             ds.setEditable(DatasetPermissions.GROUP_WRITABLE);
             break;
           default:
