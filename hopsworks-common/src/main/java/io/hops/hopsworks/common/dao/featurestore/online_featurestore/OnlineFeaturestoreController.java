@@ -110,7 +110,6 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     String jdbcString = "";
-    String dbName = project.getName();
     String dbUsername = onlineDbUsername(project, user);
     String password = "";
     try {
@@ -119,7 +118,7 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
         Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
     }
-    jdbcString = settings.getFeaturestoreJdbcUrl() + dbName;
+    jdbcString = settings.getFeaturestoreJdbcUrl() + databaseName;
     try {
       return DriverManager.getConnection(jdbcString, dbUsername, password);
     } catch (SQLException e) {
@@ -211,7 +210,8 @@ public class OnlineFeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLFeatures(onlineFeaturegroup.getTableName(), onlineFeaturegroup.getDbName());
+    return onlineFeaturestoreFacade.getMySQLFeatures(onlineFeaturegroup.getTableName(),
+        onlineFeaturegroup.getDbName().toLowerCase());
   }
   
   /**
@@ -248,8 +248,7 @@ public class OnlineFeaturestoreController {
     /*
      * Step 1: Create Database
      */
-    String db = project.getName();
-    addOnlineFeatureStoreDB(db);
+    addOnlineFeatureStoreDB(getOnlineFeaturestoreDbName(project));
     /*
      * Step 2: Create database user
      */
@@ -427,7 +426,7 @@ public class OnlineFeaturestoreController {
                 Level.SEVERE, "Problem removing user-secret to online featurestore");
       }
     }
-    String db = project.getName();
+    String db = getOnlineFeaturestoreDbName(project);
     try {
       onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
     } catch (Exception e) {
@@ -507,7 +506,8 @@ public class OnlineFeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public Double getTblSize(OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
-    return onlineFeaturestoreFacade.getTblSize(onlineFeaturegroupDTO.getTableName(), onlineFeaturegroupDTO.getDbName());
+    return onlineFeaturestoreFacade.getTblSize(onlineFeaturegroupDTO.getTableName(),
+        onlineFeaturegroupDTO.getDbName().toLowerCase());
   }
   
   /**
@@ -518,7 +518,8 @@ public class OnlineFeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public String getOnlineFeaturegroupSchema(OnlineFeaturegroupDTO onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLSchema(onlineFeaturegroup.getTableName(), onlineFeaturegroup.getDbName());
+    return onlineFeaturestoreFacade.getMySQLSchema(onlineFeaturegroup.getTableName(),
+        onlineFeaturegroup.getDbName().toLowerCase());
   }
   
   /**
@@ -534,7 +535,7 @@ public class OnlineFeaturestoreController {
     Featurestore featurestore ) throws FeaturestoreException, SQLException {
     String tbl = onlineFeaturegroup.getTableName();
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
-    String db = onlineFeaturegroup.getDbName();
+    String db = onlineFeaturegroup.getDbName().toLowerCase();
     try {
       return executeReadJDBCQuery(query, db, featurestore.getProject(), user);
     } catch(Exception e) {
@@ -551,7 +552,7 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public String getOnlineFeaturegroupTableType(OnlineFeaturegroupDTO onlineFeaturegroup) {
     return onlineFeaturestoreFacade.getMySQLTableType(onlineFeaturegroup.getTableName(),
-      onlineFeaturegroup.getDbName());
+      onlineFeaturegroup.getDbName().toLowerCase());
   }
   
   /**
@@ -563,7 +564,7 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public Integer getOnlineFeaturegroupTableRows(OnlineFeaturegroupDTO onlineFeaturegroup) {
     return onlineFeaturestoreFacade.getMySQLTableRows(onlineFeaturegroup.getTableName(),
-      onlineFeaturegroup.getDbName());
+      onlineFeaturegroup.getDbName().toLowerCase());
   }
   
   /**

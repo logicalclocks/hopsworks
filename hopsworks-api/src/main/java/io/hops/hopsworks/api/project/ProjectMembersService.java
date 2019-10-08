@@ -158,17 +158,6 @@ public class ProjectMembersService {
     if (project != null) {
       //add new members of the project
       failedMembers = projectController.addMembers(project, user, members.getProjectTeam());
-      //if online-featurestore service is enabled in the project, give new member access to it
-      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
-        settings.isOnlineFeaturestore()) {
-        for (ProjectTeam pt : members.getProjectTeam()) {
-          onlineFeaturestoreController.createDatabaseUser(pt.getUser(), project);
-          FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-            featurestoreController.getOfflineFeaturestoreDbName(project));
-          onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, pt.getUser(),
-            featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
-        }
-      }
     }
 
     if (members.getProjectTeam().size() > 1) {
