@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
@@ -57,7 +58,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
 import org.apache.hadoop.yarn.api.records.LocalResourceVisibility;
@@ -95,7 +95,6 @@ public class HopsUtils {
   public static final short ROOT_DIR_DEPTH = 0;
   private static int RANDOM_PARTITIONING_MAX_LEVEL = 1;
   public static long ROOT_INODE_ID = 1;
-  private static final FsPermission materialPermissions = new FsPermission(FsAction.ALL, FsAction.NONE, FsAction.NONE);
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\\r?\\n");
   // e.x. spark.files=hdfs://someFile,hdfs://anotherFile
   private static final Pattern JOB_PROPS_PATTERN = Pattern.compile("(.+?)=(.+)");
@@ -220,7 +219,7 @@ public class HopsUtils {
       String remoteDirectory =
           createRemoteDirectory(remoteFSDir, projectSpecificUsername, projectSpecificUsername, dfso);
       certificateMaterializer.materializeCertificatesRemote(userName, projectName, projectSpecificUsername,
-          projectSpecificUsername, materialPermissions, remoteDirectory);
+          projectSpecificUsername, FsPermissions.rwx______, remoteDirectory);
     }
   }
 
@@ -231,14 +230,15 @@ public class HopsUtils {
     
     if (!dfso.exists(remoteFSDir)) {
       Path remoteFSTarget = new Path(remoteFSDir);
-      dfso.mkdir(remoteFSTarget, new FsPermission(
-          FsAction.ALL, FsAction.ALL, FsAction.ALL));
+      dfso.mkdir(remoteFSTarget, FsPermission.getDirDefault());
+      dfso.setPermission(remoteFSTarget, FsPermissions.rwxrwxrwx);
       createdDir = true;
     }
   
     Path projectRemoteFSDir = new Path(remoteFSDir + Path.SEPARATOR + certsSpecificDir);
     if (!dfso.exists(projectRemoteFSDir.toString())) {
-      dfso.mkdir(projectRemoteFSDir, new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE));
+      dfso.mkdir(projectRemoteFSDir, FsPermission.getDirDefault());
+      dfso.setPermission(projectRemoteFSDir, FsPermissions.rwxrwx___);
       dfso.setOwner(projectRemoteFSDir, owner, owner);
       createdDir = true;
     }
@@ -314,41 +314,34 @@ public class HopsUtils {
                   //So that the certificates can be used as LocalResources
                   //by the YarnJob
                   if (!dfso.exists(remoteTmpDir)) {
-                    dfso.mkdir(
-                        new Path(remoteTmpDir), new FsPermission(
-                            FsAction.ALL,
-                            FsAction.ALL, FsAction.ALL));
+                    Path remoteTmpDirPath = new Path(remoteTmpDir);
+                    dfso.mkdir(remoteTmpDirPath, FsPermission.getDirDefault());
+                    dfso.setPermission(remoteTmpDirPath, FsPermissions.rwxrwxrwx);
                   }
                   //Put project certificates in its own dir
                   String certUser = project.getName() + "__" + username;
                   String remoteTmpProjDir = remoteTmpDir + File.separator + certUser;
                   if (!dfso.exists(remoteTmpProjDir)) {
-                    dfso.mkdir(
-                        new Path(remoteTmpProjDir),
-                        new FsPermission(FsAction.ALL,
-                            FsAction.ALL, FsAction.NONE));
-                    dfso.setOwner(new Path(remoteTmpProjDir), certUser, certUser);
+                    Path remoteTmpProjDirPath = new Path(remoteTmpProjDir);
+                    dfso.mkdir(remoteTmpProjDirPath, FsPermission.getDirDefault());
+                    dfso.setPermission(remoteTmpProjDirPath, FsPermissions.rwxrwx___);
+                    dfso.setOwner(remoteTmpProjDirPath, certUser, certUser);
                   }
                 
                   String remoteProjAppDir = remoteTmpProjDir + File.separator
                       + applicationId;
                   Path remoteProjAppPath = new Path(remoteProjAppDir);
                   if (!dfso.exists(remoteProjAppDir)) {
-                    dfso.mkdir(remoteProjAppPath,
-                        new FsPermission(FsAction.ALL,
-                            FsAction.ALL, FsAction.NONE));
+                    dfso.mkdir(remoteProjAppPath, FsPermission.getDirDefault());
+                    dfso.setPermission(remoteProjAppPath, FsPermissions.rwxrwx___);
                     dfso.setOwner(remoteProjAppPath, certUser, certUser);
                   }
                 
                   dfso.copyToHDFSFromLocal(false, entry.getValue().
                           getAbsolutePath(),
                       remoteProjAppDir + File.separator + entry.getValue().getName());
-                
-                  dfso.setPermission(new Path(remoteProjAppDir
-                          + File.separator
-                          + entry.getValue().getName()),
-                      new FsPermission(FsAction.ALL, FsAction.NONE,
-                          FsAction.NONE));
+                  dfso.setPermission(new Path(remoteProjAppDir + File.separator + entry.getValue().getName()),
+                      FsPermissions.rwx______);
                   dfso.setOwner(new Path(remoteProjAppDir + File.separator
                       + entry.getValue().getName()), certUser, certUser);
                 
