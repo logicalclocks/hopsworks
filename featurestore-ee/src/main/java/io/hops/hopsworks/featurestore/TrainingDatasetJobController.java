@@ -80,7 +80,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
     HashMap<String, Integer> featureCount = new HashMap<>();
     featureList.forEach(f -> featureCount.put(f, 0));
     
-    // check for duplicates
+    // check for string duplicates
     if(featureList.size() != featureCount.size()){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_DUPLICATE_FEATURE,
         Level.WARNING);
@@ -91,16 +91,36 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
       List<FeatureDTO> features = group.getFeatures();
       
       for (FeatureDTO f : features) {
-        if (featureCount.containsKey(f.getName())) {
-          int count = featureCount.get(f.getName()) + 1;
-          // The String conversion is not very pretty
-          if (count == 2 && featuregroupsVersionDict.equals("{}")) {
+        String featureName = f.getName();
+        String prependedFeatureName = group.getName() + "_" + group.getVersion() + "." + featureName;
+        String fullFeaturePath = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()) + "." +
+          prependedFeatureName;
+        
+        if (featureCount.containsKey(featureName)) {
+          int count = featureCount.get(featureName) + 1;
+          if (count == 2) {
             throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_FEATUREGROUP_DUPLICATE,
               Level.WARNING,
-              String.format("Multiple featuregroups contain requested feature %s. Specify featuregroups_version_dict",
-                f.getName()));
+              String.format("Multiple featuregroups contain requested feature %s. Please prepend the featuregroup " +
+                  "name and its version: [featurgroupname]_[version].[featurename]", featureName));
           }
-          featureCount.put(f.getName(), featureCount.get(f.getName()) + 1);
+          featureCount.put(featureName, count);
+        } else if (featureCount.containsKey(prependedFeatureName)) {
+          int count = featureCount.get(prependedFeatureName) + 1;
+          if (count == 2) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_FAILURE,
+              Level.WARNING,
+              String.format("Feature %s does exist twice, despite prepended table name", prependedFeatureName));
+          }
+          featureCount.put(prependedFeatureName, count);
+        } else if (featureCount.containsKey(fullFeaturePath)) {
+          int count = featureCount.get(fullFeaturePath) + 1;
+          if (count == 2) {
+            throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_FAILURE,
+              Level.WARNING,
+              String.format("Feature %s does exist twice, despite prepended table name and database", fullFeaturePath));
+          }
+          featureCount.put(fullFeaturePath, count);
         }
       }
     }
