@@ -48,6 +48,7 @@
     <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
+
   <!-- Kibana proxy servlet -->
   <servlet>
     <servlet-name>KibanaProxyServlet</servlet-name>

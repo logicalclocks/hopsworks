@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -168,7 +169,8 @@ public class EnvironmentResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response postYml(EnvironmentYmlDTO environmentYmlDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws PythonException, ServiceException, DatasetException, ProjectException, UnsupportedEncodingException {
+      throws PythonException, ServiceException, DatasetException,
+      ProjectException, UnsupportedEncodingException, ElasticException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String allYmlPath = getYmlPath(environmentYmlDTO.getAllYmlPath());
     String cpuYmlPath = getYmlPath(environmentYmlDTO.getCpuYmlPath());

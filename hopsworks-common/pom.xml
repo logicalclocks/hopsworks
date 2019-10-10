@@ -189,8 +189,8 @@
     <!--Elastic dependency-->
     <dependency>
         <groupId>org.elasticsearch.client</groupId>
-        <artifactId>transport</artifactId>
-        <version>6.2.3</version>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>7.2.0</version>
     </dependency>
     <dependency>
         <groupId>org.apache.logging.log4j</groupId>

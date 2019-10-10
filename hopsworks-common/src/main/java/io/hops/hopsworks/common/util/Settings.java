@@ -341,6 +341,17 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
 
+  //Elastic OpenDistro
+  private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
+  private static final String VARIABLE_ELASTIC_HTTPS_ENABLED = "elastic_https_enabled";
+  private static final String VARIABLE_ELASTIC_ADMIN_USER = "elastic_admin_user";
+  private static final String VARIABLE_ELASTIC_ADMIN_PASSWORD = "elastic_admin_password";
+  private static final String VARIABLE_KIBANA_HTTPS_ENABLED = "kibana_https_enabled";
+  private static final String VARIABLE_ELASTIC_JWT_ENABLED = "elastic_jwt_enabled";
+  private static final String VARIABLE_ELASTIC_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
+  private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
+  private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
+  
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -537,7 +548,25 @@ public class Settings implements Serializable {
       int elasticPort = setIntVar(VARIABLE_ELASTIC_PORT, ElasticSettings.ELASTIC_PORT_DEFAULT);
       int elasticRestPort = setIntVar(VARIABLE_ELASTIC_REST_PORT,
           ElasticSettings.ELASTIC_REST_PORT_DEFAULT);
-      ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort, elasticRestPort);
+      boolean elasticOpenDistroEnabled =
+          setBoolVar(VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED,
+              ElasticSettings.ELASTIC_OPENDISTRO_SECURTIY_ENABLED_DEFAULT);
+      boolean elasticHttpsEnabled = setBoolVar(VARIABLE_ELASTIC_HTTPS_ENABLED
+          , ElasticSettings.ELASTIC_HTTPS_ENABLED_DEFAULT);
+      String elasticAdminUser = setStrVar(VARIABLE_ELASTIC_ADMIN_USER,
+          ElasticSettings.ELASTIC_ADMIN_USER_DEFAULT);
+      String elasticAdminPassword = setStrVar(VARIABLE_ELASTIC_ADMIN_PASSWORD,
+          ElasticSettings.ELASTIC_ADMIN_PASSWORD_DEFAULT);
+      boolean elasticJWTEnabled =  setBoolVar(VARIABLE_ELASTIC_JWT_ENABLED
+          , ElasticSettings.ELASTIC_JWT_ENABLED_DEFAULT);
+      String elasticJWTUrlParameter = setStrVar(VARIABLE_ELASTIC_JWT_URL_PARAMETER,
+          ElasticSettings.ELASTIC_JWT_URL_PARAMETER_DEFAULT);
+      int elasticJWTEXPMS = setIntVar(VARIABLE_ELASTIC_JWT_EXP_MS,
+          ElasticSettings.ELASTIC_JWT_EXP_MS_DEFAULT);
+      ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort,
+          elasticRestPort, elasticOpenDistroEnabled, elasticHttpsEnabled,
+          elasticAdminUser, elasticAdminPassword, elasticJWTEnabled,
+          elasticJWTUrlParameter, elasticJWTEXPMS);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
@@ -699,7 +728,12 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
-
+  
+      KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
+          KIBANA_HTTPS_ENABELED);
+  
+      KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
+          KIBANA_MULTI_TENANCY_ENABELED);
       cached = true;
     }
   }
@@ -1361,6 +1395,11 @@ public class Settings implements Serializable {
     return ELASTIC_SETTINGS.getElasticPort();
   }
   
+  public synchronized int getElasticRESTPort() {
+    checkCache();
+    return ELASTIC_SETTINGS.getElasticRESTPort();
+  }
+  
   public synchronized String getElasticEndpoint() {
     checkCache();
     return ELASTIC_SETTINGS.getElasticEndpoint();
@@ -1370,7 +1409,42 @@ public class Settings implements Serializable {
     checkCache();
     return ELASTIC_SETTINGS.getElasticRESTEndpoint();
   }
-
+  
+  public synchronized boolean isElasticOpenDistroSecurityEnabled() {
+    checkCache();
+    return ELASTIC_SETTINGS.isOpenDistroSecurityEnabled();
+  }
+  
+  public synchronized boolean isElasticHTTPSEnabled() {
+    checkCache();
+    return ELASTIC_SETTINGS.isHttpsEnabled();
+  }
+  
+  public synchronized String getElasticAdminUser() {
+    checkCache();
+    return ELASTIC_SETTINGS.getAdminUser();
+  }
+  
+  public synchronized String getElasticAdminPassword() {
+    checkCache();
+    return ELASTIC_SETTINGS.getAdminPassword();
+  }
+  
+  public synchronized boolean isElasticJWTEnabled() {
+    checkCache();
+    return ELASTIC_SETTINGS.isElasticJWTEnabled();
+  }
+  
+  public synchronized String getElasticJwtUrlParameter() {
+    checkCache();
+    return ELASTIC_SETTINGS.getElasticJWTURLParameter();
+  }
+  
+  public synchronized int getElasicJwtExpMs() {
+    checkCache();
+    return ELASTIC_SETTINGS.getElasticJWTExpMs();
+  }
+  
   private long ELASTIC_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
   public synchronized long getElasticLogsIndexExpiration() {
@@ -1514,15 +1588,28 @@ public class Settings implements Serializable {
   private static final int ZK_PORT = 2181;
 
   // Kibana
-  public static final String KIBANA_DEFAULT_INDEX = "hopsdefault";
+  public static final String KIBANA_INDEX_PREFIX = ".kibana";
+  
   private String KIBANA_IP = "10.0.2.15";
   private static final int KIBANA_PORT = 5601;
 
   public synchronized String getKibanaUri() {
     checkCache();
-    return "http://" + KIBANA_IP + ":" + KIBANA_PORT;
+    return (KIBANA_HTTPS_ENABELED ? "https" : "http") + "://" + KIBANA_IP +
+        ":" + KIBANA_PORT;
   }
-
+  
+  public synchronized String getKibanaAppUri() {
+    checkCache();
+    return "/hopsworks-api/kibana/app/kibana?";
+  }
+  
+  public synchronized String getKibanaAppUri(String jwtToken) {
+    checkCache();
+    return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter()
+        + "=" + jwtToken + "&";
+  }
+  
   // Zookeeper
   private String ZK_IP = "10.0.2.15";
 
@@ -1802,7 +1889,6 @@ public class Settings implements Serializable {
   public static final String META_NAME_FIELD = "name";
   public static final String META_DESCRIPTION_FIELD = "description";
   public static final String META_INDEX = "projects";
-  public static final String META_DEFAULT_TYPE = "_doc";
   public static final String META_PROJECT_ID_FIELD = "project_id";
   public static final String META_DATASET_ID_FIELD = "dataset_id";
   public static final String META_DOC_TYPE_FIELD = "doc_type";
@@ -1901,11 +1987,6 @@ public class Settings implements Serializable {
     "_" + Settings.ELASTIC_BEAMSDKWORKER + "-*";
   
   public static final String ELASTIC_EXPERIMENTS_INDEX = "experiments";
-  public static final String ELASTIC_SAVED_OBJECTS = "saved_objects";
-  public static final String ELASTIC_VISUALIZATION = "visualization";
-  public static final String ELASTIC_SAVED_SEARCH = "search";
-  public static final String ELASTIC_DASHBOARD = "dashboard";
-  public static final String ELASTIC_INDEX_PATTERN = "index-pattern";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_KAGENT_INDEX_REGEX = ".*_" + ELASTIC_KAGENT_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
@@ -3561,5 +3642,18 @@ public class Settings implements Serializable {
     checkCache();
     return REQUESTS_VERIFY;
   }
-
+  
+  private  Boolean KIBANA_HTTPS_ENABELED = false;
+  public synchronized Boolean isKibanaHTTPSEnabled() {
+    checkCache();
+    return KIBANA_HTTPS_ENABELED;
+  }
+  
+  private  Boolean KIBANA_MULTI_TENANCY_ENABELED = false;
+  public synchronized Boolean isKibanaMultiTenancyEnabled() {
+    checkCache();
+    return KIBANA_MULTI_TENANCY_ENABELED;
+  }
+  
+  public static final int ELASTIC_KIBANA_NO_CONNECTIONS = 5;
 }

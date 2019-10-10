@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.admin.dto.VariablesRequest;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
@@ -389,5 +391,12 @@ public class SystemAdminService {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
     
     return Response.ok().entity(values).build();
+  }
+  
+  @GET
+  @Path("/elastic/admintoken")
+  public Response getElasticAdminToken() throws ElasticException {
+    ElasticJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
+    return Response.ok().entity(responseDTO).build();
   }
 }
