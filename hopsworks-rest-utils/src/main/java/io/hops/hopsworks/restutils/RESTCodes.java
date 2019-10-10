@@ -1451,7 +1451,8 @@ public class RESTCodes {
     JWT_NOT_CREATED(1, "JWT for Airflow service could not be created", Response.Status.INTERNAL_SERVER_ERROR),
     JWT_NOT_STORED(2, "JWT for Airflow service could not be stored", Response.Status.INTERNAL_SERVER_ERROR),
     AIRFLOW_DIRS_NOT_CREATED(3, "Airflow internal directories could not be created",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    DAG_NOT_TEMPLATED(4, "Could not template DAG file", Response.Status.INTERNAL_SERVER_ERROR);
 
     private Integer code;
     private String message;
