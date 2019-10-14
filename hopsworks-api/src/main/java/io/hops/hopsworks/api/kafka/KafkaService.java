@@ -52,6 +52,9 @@ import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
+import io.hops.hopsworks.common.dao.kafka.SharedTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -80,9 +83,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
@@ -100,6 +104,8 @@ public class KafkaService {
   private KafkaController kafkaController;
   @EJB
   private TopicsBuilder topicsBuilder;
+  @EJB
+  private SharedTopicsFacade sharedTopicsFacade;
 
   private Project project;
 
@@ -140,14 +146,13 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopic(TopicDTO topicDto, @Context SecurityContext sc)
+  public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo)
     throws KafkaException, ProjectException, UserException,
       InterruptedException, ExecutionException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaController.createTopic(project, topicDto);
-  
-    json.setSuccessMessage("The Topic has been created.");
-    return Response.ok().entity(json).build();
+    kafkaController.createTopic(project, topicDto, uriInfo);
+    URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
+    topicDto.setHref(uri);
+    return Response.created(uri).entity(topicDto).build();
   }
   
   @ApiOperation(value = "Delete a Kafka topic.")
@@ -157,10 +162,8 @@ public class KafkaService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removeTopic(@PathParam("topic") String topicName) throws KafkaException, ServiceException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaController.removeTopicFromProject(project, topicName);
-    json.setSuccessMessage("The topic has been removed.");
-    return Response.ok().entity(json).build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Get Kafka topic details.")
@@ -182,14 +185,20 @@ public class KafkaService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectId") Integer destProjectId)
-    throws KafkaException, ProjectException, UserException {
-    
-    kafkaController.shareTopicWithProject(project, topicName, destProjectId);
-    
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage("The topic has been shared.");
-    return Response.ok().entity(json).build();
+  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectId") Integer destProjectId,
+    @Context UriInfo uriInfo) throws KafkaException, ProjectException, UserException {
+    URI uri = topicsBuilder.sharedProjectUri(uriInfo, project, topicName).build();
+    Optional<SharedTopics> st = sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName);
+    SharedTopicsDTO dto;
+    if (st.isPresent()) {
+      dto = new SharedTopicsDTO(st.get().getProjectId(), st.get().getSharedTopicsPK());
+      dto.setHref(uri);
+      return Response.ok(uri).entity(dto).build();
+    } else {
+      dto = kafkaController.shareTopicWithProject(project, topicName, destProjectId);
+      dto.setHref(uri);
+      return Response.created(uri).entity(dto).build();
+    }
   }
   
   @ApiOperation(value = "Unshare Kafka topic from all projects.")
@@ -202,10 +211,7 @@ public class KafkaService {
     throws KafkaException, ProjectException {
     
     kafkaController.unshareTopicFromAllProjects(project, topicName);
-    
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage("Topic has been unshared from all projects.");
-    return Response.ok().entity(json).build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Unshare Kafka topic from a project (specified as destProjectId).")
@@ -218,9 +224,7 @@ public class KafkaService {
     @PathParam("destProjectId") Integer destProjectId) throws KafkaException, ProjectException {
     
     kafkaController.unshareTopic(project, topicName, destProjectId);
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage("Topic has been unshared.");
-    return Response.ok().entity(json).build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Get list of projects that a topic has been shared with.")
@@ -290,7 +294,7 @@ public class KafkaService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response updateTopicAcls(@PathParam("topic") String topicName, @PathParam("aclId") String aclId, AclDTO aclDto)
       throws KafkaException, ProjectException, UserException {
-    kafkaFacade.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
+    kafkaController.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("TopicAcl updated successfully");
     return Response.ok().entity(json).build();

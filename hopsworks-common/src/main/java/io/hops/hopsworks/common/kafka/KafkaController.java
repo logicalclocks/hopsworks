@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
 import io.hops.hopsworks.common.dao.kafka.SchemaTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -89,8 +90,12 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.core.UriInfo;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class KafkaController {
 
   private final static Logger LOGGER = Logger.getLogger(KafkaController.class.getName());
@@ -114,7 +119,7 @@ public class KafkaController {
   @EJB
   private SchemaTopicsFacade schemaTopicsFacade;
   
-  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException,
+  public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
     
     if (topicDto == null) {
@@ -272,7 +277,7 @@ public class KafkaController {
     return getTopicDetailsFromKafkaCluster(topicName);
   }
   
-  public void shareTopicWithProject(Project project, String topicName, Integer destProjectId) throws
+  public SharedTopicsDTO shareTopicWithProject(Project project, String topicName, Integer destProjectId) throws
     ProjectException, KafkaException, UserException {
     
     if (project.getId().equals(destProjectId)) {
@@ -291,14 +296,21 @@ public class KafkaController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
         "Could not find project: " + destProjectId);
     }
-    
-    if (sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName).isPresent()) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_SHARED, Level.FINE, "topic: " + topicName);
-    }
   
     sharedTopicsFacade.shareTopic(project, topicName, destProjectId);
     //By default, all members of the project are granted full permissions on the topic
     addFullPermissionAclsToTopic(destProjectId, topicName, project.getId());
+    
+    Optional<SharedTopics> optionalSt =
+      sharedTopicsFacade.findSharedTopicByTopicAndProjectIds(topicName, project.getId(), destProjectId);
+  
+    SharedTopicsDTO dto = new SharedTopicsDTO();
+    optionalSt.ifPresent(st -> {
+      dto.setProjectId(st.getProjectId());
+      dto.setSharedTopicsPK(st.getSharedTopicsPK());
+    });
+    
+    return dto;
   }
   
   private void addFullPermissionAclsToTopic(Integer aclProjectId, String topicName, Integer projectId)
@@ -441,7 +453,7 @@ public class KafkaController {
       new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
         "topic: " + topicName + ", project: " + destProjectId));
   
-    sharedTopicsFacade.unshareTopic(st);
+    sharedTopicsFacade.remove(st);
     
     kafkaFacade.removeAclFromTopic(topicName, destProject);
   }
@@ -563,5 +575,25 @@ public class KafkaController {
         "schema: " + schemaName + ", version: " + schemaVersion));
     
     projectTopicsFacade.updateTopicSchemaVersion(pt, st);
+  }
+  
+  public void updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws KafkaException,
+    ProjectException, UserException {
+    
+    if (!projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, topicName);
+    }
+    
+    TopicAcls ta = kafkaFacade.findAclById(aclId);
+    
+    if (ta == null) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE,  "topic: " +topicName);
+    }
+    
+    //remove previous acl
+    kafkaFacade.removeAcl(ta);
+    
+    //add the new acls
+    addAclsToTopic(topicName, project.getId(), aclDto);
   }
 }

@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
@@ -70,7 +71,16 @@ public class SharedTopicsFacade extends AbstractFacade<SharedTopics> {
     em.flush();
   }
   
-  public void unshareTopic(SharedTopics st) {
-    em.remove(st);
+  public Optional<SharedTopics> findSharedTopicByTopicAndProjectIds(String topicName, Integer ownerProjectId,
+    Integer destProjectId) {
+    try {
+      return Optional.ofNullable(em.createNamedQuery("SharedTopics.findByTopicAndProjectsIds", SharedTopics.class)
+        .setParameter("topicName", topicName)
+        .setParameter("ownerProjectId", ownerProjectId)
+        .setParameter("destProjectId", destProjectId)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 }

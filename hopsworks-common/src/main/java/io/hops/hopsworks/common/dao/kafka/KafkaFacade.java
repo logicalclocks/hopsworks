@@ -41,18 +41,15 @@ package io.hops.hopsworks.common.dao.kafka;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaCompatibility;
 import org.apache.avro.SchemaParseException;
 import org.elasticsearch.common.Strings;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -74,8 +71,6 @@ public class KafkaFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  @EJB
-  private KafkaController kafkaController;
   
   protected EntityManager getEntityManager() {
     return em;
@@ -162,29 +157,13 @@ public class KafkaFacade {
     em.persist(ta);
     em.flush();
   }
-
-  public void updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws KafkaException,
-    ProjectException, UserException {
-
-    ProjectTopics pt = null;
-    try {
-      pt = em.createNamedQuery("ProjectTopics.findByProjectAndTopicName", ProjectTopics.class)
-          .setParameter("project", project)
-          .setParameter("topicName", topicName)
-          .getSingleResult();
-    } catch (NoResultException e) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, topicName);
-    }
-
-    TopicAcls ta = em.find(TopicAcls.class, aclId);
-    if (ta == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE,  "topic: " +topicName);
-    }
-    //remove previous acl
-    em.remove(ta);
-
-    //add the new acls
-    kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
+  
+  public TopicAcls findAclById(Integer aclId) {
+    return em.find(TopicAcls.class, aclId);
+  }
+  
+  public void removeAcl(TopicAcls acl) {
+    em.remove(acl);
   }
 
   public void removeAclFromTopic(String topicName, Integer aclId) throws KafkaException {

@@ -73,7 +73,7 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
     return dto;
   }
   
-  private UriBuilder topicUri(UriInfo uriInfo, Project project, String topicName) {
+  public UriBuilder topicUri(UriInfo uriInfo, Project project, String topicName) {
     return uriInfo.getBaseUriBuilder()
       .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
       .path(Integer.toString(project.getId()))
@@ -82,7 +82,7 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
       .path(topicName);
   }
   
-  private UriBuilder sharedProjectUri(UriInfo uriInfo, Project project, String topicName) {
+  public UriBuilder sharedProjectUri(UriInfo uriInfo, Project project, String topicName) {
     return topicUri(uriInfo, project, topicName)
       .path(ResourceRequest.Name.SHARED.toString().toLowerCase());
   }
