@@ -27,6 +27,10 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
 
+	after :all do
+	  clean_projects
+	end
+
         it "should be able to create a kafka schema" do
           project = get_project
           json_result, schema_name = add_schema(project.id)
@@ -47,8 +51,7 @@ describe "On #{ENV['OS']}" do
           target_project = create_project
           topic = get_topic
 	  share_topic(org_project, topic, target_project)
-          expect_status(200)
-          expect_json(successMessage: "The topic has been shared.")
+          expect_status(201)
 
           # Check that the topic has been shared correctly
 	  get_shared_topics(target_project.id) 
@@ -69,12 +72,15 @@ describe "On #{ENV['OS']}" do
         project = get_project
         with_kafka_schema(project.id)
       end
+      after :all do
+        clean_projects
+      end
 
       it "should be able to create a kafka topic using the schema" do
         project = get_project
         schema = get_schema
         json_result, kafka_topic_name = add_topic(project.id, schema.name, 1)
-        expect_status(200)
+        expect_status(201)
       end
     end
 
@@ -84,6 +90,9 @@ describe "On #{ENV['OS']}" do
         project = get_project
         with_kafka_schema(project.id)
         with_kafka_topic(project.id)
+      end
+      after :all do
+        clean_projects
       end
 
       it "should not be able to delete the schema that is being used by the topic" do
@@ -97,7 +106,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         topic = get_topic
         delete_topic(project.id, topic)
-        expect_status(200)
+        expect_status(204)
       end
 
       it "should be able to delete the schema when it is not being used by a topic" do
@@ -116,6 +125,9 @@ describe "On #{ENV['OS']}" do
         schema = get_schema
 	create_topics(project.id, 10, schema.name, 1)
       end
+      after :all do
+        clean_projects
+      end
 
       it "should return ten own topics" do
         project = get_project
@@ -132,8 +144,7 @@ describe "On #{ENV['OS']}" do
 		
 	# share topic with the first_project
 	share_topic(second_project, topic_name, first_project)
-	expect_status(200)
-        expect_json(successMessage: "The topic has been shared.")
+	expect_status(201)
 
 	# get all topics for the first project
 	get_all_topics(first_project.id)
@@ -148,6 +159,9 @@ describe "On #{ENV['OS']}" do
 	  project = get_project
 	  @project_topics = create_topics(project.id)
 	end
+        after :all do
+          clean_projects
+        end
 	describe "Kafka topics filter" do
 	  it 'should filter shared and project topics' do
 	    # create another project with one topic
