@@ -269,7 +269,7 @@ angular.module('hopsWorksApp')
               ModalService.createTopic('lg', self.projectId, self.projectIsGuide)
               .then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New topic created successfully.', ttl: 2000});
+                          growl.success("", {title: 'New topic created successfully.', ttl: 2000});
                           self.getAllTopics();
                           if (self.projectIsGuide) {
                             self.tourService.currentStep_TourThree = 4;
@@ -355,7 +355,7 @@ angular.module('hopsWorksApp')
                         KafkaService.shareTopic(self.projectId, topicName, success.projectId).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
-                                  growl.success(success.data.successMessage, {
+                                  growl.success("", {
                                       title: 'Topic shared successfully.',ttl: 5000});
                                 }, function (error) {
                                 if (typeof error.data.usrMsg !== 'undefined') {
@@ -375,7 +375,7 @@ angular.module('hopsWorksApp')
                   KafkaService.unshareTopic(self.projectId, topicName, project.id).then(
                       function (success) {
                           self.topicIsSharedTo(topicName);
-                          growl.success(success.data.successMessage, {
+                          growl.success("", {
                               title: 'Topic share removed (unshared) from project: ' + project.name,
                               ttl: 2000
                           });
@@ -393,7 +393,7 @@ angular.module('hopsWorksApp')
                 KafkaService.unshareTopic(ownerProjectId, topicName, self.projectId).then(
                         function (success) {
                                   self.getAllSharedTopics();
-                                  growl.success(success.data.successMessage, {title: 'Topic share removed (unshared) from project:.', ttl: 2000});
+                                  growl.success("", {title: 'Topic share removed (unshared) from project:.', ttl: 2000});
                                 }, function (error) {
                                     if (typeof error.data.usrMsg !== 'undefined') {
                                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
