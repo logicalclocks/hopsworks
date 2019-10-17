@@ -171,8 +171,7 @@ describe "On #{ENV['OS']}" do
       		
             # share topic with the first_project
       	    share_topic(second_project, topic_name, project)
-      	    expect_status(200)
-            expect_json(successMessage: "The topic has been shared.")
+      	    expect_status(201)
       
       	    # get all project topics for the first project
       	    get_project_topics(project.id)
