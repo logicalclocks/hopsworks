@@ -52,9 +52,9 @@ module SessionHelper
   end
   
   def with_admin_session
-    user = create_user_without_role({})
-    create_admin_role(user)
-    create_session(user.email, "Pass123")
+    @user = create_user_without_role({})
+    create_admin_role(@user)
+    create_session(@user.email, "Pass123")
   end
 
   def with_agent_session
