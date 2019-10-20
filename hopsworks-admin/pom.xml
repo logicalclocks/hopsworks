@@ -58,6 +58,7 @@
 
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
+    <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
   </properties>
   
   <dependencies>
@@ -161,6 +162,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.google.code.maven-replacer-plugin</groupId>
+        <artifactId>maven-replacer-plugin</artifactId>
+        <version>1.3.7</version>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>replace</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <file>target/hopsworks-admin/WEB-INF/beans.xml</file>
+          <replacements>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.LocalhostStereotype</token>
+              <value>${kube.stereotype}</value>
+            </replacement>
+          </replacements>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <repositories>
@@ -178,32 +201,9 @@
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.google.code.maven-replacer-plugin</groupId>
-            <artifactId>maven-replacer-plugin</artifactId>
-            <version>1.3.7</version>
-            <executions>
-              <execution>
-                <phase>process-resources</phase>
-                <goals>
-                  <goal>replace</goal>
-                </goals>
-              </execution>
-            </executions>
-            <configuration>
-              <file>target/hopsworks-admin/WEB-INF/beans.xml</file>
-              <replacements>
-                <replacement>
-                  <token>io.hops.hopsworks.common.integrations.LocalhostStereotype</token>
-                  <value>io.hops.hopsworks.kube.common.KubeStereotype</value>
-                </replacement>
-              </replacements>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
+      <properties>
+        <kube.stereotype>io.hops.hopsworks.kube.common.KubeStereotype</kube.stereotype>
+      </properties>
     </profile>
   </profiles>
 </project>
