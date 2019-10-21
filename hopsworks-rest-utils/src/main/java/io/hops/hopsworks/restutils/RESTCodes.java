@@ -1367,7 +1367,9 @@ public class RESTCodes {
     S3_KEYS_FORBIDDEN(86, "IAM role is configured for this instance. AWS access/secret keys are not allowed",
         Response.Status.BAD_REQUEST),
     MISSING_REDSHIFT_DRIVER(87, "Could not find Redshift JDBC driver. " +
-        "Please upload it in Resources/RedshiftJDBC42-no-awssdk.jar", Response.Status.BAD_REQUEST);
+        "Please upload it in Resources/RedshiftJDBC42-no-awssdk.jar", Response.Status.BAD_REQUEST),
+    TRAININGDATASETJOB_MISSPECIFICATION(88, "Training dataset job is misspecified and cannot be created",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

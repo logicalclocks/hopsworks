@@ -29,8 +29,10 @@ import java.util.List;
 @XmlRootElement
 public class TrainingDatasetJobDTO {
   
-  @XmlElement(name="features")
+  @XmlElement(name="features", nillable = true)
   private List<String> features;
+  @XmlElement(name="sql_query", nillable = true)
+  private String sqlQuery;
   @XmlElement(name="training_dataset")
   private String trainingDataset;
   @XmlElement(name="featuregroups_version_dict")
@@ -49,6 +51,8 @@ public class TrainingDatasetJobDTO {
   private Boolean overwrite;
   @XmlElement(name="jobs")
   private List<String> jobs;
+  @XmlElement(name="online")
+  private Boolean online;
   @XmlElement(name="descriptive_statistics")
   private Boolean descriptiveStatistics;
   @XmlElement(name="feature_correlation")
@@ -83,14 +87,14 @@ public class TrainingDatasetJobDTO {
   private String path;
   
   
-  public TrainingDatasetJobDTO(
-    List<String> features, String trainingDataset, String featuregroupsVersionDict, String joinKey,
-    String description, String featurestore, String dataFormat, int trainingDatasetVersion, Boolean
-    overwrite, List<String> jobs, Boolean descriptiveStatistics, Boolean featureCorrelation, Boolean featureHistograms,
-    Boolean clusterAnalysis, List<String> statColumns, int numBins, String correlationMethod, int numClusters,
-    Boolean fixed, String sink, int amCores, int amMemory, int executorCores, int executorMemory, int maxExecutors,
-    String path) {
+  public TrainingDatasetJobDTO(List<String> features, String sqlQuery, String trainingDataset,
+    String featuregroupsVersionDict, String joinKey, String description, String featurestore, String dataFormat,
+    int trainingDatasetVersion, Boolean overwrite, List<String> jobs, Boolean online, Boolean descriptiveStatistics,
+    Boolean featureCorrelation, Boolean featureHistograms, Boolean clusterAnalysis, List<String> statColumns,
+    int numBins, String correlationMethod, int numClusters, Boolean fixed, String sink, int amCores, int amMemory,
+    int executorCores, int executorMemory, int maxExecutors, String path) {
     this.features = features;
+    this.sqlQuery = sqlQuery;
     this.trainingDataset = trainingDataset;
     this.featuregroupsVersionDict = featuregroupsVersionDict;
     this.joinKey = joinKey;
@@ -100,6 +104,7 @@ public class TrainingDatasetJobDTO {
     this.trainingDatasetVersion = trainingDatasetVersion;
     this.overwrite = overwrite;
     this.jobs = jobs;
+    this.online = online;
     this.descriptiveStatistics = descriptiveStatistics;
     this.featureCorrelation = featureCorrelation;
     this.featureHistograms = featureHistograms;
@@ -127,6 +132,14 @@ public class TrainingDatasetJobDTO {
   
   public void setFeatures(List<String> features) {
     this.features = features;
+  }
+  
+  public String getSqlQuery() {
+    return sqlQuery;
+  }
+  
+  public void setSqlQuery(String features) {
+    this.sqlQuery = sqlQuery;
   }
   
   public String getTrainingDataset() {
@@ -199,6 +212,14 @@ public class TrainingDatasetJobDTO {
   
   public void setJobs(List<String> jobs) {
     this.jobs = jobs;
+  }
+  
+  public Boolean getOnline() {
+    return online;
+  }
+  
+  public void setOnline(Boolean online) {
+    this.online = online;
   }
   
   public Boolean getDescriptiveStatistics() {
