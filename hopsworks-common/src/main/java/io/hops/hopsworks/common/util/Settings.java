@@ -516,9 +516,12 @@ public class Settings implements Serializable {
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
-      ELASTIC_IP = setIpVar(VARIABLE_ELASTIC_IP, ELASTIC_IP);
-      ELASTIC_PORT = setIntVar(VARIABLE_ELASTIC_PORT, ELASTIC_PORT);
-      ELASTIC_REST_PORT = setIntVar(VARIABLE_ELASTIC_REST_PORT, ELASTIC_REST_PORT);
+      String elasticIps = setStrVar(VARIABLE_ELASTIC_IP,
+          ElasticSettings.ELASTIC_IP_DEFAULT);
+      int elasticPort = setIntVar(VARIABLE_ELASTIC_PORT, ElasticSettings.ELASTIC_PORT_DEFAULT);
+      int elasticRestPort = setIntVar(VARIABLE_ELASTIC_REST_PORT,
+          ElasticSettings.ELASTIC_REST_PORT_DEFAULT);
+      ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort, elasticRestPort);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
@@ -1323,33 +1326,26 @@ public class Settings implements Serializable {
   public static final String PROJECT_STAGING_DIR = "Resources";
 
   // Elasticsearch
-  private String ELASTIC_IP = "127.0.0.1";
-
-  public synchronized String getElasticIp() {
+  ElasticSettings ELASTIC_SETTINGS;
+  
+  public synchronized List<String> getElasticIps(){
     checkCache();
-    return ELASTIC_IP;
+    return ELASTIC_SETTINGS.getElasticIps();
   }
-
-  private int ELASTIC_PORT = 9300;
-
+  
   public synchronized int getElasticPort() {
     checkCache();
-    return ELASTIC_PORT;
+    return ELASTIC_SETTINGS.getElasticPort();
   }
-
-  private int ELASTIC_REST_PORT = 9200;
-
-  public synchronized int getElasticRESTPort() {
-    checkCache();
-    return ELASTIC_REST_PORT;
-  }
-
+  
   public synchronized String getElasticEndpoint() {
-    return getElasticIp() + ":" + getElasticPort();
+    checkCache();
+    return ELASTIC_SETTINGS.getElasticEndpoint();
   }
 
   public synchronized String getElasticRESTEndpoint() {
-    return getElasticIp() + ":" + getElasticRESTPort();
+    checkCache();
+    return ELASTIC_SETTINGS.getElasticRESTEndpoint();
   }
 
   private long ELASTIC_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
