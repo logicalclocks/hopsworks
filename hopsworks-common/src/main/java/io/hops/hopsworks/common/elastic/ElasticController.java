@@ -71,6 +71,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.transport.TransportAddress;
@@ -466,10 +467,14 @@ public class ElasticController {
               .put("client.transport.sniff", true) //being able to retrieve other nodes
               .put("cluster.name", "hops").build();
 
-      elasticClient = new PreBuiltTransportClient(settings)
-          .addTransportAddress(new TransportAddress(
-              new InetSocketAddress(getElasticIpAsString(),
-                  this.settings.getElasticPort())));
+      List<String> elasticAddrs = getElasticIpsAsString();
+      TransportClient _client = new PreBuiltTransportClient(settings);
+      for(String addr : elasticAddrs){
+        _client.addTransportAddress(new TransportAddress(
+            new InetSocketAddress(addr,
+                this.settings.getElasticPort())));
+      }
+      elasticClient = _client;
     }
     return elasticClient;
   }
@@ -752,22 +757,25 @@ public class ElasticController {
         Settings.META_INDEX));
   }
 
-  private String getElasticIpAsString() throws ServiceException {
-    String addr = settings.getElasticIp();
+  private List<String> getElasticIpsAsString() throws ServiceException {
+    List<String> addrs = settings.getElasticIps();
 
-    // Validate the ip address pulled from the variables
-    if (!Ip.validIp(addr)) {
-      try {
-        InetAddress.getByName(addr);
-      } catch (UnknownHostException ex) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_AVAILABLE, Level.SEVERE, null,
-          ex.getMessage(),
-          ex);
-
+    for(String addr : addrs) {
+      // Validate the ip address pulled from the variables
+      if (!Ip.validIp(addr)) {
+        try {
+          InetAddress.getByName(addr);
+        } catch (UnknownHostException ex) {
+          throw new ServiceException(
+              RESTCodes.ServiceErrorCode.ELASTIC_SERVER_NOT_AVAILABLE,
+              Level.SEVERE, null,
+              ex.getMessage(),
+              ex);
+      
+        }
       }
     }
-
-    return addr;
+    return addrs;
   }
 
   private JSONObject sendKibanaReq(String templateUrl, Map<String, String> params, boolean async) {
