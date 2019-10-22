@@ -176,7 +176,7 @@ describe "On #{ENV['OS']}" do
       	    # get all project topics for the first project
       	    get_project_topics(project.id)
             expect(json_body[:items].count).to eq(10)
-      	    # get all project topics for the first project
+      	    # get all shared topics for the first project
       	    get_shared_topics(project.id)
 	    expect(json_body[:items].count).to eq(1)
 	  end
