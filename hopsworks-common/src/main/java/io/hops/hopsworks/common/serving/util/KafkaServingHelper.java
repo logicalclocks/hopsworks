@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.serving.util;
 
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -37,15 +36,16 @@ import org.apache.zookeeper.KeeperException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class KafkaServingHelper {
   
-  @EJB
-  private KafkaFacade kafkaFacade;
   @EJB
   private Settings settings;
   @EJB
