@@ -298,7 +298,6 @@ public class OnlineFeaturestoreController {
   private String createOnlineFeaturestoreUserSecret(String dbuser, Users user, Project project)
     throws FeaturestoreException {
     String onlineFsPw = generateRandomUserPw();
-    SecretId id = new SecretId(user.getUid(), dbuser);
     try {
       secretsController.delete(user, dbuser); //Delete if the secret already exsits
       secretsController.add(user, dbuser, onlineFsPw, VisibilityType.PRIVATE, project.getId());
@@ -358,7 +357,7 @@ public class OnlineFeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateUserOnlineFeatureStoreDB(Project project, Users user, Featurestore featurestore)
     throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
+    if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(getOnlineFeaturestoreDbName(project))) {
       //Nothing to update
       return;
     }
@@ -412,7 +411,7 @@ public class OnlineFeaturestoreController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeOnlineFeatureStore(Project project) throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
+    if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(getOnlineFeaturestoreDbName(project))) {
       //Nothing to remove
       return;
     }
