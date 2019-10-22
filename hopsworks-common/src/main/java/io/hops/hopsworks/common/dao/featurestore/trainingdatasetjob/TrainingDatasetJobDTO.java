@@ -79,13 +79,16 @@ public class TrainingDatasetJobDTO {
   private int executorMemory = 4096;
   @XmlElement(name="max_executors")
   private int maxExecutors = 2;
+  @XmlElement(name="path", nillable = true)
+  private String path;
   
   public TrainingDatasetJobDTO(
     List<String> features, String trainingDataset, String featuregroupsVersionDict, String joinKey,
     String description, String featurestore, String dataFormat, int trainingDatasetVersion, Boolean
     overwrite, List<String> jobs, Boolean descriptiveStatistics, Boolean featureCorrelation, Boolean featureHistograms,
     Boolean clusterAnalysis, List<String> statColumns, int numBins, String correlationMethod, int numClusters,
-    Boolean fixed, String sink, int amCores, int amMemory, int executorCores, int executorMemory, int maxExecutors) {
+    Boolean fixed, String sink, int amCores, int amMemory, int executorCores, int executorMemory, int maxExecutors,
+    String path) {
     this.features = features;
     this.trainingDataset = trainingDataset;
     this.featuregroupsVersionDict = featuregroupsVersionDict;
@@ -111,6 +114,7 @@ public class TrainingDatasetJobDTO {
     this.executorCores = executorCores;
     this.executorMemory = executorMemory;
     this.maxExecutors = maxExecutors;
+    this.path = path;
   }
   
   public TrainingDatasetJobDTO() {
@@ -314,5 +318,13 @@ public class TrainingDatasetJobDTO {
   
   public void setMaxExecutors(int maxExecutors) {
     this.maxExecutors = maxExecutors;
+  }
+  
+  public String getPath() {
+    return path;
+  }
+  
+  public void setPath(String path) {
+    this.path = path;
   }
 }
