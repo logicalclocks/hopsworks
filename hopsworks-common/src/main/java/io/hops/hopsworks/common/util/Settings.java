@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.featurestore.datavalidation.DataValidationController;
+import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -91,9 +92,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.DLIMITER;
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.SLASH_SEPARATOR;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
@@ -2696,9 +2694,9 @@ public class Settings implements Serializable {
       for (String id : ids) {
         String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
             false, null));
-        String[] tokens = brokerInfo.split(DLIMITER);
+        String[] tokens = brokerInfo.split(KafkaConst.DLIMITER);
         for (String str : tokens) {
-          if (str.contains(SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
+          if (str.contains(KafkaConst.SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
             brokerList.add(str);
           }
         }

@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.dao.project;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -299,6 +300,12 @@ public class ProjectFacade extends AbstractFacade<Project> {
       return project.getRetentionPeriod();
     }
     return null;
+  }
+  
+  public Optional<Project> findById(Integer id) {
+    return Optional.ofNullable(em.createNamedQuery("Project.findById", Project.class)
+        .setParameter("id", id)
+        .getSingleResult());
   }
 
   public Project findByName(String name) {

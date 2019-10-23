@@ -27,6 +27,7 @@ import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.UserException;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Interface for managing serving instances. Different type of serving controllers e.g (localhost or Kubernetes) should
@@ -48,7 +49,8 @@ public interface ServingController {
       throws ServingException;
 
   void createOrUpdate(Project project, Users user, ServingWrapper newServing)
-      throws KafkaException, UserException, ProjectException, ServiceException, ServingException;
+      throws KafkaException, UserException, ProjectException, ServiceException, ServingException,
+    InterruptedException, ExecutionException;
 
   int getMaxNumInstances();
 

@@ -39,35 +39,30 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.api.RestDTO;
+
 import java.io.Serializable;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class SchemaDTO implements Serializable {
+public class SchemaDTO extends RestDTO<SchemaDTO> implements Serializable {
 
   private String name;
   private String contents;
-  private int version;
   private List<Integer> versions;
 
   public SchemaDTO() {
   }
 
-  public SchemaDTO(String name, String contents, int version) {
+  public SchemaDTO(String name, String contents) {
     this.name = name;
     this.contents = contents;
-    this.version = version;
   }
 
   public SchemaDTO(String name, List<Integer> versions) {
     this.name = name;
     this.versions = versions;
-  }
-
-  public SchemaDTO(String name, int version) {
-    this.name = name;
-    this.version = version;
   }
 
   public SchemaDTO(String contents) {
@@ -81,11 +76,7 @@ public class SchemaDTO implements Serializable {
   public String getName() {
     return name;
   }
-
-  public int getVersion() {
-    return version;
-  }
-
+  
   public void setContents(String contents) {
     this.contents = contents;
   }
@@ -93,11 +84,7 @@ public class SchemaDTO implements Serializable {
   public void setName(String name) {
     this.name = name;
   }
-
-  public void setVersion(int version) {
-    this.version = version;
-  }
-
+  
   public List<Integer> getVersions() {
     return versions;
   }

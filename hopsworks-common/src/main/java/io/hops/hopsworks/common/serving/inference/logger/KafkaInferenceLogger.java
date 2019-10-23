@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.serving.inference.logger;
 
 import com.twitter.bijection.Injection;
 import com.twitter.bijection.avro.GenericAvroCodecs;
+import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -44,8 +45,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.KAFKA_SECURITY_PROTOCOL;
 
 @Stateless
 public class KafkaInferenceLogger implements InferenceLogger {
@@ -173,7 +172,7 @@ public class KafkaInferenceLogger implements InferenceLogger {
         certificateMaterializer.getUserMaterial(SERVING_MANAGER_USERNAME, project.getName());
 
     // Configure TLS for this producer
-    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KAFKA_SECURITY_PROTOCOL);
+    props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
 
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
         settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),

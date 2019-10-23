@@ -68,7 +68,7 @@ angular.module('hopsWorksApp')
                   self.tourService.currentStep_TourFive = 0;
                 }
 
-                KafkaService.defaultTopicValues(self.projectId).then(
+                KafkaService.defaultTopicValues().then(
                     function (success) {
                     self.num_partitions = success.data.numOfPartitions;
                     self.num_replicas = success.data.numOfReplicas;
