@@ -2035,15 +2035,21 @@ public class Settings implements Serializable {
   private static final String FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR = "featurestore-trainingdataset-job";
   public static final String FEATURESTORE_TRAININGDATASET_JOB_CONF = "configurations";
   public static final String FEATURESTORE_TRAININGDATASET_JOB_NAME = "ft_trainingdataset_job.py";
+  public static final String FEATURESTORE_TRAININGDATASET_SQL_JOB_NAME = "ft_trainingdataset_sql_job.py";
   
   public String getBaseFeaturestoreTrainingDatasetJobDir(Project project) {
     return Utils.getProjectPath(project.getName()) + Settings.BaseDataset.RESOURCES.getName() + Path.SEPARATOR +
       Settings.FEATURESTORE_TRAININGDATASET_JOB_PARENT_DIR + Path.SEPARATOR;
   }
   
-  public synchronized String getFeaturestoreTrainingDatasetJobPath() {
+  public synchronized String getFeaturestoreTrainingDatasetJobPath(String sql_query) {
     checkCache();
-    return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_TRAININGDATASET_JOB_NAME;
+    if (sql_query != null) {
+      return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR +
+        FEATURESTORE_TRAININGDATASET_SQL_JOB_NAME;
+    } else {
+      return "hdfs:///user" + Path.SEPARATOR + getSparkUser() + Path.SEPARATOR + FEATURESTORE_TRAININGDATASET_JOB_NAME;
+    }
   }
   
   public Settings() {
