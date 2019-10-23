@@ -151,6 +151,33 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
       trainingDatasetVersion);
   }
   
+  /**
+   * Validates the job specification to make sure user provided either a feature list or a sql query string.
+   *
+   * @param features
+   * @param sqlQuery
+   * @return
+   * @throws FeaturestoreException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public Boolean validateJobSpecification(List<String> features, String sqlQuery) throws FeaturestoreException {
+    if (features == null && sqlQuery == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_MISSPECIFICATION,
+        Level.WARNING, String.format("Both arguments 'features' and 'sql_query' are None, please provide one of the " +
+        "two"));
+    } else if (features != null && sqlQuery != null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_MISSPECIFICATION,
+        Level.WARNING, String.format("Both arguments 'features' and 'sql_query' are specified, please provide only " +
+        "one of the two"));
+    } else if (features == null && sqlQuery != null) {
+      return true;
+    } else if (features != null && sqlQuery == null) {
+      return false;
+    }
+    throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_MISSPECIFICATION,
+      Level.WARNING, String.format("Arguments 'features' and 'sql_query' are not specified correctly, please provide" +
+      " only one of the two"));
+  }
   
   /**
    * Writes JSON input for featurestore Util Job to HDFS as a JSON file
@@ -203,6 +230,8 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
   public Jobs createTrainingDatasetJob(Users user, Project project, TrainingDatasetJobDTO trainingDatasetJobDTO)
     throws FeaturestoreException, JAXBException {
     
+    Boolean sql = validateJobSpecification(trainingDatasetJobDTO.getFeatures(), trainingDatasetJobDTO.getSqlQuery());
+    
     String featurestoreName = trainingDatasetJobDTO.getFeaturestore();
     if (featurestoreName == null) {
       // take project featurestore
@@ -233,8 +262,10 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
   
     String jsonJobConfigFilePath = writeUtilArgsToHdfs(user, project, trainingDatasetJobDTO);
   
-    verifyFeatureExistence(trainingDatasetJobDTO.getFeatures(), featurestore,
-      trainingDatasetJobDTO.getFeaturegroupsVersionDict());
+    if (!sql) {
+      verifyFeatureExistence(trainingDatasetJobDTO.getFeatures(), featurestore,
+        trainingDatasetJobDTO.getFeaturegroupsVersionDict());
+    }
     
     // Create the job if it doesn't exists.
     Jobs job = jobFacade.findByProjectAndName(project, trainingDatasetJobDTO.getTrainingDataset());
@@ -249,7 +280,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
     TrainingDatasetJobDTO trainingDatasetJobDTO, String jsonJobConfigPath) {
     SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
     sparkJobConfiguration.setAppName(trainingDatasetJobDTO.getTrainingDataset());
-    String jobPath = settings.getFeaturestoreTrainingDatasetJobPath();
+    String jobPath = settings.getFeaturestoreTrainingDatasetJobPath(trainingDatasetJobDTO.getSqlQuery());
     sparkJobConfiguration.setAppPath(jobPath);
     sparkJobConfiguration.setArgs("--job_spec " + jsonJobConfigPath);
     sparkJobConfiguration.setExecutorCores(trainingDatasetJobDTO.getExecutorCores());
