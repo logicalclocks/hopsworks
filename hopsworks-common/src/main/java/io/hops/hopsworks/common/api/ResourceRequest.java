@@ -144,6 +144,9 @@ public class ResourceRequest {
     CREATOR,//user as it appears in JobDTO
     PROJECT,
     JOBS,
+    KAFKA,
+    TOPICS,
+    SHARED,
     EXECUTIONS,
     DATASETS,
     REQUESTS,

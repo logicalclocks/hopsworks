@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topics');
+                return $http.get('/api/project/' + projectId + '/kafka/topics?filter_by=shared:false');
               },
               /**
                * Get all the topics defined in the project with given id.
@@ -59,7 +59,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getSharedTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/sharedTopics');
+                return $http.get('/api/project/' + projectId + '/kafka/topics?filter_by=shared:true');
               },
               /**
                * Get all the topics defined in the project with given id.
@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A list of topic objects.
                */
               getProjectAndSharedTopics: function (projectId) {
-                return $http.get('/api/project/' + projectId  + '/kafka/projectAndSharedTopics');
+                return $http.get('/api/project/' + projectId  + '/kafka/topics')
               },
               /**
                * Get the details of the topic with given ID, under the given project.
@@ -77,7 +77,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A complete description of the requested topic.
                */
               getTopicDetails: function (projectId, topicName) {
-                return $http.get('/api/project/' + projectId + '/kafka/details/' + topicName);
+                return $http.get('/api/project/' + projectId + '/kafka/topics/' + topicName);
               },
               
               /**
@@ -91,8 +91,8 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
               },
               
-              defaultTopicValues: function (projectId){
-                return $http.get('/api/project/' + projectId + '/kafka/topic/defaultValues');
+              defaultTopicValues: function () {
+                return $http.get('/api/admin/kafka/settings');
               },
               
               validateSchema: function (projectId, schemaDetails){
@@ -146,7 +146,7 @@ angular.module('hopsWorksApp')
               createTopic: function (projectId, topicDetails) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/topic/add',
+                  url: '/api/project/' + projectId + '/kafka/topics',
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -205,7 +205,7 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeTopic: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/remove');
+                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName);
               },
               
               /**
@@ -216,7 +216,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               shareTopic: function (projectId, topicName, destProjectId) {
-                return $http.get('/api/project/' + projectId + '/kafka/topic/' + topicName + "/share/" + destProjectId);
+                return $http.put('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectId);
               },
               
               /**
@@ -227,15 +227,11 @@ angular.module('hopsWorksApp')
                * @returns {unresolved}
                */
               unshareTopic: function (projectId, topicName, destProjectId) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/' + destProjectId);
-              },
-              
-              unshareTopicFromProject: function (projectId, topicName) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/unshare/');
+                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectId);
               },
               
               topicIsSharedTo: function (projectId, topicName){
-                  return $http.get('/api/project/' + projectId + '/kafka/'+topicName+'/sharedwith');
+                  return $http.get('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared');
               },
 
               updateTopicSchemaVersion: function (projectId, topicName, schemaVersion) {

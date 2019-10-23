@@ -331,7 +331,8 @@
 
                   <td><b>{{row.name}}</b></td>
                   <td>
-                    <button type="button" ng-click="kafkaCtrl.unshareTopicFromProject(row.name)" class="btn btn-sm btn-danger">
+                    <button type="button" ng-click="kafkaCtrl.unshareTopicFromProject(row.ownerProjectId, row.name)"
+                            class="btn btn-sm btn-danger">
                       <i class="glyphicon glyphicon-remove">
                       </i>
                     </button>

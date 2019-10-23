@@ -39,10 +39,11 @@
 
 package io.hops.hopsworks.common.kafka;
 
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.restutils.RESTCodes;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
 import kafka.utils.ZKStringSerializer$;
@@ -61,6 +62,8 @@ import javax.ejb.Timer;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -72,18 +75,16 @@ import java.util.logging.Logger;
  * <p>
  */
 @Singleton
-public class ZookeeprTopicCleanerTimer {
+public class ZookeeperTopicCleanerTimer {
 
   private final static Logger LOGGER = Logger.getLogger(
-      ZookeeprTopicCleanerTimer.class.getName());
+      ZookeeperTopicCleanerTimer.class.getName());
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
   @EJB
   Settings settings;
-  @EJB
-  KafkaFacade kafkaFacade;
 
   private ZkClient zkClient = null;
   private ZkConnection zkConnection = null;
@@ -94,7 +95,7 @@ public class ZookeeprTopicCleanerTimer {
       minute = "0",
       hour = "*")
   public void execute(Timer timer) {
-    LOGGER.log(Level.INFO, "Running ZookeeprTopicCleanerTimer.");
+    LOGGER.log(Level.INFO, "Running ZookeeperTopicCleanerTimer.");
     Set<String> zkTopics = new HashSet<>();
     //30 seconds
     int sessionTimeoutMs = 30 * 1000;
@@ -141,8 +142,7 @@ public class ZookeeprTopicCleanerTimer {
       if (zkClient == null) {
         // 30 seconds
         int connectionTimeout = 90 * 1000;
-        zkClient = new ZkClient(kafkaFacade.
-            getIp(settings.getZkConnectStr()).getHostName(),
+        zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
           sessionTimeoutMs, connectionTimeout,
             ZKStringSerializer$.MODULE$);
       }
@@ -178,6 +178,17 @@ public class ZookeeprTopicCleanerTimer {
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
+    }
+  }
+  
+  private InetAddress getIp(String zkIp) throws ServiceException {
+    
+    String ip = zkIp.split(KafkaConst.COLON_SEPARATOR)[0];
+    try {
+      return InetAddress.getByName(ip);
+    } catch (UnknownHostException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ZOOKEEPER_SERVICE_UNAVAILABLE, Level.SEVERE,
+        ex.getMessage());
     }
   }
 

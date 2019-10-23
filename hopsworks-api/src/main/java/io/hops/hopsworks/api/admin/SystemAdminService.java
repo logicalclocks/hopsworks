@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.admin;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
+import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -48,12 +49,15 @@ import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -61,6 +65,7 @@ import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -112,6 +117,8 @@ public class SystemAdminService {
   private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
   private ServiceJWTKeepAlive serviceJWTKeepAlive;
+  @EJB
+  private KafkaController kafkaController;
   
   /**
    * Admin endpoint that changes the master encryption password used to encrypt the certificates' password
@@ -370,5 +377,17 @@ public class SystemAdminService {
   public Response renewServiceJWT() throws JWTException {
     serviceJWTKeepAlive.forceRenewServiceToken();
     return Response.noContent().build();
+  }
+  
+  @ApiOperation(value = "Get kafka system settings")
+  @GET
+  @Path("/kafka/settings")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getKafkaSettings() throws KafkaException {
+    TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
+    
+    return Response.ok().entity(values).build();
   }
 }

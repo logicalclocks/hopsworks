@@ -59,6 +59,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * RESTful microservice for model servings on Hopsworks. Supports both Tensorflow and SKLearn models.
@@ -173,7 +174,8 @@ public class ServingService {
   public Response createOrUpdate(@Context SecurityContext sc,
       @ApiParam(value = "serving specification", required = true)
         ServingView serving)
-      throws ServingException, ServiceException, KafkaException, ProjectException, UserException {
+      throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
+        InterruptedException, ExecutionException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (serving == null) {
       throw new IllegalArgumentException("serving was not provided");

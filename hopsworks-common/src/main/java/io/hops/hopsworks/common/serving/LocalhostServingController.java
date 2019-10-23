@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 /**
@@ -228,7 +229,8 @@ public class LocalhostServingController implements ServingController {
    */
   @Override
   public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
-      throws ProjectException, ServingException, KafkaException, ServiceException, UserException {
+      throws ProjectException, ServingException, KafkaException, UserException,
+    InterruptedException, ExecutionException {
     Serving serving = newServing.getServing();
     if (serving.getId() == null) {
       // Create request

@@ -63,7 +63,10 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
@@ -169,6 +172,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -257,6 +261,10 @@ public class ProjectController {
   private AirflowManager airflowManager;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
+  @EJB
+  private HopsKafkaAdminClient hopsKafkaAdminClient;
+  @EJB
+  private ProjectTopicsFacade projectTopicsFacade;
 
 
   /**
@@ -1578,9 +1586,8 @@ public class ProjectController {
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj, Users owner)
-    throws IOException, InterruptedException, ExecutionException,
-    HopsSecurityException, ServiceException, ProjectException, GenericException, TensorBoardException,
-    FeaturestoreException {
+    throws IOException, InterruptedException, HopsSecurityException, ServiceException, ProjectException,
+    GenericException, TensorBoardException, FeaturestoreException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1733,8 +1740,14 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) throws ServiceException, InterruptedException {
-    kafkaFacade.removeAllTopicsFromProject(project);
+  private void removeKafkaTopics(Project project) {
+    List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
+  
+    List<String> topicNameList = topics.stream()
+      .map(ProjectTopics::getTopicName)
+      .collect(Collectors.toList());
+  
+    hopsKafkaAdminClient.deleteTopics(topicNameList);
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -1894,6 +1907,7 @@ public class ProjectController {
 
   /**
    * Project info as data transfer object that can be sent to the user.
+   *
    *
    * @param projectID of the project
    * @return project DTO that contains team members and services
@@ -2257,6 +2271,7 @@ public class ProjectController {
 
   /**
    * Retrieves all the project teams for a project
+   *
    *
    * @param projectID
    * @return a list of project team

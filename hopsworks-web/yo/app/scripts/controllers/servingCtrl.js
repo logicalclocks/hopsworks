@@ -516,7 +516,7 @@ angular.module('hopsWorksApp')
                     }
                 );
 
-                KafkaService.defaultTopicValues(self.projectId).then(
+                KafkaService.defaultTopicValues().then(
                     function (success) {
                         self.kafkaDefaultNumPartitions = success.data.numOfPartitions;
                         self.kafkaDefaultNumReplicas = success.data.numOfReplicas;

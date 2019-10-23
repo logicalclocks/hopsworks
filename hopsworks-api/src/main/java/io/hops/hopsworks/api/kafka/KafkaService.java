@@ -37,38 +37,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.jobs;
+package io.hops.hopsworks.api.kafka;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
+import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
+import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
+import io.hops.hopsworks.common.dao.kafka.SharedTopics;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
+import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.zookeeper.KeeperException;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -81,10 +83,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import java.io.IOException;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -96,19 +99,19 @@ public class KafkaService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
   private KafkaFacade kafkaFacade;
   @EJB
   private KafkaController kafkaController;
   @EJB
-  private JWTHelper jWTHelper;
+  private TopicsBuilder topicsBuilder;
+  @EJB
+  private SharedTopicsFacade sharedTopicsFacade;
 
   private Project project;
 
   public KafkaService() {
   }
-
+  
   public void setProjectId(Integer projectId) {
     this.project = this.projectFacade.find(projectId);
   }
@@ -116,177 +119,123 @@ public class KafkaService {
   public Project getProject() {
     return project;
   }
-
-  /**
-   * Gets the list of topics for this project
-   *
-   * @return 
-   */
+  
+  @ApiOperation(value = "Retrieve Kafka topics metadata .")
   @GET
   @Path("/topics")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopics() {
-    List<TopicDTO> listTopics = kafkaFacade.findTopicsByProject(project);
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopics(
+    @Context UriInfo uriInfo,
+    @BeanParam Pagination pagination,
+    @BeanParam TopicsBeanParam topicsBeanParam) {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(topicsBeanParam.getSortBySet());
+    resourceRequest.setFilter(topicsBeanParam.getFilter());
+    TopicDTO dto = topicsBuilder.build(uriInfo, resourceRequest, project);
+    return Response.ok().entity(dto).build();
   }
-
-  @GET
-  @Path("/sharedTopics")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSharedTopics() {
-    List<TopicDTO> listTopics = kafkaController.findSharedTopicsByProject(project.getId());
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(listTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @GET
-  @Path("/projectAndSharedTopics")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getProjectAndSharedTopics() {
-    List<TopicDTO> allTopics = kafkaFacade.findTopicsByProject(project);
-    allTopics.addAll(kafkaController.findSharedTopicsByProject(project.getId()));
-    GenericEntity<List<TopicDTO>> topics = new GenericEntity<List<TopicDTO>>(allTopics) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
+  
+  @ApiOperation(value = "Create a new Kafka topic.")
   @POST
-  @Path("/topic/add")
+  @Path("/topics")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response createTopic(TopicDTO topicDto) throws KafkaException, ProjectException, ServiceException,
-      UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    //create the topic in the database and the Kafka cluster
-    kafkaFacade.createTopicInProject(project.getId(), topicDto);
-    //By default, all members of the project are granted full permissions 
-    //on the topic
-    AclDTO aclDto = new AclDTO(project.getName(),
-            Settings.KAFKA_ACL_WILDCARD,
-            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-            Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicDto.getName(), project.getId(), aclDto);
-
-    json.setSuccessMessage("The Topic has been created.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo)
+    throws KafkaException, ProjectException, UserException,
+      InterruptedException, ExecutionException {
+    kafkaController.createTopic(project, topicDto, uriInfo);
+    URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
+    topicDto.setHref(uri);
+    return Response.created(uri).entity(topicDto).build();
   }
-
+  
+  @ApiOperation(value = "Delete a Kafka topic.")
   @DELETE
-  @Path("/topic/{topic}/remove")
+  @Path("/topics/{topic}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removeTopic(@PathParam("topic") String topicName) throws KafkaException, ServiceException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    //remove the topic from the database and Kafka cluster
-    kafkaFacade.removeTopicFromProject(this.project, topicName);
-    json.setSuccessMessage("The topic has been removed.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    kafkaController.removeTopicFromProject(project, topicName);
+    return Response.noContent().build();
   }
-
-  @GET
-  @Path("/details/{topic}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicDetails(@PathParam("topic") String topicName, @Context SecurityContext sc) throws
-      Exception {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    List<PartitionDetailsDTO> topic;
-    topic = kafkaFacade.getTopicDetails(project, user, topicName);
-    GenericEntity<List<PartitionDetailsDTO>> topics = new GenericEntity<List<PartitionDetailsDTO>>(topic) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(topics).build();
-  }
-
-  @GET
-  @Path("/topic/defaultValues")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response topicDefaultValues() throws KafkaException {
-    TopicDefaultValueDTO values;
-    try {
-      values = kafkaFacade.topicDefaultValues();
-    } catch (InterruptedException | IOException | KeeperException ex) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.KAFKA_GENERIC_ERROR, Level.SEVERE,
-        "project: " + project.getName(), ex.getMessage(), ex);
-    }
   
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(values).build();
-  }
-
+  @ApiOperation(value = "Get Kafka topic details.")
   @GET
-  @Path("/topic/{topic}/share/{projId}")
+  @Path("/topics/{topic}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName)
+    throws KafkaException, InterruptedException, ExecutionException {
+    
+    PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
+    return Response.ok().entity(dto).build();
+  }
+  
+  @ApiOperation(value = "Share a Kafka topic with a project.")
+  @PUT
+  @Path("/topics/{topic}/shared/{destProjectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("projId") int projectId) throws
-      KafkaException, ProjectException, UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    //By default, all members of the project are granted full permissions on the topic
-    Project projectShared = projectFacade.find(projectId);
-    if (projectShared == null) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
-        "Could not find project: " + projectId);
+  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectId") Integer destProjectId,
+    @Context UriInfo uriInfo) throws KafkaException, ProjectException, UserException {
+    URI uri = topicsBuilder.sharedProjectUri(uriInfo, project, topicName).build();
+    Optional<SharedTopics> st = sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName);
+    SharedTopicsDTO dto;
+    if (st.isPresent()) {
+      dto = new SharedTopicsDTO(st.get().getProjectId(), st.get().getSharedTopicsPK());
+      dto.setHref(uri);
+      return Response.ok(uri).entity(dto).build();
+    } else {
+      dto = kafkaController.shareTopicWithProject(project, topicName, destProjectId);
+      dto.setHref(uri);
+      return Response.created(uri).entity(dto).build();
     }
-    kafkaFacade.shareTopic(project, topicName, projectId);
-
-    AclDTO aclDto = new AclDTO(projectShared.getName(),
-            Settings.KAFKA_ACL_WILDCARD,
-            "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
-            Settings.KAFKA_ACL_WILDCARD);
-    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
-    json.setSuccessMessage("The topic has been shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-
+  
+  @ApiOperation(value = "Unshare Kafka topic from all projects.")
   @DELETE
-  @Path("/topic/{topic}/unshare/{projectId}")
+  @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unShareTopic(@PathParam("topic") String topicName, @PathParam("projectId") int projectId) throws
-      KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    kafkaFacade.unShareTopic(topicName, project.getId());
-    kafkaFacade.removeAclFromTopic(topicName, project);
-    json.setSuccessMessage("Topic has been removed from shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  public Response unshareTopicFromProjects(@PathParam("topic") String topicName)
+    throws KafkaException, ProjectException {
+    
+    kafkaController.unshareTopicFromAllProjects(project, topicName);
+    return Response.noContent().build();
   }
-
+  
+  @ApiOperation(value = "Unshare Kafka topic from a project (specified as destProjectId).")
   @DELETE
-  @Path("/topic/{topic}/unshare")
+  @Path("/topics/{topic}/shared/{destProjectId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unShareTopicFromProject(@PathParam("topic") String topicName) throws KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-
-    kafkaFacade.unShareTopic(topicName, project.getId());
-    kafkaFacade.removeAclFromTopic(topicName, project);
-    json.setSuccessMessage("Topic has been removed from shared.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  public Response unshareTopicFromProject(@PathParam("topic") String topicName,
+    @PathParam("destProjectId") Integer destProjectId) throws KafkaException, ProjectException {
+    
+    kafkaController.unshareTopic(project, topicName, destProjectId);
+    return Response.noContent().build();
   }
-
+  
+  @ApiOperation(value = "Get list of projects that a topic has been shared with.")
   @GET
-  @Path("/{topic}/sharedwith")
+  @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response topicIsSharedTo(@PathParam("topic") String topicName) {
-    List<SharedProjectDTO> projectDtoList = kafkaFacade.topicIsSharedTo(topicName, project.getId());
-    GenericEntity<List<SharedProjectDTO>> projectDtos = new GenericEntity<List<SharedProjectDTO>>(projectDtoList) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(projectDtos).build();
+  public Response topicIsSharedTo(@Context UriInfo uriInfo, @PathParam("topic") String topicName) {
+    SharedProjectDTO dto = topicsBuilder.buildSharedProject(uriInfo, project, topicName);
+    return Response.ok().entity(dto).build();
   }
 
   @GET
@@ -297,7 +246,7 @@ public class KafkaService {
   public Response aclUsers(@PathParam("topicName") String topicName) {
     List<AclUserDTO> aclUsersDtos = kafkaFacade.aclUsers(project.getId(), topicName);
     GenericEntity<List<AclUserDTO>> aclUsers = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclUsers).build();
+    return Response.ok().entity(aclUsers).build();
   }
 
   @POST
@@ -309,9 +258,9 @@ public class KafkaService {
   public Response addAclsToTopic(@PathParam("topic") String topicName, AclDTO aclDto) throws KafkaException,
       ProjectException, UserException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.addAclsToTopic(topicName, project.getId(), aclDto);
+    kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
     json.setSuccessMessage("ACL has been added to the topic.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @DELETE
@@ -324,7 +273,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.removeAclFromTopic(topicName, aclId);
     json.setSuccessMessage("Topic acls has been removed.");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   @GET
@@ -335,7 +284,7 @@ public class KafkaService {
   public Response getTopicAcls(@PathParam("topic") String topicName) throws KafkaException {
     List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, project);
     GenericEntity<List<AclDTO>> aclDtos = new GenericEntity<List<AclDTO>>(aclDto) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(aclDtos).build();
+    return Response.ok().entity(aclDtos).build();
   }
 
   @PUT
@@ -345,10 +294,10 @@ public class KafkaService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response updateTopicAcls(@PathParam("topic") String topicName, @PathParam("aclId") String aclId, AclDTO aclDto)
       throws KafkaException, ProjectException, UserException {
-    kafkaFacade.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
+    kafkaController.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("TopicAcl updated successfully");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
   //validate the new schema
@@ -363,13 +312,13 @@ public class KafkaService {
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
         json.setErrorMsg("schema is invalid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       case INCOMPATIBLE:
         json.setErrorMsg("schema is not backward compatible");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       default:
         json.setSuccessMessage("schema is valid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return Response.ok().entity(json).build();
     }
   }
 
@@ -385,14 +334,14 @@ public class KafkaService {
     switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
       case INVALID:
         json.setErrorMsg("schema is invalid");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       case INCOMPATIBLE:
         json.setErrorMsg("schema is not backward compatible");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_ACCEPTABLE).entity(json).build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
       default:
         kafkaFacade.addSchemaForTopics(schemaData);
         json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+        return Response.ok().entity(json).build();
     }
   }
 
@@ -406,7 +355,7 @@ public class KafkaService {
   public Response listSchemasForTopics() {
     List<SchemaDTO> schemaDtos = kafkaFacade.listSchemasForTopics();
     GenericEntity<List<SchemaDTO>> schemas = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemas).build();
+    return Response.ok().entity(schemas).build();
   }
   
   
@@ -418,10 +367,10 @@ public class KafkaService {
   public Response getSchema(@PathParam("topic") String topic) {
     SchemaDTO schemaDto = kafkaFacade.getSchemaForTopic(topic);
     if (schemaDto != null) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).
+      return Response.ok().
         entity(schemaDto).build();
     } else {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
   }
   
@@ -433,7 +382,7 @@ public class KafkaService {
   public Response updateSchemaVersion(@PathParam("topic") String topic, @PathParam("version") Integer version)
   throws KafkaException {
     kafkaController.updateTopicSchemaVersion(project, topic, version);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return Response.ok().build();
   }
   
 
@@ -447,7 +396,7 @@ public class KafkaService {
   public Response getSchemaContent(@PathParam("schemaName") String schemaName,
       @PathParam("schemaVersion") Integer schemaVersion) throws KafkaException {
     SchemaDTO schemaDtos = kafkaFacade.getSchemaContent(schemaName, schemaVersion);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaDtos).build();
+    return Response.ok().entity(schemaDtos).build();
   }
 
   //delete the specified version of the given schema.
@@ -461,7 +410,7 @@ public class KafkaService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     kafkaFacade.deleteSchema(schemaName, version);
     json.setSuccessMessage("Schema version for topic removed successfuly");
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    return Response.ok().entity(json).build();
   }
 
 }
