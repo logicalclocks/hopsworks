@@ -115,10 +115,10 @@ angular.module('hopsWorksApp')
                 };
                 
                 tourService.setDefaultTourState = function () {
-                  tourService.informAndTips = true;
+                  tourService.informAndTips = false;
                   tourService.tipsOnly = false;
                   tourService.informOnly = false;
-                  tourService.showNothing = false;
+                  tourService.showNothing = true;
                 };
 
                 tourService.printDebug = function () {

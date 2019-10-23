@@ -72,9 +72,7 @@
 
   <tour class="ng-scope" step="homeCtrl.tourService.toursInfoStep"
         post-tour="closeTour()"
-        ng-if="homeCtrl.loadedView
-          && (homeCtrl.tourService.informAndTips
-            || homeCtrl.tourService.informOnly)">
+        ng-if="homeCtrl.loadedView && homeCtrl.tourService.informAndTips">
     <virtual-step
             class="ng-scope"
             tourtip="Follow our guided tours"
@@ -83,7 +81,7 @@
             tourtip-placement="right"
             tourtip-next-label="Got it!"
             on-proceed="homeCtrl.disableInformBalloon()"
-            tourtip-offset-horizontal="50"
+            tourtip-offset-vertical="20"
     ></virtual-step>
   </tour>
 </div>
