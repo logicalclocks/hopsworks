@@ -45,6 +45,9 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
@@ -55,6 +58,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -63,10 +68,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator.JUPYTER_CUSTOM_JS_FILE;
-import static io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator.JUPYTER_CUSTOM_KERNEL;
-import static io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator.JUPYTER_NOTEBOOK_CONFIG;
-import static io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator.SPARKMAGIC_CONFIG;
 import static io.hops.hopsworks.restutils.RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR;
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.SEVERE;
@@ -144,26 +145,25 @@ public class KubeJupyterManager implements JupyterManager {
       
       nodePortOptional = jupyterPort(service.getSpec());
       int nodePort = nodePortOptional.orElseThrow(() -> new IOException("NodePort could not be retrieved"));
+  
+      Writer jupyterNotebookConfig = new StringWriter();
+      jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project,
+          hdfsLeFacade.getRPCEndpoint(), nodePort, jupyterSettings, hdfsUser, pythonKernelName,
+          jupyterPaths.getCertificatesDir(), allowOrigin);
+      Writer sparkMagicConfig = new StringWriter();
+      jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
+          jupyterPaths.getConfDirPath(), user.getFname() + " " + user.getLname());
       
       kubeClientService.createOrUpdateConfigMap(project, user, CONF_SUFFIX,
         ImmutableMap.of(
-          JUPYTER_NOTEBOOK_CONFIG,
-          jupyterConfigFilesGenerator.createJupyterNotebookConfig(project, hdfsLeFacade.getRPCEndpoint(), nodePort,
-            jupyterSettings, hdfsUser, pythonKernelName, jupyterPaths.getCertificatesDir(), allowOrigin),
-          SPARKMAGIC_CONFIG,
-          jupyterConfigFilesGenerator.createSparkMagicConfig(project, jupyterSettings, hdfsUser,
-            jupyterPaths.getConfDirPath(), user.getFname() + " " + user.getLname())));
+            JupyterNotebookConfigTemplate.FILE_NAME, jupyterNotebookConfig.toString(),
+            SparkMagicConfigTemplate.FILE_NAME, sparkMagicConfig.toString()));
   
+      Writer kernelConfig = new StringWriter();
+      jupyterConfigFilesGenerator.createJupyterKernelConfig(kernelConfig, project, jupyterSettings, hdfsUser);
       kubeClientService.createOrUpdateConfigMap(project, user, KERNELS_SUFFIX,
         ImmutableMap.of(
-          JUPYTER_CUSTOM_KERNEL,
-          jupyterConfigFilesGenerator.createJupyterKernelConfig(project, jupyterSettings,
-            hdfsUser)));
-  
-      kubeClientService.createOrUpdateConfigMap(project, user, CUSTOM_SUFFIX,
-        ImmutableMap.of(
-          JUPYTER_CUSTOM_JS_FILE,
-          jupyterConfigFilesGenerator.createCustomJs()));
+            KernelTemplate.FILE_NAME, kernelConfig.toString()));
       
       String deploymentName = serviceAndDeploymentName(project, user);
       kubeClientService.createOrReplaceDeployment(project,
