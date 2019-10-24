@@ -608,7 +608,7 @@ angular.module('hopsWorksApp')
                     }
                 }
                 if (self.onDemandFeaturegroupFeatures.length > 0) {
-                    if (numberOfPrimary != 1) {
+                    if (numberOfPrimary == 0) {
                         self.onDemandFeaturegroupPrimaryKeyWrongValue = -1
                         self.onDemandFeaturegroupWrong_values = -1;
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
@@ -737,7 +737,7 @@ angular.module('hopsWorksApp')
                     }
                 }
                 if (self.cachedFeaturegroupFeatures.length > 0) {
-                    if (numberOfPrimary != 1) {
+                    if (numberOfPrimary == 0) {
                         self.cachedFeaturegroupPrimaryKeyWrongValue = -1
                         self.cachedFeaturegroupWrong_values = -1;
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
