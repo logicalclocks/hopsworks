@@ -153,7 +153,7 @@ public class FeaturegroupService {
   public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
       throws FeaturestoreException, HopsSecurityException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    if(featuregroupDTO == null){
+    if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
     }
     try {

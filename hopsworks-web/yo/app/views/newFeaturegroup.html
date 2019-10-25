@@ -264,7 +264,7 @@
                                                 <div class="col-sm-3">
                                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                                                        uib-tooltip='Whether this feature is the primary key of this feature group. The primary key is
-                               typically used to join several feature groups when creating training datasets'></i>
+                               typically used to join several feature groups when creating training datasets. Composite primary keys are supported.'></i>
                                                     <label style="margin-left:10px" class="control-label">
                                                         Primary key:
                                                     </label>
@@ -339,7 +339,7 @@
                                 </div>
                                 <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupPrimaryKeyWrongValue === -1" style="color: red">
                                     <p>
-                                        There must be exactly one feature marked as primary key for each feature group
+                                        There must be at least one column marked as primary key in the feature group
                                     </p>
                                 </div>
                                 <div ng-if="newFeaturegroupCtrl.cachedFeaturegroupPartitionKeyWrongValue === -1" style="color: red">
@@ -821,7 +821,7 @@
                                                 <div class="col-sm-3">
                                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                                                        uib-tooltip='Whether this feature is the primary key of this feature group. The primary key is
-                               typically used to join several feature groups when creating training datasets'></i>
+                               typically used to join several feature groups when creating training datasets. Composite primary keys are supported.'></i>
                                                     <label style="margin-left:10px" class="control-label">
                                                         Primary key:
                                                     </label>
@@ -875,7 +875,7 @@
                                 </div>
                                 <div ng-if="newFeaturegroupCtrl.onDemandFeaturegroupPrimaryKeyWrongValue === -1" style="color: red">
                                     <p>
-                                        There must be exactly one feature marked as primary key for each feature group
+                                        There must be at least one column marked as primary key in the feature group
                                     </p>
                                 </div>
                             </div>
