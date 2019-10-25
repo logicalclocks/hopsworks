@@ -175,20 +175,20 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
   }
 
   /**
-   * Gets the Hive Table Primary Key by querying the metastore with the tableId
+   * Gets the Hive Table Primary Keys by querying the metastore with the tableId
    *
    * @param hiveTableId the id of the hive table in the metastore
-   * @return the name of the column marked as primary key
+   * @return a list of the names of the columns marked as primary key
    */
-  public String getHiveTablePrimaryKey(Long hiveTableId) {
+  public List<String> getHiveTablePrimaryKey(Long hiveTableId) {
     try {
-      return (String) em.createNativeQuery("SELECT c.`COLUMN_NAME` FROM metastore.`TBLS` t " +
+      return em.createNativeQuery("SELECT c.`COLUMN_NAME` FROM metastore.`TBLS` t " +
           "JOIN metastore.`SDS` s JOIN metastore.`COLUMNS_V2` c ON t.`SD_ID`=s.`SD_ID` AND " +
           "s.`CD_ID`=c.`CD_ID` WHERE t.`TBL_ID` = ?1 AND EXISTS " +
           "(SELECT * FROM metastore.`KEY_CONSTRAINTS` k WHERE k.`PARENT_CD_ID`=c.`CD_ID` " +
           "AND k.`PARENT_TBL_ID` = ?1" +
           " AND k.`PARENT_INTEGER_IDX`=c.`INTEGER_IDX` AND k.`CONSTRAINT_TYPE`=0)")
-          .setParameter(1, hiveTableId).getSingleResult();
+          .setParameter(1, hiveTableId).getResultList();
     } catch (NoResultException e) {
       return null;
     }

@@ -324,13 +324,12 @@ public class CachedFeaturegroupController {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     List<FeatureDTO> featureDTOs =
       cachedFeaturegroupFacade.getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
-    String primaryKeyName = cachedFeaturegroupFacade.getHiveTablePrimaryKey(
+    List<String> primaryKeys = cachedFeaturegroupFacade.getHiveTablePrimaryKey(
       featuregroup.getCachedFeaturegroup().getHiveTableId());
-    if(!featureDTOs.isEmpty() && !Strings.isNullOrEmpty(primaryKeyName)){
-      featureDTOs.stream().filter(f -> f.getName().equals(primaryKeyName))
-          .collect(Collectors.toList()).get(0).setPrimary(true);
+    if(!featureDTOs.isEmpty() && !primaryKeys.isEmpty()) {
+      featureDTOs.stream().filter(f -> primaryKeys.contains(f.getName())).forEach(f -> f.setPrimary(true));
     }
-    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null){
+    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
       List<FeatureDTO> onlineFeatureDTOs =
         onlineFeaturegroupController.getOnlineFeaturegroupFeatures(
           featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup());
@@ -650,11 +649,12 @@ public class CachedFeaturegroupController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.SEVERE,
           "Out of the " + features.size() + " features provided, none is marked as primary");
     }
-    FeatureDTO primaryKey = primaryKeys.get(0);
-    if(primaryKey.getPartition()){
-      LOGGER.fine("The primary key column: " + primaryKey.getName() +
+    for (FeatureDTO primaryKey :primaryKeys) {
+      if(primaryKey.getPartition()){
+        LOGGER.fine("The primary key column: " + primaryKey.getName() +
           " was specified as a partition column, which is not " +
           "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
+      }
     }
     schemaStringBuilder.append("(");
     int numPartitions = features.stream().filter(f -> f.getPartition()).collect(Collectors.toList()).size();
@@ -694,12 +694,22 @@ public class CachedFeaturegroupController {
         partitionStringBuilder.append("'");
       }
       if (i == features.size() - 1){
-        schemaStringBuilder.append("PRIMARY KEY (`");
-        schemaStringBuilder.append(primaryKey.getName());
+        Boolean firstPrimary = true;
+        schemaStringBuilder.append("PRIMARY KEY (");
+        for (int j = 0; j < primaryKeys.size(); j++) {
+          if(!firstPrimary){
+            schemaStringBuilder.append(",");
+          } else {
+            firstPrimary = false;
+          }
+          schemaStringBuilder.append("`");
+          schemaStringBuilder.append(primaryKeys.get(j).getName());
+          schemaStringBuilder.append("` ");
+        }
         if(!mysqlTable){
-          schemaStringBuilder.append("`) DISABLE NOVALIDATE) COMMENT '");
+          schemaStringBuilder.append(") DISABLE NOVALIDATE) COMMENT '");
         } else {
-          schemaStringBuilder.append("`)) COMMENT '");
+          schemaStringBuilder.append(")) COMMENT '");
         }
         schemaStringBuilder.append(featuregroupDoc);
         schemaStringBuilder.append("' ");
