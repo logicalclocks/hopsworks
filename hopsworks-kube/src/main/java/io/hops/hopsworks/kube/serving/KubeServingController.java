@@ -42,6 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 import static io.hops.hopsworks.common.serving.util.ServingCommands.START;
@@ -180,7 +181,8 @@ public class KubeServingController implements ServingController {
 
   @Override
   public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
-      throws KafkaException, UserException, ProjectException, ServiceException, ServingException {
+    throws KafkaException, UserException, ProjectException, ServiceException, ServingException, ExecutionException,
+    InterruptedException {
     Serving serving = newServing.getServing();
 
     if (serving.getId() == null) {
