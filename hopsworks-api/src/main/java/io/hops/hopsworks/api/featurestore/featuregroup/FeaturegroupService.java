@@ -157,7 +157,10 @@ public class FeaturegroupService {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
     }
     try {
-      featuregroupController.deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
+      if (featuregroupController.featuregroupExists(featurestore, featuregroupDTO)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_EXISTS, Level.INFO,
+          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId());
+      }
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
         user);
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroup.getName(),
@@ -225,8 +228,9 @@ public class FeaturegroupService {
     try {
       featuregroupDTO = new FeaturegroupDTO();
       featuregroupDTO.setId(featuregroupId);
-      featuregroupDTO = featuregroupController.
-          deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
+      featuregroupDTO = featuregroupController
+        .deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user)
+        .orElseGet(null);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =

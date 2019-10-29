@@ -50,6 +50,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -347,6 +348,39 @@ public class FeaturegroupController {
   }
 
   /**
+   * Check if the feature group described by the DTO exists
+   *
+   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param featuregroupDTO DTO representation of the feature group
+   * @return
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public boolean featuregroupExists(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+    return getFeaturegroupByDTO(featurestore, featuregroupDTO).isPresent();
+  }
+
+  /**
+   * Get the feature group represented by the DTO
+   *
+   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param featuregroupDTO DTO representation of the feature group
+   * @return Optional containing the feature group if found
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public Optional<Featuregroup> getFeaturegroupByDTO(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+    if (featuregroupDTO.getId() != null) {
+      return Optional.of(verifyFeaturegroupId(featuregroupDTO.getId(), featurestore));
+    }
+
+    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
+    return featuregroups.stream().filter(fg -> {
+      FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(fg);
+      return convertedFeaturegroupDTO.getName().equalsIgnoreCase(featuregroupDTO.getName()) &&
+        convertedFeaturegroupDTO.getVersion().equals(featuregroupDTO.getVersion());
+    }).findFirst();
+  }
+
+  /**
    * Deletes a featuregroup with a particular id or name from a featurestore
    *
    * @param featurestore    the featurestore that the featuregroup belongs to
@@ -358,50 +392,48 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturegroupDTO deleteFeaturegroupIfExists(
+  public Optional<FeaturegroupDTO> deleteFeaturegroupIfExists(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    Featuregroup featuregroup = null;
-    if (featuregroupDTO.getId() != null) {
-      featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), null);
-    } else {
-      if (featuregroupDTO.getId() == null) {
-        List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-        featuregroups = featuregroups.stream().filter(fg -> {
-          FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(fg);
-          return convertedFeaturegroupDTO.getName().equals(featuregroupDTO.getName()) &&
-              convertedFeaturegroupDTO.getVersion() == featuregroupDTO.getVersion();
-        }).collect(Collectors.toList());
-        if (!featuregroups.isEmpty())
-          featuregroup = featuregroups.get(0);
-      } else {
-        featuregroup = featuregroupFacade.findById(featuregroupDTO.getId());
-      }
+          throws SQLException, FeaturestoreException, HopsSecurityException {
+    Optional<Featuregroup> featuregroup = getFeaturegroupByDTO(featurestore, featuregroupDTO);
+    if (featuregroup.isPresent()) {
+      return Optional.of(deleteFeaturegroup(featurestore, featuregroup.get(), user));
     }
+    return Optional.empty();
+  }
 
-    if (featuregroup != null) {
-      FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
-      switch (featuregroup.getFeaturegroupType()) {
-        case CACHED_FEATURE_GROUP:
-          //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
-          cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
-          //Delete mysql table and metadata
-          cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), featurestore, user);
-          break;
-        case ON_DEMAND_FEATURE_GROUP:
-          //Delete on_demand_feature_group will cascade will cascade to feature_group table
-          onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup.getOnDemandFeaturegroup());
-          break;
-        default:
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
-              ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-              FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-              + featuregroup.getFeaturegroupType());
-      }
-      return convertedFeaturegroupDTO;
-    } else {
-      return null;
+  /**
+   * Deletes a featuregroup with a particular id or name from a featurestore
+   *
+   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param user            the user making the request
+   * @return JSON/XML DTO of the deleted featuregroup
+   * @throws SQLException
+   * @throws FeaturestoreException
+   * @throws HopsSecurityException
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO deleteFeaturegroup(Featurestore featurestore, Featuregroup featuregroup, Users user)
+      throws SQLException, FeaturestoreException, HopsSecurityException {
+    FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
+    switch (featuregroup.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
+        cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
+        //Delete mysql table and metadata
+        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), featurestore, user);
+        break;
+      case ON_DEMAND_FEATURE_GROUP:
+        //Delete on_demand_feature_group will cascade will cascade to feature_group table
+        onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup.getOnDemandFeaturegroup());
+        break;
+      default:
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
+          ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
+            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
+            + featuregroup.getFeaturegroupType());
     }
+    return convertedFeaturegroupDTO;
   }
 
   /**
