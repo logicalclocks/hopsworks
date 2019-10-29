@@ -46,9 +46,9 @@
 angular.module('hopsWorksApp')
         .controller('KafkaCtrl', ['$routeParams', 'growl',
         'KafkaService', '$location', 'ModalService', '$interval',
-        '$mdSidenav', 'TourService', 'ProjectService',
-          function ($routeParams, growl, KafkaService, $location,
-          ModalService, $interval, $mdSidenav, TourService, ProjectService) {
+        '$mdSidenav', 'TourService', 'ProjectService', 'MembersService',
+          function ($routeParams, growl, KafkaService, $location, ModalService,
+          $interval, $mdSidenav, TourService, ProjectService, MembersService) {
 
             var self = this;
             self.projectId = $routeParams.projectID;
@@ -82,7 +82,7 @@ angular.module('hopsWorksApp')
            self.tourService = TourService;
 
             self.selectAcl = function (acl, topicName) {
-              if (self.activeId === acl.id) { 
+              if (self.activeId === acl.id) {
                 return;
               }
               self.projectName = acl.projectName;
@@ -92,18 +92,48 @@ angular.module('hopsWorksApp')
               self.host = acl.host;
               self.role = acl.role;
               self.activeId = acl.id;
-              
-              KafkaService.aclUsers(self.projectId, topicName).then(
-                    function (success) {
-                        self.users = success.data;
-                }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
-                      }
-                   });
-              
+
+              self.users = self.getAclUsers(self.projectId, topicName);
+            };
+
+            self.getAclUsers = function (projectId, topicName) {
+                var users = [];
+                var projects = [];
+                KafkaService.topicIsSharedTo(projectId, topicName).then(
+                  function (success) {
+                    projects = success.data.items.length > 0 ? success.data.items : [];
+                  },
+                  function (error) {
+
+                  }
+                ).then(
+                  function (success) {
+                    var project = {};
+                    project.id = projectId;
+                    projects.push(project);
+                  }
+                ).then(
+                  function(success) {
+                    projects.forEach(function(project) {
+                      MembersService.query({id: project.id}).$promise.then(
+                        function (success) {
+                          var projectUsers = {};
+                          projectUsers.projectName = success[0].project.name;
+                          var emails = success.map(function(item) {
+                            return item.user.email;
+                          });
+                          emails.push("*");
+                          projectUsers.userEmails = emails;
+                          users.push(projectUsers);
+                        },
+                        function (error) {
+
+                        }
+                      );
+                    })
+                  }
+                );
+                return users;
             };
 
             self.updateAcl = function (topicName, aclId){
@@ -130,7 +160,9 @@ angular.module('hopsWorksApp')
             self.getAllTopics = function () {
               KafkaService.getTopics(self.projectId).then(
                       function (success) {
-                        self.topics = success.data.items;
+                        if (success.data.count > 0) {
+                          self.topics = success.data.items;
+                        }
                         self.numTopicsUsed = self.topics.length;
                       }, function (error) {
                       if (typeof error.data.usrMsg !== 'undefined') {
@@ -176,7 +208,7 @@ angular.module('hopsWorksApp')
               ModalService.createSchema('lg', self.projectId,
                 self.projectIsGuide).then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New schema added successfully.', ttl: 2000});
+                          growl.success("", {title: 'New schema added successfully.', ttl: 2000});
                           self.listSchemas();
                           if (self.projectIsGuide) {
                             self.tourService.currentStep_TourThree = 2;
@@ -309,7 +341,7 @@ angular.module('hopsWorksApp')
                       function (success) {
                           for(var i =0;i<self.topics.length;i++){
                               if(self.topics[i].name === topicName){
-                                  self.topics[i].acls = success.data;
+                                  self.topics[i].acls = success.data.items;
                                   return;
                               }
                           }
@@ -327,7 +359,7 @@ angular.module('hopsWorksApp')
                 
                 ModalService.createTopicAcl('lg', self.projectId, topicName).then(
                       function (success) {
-                          growl.success(success.data.successMessage, {title: 'New acl added for the topic: '+topicName, ttl: 5000});
+                          growl.success("", {title: 'New acl added for the topic: '+topicName, ttl: 5000});
                           self.getAclsForTopic(topicName);
                       }, function (error) {
                 //The user changed their mind.

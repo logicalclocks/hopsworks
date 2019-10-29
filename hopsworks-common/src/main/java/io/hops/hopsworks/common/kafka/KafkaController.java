@@ -39,12 +39,13 @@
 
 package io.hops.hopsworks.common.kafka;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
+import io.hops.hopsworks.common.dao.kafka.AclUser;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
@@ -57,23 +58,25 @@ import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
+import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.zookeeper.KeeperException;
-import org.elasticsearch.common.Strings;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -81,7 +84,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -92,6 +98,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 @Stateless
@@ -100,8 +107,6 @@ public class KafkaController {
 
   private final static Logger LOGGER = Logger.getLogger(KafkaController.class.getName());
 
-  @EJB
-  private KafkaFacade kafkaFacade;
   @EJB
   private CertsFacade userCerts;
   @EJB
@@ -118,6 +123,10 @@ public class KafkaController {
   private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private SchemaTopicsFacade schemaTopicsFacade;
+  @EJB
+  private TopicAclsFacade topicAclsFacade;
+  @EJB
+  private ProjectController projectController;
   
   public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
@@ -154,7 +163,7 @@ public class KafkaController {
   
     //By default, all members of the project are granted full permissions
     //on the topic
-    addFullPermissionAclsToTopic(project.getName(), topicDto.getName(), project.getId());
+    addFullPermissionAclsToTopic(project.getId(), topicDto.getName(), project.getId());
   }
   
   public void removeTopicFromProject(Project project, String topicName) throws KafkaException {
@@ -313,88 +322,122 @@ public class KafkaController {
     return dto;
   }
   
+  public Optional<TopicAcls> getTopicAclsByDto(String topicName, AclDTO dto) throws UserException{
+    Users user = Optional.ofNullable(userFacade.findByEmail(dto.getUserEmail()))
+      .orElseThrow(() ->
+        new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + dto.getUserEmail()));
+  
+    String principalName = KafkaConst.buildPrincipalName(dto.getProjectName(), user.getUsername());
+    
+    return topicAclsFacade.getTopicAcls(topicName, dto, principalName);
+  }
+  
   private void addFullPermissionAclsToTopic(Integer aclProjectId, String topicName, Integer projectId)
     throws ProjectException, KafkaException, UserException {
     Project p = Optional.ofNullable(projectFacade.find(aclProjectId)).orElseThrow(() ->
       new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
       "Could not find project: " + aclProjectId));
     
-    addFullPermissionAclsToTopic(p.getName(), topicName, projectId);
+    List<AclDTO> acls = p.getProjectTeamCollection()
+      .stream()
+      .map(member -> member.getUser().getEmail())
+      .map(email -> new AclDTO(p.getName(), email, "allow",
+        Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD))
+      .collect(Collectors.toList());
+    
+    for (AclDTO acl : acls) {
+      addAclsToTopic(topicName, projectId, acl);
+    }
   }
   
-  private void addFullPermissionAclsToTopic(String aclProjectName, String topicName, Integer projectId)
-    throws ProjectException, KafkaException, UserException {
-    AclDTO aclDto = new AclDTO(aclProjectName,
-      Settings.KAFKA_ACL_WILDCARD,
-      "allow",
-      Settings.KAFKA_ACL_WILDCARD,
-      Settings.KAFKA_ACL_WILDCARD,
-      Settings.KAFKA_ACL_WILDCARD);
-    addAclsToTopic(topicName, projectId, aclDto);
+  public List<AclUser> getTopicAclUsers(Project project, String topicName) {
+    if (project == null || Strings.isNullOrEmpty(topicName)) {
+      throw new IllegalArgumentException("ProjectId must be non-null, topic must be provided");
+    }
+    
+    List<AclUser> aclUsers = new ArrayList<>();
+  
+    List<String> teamMembers = new ArrayList<>();
+    for (ProjectTeam pt : project.getProjectTeamCollection()) {
+      teamMembers.add(pt.getUser().getEmail());
+    }
+    teamMembers.add("*");//wildcard used for rolebased acl
+    //contains project and its members
+    Map<String, List<String>> projectMemberCollections = new HashMap<>();
+    projectMemberCollections.put(project.getName(), teamMembers);
+  
+    //get all the projects this topic is shared with
+    List<SharedTopics> sharedTopicsList = sharedTopicsFacade.findSharedTopicsByTopicName(topicName);
+  
+    List<String> sharedMembers;
+    for (SharedTopics st : sharedTopicsList) {
+      sharedMembers = new ArrayList<>();
+      Project p = projectFacade.find(st.getSharedTopicsPK().getProjectId());
+      for (ProjectTeam pt : p.getProjectTeamCollection()) {
+        sharedMembers.add(pt.getUser().getEmail());
+      }
+      sharedMembers.add("*");
+      projectMemberCollections.put(p.getName(), sharedMembers);
+    }
+    for (Map.Entry<String, List<String>> user : projectMemberCollections.
+      entrySet()) {
+      aclUsers.add(new AclUser(user.getKey(), new HashSet<>(user.getValue())));
+    }
+    return aclUsers;
   }
   
-  public void addAclsToTopic(String topicName, Integer projectId, AclDTO dto) throws ProjectException,
+  public Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId, AclDTO dto) throws
+    ProjectException,
     KafkaException, UserException {
-    addAclsToTopic(topicName, projectId,
+    return addAclsToTopic(topicName, projectId,
       dto.getProjectName(),
       dto.getUserEmail(), dto.getPermissionType(),
       dto.getOperationType(), dto.getHost(), dto.getRole());
   }
   
-  private void addAclsToTopic(String topicName, Integer projectId,
+  private Pair<TopicAcls, Response.Status> addAclsToTopic(String topicName, Integer projectId,
     String selectedProjectName, String userEmail, String permissionType,
     String operationType, String host, String role) throws ProjectException, KafkaException, UserException {
   
-    if(Strings.isNullOrEmpty(topicName) || projectId == null || projectId < 0 || userEmail == null){
-      throw new IllegalArgumentException("Topic, userEmail and projectId must be provided. ProjectId must be a " +
-        "non-negative number");
+    if(Strings.isNullOrEmpty(topicName) || userEmail == null){
+      throw new IllegalArgumentException("Topic and userEmail must be provided.");
     }
   
     //get the project id
     Project topicOwnerProject = Optional.ofNullable(projectFacade.find(projectId)).orElseThrow(() ->
       new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId));
-    Project project;
-  
+    
     if (!topicOwnerProject.getName().equals(selectedProjectName)) {
-      project = Optional.ofNullable(projectFacade.findByName(selectedProjectName))
-        .orElseThrow(() ->
-          new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
-            "for the topic" +
-            topicName + " was not found"));
-    } else {
-      project = topicOwnerProject;
+      if (projectFacade.findByName(selectedProjectName) == null) {
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "The specified project " +
+          "for the topic" + topicName + " was not found");
+      }
     }
     
     ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(topicOwnerProject, topicName)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, "Topic: " + topicName));
       
-    if (!userEmail.equals("*")) {
-      //fetch the user name from database
-      Users user = Optional.ofNullable(userFacade.findByEmail(userEmail))
-        .orElseThrow(() ->
-          new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail));
-      String principalName = KafkaConst.buildPrincipalName(selectedProjectName, user.getUsername());
-      Optional<TopicAcls> topicAcl = kafkaFacade.getTopicAcls(topicName, principalName, permissionType, operationType,
-        host, role);
-      
-      //TODO: previously there was a check of all the parts of the acl - is that necessary?
-      if (topicAcl.isPresent()) {
-        throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_ALREADY_EXISTS, Level.FINE,
-          "topicAcl:" + topicAcl.get().toString());
-      }
-      
-      kafkaFacade.addAclsToTopic(pt, user, permissionType, operationType, host, role, principalName);
-    } else {
-      for (ProjectTeam p : project.getProjectTeamCollection()) {
-        Users selectedUser = p.getUser();
-        String principalName = KafkaConst.buildPrincipalName(selectedProjectName, selectedUser.getUsername());
-        if (!kafkaFacade.getTopicAcls(topicName, principalName, permissionType, operationType, host, role)
-          .isPresent()) {
-          kafkaFacade.addAclsToTopic(pt, selectedUser, permissionType, operationType, host, role, principalName);
-        }
-      }
+    //should not be able to create multiple ACLs at the same time
+    if (userEmail.equals("*")) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_FOR_ANY_USER, Level.FINE, "topic: " + topicName);
     }
+    
+    //fetch the user name from database
+    Users user = Optional.ofNullable(userFacade.findByEmail(userEmail))
+      .orElseThrow(() ->
+        new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + userEmail));
+    String principalName = KafkaConst.buildPrincipalName(selectedProjectName, user.getUsername());
+    
+    Optional<TopicAcls> optionalAcl = topicAclsFacade.getTopicAcls(topicName, principalName, permissionType,
+      operationType, host, role);
+    if (optionalAcl.isPresent()) {
+      return Pair.of(optionalAcl.get(), Response.Status.OK);
+    }
+    
+    TopicAcls acl = topicAclsFacade.addAclsToTopic(pt, user, permissionType, operationType, host, role,
+      principalName);
+    return Pair.of(acl, Response.Status.CREATED);
   }
   
   public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
@@ -455,7 +498,7 @@ public class KafkaController {
   
     sharedTopicsFacade.remove(st);
     
-    kafkaFacade.removeAclFromTopic(topicName, destProject);
+    topicAclsFacade.removeAclFromTopic(topicName, destProject);
   }
   
   public String getKafkaCertPaths(Project project) {
@@ -521,24 +564,18 @@ public class KafkaController {
   }
   
   public void removeProjectMemberFromTopics(Project project, Users user) throws ProjectException {
-    //Get all topics (shared with project as well)
-    List<SharedTopics> sharedTopics = sharedTopicsFacade.findSharedTopicsByProject(project.getId());
-    //For every topic that has been shared with the current project, add the new member to its ACLs
-    List<Integer> projectSharedTopics = new ArrayList<>();
-
-    //Get all projects from which topics have been shared
-    for (SharedTopics sharedTopic : sharedTopics) {
-      projectSharedTopics.add(sharedTopic.getProjectId());
-    }
-
-    if (!projectSharedTopics.isEmpty()) {
-      for (Integer projectSharedTopic : projectSharedTopics) {
-        kafkaFacade.removeAclsForUser(user, projectSharedTopic);
-      }
-    }
-
-    //Remove acls for use in current project
-    kafkaFacade.removeAclsForUser(user, project);
+    sharedTopicsFacade.findSharedTopicsByProject(project.getId())
+      .stream()
+      .map(st -> {
+        try {
+          return projectController.findProjectById(st.getSharedTopicsPK().getProjectId());
+        } catch (ProjectException ex) {
+          throw new RuntimeException(ex);
+        }
+      })
+      .map(Project::getName)
+      .forEach(name -> topicAclsFacade.removeAclsForUserAndPrincipalProject(user, name));
+    topicAclsFacade.removeAclsForUser(user, project);
   }
   
   /**
@@ -577,23 +614,67 @@ public class KafkaController {
     projectTopicsFacade.updateTopicSchemaVersion(pt, st);
   }
   
-  public void updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws KafkaException,
+  public void removeAclsForUser(Users user, Integer projectId) throws ProjectException {
+    Project project = projectFacade.find(projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId:" + projectId);
+    }
+    topicAclsFacade.removeAclsForUser(user, project);
+  }
+  
+  public void removeAclForProject(Integer projectId) throws ProjectException {
+    Project project = projectFacade.find(projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId:" + projectId);
+    }
+    topicAclsFacade.removeAclForProject(project);
+  }
+  
+  public Integer updateTopicAcl(Project project, String topicName, Integer aclId, AclDTO aclDto) throws
+    KafkaException,
     ProjectException, UserException {
     
     if (!projectTopicsFacade.findTopicByNameAndProject(project, topicName).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE, topicName);
     }
     
-    TopicAcls ta = kafkaFacade.findAclById(aclId);
-    
+    TopicAcls ta = topicAclsFacade.find(aclId);
     if (ta == null) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE,  "topic: " +topicName);
     }
-    
+  
     //remove previous acl
-    kafkaFacade.removeAcl(ta);
+    topicAclsFacade.remove(ta);
     
     //add the new acls
-    addAclsToTopic(topicName, project.getId(), aclDto);
+    Pair<TopicAcls, Response.Status> aclTuple = addAclsToTopic(topicName, project.getId(), aclDto);
+    return aclTuple.getLeft().getId();
+  }
+  
+  public Optional<TopicAcls> findAclByIdAndTopic(String topicName, Integer aclId) throws KafkaException{
+    Optional<TopicAcls> acl = Optional.ofNullable(topicAclsFacade.find(aclId));
+    if (acl.isPresent()) {
+      if (!topicName.equals(acl.get().getProjectTopics().getTopicName())) {
+        throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOR_TOPIC, Level.FINE, "topic: " + topicName);
+      }
+    } else {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE, "aclId: " + aclId);
+    }
+    return acl;
+  }
+  
+  public void removeAclFromTopic(String topicName, Integer aclId) throws KafkaException {
+    TopicAcls ta = topicAclsFacade.find(aclId);
+    if (ta == null) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOUND, Level.FINE, "topic: " +topicName);
+    }
+    
+    if (!ta.getProjectTopics().getTopicName().equals(topicName)) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.ACL_NOT_FOR_TOPIC, Level.FINE, "topic: " + topicName);
+    }
+    
+    topicAclsFacade.remove(ta);
   }
 }
+
+

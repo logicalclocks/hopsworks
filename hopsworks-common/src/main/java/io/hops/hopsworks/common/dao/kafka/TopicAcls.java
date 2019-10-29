@@ -97,7 +97,9 @@ import io.hops.hopsworks.common.dao.user.Users;
           + "t.projectTopics.topicName = :topicName"),
   @NamedQuery(name = "TopicAcls.deleteByUser",
       query = "DELETE FROM TopicAcls t WHERE t.user = :user AND t.projectTopics.project = " +
-          ":project")})
+          ":project"),
+  @NamedQuery(name = "TopicAcls.deleteByUserAndPrincipalProject",
+      query = "DELETE FROM TopicAcls t WHERE t.user = :user AND t.principal LIKE CONCAT(:project, '\\_\\_%')")})
 public class TopicAcls implements Serializable {
 
   private static final long serialVersionUID = 1L;

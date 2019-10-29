@@ -39,26 +39,18 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
-import java.io.Serializable;
-import java.util.List;
+import io.hops.hopsworks.common.api.RestDTO;
+
+import java.util.Set;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class AclUserDTO implements Serializable {
+public class AclUserDTO extends RestDTO<AclUserDTO> {
 
   private String projectName;
-  private List<String> userEmails;
+  private Set<String> userEmails;
 
   public AclUserDTO() {
-  }
-
-  public AclUserDTO(String projectName) {
-    this.projectName = projectName;
-  }
-
-  public AclUserDTO(String projectName, List<String> userEmails) {
-    this.projectName = projectName;
-    this.userEmails = userEmails;
   }
 
   public String getProjectName() {
@@ -69,12 +61,13 @@ public class AclUserDTO implements Serializable {
     this.projectName = projectName;
   }
 
-  public List<String> getUserEmails() {
+  public Set<String> getUserEmails() {
     return userEmails;
   }
 
-  public void setUserEmails(List<String> userEmails) {
+  public void setUserEmails(Set<String> userEmails) {
     this.userEmails = userEmails;
   }
 
 }
+

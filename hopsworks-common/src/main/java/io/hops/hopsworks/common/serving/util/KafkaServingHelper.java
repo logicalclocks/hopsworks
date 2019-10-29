@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.ServingException;
@@ -160,14 +161,15 @@ public class KafkaServingHelper {
       Settings.INFERENCE_SCHEMAVERSION);
 
     ProjectTopics pt = kafkaController.createTopicInProject(project, topicDTO);
-
+  
     // Add the ACLs for this topic. By default all users should be able to do everything
-    AclDTO aclDto = new AclDTO(project.getName(),
-        Settings.KAFKA_ACL_WILDCARD,
+    for (ProjectTeam projectTeam : project.getProjectTeamCollection()) {
+      AclDTO aclDto = new AclDTO(project.getName(),
+        projectTeam.getUser().getEmail(),
         "allow", Settings.KAFKA_ACL_WILDCARD, Settings.KAFKA_ACL_WILDCARD,
         Settings.KAFKA_ACL_WILDCARD);
-
-    kafkaController.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
+      kafkaController.addAclsToTopic(topicDTO.getName(), project.getId(), aclDto);
+    }
 
     return pt;
   }
