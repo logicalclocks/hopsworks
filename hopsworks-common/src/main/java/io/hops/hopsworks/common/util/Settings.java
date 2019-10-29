@@ -3021,7 +3021,7 @@ public class Settings implements Serializable {
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, pandas, tensorflow-serving-api, mmlspark, numpy";
+      "hops, pandas, numpy";
 
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();

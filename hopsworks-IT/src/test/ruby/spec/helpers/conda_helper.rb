@@ -67,6 +67,14 @@ module CondaHelper
     File.exists?(@conda_bin)
   end
 
+  def upload_yml
+    chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
+    chmod_local_dir("#{ENV['PROJECT_DIR']}/tools", 777)
+    copy_from_local("#{ENV['PROJECT_DIR']}/tools/conda/python3.6.yml",
+                    "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def get_conda_envs_locally
     cmd = "#{@conda_bin} env list --json"
     Open3.popen3(cmd) do |_, stdout, _, _|
@@ -91,22 +99,22 @@ module CondaHelper
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
-  def create_env(project, version, pythonKernelEnable)
+  def create_env(project, version)
     project = get_project_by_name(project[:projectname])
     if not (project[:python_version].nil? or project[:python_version].empty?)
       delete_env(project[:id], version)
     end
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=#{pythonKernelEnable}"
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
   end
 
   def list_envs(projectId)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments"
   end
 
-  def create_env_and_update_project(project, version, pythonKernelEnable)
+  def create_env_and_update_project(project, version)
     project = get_project_by_name(project[:projectname])
     if project[:python_version].nil? or project[:python_version].empty?
-      create_env(project, version, pythonKernelEnable)
+      create_env(project, version)
       expect_status(201)
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
@@ -114,9 +122,9 @@ module CondaHelper
     end
   end
 
-  def create_env_yml(projectId, pythonKernelEnable, allYmlPath, cpuYmlPath, gpuYmlPath)
+  def create_env_yml(projectId, allYmlPath, cpuYmlPath, gpuYmlPath, installJupyter)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
-         {pythonKernelEnable: pythonKernelEnable, allYmlPath: allYmlPath, cpuYmlPath: cpuYmlPath, gpuYmlPath: gpuYmlPath}
+         {allYmlPath: allYmlPath, cpuYmlPath: cpuYmlPath, gpuYmlPath: gpuYmlPath, installJupyter: installJupyter}
   end
 
   def export_env(projectId, version)

@@ -39,7 +39,7 @@ describe "On #{ENV['OS']}" do
 
       it "should start and stop a notebook server" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
@@ -70,7 +70,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not allow starting multiple notebook servers" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
@@ -90,7 +90,7 @@ describe "On #{ENV['OS']}" do
 
       it "should allow multiple restarts" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
@@ -113,7 +113,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be killed by timer" do
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, 200, 0)
@@ -132,7 +132,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not be killed by timer" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, 200, 6)
@@ -155,7 +155,7 @@ describe "On #{ENV['OS']}" do
 
         copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create&pythonKernelEnable=true"
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
