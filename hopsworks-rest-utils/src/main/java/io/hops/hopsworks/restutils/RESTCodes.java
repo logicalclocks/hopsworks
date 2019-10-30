@@ -1371,6 +1371,8 @@ public class RESTCodes {
     MISSING_REDSHIFT_DRIVER(87, "Could not find Redshift JDBC driver. " +
         "Please upload it in Resources/RedshiftJDBC42-no-awssdk.jar", Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_MISSPECIFICATION(88, "Training dataset job is misspecified and cannot be created",
+      Response.Status.BAD_REQUEST),
+    FEATUREGROUP_EXISTS(89, "The feature group you are trying to create does already exist.",
       Response.Status.BAD_REQUEST);
 
     private int code;
