@@ -288,6 +288,19 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
+        it "should fail when creating the same feature group and version twice" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id,
+            featuregroup_name: "duplicatedName")
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id,
+            featuregroup_name: "duplicatedName")
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+        end
+
         it "should be able to add a offline cached featuregroup with hive partitioning to the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
