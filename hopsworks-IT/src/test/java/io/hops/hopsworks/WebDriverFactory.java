@@ -42,14 +42,14 @@ public class WebDriverFactory {
 
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
   private static final String GECKODRIVER_VERSION = "0.23.0";
-  private static final String CHROMEDRIVER_VERSION = "76.0.3809.68";
+  private static final String CHROMEDRIVER_VERSION = "78.0.3904.70";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
       + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
   private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
       + "/chromedriver_";
-  private static final int SUPPORTED_CHROME_VERSION = 68;
+  private static final int SUPPORTED_CHROME_VERSION = 78;
   private static final int SUPPORTED_FIREFOX_VERSION = 57;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
