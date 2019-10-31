@@ -124,6 +124,7 @@
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumn</class>
     <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>

@@ -288,6 +288,43 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
+        it "should be able to add a cached featuregroup with non default statistics settings to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id,
+                                                                      default_stats_settings: false)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("inodeId")).to be true
+          expect(parsed_json.key?("inputFormat")).to be true
+          expect(parsed_json.key?("hiveTableId")).to be true
+          expect(parsed_json.key?("hiveTableType")).to be true
+          expect(parsed_json.key?("featurestoreName")).to be true
+          expect(parsed_json.key?("featuregroupType")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json.key?("numBins")).to be true
+          expect(parsed_json.key?("numClusters")).to be true
+          expect(parsed_json.key?("corrMethod")).to be true
+          expect(parsed_json.key?("statisticColumns")).to be true
+          expect(parsed_json.key?("featHistEnabled")).to be true
+          expect(parsed_json.key?("featCorrEnabled")).to be true
+          expect(parsed_json.key?("clusterAnalysisEnabled")).to be true
+          expect(parsed_json.key?("descStatsEnabled")).to be true
+          expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+          expect(parsed_json["name"] == featuregroup_name).to be true
+          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+          expect(parsed_json["numBins"] == 10).to be true
+          expect(parsed_json["numClusters"] == 10).to be true
+          expect(parsed_json["corrMethod"] == "spearman").to be true
+          expect(parsed_json["statisticColumns"].length == 1).to be true
+          expect(parsed_json["statisticColumns"][0] == "testfeature").to be true
+          expect(parsed_json["featHistEnabled"]).to be false
+          expect(parsed_json["featCorrEnabled"]).to be false
+          expect(parsed_json["clusterAnalysisEnabled"]).to be false
+          expect(parsed_json["descStatsEnabled"]).to be false
+        end
+
         it "should fail when creating the same feature group and version twice" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -412,6 +449,29 @@ describe "On #{ENV['OS']}" do
           featuregroup_version = parsed_json["version"]
           update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id, featuregroup_version)
           expect_status(200)
+        end
+
+        it "should be able to update the statistics settings of a cached featuregroup" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          featuregroup_version = parsed_json["version"]
+          json_result = update_cached_featuregroup_stats_settings(project.id, featurestore_id, featuregroup_id,
+                                                                  featuregroup_version)
+          parsed_json = JSON.parse(json_result)
+          expect_status(200)
+          expect(parsed_json["numBins"] == 10).to be true
+          expect(parsed_json["numClusters"] == 10).to be true
+          expect(parsed_json["corrMethod"] == "spearman").to be true
+          expect(parsed_json["statisticColumns"].length == 1).to be true
+          expect(parsed_json["statisticColumns"][0] == "testfeature").to be true
+          expect(parsed_json["featHistEnabled"]).to be false
+          expect(parsed_json["featCorrEnabled"]).to be false
+          expect(parsed_json["clusterAnalysisEnabled"]).to be false
+          expect(parsed_json["descStatsEnabled"]).to be false
         end
 
       end
