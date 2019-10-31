@@ -74,6 +74,7 @@ angular.module('hopsWorksApp')
             
             self.users =[];
             self.project;
+            self.projects = [];
            
             self.showTopics = 1;
             self.showSchemas = -1;
@@ -85,7 +86,7 @@ angular.module('hopsWorksApp')
               if (self.activeId === acl.id) {
                 return;
               }
-              self.projectName = acl.projectName;
+              self.selectedProjectName = acl.projectName;
               self.userEmail = acl.userEmail;
               self.permission_type = acl.permission_type;
               self.operation_type = acl.operation_type;
@@ -93,47 +94,35 @@ angular.module('hopsWorksApp')
               self.role = acl.role;
               self.activeId = acl.id;
 
-              self.users = self.getAclUsers(self.projectId, topicName);
+              self.projects = self.getProjectsForTopic(self.projectId, topicName);
+              self.users = [];
             };
 
-            self.getAclUsers = function (projectId, topicName) {
-                var users = [];
-                var projects = [];
+            self.getProjectsForTopic = function (projectId, topicName) {
                 KafkaService.topicIsSharedTo(projectId, topicName).then(
-                  function (success) {
-                    projects = success.data.items.length > 0 ? success.data.items : [];
-                  },
-                  function (error) {
+                    function (success) {
+                        var res = success.data.items.length > 0 ? success.data.items : [];
+                        var project = {};
+                        project.id = projectId;
+                        project.name = self.projectName;
+                        res.push(project);
+                        self.projects = res;
+                    }
+                )
+            };
 
-                  }
-                ).then(
-                  function (success) {
-                    var project = {};
-                    project.id = projectId;
-                    projects.push(project);
-                  }
-                ).then(
-                  function(success) {
-                    projects.forEach(function(project) {
-                      MembersService.query({id: project.id}).$promise.then(
-                        function (success) {
-                          var projectUsers = {};
-                          projectUsers.projectName = success[0].project.name;
-                          var emails = success.map(function(item) {
+            self.getAclUsersForProject = function (item) {
+                MembersService.query({id: item.id}).$promise.then(
+                    function (success) {
+                        var emails = success.map(function(item) {
                             return item.user.email;
-                          });
-                          emails.push("*");
-                          projectUsers.userEmails = emails;
-                          users.push(projectUsers);
-                        },
-                        function (error) {
-
-                        }
-                      );
-                    })
-                  }
+                        });
+                        emails.push("*");
+                        self.users = emails;
+                    },
+                    function (error) {
+                    }
                 );
-                return users;
             };
 
             self.updateAcl = function (topicName, aclId){
@@ -357,7 +346,7 @@ angular.module('hopsWorksApp')
 
             self.addAcl = function (topicName) {
                 
-                ModalService.createTopicAcl('lg', self.projectId, topicName).then(
+                ModalService.createTopicAcl('lg', self.projectId, topicName, self.projectName).then(
                       function (success) {
                           growl.success("", {title: 'New acl added for the topic: '+topicName, ttl: 5000});
                           self.getAclsForTopic(topicName);
@@ -457,6 +446,7 @@ angular.module('hopsWorksApp')
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
                 function (success) {
                   var projectNameTour = success.projectName;
+                  self.projectName = success.projectName;
                   if (angular.equals(projectNameTour.substr(0, 5), 'demo_')) {
                     self.tourService.currentStep_TourThree = 0;
                     self.projectIsGuide = true;

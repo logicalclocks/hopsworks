@@ -39,16 +39,18 @@
 
 angular.module('hopsWorksApp')
         .controller('CreateAclCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 'topicName',
-          'MembersService',
-          function ($uibModalInstance, KafkaService, growl, projectId, topicName, MembersService) {
+          'projectName', 'MembersService',
+          function ($uibModalInstance, KafkaService, growl, projectId, topicName, projectName, MembersService) {
 
             var self = this;
             self.users = [];
             self.projectId = projectId;
             self.topicName = topicName;
+            self.projectName = projectName;
             self.permission_type;
 
             self.project;
+            self.projects = [];
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
@@ -56,47 +58,34 @@ angular.module('hopsWorksApp')
 
 
             self.init = function () {
-              self.users = self.getAclUsers(self.projectId, self.topicName);
+              self.projects = self.getProjectsForTopic(self.projectId, self.topicName);
             };
 
-            self.getAclUsers = function (projectId, topicName) {
-              var users = [];
-              var projects = [];
-              KafkaService.topicIsSharedTo(projectId, topicName).then(
+              self.getProjectsForTopic = function (projectId, topicName) {
+                  KafkaService.topicIsSharedTo(projectId, topicName).then(
+                    function (success) {
+                        var res = success.data.items.length > 0 ? success.data.items : [];
+                        var project = {};
+                        project.id = projectId;
+                        project.name = self.projectName;
+                        res.push(project);
+                        self.projects = res;
+                    }
+                  )
+              };
+
+            self.getAclUsersForProject = function (item) {
+              MembersService.query({id: item.id}).$promise.then(
                 function (success) {
-                  projects = success.data.items.length > 0 ? success.data.items : [];
+                  var emails = success.map(function(item) {
+                      return item.user.email;
+                  });
+                  emails.push("*");
+                  self.users = emails;
                 },
                 function (error) {
-
-                }
-              ).then(
-                function (success) {
-                  var project = {};
-                  project.id = projectId;
-                  projects.push(project);
-                }
-              ).then(
-                function(success) {
-                  projects.forEach(function(project) {
-                    MembersService.query({id: project.id}).$promise.then(
-                      function (success) {
-                        var projectUsers = {};
-                        projectUsers.projectName = success[0].project.name;
-                        var emails = success.map(function(item) {
-                          return item.user.email;
-                        });
-                        emails.push("*");
-                        projectUsers.userEmails = emails;
-                        users.push(projectUsers);
-                      },
-                      function (error) {
-
-                      }
-                    );
-                  })
                 }
               );
-              return users;
             };
 
             self.init();
