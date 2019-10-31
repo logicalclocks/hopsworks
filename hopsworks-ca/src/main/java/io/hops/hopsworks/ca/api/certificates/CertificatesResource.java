@@ -60,6 +60,8 @@ public class CertificatesResource {
   private KubeCertsResource kubeCertsResource;
   @Inject
   private ProjectCertsResource projectCertsResource;
+  @Inject
+  private CRLResource crlResource;
 
   @Path("/host")
   public HostCertsResource getHostCertsResource() {
@@ -86,4 +88,8 @@ public class CertificatesResource {
     return projectCertsResource;
   }
 
+  @Path("/crl")
+  public CRLResource getCrlResource() {
+    return crlResource;
+  }
 }
