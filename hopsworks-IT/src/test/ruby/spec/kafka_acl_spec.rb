@@ -454,10 +454,10 @@ describe "On #{ENV['OS']}" do
           count = json_body[:count]
           get_kafka_acls(project, topic, "?limit=3")
           expect(json_body[:items].count).to eq(3)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?limit=5")
           expect(json_body[:items].count).to eq(5)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
         it 'should get acls with offset=y' do
           project = get_project
@@ -468,11 +468,11 @@ describe "On #{ENV['OS']}" do
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=3")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls.drop(3))
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=5")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls.drop(5))
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
         it 'should get only limit=x acls with offset=y' do
           project = get_project
@@ -483,11 +483,11 @@ describe "On #{ENV['OS']}" do
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=3&limit=2")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls.drop(3).take(2))
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=5&limit=3")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls.drop(5).take(3))
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
         it 'should ignore if limit < 0' do
           project = get_project
@@ -498,7 +498,7 @@ describe "On #{ENV['OS']}" do
           get_kafka_acls(project, topic, "?sort_by=id:asc&limit=-2")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
         it 'should ignore if offset < 0' do
           project = get_project
@@ -509,7 +509,7 @@ describe "On #{ENV['OS']}" do
           get_kafka_acls(project, topic, "?sort_by=id:asc&offset=-2")
           res = json_body[:items].map{|a| "#{a[:id]}"}
           expect(res).to eq(acls)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
         it 'should ignore if limit = 0' do
           project = get_project
@@ -531,10 +531,10 @@ describe "On #{ENV['OS']}" do
           size = acls.size
           get_kafka_acls(project, topic, "?offset=#{size}")
           expect(json_body[:items]).to eq(nil)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
           get_kafka_acls(project, topic, "?offset=#{size + 1}")
           expect(json_body[:items]).to eq(nil)
-          except(count).to eq(json_body[:count])
+          expect(count).to eq(json_body[:count])
         end
       end
     end
