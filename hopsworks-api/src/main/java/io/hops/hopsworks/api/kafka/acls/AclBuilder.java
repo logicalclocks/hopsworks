@@ -69,7 +69,7 @@ public class AclBuilder {
         resourceRequest.getFilter(),
         resourceRequest.getSort(),
         topicName);
-      dto.setCount(Integer.toUnsignedLong(collectionInfo.getItems().size()));
+      dto.setCount(collectionInfo.getCount());
       UriBuilder uriBuilder = getAclUri(uriInfo, project, topicName);
       collectionInfo.getItems().forEach((acl) ->
         dto.addItem(build((TopicAcls) acl, uriBuilder)));
