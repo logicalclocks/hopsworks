@@ -71,6 +71,7 @@ angular.module('hopsWorksApp')
             self.role = "*";
            // self.activeId = -1;
             self.selectedProjectName="";
+            self.selectedProject;
             
             self.users =[];
             self.project;
@@ -101,7 +102,7 @@ angular.module('hopsWorksApp')
             self.getProjectsForTopic = function (projectId, topicName) {
                 KafkaService.topicIsSharedTo(projectId, topicName).then(
                     function (success) {
-                        var res = success.data.items.length > 0 ? success.data.items : [];
+                        var res = success.data.items != null ? success.data.items : [];
                         var project = {};
                         project.id = projectId;
                         project.name = self.projectName;
@@ -127,7 +128,7 @@ angular.module('hopsWorksApp')
 
             self.updateAcl = function (topicName, aclId){
               var acl ={};
-              acl.projectName = self.project.projectName;
+              acl.projectName = self.project.name;
               acl.role = self.role;
               acl.userEmail = self.userEmail;
               acl.permissionType = self.permission_type;
