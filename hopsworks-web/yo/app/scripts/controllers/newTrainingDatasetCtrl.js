@@ -596,17 +596,17 @@ angular.module('hopsWorksApp')
                     "jobs": []
                 }
                 if(self.configureJob){
-                    var utilArgs = self.setupJobArgs(jobName + "_args.json")
+                    var utilArgs = self.setupJobArgs(jobName + "_args.json");
                     FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
                         function (success) {
-                            growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
-                            var hdfsPath = success.data.successMessage
-                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath)
+                            var hdfsPath = success.data.successMessage;
+                            StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
+                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath);
                             FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
                                 function (success) {
                                     self.working = false;
                                     growl.success("New training dataset created", {title: 'Success', ttl: 1000});
-                                    var jobState = self.setupJobState(runConfig)
+                                    var jobState = self.setupJobState(runConfig);
                                     StorageService.store(self.newJobName, jobState);
                                     self.goToUrl("newjob")
                                 }, function (error) {
@@ -770,7 +770,6 @@ angular.module('hopsWorksApp')
                     jobType: jobType,
                     appPath: path,
                     mainClass: mainClass,
-                    args: "--input " + argsPath,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,

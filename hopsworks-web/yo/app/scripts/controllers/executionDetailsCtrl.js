@@ -13,31 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.jobs.beam;
 
-import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
-/**
- * Beam job configuration. Specifies which runner to use.
+'use strict';
+/*
+ * Controller for the job execution dialog.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
-public class BeamFlinkJobConfiguration extends FlinkJobConfiguration {
-  
-  public BeamFlinkJobConfiguration(){
-  
-  }
-  
-  @Override
-  @XmlElement(name="jobType")
-  public JobType getJobType() {
-    return JobType.BEAM_FLINK;
-  }
-  
-}
+angular.module('hopsWorksApp')
+    .controller('ExecutionDetailsCtrl', ['$scope', '$uibModalInstance', 'growl', 'JobService', 'job', 'execution',
+        function ($scope, $uibModalInstance, growl, JobService, job, execution) {
+
+            var self = this;
+            this.job = job;
+            this.execution = execution;
+
+            /**
+             * Close the modal dialog.
+             * @returns {undefined}
+             */
+            self.close = function () {
+                $uibModalInstance.dismiss('cancel');
+            };
+
+        }]);

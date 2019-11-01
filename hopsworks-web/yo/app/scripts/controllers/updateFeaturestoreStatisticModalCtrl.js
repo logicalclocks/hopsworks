@@ -144,7 +144,7 @@ angular.module('hopsWorksApp')
              * @param jobName name of the job
              * @param argsPath HDFS path to input arguments
              */
-            self.setupUpdateStatsJob = function (jobName, argsPath) {
+            self.setupUpdateStatsJob = function (jobName) {
                 var path = self.featurestoreUtil4JExecutable
                 var mainClass = self.featurestoreUtil4jMainClass
                 var jobType = self.sparkJobType
@@ -157,7 +157,6 @@ angular.module('hopsWorksApp')
                     jobType: jobType,
                     appPath: path,
                     mainClass: mainClass,
-                    args: "--input " + argsPath,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,
@@ -302,13 +301,15 @@ angular.module('hopsWorksApp')
              * @param operation
              */
             var writeUtilArgstoHdfs = function (jobName, operation) {
-                    var utilArgs = self.setupJobArgs(jobName + "_args.json", operation)
+                    var utilArgs = self.setupJobArgs(jobName + "_args.json", operation);
                     FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
                         function (success) {
                             growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
-                            var hdfsPath = success.data.successMessage
-                            var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath)
-                            var jobState = self.setupJobState(runConfig)
+                            var hdfsPath = success.data.successMessage;
+                            //Save path in local storage so we can retrieve it when launching the job in the UI
+                            StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
+                            var runConfig = self.setupUpdateStatsJob(jobName);
+                            var jobState = self.setupJobState(runConfig);
                             StorageService.store(self.newJobName, jobState);
                             $uibModalInstance.close(success);
                             self.goToUrl("newjob")

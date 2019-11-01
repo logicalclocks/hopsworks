@@ -108,7 +108,7 @@ public class SparkController {
    * @throws IOException If starting the job fails.
    * Spark job.
    */
-  public Execution startJob(final Jobs job, final Users user)
+  public Execution startJob(final Jobs job, String args, final Users user)
     throws ServiceException, GenericException, JobException, ProjectException {
     //First: some parameter checking.
     sanityCheck(job, user);
@@ -151,11 +151,11 @@ public class SparkController {
         "sparkjob object was null");
     }
 
-    Execution jh = sparkjob.requestExecutionId();
-    submitter.startExecution(sparkjob);
+    Execution exec = sparkjob.requestExecutionId(args);
+    submitter.startExecution(sparkjob, args);
     activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), job.getProject(), user.asUser(),
       ActivityFlag.JOB);
-    return jh;
+    return exec;
   }
   
   private void sanityCheck(Jobs job, Users user) throws GenericException, ProjectException {

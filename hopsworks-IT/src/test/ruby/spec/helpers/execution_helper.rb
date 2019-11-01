@@ -23,12 +23,15 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
   end
 
-  def start_execution(project_id, job_name)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions?action=start"
-  end
+  def start_execution(project_id, job_name, args)
+      headers = { 'Content-Type' => 'text/plain' }
+      post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions", args, headers
+    end
 
-  def stop_execution(project_id, job_name)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions?action=stop"
+  def stop_execution(project_id, job_name, execution_id)
+    stateDTO = {}
+    stateDTO["state"] = "stopped"
+    put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status", stateDTO
   end
 
   def get_execution_log(project_id, job_name, execution_id, type)
@@ -64,3 +67,4 @@ module ExecutionHelper
     end
   end
 end
+

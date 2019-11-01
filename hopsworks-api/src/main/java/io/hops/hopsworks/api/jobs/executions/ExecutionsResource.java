@@ -37,19 +37,19 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -125,36 +125,47 @@ public class ExecutionsResource {
   }
   
   
-  @ApiOperation(value = "Start/Stop a job",
-    notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.")
-  @POST
+  @ApiOperation(value = "Start/Stop an execution(run) of the job",
+    notes = "Stops an execution of a job by providing the status.",
+    response = ExecutionDTO.class)
+  @PUT
+  @Path("{id}/status")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response execution(
-    @ApiParam(value = "start or stop", required = true) @QueryParam("action") Action action,
+    @ApiParam(value = "Id of execution.", required = true) @PathParam("id") Integer id,
+    @ApiParam(value = "status to set.", required = true) Status status,
     @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException,
-      UnsupportedEncodingException {
+    @Context UriInfo uriInfo) throws JobException {
     
+    Execution exec = executionController.stopExecution(id);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+    return Response.accepted().entity(executionsBuilder.build(uriInfo, resourceRequest, exec)).build();
+  }
+  
+  @ApiOperation(value = "Start an execution(run) of the job",
+    notes = "Starts a job by creating and starting an Execution, stops a job by stopping the Execution.",
+    response = ExecutionDTO.class)
+  @POST
+  @Consumes(MediaType.TEXT_PLAIN)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response execution(
+    @ApiParam(value = "Arguments for executing the job") String args,
+    @Context SecurityContext sc,
+    @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
+  
     Users user = jWTHelper.getUserPrincipal(sc);
-    Execution exec;
-    switch (action) {
-      case START:
-        exec = executionController.start(job, user);
-        UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
-        uriBuilder.path(Integer.toString(exec.getId()));
-        ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
-        return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
-          .build();
-      case STOP:
-        exec = executionController.stop(job);
-        resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
-        return Response.ok().entity(executionsBuilder.build(uriInfo, resourceRequest, exec)).build();
-      default:
-        return Response.status(Response.Status.BAD_REQUEST).build();
-    }
+    Execution exec = executionController.start(job, args, user);
+    UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
+    uriBuilder.path(Integer.toString(exec.getId()));
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
+    return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
+      .build();
   }
   
   @ApiOperation(value = "Retrieve log of given execution and type", response = JobLogDTO.class)
@@ -202,17 +213,16 @@ public class ExecutionsResource {
   }
   
   
-  public enum Action {
-    START("start"),
-    STOP("stop");
+  public enum Status {
+    STOPPED("stopped");
     
     private final String name;
     
-    Action(String name) {
+    Status(String name) {
       this.name = name;
     }
     
-    public static Action fromString(String name) {
+    public static Status fromString(String name) {
       return valueOf(name.toUpperCase());
     }
     

@@ -45,7 +45,7 @@ angular.module('hopsWorksApp')
 
         .factory('JobService', ['$http', function ($http) {
             var service = {
-               jobFilter: "",
+               jobFilter: '',
 
                /**
                  * Get the jobFilter
@@ -53,7 +53,7 @@ angular.module('hopsWorksApp')
                  * @returns {string}
                  */
                getJobFilter: function() {
-                   return this.jobFilter
+                   return this.jobFilter;
                },
 
                /**
@@ -63,7 +63,7 @@ angular.module('hopsWorksApp')
                  * @param jobFilter
                 */
                setJobFilter: function(jobFilter) {
-                   this.jobFilter = jobFilter
+                   this.jobFilter = jobFilter;
                },
 
               /**
@@ -144,14 +144,31 @@ angular.module('hopsWorksApp')
               /**
                * Run the given job, creating a new Execution instance.
                * @param {type} projectId
-               * @param {type} jobId
+               * @param {type} name
+               * @param {type} args
                * @returns {undefined} The new Execution instance
                */
-              runJob: function (projectId, name) {
-                return $http.post('/api/project/' + projectId + '/jobs/' + name + '/executions?action=start', {});
+              runJob: function (projectId, name, args) {
+                  var req = {
+                      method: 'POST',
+                      url: '/api/project/' + projectId + '/jobs/' + name + '/executions',
+                      headers: {
+                          'Content-Type': 'text/plain'
+                      },
+                      data: args
+                  };
+                  return $http(req);
               },
-              stopJob: function (projectId, name) {
-                return $http.post('/api/project/' + projectId + '/jobs/' + name + '/executions?action=stop', {});
+              stopExecution: function (projectId, name, execId) {
+                  var req = {
+                      method: 'PUT',
+                      url: '/api/project/' + projectId + '/jobs/' + name + '/executions/' + execId + '/status',
+                      headers: {
+                          'Content-Type': 'application/json'
+                      },
+                      data: '{"state":"stopped"}'
+                  };
+                  return $http(req);
               },
               /**
                * Get the latest app Id of the given job.
