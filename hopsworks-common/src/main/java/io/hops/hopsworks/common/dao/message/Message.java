@@ -39,9 +39,9 @@
 
 package io.hops.hopsworks.common.dao.message;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
+import io.hops.hopsworks.common.dao.user.Users;
+import org.codehaus.jackson.annotate.JsonIgnore;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -50,7 +50,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -63,8 +62,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import io.hops.hopsworks.common.dao.user.Users;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 
 @Entity
 @Table(name = "hopsworks.message")
@@ -119,9 +119,8 @@ public class Message implements Serializable {
   private String preview;
   @Basic(optional = false)
   @NotNull
-  @Lob
   @Size(min = 1,
-          max = 65535)
+          max = 11000)
   @Column(name = "content")
   private String content;
   @Basic(optional = false)
