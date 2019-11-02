@@ -41,6 +41,17 @@ angular.module('hopsWorksApp')
                     // Both status codes are normal.
                     console.info("Logged out from Airflow successfully");
                   });
-              }
+              },
+              generateDag: function(projectId, dagDefinition) {
+                var request = {
+                  method: 'POST',
+                  url: '/api/project/' + projectId + '/airflow/dag',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  data: dagDefinition
+                };
+                return $http(request);
+              } 
             };
           }]);
