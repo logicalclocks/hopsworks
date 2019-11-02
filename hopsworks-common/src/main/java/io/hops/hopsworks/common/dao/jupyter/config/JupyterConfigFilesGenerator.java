@@ -39,15 +39,22 @@
 
 package io.hops.hopsworks.common.dao.jupyter.config;
 
+import freemarker.template.TemplateException;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
 import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
-import io.hops.hopsworks.common.util.ConfigFileGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
+import io.hops.hopsworks.common.util.TemplateEngine;
+import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplateBuilder;
+import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplateBuilder;
+import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
+import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplateBuilder;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
@@ -58,7 +65,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -79,11 +88,6 @@ import java.util.logging.Logger;
 public class JupyterConfigFilesGenerator {
   
   private static final Logger LOGGER = Logger.getLogger(JupyterConfigFilesGenerator.class.getName());
-  public static final String JUPYTER_NOTEBOOK_CONFIG = "jupyter_notebook_config.py";
-  public static final String JUPYTER_CUSTOM_KERNEL = "kernel.json";
-  public static final String JUPYTER_CUSTOM_JS_FILE = "custom.js";
-  public static final String JUPYTER_CUSTOM_JS = "/custom/" + JUPYTER_CUSTOM_JS_FILE;
-  public static final String SPARKMAGIC_CONFIG = "config.json";
   
   @EJB
   private Settings settings;
@@ -91,6 +95,8 @@ public class JupyterConfigFilesGenerator {
   private TfLibMappingUtil tfLibMappingUtil;
   @Inject
   private JupyterNbVCSController jupyterNbVCSController;
+  @EJB
+  private TemplateEngine templateEngine;
   
   public JupyterPaths generateJupyterPaths(Project project, String hdfsUser, String secretConfig) {
     return new JupyterPaths(settings.getJupyterDir(), project.getName(), hdfsUser, secretConfig);
@@ -152,7 +158,7 @@ public class JupyterConfigFilesGenerator {
     Files.setPosixFilePermissions(Paths.get(jp.getNotebookPath()), perms);
     Files.setPosixFilePermissions(Paths.get(jp.getProjectUserPath()), xOnly);
     
-    new File(jp.getConfDirPath() + "/custom").mkdirs();
+    new File(jp.getConfDirPath()).mkdirs();
     new File(jp.getRunDirPath()).mkdirs();
     new File(jp.getLogDirPath()).mkdirs();
     new File(jp.getCertificatesDir()).mkdirs();
@@ -169,23 +175,29 @@ public class JupyterConfigFilesGenerator {
     return kernelsDir + File.separator + pythonKernelName;
   }
   
-  public String createJupyterKernelConfig(Project project, JupyterSettings js, String hdfsUser)
+  public void createJupyterKernelConfig(Writer out, Project project, JupyterSettings js, String hdfsUser)
       throws IOException {
-    StringBuilder jupyterKernelConfig = ConfigFileGenerator.
-      instantiateFromTemplate(
-        ConfigFileGenerator.JUPYTER_CUSTOM_KERNEL,
-        "hdfs_user", hdfsUser,
-        "hadoop_home", settings.getHadoopSymbolicLinkDir(),
-        "hadoop_version", settings.getHadoopVersion(),
-        "anaconda_home", settings.getAnacondaProjectDir(project),
-        "secret_dir", settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
-        "project_name", project.getName(),
-        "hive_endpoint", settings.getHiveServerHostName(false)
-      );
-    return jupyterKernelConfig.toString();
+    KernelTemplate kernelTemplate = KernelTemplateBuilder.newBuilder()
+        .setHdfsUser(hdfsUser)
+        .setHadoopHome(settings.getHadoopSymbolicLinkDir())
+        .setHadoopVersion(settings.getHadoopVersion())
+        .setAnacondaHome(settings.getAnacondaProjectDir(project))
+        .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
+        .setProject(project)
+        .setHiveEndpoints(settings.getHiveServerHostName(false))
+        .build();
+    
+    Map<String, Object> dataModel = new HashMap<>(1);
+    dataModel.put("kernel", kernelTemplate);
+    
+    try {
+      templateEngine.template(KernelTemplate.TEMPLATE_NAME, dataModel, out);
+    } catch (TemplateException ex) {
+      throw new IOException(ex);
+    }
   }
   
-  public String createJupyterNotebookConfig(Project project, String nameNodeEndpoint, int port,
+  public void createJupyterNotebookConfig(Writer out, Project project, String nameNodeEndpoint, int port,
       JupyterSettings js, String hdfsUser, String pythonKernelName, String certsDir, String allowOrigin)
         throws IOException, ServiceException {
     String[] nn = nameNodeEndpoint.split(":");
@@ -199,34 +211,38 @@ public class JupyterConfigFilesGenerator {
       apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
-    return ConfigFileGenerator.instantiateFromTemplate(
-        ConfigFileGenerator.JUPYTER_NOTEBOOK_CONFIG_TEMPLATE,
-        "project", project.getName(),
-        "namenode_ip", nameNodeIp,
-        "namenode_port", nameNodePort,
-        "contents_manager", jcm.getClassName(),
-        "hopsworks_endpoint", this.settings.getRestEndpoint(),
-        "elastic_endpoint", this.settings.getElasticEndpoint(),
-        "port", String.valueOf(port),
-        "base_dir", js.getBaseDir(),
-        "hdfs_user", hdfsUser,
-        "python-kernel", ", '" + pythonKernelName + "'",
-        "hadoop_home", this.settings.getHadoopSymbolicLinkDir(),
-        "hdfs_home", this.settings.getHadoopSymbolicLinkDir(),
-        "jupyter_certs_dir", certsDir,
-        "secret_dir", this.settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret(),
-        "allow_origin", allowOrigin,
-        "ws_ping_interval", String.valueOf(settings.getJupyterWSPingInterval()),
-        "hopsworks_project_id", Integer.toString(project.getId()),
-        "api_key", apiKey,
-        "flink_conf_dir", String.valueOf(settings.getFlinkConfDir()),
-        "requests_verify", String.valueOf(settings.getRequestsVerify()),
-        "domain_ca_truststore_pem", settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM
-      ).toString();
+    JupyterNotebookConfigTemplate template = JupyterNotebookConfigTemplateBuilder.newBuilder()
+        .setProject(project)
+        .setNamenodeIp(nameNodeIp)
+        .setNamenodePort(nameNodePort)
+        .setContentsManager(jcm.getClassName())
+        .setHopsworksEndpoint(settings.getRestEndpoint())
+        .setElasticEndpoint(settings.getElasticEndpoint())
+        .setPort(port)
+        .setBaseDirectory(js.getBaseDir())
+        .setHdfsUser(hdfsUser)
+        .setPythonKernel(", '" + pythonKernelName + "'")
+        .setHadoopHome(settings.getHadoopSymbolicLinkDir())
+        .setJupyterCertsDirectory(certsDir)
+        .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
+        .setAllowOrigin(allowOrigin)
+        .setWsPingInterval(settings.getJupyterWSPingInterval())
+        .setApiKey(apiKey)
+        .setFlinkConfDirectory(settings.getFlinkConfDir())
+        .setRequestsVerify(settings.getRequestsVerify())
+        .setDomainCATruststorePem(settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM)
+        .build();
+    Map<String, Object> dataModel = new HashMap<>(1);
+    dataModel.put("conf", template);
+    try {
+      templateEngine.template(JupyterNotebookConfigTemplate.TEMPLATE_NAME, dataModel, out);
+    } catch (TemplateException ex) {
+      throw new IOException(ex);
+    }
   }
   
-  public String createSparkMagicConfig(Project project, JupyterSettings js, String hdfsUser, String confDirPath,
-      String usersFullName) throws IOException {
+  public void createSparkMagicConfig(Writer out, Project project, JupyterSettings js, String hdfsUser,
+      String confDirPath, String usersFullName) throws IOException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
     
@@ -254,74 +270,69 @@ public class JupyterConfigFilesGenerator {
     }
     sparkConfBuilder.deleteCharAt(sparkConfBuilder.lastIndexOf(","));
   
-    HashMap<String, String> replacementMap = new HashMap<>();
-    replacementMap.put("livy_ip", settings.getLivyIp());
-    replacementMap.put("jupyter_home", confDirPath);
-    replacementMap.put("driver_cores", finalSparkConfiguration.get(Settings.SPARK_DRIVER_CORES_ENV));
-    replacementMap.put("driver_memory", finalSparkConfiguration.get(Settings.SPARK_DRIVER_MEMORY_ENV));
+    SparkMagicConfigTemplateBuilder templateBuilder = SparkMagicConfigTemplateBuilder.newBuilder()
+        .setLivyIp(settings.getLivyIp())
+        .setJupyterHome(confDirPath)
+        .setDriverCores(Integer.parseInt(finalSparkConfiguration.get(Settings.SPARK_DRIVER_CORES_ENV)))
+        .setDriverMemory(finalSparkConfiguration.get(Settings.SPARK_DRIVER_MEMORY_ENV));
     if (sparkJobConfiguration.isDynamicAllocationEnabled() || sparkJobConfiguration.getExperimentType() != null) {
-      replacementMap.put("num_executors", "1");
+      templateBuilder.setNumExecutors(1);
     } else {
-      replacementMap.put("num_executors", finalSparkConfiguration.get(Settings.SPARK_NUMBER_EXECUTORS_ENV));
+      templateBuilder.setNumExecutors(Integer.parseInt(finalSparkConfiguration
+          .get(Settings.SPARK_NUMBER_EXECUTORS_ENV)));
     }
-    replacementMap.put("executor_cores", finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_CORES_ENV));
-    replacementMap.put("executor_memory", finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_MEMORY_ENV));
-    replacementMap.put("hdfs_user", hdfsUser);
-    replacementMap.put("yarn_queue", sparkJobConfiguration.getAmQueue());
-    replacementMap.put("hadoop_home", this.settings.getHadoopSymbolicLinkDir());
-    replacementMap.put("hadoop_version", this.settings.getHadoopVersion());
-    replacementMap.put("spark_configuration", sparkConfBuilder.toString());
-  
-    return ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.SPARKMAGIC_CONFIG_TEMPLATE, replacementMap)
-      .toString();
-  }
-  
-  public String createCustomJs() throws IOException {
-    return ConfigFileGenerator.instantiateFromTemplate(ConfigFileGenerator.JUPYTER_CUSTOM_TEMPLATE,
-      "hadoop_home", this.settings.getHadoopSymbolicLinkDir()).toString();
+    templateBuilder
+        .setExecutorCores(Integer.parseInt(finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_CORES_ENV)))
+        .setExecutorMemory(finalSparkConfiguration.get(Settings.SPARK_EXECUTOR_MEMORY_ENV))
+        .setHdfsUser(hdfsUser)
+        .setYarnQueue(sparkJobConfiguration.getAmQueue())
+        .setHadoopHome(settings.getHadoopSymbolicLinkDir())
+        .setHadoopVersion(settings.getHadoopVersion())
+        .setSparkConfiguration(sparkConfBuilder.toString());
+    Map<String, Object> dataModel = new HashMap<>(1);
+    dataModel.put("conf", templateBuilder.build());
+    try {
+      templateEngine.template(SparkMagicConfigTemplate.TEMPLATE_NAME, dataModel, out);
+    } catch (TemplateException ex) {
+      throw new IOException(ex);
+    }
   }
   
   // returns true if one of the conf files were created anew 
-  private boolean createConfigFiles(JupyterPaths jp, String hdfsUser, String usersFullName, Project project,
+  private void createConfigFiles(JupyterPaths jp, String hdfsUser, String usersFullName, Project project,
       String nameNodeEndpoint, Integer port, JupyterSettings js, String allowOrigin)
       throws IOException, ServiceException {
     
     String confDirPath = jp.getConfDirPath();
     String kernelsDir = jp.getKernelsDir();
     String certsDir = jp.getCertificatesDir();
-    File jupyter_config_file = new File(confDirPath, JUPYTER_NOTEBOOK_CONFIG);
-    File sparkmagic_config_file = new File(confDirPath, SPARKMAGIC_CONFIG);
-    File custom_js = new File(confDirPath, JUPYTER_CUSTOM_JS);
-    boolean createdJupyter = false;
-    boolean createdSparkmagic = false;
-    boolean createdCustomJs = false;
+    File jupyter_config_file = new File(confDirPath, JupyterNotebookConfigTemplate.FILE_NAME);
+    File sparkmagic_config_file = new File(confDirPath, SparkMagicConfigTemplate.FILE_NAME);
     
     if (!jupyter_config_file.exists()) {
       String pythonKernelName = pythonKernelName(project.getPythonVersion());
       if (settings.isPythonKernelEnabled()) {
         String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
-        File pythonKernelFile = new File(pythonKernelPath, JUPYTER_CUSTOM_KERNEL);
+        File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);
         
         new File(pythonKernelPath).mkdir();
         // Create the python kernel
-        ConfigFileGenerator.createConfigFile(pythonKernelFile, createJupyterKernelConfig(project, js, hdfsUser));
+        try (Writer out = new FileWriter(pythonKernelFile, false)) {
+          createJupyterKernelConfig(out, project, js, hdfsUser);
+        }
       }
-
-      createdJupyter = ConfigFileGenerator.createConfigFile(jupyter_config_file, createJupyterNotebookConfig(project,
-        nameNodeEndpoint,  port, js, hdfsUser, pythonKernelName, certsDir, allowOrigin));
+  
+      try (Writer out = new FileWriter(jupyter_config_file, false)) {
+        createJupyterNotebookConfig(out, project, nameNodeEndpoint, port, js, hdfsUser,
+            pythonKernelName, certsDir, allowOrigin);
+      }
     }
     
     if (!sparkmagic_config_file.exists()) {
-      createdSparkmagic = ConfigFileGenerator.createConfigFile(sparkmagic_config_file, createSparkMagicConfig(project
-        , js, hdfsUser, confDirPath, usersFullName));
+      try (Writer out = new FileWriter(sparkmagic_config_file, false)) {
+        createSparkMagicConfig(out, project, js, hdfsUser, confDirPath, usersFullName);
+      }
     }
-    
-    if (!custom_js.exists()) {
-      createdCustomJs = ConfigFileGenerator.createConfigFile(custom_js, createCustomJs());
-    }
-    
-    // Add this local file to 'spark: file' to copy it to hdfs and localize it.
-    return createdJupyter || createdSparkmagic || createdCustomJs;
   }
   
   

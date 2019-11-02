@@ -307,6 +307,10 @@ angular.module('hopsWorksApp')
               self.goToUrl('rstudio');
             };
 
+            self.goToDagComposer = function() {
+              self.goToUrl('airflow/dagcomposer');
+            };
+
             self.goToAirflow = function () {
               self.goToUrl('airflow');
             };

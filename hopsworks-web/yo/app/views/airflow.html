@@ -59,8 +59,15 @@
         </div>
 
         <div class="col-sm-6 col-md-1">
+          <button class="btn btn-primary active" ng-click="projectCtrl.goToDagComposer()" type="button" id="new_dag_composer_btn">
+            New ML workflow<i style="margin-left: 10px" class="glyphicon glyphicon-pencil">
+              </i>
+          </button>
+        </div>
+        <div class="col-sm-6 col-md-1">
           <button class="btn btn-success active" ng-click="projectCtrl.connectToAirflow()" type="button" id="newAirflow">
-            Open Airflow
+            Open Airflow<i style="margin-left: 10px" class="glyphicon glyphicon-play-circle">
+              </i>
           </button>
         </div>
       </div>

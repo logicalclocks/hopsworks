@@ -362,6 +362,11 @@
       <artifactId>snakeyaml</artifactId>
       <version>1.18</version>
     </dependency>
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.29</version>
+    </dependency>
   </dependencies>
 
   <build>
