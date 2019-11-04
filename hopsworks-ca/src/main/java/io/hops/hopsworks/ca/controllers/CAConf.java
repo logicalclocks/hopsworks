@@ -64,7 +64,7 @@ public class CAConf {
     SERVICE_KEY_ROTATION_INTERVAL("service_key_rotation_interval", "3d"),
     APPLICATION_CERTIFICATE_VALIDITY_PERIOD("application_certificate_validity_period", "3d"),
     HOPSWORKS_INSTALL_DIR("hopsworks_dir", "/srv/hops/domains"),
-    CERTS_DIR("certs_dir", "/srv/hops/certs-di"),
+    CERTS_DIR("certs_dir", "/srv/hops/certs-dir"),
     HOPSWORKS_SSL_MASTER_PASSWORD("hopsworks_master_password", "adminpw"),
     KUBE_CA_PASSWORD("kube_ca_password", "adminpw"),
     HOPSWORKS_REST_LOGLEVEL("hopsworks_rest_log_level", "PROD"),

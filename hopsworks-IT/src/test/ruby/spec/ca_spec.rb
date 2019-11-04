@@ -257,5 +257,19 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+
+    describe "# CA CRL" do
+      context "# Not authenticated" do
+        before :all do
+          reset_session
+        end
+        
+        it "should be able to download intermediate CA CRL" do
+          get "#{ENV['HOPSWORKS_CA']}/certificate/crl/intermediate"
+          expect_status(200)
+          expect(headers['content_type']).to eq("application/octet-stream")
+        end
+      end
+    end
   end
 end
