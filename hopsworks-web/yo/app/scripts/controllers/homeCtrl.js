@@ -115,7 +115,7 @@ angular.module('hopsWorksApp')
             updateUIAfterChange(false);
 
             var disableTT = function () {
-              self.user.toursState = 3;
+              self.user.toursState = 1;
               self.updateProfile(self.tourService.setShowNothingState);
               $rootScope.showTourTips = false;
               self.showTT = false;
@@ -222,10 +222,8 @@ angular.module('hopsWorksApp')
               } else {
                 internalTourName = uiTourName;
               }
-
-              $rootScope.showTourTips = true;
-              $rootScope.toggleTourTips();
-
+              self.showTT = true;
+              $scope.toggleTourTips();
 
               ProjectService.example({type: internalTourName}).$promise.then(
                       function (success) {
