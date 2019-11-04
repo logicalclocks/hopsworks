@@ -634,7 +634,8 @@ public class RESTCodes {
       Response.Status.METHOD_NOT_ALLOWED),
     SCHEMA_VERSION_NOT_FOUND(18, "Specified version of the schema not found", Response.Status.NOT_FOUND),
     PROJECT_IS_NOT_THE_OWNER_OF_THE_TOPIC(19, "Specified project is not the owner of the topic",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    ACL_FOR_ANY_USER(20, "Cannot create an ACL for user with email '*'", Response.Status.BAD_REQUEST);
 
 
     private Integer code;

@@ -18,8 +18,8 @@ package io.hops.hopsworks.api.kafka.topics;
 import io.hops.hopsworks.common.api.CollectionsBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
+import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -40,7 +40,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static io.hops.hopsworks.common.dao.kafka.KafkaFacade.TopicsFilters;
+import static io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade.TopicsFilters;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -140,7 +140,7 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
       AbstractFacade.SortBy sort = it.next();
       Comparator order =
         sort.getParam().getValue().equals("DESC") ? Comparator.reverseOrder() : Comparator.naturalOrder();
-      switch (KafkaFacade.TopicsSorts.valueOf(sort.getValue())) {
+      switch (ProjectTopicsFacade.TopicsSorts.valueOf(sort.getValue())) {
         case NAME:
           if (comparator == null) {
             comparator = Comparator.comparing(TopicDTO::getName, order);

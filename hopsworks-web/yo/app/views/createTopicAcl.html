@@ -90,12 +90,13 @@
                 <div class="col-sm-6">
                      <label class="control-label">Project name</label><br>
                    <ui-select style="min-width: 400px;" name="project_name" theme="select2"
-                              ng-model="createAclCtrl.project"  required>
+                              ng-model="createAclCtrl.project"
+                              on-select="createAclCtrl.getAclUsersForProject($item)" required>
 
-                    <ui-select-match placeholder="Select a project for this ACL">{{$select.selected.projectName}}</ui-select-match>
+                    <ui-select-match placeholder="Select a project for this ACL">{{$select.selected.name}}</ui-select-match>
 
-                    <ui-select-choices repeat="item in createAclCtrl.users | filter: $select.search">
-                    <div ng-bind-html="item.projectName | highlight: $select.search"></div>
+                    <ui-select-choices repeat="item in createAclCtrl.projects | filter: $select.search">
+                    <div ng-bind-html="item.name | highlight: $select.search"></div>
                     </ui-select-choices>
 
                 </ui-select><br>
@@ -107,7 +108,7 @@
 
                     <ui-select-match placeholder="Select a user">{{$select.selected}}</ui-select-match>
 
-                    <ui-select-choices repeat="item in createAclCtrl.project.userEmails | filter: $select.search">
+                    <ui-select-choices repeat="item in createAclCtrl.users | filter: $select.search">
                     <div ng-bind-html="item | highlight: $select.search"></div>
                     </ui-select-choices>
 

@@ -67,6 +67,7 @@ import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
@@ -265,6 +266,8 @@ public class ProjectController {
   private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
+  @EJB
+  private TopicAclsFacade topicAclsFacade;
 
 
   /**
@@ -991,7 +994,7 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
 
-    kafkaFacade.removeAclForProject(projectId);
+    topicAclsFacade.removeAclForProject(project);
 
     cleanup(project, sessionId);
   }

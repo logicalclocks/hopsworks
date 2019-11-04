@@ -39,15 +39,18 @@
 
 angular.module('hopsWorksApp')
         .controller('CreateAclCtrl', ['$uibModalInstance', 'KafkaService', 'growl', 'projectId', 'topicName',
-          function ($uibModalInstance, KafkaService, growl, projectId, topicName) {
+          'projectName', 'MembersService',
+          function ($uibModalInstance, KafkaService, growl, projectId, topicName, projectName, MembersService) {
 
             var self = this;
             self.users = [];
             self.projectId = projectId;
             self.topicName = topicName;
+            self.projectName = projectName;
             self.permission_type;
 
             self.project;
+            self.projects = [];
             self.permission_type = "Allow";
             self.operation_type = "Read";
             self.host = "*";
@@ -55,40 +58,73 @@ angular.module('hopsWorksApp')
 
 
             self.init = function () {
-              KafkaService.aclUsers(self.projectId, self.topicName).then(
-                      function (success) {
-                        self.users = success.data;
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                      }
-              });
+              self.projects = self.getProjectsForTopic(self.projectId, self.topicName);
+            };
+
+              self.getProjectsForTopic = function (projectId, topicName) {
+                  KafkaService.topicIsSharedTo(projectId, topicName).then(
+                    function (success) {
+                        var res = success.data.items != null ? success.data.items : [];
+                        var project = {};
+                        project.id = projectId;
+                        project.name = self.projectName;
+                        res.push(project);
+                        self.projects = res;
+                    }
+                  )
+              };
+
+            self.getAclUsersForProject = function (item) {
+              MembersService.query({id: item.id}).$promise.then(
+                function (success) {
+                  var emails = success.map(function(item) {
+                      return item.user.email;
+                  });
+                  emails.push("*");
+                  self.users = emails;
+                },
+                function (error) {
+                }
+              );
             };
 
             self.init();
 
             self.createTopicAcl = function () {
 
-              var acl = {};
-              acl.projectName = self.project.projectName;
-              acl.role = self.role;
-              acl.userEmail = self.userEmail;
-              acl.permissionType = self.permission_type;
-              acl.operationType = self.operation_type;
-              acl.host = self.host;
-
-              KafkaService.createTopicAcl(self.projectId, topicName, acl).then(
-                      function (success) {
-                        $uibModalInstance.close(success);
-                      }, function (error) {
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                      }
+              var aclArray = [];
+              var emailsArray = [];
+              if (self.userEmail === '*') {
+                emailsArray = self.users
+                  .filter(function(email) {
+                    return email !== '*';});
+              } else {
+                emailsArray.push(self.userEmail);
+              }
+              emailsArray.forEach(function (email) {
+                var acl = {};
+                acl.projectName = self.project.name;
+                acl.role = self.role;
+                acl.userEmail = email;
+                acl.permissionType = self.permission_type;
+                acl.operationType = self.operation_type;
+                acl.host = self.host;
+                aclArray.push(acl);
               });
+              aclArray.forEach(self.sendCreateTopicAcl);
+            };
+
+            self.sendCreateTopicAcl = function (acl) {
+                KafkaService.createTopicAcl(self.projectId, topicName, acl).then(
+                    function (success) {
+                        $uibModalInstance.close(success);
+                    }, function (error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
+                        }
+                    });
             };
 
             self.close = function () {

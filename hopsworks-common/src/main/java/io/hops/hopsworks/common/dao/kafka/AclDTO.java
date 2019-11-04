@@ -39,11 +39,13 @@
 
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.api.RestDTO;
+
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class AclDTO implements Serializable {
+public class AclDTO extends RestDTO<AclDTO> implements Serializable {
 
   private Integer id;
   private String projectName;
@@ -54,6 +56,10 @@ public class AclDTO implements Serializable {
   private String role;
 
   public AclDTO() {
+  }
+  
+  public AclDTO(Integer id) {
+    this.id = id;
   }
 
   public AclDTO(Integer id, String projectName, String userEmail,

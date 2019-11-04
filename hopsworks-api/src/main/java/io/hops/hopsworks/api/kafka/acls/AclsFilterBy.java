@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,20 +13,21 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.kafka.topics;
+
+package io.hops.hopsworks.api.kafka.acls;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 
-public class TopicsFilterBy implements AbstractFacade.FilterBy {
+public class AclsFilterBy implements AbstractFacade.FilterBy {
   
-  private final ProjectTopicsFacade.TopicsFilters filter;
+  private final TopicAclsFacade.TopicAclsFilters filter;
   private final String param;
   
-  public TopicsFilterBy(String param) {
+  public AclsFilterBy(String param) {
     String[] filterByParams = param.split(":");
-    this.filter = ProjectTopicsFacade.TopicsFilters.valueOf(filterByParams[0].toUpperCase());
-    this.param = (filterByParams.length > 1) ? filterByParams[1].toUpperCase() : this.filter.getDefaultParam();
+    this.filter = TopicAclsFacade.TopicAclsFilters.valueOf(filterByParams[0].toUpperCase());
+    this.param = (filterByParams.length > 1) ? filterByParams[1] : this.filter.getDefaultParam();
   }
   
   @Override

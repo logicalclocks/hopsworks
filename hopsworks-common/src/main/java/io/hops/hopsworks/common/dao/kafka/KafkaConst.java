@@ -28,4 +28,8 @@ public final class KafkaConst {
     return projectName + PROJECT_DELIMITER + userName;
   }
   
+  public static String getProjectNameFromPrincipal(String principal) {
+    return principal.split(KafkaConst.PROJECT_DELIMITER)[0];
+  }
+  
 }

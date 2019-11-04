@@ -111,5 +111,9 @@ module KafkaHelper
   def get_shared_topics(project_id)
     get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics?filter_by=shared:true"
   end
-  
+
+  def clean_topics(project_id)
+    get_project_topics(project_id)
+    json_body[:items].map{|topic| topic[:name]}.each{ |t| delete "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/topics" + t}
+  end
 end

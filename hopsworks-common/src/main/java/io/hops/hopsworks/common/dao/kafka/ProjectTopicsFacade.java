@@ -74,4 +74,78 @@ public class ProjectTopicsFacade extends AbstractFacade<ProjectTopics> {
     pt.setSchemaTopics(new SchemaTopics(st.schemaTopicsPK.getName(), st.schemaTopicsPK.getVersion()));
     update(pt);
   }
+  
+  public enum TopicsSorts {
+    NAME("NAME", "LOWER(t.name)", "ASC"),
+    SCHEMA_NAME("SCHEMA_NAME", "LOWER(t.schemaName)", "ASC");
+    
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+    
+    private TopicsSorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+    
+    public String getValue() {
+      return value;
+    }
+    
+    public String getSql() {
+      return sql;
+    }
+    
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getJoin() {
+      return null;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+  
+  public enum TopicsFilters {
+    SHARED("SHARED", "t.isShared = :shared", "shared", "false");
+    
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+    
+    private TopicsFilters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+    
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getValue() {
+      return value;
+    }
+    
+    public String getSql() {
+      return sql;
+    }
+    
+    public String getField() {
+      return field;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+    
+  }
 }

@@ -134,7 +134,7 @@ public abstract class AbstractFacade<T> {
     if (!sort.hasNext()) {
       return "";
     }
-    StringBuilder c = new StringBuilder("ORDER BY " + OrderBy(sort.next()));
+    StringBuilder c = new StringBuilder(" ORDER BY " + OrderBy(sort.next()));
     for (;sort.hasNext();) {
       c.append(", ").append(OrderBy(sort.next()));
     }
@@ -151,11 +151,11 @@ public abstract class AbstractFacade<T> {
     if (!filterBy.hasNext()) {
       return s;
     }
-    StringBuilder c = new StringBuilder("WHERE " + filterBy.next().getSql());
+    StringBuilder c = new StringBuilder(" WHERE " + filterBy.next().getSql());
     for (;filterBy.hasNext();) {
-      c.append("AND ").append(filterBy.next().getSql());
+      c.append(" AND ").append(filterBy.next().getSql());
     }
-    return c.append(more == null || more.isEmpty()? "": "AND " + more).toString();
+    return c.append(more == null || more.isEmpty()? "": " AND " + more).toString();
   }
   
   public Date getDate(String field, String value) {
