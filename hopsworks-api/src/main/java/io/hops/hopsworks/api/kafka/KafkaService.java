@@ -41,13 +41,14 @@ package io.hops.hopsworks.api.kafka;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.kafka.acls.AclBuilder;
+import io.hops.hopsworks.api.kafka.acls.AclsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
-import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
@@ -55,6 +56,7 @@ import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -65,6 +67,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -106,6 +109,8 @@ public class KafkaService {
   private TopicsBuilder topicsBuilder;
   @EJB
   private SharedTopicsFacade sharedTopicsFacade;
+  @EJB
+  private AclBuilder aclBuilder;
 
   private Project project;
 
@@ -238,66 +243,85 @@ public class KafkaService {
     return Response.ok().entity(dto).build();
   }
 
+  @ApiOperation(value = "Get all ACLs for a specified topic.")
   @GET
-  @Path("/aclUsers/topic/{topicName}")
+  @Path("/topics/{topic}/acls")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response aclUsers(@PathParam("topicName") String topicName) {
-    List<AclUserDTO> aclUsersDtos = kafkaFacade.aclUsers(project.getId(), topicName);
-    GenericEntity<List<AclUserDTO>> aclUsers = new GenericEntity<List<AclUserDTO>>(aclUsersDtos) {};
-    return Response.ok().entity(aclUsers).build();
+  public Response getTopicAcls(@Context UriInfo uriInfo,
+    @PathParam("topic") String topicName,
+    @BeanParam Pagination pagination,
+    @BeanParam AclsBeanParam aclsBeanParam) {
+    
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KAFKA);
+    resourceRequest.setOffset(pagination.getOffset());
+    resourceRequest.setLimit(pagination.getLimit());
+    resourceRequest.setSort(aclsBeanParam.getSortBySet());
+    resourceRequest.setFilter(aclsBeanParam.getFilter());
+    AclDTO dto = aclBuilder.build(uriInfo, project, topicName, resourceRequest);
+    return Response.ok().entity(dto).build();
   }
-
+  
+  @ApiOperation(value = "Add a new ACL for a specified topic.")
   @POST
-  @Path("/topic/{topic}/addAcl")
+  @Path("/topics/{topic}/acls")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response addAclsToTopic(@PathParam("topic") String topicName, AclDTO aclDto) throws KafkaException,
-      ProjectException, UserException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
-    json.setSuccessMessage("ACL has been added to the topic.");
-    return Response.ok().entity(json).build();
+  public Response addAclsToTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName, AclDTO aclDto)
+    throws KafkaException, ProjectException, UserException {
+    Pair<TopicAcls, Response.Status> aclTuple = kafkaController.addAclsToTopic(topicName, project.getId(), aclDto);
+    AclDTO dto = aclBuilder.build(uriInfo, aclTuple.getLeft());
+    return Response.status(aclTuple.getRight()).entity(dto).build();
   }
 
+  @ApiOperation(value = "Remove ACL specified by id.")
   @DELETE
-  @Path("/topic/{topic}/removeAcl/{aclId}")
+  @Path("/topics/{topic}/acls/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removeAclsFromTopic(@PathParam("topic") String topicName, @PathParam("aclId") int aclId) throws
+  public Response removeAclsFromTopic(@PathParam("topic") String topicName, @PathParam("id") Integer aclId) throws
       KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.removeAclFromTopic(topicName, aclId);
-    json.setSuccessMessage("Topic acls has been removed.");
-    return Response.ok().entity(json).build();
+    kafkaController.removeAclFromTopic(topicName, aclId);
+    return Response.noContent().build();
   }
-
+  
+  @ApiOperation(value = "Get ACL metadata specified by id.")
   @GET
-  @Path("/acls/{topic}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicAcls(@PathParam("topic") String topicName) throws KafkaException {
-    List<AclDTO> aclDto = kafkaFacade.getTopicAcls(topicName, project);
-    GenericEntity<List<AclDTO>> aclDtos = new GenericEntity<List<AclDTO>>(aclDto) {};
-    return Response.ok().entity(aclDtos).build();
-  }
-
-  @PUT
-  @Path("/topic/{topic}/updateAcl/{aclId}")
+  @Path("/topics/{topic}/acls/{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateTopicAcls(@PathParam("topic") String topicName, @PathParam("aclId") String aclId, AclDTO aclDto)
+  public Response getTopicAcl(@Context UriInfo uriInfo,
+    @PathParam("topic") String topicName,
+    @PathParam("id") Integer aclId) throws KafkaException {
+    
+    AclDTO dto = aclBuilder.getAclByTopicAndId(uriInfo, project, topicName, aclId);
+    return Response.ok().entity(dto).build();
+  }
+
+  @ApiOperation(value = "Update ACL specified by id.")
+  @PUT
+  @Path("/topics/{topic}/acls/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateTopicAcls(@Context UriInfo uriInfo, @PathParam("topic") String topicName,
+    @PathParam("id") Integer aclId, AclDTO aclDto)
       throws KafkaException, ProjectException, UserException {
-    kafkaController.updateTopicAcl(project, topicName, Integer.parseInt(aclId), aclDto);
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage("TopicAcl updated successfully");
-    return Response.ok().entity(json).build();
+    
+    Integer updatedAclId = kafkaController.updateTopicAcl(project, topicName, aclId, aclDto);
+    aclDto.setId(updatedAclId);
+    URI uri = aclBuilder.getAclUri(uriInfo, project, topicName)
+      .path(Integer.toString(updatedAclId))
+      .build();
+    aclDto.setHref(uri);
+    return Response.ok(uri).entity(aclDto).build();
   }
 
   //validate the new schema

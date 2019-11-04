@@ -787,7 +787,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            createTopicAcl: function (size, projectId, topicName) {
+            createTopicAcl: function (size, projectId, topicName, projectName) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/createTopicAcl.html',
                     controller: 'CreateAclCtrl as createAclCtrl',
@@ -809,6 +809,9 @@ angular.module('hopsWorksApp')
                         },
                         topicName: function () {
                             return topicName;
+                        },
+                        projectName: function () {
+                            return projectName;
                         }
                     }
                 });

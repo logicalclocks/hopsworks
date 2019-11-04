@@ -88,7 +88,7 @@ angular.module('hopsWorksApp')
                * @returns {unresolved} A complete description of the requested topic.
                */
               getAclsForTopic: function (projectId, topicName) {
-                return $http.get('/api/project/' + projectId + '/kafka/acls/' + topicName);
+                return $http.get('/api/project/' + projectId + '/kafka/topics/' + topicName + '/acls');
               },
               
               defaultTopicValues: function () {
@@ -154,10 +154,6 @@ angular.module('hopsWorksApp')
                 };
                 return $http(req);
               },
-
-              aclUsers: function(projectId, topicName){
-                return $http.get('/api/project/' + projectId + '/kafka/aclUsers/topic/' + topicName);
-              },
               
               /**
                * Add a new ACL rule to a Topic in the given project. 
@@ -169,7 +165,7 @@ angular.module('hopsWorksApp')
               createTopicAcl: function (projectId, topicName, topicAcl) {
                 var req = {
                   method: 'POST',
-                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + "/addAcl",
+                  url: '/api/project/' + projectId + '/kafka/topics/' + topicName + "/acls",
                   headers: {
                     'Content-Type': 'application/json'
                   },
@@ -184,13 +180,13 @@ angular.module('hopsWorksApp')
                * @returns {undefined} true if success, false otheriwse
                */
               removeTopicAcl: function (projectId, topicName, aclId) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topic/' + topicName + '/removeAcl/' + aclId);
+                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName + '/acls/' + aclId);
               },
               
               updateTopicAcl: function(projectId, topicName, aclId, topicAcl){                
                 var req = {
                   method: 'PUT',
-                  url: '/api/project/' + projectId + '/kafka/topic/' + topicName + '/updateAcl/' + aclId,
+                  url: '/api/project/' + projectId + '/kafka/topics/' + topicName + '/acls/' + aclId,
                   headers: {
                     'Content-Type': 'application/json'
                   },

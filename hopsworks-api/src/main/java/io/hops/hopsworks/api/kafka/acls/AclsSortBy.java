@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,25 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.kafka.topics;
+
+package io.hops.hopsworks.api.kafka.acls;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-public class TopicsSortBy implements AbstractFacade.SortBy {
+public class AclsSortBy implements AbstractFacade.SortBy {
   
-  private final ProjectTopicsFacade.TopicsSorts sortBy;
+  private final TopicAclsFacade.TopicAclsSorts sortBy;
   private final AbstractFacade.OrderBy param;
   
-  public TopicsSortBy(String param) {
+  public AclsSortBy(String param) {
     String[] sortByParams = param.split(":");
     String sort = "";
     try {
       sort = sortByParams[0].toUpperCase();
-      this.sortBy = ProjectTopicsFacade.TopicsSorts.valueOf(sort);
+      this.sortBy = TopicAclsFacade.TopicAclsSorts.valueOf(sort);
     } catch (IllegalArgumentException iae) {
       throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " + sort,
         Response.Status.NOT_FOUND);
