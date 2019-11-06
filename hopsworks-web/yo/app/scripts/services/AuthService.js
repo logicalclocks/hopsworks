@@ -128,7 +128,6 @@ angular.module('hopsWorksApp')
                 $cookies.remove("projectID");
                 $cookies.remove("SESSION");
                 sessionStorage.removeItem("isAdmin");
-                localStorage.removeItem("hopsworks-showtourtips");
               }
             };
             return service;

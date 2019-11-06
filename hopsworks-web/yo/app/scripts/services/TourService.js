@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .factory('TourService', ['$timeout',
-            function ($timeout) {
+        .factory('TourService', ['$timeout', 'UserService',
+            function ($timeout, UserService) {
 
                 var tourService = this;
 
@@ -53,10 +53,7 @@ angular.module('hopsWorksApp')
                 tourService.featurestoreProjectPrefix = "demo_featurestore";
                 tourService.featurestoreTourJobName = "featurestore_tour_job";
                 tourService.deepLearningRunTip = "";
-                tourService.informAndTips = true;
-                tourService.tipsOnly = false;
-                tourService.informOnly = false;
-                tourService.showNothing = false;
+                tourService.showTips = false;
                 tourService.currentProjectName = '';
 
                 tourService.toursInfoStep = 0;
@@ -75,6 +72,49 @@ angular.module('hopsWorksApp')
                 tourService.kafkaJobCreationState = "producer";
                 tourService.counter = 0;
 
+                tourService.init = function (fun) {
+                    UserService.profile().then(
+                        function (success) {
+                            var tourState = success.data.toursState;
+                            if (tourState === 0) {
+                                tourService.setShowNothingState();
+                            } else if (tourState !== 0) {
+                                tourService.setTipsOnlyState();
+                            } else {
+                                tourService.setDefaultTourState();
+                            }
+                            if (typeof fun === "function") {
+                              fun();
+                            }
+                        }, function (error) {
+                            console.log("Load Tours State", error);
+                        });
+                };
+
+                tourService.updateProfile = function (fun, user) {
+                    UserService.updateProfile(user).then (
+                        function (success) {
+                            if (typeof fun === "function") {
+                              fun();
+                            }
+                        }, function (error) {
+                            console.log("Update Tours State", error);
+                        }
+                    );
+                };
+
+                tourService.disableTourTips = function () {
+                    var user = {};
+                    user.toursState = 0;
+                    tourService.updateProfile(tourService.setShowNothingState, user);
+                };
+
+                tourService.enableTourTips = function () {
+                    var user = {};
+                    user.toursState = 1;
+                    tourService.updateProfile(tourService.setTipsOnlyState, user);
+                };
+
                 tourService.getDeepLearningJobTip = function(){
                   if(tourService.activeTour === "deep_learning"){
                     tourService.deepLearningRunTip = "An inference job was created for you! Go on and run it after the model is finished.";
@@ -86,39 +126,16 @@ angular.module('hopsWorksApp')
                     tourService.activeTour = tourName;
                 };
 
-                tourService.setInformAndTipsState = function () {
-                  tourService.informAndTips = true;
-                  tourService.tipsOnly = false;
-                  tourService.informOnly = false;
-                  tourService.showNothing = false;
-                };
-
                 tourService.setTipsOnlyState = function () {
-                  tourService.informAndTips = false;
-                  tourService.tipsOnly = true;
-                  tourService.informOnly = false;
-                  tourService.showNothing = false;
-                };
-
-                tourService.setInformOnly = function () {
-                  tourService.informAndTips = false;
-                  tourService.tipsOnly = false;
-                  tourService.informOnly = true;
-                  tourService.showNothing = false;
+                  tourService.showTips = true;
                 };
 
                 tourService.setShowNothingState = function () {
-                  tourService.informAndTips = false;
-                  tourService.tipsOnly = false;
-                  tourService.informOnly = false;
-                  tourService.showNothing = true;
+                  tourService.showTips = false;
                 };
                 
                 tourService.setDefaultTourState = function () {
-                  tourService.informAndTips = false;
-                  tourService.tipsOnly = false;
-                  tourService.informOnly = false;
-                  tourService.showNothing = true;
+                  tourService.showTips = false;
                 };
 
                 tourService.printDebug = function () {

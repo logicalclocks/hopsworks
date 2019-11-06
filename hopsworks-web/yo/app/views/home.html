@@ -69,16 +69,4 @@
     </virtual-step>
   </tour>
 
-  <tour step="homeCtrl.tourService.toursInfoStep"
-        post-tour="closeTour()" ng-if="homeCtrl.loadedView && homeCtrl.tourService.informAndTips">
-    <virtual-step
-            tourtip="Follow our guided tours"
-            tourtip-step="0"
-            tourtip-element="#toursBox"
-            tourtip-placement="right"
-            tourtip-next-label="Got it!"
-            on-proceed="homeCtrl.disableInformBalloon()"
-            tourtip-offset-vertical="20">
-    </virtual-step>
-  </tour>
 </div>

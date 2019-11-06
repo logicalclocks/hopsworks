@@ -115,45 +115,27 @@ angular.module('hopsWorksApp')
             updateUIAfterChange(false);
 
             var disableTT = function () {
-              self.user.toursState = 1;
-              self.updateProfile(self.tourService.setShowNothingState);
+              self.tourService.disableTourTips();
               $rootScope.showTourTips = false;
               self.showTT = false;
-              StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
             };
 
             var enableTT = function () {
-              self.user.toursState = 0;
-              self.updateProfile(self.tourService.setInformAndTipsState);
+              self.tourService.enableTourTips();
               $rootScope.showTourTips = true;
               self.showTT = true;
-              StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
             };
 
-            self.initCheckBox = function () {
-                return UserService.profile().then(
-                  function (success) {
-                    self.user = success.data;
-                    var tourState = self.user.toursState;
-                    if (tourState === 0) {
-                      self.tourService.setInformAndTipsState();
-                    } else if (tourState > 0) {
-                      self.tourService.setShowNothingState();
-                    } else {
-                      self.tourService.setDefaultTourState();
-                    }
-                    if (self.tourService.informAndTips) {
-                        $rootScope.showTourTips = true;
-                        self.showTT = true;
-                    } else {
-                        $rootScope.showTourTips = false;
-                        self.showTT = false;
-                    }
-                    StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
-                  }, function (error) {
-                      console.log("Load Tours State", error);
-                  });
+             var initCheckBox = function () {
+                if (self.tourService.showTips) {
+                    $rootScope.showTourTips = true;
+                    self.showTT = true;
+                } else {
+                    $rootScope.showTourTips = false;
+                    self.showTT = false;
+                }
             };
+            self.tourService.init(initCheckBox);
 
             self.disableInformBalloon = function () {
                 disableTT();
@@ -222,8 +204,7 @@ angular.module('hopsWorksApp')
               } else {
                 internalTourName = uiTourName;
               }
-              self.showTT = true;
-              $scope.toggleTourTips();
+              self.enableTourTips();
 
               ProjectService.example({type: internalTourName}).$promise.then(
                       function (success) {
@@ -250,8 +231,6 @@ angular.module('hopsWorksApp')
 
             self.deleteProjectAndDatasets = function (projectId) {
               self.working[projectId] = true;
-              //Clear project StorageService state
-              StorageService.remove(projectId+"-tftour-finished");
 
               ProjectService.delete({id: projectId}).$promise.then(
                       function (success) {

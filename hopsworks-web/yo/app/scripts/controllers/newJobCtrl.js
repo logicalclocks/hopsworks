@@ -91,9 +91,10 @@ angular.module('hopsWorksApp')
             self.sliderVisible = false;
 
             self.guideKafkaTopics = [];
+            self.tourService.init(null);
 
             self.populateKafkaTopic = function () {
-              var tipsEnabled = StorageService.get("hopsworks-showtourtips");
+              var tipsEnabled = self.tourService.showTips;
               if (tipsEnabled) {
                 self.getAllTopics(self.projectId).then(
                         function (success) {

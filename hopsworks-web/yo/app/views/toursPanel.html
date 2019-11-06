@@ -24,7 +24,7 @@
                 <span class="glyphicon glyphicon-expand pull-right"></span>
             </a>
             <a href="" class="list-group-item" ng-show="homeCtrl.showTours" ng-class="{'tour-highlight': homeCtrl.showGettingStarted()}">
-                <div ng-init="homeCtrl.initCheckBox()" style="margin-top: 10px">
+                <div style="margin-top: 10px">
                     <md-checkbox md-no-ink aria-label="Tour tips" class="md-primary"
                                  ng-model="homeCtrl.showTT" ng-change="toggleTourTips()">
                                  Tour tips: {{homeCtrl.showTT? 'ON' : 'OFF'}}

@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
 
             self.disableTours = function() {
                 $rootScope.showTourTips = false;
-                $rootScope.toggleTourTips();
+                self.tourService.disableTours();
             };
 
             // We could instead implement a service to get all the available types but this will do it for now
@@ -137,6 +137,7 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.tourService.init(null);
 
             var getCurrentProject = function () {
               ProjectService.get({}, {'id': self.projectId}).$promise.then(
