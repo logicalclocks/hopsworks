@@ -403,9 +403,7 @@
   </div>
   <tour class="ng-scope" step="kafkaCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
-        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView
-          && (projectCtrl.tourService.informAndTips
-              || projectCtrl.tourService.tipsOnly)">
+        ng-if="projectCtrl.showKafka() && projectCtrl.loadedView && projectCtrl.tourService.showTips && projectCtrl.tourService.activeTour === 'kafka'">
     <virtual-step
             class="ng-scope"
             tourtip="Click Next OR click on the 'Schemas' tab to continue!"

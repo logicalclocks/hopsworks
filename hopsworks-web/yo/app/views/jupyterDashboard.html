@@ -276,8 +276,7 @@
       <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourEight"
             post-tour="closeTour()"
             ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'deep_learning'
-            && (projectCtrl.tourService.informAndTips
-            || projectCtrl.tourService.tipsOnly) && !jupyterCtrl.loading &&
+            && projectCtrl.tourService.showTips && !jupyterCtrl.loading &&
             !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 0 ||  self.tourService.currentStep_TourEight <= 10))">
         <virtual-step
                 class="ng-scope"
