@@ -67,7 +67,7 @@ angular.module('hopsWorksApp')
             self.working = [];
             self.user = {};
             $rootScope.showTourTips = false;
-            self.tourTipsText = "off";
+            self.showTT = false;
             self.sortBy='-project.created';
 
 
@@ -114,92 +114,49 @@ angular.module('hopsWorksApp')
             
             updateUIAfterChange(false);
 
-            self.initCheckBox = function () {
-              self.loadToursState().then(
-                function(success) {
-                  if (self.tourService.informAndTips || self.tourService.tipsOnly) {
-                    $rootScope.showTourTips = true;
-                  } else {
-                    $rootScope.showTourTips = false;
-                  }
-                  StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
-                }, function(error) {
-                  console.log(error);
-                }
-              );
+            var disableTT = function () {
+              self.tourService.disableTourTips();
+              $rootScope.showTourTips = false;
+              self.showTT = false;
             };
 
-            self.loadToursState = function () {
-                return UserService.profile().then(
-                  function (success) {
-                    self.user = success.data;
-                    var tourState = self.user.toursState;
-                    if (tourState === 0) {
-                      self.tourService.setInformAndTipsState();
-                    } else if (tourState === 1) {
-                      self.tourService.setTipsOnlyState();
-                    } else if (tourState === 2) {
-                      self.tourService.setInformOnly();
-                    } else if (tourState === 3) {
-                      self.tourService.setShowNothingState();
-                    } else {
-                      self.tourService.setDefaultTourState();
-                    }
-                  }, function (error) {
-                      console.log("Load Tours State", error);
-                  });
+            var enableTT = function () {
+              self.tourService.enableTourTips();
+              $rootScope.showTourTips = true;
+              self.showTT = true;
             };
+
+             var initCheckBox = function () {
+                if (self.tourService.showTips) {
+                    $rootScope.showTourTips = true;
+                    self.showTT = true;
+                } else {
+                    $rootScope.showTourTips = false;
+                    self.showTT = false;
+                }
+            };
+            self.tourService.init(initCheckBox);
 
             self.disableInformBalloon = function () {
-              if (self.tourService.informAndTips) {
-                self.user.toursState = 1;
-                self.updateProfile(self.tourService.setTipsOnlyState);
-              } else if (self.tourService.informOnly) {
-                self.user.toursState = 3;
-                self.updateProfile(self.tourService.setShowNothingState);
-              }
+                disableTT();
             };
 
-            $rootScope.toggleTourTips = function () {
-              if ($rootScope.showTourTips) {
+            $scope.toggleTourTips = function () {
+              if (self.showTT) {
                 self.enableTourTips();
               } else {
                 self.disableTourTips();
               }
-              StorageService.store("hopsworks-showtourtips",$rootScope.showTourTips);
             };
 
             self.disableTourTips = function () {
-              if (self.tourService.informAndTips) {
-                self.user.toursState = 2;
-                self.updateProfile(self.tourService.setInformOnly);
-              } else if (self.tourService.tipsOnly) {
-                self.user.toursState = 3;
-                self.updateProfile(self.tourService.setShowNothingState);
-              }
-              $rootScope.showTourTips = false;
-              self.tourTipsText = self.getTourTipsText();
+                disableTT();
             };
 
             self.enableTourTips = function () {
-              if (self.tourService.informOnly) {
-                self.user.toursState = 0;
-                self.updateProfile(self.tourService.setInformAndTipsState);
-              } else if (self.tourService.showNothing) {
-                self.user.toursState = 1;
-                self.updateProfile(self.tourService.setTipsOnlyState);
-              }
-              $rootScope.showTourTips = true;
-              self.tourTipsText = self.getTourTipsText();
+                enableTT();
             };
 
-            self.getTourTipsText = function () {
-                if ($rootScope.showTourTips) {
-                    return "on";
-                } else {
-                    return "off";
-                }
-            };
             self.updateProfile = function (fun) {
               UserService.updateProfile(self.user).then (
                 function (success) {
@@ -247,11 +204,7 @@ angular.module('hopsWorksApp')
               } else {
                 internalTourName = uiTourName;
               }
-
-              $rootScope.showTourTips = true;
-              self.tourTipsText = self.getTourTipsText();
-              $rootScope.toggleTourTips();
-
+              self.enableTourTips();
 
               ProjectService.example({type: internalTourName}).$promise.then(
                       function (success) {
@@ -278,8 +231,6 @@ angular.module('hopsWorksApp')
 
             self.deleteProjectAndDatasets = function (projectId) {
               self.working[projectId] = true;
-              //Clear project StorageService state
-              StorageService.remove(projectId+"-tftour-finished");
 
               ProjectService.delete({id: projectId}).$promise.then(
                       function (success) {

@@ -52,7 +52,7 @@ angular.module('hopsWorksApp')
             self.jupyterServer;
             self.projectName;
             self.tourService = TourService;
-            self.tourService.currentStep_TourEight = -1;
+            self.tourService.currentStep_TourEight = 0;
             self.projectId = $routeParams.projectID;
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             self.ui = "";

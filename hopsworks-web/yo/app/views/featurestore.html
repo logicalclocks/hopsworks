@@ -873,9 +873,8 @@
         </div>
         <tour class="ng-scope" step="featurestoreCtrl.tourService.currentStep_TourNine"
               post-tour="closeTour()"
-              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'
-          && (featurestoreCtrl.tourService.informAndTips
-              || featurestoreCtrl.tourService.tipsOnly) && !featurestoreCtrl.loading && !projectCtrl.loading">
+              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'&& featurestoreCtrl.tourService.showTips
+              && !featurestoreCtrl.loading && !projectCtrl.loading">
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"

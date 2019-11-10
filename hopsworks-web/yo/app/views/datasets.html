@@ -609,8 +609,7 @@
     <tour class="ng-scope" step="datasetsCtrl.tourService.currentStep_TourNine"
           post-tour="closeTour()"
           ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'
-          && (datasetsCtrl.tourService.informAndTips
-              || datasetsCtrl.tourService.tipsOnly) && !datasetsCtrl.working">
+          && datasetsCtrl.tourService.showTips && !datasetsCtrl.working">
       <virtual-step
               ng-if="datasetsCtrl.tourService.activeTour === 'featurestore'"
               class="ng-scope"

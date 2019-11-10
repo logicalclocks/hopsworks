@@ -470,8 +470,7 @@
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourThree"
         post-tour="closeTour()"
         ng-if="(projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark')
-          && (projectCtrl.tourService.informAndTips
-              || projectCtrl.tourService.tipsOnly)
+          && projectCtrl.tourService.showTips
           ">
     <virtual-step
       class="ng-scope"
@@ -504,8 +503,7 @@
   <tour class="ng-scope" step="projectCtrl.tourService.currentStep_TourSix"
         post-tour="closeTour()"
         ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
-          && (projectCtrl.tourService.informAndTips
-              || projectCtrl.tourService.tipsOnly)">
+          && projectCtrl.tourService.showTips">
     <virtual-step
       class="ng-scope"
       tourtip="Click Next OR click on the 'New job' button to start creating your Kafka streaming job!"
@@ -523,14 +521,13 @@
       tourtip-element="#buttonRunJob"
       tourtip-placement="bottom"
       tourtip-next-label="Done"
-      on-proceed="closeTour(); projectCtrl.tourService.resetTours();projectCtrl.disableTours();"
+      on-proceed="closeTour();projectCtrl.disableTours();"
       ></virtual-step>
   </tour>
     <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
           post-tour="closeTour()"
           ng-if="jobsCtrl.tourService.activeTour === 'featurestore'
-          && (jobsCtrl.tourService.informAndTips
-              || jobsCtrl.tourService.tipsOnly) && !projectCtrl.loading && !getAllJobsStatusIsPending ">
+          && jobsCtrl.tourService.showTips && !projectCtrl.loading && !getAllJobsStatusIsPending ">
       <virtual-step
               ng-if="jobsCtrl.tourService.activeTour === 'featurestore'"
               class="ng-scope"

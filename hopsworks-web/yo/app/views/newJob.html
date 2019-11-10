@@ -178,9 +178,7 @@
     <tour class="ng-scope"
           step="newJobCtrl.tourService.currentStep_TourSeven"
           post-tour="closeTour()"
-          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka'
-                              && (projectCtrl.tourService.informAndTips
-                                      || projectCtrl.tourService.tipsOnly)">
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'kafka' && projectCtrl.tourService.showTips">
       <virtual-step
         class="ng-scope"
         tourtip="Click Next OR give a name to your Kafka job"
@@ -256,9 +254,7 @@
     <tour class="ng-scope"
           step="projectCtrl.tourService.currentStep_TourFour"
           post-tour="closeTour()"
-          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark'
-                              && (projectCtrl.tourService.informAndTips
-                                      || projectCtrl.tourService.tipsOnly)">
+          ng-if="projectCtrl.loadedView && projectCtrl.tourService.activeTour === 'spark' && projectCtrl.tourService.showTips">
       <virtual-step
         class="ng-scope"
         tourtip="Click Next OR name the job yourself by typing in the field below"
