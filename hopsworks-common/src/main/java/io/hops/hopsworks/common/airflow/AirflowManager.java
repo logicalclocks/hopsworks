@@ -139,26 +139,29 @@ public class AirflowManager {
   private TimerService timerService;
   
   private GroupPrincipal airflowGroup;
+  private volatile boolean initialized = false;
   
   @PostConstruct
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void init() throws RuntimeException {
-    try {
-      Path airflowPath = Paths.get(settings.getAirflowDir());
-      airflowGroup = Files.getFileAttributeView(airflowPath, PosixFileAttributeView.class,
-          LinkOption.NOFOLLOW_LINKS).readAttributes().group();
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
+  public void init() {
+    Path airflowPath = Paths.get(settings.getAirflowDir());
+    if (airflowPath.toFile().isDirectory()) {
+      try {
+        airflowGroup = Files.getFileAttributeView(airflowPath, PosixFileAttributeView.class,
+            LinkOption.NOFOLLOW_LINKS).readAttributes().group();
+        try {
+          recover();
+        } catch (Exception ex) {
+          LOG.log(Level.WARNING, "AirflowManager failed to recover, some already running workloads might be " +
+              "disrupted");
+        }
+        long interval = Math.max(1000L, settings.getJWTExpLeewaySec() * 1000 / 2);
+        timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow JWT renewal", false));
+        initialized = true;
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "Failed to initialize AirflowManager", ex);
+      }
     }
-    
-    try {
-      recover();
-    } catch (Exception ex) {
-      LOG.log(Level.WARNING, "Failed to recover material for Airflow sessions", ex);
-    }
-    
-    long interval = Math.max(1000L, settings.getJWTExpLeewaySec() * 1000 / 2);
-    timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow JWT renewal", false));
   }
   
   /**
@@ -287,17 +290,28 @@ public class AirflowManager {
     return roles;
   }
   
+  private void isInitialized() throws AirflowException {
+    if (!initialized) {
+      throw new AirflowException(RESTCodes.AirflowErrorCode.AIRFLOW_MANAGER_UNINITIALIZED, Level.WARNING,
+          "AirflowManager is not initialized",
+          "AirflowManager failed to initialize or Airflow is not deployed");
+    }
+  }
+  
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
   public void onProjectRemoval(Project project) throws IOException {
-    FileUtils.deleteDirectory(getProjectDagDirectory(project.getId()).toFile());
-    // Airflow material will be deleted from the database by the foreign key constraint
-    // Monitor will reap all material that do not exist in the database
+    if (initialized) {
+      FileUtils.deleteDirectory(getProjectDagDirectory(project.getId()).toFile());
+      // Airflow material will be deleted from the database by the foreign key constraint
+      // Monitor will reap all material that do not exist in the database
+    }
   }
   
   @Lock(LockType.READ)
   @AccessTimeout(value = 1, unit = TimeUnit.SECONDS)
   public void prepareSecurityMaterial(Users user, Project project, String[] audience) throws AirflowException {
+    isInitialized();
     MaterializedJWTID materialID = new MaterializedJWTID(project.getId(), user.getUid(),
         MaterializedJWTID.USAGE.AIRFLOW);
     if (!materializedJWTFacade.exists(materialID)) {
@@ -410,7 +424,7 @@ public class AirflowManager {
     return Paths.get(settings.getAirflowDir(), "dags", generateProjectSecret(projectID));
   }
   
-  public Path getProjectSecretsDirectory(String username) {
+  private Path getProjectSecretsDirectory(String username) {
     return Paths.get(settings.getAirflowDir(), "secrets", generateOwnerSecret(username));
   }
   
