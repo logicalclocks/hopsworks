@@ -37,12 +37,6 @@ angular.module('hopsWorksApp')
             self.settings=settings;
             self.newJobName = self.projectId + "_newjob";
 
-            //State
-            //self.clusterAnalysis = true
-            //self.featureCorrelations = true
-            //self.descriptiveStats = true
-            //self.featureHistograms = true
-
             //Constants
             self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
             self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
@@ -301,6 +295,12 @@ angular.module('hopsWorksApp')
                 }
             }
 
+            /**
+             * Writes the jobArgs to Hdfs with a given jobName and operation
+             *
+             * @param jobName
+             * @param operation
+             */
             var writeUtilArgstoHdfs = function (jobName, operation) {
                     var utilArgs = self.setupJobArgs(jobName + "_args.json", operation)
                     FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
