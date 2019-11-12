@@ -87,6 +87,8 @@ public class UserAdministrationController {
         return "Blocked account";
       case LOST_MOBILE:
         return "Lost mobile account";
+      case TEMP_PASSWORD:
+        return "Temporary password";
       default:
         return "Unknown account type";
     }

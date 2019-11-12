@@ -139,7 +139,7 @@ angular.module('hopsWorksApp')
             getUserNotification();
 
             self.profileModal = function () {
-              ModalService.profile('md');
+                $location.url('/settings?tab=credentials');
             };
 
             self.sshKeysModal = function () {
