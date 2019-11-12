@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.jupyter.config.GitConfig;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.common.jupyter.DockerConfigurationConverter;
 import io.hops.hopsworks.common.jupyter.JupyterConfigurationConverter;
 
 import java.io.Serializable;
@@ -109,6 +110,10 @@ public class JupyterSettings implements Serializable {
   @Column(name = "advanced")
   private boolean advanced = false;
 
+  @Basic(optional = false)
+  @Column(name = "python_kernel")
+  private boolean pythonKernel = true;
+
   @JoinColumn(name = "team_member",
       referencedColumnName = "email",
       insertable = false,
@@ -122,15 +127,21 @@ public class JupyterSettings implements Serializable {
       updatable = false)
   @ManyToOne(optional = false)
   private Project project;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "base_dir")
   private String baseDir = "/Jupyter/";
-  @Column(name = "json_config")
+
+  @Column(name = "job_config")
   @Convert(converter = JupyterConfigurationConverter.class)
   private JobConfiguration jobConfig;
+
+  @Column(name = "docker_config")
+  @Convert(converter = DockerConfigurationConverter.class)
+  private JobConfiguration dockerConfig;
   
   @Transient
   private String privateDir = "";
@@ -288,5 +299,21 @@ public class JupyterSettings implements Serializable {
   
   public void setGitConfig(GitConfig gitConfig) {
     this.gitConfig = gitConfig;
+  }
+
+  public JobConfiguration getDockerConfig() {
+    return dockerConfig;
+  }
+
+  public void setDockerConfig(JobConfiguration dockerConfig) {
+    this.dockerConfig = dockerConfig;
+  }
+
+  public boolean isPythonKernel() {
+    return pythonKernel;
+  }
+
+  public void setPythonKernel(boolean pythonKernel) {
+    this.pythonKernel = pythonKernel;
   }
 }

@@ -1,24 +1,11 @@
 /*
- * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  */
 
 package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 
@@ -36,14 +23,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Converter
-public class JupyterConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
+public class DockerConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
 
-  private static final Logger LOGGER = Logger.getLogger(JupyterConfigurationConverter.class.getName());
-  private static JAXBContext jobJAXBContext;
+  private static final Logger LOGGER = Logger.getLogger(DockerConfigurationConverter.class.getName());
+  private static JAXBContext dockerJAXBContext;
 
   static {
     try {
-      jobJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
+      dockerJAXBContext = JAXBContextFactory.createContext(new Class[] {DockerJobConfiguration.class}, null);
     } catch (JAXBException e) {
       LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
@@ -52,10 +39,10 @@ public class JupyterConfigurationConverter implements AttributeConverter<JobConf
   @Override
   public String convertToDatabaseColumn(JobConfiguration config) {
     if(config == null) {
-      config = new SparkJobConfiguration();
+      config = new DockerJobConfiguration();
     }
     try {
-      Marshaller marshaller = jobJAXBContext.createMarshaller();
+      Marshaller marshaller = dockerJAXBContext.createMarshaller();
       marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       StringWriter sw = new StringWriter();
@@ -72,7 +59,7 @@ public class JupyterConfigurationConverter implements AttributeConverter<JobConf
       return null;
     }
     try {
-      return unmarshal(jsonConfig, jobJAXBContext);
+      return unmarshal(jsonConfig, dockerJAXBContext);
     } catch (JAXBException e) {
       throw new IllegalStateException(e);
     }
@@ -83,6 +70,6 @@ public class JupyterConfigurationConverter implements AttributeConverter<JobConf
     StreamSource json = new StreamSource(new StringReader(jsonConfig));
     unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
     unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-    return unmarshaller.unmarshal(json, SparkJobConfiguration.class).getValue();
+    return unmarshaller.unmarshal(json, DockerJobConfiguration.class).getValue();
   }
 }

@@ -51,7 +51,7 @@
         </div>
         <div class="content-wrapper">
         <div growl reference="10" class="pull-right" ></div>
-          <h3>
+          <h3 ng-class="{'hidden' : jupyterCtrl.ui == ''}">
             <div class="col-md-4 col-lg-4" style="margin-top:-25px;">
               <div class="row">
                 <div class="col-md-2 col-lg-2">
@@ -70,13 +70,9 @@
                 </div>
               </div>
             </div>
-            <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui === ''">
-              <button class="btn btn-primary" ng-click="jupyterCtrl.start()" type="button" id="newNotebook" style="width:90px;">
-                Start
-              </button>
-            </div>
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false" id="viewConfig">
-              <button class="btn btn-info btn-md" ng-click="jupyterCtrl.tgState=false; sparkConfigCtrl.uneditableMode=true;">
+              <button class="btn btn-info btn-md"
+                      ng-click="jupyterCtrl.tgState=false; sparkConfigCtrl.uneditableMode=true; sparkConfigCtrl.setConf()">
                 <i class="fa fa-sliders"></i> View Configuration
               </button>
             </div>
@@ -89,16 +85,13 @@
               <i class="fa fa-info-circle" tooltip-placement="auto left" uib-tooltip="Configuration not editable while Jupyter Notebook Server is running" style="margin-left: 10px"></i> <strong>&nbsp;Configuration not editable</strong>
             </div>
             <ul class="nav navbar-nav pull-right" style="margin-right:30px;  margin-top:-17px;">
-              <li class="pull-left"
-                  ng-class="{'connected-space' : jupyterCtrl.connectedStatus, 'disconnected-space':!jupyterCtrl.connectedStatus}" style="margin-top:-8px;">
+              <li class="pull-left" style="margin-top:-8px;">
                 <hamburger-toggle state="jupyterCtrl.tgState" class="hamburger-toggle" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false">
                 </hamburger-toggle>
               </li>
               <li class="server-status">
-                        <span class="fa fa-circle" ng-class="{'server-connected' :jupyterCtrl.ui !== '',
-                           'server-disconnected':jupyterCtrl.ui === ''}"></span>
-                <span ng-show="jupyterCtrl.jupyterCtrl.ui !== ''">Connected</span>
-                <span ng-show="jupyterCtrl.jupyterCtrl.ui === ''">Disconnected</span>
+                        <span class="fa fa-circle" ng-class="{'server-connected' :jupyterCtrl.ui !== ''}"></span>
+                <span ng-show="jupyterCtrl.ui !== ''">Connected</span>
               </li>
             </ul>
           </h3>
@@ -108,7 +101,7 @@
             </div>
           </div>
           <div ng-if="jupyterCtrl.ui === '' || sparkConfigCtrl.uneditableMode===true">
-            <div ng-include="'views/sparkConfig.html'"></div>
+            <div ng-include="'views/jupyter/jupyterConfigPanel.html'"></div>
           </div>  
           <div class="row top-buffer" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false" class="animate-if">
             <div class="col-md-4 panel panel-default jupyter-left" style="min-height: 212px;" id="applications">
@@ -280,55 +273,49 @@
             !(self.ui !=='' && (self.tourService.currentStep_TourEight >= 0 ||  self.tourService.currentStep_TourEight <= 10))">
         <virtual-step
                 class="ng-scope"
-                tourtip="Before starting Jupyter you need to select an appropriate mode depending on what type of job you intend to run. The 'Experiment' mode should be selected for this tour."
+                tourtip="Jupyter Notebooks is the recommended way for development and writing production pipelines in the platform."
                 tourtip-step="0"
-                tourtip-element="#experimentLabel"
+                tourtip-element="#python"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
                 on-show=""
-                on-proceed="sparkConfigCtrl.setMode('EXPERIMENT');"
+                on-proceed=""
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="Parallel Experiments is used for parallel hyperparameter optimization of your Deep Learning model. We provide tools to search for the best hyperparameters automatically."
+                tourtip="The Jupyter Notebook server you will be working with can be configured for different use-cases as represented by the tabs above."
                 tourtip-step="1"
-                tourtip-element="#parallelExperiments"
+                tourtip-element="#python"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
+                on-show=""
                 on-proceed=""
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="Distributed Training using CollectiveAllReduceStrategy, ParameterServerStrategy and MirroredStrategy is configured here."
+                tourtip="If you want to work in the python kernel as on your local workstation, the 'Python' option should be selected."
                 tourtip-step="2"
-                tourtip-element="#distributedTraining"
+                tourtip-element="#python"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
+                on-show=""
                 on-proceed=""
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="If you want to run Spark with static executors, use this mode."
+                tourtip="Running parallel hyperparameter optimization or distributed training over many hosts and GPUs the 'Experiments' option should be selected."
                 tourtip-step="3"
-                tourtip-element="#sparkStatic"
+                tourtip-element="#experiment"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
+                on-show=""
                 on-proceed=""
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="Or if you would like a dynamic number of executors pick this mode."
+                tourtip="To work with Spark, PySpark or SparkR the 'Spark' option should be selected."
                 tourtip-step="4"
-                tourtip-element="#sparkDynamic"
-                tourtip-placement="bottom"
-                tourtip-next-label="Next"
-                on-proceed=""
-        ></virtual-step>
-        <virtual-step
-                class="ng-scope"
-                tourtip="These configuration options are important to understand as they define the behaviour of the application, for example setting the application memory."
-                tourtip-step="5"
-                tourtip-element="#configOptions"
+                tourtip-element="#spark"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
                 on-proceed=""
@@ -336,7 +323,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="Click 'Start' to start a Jupyter Notebook server for your user in this project for the given configuration. To change the configuration you need to restart the Jupyter notebook server."
-                tourtip-step="6"
+                tourtip-step="5"
                 tourtip-element="#newNotebook"
                 tourtip-placement="bottom"
                 tourtip-next-label="Start"
@@ -345,13 +332,13 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="invisible"
-                tourtip-step="7"
+                tourtip-step="6"
                 ng-hide="true"
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
                 tourtip="Click the icon to enter Jupyter. When inside Jupyter, navigate to the Experiment folder in which there are several notebooks you can run. "
-                tourtip-step="8"
+                tourtip-step="7"
                 tourtip-element="#openNotebook"
                 tourtip-placement="left"
                 tourtip-next-label="Open Jupyter in a new tab"

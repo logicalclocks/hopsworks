@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.jobs.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobConfiguration;
+import io.hops.hopsworks.common.jupyter.DockerJobConfiguration;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -60,11 +61,12 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlSeeAlso({YarnJobConfiguration.class})
+@XmlSeeAlso({YarnJobConfiguration.class, DockerJobConfiguration.class})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration") }
+  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration"),
+  @JsonSubTypes.Type(value = DockerJobConfiguration.class, name = "DockerJobConfiguration")}
 )
 public abstract class JobConfiguration {
 

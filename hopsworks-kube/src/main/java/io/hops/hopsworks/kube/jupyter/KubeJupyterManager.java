@@ -16,6 +16,9 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.QuantityBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -42,6 +45,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jupyter.DockerJobConfiguration;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
@@ -64,6 +68,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -78,7 +83,6 @@ public class KubeJupyterManager implements JupyterManager {
   public static final String ANACONDA = "anaconda";
   public static final String CERTS = "certs";
   public static final String CONF = "conf";
-  public static final String CUSTOM = "custom";
   public static final String HADOOP = "hadoop";
   public static final String JUPYTER = "jupyter";
   public static final String JWT = "jwt";
@@ -88,7 +92,6 @@ public class KubeJupyterManager implements JupyterManager {
   public static final String SEPARATOR = "-";
   public static final String JUPYTER_PREFIX = JUPYTER + SEPARATOR;
   public static final String CONF_SUFFIX = SEPARATOR + "conf";
-  public static final String CUSTOM_SUFFIX = SEPARATOR + "custom";
   public static final String JWT_SUFFIX = SEPARATOR + "jwt";
   public static final String KERNELS_SUFFIX = SEPARATOR + "kernels";
   
@@ -124,7 +127,7 @@ public class KubeJupyterManager implements JupyterManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
     JupyterSettings jupyterSettings, String allowOrigin) throws ServiceException {
-  
+
     JupyterPaths jupyterPaths = jupyterConfigFilesGenerator.generateJupyterPaths(project, hdfsUser, secretConfig);
     String kubeProjectUser = kubeClientService.getKubeProjectUsername(project, user);
     String pythonKernelName = jupyterConfigFilesGenerator.pythonKernelName(project.getPythonVersion());
@@ -178,7 +181,8 @@ public class KubeJupyterManager implements JupyterManager {
           hdfsUser,
           token,
           settings.getFlinkConfDir(),
-          settings.getSparkConfDir()));
+          settings.getSparkConfDir(),
+          (DockerJobConfiguration)jupyterSettings.getDockerConfig()));
       
       return new JupyterDTO(nodePort, token, PID, secretConfig, jupyterPaths.getCertificatesDir());
     } catch (KubernetesClientException | IOException e) {
@@ -190,7 +194,8 @@ public class KubeJupyterManager implements JupyterManager {
         } catch (Exception ex) {
         }
       });
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, SEVERE, null, e.getMessage(), e);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, SEVERE,
+          e.getMessage(), e.getMessage(), e);
     }
   }
 
@@ -215,14 +220,33 @@ public class KubeJupyterManager implements JupyterManager {
   private String serviceAndDeploymentName(String kubeProjectUsername) {
     return JUPYTER_PREFIX + kubeProjectUsername;
   }
-  
-  private Container buildContainer(String jupyterHome, String anacondaEnv,
-    String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir, String sparkConfDir) {
+
+  private ResourceRequirements buildResourceRequirements(DockerJobConfiguration dockerConfig) throws ServiceException {
+
+    if(dockerConfig.getMemory() > settings.getKubeDockerMaxMemoryAllocation()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum memory "
+          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
+    } else if(dockerConfig.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum cores "
+          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
+    }
+    return new ResourceRequirementsBuilder()
+        .addToLimits("memory", new QuantityBuilder()
+            .withAmount(dockerConfig.getMemory() + "Mi").build())
+        .addToLimits("cpu", new QuantityBuilder()
+            .withAmount(Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build())
+        .build();
+  }
+
+
+  private Container buildContainer(String jupyterHome, String anacondaEnv, String pythonKernelName, String secretDir,
+                                   String certificatesDir, String hadoopUser, String token, String flinkConfDir,
+                                   String sparkConfDir, ResourceRequirements resourceRequirements) {
     return new ContainerBuilder()
       .withName(JUPYTER)
       .withImage(settings.getKubeRegistry() + "/jupyter:" + settings.getJupyterImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
+      .withResources(resourceRequirements)
       .withVolumeMounts(
         new VolumeMountBuilder()
           .withName(ANACONDA)
@@ -238,11 +262,6 @@ public class KubeJupyterManager implements JupyterManager {
           .withName(CONF)
           .withReadOnly(true)
           .withMountPath("/srv/hops/jupyter/conf")
-          .build(),
-        new VolumeMountBuilder()
-          .withName(CUSTOM)
-          .withReadOnly(true)
-          .withMountPath("/srv/hops/jupyter/custom")
           .build(),
         new VolumeMountBuilder()
           .withName(HADOOP)
@@ -305,13 +324,6 @@ public class KubeJupyterManager implements JupyterManager {
               .build())
           .build(),
         new VolumeBuilder()
-          .withName(CUSTOM)
-          .withConfigMap(
-            new ConfigMapVolumeSourceBuilder()
-              .withName(kubeProjectUser + CUSTOM_SUFFIX)
-              .build())
-          .build(),
-        new VolumeBuilder()
           .withName(HADOOP)
           .withHostPath(
             new HostPathVolumeSourceBuilder()
@@ -351,10 +363,11 @@ public class KubeJupyterManager implements JupyterManager {
   
   private Deployment buildDeployment(String name, String kubeProjectUser, String jupyterHome, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir, String sparkConfDir) {
-    
+    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig) throws ServiceException {
+
+    ResourceRequirements resourceRequirements = buildResourceRequirements(dockerConfig);
     Container container = buildContainer(jupyterHome, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir, sparkConfDir);
+      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()
@@ -439,9 +452,6 @@ public class KubeJupyterManager implements JupyterManager {
       errorMessage, t);
     t = runCatchAndLog(() -> kubeClientService.deleteConfigMap(kubeProjectName, kubeProjectUser + KERNELS_SUFFIX),
       errorMessage, t);
-    t = runCatchAndLog(() -> kubeClientService.deleteConfigMap(kubeProjectName, kubeProjectUser + CUSTOM_SUFFIX),
-      errorMessage, t);
-
     if (t.isPresent()) {
       throw new ServiceException(JUPYTER_STOP_ERROR, SEVERE,
         "Exception when deleting jupyter notebook", "Exception when deleting jupyter notebook", t.get());

@@ -49,6 +49,7 @@ import javax.persistence.TypedQuery;
 
 import io.hops.hopsworks.common.jobs.spark.ExperimentType;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jupyter.DockerJobConfiguration;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**
@@ -92,9 +93,14 @@ public class JupyterSettingsFacade {
       js = new JupyterSettings(pk);
       js.setSecret(secret);
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
+      js.setDockerConfig(new DockerJobConfiguration());
       persist(js);
-    } else if(js.getJobConfig() == null) {
+    }
+    if(js.getJobConfig() == null) {
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
+    }
+    if(js.getDockerConfig() == null) {
+      js.setDockerConfig(new DockerJobConfiguration());
     }
     return js;
   }
