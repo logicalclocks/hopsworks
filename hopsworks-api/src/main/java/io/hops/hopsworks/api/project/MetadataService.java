@@ -71,7 +71,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -79,7 +78,6 @@ import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.JsonUtil;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ArrayNode;
 import org.codehaus.jackson.node.ObjectNode;
@@ -93,10 +91,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -113,8 +109,6 @@ import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/metadata")
 @Stateless
@@ -608,63 +602,5 @@ public class MetadataService {
     return noCacheResponse.getNoCacheResponseBuilder(status).entity(json).
             build();
 
-  }
-  
-  @ApiOperation( value = "Create or Update a schemaless metadata for a path.")
-  @PUT
-  @Path("schemaless/{xattrName}/{path: .+}")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response attachSchemalessMetadata(@Context SecurityContext sc, @Context
-      UriInfo uriInfo, @PathParam("xattrName") String xattrName, @PathParam("path") String path,
-      String metaObj) throws DatasetException,
-      MetadataException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-  
-    if (metaObj.length() > 13500 || xattrName.length() > 255) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
-    }
-    Response.Status status = Response.Status.CREATED;
-    String metadata = metadataController.getSchemalessMetadata(user, path,
-        xattrName);
-    if(metadata != null){
-      status = Response.Status.OK;
-    }
-    
-    metadataController.addSchemaLessMetadata(user, path, xattrName,
-        metaObj);
-    
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-    if(status == Response.Status.CREATED) {
-      return Response.created(builder.build()).build();
-    } else {
-      return Response.ok(builder.build()).build();
-    }
-  }
-  
-  @ApiOperation( value = "Get the schemaless metadata attached to a path.")
-  @GET
-  @Path("schemaless/{xattrName}/{path: .+}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response getSchemalessMetadata(@Context SecurityContext sc,
-      @PathParam("xattrName") String xattrName,
-      @PathParam("path") String path) throws DatasetException, MetadataException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String metadata = metadataController.getSchemalessMetadata(user, path,
-        xattrName);
-    return Response.accepted().entity(metadata).build();
-  }
-  
-  @ApiOperation( value = "Delete the schemaless metadata attached to a path.")
-  @DELETE
-  @Path("schemaless/{xattrName}/{path: .+}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response detachSchemalessMetadata(@Context SecurityContext sc,
-      @PathParam("xattrName") String xattrName,
-      @PathParam("path") String path) throws DatasetException, MetadataException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    metadataController.removeSchemaLessMetadata(user, path, xattrName);
-    return Response.noContent().build();
   }
 }

@@ -67,19 +67,10 @@ import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.common.util.HopsUtils;
-import org.apache.commons.io.Charsets;
-import org.apache.hadoop.fs.Path;
-
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -119,10 +110,6 @@ public class MetadataController {
   private ProjectFacade projectFacade;
   @EJB
   private DatasetFacade datasetFacade;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private DistributedFsService dfs;
   
   public MetadataController() {
   }
@@ -341,79 +328,6 @@ public class MetadataController {
       this.metadataFacade.addMetadata(metadata);
       logMetadataOperation(metadata, OperationType.Add);
     }
-  }
-  
-  enum SchemalessOp {
-    Attach,
-    Detach,
-    Get
-  }
-  
-  public void addSchemaLessMetadata(Users user, String inodePath, String name,
-      String metadataJson) throws DatasetException, MetadataException {
-    processSchemaLessMetadata(user, inodePath, name, metadataJson,
-        SchemalessOp.Attach);
-  }
-  
-  public void removeSchemaLessMetadata(Users user, String inodePath,
-      String name) throws MetadataException, DatasetException {
-    processSchemaLessMetadata(user, inodePath, name, null
-        , SchemalessOp.Detach);
-  }
-  
-  public String getSchemalessMetadata(Users user, String inodePath,
-      String name) throws DatasetException, MetadataException {
-    return processSchemaLessMetadata(user, inodePath, name, null,
-        SchemalessOp.Get);
-  }
-  
-  
-  public String processSchemaLessMetadata(Users user, String inodePath,
-      String name, String metadataJson, SchemalessOp op)
-      throws DatasetException,
-      MetadataException {
-    Inode inode = inodeController.getInodeAtPath(inodePath);
-    if (inode == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND,
-          Level.FINE,
-          "file " + inodePath + "doesn't exist");
-    }
-    
-    Project project = projectFacade.findByName(inodeController.getProjectNameForInode(inode));
-    String hdfsUserName = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUserName);
-    
-    try {
-      String res = null;
-      switch (op) {
-        case Attach:
-          udfso.setXAttr(new Path(inodePath), getXAttrName(name),
-              metadataJson.getBytes(Charsets.UTF_8));
-          break;
-        case Detach:
-          udfso.removeXAttr(new Path(inodePath), getXAttrName(name));
-          break;
-        case Get:
-          byte[] value =
-              udfso.getXAttr(new Path(inodePath), getXAttrName(name));
-          if(value != null) {
-            res = new String(value, Charsets.UTF_8);
-          }
-          break;
-      }
-      return res;
-    } catch (IOException e) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
-          Level.SEVERE, inodePath, e.getMessage(), e);
-    } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
-  
-  private String getXAttrName(String name) {
-    return "user." + name;
   }
   
   private void logMetadataOperation(Metadata metadata, OperationType optype) {
