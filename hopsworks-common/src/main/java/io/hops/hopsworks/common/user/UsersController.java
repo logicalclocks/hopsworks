@@ -328,11 +328,23 @@ public class UsersController {
       "Reset QR code.", user, req);
     return getQrCode(user);
   }
-
+  
+  /**
+   * Use when a user change her/his password
+   * @param user
+   * @param oldPassword
+   * @param newPassword
+   * @param confirmedPassword
+   * @param req
+   * @throws UserException
+   */
   public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword,
       HttpServletRequest req) throws UserException {
     if (!authController.validatePassword(user, oldPassword, req)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
+    }
+    if (UserAccountStatus.TEMP_PASSWORD.equals(user.getStatus())){
+      user.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
     }
     changePassword(user, newPassword, confirmedPassword, req);
   }
@@ -345,6 +357,33 @@ public class UsersController {
     authController.validateEmail(key, req);
   }
   
+  /**
+   * Use to reset password to a temporary random password
+   * @param user
+   * @param req
+   * @return
+   * @throws UserException
+   * @throws MessagingException
+   */
+  public String resetPassword(Users user, HttpServletRequest req) throws UserException, MessagingException {
+    String randomPwd = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
+    user.setStatus(UserAccountStatus.TEMP_PASSWORD);
+    changePasswordAsAdmin(user, randomPwd, req);
+    String subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET;
+    String msg = UserAccountsEmailMessages.buildResetByAdminMessage(req.getRemoteUser());
+    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
+    return randomPwd;
+  }
+  
+  /**
+   * Use to reset password with a recovery key
+   * @param key
+   * @param newPassword
+   * @param confirmedPassword
+   * @param req
+   * @throws UserException
+   * @throws MessagingException
+   */
   public void changePassword(String key, String newPassword, String confirmedPassword, HttpServletRequest req)
     throws UserException, MessagingException {
     userValidator.isValidPassword(newPassword, confirmedPassword);
@@ -367,6 +406,16 @@ public class UsersController {
         throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
       }
+    }
+  }
+  
+  private void changePasswordAsAdmin(Users user, String newPassword, HttpServletRequest req) throws UserException {
+    try {
+      Secret secret = securityUtils.generateSecret(newPassword);
+      authController.changeUserPasswordAsAdmin(user, secret, req);
+    } catch (Exception ex) {
+      throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
+        ex.getMessage(), ex);
     }
   }
 

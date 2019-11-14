@@ -40,13 +40,13 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"   
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:pt="http://xmlns.jcp.org/jsf/passthrough"
-      xmlns:p="http://primefaces.org/ui"
-      >
+      xmlns:p="http://primefaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+>
   <h:head>
     <title><ui:insert name="title">Hopsworks User Profile</ui:insert></title>
     <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
@@ -137,7 +137,7 @@
 
       <div class="personal-info">
         <p:panel header="Change Settings" toggleable="false" style="margin-bottom:20px">
-          <h:panelGrid columns="4">
+          <h:panelGrid columns="5">
             <h:form id="add_role" >
               <h:panelGrid columns="2" >
 
@@ -146,8 +146,7 @@
                                  editable="false">
 
                   <f:selectItem itemValue="#"
-                                itemLabel="Add Role" 
-                                />
+                                itemLabel="Add Role"/>
                   <f:selectItems value="#{adminProfileAdministration.newGroups}" />
                 </p:selectOneMenu>
 
@@ -203,10 +202,123 @@
               </h:panelGrid>
             </h:form>
 
+            <h:form id="password_reset">
+              <h:panelGrid columns="1">
+                <p:commandButton type="submit"
+                                 value="Reset user password"
+                                 action="#{adminProfileAdministration.resetPassword()}"
+                                 oncomplete="PF('dlg1').show();"
+                                 update=":account_status :dialog" maxWidth="40" styleClass="flat">
+                  <p:confirm header="Confirmation"
+                             message="Are you sure you want to reset the password for #{adminProfileAdministration.editingUser.email}? This action will be logged."
+                             icon="ui-icon-alert"/>
+                </p:commandButton>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                  <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="ui-icon-check"/>
+                  <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="ui-icon-close"/>
+                </p:confirmDialog>
+              </h:panelGrid>
+            </h:form>
+            <p:dialog id="dialog" header="New password" widgetVar="dlg1" minHeight="40" resizable="false">
+              <h:outputText value="Password: "/>
+              <p:inputText id="txtCopy" value="#{adminProfileAdministration.newPassword}" readonly="true"
+                           style="font-weight: bolder;"/>
+              <p:commandButton id="btnCopy" value="Copy" icon="ui-icon-copy"/>
+              <pe:clipboard id="clipCopy" trigger="btnCopy" action="copy" target="txtCopy">
+                <p:ajax event="success" listener="#{adminProfileAdministration.successListener}" />
+                <p:ajax event="error" listener="#{adminProfileAdministration.errorListener}" />
+              </pe:clipboard>
+            </p:dialog>
           </h:panelGrid>
         </p:panel>
       </div>
 
+      <br></br>
+      <div class="personal-info">
+        <p:panel header="Account Info" toggleable="true" toggleSpeed="200" collapsed="true" style="margin-bottom:20px">
+          <p:panelGrid columns="2" styleClass="PersonalIfo" id="account_status">
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel value="Current User Status" />
+              </h3>
+            </p:column>
+
+
+            <p:column>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAdministration.editStatus}</h3>
+
+            </p:column>
+
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel   value="Account Type" />
+              </h3>
+            </p:column>
+
+
+            <p:column>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                #{adminProfileAdministration.accountTypeStr()}
+              </h3>
+            </p:column>
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel   value="Current Hopsworks Roles" />
+              </h3>
+            </p:column>
+
+            <p:column >
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                #{adminProfileAdministration.currentGroups}
+              </h3>
+            </p:column>
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel value="Max Number of Projects allowed" />
+              </h3>
+            </p:column>
+
+            <p:column>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAdministration.maxNumProjs}</h3>
+
+            </p:column>
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel value="Last Login" />
+              </h3>
+            </p:column>
+
+            <p:column rendered="#{adminProfileAdministration.login!=null}">
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                #{adminProfileAdministration.login.loginDate} from #{adminProfileAdministration.login.ip} with #{adminProfileAdministration.login.userAgent}
+              </h3>
+            </p:column>
+
+            <p:column rendered="#{adminProfileAdministration.login==null}">
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                -
+              </h3>
+            </p:column>
+
+            <p:column>
+              <h3  style="color: rgba(0, 0, 0, 0.54);">
+                <p:outputLabel value="Last Password Change"/>
+              </h3>
+            </p:column>
+
+            <p:column>
+              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
+                #{adminProfileAdministration.editingUser.passwordChanged}
+              </h3>
+            </p:column>
+          </p:panelGrid>
+        </p:panel>
+      </div>
 
       <br></br>
       <div class="personal-info">
@@ -321,93 +433,6 @@
 
 
 
-          </p:panelGrid>
-        </p:panel>
-      </div>
-
-      <br></br>
-      <div class="personal-info">
-        <p:panel header="Account Info" toggleable="true" toggleSpeed="200" collapsed="true" style="margin-bottom:20px">
-          <p:panelGrid columns="2" styleClass="PersonalIfo" id="account_status">
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel value="Current User Status" />
-              </h3> 
-            </p:column>
-
-
-            <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAdministration.editStatus}</h3>
-
-            </p:column>
-
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel   value="Account Type" />
-              </h3> 
-            </p:column>
-
-
-            <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-              #{adminProfileAdministration.accountTypeStr()}
-              </h3>
-            </p:column>
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel   value="Current Hopsworks Roles" />
-              </h3> 
-            </p:column>
-
-            <p:column >
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                #{adminProfileAdministration.currentGroups}
-              </h3>     
-            </p:column>   
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel value="Max Number of Projects allowed" />
-              </h3> 
-            </p:column>
-
-            <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">#{adminProfileAdministration.maxNumProjs}</h3>
-
-            </p:column>            
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel value="Last Login" />
-              </h3> 
-            </p:column>
-
-            <p:column rendered="#{adminProfileAdministration.login!=null}">
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-              #{adminProfileAdministration.login.loginDate} from #{adminProfileAdministration.login.ip} with #{adminProfileAdministration.login.userAgent}
-              </h3> 
-            </p:column>
-
-            <p:column rendered="#{adminProfileAdministration.login==null}">
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-                -
-              </h3> 
-            </p:column>
-
-            <p:column>
-              <h3  style="color: rgba(0, 0, 0, 0.54);">
-                <p:outputLabel value="Last Password Change"/>
-              </h3> 
-            </p:column>
-
-            <p:column>
-              <h3 style="color: rgba(0, 0, 0, 0.54); font-weight: 400;">
-              #{adminProfileAdministration.editingUser.passwordChanged}
-              </h3>      
-            </p:column>
           </p:panelGrid>
         </p:panel>
       </div>
