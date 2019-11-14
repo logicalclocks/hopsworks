@@ -368,8 +368,8 @@ public class AuthController {
     String resetToken;
     long validForHour = TimeUnit.HOURS.toMillis(SecurityUtils.RESET_LINK_VALID_FOR_HOUR);
     //resend the same token exp date > 5min
-    if (user.getValidationKey() != null &&
-      user.getValidationKeyType().equals(isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET) &&
+    if (user.getValidationKey() != null && user.getValidationKeyType() != null && user.getValidationKeyUpdated() != null
+      && user.getValidationKeyType().equals(isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET) &&
       diffMillis(user.getValidationKeyUpdated()) > TimeUnit.MINUTES.toMillis(5)) {
       resetToken = user.getValidationKey();
       validForHour = diffMillis(user.getValidationKeyUpdated());
@@ -415,11 +415,12 @@ public class AuthController {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
+    Users intiator = userFacade.findByEmail(req.getRemoteUser());
     String activationKey = securityUtils.generateSecureRandomString();
     sendEmailValidationKey(user, activationKey, req);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
+    accountAuditFacade.registerAccountChange(intiator, AccountsAuditActions.REGISTRATION.name(),
       AccountsAuditActions.SUCCESS.name(), "New validation key", user, req);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
+    accountAuditFacade.registerAccountChange(intiator, AccountsAuditActions.QRCODE.name(),
       AccountsAuditActions.SUCCESS.name(), "", user, req);
     setValidationKey(user, activationKey, ValidationKeyType.EMAIL);
   }
@@ -480,7 +481,7 @@ public class AuthController {
   }
 
   /**
-   * Change password to the given password. Will generate a new salt
+   * Change user password. Will generate a new salt
    *
    * @param user
    * @param secret
@@ -488,13 +489,27 @@ public class AuthController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   public void changePassword(Users user, Secret secret, HttpServletRequest req) {
+    changePassword(user, secret, user, req);
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public void changeUserPasswordAsAdmin(Users user, Secret secret, HttpServletRequest req) throws UserException {
+    Users intiator = userFacade.findByEmail(req.getRemoteUser());
+    if (intiator == null || !req.isUserInRole("HOPS_ADMIN")) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.WARNING, "No valid role for password " +
+        "reset.");
+    }
+    changePassword(user, secret, intiator, req);
+  }
+  
+  private void changePassword(Users user, Secret secret, Users intiator, HttpServletRequest req) {
     String oldPassword = user.getPassword();
     user.setPassword(secret.getSha256HexDigest());
     user.setSalt(secret.getSalt());
     user.setPasswordChanged(new Timestamp(new Date().getTime()));
     userFacade.update(user);
     resetProjectCertPassword(user, oldPassword);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.
+    accountAuditFacade.registerAccountChange(intiator, AccountsAuditActions.PASSWORDCHANGE.name(), AccountsAuditActions.
       SUCCESS.name(), "Changed password.", user, req);
   }
 
@@ -507,10 +522,11 @@ public class AuthController {
    * @param req
    */
   public void changeSecQA(Users user, String securityQuestion, String securityAnswer, HttpServletRequest req) {
+    Users intiator = userFacade.findByEmail(req.getRemoteUser());
     user.setSecurityQuestion(SecurityQuestion.getQuestion(securityQuestion));
     user.setSecurityAnswer(securityUtils.getHash(securityAnswer.toLowerCase()));
     userFacade.update(user);
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.SECQUESTION.name(),
+    accountAuditFacade.registerAccountChange(intiator, AccountsAuditActions.SECQUESTION.name(),
         AccountsAuditActions.SUCCESS.name(), "Changed Security Question.", user, req);
   }
 

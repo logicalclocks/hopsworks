@@ -49,6 +49,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
@@ -142,6 +143,17 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     query.setParameter("target", user);
 
     return query.getResultList();
+  }
+  
+  public AccountAudit findByTargetLatest(Users user) {
+    TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByTargetLatest", AccountAudit.class);
+    query.setParameter("target", user);
+    query.setMaxResults(1);
+    try {
+      return query.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   private String extractUserAgent(HttpServletRequest httpServletRequest) {

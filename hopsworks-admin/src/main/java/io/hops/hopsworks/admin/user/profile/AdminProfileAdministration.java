@@ -49,6 +49,7 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 
 import io.hops.hopsworks.admin.user.administration.UserAdministrationController;
@@ -64,6 +65,9 @@ import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.exceptions.UserException;
+import org.primefaces.extensions.event.ClipboardErrorEvent;
+import org.primefaces.extensions.event.ClipboardSuccessEvent;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,6 +77,7 @@ import java.util.logging.Logger;
 public class AdminProfileAdministration implements Serializable {
 
   private static final long serialVersionUID = 1L;
+  private static final Logger LOGGER = Logger.getLogger(AdminProfileAdministration.class.getName());
 
   @EJB
   private UserFacade userFacade;
@@ -123,6 +128,8 @@ public class AdminProfileAdministration implements Serializable {
   private Userlogins login;
 
   private Address address;
+  
+  private String newPassword;
 
   public Address getAddress() {
     return address;
@@ -200,7 +207,15 @@ public class AdminProfileAdministration implements Serializable {
   public void setSelectedGroup(String selectedGroup) {
     this.selectedGroup = selectedGroup;
   }
-
+  
+  public String getNewPassword() {
+    return newPassword;
+  }
+  
+  public void setNewPassword(String newPassword) {
+    this.newPassword = newPassword;
+  }
+  
   /**
    * Filter the current groups of the user.
    *
@@ -300,8 +315,11 @@ public class AdminProfileAdministration implements Serializable {
     // Update status
     if (!"#!".equals(selectedStatus)) {
       editingUser.setStatus(UserAccountStatus.valueOf(selectedStatus));
+      if (selectedStatus != null && editingUser.getStatus().equals(UserAccountStatus.ACTIVATED_ACCOUNT)) {
+        editingUser.setFalseLogin(0);//reset false login if activating account
+      }
       try {
-        userFacade.updateStatus(editingUser.getEmail(), UserAccountStatus.valueOf(selectedStatus));
+        userFacade.update(editingUser);
         am.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.CHANGEDSTATUS.name(),
             UserAuditActions.SUCCESS.name(), selectedStatus, editingUser, httpServletRequest);
         MessagesController.addInfoMessage("Success", "Status updated successfully.");
@@ -398,5 +416,31 @@ public class AdminProfileAdministration implements Serializable {
       usersController.updateMaxNumProjs(editingUser, num);
     }
   }
-
+  
+  public void resetPassword() {
+    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().
+      getRequest();
+    try {
+      newPassword = usersController.resetPassword(editingUser, httpServletRequest);
+      MessagesController.addInfoMessage("Password reset", "Password reset for: " + editingUser.getEmail());
+      LOGGER.log(Level.INFO, "User: {0} reset password for user: {1}",
+        new Object[]{httpServletRequest.getRemoteUser(), editingUser.getEmail()});
+    } catch (UserException e) {
+      MessagesController.addErrorMessage("Error resetting password ", e.getMessage());
+      LOGGER.log(Level.WARNING, "Error resetting password. User: {0} trying to reset password for user: {1} ",
+        new Object[]{httpServletRequest.getRemoteUser(), editingUser.getEmail()});
+    } catch (MessagingException e) {
+      MessagesController.addErrorMessage("Password reset. Error sending email ", e.getMessage());
+      LOGGER.log(Level.WARNING, "Error sending email after user: {0} reset password for user: {1} ",
+        new Object[]{httpServletRequest.getRemoteUser(), editingUser.getEmail()});
+    }
+  }
+  
+  public void successListener(final ClipboardSuccessEvent successEvent) {
+    MessagesController.addInfoMessage("Success", " Copied to clipboard text: " + successEvent.getText());
+  }
+  
+  public void errorListener(final ClipboardErrorEvent errorEvent) {
+    MessagesController.addErrorMessage("Error ", errorEvent.getAction());
+  }
 }
