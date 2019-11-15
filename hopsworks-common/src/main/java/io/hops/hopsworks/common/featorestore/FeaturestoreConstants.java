@@ -32,7 +32,7 @@ public class FeaturestoreConstants {
   }
 
   public static final int FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
-  public static final String FEATURESTORE_REGEX = "^[a-zA-Z0-9_]+$";
+  public static final String FEATURESTORE_REGEX = "^[a-z0-9_]+$";
   public static final int STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
   public static final int STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH = 1000;
   public static final int JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH = 5000;
