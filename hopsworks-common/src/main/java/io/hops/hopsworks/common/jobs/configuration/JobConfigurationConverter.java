@@ -43,7 +43,6 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
 
   private static final Logger LOGGER = Logger.getLogger(JobConfigurationConverter.class.getName());
 
-
   private static JAXBContext sparkJAXBContext;
   private static JAXBContext flinkJAXBContext;
   private static JAXBContext beamFlinkJAXBContext;

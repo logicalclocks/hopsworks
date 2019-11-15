@@ -41,12 +41,11 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService) {
 
             var self = this;
-            self.connectedStatus = false;
             self.loading = false;
             self.loadingText = "";
             self.jupyterServer;
@@ -65,6 +64,11 @@ angular.module('hopsWorksApp')
             self.numNotEnabledEnvs = 0;
             self.opsStatus = {};
             self.pythonVersion;
+
+            self.hasDockerMemory = false;
+            self.maxDockerMemory = 1024;
+            self.hasDockerCores = false;
+            self.maxDockerCores = 1;
 
             self.dirs = [{
                 id: 1,
@@ -100,6 +104,33 @@ angular.module('hopsWorksApp')
                 modifiedFiles: -1,
                 branch: 'UNKNOWN',
                 repository: 'UNKNOWN'
+            };
+
+            self.getDockerMaxAllocation = function () {
+              VariablesService.getVariable('kube_docker_max_memory_allocation')
+                .then(function (success) {
+                  self.hasDockerMemory = true;
+                  self.maxDockerMemory = parseInt(success.data.successMessage);
+                }, function (error) {
+                  self.hasDockerMemory = false;
+                  self.maxDockerMemory = -1;
+              });
+              VariablesService.getVariable('kube_docker_max_cores_allocation')
+                .then(function (success) {
+                  self.hasDockerCores = true;
+                  self.maxDockerCores = parseInt(success.data.successMessage);
+                }, function (error) {
+                  self.hasDockerCores = false;
+                  self.maxDockerCores = -1;
+              });
+            };
+
+            self.range = function (max) {
+                var input = [];
+                for (var i = 1; i <= max; i++) {
+                    input.push(i);
+                }
+                return input;
             };
 
             self.changeShutdownLevel = function() {
@@ -286,6 +317,34 @@ angular.module('hopsWorksApp')
                 $location.path('/#!/project/' + self.projectId + '/jupyter');
             };
 
+            self.loadThirdPartyApiKeys = function() {
+                    UserService.load_secrets().then(
+                        function (success) {
+                            self.third_party_api_keys = success.data.items
+                        }, function (error) {
+                            self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                            growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
+                        }
+                    );
+                for (var i = 0; i < self.third_party_api_keys.length; i++) {
+                    var api_key = self.third_party_api_keys[i]
+                    if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
+                        self.git_api_key = api_key
+                    }
+                }
+                var repoConf = {
+                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                    keyName: self.jupyterSettings.gitConfig.apiKeyName
+                };
+                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                    function (success) {
+                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                    }, function (error) {
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                    }
+                );
+            }
+
             var init = function() {
                 JupyterService.running(self.projectId).then(
                     function(success) {
@@ -304,6 +363,9 @@ angular.module('hopsWorksApp')
                 JupyterService.settings(self.projectId).then(
                     function(success) {
                         self.jupyterSettings = success.data;
+                        if(self.jupyterSettings.dockerConfig) {
+                            self.getDockerMaxAllocation();
+                        }
                         $scope.settings = self.jupyterSettings;
                         $scope.jobConfig = self.jupyterSettings.jobConfig;
                         self.projectName = self.jupyterSettings.project.name;
@@ -348,7 +410,6 @@ angular.module('hopsWorksApp')
 
                         timeToShutdown();
 
-
                         // Loading of API keys happen when you click on Git backend
                         // but if it is already selected, user won't need to click it again
                         if (self.jupyterSettings.gitAvailable) {
@@ -358,23 +419,28 @@ angular.module('hopsWorksApp')
                                 self.jupyterSettings.gitConfig.shutdownAutoPush = true;
                             }
                             if (self.jupyterSettings.gitBackend) {
-                                self.load_third_party_api_keys(function () {
-                                    for (var i = 0; i < self.third_party_api_keys.length; i++) {
-                                        var api_key = self.third_party_api_keys[i]
-                                        if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
-                                            self.git_api_key = api_key
-                                        }
-                                    }
-                                });
-                                var repoConf = {
-                                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
-                                    keyName: self.jupyterSettings.gitConfig.apiKeyName
-                                };
-                                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                                UserService.load_secrets().then(
                                     function (success) {
-                                        self.jupyterSettings.gitConfig.branches = success.data.branches;
+                                        self.third_party_api_keys = success.data.items;
+                                        for (var i = 0; i < self.third_party_api_keys.length; i++) {
+                                            var api_key = self.third_party_api_keys[i]
+                                            if (api_key.name === self.jupyterSettings.gitConfig.apiKeyName) {
+                                                self.git_api_key = api_key
+                                            }
+                                        }
+                                        var repoConf = {
+                                            remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                                            keyName: self.jupyterSettings.gitConfig.apiKeyName
+                                        };
+                                        JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
+                                            function (success) {
+                                                self.jupyterSettings.gitConfig.branches = success.data.branches;
+                                            }, function (error) {
+                                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                            });
                                     }, function (error) {
-                                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                                        self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                                        growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
                                     }
                                 );
                             }
@@ -385,15 +451,12 @@ angular.module('hopsWorksApp')
                     }
                 );
                 self.livySessions(self.projectId);
-
             };
-
-
 
             self.openWindow = function() {
                 $window.open(self.ui, '_blank');
                 timeToShutdown();
-            }
+            };
 
             var startLoading = function(label) {
                 self.loading = true;
@@ -459,47 +522,34 @@ angular.module('hopsWorksApp')
                 $location.path('/#!/project/' + self.projectId + '/python');
             };
 
-            self.load_third_party_api_keys = function (callback) {
-                if (self.jupyterSettings.gitBackend) {
-                    UserService.load_secrets().then(
+            self.git_error = "";
+            self.getRemoteGitBranches = function() {
+                if(self.git_api_key && self.git_api_key.name) {
+                    self.jupyterSettings.gitConfig.apiKeyName = self.git_api_key.name
+                    var repoConf = {
+                        remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
+                        keyName: self.jupyterSettings.gitConfig.apiKeyName
+                    };
+                    self.gitWorking = true;
+                    self.git_error = "";
+                    JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
                         function (success) {
-                            self.third_party_api_keys = success.data.items
-                            if (callback) {
-                                callback()
-                            }
+                            self.jupyterSettings.gitConfig.branches = success.data.branches;
+                            self.jupyterSettings.gitConfig.baseBranch = self.jupyterSettings.gitConfig.branches[0];
+                            self.jupyterSettings.gitConfig.headBranch = self.jupyterSettings.gitConfig.branches[0];
+                            self.gitWorking = false;
                         }, function (error) {
-                            self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
-                            growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
+                            self.gitWorking = false;
+                            if (error.data.usrMsg.indexOf("Could not parse remote") !== -1) {
+                                // Could not parse remote Git URL
+                                self.git_error = "URI_SYNTAX_ERROR";
+                            } else if (error.data.usrMsg.indexOf("Invalid API key") !== -1) {
+                                self.git_error = "API_KEY_ERROR";
+                            }
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
                         }
                     );
                 }
-            }
-
-
-            self.git_error = "";
-            self.git_api_key_selected = function() {
-                self.jupyterSettings.gitConfig.apiKeyName = self.git_api_key.name
-                var repoConf = {
-                    remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
-                    keyName: self.jupyterSettings.gitConfig.apiKeyName
-                };
-                self.gitWorking = true;
-                self.git_error = "";
-                JupyterService.getGitRemoteBranches(self.projectId, repoConf).then(
-                    function (success) {
-                        self.jupyterSettings.gitConfig.branches = success.data.branches;
-                        self.gitWorking = false;
-                    }, function (error) {
-                        self.gitWorking = false;
-                        if (error.data.usrMsg.indexOf("Could not parse remote") !== -1) {
-                            // Could not parse remote Git URL
-                            self.git_error = "URI_SYNTAX_ERROR";
-                        } else if (error.data.usrMsg.indexOf("Invalid API key") !== -1) {
-                            self.git_error = "API_KEY_ERROR";
-                        }
-                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                    }
-                );
             }
             
             self.gitStatus = function () {
@@ -535,9 +585,18 @@ angular.module('hopsWorksApp')
                         )
                     }, 30000);
                 }
-            }
+            };
 
             self.start = function() {
+
+                // do not allow starting jupyter enterprise if invalid memory picked
+                if (self.jupyterSettings.pythonKernel === true &&
+                 self.hasDockerMemory === true &&
+                 self.pythonConfigForm &&
+                 !self.pythonConfigForm.$valid) {
+                    return;
+                }
+
                 startLoading("Connecting to Jupyter...");
                 $scope.tgState = true;
 
