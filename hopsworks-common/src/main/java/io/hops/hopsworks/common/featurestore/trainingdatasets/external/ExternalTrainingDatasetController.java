@@ -30,6 +30,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * Class controlling the interaction with the external_training_dataset table and required business logic
@@ -83,17 +84,18 @@ public class ExternalTrainingDatasetController {
    * @throws FeaturestoreException
    */
   private void verifyExternalTrainingDatasetName(String name) throws FeaturestoreException {
-    if(Strings.isNullOrEmpty(name)){
+    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    if (Strings.isNullOrEmpty(name)) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
         ", the name of an external training dataset should not be empty ");
     }
-    if(name.length() >
-      FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH) {
+    if (name.length() > FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH ||
+      !namePattern.matcher(name).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
         ", the name of an external training dataset should be less than "
-        + FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
+          + FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters and match " +
+          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
     }
-    
   }
   
   /**

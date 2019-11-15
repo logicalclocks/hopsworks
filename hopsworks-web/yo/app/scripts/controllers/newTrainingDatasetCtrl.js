@@ -69,6 +69,7 @@ angular.module('hopsWorksApp')
             //Constants
             self.trainingDatasetNameMaxLength = self.settings.hopsfsTrainingDatasetNameMaxLength
             self.trainingDatasetDescriptionMaxLength = self.settings.trainingDatasetDescriptionMaxLength
+            self.trainingDatasetNameRegexp = self.settings.featurestoreRegex
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
             self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatasetDtoType

@@ -185,11 +185,15 @@ module FeaturestoreHelper
     return json_result, s3_connector_name
   end
 
-  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, query: nil)
+  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, query: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
-    featuregroup_name = "featuregroup_#{random_id}"
+    if name == nil
+      featuregroup_name = "featuregroup_#{random_id}"
+    else
+      featuregroup_name = name
+    end
     if query == nil
       query = "SELECT * FROM test"
     end
@@ -377,11 +381,15 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, data_format: nil)
+  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil)
     type = "hopsfsTrainingDatasetDTO"
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
-    training_dataset_name = "training_dataset_#{random_id}"
+    if name == nil
+      training_dataset_name = "training_dataset_#{random_id}"
+    else
+      training_dataset_name = name
+    end
     if data_format == nil
       data_format = "tfrecords"
     end

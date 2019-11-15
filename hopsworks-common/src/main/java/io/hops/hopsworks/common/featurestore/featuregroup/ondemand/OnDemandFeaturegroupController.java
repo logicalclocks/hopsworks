@@ -32,6 +32,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -123,15 +124,17 @@ public class OnDemandFeaturegroupController {
    * @throws FeaturestoreException
    */
   public void verifyOnDemandFeaturegroupName(String name) throws FeaturestoreException {
+    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
     if(Strings.isNullOrEmpty(name)){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
         ", the name of an on-demand feature group should not be empty ");
     }
-    if(name.length() >
-      FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH) {
+    if(name.length() > FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH  ||
+      !namePattern.matcher(name).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
         ", the name of an on-demand feature group should be less than "
-        + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters");
+        + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters and match " +
+          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
     }
   }
   
