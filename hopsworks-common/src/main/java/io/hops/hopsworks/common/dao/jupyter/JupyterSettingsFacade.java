@@ -93,7 +93,8 @@ public class JupyterSettingsFacade {
       js.setSecret(secret);
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
       persist(js);
-    } else if(js.getJobConfig() == null) {
+    }
+    if(js.getJobConfig() == null) {
       js.setJobConfig(new SparkJobConfiguration(ExperimentType.EXPERIMENT));
     }
     return js;

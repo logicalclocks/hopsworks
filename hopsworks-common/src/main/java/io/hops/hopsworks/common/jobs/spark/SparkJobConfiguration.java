@@ -99,7 +99,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private int executorGpus = 0;
 
   @XmlElement(name="spark.tensorflow.num.ps")
-  private int numPs = 0;
+  private int numPs = 1;
 
   @XmlElement(name="spark.dynamicAllocation.enabled")
   private boolean dynamicAllocationEnabled = true;
@@ -267,7 +267,7 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       return JobType.SPARK;
     }
   }
-  
+
   @Override
   @XmlElement(name="jobTypeName")
   public String getJobTypeName() {

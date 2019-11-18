@@ -39,11 +39,11 @@ import java.util.logging.Logger;
 public class JupyterConfigurationConverter implements AttributeConverter<JobConfiguration, String> {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterConfigurationConverter.class.getName());
-  private static JAXBContext sparkJAXBContext;
+  private static JAXBContext jobJAXBContext;
 
   static {
     try {
-      sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
+      jobJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
     } catch (JAXBException e) {
       LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
@@ -55,7 +55,7 @@ public class JupyterConfigurationConverter implements AttributeConverter<JobConf
       config = new SparkJobConfiguration();
     }
     try {
-      Marshaller marshaller = sparkJAXBContext.createMarshaller();
+      Marshaller marshaller = jobJAXBContext.createMarshaller();
       marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       StringWriter sw = new StringWriter();
@@ -72,7 +72,7 @@ public class JupyterConfigurationConverter implements AttributeConverter<JobConf
       return null;
     }
     try {
-      return unmarshal(jsonConfig, sparkJAXBContext);
+      return unmarshal(jsonConfig, jobJAXBContext);
     } catch (JAXBException e) {
       throw new IllegalStateException(e);
     }

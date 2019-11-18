@@ -75,7 +75,11 @@ public enum UserAccountStatus {
 
   // Mark account as SPAM
   @XmlEnumValue("SPAM_ACCOUNT")
-  SPAM_ACCOUNT(6);
+  SPAM_ACCOUNT(6),
+  
+  // Mark account as temp password
+  @XmlEnumValue("TEMP_PASSWORD")
+  TEMP_PASSWORD(7);
 
   private final int value;
 

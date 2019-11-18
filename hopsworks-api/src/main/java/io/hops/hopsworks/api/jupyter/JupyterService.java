@@ -249,6 +249,7 @@ public class JupyterService {
     }
     
     js.setGitAvailable(jupyterNbVCSController.isGitAvailable());
+
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
   }
 

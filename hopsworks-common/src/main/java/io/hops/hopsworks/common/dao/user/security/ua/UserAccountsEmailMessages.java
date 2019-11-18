@@ -343,6 +343,21 @@ public class UserAccountsEmailMessages {
     return message;
   }
   
+  /**
+   * Construct message for admin password reset
+   *
+   * @return
+   */
+  public static String buildResetByAdminMessage(String initiator) {
+    String message;
+    String l1 =
+      GREETINGS_HEADER + ",\n\n" + "Your password was reset by a platform administrator (" + initiator + ").\n\n";
+    String l2 = "Your password has been changed successfully.\n\n\n";
+    String l3 = "If you have any questions please contact " + HOPSWORKS_SUPPORT_EMAIL;
+    message = l1 + l2 + l3;
+    return message;
+  }
+  
   public static String buildQRResetMessage() {
     String message;
     String l1 = GREETINGS_HEADER + ",\n\n A lost device has been reported on Hopsworks.\n\n";

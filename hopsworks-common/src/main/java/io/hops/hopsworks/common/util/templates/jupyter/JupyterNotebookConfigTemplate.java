@@ -27,7 +27,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String elasticEndpoint;
   private final Integer port;
   private final String baseDirectory;
-  private final String pythonKernel;
+  private final String whiteListedKernels;
   private final String jupyterCertsDirectory;
   private final String secretDirectory;
   private final String allowOrigin;
@@ -46,7 +46,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.elasticEndpoint = builder.getElasticEndpoint();
     this.port = builder.getPort();
     this.baseDirectory = builder.getBaseDirectory();
-    this.pythonKernel = builder.getPythonKernel();
+    this.whiteListedKernels = builder.getWhiteListedKernels();
     this.jupyterCertsDirectory = builder.getJupyterCertsDirectory();
     this.secretDirectory = builder.getSecretDirectory();
     this.allowOrigin = builder.getAllowOrigin();
@@ -84,9 +84,9 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public String getBaseDirectory() {
     return baseDirectory;
   }
-  
-  public String getPythonKernel() {
-    return pythonKernel;
+
+  public String getWhiteListedKernels() {
+    return whiteListedKernels;
   }
   
   public String getJupyterCertsDirectory() {
@@ -120,4 +120,5 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public String getDomainCATruststorePem() {
     return domainCATruststorePem;
   }
+
 }

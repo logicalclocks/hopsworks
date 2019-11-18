@@ -1,0 +1,112 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.j-panel {
+    border: 1px solid #dadce0;
+    box-shadow: none;
+    border-radius: 10px
+}
+
+.j-panel-heading {
+    background-color: #425066 !important;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    min-height: 55px;
+}
+
+.j-panel-body {
+    min-height: 800px;
+    background-color: white;
+}
+
+.j-panel-body uib-tab div {
+    padding: 10px 0px;
+}
+
+.j-panel-body .btn-default {
+    text-align: left;
+}
+
+.j-conf-body .btn-default {
+    text-align: left;
+}
+
+.j-panel-body .description {
+    margin-top: 20px;
+    border-left: 4px solid #5f6368;
+    min-height: 200px;
+}
+
+.j-tab-heading {
+    color: #425066;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 40px;
+}
+
+.j-tab-advanced {
+    color: #425066;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 40px;
+    width: 50%;
+}
+
+.button-table {
+    border: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin-top: 25px;
+}
+
+.button-table md-radio-button {
+    border-radius: 8px;
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+    color: #202124;
+    padding: 12px 24px;
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.button-table md-radio-button .md-container {
+    margin-left: 10px;
+}
+
+.button-table md-radio-button .md-label {
+    margin-left: 15px !important;
+}
+
+.button-table md-radio-button:hover {
+    box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .3), 0 2px 6px 2px rgba(60, 64, 67, .15);
+}
+
+.button-table td {
+    padding-left: 0;
+    padding-right: 20px;
+}
+
+.button-table td .md-checked {
+    background-color: #e8f0fe;
+}
+
+.j-panel-body .form-horizontal {
+    margin-top: 20px;
+}
+
+.j-panel-body .form-horizontal .control-label{
+    text-align:left;
+}

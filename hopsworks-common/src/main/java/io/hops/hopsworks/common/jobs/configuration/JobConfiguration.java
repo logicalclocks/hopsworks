@@ -64,7 +64,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration") }
+  @JsonSubTypes.Type(value = YarnJobConfiguration.class, name = "YarnJobConfiguration")}
 )
 public abstract class JobConfiguration {
 
