@@ -109,6 +109,10 @@ public class JupyterSettings implements Serializable {
   @Column(name = "advanced")
   private boolean advanced = false;
 
+  @Basic(optional = false)
+  @Column(name = "python_kernel")
+  private boolean pythonKernel = true;
+
   @JoinColumn(name = "team_member",
       referencedColumnName = "email",
       insertable = false,
@@ -122,13 +126,15 @@ public class JupyterSettings implements Serializable {
       updatable = false)
   @ManyToOne(optional = false)
   private Project project;
+
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
           max = 255)
   @Column(name = "base_dir")
   private String baseDir = "/Jupyter/";
-  @Column(name = "json_config")
+
+  @Column(name = "job_config")
   @Convert(converter = JupyterConfigurationConverter.class)
   private JobConfiguration jobConfig;
   
@@ -288,5 +294,13 @@ public class JupyterSettings implements Serializable {
   
   public void setGitConfig(GitConfig gitConfig) {
     this.gitConfig = gitConfig;
+  }
+
+  public boolean isPythonKernel() {
+    return pythonKernel;
+  }
+
+  public void setPythonKernel(boolean pythonKernel) {
+    this.pythonKernel = pythonKernel;
   }
 }

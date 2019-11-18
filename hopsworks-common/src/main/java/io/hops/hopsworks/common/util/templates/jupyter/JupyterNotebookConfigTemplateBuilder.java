@@ -30,7 +30,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String elasticEndpoint;
   private Integer port;
   private String baseDirectory;
-  private String pythonKernel;
+  private String whiteListedKernels;
   private String jupyterCertsDirectory;
   private String secretDirectory;
   private String allowOrigin;
@@ -136,12 +136,12 @@ public class JupyterNotebookConfigTemplateBuilder {
     return this;
   }
   
-  public String getPythonKernel() {
-    return pythonKernel;
+  public String getWhiteListedKernels() {
+    return whiteListedKernels;
   }
   
-  public JupyterNotebookConfigTemplateBuilder setPythonKernel(String pythonKernel) {
-    this.pythonKernel = pythonKernel;
+  public JupyterNotebookConfigTemplateBuilder setWhiteListedKernels(String whiteListedKernels) {
+    this.whiteListedKernels = whiteListedKernels;
     return this;
   }
   

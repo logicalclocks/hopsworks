@@ -306,14 +306,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
   private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
+  private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
+  private static final String VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION = "kube_docker_max_memory_allocation";
+  private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
+  private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
 
   // Container image versions
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
   private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
-
-  private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
 
   /*
    * -------------------- Jupyter ---------------
@@ -438,6 +440,22 @@ public class Settings implements Serializable {
           + " should be an integer. Value was " + defaultValue);
     }
 
+    return defaultValue;
+  }
+
+  private Double setDoubleVar(String varName, Double defaultValue) {
+    Variables var = findById(varName);
+    try {
+      if (var != null && var.getValue() != null) {
+        String val = var.getValue();
+        if (val != null && !val.isEmpty()) {
+          return Double.parseDouble(val);
+        }
+      }
+    } catch (NumberFormatException ex) {
+      LOGGER.info("Error - not a double! " + varName
+        + " should be a double. Value was " + defaultValue);
+    }
     return defaultValue;
   }
 
@@ -655,6 +673,12 @@ public class Settings implements Serializable {
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
       KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
+      KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
+          KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
+      KUBE_DOCKER_MAX_CORES_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION,
+        KUBE_DOCKER_MAX_CORES_ALLOCATION);
+      KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION,
+        KUBE_DOCKER_CORES_FRACTION);
 
       JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
 
@@ -3321,6 +3345,24 @@ public class Settings implements Serializable {
   public synchronized String getJupyterImgVersion() {
     checkCache();
     return KUBE_JUPYTER_IMG_VERSION;
+  }
+
+  private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
+  public synchronized Integer getKubeDockerMaxMemoryAllocation() {
+    checkCache();
+    return KUBE_DOCKER_MAX_MEMORY_ALLOCATION;
+  }
+
+  private Integer KUBE_DOCKER_MAX_CORES_ALLOCATION = 4;
+  public synchronized Integer getKubeDockerMaxCoresAllocation() {
+    checkCache();
+    return KUBE_DOCKER_MAX_CORES_ALLOCATION;
+  }
+
+  private Double KUBE_DOCKER_CORES_FRACTION = 1.0;
+  public synchronized Double getKubeDockerCoresFraction() {
+    checkCache();
+    return KUBE_DOCKER_CORES_FRACTION;
   }
 
   private String SERVING_MONITOR_INT = "30s";

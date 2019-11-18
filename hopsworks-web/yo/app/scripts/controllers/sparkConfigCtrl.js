@@ -39,33 +39,53 @@ angular.module('hopsWorksApp')
             self.isJobs = self.loc.endsWith('newJob');
             self.uneditableMode = false;
 
-            self.sparkType = "";
+            self.experimentType = '';
+            self.sparkType = 'SPARK_STATIC';
+            self.selectedType = 'EXPERIMENT';
+            self.sparkAdvanced = false;
+            self.advanced = false;
+            $scope.indextab = 0;
 
-            self.setAdvanced = function() {
-                self.settings.advanced = !self.settings.advanced;
-            };
+            $scope.$watch('jobConfig', function (jobConfig, oldConfig) {
+                if (jobConfig) {
+                    self.jobConfig = jobConfig;
+                    self.setConf();
+                }
+            }, true);
 
-            $scope.$watch('jobConfig', function(jobConfig, oldConfig) {
-            if(jobConfig) {
-              self.jobConfig = jobConfig;
-              self.setConf();
-              }
+            $scope.$watch('sparkConfigCtrl.sparkType', function(sparkType, oldSparkType) {
+                if (sparkType && typeof self.jobConfig !== "undefined") {
+                    self.setMode(sparkType);
+                }
+            });
+
+            $scope.$watch('sparkConfigCtrl.selectedType', function(newSelectedType, oldSelectedType) {
+                if (newSelectedType && typeof self.jobConfig !== "undefined") {
+                    self.setMode(newSelectedType);
+                }
             });
 
             $scope.$watch('settings', function(settings, oldSettings) {
-              self.settings = settings;
+                if(settings) {
+                      self.settings = settings;
+                      self.setConf();
+                }
             });
 
             self.setConf = function() {
-
-                if (self.jobConfig.experimentType) {
-                    self.jobConfig['spark.dynamicAllocation.enabled']=true;
+                if(self.isJupyter && self.settings && self.settings.pythonKernel === true) {
+                    $scope.indextab = 0;
+                } else if (self.jobConfig.experimentType) {
+                    self.jobConfig['spark.dynamicAllocation.enabled'] = true;
                     self.setMode(self.jobConfig.experimentType);
+                    $scope.indextab = 1;
                 } else if (self.jobConfig['spark.dynamicAllocation.enabled'] && self.jobConfig['spark.dynamicAllocation.enabled'] === true) {
                     self.setMode('SPARK_DYNAMIC');
+                    $scope.indextab = 2;
                 } else {
                     self.setMode('SPARK_STATIC');
-                    self.jobConfig['spark.dynamicAllocation.enabled']=false;
+                    self.jobConfig['spark.dynamicAllocation.enabled'] = false;
+                    $scope.indextab = 2;
                 }
 
                 if (self.jobConfig.distributionStrategy) {
@@ -127,8 +147,47 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.setMode = function(mode) {
+            var saveExperimentType = function () {
+                if (typeof self.jobConfig.experimentType !== "undefined") {
+                    self.experimentType = self.jobConfig.experimentType;
+                } else {
+                    self.experimentType = 'EXPERIMENT';
+                }
+            };
 
+            self.changeTab = function (tab) {
+                switch (tab) {
+                    case 'PYTHON':
+                        saveExperimentType();
+                        break;
+                    case 'EXPERIMENT':
+                        if (typeof self.jobConfig.experimentType !== "undefined") {
+                            saveExperimentType();
+                        } else {
+                            if (self.experimentType) {
+                                self.setMode(self.experimentType);
+                            } else {
+                                self.setMode('EXPERIMENT');
+                            }
+                        }
+                        break;
+                    case 'SPARK':
+                        saveExperimentType();
+                        if (self.sparkType === '' && self.jobConfig['spark.dynamicAllocation.enabled']) {
+                            self.setMode('SPARK_DYNAMIC');
+                        } else if (self.sparkType === '') {
+                            self.setMode('SPARK_STATIC');
+                        } else {
+                            self.setMode(self.sparkType);
+                        }
+                        if (typeof self.jobConfig.experimentType !== "undefined") {
+                            delete self.jobConfig.experimentType;
+                        }
+                        break;
+                }
+            };
+
+            self.setMode = function(mode) {
                 if (mode === 'PARALLEL_EXPERIMENTS' || mode === 'DISTRIBUTED_TRAINING') {
                     self.jobConfig['spark.dynamicAllocation.initialExecutors'] = 0;
                     self.jobConfig['spark.dynamicAllocation.minExecutors'] = 0;
@@ -149,14 +208,14 @@ angular.module('hopsWorksApp')
                         self.sparkType = mode;
                     } else {
                         self.jobConfig.experimentType = mode;
-                        self.sparkType = "";
+                        //self.sparkType = '';
                     }
                 }
 
-                if(mode === 'SPARK_STATIC') {
-                  self.jobConfig['spark.dynamicAllocation.enabled']=false;
+                if (mode === 'SPARK_STATIC') {
+                    self.jobConfig['spark.dynamicAllocation.enabled'] = false;
                 } else {
-                  self.jobConfig['spark.dynamicAllocation.enabled']=true;
+                    self.jobConfig['spark.dynamicAllocation.enabled'] = true;
                 }
 
                 self.sliderOptions.min = self.jobConfig['spark.dynamicAllocation.minExecutors'];
@@ -372,13 +431,16 @@ angular.module('hopsWorksApp')
 
             self.distribution_strategies = [{
                 id: 1,
-                name: 'MIRRORED'
+                name: 'MIRRORED',
+                displayName: 'Mirrored'
             }, {
                 id: 2,
-                name: 'COLLECTIVE_ALL_REDUCE'
+                name: 'COLLECTIVE_ALL_REDUCE',
+                displayName: 'CollectiveAllReduce'
             }, {
                 id: 3,
-                name: 'PARAMETER_SERVER'
+                name: 'PARAMETER_SERVER',
+                displayName: 'ParameterServer'
             }];
 
             self.distributionStrategySelected;
