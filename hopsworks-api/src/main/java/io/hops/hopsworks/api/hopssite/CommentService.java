@@ -43,6 +43,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.CommentIssueReqDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.UsersController;
@@ -73,6 +75,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CommentService {
@@ -94,14 +97,15 @@ public class CommentService {
 
   public CommentService() {
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setPublicDSId(String publicDSId) {
     this.publicDSId = publicDSId;
   }
 
   @GET
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllComments() throws DelaException {
+  public Response getAllComments(@Context SecurityContext sc) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all {0}", publicDSId);
     List<CommentDTO.RetrieveComment> comments = hopsSite.getDatasetAllComments(publicDSId);
     GenericEntity<List<CommentDTO.RetrieveComment>> commentsJson

@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
@@ -66,6 +67,7 @@ import java.util.logging.Level;
  * A Stateless RESTful service for the storage connectors in a featurestore on Hopsworks.
  * Base URL: project/projectId/featurestores/featurestoreId/storageconnectors/
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "StorageConnector service", description = "A service that manages a feature store's storage connectors")

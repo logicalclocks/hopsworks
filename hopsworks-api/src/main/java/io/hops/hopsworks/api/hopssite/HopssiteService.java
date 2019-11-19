@@ -46,6 +46,8 @@ import io.hops.hopsworks.api.hopssite.dto.DatasetIssueReqDTO;
 import io.hops.hopsworks.api.hopssite.dto.HopsSiteServiceInfoDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -84,6 +86,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @Path("/hopssite/")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -114,7 +117,7 @@ public class HopssiteService {
 
   @GET
   @Path("services/{service}")
-  public Response getServiceInfo(@PathParam("service") String service) {
+  public Response getServiceInfo(@PathParam("service") String service, @Context SecurityContext sc) {
     boolean delaEnabled = settings.isDelaEnabled();
     HopsSiteServiceInfoDTO serviceInfo;
     if (delaEnabled) {
@@ -130,7 +133,7 @@ public class HopssiteService {
   @GET
   @Path("clusterId")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getClusterId() throws DelaException {
+  public Response getClusterId(@Context SecurityContext sc) throws DelaException {
     String clusterId = settings.getDELA_CLUSTER_ID();
     LOGGER.log(Level.INFO, "Cluster id on hops-site: {0}", clusterId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clusterId).build();
@@ -151,9 +154,8 @@ public class HopssiteService {
   }
   @GET
   @Path("datasets")
-  public Response getAllDatasets(
-    @ApiParam(required = true) @QueryParam("filter") CategoriesFilter filter) 
-    throws DelaException {
+  public Response getAllDatasets(@ApiParam(required = true) @QueryParam("filter") CategoriesFilter filter,
+    @Context SecurityContext sc) throws DelaException {
     List<HopsSiteDatasetDTO> datasets;
     switch(filter) {
       case ALL : datasets = hopsSite.getAll(); break;
@@ -171,7 +173,8 @@ public class HopssiteService {
 
   @GET
   @Path("datasets/{publicDSId}")
-  public Response getDataset(@PathParam("publicDSId") String publicDSId) throws DelaException {
+  public Response getDataset(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc)
+    throws DelaException {
     DatasetDTO.Complete datasets = hopsSite.getDataset(publicDSId);
     LOGGER.log(Settings.DELA_DEBUG, "Get a dataset");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
@@ -179,7 +182,7 @@ public class HopssiteService {
 
   @GET
   @Path("datasets/{publicDSId}/local")
-  public Response getLocalDataset(@PathParam("publicDSId") String publicDSId) {
+  public Response getLocalDataset(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc) {
     Optional<Dataset> datasets = datasetFacade.findByPublicDsId(publicDSId);
     if (!datasets.isPresent()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.BAD_REQUEST).build();
@@ -194,7 +197,7 @@ public class HopssiteService {
 
   @GET
   @Path("categories")
-  public Response getDisplayCategories() {
+  public Response getDisplayCategories(@Context SecurityContext sc) {
     CategoryDTO categoryAll = new CategoryDTO(CategoriesFilter.ALL.name(), "All", false);
     CategoryDTO categoryNew = new CategoryDTO(CategoriesFilter.NEW.name(), "Recently added", false);
     CategoryDTO categoryTopRated = new CategoryDTO(CategoriesFilter.TOP_RATED.name(), "Top Rated", false);
@@ -223,13 +226,15 @@ public class HopssiteService {
     }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_MODIFIED).build();
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @Path("datasets/{publicDSId}/comments")
   public CommentService getComments(@PathParam("publicDSId") String publicDSId) {
     this.commentService.setPublicDSId(publicDSId);
     return this.commentService;
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @Path("datasets/{publicDSId}/rating")
   public RatingService getRating(@PathParam("publicDSId") String publicDSId) {
     this.ratingService.setPublicDSId(publicDSId);

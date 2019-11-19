@@ -23,6 +23,8 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource;
 import io.hops.hopsworks.api.python.library.LibraryResource;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -61,6 +63,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 
+@Logged
 @Api(value = "Python Environments Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -85,11 +88,13 @@ public class EnvironmentResource {
   
   private Project project;
   
+  @Logged(logLevel = LogLevel.OFF)
   public EnvironmentResource setProject(Project project) {
     this.project = project;
     return this;
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }
@@ -116,8 +121,8 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAll(@BeanParam EnvironmentExpansionBeanParam expansions, @Context UriInfo uriInfo)
-    throws PythonException {
+  public Response getAll(@BeanParam EnvironmentExpansionBeanParam expansions, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws PythonException {
     ResourceRequest resourceRequest = getResourceRequest(expansions);
     EnvironmentDTO dto = environmentBuilder.buildItems(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
@@ -130,7 +135,7 @@ public class EnvironmentResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@PathParam("version") String version, @BeanParam EnvironmentExpansionBeanParam expansions,
-      @Context UriInfo uriInfo) throws PythonException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     if (!version.equals(this.project.getPythonVersion())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     } 
@@ -207,14 +212,16 @@ public class EnvironmentResource {
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
     return fullPath.toString();
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python library sub-resource", tags = {"PythonLibraryResource"})
   @Path("{version}/libraries")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public LibraryResource libraries(@PathParam("version") String version) {
     return this.libraryResource.setProjectAndVersion(project, version);
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python opStatus sub-resource", tags = {"EnvironmentCommandsResource"})
   @Path("{version}/commands")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

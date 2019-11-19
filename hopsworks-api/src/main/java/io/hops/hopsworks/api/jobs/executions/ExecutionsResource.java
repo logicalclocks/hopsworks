@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -59,6 +61,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionsResource {
@@ -78,6 +81,7 @@ public class ExecutionsResource {
   
   private Jobs job;
   
+  @Logged(logLevel = LogLevel.OFF)
   public ExecutionsResource setJob(Jobs job) {
     this.job = job;
     return this;
@@ -92,7 +96,7 @@ public class ExecutionsResource {
   public Response getExecutions(
     @BeanParam Pagination pagination,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
-    @Context UriInfo uriInfo) {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) {
   
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -112,10 +116,9 @@ public class ExecutionsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getExecution(
-    @ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
+  public Response getExecution(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
-    @Context UriInfo uriInfo) throws JobException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
     //If requested execution does not belong to job
     Execution execution = authorize(id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
@@ -177,7 +180,7 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getLog(
     @PathParam("id") Integer id,
-    @PathParam("type") JobLogDTO.LogType type) throws JobException {
+    @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
     Execution execution = authorize(id);
     JobLogDTO dto = executionController.getLog(execution, type);
     return Response.ok().entity(dto).build();
@@ -192,7 +195,7 @@ public class ExecutionsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response retryLog(
     @PathParam("id") Integer id,
-    @PathParam("type") JobLogDTO.LogType type) throws JobException {
+    @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
     Execution execution = authorize(id);
     JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();

@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -62,6 +64,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.codec.digest.DigestUtils;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Airflow related endpoints")
@@ -104,12 +107,14 @@ public class AirflowService {
   
   public AirflowService() {
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public Integer getProjectId() {
     return projectId;
   }
@@ -132,7 +137,7 @@ public class AirflowService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create project secret directory in Airflow home")
-  public Response secretDir() throws AirflowException {
+  public Response secretDir(@Context SecurityContext sc) throws AirflowException {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
     java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project.getId());

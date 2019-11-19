@@ -23,6 +23,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -85,7 +87,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobsResource {
@@ -114,6 +116,7 @@ public class JobsResource {
   private JobsBuilder jobsBuilder;
   
   private Project project;
+  @Logged(logLevel = LogLevel.OFF)
   public JobsResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
@@ -128,7 +131,7 @@ public class JobsResource {
   public Response getAll(
     @BeanParam Pagination pagination,
     @BeanParam JobsBeanParam jobsBeanParam,
-    @Context UriInfo uriInfo) {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -149,7 +152,7 @@ public class JobsResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getJob(@PathParam("name") String name,
     @BeanParam JobsBeanParam jobsBeanParam,
-    @Context UriInfo uriInfo) throws JobException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
     Jobs job = jobController.getJob(project, name);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.JOBS);
     resourceRequest.setExpansions(jobsBeanParam.getExpansions().getResources());
@@ -296,6 +299,7 @@ public class JobsResource {
     return Response.ok().entity(config).build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{name}/executions")
   public ExecutionsResource executions(@PathParam("name") String name) throws JobException {
     Jobs job = jobFacade.findByProjectAndName(project, name);
@@ -327,7 +331,8 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getJobUI(@PathParam("appId") String appId, @PathParam("isLivy") String isLivy) throws JobException {
+  public Response getJobUI(@PathParam("appId") String appId, @PathParam("isLivy") String isLivy,
+    @Context SecurityContext sc) throws JobException {
     executionController.checkAccessRight(appId, project);
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
     
@@ -386,7 +391,7 @@ public class JobsResource {
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getYarnUI(@PathParam("appId") String appId) throws JobException {
+  public Response getYarnUI(@PathParam("appId") String appId, @Context SecurityContext sc) throws JobException {
     executionController.checkAccessRight(appId, project);
     
     try {
@@ -414,7 +419,7 @@ public class JobsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAppInfo(@PathParam("appId") String appId) throws JobException {
+  public Response getAppInfo(@PathParam("appId") String appId, @Context SecurityContext sc) throws JobException {
     executionController.checkAccessRight(appId, project);
     Execution execution = executionFacade.findByAppId(appId);
     try {

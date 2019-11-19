@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.serving;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
@@ -32,6 +34,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Logged(logLevel = LogLevel.OFF)
 @Path("/servingconf")
 @Stateless
 @Api(value = "UI serving configuration", description = "Get UI serving configuration")

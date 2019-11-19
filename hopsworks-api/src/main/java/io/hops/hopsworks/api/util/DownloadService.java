@@ -45,6 +45,8 @@ import io.hops.hopsworks.api.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
@@ -87,6 +89,7 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class DownloadService {
@@ -116,10 +119,11 @@ public class DownloadService {
   private Integer projectId;
   private String projectName;
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
@@ -169,8 +173,8 @@ public class DownloadService {
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
   public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token,
-    @QueryParam("type") DatasetType datasetType) throws DatasetException, SigningKeyNotFoundException,
-    VerificationException, ProjectException {
+    @QueryParam("type") DatasetType datasetType, @Context SecurityContext sc) throws DatasetException,
+    SigningKeyNotFoundException, VerificationException, ProjectException {
     if(!settings.isDownloadAllowed()){
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
     }

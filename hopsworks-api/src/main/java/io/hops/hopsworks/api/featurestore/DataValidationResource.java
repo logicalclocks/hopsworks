@@ -22,6 +22,8 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.datavalidation.ConstraintGroup;
@@ -55,6 +57,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "Feature store data validation service")
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -80,11 +83,13 @@ public class DataValidationResource {
   private Featurestore featurestore;
   private String path2hopsverification;
   
+  @Logged(logLevel = LogLevel.OFF)
   public DataValidationResource setFeatureStore(Integer featureStoreId) {
     this.featurestore = featurestoreFacade.findById(featureStoreId);
     return this;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @PostConstruct
   public void init() {
     path2hopsverification = String.format(HOPS_VERIFICATION_JAR_TEMPLATE, settings.getSparkUser(),

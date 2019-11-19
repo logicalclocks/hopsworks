@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.admin.hosts;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.hosts.HostsController;
@@ -40,9 +41,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/hosts")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
@@ -59,7 +62,7 @@ public class HostsAdminResource {
   
   @ApiParam(value = "Get all cluster nodes.")
   @GET
-  public Response getAllClusterNodes(
+  public Response getAllClusterNodes(@Context SecurityContext sc,
     @Context UriInfo uriInfo,
     @BeanParam Pagination pagination,
     @BeanParam HostsBeanParam hostsBeanParam
@@ -76,8 +79,8 @@ public class HostsAdminResource {
   @ApiParam(value = "Get cluster node by hostname.")
   @GET
   @Path("/{hostname}")
-  public Response getClusterNode(@Context UriInfo uriInfo, @PathParam("hostname") String hostname)
-    throws ServiceException {
+  public Response getClusterNode(@Context SecurityContext sc, @Context UriInfo uriInfo,
+    @PathParam("hostname") String hostname) throws ServiceException {
     HostsDTO dto = hostsBuilder.buildByHostname(uriInfo, hostname);
     return Response.ok().entity(dto).build();
   }
@@ -85,7 +88,7 @@ public class HostsAdminResource {
   @ApiParam(value = "Delete cluster node by hostname.")
   @DELETE
   @Path("/{hostname}")
-  public Response deleteNodeByHostname(@PathParam("hostname") String hostname) {
+  public Response deleteNodeByHostname(@PathParam("hostname") String hostname, @Context SecurityContext sc) {
     if (hostsController.removeByHostname(hostname)) {
       return Response.noContent().build();
     } else {
@@ -98,7 +101,7 @@ public class HostsAdminResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/{hostname}")
-  public Response updateClusterNode(@Context UriInfo uriInfo,
+  public Response updateClusterNode(@Context UriInfo uriInfo, @Context SecurityContext sc,
     @PathParam("hostname") String hostname, HostDTO nodeToUpdate) {
     
     return hostsController.addOrUpdateClusterNode(uriInfo, hostname, nodeToUpdate);

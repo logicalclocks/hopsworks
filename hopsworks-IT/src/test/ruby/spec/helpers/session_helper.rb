@@ -57,6 +57,13 @@ module SessionHelper
     create_session(@user.email, "Pass123")
   end
 
+  def with_admin_session_return_user
+    user = create_user_without_role({})
+    create_admin_role(user)
+    create_session(user.email, "Pass123")
+    user
+  end
+
   def with_agent_session
     create_session("agent@hops.io", "admin")
   end
@@ -102,7 +109,7 @@ module SessionHelper
     user[:repeatedPassword] = params[:password] ? params[:password] : "Pass123"
     user[:securityQuestion] = params[:security_question] ? params[:security_question] : "Name of your first pet?"
     user[:securityAnswer]   = params[:security_answer] ? params[:security_answer] : "example_answer"
-    user[:ToS]              = params[:tos] ? params[:tos] :  true
+    user[:tos]              = params[:tos] ? params[:tos] :  true
     user[:authType]         = params[:auth_type] ? params[:auth_type] : "Mobile"
     user[:twoFactor]        = params[:twoFactor] ? params[:twoFactor] : 0
     user[:testUser]         = true

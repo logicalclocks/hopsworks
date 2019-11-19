@@ -17,15 +17,23 @@
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
 import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.api.user.UsersBeanParam;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.auditor.annotation.AuditedList;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.FormatUtils;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -49,6 +57,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+@Logged
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
@@ -57,11 +66,11 @@ import javax.ws.rs.core.UriInfo;
 public class UsersAdminResource {
 
   @EJB
-  private JWTHelper jWTHelper;
-  @EJB
   private UsersBuilder usersBuilder;
   @EJB
   private UserProfileBuilder userProfileBuilder;
+  @EJB
+  private Settings settings;
   
   @ApiOperation(value = "Get all users profiles.")
   @GET
@@ -70,7 +79,7 @@ public class UsersAdminResource {
   public Response getAllUsers(
     @Context UriInfo uriInfo,
     @BeanParam Pagination pagination,
-    @BeanParam UsersBeanParam usersBeanParam) {
+    @BeanParam UsersBeanParam usersBeanParam, @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.USERS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -84,7 +93,8 @@ public class UsersAdminResource {
   @GET
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getUser(@Context UriInfo uriInfo, @PathParam("id") Integer id) throws UserException {
+  public Response getUser(@Context UriInfo uriInfo, @PathParam("id") Integer id, @Context SecurityContext sc)
+    throws UserException {
     UserProfileDTO dto = usersBuilder.buildById(uriInfo, id);
     return Response.ok().entity(dto).build();
   }
@@ -93,17 +103,15 @@ public class UsersAdminResource {
   @PUT
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response updateUser(
-    @Context HttpServletRequest req,
-    @Context SecurityContext sc,
-    @PathParam("id") Integer id,
-    Users user) throws UserException {
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "Update user " +
+    "profile"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_UPDATED, message = "Update user role")})
+  public Response updateUser(@Context HttpServletRequest req, @Context SecurityContext sc,
+    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id, Users user) throws UserException {
     
     userProfileBuilder.updateUser(
       id,
-      req,
-      user,
-      jWTHelper.getUserPrincipal(sc));
+      user);
     
     return Response.noContent().build();
   }
@@ -112,12 +120,13 @@ public class UsersAdminResource {
   @PUT
   @Path("/users/{id}/accepted")
   @Produces(MediaType.APPLICATION_JSON)
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ACTIVATED_ACCOUNT, message = "Activated" +
+    " account"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Added role")})
   public Response acceptUser(@Context HttpServletRequest req, @Context SecurityContext sc,
-    @PathParam("id") Integer id, Users user) throws UserException, ServiceException {
+    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id, Users user) throws UserException, ServiceException {
     
     userProfileBuilder.acceptUser(
-      req,
-      jWTHelper.getUserPrincipal(sc),
       id,
       user);
     
@@ -127,13 +136,13 @@ public class UsersAdminResource {
   @ApiOperation(value = "Reject user specified by id.")
   @PUT
   @Path("/users/{id}/rejected")
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Rejected " +
+    "user"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Spam account")})
   public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc,
-    @PathParam("id") Integer id) throws UserException, ServiceException {
+    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id) throws UserException, ServiceException {
     
-    userProfileBuilder.rejectUser(
-      req,
-      jWTHelper.getUserPrincipal(sc),
-      id);
+    userProfileBuilder.rejectUser(id);
     
     return Response.noContent().build();
   }
@@ -141,10 +150,11 @@ public class UsersAdminResource {
   @ApiOperation(value = "Resend confirmation email to user specified by id.")
   @PUT
   @Path("/users/{id}/pending")
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Resend confirmation email")
   public Response pendingUser(@Context HttpServletRequest req, @PathParam("id") Integer id)
     throws UserException, ServiceException {
-    
-    userProfileBuilder.pendUser(req, id);
+    String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
+    userProfileBuilder.pendUser(linkUrl, id);
   
     return Response.noContent().build();
   }
@@ -153,7 +163,7 @@ public class UsersAdminResource {
   @GET
   @Path("/users/groups")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllGroups(@Context UriInfo uriInfo) {
+  public Response getAllGroups(@Context UriInfo uriInfo, @Context SecurityContext sc) {
     BbcGroupDTO dto = usersBuilder.buildUserGroups(uriInfo);
     return Response.ok().entity(dto).build();
   }

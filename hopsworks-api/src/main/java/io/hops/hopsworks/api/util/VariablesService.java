@@ -39,6 +39,8 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
@@ -53,14 +55,17 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+@Logged(logLevel = LogLevel.OFF)
 @Path("/variables")
 @Stateless
 @Api(value = "Variables Service",

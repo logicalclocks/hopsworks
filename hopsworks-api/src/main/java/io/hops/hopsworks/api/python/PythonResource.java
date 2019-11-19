@@ -38,6 +38,8 @@
  */
 package io.hops.hopsworks.api.python;
 
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 
@@ -53,7 +55,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 
-
+@Logged
 @Api(value = "Python")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -66,11 +68,13 @@ public class PythonResource {
   private ProjectFacade projectFacade;
 
   private Project project;
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python environment sub-resource")
   @Path("/environments")
   public EnvironmentResource environment() {

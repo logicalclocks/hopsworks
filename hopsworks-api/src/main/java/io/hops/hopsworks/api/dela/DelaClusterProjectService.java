@@ -44,6 +44,8 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -65,11 +67,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @RequestScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -97,7 +102,7 @@ public class DelaClusterProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response share(InodeIdDTO inodeId) throws DelaException {
+  public Response share(InodeIdDTO inodeId, @Context SecurityContext sc) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.shareWithCluster(this.project, dataset);
@@ -111,7 +116,7 @@ public class DelaClusterProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removePublic(@PathParam("inodeId") Long inodeId) throws DelaException {
+  public Response removePublic(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.unshareFromCluster(this.project, dataset);
@@ -140,11 +145,13 @@ public class DelaClusterProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(content).build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = projectFacade.find(projectId);
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public Integer getProjectId() {
     return projectId;
   }

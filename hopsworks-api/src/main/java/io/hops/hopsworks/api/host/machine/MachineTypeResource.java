@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.host.machine;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -33,8 +34,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+@Logged
 @Path("/machines")
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API},
@@ -49,7 +52,7 @@ public class MachineTypeResource {
   @ApiOperation(value = "Get all types of machines for conda", response = MachineTypeDTO.class)
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMachineTypes(@Context UriInfo uriInfo) {
+  public Response getMachineTypes(@Context UriInfo uriInfo, @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MACHINETYPES);
     MachineTypeDTO machineTypeDTO = machineTypeBuilder.buildItems(uriInfo, resourceRequest);
     return Response.ok(machineTypeDTO).build();
@@ -59,7 +62,8 @@ public class MachineTypeResource {
   @GET
   @Path("/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMachineType(@PathParam("type") LibraryFacade.MachineType type, @Context UriInfo uriInfo) {
+  public Response getMachineType(@PathParam("type") LibraryFacade.MachineType type, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MACHINETYPES);
     MachineTypeDTO machineTypeDTO = machineTypeBuilder.buildItem(uriInfo, resourceRequest, type);
     return Response.ok(machineTypeDTO).build();

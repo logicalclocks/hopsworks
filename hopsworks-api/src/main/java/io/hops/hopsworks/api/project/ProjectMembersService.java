@@ -43,6 +43,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
@@ -89,6 +91,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectMembersService {
@@ -114,11 +117,11 @@ public class ProjectMembersService {
 
   public ProjectMembersService() {
   }
-
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-
+  @Logged(logLevel = LogLevel.OFF)
   public Integer getProjectId() {
     return projectId;
   }
@@ -132,7 +135,7 @@ public class ProjectMembersService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response findMembersByProjectID() {
+  public Response findMembersByProjectID(@Context SecurityContext sc) {
     List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
     GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
     };

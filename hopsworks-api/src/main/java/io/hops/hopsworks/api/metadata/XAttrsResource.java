@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.metadata;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -48,6 +50,7 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
 
+@Logged
 @Api(value = "Extended Attributes Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -64,6 +67,7 @@ public class XAttrsResource {
   
   private Project project;
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }

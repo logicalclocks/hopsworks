@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -90,6 +91,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API},
@@ -178,7 +180,7 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response getProjectsAdminInfo() {
+  public Response getProjectsAdminInfo(@Context SecurityContext sc) {
 
     List<Project> projects = projectFacade.findAll();
     List<ProjectAdminInfoDTO> projectAdminInfoDTOList = new ArrayList<>();
@@ -203,7 +205,8 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
-  public Response getProjectAdminInfo(@PathParam("id") Integer projectId) throws ProjectException {
+  public Response getProjectAdminInfo(@PathParam("id") Integer projectId, @Context SecurityContext sc)
+    throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -220,7 +223,8 @@ public class ProjectsAdmin {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
+  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO, @Context SecurityContext sc)
+    throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null && (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null))

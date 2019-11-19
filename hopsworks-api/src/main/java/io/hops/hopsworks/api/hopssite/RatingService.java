@@ -42,6 +42,8 @@ package io.hops.hopsworks.api.hopssite;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.RatingValueDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
@@ -66,6 +68,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RatingService {
@@ -81,10 +84,8 @@ public class RatingService {
   private JWTHelper jWTHelper;
 
   private String publicDSId;
-
-  public RatingService() {
-  }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setPublicDSId(String publicDSId) {
     this.publicDSId = publicDSId;
   }
@@ -109,14 +110,14 @@ public class RatingService {
     }
   }
 
-  public Response getDatasetAllRating() throws DelaException {
+  private Response getDatasetAllRating() throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:all {0}", publicDSId);
     RatingDTO rating = hopsSite.getDatasetAllRating(publicDSId);
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:all - done {0}", publicDSId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(rating).build();
   }
 
-  public Response getDatasetUserRating(SecurityContext sc) throws DelaException {
+  private Response getDatasetUserRating(SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:user {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = jWTHelper.getUserPrincipal(sc);

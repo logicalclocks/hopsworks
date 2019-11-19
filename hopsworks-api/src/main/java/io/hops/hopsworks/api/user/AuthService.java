@@ -43,13 +43,20 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.annotation.Caller;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.util.DateUtils;
+import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.JsonWebToken;
@@ -99,6 +106,7 @@ import java.util.logging.Logger;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @Path("/auth")
 @Stateless
 @Api(value = "Auth",
@@ -115,8 +123,6 @@ public class AuthService {
   private UserStatusValidator statusValidator;
   @EJB
   private NoCacheResponse noCacheResponse;
-  @EJB
-  private AccountAuditFacade accountAuditFacade;
   @EJB
   private AuthController authController;
   @EJB
@@ -154,9 +160,11 @@ public class AuthService {
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response login(@FormParam("email") String email, @FormParam("password") String password,
-      @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
-      NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException {
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
+  public Response login(@Caller @AuditTarget @FormParam("email") String email,
+    @Secret @FormParam("password") String password, @Secret @FormParam("otp") String otp,
+    @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException, NoSuchAlgorithmException,
+    LoginException, DuplicateSigningKeyException {
 
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
@@ -176,7 +184,7 @@ public class AuthService {
     req.getSession();
 
     // Do pre cauth realm check
-    String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp, req);
+    String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp);
 
     // Do login
     Response response = login(user, passwordWithSaltPlusOtp, req);
@@ -191,6 +199,7 @@ public class AuthService {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
   public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
     logoutAndInvalidateSession(req);
     return Response.ok().build();
@@ -199,10 +208,10 @@ public class AuthService {
   @POST
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceLogin(@FormParam("email") String email, @FormParam("password") String password,
-      @Context HttpServletRequest request)
-    throws LoginException, UserException, GeneralSecurityException, SigningKeyNotFoundException,
-      DuplicateSigningKeyException, HopsSecurityException {
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
+  public Response serviceLogin(@Caller @AuditTarget @FormParam("email") String email,
+    @Secret @FormParam("password") String password, @Context HttpServletRequest request) throws UserException,
+    GeneralSecurityException, SigningKeyNotFoundException, DuplicateSigningKeyException, HopsSecurityException {
     if (Strings.isNullOrEmpty(email)) {
       throw new IllegalArgumentException("Email cannot be null or empty");
     }
@@ -229,12 +238,12 @@ public class AuthService {
     }
     
     statusValidator.checkStatus(user.getStatus());
-    String saltedPassword = authController.preCustomRealmLoginCheck(user, password, null, request);
+    String saltedPassword = authController.preCustomRealmLoginCheck(user, password, null);
     
     try {
       request.login(user.getEmail(), saltedPassword);
     } catch (ServletException ex) {
-      authController.registerAuthenticationFailure(user, request);
+      authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, ex.getMessage(), ex);
     }
   
@@ -283,6 +292,7 @@ public class AuthService {
   @DELETE
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
   public Response serviceLogout(@Context HttpServletRequest request) throws UserException, InvalidationException {
     if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
       jwtController.invalidateServiceToken(jWTHelper.getAuthToken(request), settings.getJWTSigningKeyName());
@@ -295,7 +305,7 @@ public class AuthService {
   @Path("isAdmin")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response login(@Context SecurityContext sc) {
+  public Response isAdmin(@Context SecurityContext sc) {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(false);
     if (sc.isUserInRole("HOPS_ADMIN")) {
@@ -309,16 +319,18 @@ public class AuthService {
   @Path("register")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(UserDTO newUser, @Context HttpServletRequest req) throws NoSuchAlgorithmException,
-      UserException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user")
+  public Response register(@Caller(UserIdentifier.USER_DTO) @AuditTarget(UserIdentifier.USER_DTO) UserDTO newUser,
+    @Context HttpServletRequest req) throws UserException {
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    qrCode = userController.registerUser(newUser, req);
+    String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
+    qrCode = userController.registerUser(newUser, linkUrl);
     if (authController.isTwoFactorEnabled() && newUser.isTwoFactor()) {
       json.setQRCode(new String(Base64.encodeBase64(qrCode)));
     } else {
       json.setSuccessMessage("We registered your account request. Please validate you email and we will "
-          + "review your account within 48 hours.");
+        + "review your account within 48 hours.");
     }
     return Response.ok(json).build();
   }
@@ -326,12 +338,14 @@ public class AuthService {
   @POST
   @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response recoverPassword(@FormParam("email") String email,
-      @FormParam("securityQuestion") String securityQuestion,
-      @FormParam("securityAnswer") String securityAnswer,
-      @Context HttpServletRequest req) throws UserException, MessagingException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Start password recovery")
+  public Response recoverPassword(@Caller @AuditTarget @FormParam("email") String email,
+    @Secret @FormParam("securityQuestion") String securityQuestion,
+    @Secret @FormParam("securityAnswer") String securityAnswer, @Context HttpServletRequest req) throws UserException,
+    MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, req);
+    String reqUrl = FormatUtils.getUserURL(req);
+    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
     return Response.ok(json).build();
   }
@@ -339,10 +353,13 @@ public class AuthService {
   @POST
   @Path("/recover/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response recoverQRCode(@FormParam("email") String email, @FormParam("password") String password,
-    @Context HttpServletRequest req) throws UserException, MessagingException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Start QR recovery")
+  public Response recoverQRCode(@Caller @AuditTarget @FormParam("email") String email,
+    @Secret @FormParam("password") String password, @Context HttpServletRequest req) throws UserException,
+    MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.sendQRRecoveryEmail(email, password, req);
+    String reqUrl = FormatUtils.getUserURL(req);
+    userController.sendQRRecoveryEmail(email, password, reqUrl);
     json.setSuccessMessage(ResponseMessages.QR_CODE_RESET);
     return Response.ok(json).build();
   }
@@ -350,20 +367,23 @@ public class AuthService {
   @POST
   @Path("/reset/validate")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validatePasswordRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
-    throws UserException {
-    userController.checkRecoveryKey(key, req);
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Validate password recovery key")
+  public Response validatePasswordRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
+    @FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    userController.checkRecoveryKey(key);
     return Response.ok().build();
   }
   
   @POST
   @Path("/reset/password")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response passwordRecovery(@FormParam("key") String key, @FormParam("newPassword") String newPassword,
-    @FormParam("confirmPassword") String confirmPassword, @Context HttpServletRequest req) throws UserException,
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Reset password")
+  public Response passwordRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
+    @FormParam("key") String key, @Secret @FormParam("newPassword") String newPassword,
+    @Secret @FormParam("confirmPassword") String confirmPassword, @Context HttpServletRequest req) throws UserException,
     MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    userController.changePassword(key, newPassword, confirmPassword, req);
+    userController.changePassword(key, newPassword, confirmPassword);
     json.setSuccessMessage(ResponseMessages.PASSWORD_CHANGED);
     return Response.ok(json).build();
   }
@@ -371,18 +391,22 @@ public class AuthService {
   @POST
   @Path("/reset/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response qrCodeRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
-    throws UserException, MessagingException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Reset QR Code")
+  public Response qrCodeRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
+    @FormParam("key") String key, @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setQRCode(userController.recoverQRCode(key, req));
+    json.setQRCode(userController.recoverQRCode(key));
     return Response.ok(json).build();
   }
-
+  
   @POST
   @Path("/validate/email")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response validateUserMail(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
-    authController.validateEmail(key, req);
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.VERIFIED_ACCOUNT,
+    message = "Account email verification")
+  public Response validateUserMail(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
+    @FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
+    authController.validateEmail(key);
     return Response.ok().build();
   }
 
@@ -397,10 +421,9 @@ public class AuthService {
       req.getSession().invalidate();
       req.logout();
       if (user != null) {
-        authController.registerLogout(user, req);
+        authController.registerLogout(user);
       }
     } catch (ServletException e) {
-      accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
       throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -409,15 +432,16 @@ public class AuthService {
       SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
-      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE);
+      throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE,
+        null, RESTCodes.UserErrorCode.NO_ROLE_FOUND.getMessage());
     }
 
     statusValidator.checkStatus(user.getStatus());
     try {
       req.login(user.getEmail(), password);
-      authController.registerLogin(user, req);
+      authController.registerLogin(user);
     } catch (ServletException e) {
-      authController.registerAuthenticationFailure(user, req);
+      authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, e.getMessage(), e);
     }
 

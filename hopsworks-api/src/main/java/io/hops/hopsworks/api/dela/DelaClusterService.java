@@ -43,6 +43,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -59,12 +60,15 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.List;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/delacluster")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -88,7 +92,7 @@ public class DelaClusterService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getPublicDatasets() {
+  public Response getPublicDatasets(@Context SecurityContext sc) {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;

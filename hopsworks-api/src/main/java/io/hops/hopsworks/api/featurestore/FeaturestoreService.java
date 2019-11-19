@@ -26,6 +26,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -87,6 +89,7 @@ import java.util.List;
  * A Stateless RESTful service for the featurestore service on Hopsworks.
  * Base URL: project/id/featurestores/
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
@@ -132,6 +135,7 @@ public class FeaturestoreService {
    *
    * @param projectId the id of the project
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -149,7 +153,7 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
-  public Response getFeaturestores() {
+  public Response getFeaturestores(@Context SecurityContext sc) {
     List<FeaturestoreDTO> featurestores = featurestoreController.getFeaturestoresForProject(project);
     GenericEntity<List<FeaturestoreDTO>> featurestoresGeneric =
       new GenericEntity<List<FeaturestoreDTO>>(featurestores) {
@@ -173,8 +177,7 @@ public class FeaturestoreService {
     response = FeaturestoreDTO.class)
   public Response getFeaturestore(
     @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("featurestoreId")
-      Integer featurestoreId) throws FeaturestoreException {
+    @PathParam("featurestoreId") Integer featurestoreId, @Context SecurityContext sc) throws FeaturestoreException {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
@@ -198,7 +201,7 @@ public class FeaturestoreService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore settings",
     response = FeaturestoreClientSettingsDTO.class)
-  public Response getFeaturestoreSettings() {
+  public Response getFeaturestoreSettings(@Context SecurityContext sc) {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setFeaturestoreUtil4jExecutable("hdfs:///user" + org.apache.hadoop.fs.Path.SEPARATOR
       + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
@@ -234,7 +237,7 @@ public class FeaturestoreService {
     response = FeaturestoreDTO.class)
   public Response getFeaturestoreByName(
     @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("name") String name) throws FeaturestoreException {
+    @PathParam("name") String name, @Context SecurityContext sc) throws FeaturestoreException {
     verifyNameProvided(name);
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, name);
@@ -303,8 +306,9 @@ public class FeaturestoreService {
         .entity(featurestoreMetadataGeneric)
         .build();
   }
-
-
+  
+  
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{featureStoreId}/datavalidation")
   public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
     return this.dataValidationService.setFeatureStore(featureStoreId);
@@ -317,9 +321,10 @@ public class FeaturestoreService {
    * @return the feature groups service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/featuregroups")
-  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId)
-      throws FeaturestoreException {
+  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId,
+    @Context SecurityContext sc) throws FeaturestoreException {
     featuregroupService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
@@ -335,6 +340,7 @@ public class FeaturestoreService {
    * @return the training dataset service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/trainingdatasets")
   public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId)
       throws FeaturestoreException {
@@ -353,6 +359,7 @@ public class FeaturestoreService {
    * @return the storage connector service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/storageconnectors")
   public FeaturestoreStorageConnectorService storageConnectorService(
       @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {

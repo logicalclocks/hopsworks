@@ -42,6 +42,7 @@ package io.hops.hopsworks.api.cluster;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kagent.HostServices;
@@ -62,13 +63,16 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Logged
 @Path("/kmon")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -87,7 +91,7 @@ public class Monitor {
   @GET
   @Path("/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getAllRoles() {
+  public Response getAllRoles(@Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findAll();
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -97,7 +101,7 @@ public class Monitor {
   @GET
   @Path("/groups/{groupName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getServiceRoles(@PathParam("groupName") String groupName) {
+  public Response getServiceRoles(@PathParam("groupName") String groupName, @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findGroupServices(groupName);
     // Do not leak Host data back to clients!
     List<ServiceStatusDTO> groupStatus = new ArrayList<>();
@@ -111,7 +115,7 @@ public class Monitor {
   @GET
   @Path("/hosts/{hostId}/services")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHostRoles(@PathParam("hostId") String hostname) {
+  public Response getHostRoles(@PathParam("hostId") String hostname, @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findHostServiceByHostname(hostname);
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -121,7 +125,8 @@ public class Monitor {
   @GET
   @Path("/groups/{groupName}/services/{serviceName}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName) {
+  public Response getRoles(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
+    @Context SecurityContext sc) {
     List<HostServices> list = hostServicesFacade.findServices(serviceName);
     GenericEntity<List<HostServices>> services = new GenericEntity<List<HostServices>>(list) {
     };
@@ -132,7 +137,7 @@ public class Monitor {
   @Path("/hosts")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts() {
+  public Response getHosts(@Context SecurityContext sc) {
     List<Hosts> list = hostEjb.findAll();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
@@ -143,7 +148,7 @@ public class Monitor {
   @Path("/hosts/{hostId}")
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getHosts(@PathParam("hostId") String hostId) {
+  public Response getHosts(@PathParam("hostId") String hostId, @Context SecurityContext sc) {
     Optional<Hosts> optional = hostEjb.findByHostname(hostId);
     if (optional.isPresent()) {
       GenericEntity<Hosts> host = new GenericEntity<Hosts>(optional.get()) {
@@ -160,8 +165,8 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"})
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action) throws 
-      GenericException {
+  public Response serviceOp(@PathParam("groupName") String groupName, ServicesActionDTO action,
+    @Context SecurityContext sc) throws GenericException {
     String result = hostServicesFacade.groupOp(groupName, action.getAction());
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(result);
@@ -174,7 +179,7 @@ public class Monitor {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOp(@PathParam("groupName") String groupName, @PathParam("serviceName") String serviceName,
-      ServicesActionDTO action) throws GenericException {
+      ServicesActionDTO action, @Context SecurityContext sc) throws GenericException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOp(serviceName, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
@@ -186,9 +191,8 @@ public class Monitor {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Response serviceOnHostOp(@PathParam("groupName") String groupName,
-      @PathParam("serviceName") String serviceName,
-      @PathParam("hostId") String hostId,
-      ServicesActionDTO action) throws GenericException {
+    @PathParam("serviceName") String serviceName,
+    @PathParam("hostId") String hostId, ServicesActionDTO action, @Context SecurityContext sc) throws GenericException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(hostServicesFacade.serviceOnHostOp(groupName, serviceName, hostId, action.getAction()));
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();

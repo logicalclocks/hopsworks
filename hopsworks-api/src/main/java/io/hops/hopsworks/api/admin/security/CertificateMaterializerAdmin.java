@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -58,9 +59,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +75,7 @@ import java.util.regex.Pattern;
 /**
  * REST API to monitor and control CertificateMaterializer service
  */
+@Logged
 @Path("/admin/materializer")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
@@ -95,7 +99,7 @@ public class CertificateMaterializerAdmin {
    * @return
    */
   @GET
-  public Response getMaterializerState() {
+  public Response getMaterializerState(@Context SecurityContext sc) {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
         Map<String, Set<String>>, Map<String, Boolean>> materializerState = certificateMaterializer.getState();
@@ -147,7 +151,7 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/local/{name}/{directory}")
   public Response removeLocalMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory) {
+      @PathParam("directory") String directory, @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
@@ -191,7 +195,7 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/remote/{name}/{directory}")
   public Response removeRemoteMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory) {
+      @PathParam("directory") String directory, @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }

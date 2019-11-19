@@ -725,13 +725,30 @@ public class Users implements Serializable {
     return true;
   }
 
-  @Override
-  public String toString() {
-    return "Users[ uid=" + uid + " ]";
-  }
-
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
         isonline, maxNumProjects, numCreatedProjects, numActiveProjects);
+  }
+  
+  @Override
+  public String toString() {
+    return "Users{" +
+      "uid=" + uid +
+      ", username='" + username + '\'' +
+      ", activated=" + activated +
+      ", orcid='" + orcid + '\'' +
+      ", falseLogin=" + falseLogin +
+      ", status=" + status +
+      ", isonline=" + isonline +
+      ", validationKeyUpdated=" + validationKeyUpdated +
+      ", validationKeyType=" + validationKeyType +
+      ", mode=" + mode +
+      ", maxNumProjects=" + maxNumProjects +
+      ", numCreatedProjects=" + numCreatedProjects +
+      ", numActiveProjects=" + numActiveProjects +
+      ", twoFactor=" + twoFactor +
+      ", toursState=" + toursState +
+      ", bbcGroupCollection=" + bbcGroupCollection +
+      '}';
   }
 }

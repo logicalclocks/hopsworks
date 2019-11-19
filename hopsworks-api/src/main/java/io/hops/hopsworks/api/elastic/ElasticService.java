@@ -45,6 +45,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.elastic.ElasticHit;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/elastic")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -100,8 +102,7 @@ public class ElasticService {
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response globalSearch(@PathParam("searchTerm") String searchTerm, @Context HttpServletRequest req)
-      throws
-      ServiceException, ElasticException {
+    throws ServiceException, ElasticException {
 
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new IllegalArgumentException("searchTerm was not provided or was empty");
@@ -119,16 +120,14 @@ public class ElasticService {
    * @param projectId
    * @param searchTerm
    * @param sc
-   * @param req
    * @return
    */
   @GET
   @Path("projectsearch/{projectId}/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response projectSearch(@PathParam("projectId") Integer projectId,
-      @PathParam("searchTerm") String searchTerm)
-      throws ServiceException, ElasticException {
+  public Response projectSearch(@PathParam("projectId") Integer projectId, @PathParam("searchTerm") String searchTerm,
+    @Context SecurityContext sc) throws ServiceException, ElasticException {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
@@ -145,7 +144,6 @@ public class ElasticService {
    * @param datasetName
    * @param searchTerm
    * @param sc
-   * @param req
    * @return
    */
   @GET
@@ -155,7 +153,7 @@ public class ElasticService {
   public Response datasetSearch(
       @PathParam("projectId") Integer projectId,
       @PathParam("datasetName") String datasetName,
-      @PathParam("searchTerm") String searchTerm)
+      @PathParam("searchTerm") String searchTerm, @Context SecurityContext sc)
       throws ServiceException, ElasticException {
   
     if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {

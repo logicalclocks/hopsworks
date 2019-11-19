@@ -43,7 +43,6 @@ import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 
 import javax.annotation.PostConstruct;
@@ -80,7 +79,7 @@ public class ResetPassword implements Serializable {
   private String notes;
 
   @EJB
-  protected UsersController usersController;
+  protected AuditedUserAccountAction auditedUserAccountAction;
   @EJB
   private UserFacade userFacade;
   
@@ -170,7 +169,7 @@ public class ResetPassword implements Serializable {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      usersController.sendPasswordRecoveryEmail(this.username, question.getValue(), answer, req);
+      auditedUserAccountAction.sendPasswordRecoveryEmail(this.username, question, answer, req);
     } catch (MessagingException ex) {
       String detail = ex.getCause() != null? ex.getCause().getMessage() : "Failed to send recovery email.";
       MessagesController.addSecurityErrorMessage(detail);
@@ -203,7 +202,7 @@ public class ResetPassword implements Serializable {
     }
 
     try {
-      usersController.changePassword(people, current, passwd1, passwd2, req);
+      auditedUserAccountAction.changePassword(people, current, passwd1, passwd2, req);
       return ("profile_password_changed");
     } catch (IllegalStateException | UserException ex) {
       MessagesController.addSecurityErrorMessage(ex.getMessage());

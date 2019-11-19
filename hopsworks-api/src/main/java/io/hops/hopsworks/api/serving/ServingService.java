@@ -20,6 +20,8 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -65,6 +67,7 @@ import java.util.concurrent.ExecutionException;
 /**
  * RESTful microservice for model servings on Hopsworks. Supports both Tensorflow and SKLearn models.
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "TensorFlow Serving service", description = "Manage Serving instances")
@@ -99,7 +102,8 @@ public class ServingService {
   private Project project;
 
   public ServingService(){ }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -111,7 +115,8 @@ public class ServingService {
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
-  public Response getServings() throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+  public Response getServings(@Context SecurityContext sc) throws ServingException, KafkaException,
+    CryptoPasswordNotFoundException {
     List<ServingWrapper> servingDAOList = servingController.getServings(project);
     
     ArrayList<ServingView> servingViewList = new ArrayList<>();
@@ -133,7 +138,7 @@ public class ServingService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
-  public Response getServing(
+  public Response getServing(@Context SecurityContext sc,
       @ApiParam(value = "Id of the Serving instance", required = true) @PathParam("servingId") Integer servingId)
       throws ServingException, KafkaException, CryptoPasswordNotFoundException {
     if (servingId == null) {
@@ -154,7 +159,7 @@ public class ServingService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a serving instance")
-  public Response deleteServing(
+  public Response deleteServing(@Context SecurityContext sc,
       @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
       throws ServingException {
     if (servingId == null) {

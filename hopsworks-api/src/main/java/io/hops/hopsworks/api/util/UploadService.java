@@ -48,6 +48,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.wscomm.ResponseBuilder;
 import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -110,6 +112,7 @@ import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged(logLevel = LogLevel.FINEST)
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UploadService {
@@ -180,13 +183,15 @@ public class UploadService {
   public UploadService() {
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setParams(String path, DatasetType datasetType, int templateId, boolean isTemplate) {
     this.path = path;
     this.datasetType = datasetType;
     this.templateId = templateId;
     this.isTemplate = isTemplate;
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setParams(Integer projectId, String path, DatasetType datasetType, int templateId, boolean isTemplate) {
     this.projectId = projectId;
     this.path = path;
@@ -195,6 +200,7 @@ public class UploadService {
     this.isTemplate = isTemplate;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setParams(String projectName, String path, DatasetType datasetType, int templateId, boolean isTemplate) {
     this.projectName = projectName;
     this.path = path;

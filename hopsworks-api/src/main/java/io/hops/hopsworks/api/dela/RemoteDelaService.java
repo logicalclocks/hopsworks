@@ -41,18 +41,17 @@ package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
 import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -62,9 +61,15 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+@Logged
 @Path("/remote/dela")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -86,7 +91,7 @@ public class RemoteDelaService {
   @GET
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response readme(@PathParam("publicDSId") String publicDSId) throws DelaException {
+  public Response readme(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "remote:dela:readme {0}", publicDSId);
     Optional<Dataset> dataset = datasetFacade.findByPublicDsId(publicDSId);
     if (!dataset.isPresent() || !dataset.get().isPublicDs()) {

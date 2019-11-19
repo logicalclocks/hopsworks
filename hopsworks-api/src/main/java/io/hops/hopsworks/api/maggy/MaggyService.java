@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.maggy;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.maggy.MaggyDriver;
 import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -40,9 +41,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/maggy")
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -96,7 +99,7 @@ public class MaggyService {
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(MaggyDriver driver) throws ServiceException {
+  public Response register(MaggyDriver driver, @Context SecurityContext sc) throws ServiceException {
     
     logger.log(Level.FINE, "REST call from maggy to register the driver: " + driver);
     

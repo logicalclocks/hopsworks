@@ -22,6 +22,8 @@ import io.hops.hopsworks.api.python.library.command.LibraryCommandsResource;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchBuilder;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchDTO;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
@@ -65,6 +67,7 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Logged
 @Api(value = "Python Environment Library Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -92,13 +95,15 @@ public class LibraryResource {
 
   private Project project;
   private String pythonVersion;
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public LibraryResource setProjectAndVersion(Project project, String pythonVersion) {
     this.project = project;
     this.pythonVersion = pythonVersion;
     return this;
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }
@@ -110,7 +115,7 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
       @BeanParam LibrariesBeanParam librariesBeanParam,
-      @Context UriInfo uriInfo) throws PythonException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -131,7 +136,7 @@ public class LibraryResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
-    @Context UriInfo uriInfo) throws PythonException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     validatePattern(library);
     environmentController.checkCondaEnabled(project, pythonVersion);
     PythonDep dep = libraryController.getPythonDep(library, project);
@@ -150,10 +155,8 @@ public class LibraryResource {
   @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response uninstall(@Context
-      SecurityContext sc, @PathParam("library") String library)
-      throws ServiceException, GenericException, ProjectException,
-      PythonException, ElasticException {
+  public Response uninstall(@Context SecurityContext sc, @PathParam("library") String library)
+    throws ServiceException, GenericException, ProjectException, PythonException, ElasticException {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion);
@@ -239,8 +242,8 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response search(@PathParam("search") String search,
                          @QueryParam("query") String query,
-                         @QueryParam("channel") String channel,
-                         @Context UriInfo uriInfo) throws ServiceException, PythonException {
+                         @QueryParam("channel") String channel, @Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws ServiceException, PythonException {
     validatePattern(query);
     environmentController.checkCondaEnabled(project, pythonVersion);
     LibrarySearchDTO librarySearchDTO;
@@ -258,7 +261,8 @@ public class LibraryResource {
     }
     return Response.ok().entity(librarySearchDTO).build();
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python Library Commands sub-resource", tags = {"LibraryCommandsResource"})
   @Path("{library}/commands")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

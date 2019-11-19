@@ -70,7 +70,7 @@ public class SpamUserAdministrationBean implements Serializable {
   }
   
   public void deleteUser(Users user) {
-    userAdministrationController.deleteUser(user);
+    userAdministrationController.deleteSpamUser(user);
     LOGGER.log(Level.FINE, "Deleted spam user: {0}", user.getEmail());
   }
   

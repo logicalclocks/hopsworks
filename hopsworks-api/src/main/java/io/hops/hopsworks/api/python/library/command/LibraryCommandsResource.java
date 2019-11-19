@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.python.command.CommandBeanParam;
 import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.api.python.command.CommandDTO;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.python.commands.CommandsController;
@@ -44,8 +46,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+@Logged
 @Api(value = "Python Environment Library Commands Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -61,14 +65,11 @@ public class LibraryCommandsResource {
   private Project project;
   private String pythonVersion;
   
+  @Logged(logLevel = LogLevel.OFF)
   public LibraryCommandsResource setProject(Project project, String pythonVersion) {
     this.project = project;
     this.pythonVersion = pythonVersion;
     return this;
-  }
-
-  public Project getProject() {
-    return project;
   }
 
   @ApiOperation(value = "Get all commands for this library", response = CommandDTO.class)
@@ -79,7 +80,7 @@ public class LibraryCommandsResource {
   public Response get(@PathParam("library") String library,
       @BeanParam Pagination pagination,
       @BeanParam CommandBeanParam libraryCommandBeanParam,
-      @Context UriInfo uriInfo) throws PythonException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     resourceRequest.setOffset(pagination.getOffset());
@@ -97,7 +98,7 @@ public class LibraryCommandsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getByName(@PathParam("library") String library, @PathParam("commandId") Integer commandId,
-    @Context UriInfo uriInfo) throws PythonException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.COMMANDS);
     CommandDTO dto = commandBuilder.build(uriInfo, resourceRequest, project, library, commandId);
@@ -108,7 +109,8 @@ public class LibraryCommandsResource {
   @PUT
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo) throws PythonException {
+  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.retryFailedCondaOps(project, library);
     return Response.noContent().build();
@@ -118,7 +120,7 @@ public class LibraryCommandsResource {
   @DELETE
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("library") String library) throws PythonException {
+  public Response delete(@PathParam("library") String library, @Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.deleteCommands(project, library);
     return Response.noContent().build();
