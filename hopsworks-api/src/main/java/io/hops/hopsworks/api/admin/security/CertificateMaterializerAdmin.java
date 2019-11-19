@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.admin;
+package io.hops.hopsworks.api.admin.security;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
