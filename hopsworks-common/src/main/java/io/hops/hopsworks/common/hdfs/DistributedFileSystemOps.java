@@ -170,7 +170,14 @@ public class DistributedFileSystemOps {
     return cat(path);
   }
 
-  public void copyFromHDFSToLocal(String src, String dest) throws IOException {
+  /**
+   * Copy from HDFS to the local file system.
+   * <p/>
+   * @param hdfsPath
+   * @param localPath
+   * @throws IOException
+   */
+  public void copyToLocal(String src, String dest) throws IOException {
     dfs.copyToLocalFile(new Path(src), new Path(dest));
   }
 
@@ -282,23 +289,6 @@ public class DistributedFileSystemOps {
   }
 
   /**
-   * Copy from HDFS to the local file system.
-   * <p/>
-   * @param hdfsPath
-   * @param localPath
-   * @throws IOException
-   */
-  public void copyToLocal(String hdfsPath, String localPath) throws IOException {
-    if (!hdfsPath.startsWith("hdfs:")) {
-      hdfsPath = "hdfs://" + hdfsPath;
-    }
-    if (!localPath.startsWith("file:")) {
-      localPath = "file://" + localPath;
-    }
-    dfs.copyToLocalFile(new Path(hdfsPath), new Path(localPath));
-  }
-
-  /**
    * Copy a file from the local path to the HDFS destination.
    * <p/>
    * @param deleteSource If true, deletes the source file after copying.
@@ -345,26 +335,12 @@ public class DistributedFileSystemOps {
     if (source.equals(destination)) {
       return;
     }
-    //If source does not start with hdfs, prepend.
-    if (!source.startsWith("hdfs")) {
-      source = "hdfs://" + source;
-    }
-
-    //Check destination place, create directory.
-    String destDir;
-    if (!destination.startsWith("hdfs")) {
-      destDir = Utils.getDirectoryPart(destination);
-      destination = "hdfs://" + destination;
-    } else {
-      String tmp = destination.substring("hdfs://".length());
-      destDir = Utils.getDirectoryPart(tmp);
-    }
-    Path dest = new Path(destDir);
-    if (!dfs.exists(dest)) {
-      dfs.mkdirs(dest);
-    }
     Path src = new Path(source);
     Path dst = new Path(destination);
+    
+    if (!dfs.exists(dst.getParent())) {
+      dfs.mkdirs(dst.getParent());
+    }
     moveWithinHdfs(src, dst);
   }
 

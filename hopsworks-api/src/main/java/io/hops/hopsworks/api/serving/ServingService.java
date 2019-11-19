@@ -37,6 +37,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -175,7 +176,7 @@ public class ServingService {
       @ApiParam(value = "serving specification", required = true)
         ServingView serving)
       throws ServingException, ServiceException, KafkaException, ProjectException, UserException,
-        InterruptedException, ExecutionException {
+        InterruptedException, ExecutionException, UnsupportedEncodingException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (serving == null) {
       throw new IllegalArgumentException("serving was not provided");

@@ -19,13 +19,12 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.Path;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class DatasetPath {
@@ -38,7 +37,7 @@ public class DatasetPath {
   private Inode inode;
   
   public DatasetPath(Project project, String path, String root) throws UnsupportedEncodingException {
-    String p = prepPath(path);
+    String p = Utils.prepPath(path);
     String pathStr = stripSlash(p);
     String pathRoot = stripSlash(root); // Projects or /apps/hive/warehouse
     boolean isProject = root.equals(Settings.DIR_ROOT);
@@ -145,24 +144,6 @@ public class DatasetPath {
     String[] parts = fullPath.split(File.separator);
     String dsPath = String.join(File.separator, Arrays.copyOfRange(parts, 0, root.depth() + 1));
     return new Path(File.separator + dsPath);
-  }
-  
-  private String prepPath(String path) throws UnsupportedEncodingException {
-    Path p;
-    String result = path;
-    if (path.contains(Settings.SHARED_FILE_SEPARATOR)) {
-      String[] parts = path.split(Settings.SHARED_FILE_SEPARATOR);
-      p = new Path(parts[0]);
-      //remove hdfs://10.0.2.15:8020//
-      p = new Path(URLDecoder.decode(p.toUri().getRawPath(), StandardCharsets.UTF_8.toString()));
-      result = p.toString() + Settings.SHARED_FILE_SEPARATOR + parts[1];
-    } else {
-      p = new Path(path);
-      //remove hdfs://10.0.2.15:8020//
-      p = new Path(URLDecoder.decode(p.toUri().getRawPath(), StandardCharsets.UTF_8.toString()));
-      result = p.toString();
-    }
-    return result;
   }
   
   private String stripSlash(String path) {

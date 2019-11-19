@@ -50,6 +50,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
@@ -252,7 +253,7 @@ public class FlinkController {
     Yaml yaml = new Yaml();
     try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
       Map<String, Object> obj = (Map<String, Object>) yaml.load(in);
-      return ((String) obj.get("historyserver.archive.fs.dir")).replace("hdfs://", "");
+      return Utils.prepPath((String) obj.get("historyserver.archive.fs.dir"));
     }
   }
   

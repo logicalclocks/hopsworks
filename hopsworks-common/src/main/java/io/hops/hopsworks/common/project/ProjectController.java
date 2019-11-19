@@ -157,6 +157,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -2316,7 +2317,7 @@ public class ProjectController {
   public void addTourFilesToProject(String username, Project project,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
     TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException,
-    JobException, GenericException, ServiceException {
+    JobException, GenericException, ServiceException, UnsupportedEncodingException {
 
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {

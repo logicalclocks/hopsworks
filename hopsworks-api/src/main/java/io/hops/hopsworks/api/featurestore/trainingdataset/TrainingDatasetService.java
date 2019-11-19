@@ -49,6 +49,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -162,7 +163,8 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Create training dataset for a featurestore",
       response = TrainingDatasetDTO.class)
   public Response createTrainingDataset(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
-    throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException {
+    throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException,
+      UnsupportedEncodingException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
@@ -258,7 +260,7 @@ public class TrainingDatasetService {
   public Response deleteTrainingDataset(
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException, DatasetException,
-      ProjectException, HopsSecurityException {
+      ProjectException, HopsSecurityException, UnsupportedEncodingException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(
@@ -307,7 +309,8 @@ public class TrainingDatasetService {
     @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
     @QueryParam("updateStats") Boolean updateStats,
     TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException {
+      throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException,
+      UnsupportedEncodingException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }

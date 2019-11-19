@@ -36,6 +36,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -167,7 +168,7 @@ public class EnvironmentResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response postYml(EnvironmentYmlDTO environmentYmlDTO, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws PythonException, ServiceException, DatasetException, ProjectException {
+    throws PythonException, ServiceException, DatasetException, ProjectException, UnsupportedEncodingException {
     Users user = jWTHelper.getUserPrincipal(sc);
     String allYmlPath = getYmlPath(environmentYmlDTO.getAllYmlPath());
     String cpuYmlPath = getYmlPath(environmentYmlDTO.getCpuYmlPath());
@@ -190,7 +191,7 @@ public class EnvironmentResource {
     return Response.noContent().build();
   }
 
-  private String getYmlPath(String path) throws DatasetException, ProjectException {
+  private String getYmlPath(String path) throws DatasetException, ProjectException, UnsupportedEncodingException {
     if(Strings.isNullOrEmpty(path)) {
       return null;
     }

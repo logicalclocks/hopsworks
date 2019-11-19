@@ -58,10 +58,9 @@ import org.apache.hadoop.fs.Path;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Stateless
 public class PathValidator {
@@ -91,21 +90,16 @@ public class PathValidator {
    * file/directory) starting from the dataset path
    */
 
-  public DsPath validatePath(Project project, String path) throws DatasetException, ProjectException {
+  public DsPath validatePath(Project project, String path) throws DatasetException, ProjectException,
+      UnsupportedEncodingException {
     DsPath dsPath = new DsPath();
-
-    Pattern authorityPattern = Pattern.compile("(hdfs://[a-zA-Z0-9\\-\\.]{2,255}:[0-9]{4,6})(/.*$)");
-    Matcher urlMatcher = authorityPattern.matcher(path);
-
     if (path == null || path.isEmpty()) {
       throw new IllegalArgumentException("path was not provided.");
-    } else if (urlMatcher.find()) {
-      // Case hdfs://10.0.2.15:8020//Projects/project1/ds/dsRelativePath
-      path = urlMatcher.group(2);
-      dsPath.setFullPath(new Path(path));
-      String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(project, pathComponents, dsPath);
-    } else if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
+    } 
+    
+    path = Utils.prepPath(path);
+    
+    if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");

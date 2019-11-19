@@ -46,7 +46,6 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.IoUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.flink.client.deployment.ClusterDeploymentException;
 import org.apache.flink.client.deployment.ClusterSpecification;
@@ -452,7 +451,7 @@ public class YarnRunner {
       String destination = basePath + File.separator + Utils.getFileName(path);
       Path dst = new Path(destination);
       //copy the input file to where cuneiform expects it
-      if (!path.startsWith("hdfs:")) {
+      if (!path.startsWith(fs.getScheme()) && !path.startsWith(fs.getAlternativeScheme())) {
         //First, remove any checksum files that are present
         //Since the file may have been downloaded from HDFS, modified and now trying to upload,
         //may run into bug HADOOP-7199 (https://issues.apache.org/jira/browse/HADOOP-7199)
@@ -597,8 +596,6 @@ public class YarnRunner {
     //Possibly equired attributes
     //The name of the application app master class
     private String amMainClass;
-    //Path to the application master jar
-    private String amJarPath;
     //Which job type is running
     private JobType jobType;
     //Flink parallelism
@@ -646,10 +643,6 @@ public class YarnRunner {
       this.amMainClass = amMainClass;
     }
 
-    public Builder(String amJarPath, String amJarLocalName) {
-      this.amJarPath = amJarPath;
-    }
-    
     /**
      * Sets the configured DFS client
      *
@@ -773,29 +766,21 @@ public class YarnRunner {
     
 
     /**
-     * Add a local resource that should be added to the AM container. The name
-     * is the key as used in the LocalResources
-     * map passed to the container. The source is the local path to the file.
-     * The file will be copied into HDFS under
-     * the path
-     * <i>localResourcesBasePath</i>/<i>filename</i> and if removeAfterCopy is
-     * true, the original will be removed after
-     * starting the AM.
-     * <p/>
+     * Add a hdfs resource that should be added to the AM container.The name
+ is the key as used in the LocalResources
+ map passed to the container. The source is the path to the file.
+ <p/>
      * @param dto
-     * @param removeAfterCopy
+     * @param dfsClient to check that the path has the proper scheme compared to the dfs
      * @return
      */
-    public Builder addLocalResource(LocalResourceDTO dto,
-      boolean removeAfterCopy) {
-      if (!dto.getPath().startsWith("hdfs")) {
+    public Builder addLocalResource(LocalResourceDTO dto, DistributedFileSystemOps dfsClient) {
+      if (!dto.getPath().startsWith(dfsClient.getFilesystem().getScheme()) && !dto.getPath().startsWith(dfsClient.
+          getFilesystem().getAlternativeScheme())) {
         throw new IllegalArgumentException("Dependencies need to be stored in Datasets, local file system is not " +
           "supported");
       }
       amLocalResourcesOnHDFS.put(dto.getName(), dto);
-      if (removeAfterCopy) {
-        filesToRemove.add(dto.getPath());
-      }
       return this;
     }
     
@@ -875,11 +860,8 @@ public class YarnRunner {
 
       //Set main class
       if (amMainClass == null) {
-        amMainClass = IoUtils.getMainClassNameFromJar(amJarPath, null);
-        if (amMainClass == null) {
-          throw new IllegalStateException(
+        throw new IllegalStateException(
               "Could not infer main class name from jar and was not specified.");
-        }
       }
       //Default localResourcesBasePath
       if (localResourcesBasePath == null) {

@@ -31,6 +31,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
@@ -56,8 +57,10 @@ public class ServingUtil {
    * @param servingWrapper contains the user-data to validate
    * @param project the project where the serving resides
    * @throws ServingException
+   * @throws java.io.UnsupportedEncodingException
    */
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
+  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
+      UnsupportedEncodingException {
     // Check that the modelName is present
     if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
       throw new IllegalArgumentException("Serving name not provided");
@@ -95,9 +98,11 @@ public class ServingUtil {
    * @param servingWrapper the user data
    * @param project the project to create the serving for
    * @throws ServingException if the python environment is not activated for the project
+   * @throws java.io.UnsupportedEncodingException
    */
-  public void validateSKLearnUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
-    
+  public void validateSKLearnUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
+      UnsupportedEncodingException {
+  
     // Check that the script name is valid and exists
     String scriptName = Utils.getFileName(servingWrapper.getServing().getArtifactPath());
     if(!scriptName.contains(".py")){
@@ -105,9 +110,7 @@ public class ServingUtil {
     }
     String hdfsPath = servingWrapper.getServing().getArtifactPath();
     //Remove hdfs:// if it is in the path
-    if (hdfsPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
-      hdfsPath = hdfsPath.substring(7);
-    }
+    hdfsPath = Utils.prepPath(hdfsPath);
     if(!inodeController.existsPath(hdfsPath)){
       throw new IllegalArgumentException("Python script path does not exist in HDFS");
     }

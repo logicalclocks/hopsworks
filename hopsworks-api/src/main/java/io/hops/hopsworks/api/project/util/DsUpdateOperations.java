@@ -37,6 +37,7 @@ import org.apache.hadoop.security.AccessControlException;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 
 /**
@@ -74,7 +75,7 @@ public class DsUpdateOperations {
    */
   public org.apache.hadoop.fs.Path createDirectoryInDataset(
       Project project, Users user, String directoryName, String description, int templateId, Boolean isSearchable)
-      throws DatasetException, ProjectException, HopsSecurityException {
+      throws DatasetException, ProjectException, HopsSecurityException, UnsupportedEncodingException {
     DsPath dsPath = pathValidator.validatePath(project, directoryName);
     org.apache.hadoop.fs.Path fullPath = dsPath.getFullPath();
 
@@ -109,7 +110,8 @@ public class DsUpdateOperations {
    * @throws ProjectException
    */
   public org.apache.hadoop.fs.Path deleteDatasetFile(
-      Project project, Users user, String fileName) throws DatasetException, ProjectException, HopsSecurityException {
+      Project project, Users user, String fileName) throws DatasetException, ProjectException, HopsSecurityException,
+      UnsupportedEncodingException {
     boolean success = false;
     DistributedFileSystemOps dfso = null;
     DsPath dsPath = pathValidator.validatePath(project, fileName);
@@ -166,7 +168,7 @@ public class DsUpdateOperations {
    * @throws ProjectException
    */
   public org.apache.hadoop.fs.Path moveDatasetFile(Project project, Users user, Inode sourceInode, String destPathStr)
-      throws DatasetException, ProjectException, HopsSecurityException {
+      throws DatasetException, ProjectException, HopsSecurityException, UnsupportedEncodingException {
     String username = hdfsUsersBean.getHdfsUserName(project, user);
     String sourcePathStr = inodeController.getPath(sourceInode);
     DsPath sourceDsPath = pathValidator.validatePath(project, sourcePathStr);

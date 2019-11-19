@@ -37,6 +37,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -121,7 +122,7 @@ public class TensorBoardService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context SecurityContext sc) throws
-      ServiceException, DatasetException, ProjectException, TensorBoardException {
+      ServiceException, DatasetException, ProjectException, TensorBoardException, UnsupportedEncodingException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 

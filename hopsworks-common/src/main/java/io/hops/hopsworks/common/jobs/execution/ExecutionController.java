@@ -59,6 +59,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
@@ -93,6 +94,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -101,7 +103,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -144,7 +145,7 @@ public class ExecutionController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Execution start(Jobs job, Users user) throws JobException, GenericException, ServiceException,
-    ProjectException {
+    ProjectException, UnsupportedEncodingException {
     //A job can only have one execution running
     List<Execution> jobExecs = execFacade.findByJob(job);
     if(!jobExecs.isEmpty()) {
@@ -177,10 +178,7 @@ public class ExecutionController {
         }
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
         String path = config.getAppPath();
-        String patternString = REMOTE_PROTOCOL + "(.*)\\s";
-        Pattern.compile(patternString).matcher(path);
-        String[] parts = path.split("/");
-        String pathOfInode = path.replace(REMOTE_PROTOCOL + parts[2], "");
+        String pathOfInode = Utils.prepPath(path);
         Inode inode = inodeController.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
 
