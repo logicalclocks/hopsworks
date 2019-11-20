@@ -105,7 +105,6 @@ public class StatisticColumn implements Serializable {
   
   @Override
   public int hashCode() {
-    
     return Objects.hash(id, featuregroup, name);
   }
 }

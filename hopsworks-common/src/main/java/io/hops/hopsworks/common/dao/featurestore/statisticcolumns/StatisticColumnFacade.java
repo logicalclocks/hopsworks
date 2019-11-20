@@ -24,7 +24,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,10 +62,9 @@ public class StatisticColumnFacade extends AbstractFacade<StatisticColumn> {
    * @return list of statistic columns
    */
   public List<StatisticColumn> findByFeaturegroup(Featuregroup featuregroup) {
-    TypedQuery<StatisticColumn> query = em.createNamedQuery("StatisticColumn.findByFeaturegroup",
-      StatisticColumn.class).setParameter(
-      "feature_group", featuregroup);
-    return query.getResultList();
+    return em.createNamedQuery("StatisticColumn.findByFeaturegroup", StatisticColumn.class)
+            .setParameter("feature_group", featuregroup)
+            .getResultList();
   }
   
   /**

@@ -40,7 +40,7 @@ public class StatisticColumnController {
    */
   public void persistStatisticColumns(Featuregroup featuregroup, List<String> statisticColumns){
     if(statisticColumns != null){
-      statisticColumns.stream().forEach(statisticColumn -> {
+      statisticColumns.forEach(statisticColumn -> {
         if(!isColumnExists((List) featuregroup.getStatisticColumns(), statisticColumn)) {
           StatisticColumn sc = new StatisticColumn();
           sc.setFeaturegroup(featuregroup);
@@ -50,7 +50,7 @@ public class StatisticColumnController {
       });
       // drop all entities which are not in the list anymore
       List<StatisticColumn> columnEntities = (List) featuregroup.getStatisticColumns();
-      columnEntities.stream().forEach(scEntity -> {
+      columnEntities.forEach(scEntity -> {
         if(isEntityToBeDropped(scEntity, statisticColumns)) {
           statisticColumnFacade.remove(scEntity);
         }
@@ -78,6 +78,6 @@ public class StatisticColumnController {
    * @return
    */
   public boolean isEntityToBeDropped(StatisticColumn entity, List<String> statisticColumns) {
-    return !statisticColumns.stream().anyMatch(statisticColumn -> statisticColumn.equals(entity.getName()));
+    return statisticColumns.stream().noneMatch(statisticColumn -> statisticColumn.equals(entity.getName()));
   }
 }
