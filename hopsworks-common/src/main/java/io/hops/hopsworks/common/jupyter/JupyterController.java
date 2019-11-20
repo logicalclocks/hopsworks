@@ -147,15 +147,20 @@ public class JupyterController {
   public void shutdownQuietly(Project project, String hdfsUser, Users user, String secret,
       long pid, int port) {
     try {
-      shutdown(project, hdfsUser, user, secret, pid, port);
+      shutdown(project, hdfsUser, user, secret, pid, port, true);
     } catch (Exception e) {
       LOGGER.log(INFO, "Encountered exception while cleaning up", e);
     }
     jupyterJWTManager.cleanJWT(pid, port);
   }
-
+  
   public void shutdown(Project project, String hdfsUser, Users user, String secret,
-                              long pid, int port) throws ServiceException {
+      long pid, int port) throws ServiceException {
+    shutdown(project, hdfsUser, user, secret, pid, port, false);
+  }
+  
+  public void shutdown(Project project, String hdfsUser, Users user, String secret,
+                              long pid, int port, boolean quiet) throws ServiceException {
     // We need to stop the jupyter notebook server with the PID
     // If we can't stop the server, delete the Entity bean anyway
 
@@ -187,7 +192,14 @@ public class JupyterController {
       // Do some sanity check before using jupyter settings
       if (jupyterProject != null && jupyterSettings != null) {
         if (jupyterSettings.isGitBackend() && jupyterSettings.getGitConfig().getShutdownAutoPush()) {
-          jupyterNbVCSController.push(jupyterProject, jupyterSettings, user);
+          try {
+            jupyterNbVCSController.push(jupyterProject, jupyterSettings, user);
+          } catch (ServiceException ex) {
+            if (!quiet) {
+              throw ex;
+            }
+            LOGGER.log(Level.WARNING, "Could not push Git repository, shutting down Jupyter nevertheless", ex);
+          }
         }
       }
       jupyterManager.stopJupyterServer(project, user, hdfsUser, jupyterHomePath, pid, port);
