@@ -366,7 +366,7 @@ public class JupyterService {
         jp.setMinutesUntilExpiration(durationLeft.toMinutes());
       } catch(Exception e) {
         LOGGER.log(Level.SEVERE, "Failed to save Jupyter notebook settings", e);
-        jupyterController.shutdown(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
+        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getPid(), dto.getPort());
       }
       
       if (jp == null) {
