@@ -239,7 +239,7 @@ public class KubeClientService {
   public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
     RetryConfig retryConfig = RetryConfig.<Optional<Integer>>custom()
       .maxAttempts(maxAttempts)
-      .intervalFunction(IntervalFunction.ofExponentialBackoff())
+      .intervalFunction(IntervalFunction.ofExponentialBackoff(400L, 1.3D))
       .retryOnResult(o -> o.map(replicas -> replicas < 1).orElse(true))
       .build();
     Retry retry = Retry.of("waitForDeployment: " + deploymentName, retryConfig);

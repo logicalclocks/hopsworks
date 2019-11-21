@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
@@ -16,6 +17,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
@@ -94,6 +96,7 @@ public class KubeJupyterManager implements JupyterManager {
   public static final String CONF_SUFFIX = SEPARATOR + "conf";
   public static final String JWT_SUFFIX = SEPARATOR + "jwt";
   public static final String KERNELS_SUFFIX = SEPARATOR + "kernels";
+  private static final String READINESS_PATH = "/hopsworks-api/jupyter/%d/api/status?token=%s";
   
   private static final long PID = -1;
   private static final int TOKEN_LENGTH = 48;
@@ -182,7 +185,8 @@ public class KubeJupyterManager implements JupyterManager {
           token,
           settings.getFlinkConfDir(),
           settings.getSparkConfDir(),
-          (DockerJobConfiguration)jupyterSettings.getDockerConfig()));
+          (DockerJobConfiguration)jupyterSettings.getDockerConfig(),
+          nodePort));
       
       return new JupyterDTO(nodePort, token, PID, secretConfig, jupyterPaths.getCertificatesDir());
     } catch (KubernetesClientException | IOException e) {
@@ -241,11 +245,20 @@ public class KubeJupyterManager implements JupyterManager {
 
   private Container buildContainer(String jupyterHome, String anacondaEnv, String pythonKernelName, String secretDir,
                                    String certificatesDir, String hadoopUser, String token, String flinkConfDir,
-                                   String sparkConfDir, ResourceRequirements resourceRequirements) {
+                                   String sparkConfDir, ResourceRequirements resourceRequirements,
+                                   Integer nodePort) {
     return new ContainerBuilder()
       .withName(JUPYTER)
       .withImage(settings.getKubeRegistry() + "/jupyter:" + settings.getJupyterImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
+      .withReadinessProbe(
+        new ProbeBuilder()
+          .withHttpGet(
+            new HTTPGetActionBuilder()
+              .withPath(String.format(READINESS_PATH, nodePort, token))
+              .withNewPort(LOCAL_PORT)
+            .build())
+          .build())
       .withResources(resourceRequirements)
       .withVolumeMounts(
         new VolumeMountBuilder()
@@ -363,11 +376,12 @@ public class KubeJupyterManager implements JupyterManager {
   
   private Deployment buildDeployment(String name, String kubeProjectUser, String jupyterHome, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig) throws ServiceException {
+    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig, Integer nodePort)
+      throws ServiceException {
 
     ResourceRequirements resourceRequirements = buildResourceRequirements(dockerConfig);
     Container container = buildContainer(jupyterHome, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements);
+      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()
