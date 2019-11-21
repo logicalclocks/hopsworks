@@ -22,11 +22,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumn;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * DTO containing the human-readable information of a featuregroup, can be converted to JSON or XML representation
@@ -42,6 +44,22 @@ import java.util.List;
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   private FeaturegroupType featuregroupType;
+  @XmlElement
+  private Boolean descStatsEnabled;
+  @XmlElement
+  private Boolean featCorrEnabled;
+  @XmlElement
+  private Boolean featHistEnabled;
+  @XmlElement
+  private Boolean clusterAnalysisEnabled;
+  @XmlElement
+  private List<String> statisticColumns;
+  @XmlElement
+  private Integer numBins;
+  @XmlElement
+  private Integer numClusters;
+  @XmlElement
+  private String corrMethod;
 
   public FeaturegroupDTO() {
   }
@@ -52,6 +70,81 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
         (List) featuregroup.getStatistics(), (List) featuregroup.getJobs(),
         featuregroup.getId());
     this.featuregroupType = featuregroup.getFeaturegroupType();
+    this.clusterAnalysisEnabled = featuregroup.isClusterAnalysisEnabled();
+    this.descStatsEnabled = featuregroup.isDescStatsEnabled();
+    this.featCorrEnabled = featuregroup.isFeatCorrEnabled();
+    this.featHistEnabled = featuregroup.isFeatHistEnabled();
+    List<StatisticColumn> statColumns = (List) featuregroup.getStatisticColumns();
+    this.statisticColumns = statColumns.stream()
+      .map(sc -> sc.getName())
+      .collect(Collectors.toList());
+    this.numBins = featuregroup.getNumBins();
+    this.numClusters = featuregroup.getNumClusters();
+    this.corrMethod = featuregroup.getCorrMethod();
+  }
+  
+  public Boolean isDescStatsEnabled() {
+    return descStatsEnabled;
+  }
+  
+  public void setDescStatsEnabled(boolean descStatsEnabled) {
+    this.descStatsEnabled = descStatsEnabled;
+  }
+  
+  public Boolean isFeatCorrEnabled() {
+    return featCorrEnabled;
+  }
+  
+  public void setFeatCorrEnabled(boolean featCorrEnabled) {
+    this.featCorrEnabled = featCorrEnabled;
+  }
+  
+  public Boolean isFeatHistEnabled() {
+    return featHistEnabled;
+  }
+  
+  public void setFeatHistEnabled(boolean featHistEnabled) {
+    this.featHistEnabled = featHistEnabled;
+  }
+  
+  public Boolean isClusterAnalysisEnabled() {
+    return clusterAnalysisEnabled;
+  }
+  
+  public void setClusterAnalysisEnabled(boolean clusterAnalysisEnabled) {
+    this.clusterAnalysisEnabled = clusterAnalysisEnabled;
+  }
+  
+  public List<String> getStatisticColumns() {
+    return statisticColumns;
+  }
+  
+  public void setStatisticColumns(List<String> statisticColumns) {
+    this.statisticColumns = statisticColumns;
+  }
+  
+  public Integer getNumBins() {
+    return numBins;
+  }
+  
+  public void setNumBins(Integer numBins) {
+    this.numBins = numBins;
+  }
+  
+  public Integer getNumClusters() {
+    return numClusters;
+  }
+  
+  public void setNumClusters(Integer numClusters) {
+    this.numClusters = numClusters;
+  }
+  
+  public String getCorrMethod() {
+    return corrMethod;
+  }
+  
+  public void setCorrMethod(String corrMethod) {
+    this.corrMethod = corrMethod;
   }
 
   @XmlElement
@@ -62,13 +155,19 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   public void setFeaturegroupType(FeaturegroupType featuregroupType) {
     this.featuregroupType = featuregroupType;
   }
-
+  
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-        "featuregroupType=" + featuregroupType +
-        '}';
+      "featuregroupType=" + featuregroupType +
+      ", descStatsEnabled=" + descStatsEnabled +
+      ", featCorrEnabled=" + featCorrEnabled +
+      ", featHistEnabled=" + featHistEnabled +
+      ", clusterAnalysisEnabled=" + clusterAnalysisEnabled +
+      ", statisticColumns=" + statisticColumns +
+      ", numBins=" + numBins +
+      ", numClusters=" + numClusters +
+      ", corrMethod='" + corrMethod + '\'' +
+      '}';
   }
-
-
 }

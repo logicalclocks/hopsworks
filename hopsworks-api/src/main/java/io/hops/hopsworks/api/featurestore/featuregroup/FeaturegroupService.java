@@ -50,6 +50,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -392,7 +393,9 @@ public class FeaturegroupService {
       @QueryParam("updateStats") Boolean updateStats, @ApiParam(value = "enableOnline", example = "true",
     defaultValue = "false") @QueryParam("enableOnline") Boolean enableOnline,
     @ApiParam(value = "disableOnline", example = "true", defaultValue = "false") @QueryParam("disableOnline")
-      Boolean disableOnline, FeaturegroupDTO featuregroupDTO)
+      Boolean disableOnline, @ApiParam(value = "updateStatsSettings", example = "true", defaultValue =
+    "false") @DefaultValue("false") @QueryParam("updateStatsSettings") Boolean updateStatsSettings, FeaturegroupDTO
+    featuregroupDTO)
     throws FeaturestoreException, SQLException {
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
@@ -408,7 +411,7 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
-    if(updateMetadata || updateStats || enableOnline || disableOnline){
+    if(updateMetadata || updateStats || enableOnline || disableOnline || updateStatsSettings){
       if(updateMetadata) {
         updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
       }
@@ -423,6 +426,9 @@ public class FeaturegroupService {
       if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
         updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+      }
+      if(updateStatsSettings) {
+        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
       }
     }
     if(updatedFeaturegroupDTO != null) {

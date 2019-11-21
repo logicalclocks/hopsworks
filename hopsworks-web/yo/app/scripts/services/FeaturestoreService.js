@@ -117,6 +117,35 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
+                 * GET request for the metadata of a particular featuregroup for a particular featurestore
+                 *
+                 * @param projectId project of the active user
+                 * @param featurestore featurestore to get featuregroups from
+                 * @param featuregroupId id of the featuregroup to get metadata for
+                 * @returns {HttpPromise}
+                 */
+                getFeaturegroupMetadata: function(projectId, featurestore, featuregroupId) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId);
+                },
+
+                /**
+                 * Updates the statistics settings of a featuregroup for a particular featurestore
+                 *
+                 * @param projectId
+                 * @param featurestore
+                 * @param featuregroupId
+                 * @param featuregroupJson
+                 * @returns {HttpPromise}
+                 */
+                updateFeaturegroupStatsSettings: function(projectId, featurestore, featuregroupId, featuregroupJson) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroupId +
+                        "?updateStatsSettings=true",
+                        JSON.stringify(featuregroupJson), {headers: {'Content-Type': 'application/json'}});
+                },
+
+                /**
                  * GET request for all training datasets for a particular featurestore
                  *
                  * @param projectId project of the active user
