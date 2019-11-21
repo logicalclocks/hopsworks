@@ -31,17 +31,11 @@ angular.module('hopsWorksApp')
             //Controller Inputs
             self.projectId = projectId;
             self.featuregroup = featuregroup;
-            self.trainingDataset = trainingDataset
+            self.trainingDataset = trainingDataset;
             self.projectName = projectName;
             self.featurestore = featurestore;
             self.settings=settings;
             self.newJobName = self.projectId + "_newjob";
-
-            //State
-            self.clusterAnalysis = true
-            self.featureCorrelations = true
-            self.descriptiveStats = true
-            self.featureHistograms = true
 
             //Constants
             self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
@@ -58,6 +52,37 @@ angular.module('hopsWorksApp')
             self.close = function () {
                 $uibModalInstance.dismiss('cancel');
             };
+
+            /**
+             * Initializes the statistics settings checkboxes
+             */
+            var init = function () {
+                FeaturestoreService.getFeaturegroupMetadata(self.projectId, self.featurestore, self.featuregroup.id).then(
+                    function (success) {
+                        self.clusterAnalysis = success.data.clusterAnalysisEnabled;
+                        self.featureCorrelations = success.data.featCorrEnabled;
+                        self.descriptiveStats = success.data.descStatsEnabled;
+                        self.featureHistograms = success.data.featHistEnabled;
+                        self.statColumns = success.data.statisticColumns;
+                    }, function (error) {
+                        self.clusterAnalysis = true;
+                        self.featureCorrelations = true;
+                        self.descriptiveStats = true;
+                        self.featureHistograms = true;
+                        self.statisticColumns = [];
+                        console.log('Failed to fetch statistics settings');
+                    });
+            }
+
+            if(!self.trainingDataset) {
+                init();
+            } else {
+                self.clusterAnalysis = true;
+                self.featureCorrelations = true;
+                self.descriptiveStats = true;
+                self.featureHistograms = true;
+                self.statisticColumns = [];
+            }
 
             /**
              * Sets the feature correlations checkbox
@@ -164,7 +189,7 @@ angular.module('hopsWorksApp')
                     "featureCorrelation": self.featureCorrelations,
                     "clusterAnalysis": self.clusterAnalysis,
                     "featureHistograms": self.featureHistograms,
-                    "statColumns": []
+                    "statColumns": self.statColumns
                 }
                 if(self.trainingDataset){
                     argsJson["trainingDataset"] = self.featuregroup.name
@@ -243,27 +268,58 @@ angular.module('hopsWorksApp')
                 if(!self.trainingDataset){
                     jobName = "update_featuregroup_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
                     operation = 'update_fg_stats'
+                    var settingsJson = {
+                        "clusterAnalysisEnabled": self.clusterAnalysis,
+                        "featCorrEnabled": self.featureCorrelations,
+                        "descStatsEnabled": self.descriptiveStats,
+                        "featHistEnabled": self.featureHistograms,
+                        "featuregroupType": self.featuregroup.featuregroupType
+                    }
+                    FeaturestoreService.updateFeaturegroupStatsSettings(
+                        self.projectId, self.featurestore, self.featuregroup.id, settingsJson).then(
+                        function (success) {
+                            growl.success("Featuregroup statistics settings updated", {title: 'Success', ttl: 15000});
+                            writeUtilArgstoHdfs(jobName, operation);
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Failed to update featuregroup statistics settings',
+                                ttl: 15000
+                            });
+                            self.working = false;
+                        }
+                    )
                 } else {
                     jobName = "update_trainingdataset_statistics_" + self.featuregroup.name + "_" + new Date().getTime()
                     operation = 'update_td_stats'
+                    writeUtilArgstoHdfs(jobName, operation);
                 }
-                var utilArgs = self.setupJobArgs(jobName + "_args.json", operation)
-                FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
-                    function (success) {
-                        growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
-                        var hdfsPath = success.data.successMessage
-                        var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath)
-                        var jobState = self.setupJobState(runConfig)
-                        StorageService.store(self.newJobName, jobState);
-                        $uibModalInstance.close(success);
-                        self.goToUrl("newjob")
-                    }, function (error) {
-                        growl.error(error.data.errorMsg, {
-                            title: 'Failed to setup featurestore util job arguments',
-                            ttl: 15000
-                        });
-                        self.working = false;
-                    });
-                growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
             }
+
+            /**
+             * Writes the jobArgs to Hdfs with a given jobName and operation
+             *
+             * @param jobName
+             * @param operation
+             */
+            var writeUtilArgstoHdfs = function (jobName, operation) {
+                    var utilArgs = self.setupJobArgs(jobName + "_args.json", operation)
+                    FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
+                        function (success) {
+                            growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
+                            var hdfsPath = success.data.successMessage
+                            var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath)
+                            var jobState = self.setupJobState(runConfig)
+                            StorageService.store(self.newJobName, jobState);
+                            $uibModalInstance.close(success);
+                            self.goToUrl("newjob")
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, {
+                                title: 'Failed to setup featurestore util job arguments',
+                                ttl: 15000
+                            });
+                            self.working = false;
+                        });
+                    growl.info("Settings up job arguments... wait", {title: 'Creating', ttl: 1000})
+            }
+
         }]);
