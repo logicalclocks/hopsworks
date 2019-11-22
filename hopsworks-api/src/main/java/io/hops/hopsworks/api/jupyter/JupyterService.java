@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.jupyter.JupyterMode;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
@@ -249,6 +250,7 @@ public class JupyterService {
     }
     
     js.setGitAvailable(jupyterNbVCSController.isGitAvailable());
+    js.setMode(JupyterMode.JUPYTER_LAB);
 
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(js).build();
   }
@@ -306,6 +308,11 @@ public class JupyterService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 
+    // Jupyter Git works only for JupyterLab
+    if (jupyterSettings.isGitBackend() && jupyterSettings.getMode().equals(JupyterMode.JUPYTER_CLASSIC)) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE,
+          "Git support available only in JupyterLab");
+    }
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
 
     if (jp == null) {
