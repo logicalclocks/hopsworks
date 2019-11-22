@@ -207,7 +207,6 @@
                 <p:commandButton type="submit"
                                  value="Reset user password"
                                  action="#{adminProfileAdministration.resetPassword()}"
-                                 oncomplete="PF('dlg1').show();"
                                  update=":account_status :dialog" maxWidth="40" styleClass="flat">
                   <p:confirm header="Confirmation"
                              message="Are you sure you want to reset the password for #{adminProfileAdministration.editingUser.email}? This action will be logged."
