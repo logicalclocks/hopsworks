@@ -24,7 +24,8 @@ module FeaturestoreHelper
     return featurestore_id
   end
 
-  def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false)
+  def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
+                                 default_stats_settings: true)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     if features == nil
@@ -60,6 +61,16 @@ module FeaturestoreHelper
       json_data['onlineFeaturegroupEnabled'] = true
     else
       json_data['onlineFeaturegroupEnabled'] = false
+    end
+    unless default_stats_settings
+      json_data['numBins'] = 10
+      json_data['numClusters'] = 10
+      json_data['corrMethod'] = "spearman"
+      json_data['featHistEnabled'] = false
+      json_data['featCorrEnabled'] = false
+      json_data['clusterAnalysisEnabled'] = false
+      json_data['statisticColumns'] = ["testfeature"]
+      json_data['descStatsEnabled'] = false
     end
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
@@ -250,6 +261,28 @@ module FeaturestoreHelper
         version: featuregroup_version,
         type: type,
         featuregroupType: featuregroupType
+    }
+    json_data = json_data.to_json
+    json_result = put update_featuregroup_metadata_endpoint, json_data
+    return json_result
+  end
+
+  def update_cached_featuregroup_stats_settings(project_id, featurestore_id, featuregroup_id, featuregroup_version)
+    type = "cachedFeaturegroupDTO"
+    featuregroupType = "CACHED_FEATURE_GROUP"
+    update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateStatsSettings=true"
+    json_data = {
+        type: type,
+        featuregroupType: featuregroupType,
+        version: featuregroup_version,
+        numBins: 10,
+        numClusters: 10,
+        corrMethod: "spearman",
+        featHistEnabled: false,
+        featCorrEnabled: false,
+        clusterAnalysisEnabled: false,
+        statisticColumns: ["testfeature"],
+        descStatsEnabled: false
     }
     json_data = json_data.to_json
     json_result = put update_featuregroup_metadata_endpoint, json_data

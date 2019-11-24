@@ -28,6 +28,8 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featureg
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJobDTO;
+import io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumnController;
+import io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumnFacade;
 import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -77,6 +79,10 @@ public class FeaturegroupController {
   private FeaturestoreJobController featurestoreJobController;
   @EJB
   private JobFacade jobFacade;
+  @EJB
+  private StatisticColumnController statisticColumnController;
+  @EJB
+  private StatisticColumnFacade statisticColumnFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -167,6 +173,10 @@ public class FeaturegroupController {
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
       cachedFeaturegroup, onDemandFeaturegroup);
+    
+    //Store statistic columns setting
+    statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
+    featuregroup.setStatisticColumns(statisticColumnFacade.findByFeaturegroup(featuregroup));
 
     // Store statistics
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
@@ -331,7 +341,59 @@ public class FeaturegroupController {
       featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
     return convertFeaturegrouptoDTO(featuregroup);
   }
-
+  
+  /**
+   * Updates statistics settings for a featuregroup
+   *
+   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroupDTO a DTO containing the updated featuregroup stats
+   * @return DTO of the updated feature group
+   * @throws FeaturestoreException
+   */
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO updateFeaturegroupStatsSettings(
+    Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
+    featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    // update the settings and persist, if setting not define keep previous value
+    verifyAndSetFeaturegroupStatsSettings(featuregroupDTO, featuregroup);
+    featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+  
+  /**
+   * Verifies if statistics settings were provided and else sets it to the default or keeps the current settings
+   *
+   * @param featuregroupDTO
+   * @param featuregroup
+   */
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public void verifyAndSetFeaturegroupStatsSettings(FeaturegroupDTO featuregroupDTO, Featuregroup featuregroup) {
+    if(featuregroupDTO.isDescStatsEnabled() != null) {
+      featuregroup.setDescStatsEnabled(featuregroupDTO.isDescStatsEnabled());
+    }
+    if(featuregroupDTO.isFeatCorrEnabled() != null) {
+      featuregroup.setFeatCorrEnabled(featuregroupDTO.isFeatCorrEnabled());
+    }
+    if(featuregroupDTO.isFeatHistEnabled() != null) {
+      featuregroup.setFeatHistEnabled(featuregroupDTO.isFeatHistEnabled());
+    }
+    if(featuregroupDTO.isClusterAnalysisEnabled() != null) {
+      featuregroup.setClusterAnalysisEnabled(featuregroupDTO.isClusterAnalysisEnabled());
+    }
+    if(featuregroupDTO.getNumBins() != null) {
+      featuregroup.setNumBins(featuregroupDTO.getNumBins());
+    }
+    if(featuregroupDTO.getNumClusters() != null) {
+      featuregroup.setNumClusters(featuregroupDTO.getNumClusters());
+    }
+    if(featuregroupDTO.getCorrMethod() != null) {
+      featuregroup.setCorrMethod(featuregroupDTO.getCorrMethod());
+    }
+  }
+  
   /**
    * Verifies statistics user input for a feature group
    *
@@ -622,6 +684,8 @@ public class FeaturegroupController {
     featuregroup.setFeaturegroupType(featuregroupDTO.getFeaturegroupType());
     featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
+    // check if null to handle old clients and use entity defaults
+    verifyAndSetFeaturegroupStatsSettings(featuregroupDTO, featuregroup);
     featuregroupFacade.persist(featuregroup);
     return featuregroup;
   }
