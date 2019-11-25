@@ -20,10 +20,21 @@
         <div class="panel-heading j-panel-heading">
             <div class="row">
                 <div class="pull-right" style="margin-right: 10px">
-                    <button class="btn btn-primary" ng-click="jupyterCtrl.start()" type="button"
-                            id="newNotebook"  style="width:90px; font-weight: bolder" ng-show="!sparkConfigCtrl.uneditableMode">
-                        Start <i class="fa fa-play" aria-hidden="true" style="margin-left: 5px"></i>
-                    </button>
+                    <div class="btn-group" ng-show="!sparkConfigCtrl.uneditableMode">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                            style="border-top-right-radius: 0px; border-bottom-right-radius: 0px; border-right: 1px solid black;">
+                          <span class="caret"></span>
+                          <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a ng-click="jupyterCtrl.start('JUPYTER_CLASSIC')" style="cursor: pointer;"
+                            uib-tooltip="Start Jupyter Classic notebook">Classic Jupyter</a></li>
+                        </ul>
+                        <button type="button" class="btn btn-primary" id="newNotebook" ng-click="jupyterCtrl.start('JUPYTER_LAB')"
+                            style="padding-left: 4px;" uib-tooltip="Start JupyterLab. Click the arrow on the left for more options.">
+                            JupyterLab <i class="fa fa-play" aria-hidden="true" style="margin-left: 10px"></i>
+                        </button>
+                      </div>
                 </div>
             </div>
         </div>

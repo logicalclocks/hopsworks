@@ -162,6 +162,7 @@ public class JupyterProcessMgr implements JupyterManager {
           .addCommand(jp.getCertificatesDir())
           .addCommand(hdfsUser)
           .addCommand(token)
+          .addCommand(js.getMode().getValue())
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
           .setWaitTimeout(20L, TimeUnit.SECONDS)
