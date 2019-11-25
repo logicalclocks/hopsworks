@@ -27,14 +27,14 @@ describe "On #{ENV['OS']}" do
         project = get_project
 
         # Check TestJob dataset
-        get_datasets_in(project, "TestJob")
+        get_datasets_in_path(project, "TestJob", "&type=DATASET")
         inode_list = JSON.parse(response.body)
         expect_status(200)
         expect(find_inode_in_dataset(inode_list, "hops-examples-featurestore")).to be true
         expect(find_inode_in_dataset(inode_list, "data")).to be true
 
         # Check Jupyter dataset
-        get_datasets_in(project, "Jupyter")
+        get_datasets_in_path(project, "Jupyter", "&type=DATASET")
         inode_list = JSON.parse(response.body)
         expect_status(200)
         expect(inode_list.empty?).to be false

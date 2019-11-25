@@ -42,7 +42,6 @@ describe "On #{ENV['OS']}" do
       reset_session
     end
     after :all do
-      puts "after project test. Clean all"
       clean_projects
     end
     describe 'login' do
