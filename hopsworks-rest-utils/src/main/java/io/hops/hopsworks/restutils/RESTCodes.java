@@ -569,7 +569,11 @@ public class RESTCodes {
     JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running", Response.Status.BAD_REQUEST),
     ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR),
     OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST),
-    GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST);
+    GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST),
+    ELASTIC_QUERY_NO_MAPPING(47, "Elastic query uses a field that is not in the mapping of the index",
+      Response.Status.BAD_REQUEST),
+    ELASTIC_SERVICE_ERROR(48, "Elastic error - not query", Response.Status.BAD_REQUEST),
+    ELASTIC_QUERY_ERROR(49, "Elastic error - query", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

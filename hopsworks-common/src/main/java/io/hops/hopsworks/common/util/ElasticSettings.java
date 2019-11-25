@@ -23,6 +23,8 @@ public class ElasticSettings {
   public final static String ELASTIC_IP_DEFAULT="127.0.0.1";
   public final static int ELASTIC_PORT_DEFAULT = 9300;
   public final static int ELASTIC_REST_PORT_DEFAULT = 9200;
+  public final static Integer DEFAULT_SCROLL_PAGE_SIZE = 1000;
+  public final static Integer MAX_SCROLL_PAGE_SIZE = 10000;
   
   private final List<String> elasticIps;
   private final int elasticPort;
@@ -64,5 +66,13 @@ public class ElasticSettings {
       rrIndex = 0;
     }
     return elasticIps.get(rrIndex++);
+  }
+  
+  public Integer getDefaultScrollPageSize() {
+    return DEFAULT_SCROLL_PAGE_SIZE;
+  }
+  
+  public Integer getMaxScrollPageSize() {
+    return MAX_SCROLL_PAGE_SIZE;
   }
 }

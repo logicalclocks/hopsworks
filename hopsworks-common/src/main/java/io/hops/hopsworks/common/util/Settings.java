@@ -1370,6 +1370,16 @@ public class Settings implements Serializable {
     checkCache();
     return ELASTIC_SETTINGS.getElasticRESTEndpoint();
   }
+  
+  public synchronized Integer getElasticDefaultScrollPageSize() {
+    checkCache();
+    return ELASTIC_SETTINGS.getDefaultScrollPageSize();
+  }
+  
+  public synchronized Integer getElasticMaxScrollPageSize() {
+    checkCache();
+    return ELASTIC_SETTINGS.getMaxScrollPageSize();
+  }
 
   private long ELASTIC_LOGS_INDEX_EXPIRATION = 7 * 24 * 60 * 60 * 1000;
 
