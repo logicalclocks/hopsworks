@@ -186,7 +186,7 @@ public class KubeJupyterManager implements JupyterManager {
           settings.getFlinkConfDir(),
           settings.getSparkConfDir(),
           (DockerJobConfiguration)jupyterSettings.getDockerConfig(),
-          nodePort));
+          nodePort, jupyterSettings.getMode().getValue()));
       
       return new JupyterDTO(nodePort, token, PID, secretConfig, jupyterPaths.getCertificatesDir());
     } catch (KubernetesClientException | IOException e) {
@@ -246,7 +246,7 @@ public class KubeJupyterManager implements JupyterManager {
   private Container buildContainer(String jupyterHome, String anacondaEnv, String pythonKernelName, String secretDir,
                                    String certificatesDir, String hadoopUser, String token, String flinkConfDir,
                                    String sparkConfDir, ResourceRequirements resourceRequirements,
-                                   Integer nodePort) {
+                                   Integer nodePort, String jupyterMode) {
     return new ContainerBuilder()
       .withName(JUPYTER)
       .withImage(settings.getKubeRegistry() + "/jupyter:" + settings.getJupyterImgVersion())
@@ -306,7 +306,8 @@ public class KubeJupyterManager implements JupyterManager {
           .withContainerPort(LOCAL_PORT)
           .build())
       .withCommand("jupyter-launch.sh")
-      .withArgs(jupyterHome, anacondaEnv, secretDir, certificatesDir, hadoopUser, token, flinkConfDir, sparkConfDir)
+      .withArgs(jupyterHome, anacondaEnv, secretDir, certificatesDir, hadoopUser, token, flinkConfDir, sparkConfDir,
+          jupyterMode)
       .build();
   }
   
@@ -376,12 +377,13 @@ public class KubeJupyterManager implements JupyterManager {
   
   private Deployment buildDeployment(String name, String kubeProjectUser, String jupyterHome, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig, Integer nodePort)
+    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig, Integer nodePort,
+    String jupyterMode)
       throws ServiceException {
 
     ResourceRequirements resourceRequirements = buildResourceRequirements(dockerConfig);
     Container container = buildContainer(jupyterHome, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort);
+      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort, jupyterMode);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()
