@@ -27,6 +27,10 @@ describe "On #{ENV['OS']}" do
     end
 
     context "#not logged in" do
+      before :all do
+        reset_session
+      end
+      
       it "should not be able to ping" do
         post @ping_resource, {}
         expect_status(401)

@@ -116,14 +116,15 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should succeed to get credentials" do
-          get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?project=#{@project[:projectname]}&username=#{@project_user[:username]}"
+          project_username = @project[:projectname] + "__" + @project_user[:username]
+          get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?username=#{project_username}"
           expect_status(200)
           expect(json_body[:fileExtension]).to eql("jks")
           expect(json_body[:kStore]).not_to be_nil
           expect(json_body[:tStore]).not_to be_nil
           expect(json_body[:password]).not_to be_nil
           with_agent_session
-          get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?project=#{@project[:projectname]}&username=#{@project_user[:username]}"
+          get "#{ENV['HOPSWORKS_API']}/admin/credentials/x509?username=#{project_username}"
           expect_status(200)
         end
       end

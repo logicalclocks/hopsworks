@@ -157,6 +157,9 @@ public class JupyterSettings implements Serializable {
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private GitConfig gitConfig;
   
+  @Transient
+  private JupyterMode mode;
+  
   public JupyterSettings() {
   }
 
@@ -315,5 +318,13 @@ public class JupyterSettings implements Serializable {
 
   public void setPythonKernel(boolean pythonKernel) {
     this.pythonKernel = pythonKernel;
+  }
+  
+  public JupyterMode getMode() {
+    return mode;
+  }
+  
+  public void setMode(JupyterMode mode) {
+    this.mode = mode;
   }
 }

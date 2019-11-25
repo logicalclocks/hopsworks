@@ -587,7 +587,7 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.start = function() {
+            self.start = function(mode) {
 
                 // do not allow starting jupyter enterprise if invalid memory picked
                 if (self.jupyterSettings.pythonKernel === true &&
@@ -600,6 +600,8 @@ angular.module('hopsWorksApp')
                 startLoading("Connecting to Jupyter...");
                 $scope.tgState = true;
 
+                self.jupyterSettings.mode = mode;
+                
                 if (!self.jupyterSettings.gitBackend) {
                     delete self.jupyterSettings.gitConfig
                 }
