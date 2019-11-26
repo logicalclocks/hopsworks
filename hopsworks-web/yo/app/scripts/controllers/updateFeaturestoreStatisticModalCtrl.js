@@ -222,18 +222,18 @@ angular.module('hopsWorksApp')
                 if (runConfig.jobType === self.sparkJobType) {
                     jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
                         "isOpen": false,
-                        "visible": true,
+                        "visible": false,
                         "value": "",
-                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.path
+                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.appPath
                     };
                     jobState.jobtype = 1
                 }
                 if (runConfig.jobType === self.pySparkJobType) {
                     jobState.accordion3 = {// Contains the main execution file (jar, workflow,...)
                         "isOpen": false,
-                        "visible": true,
+                        "visible": false,
                         "value": "",
-                        "title": "App file (.py or .ipynb) - " + runConfig.path
+                        "title": "App file (.py or .ipynb) - " + runConfig.appPath
                     };
                     jobState.jobtype = 2
                 }
@@ -253,7 +253,7 @@ angular.module('hopsWorksApp')
                 jobState.jobname = runConfig.appName
                 jobState.runConfig = runConfig
                 jobState.sparkState = {
-                    "selectedJar": runConfig.path
+                    "selectedJar": runConfig.appPath
                 }
                 return jobState
             }
