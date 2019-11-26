@@ -47,7 +47,7 @@
                             <p>Starting Jupyter with this mode will enable the Python Kernel.</p>
                             <div ng-include="'views/jupyter/pythonConfig.html'"></div>
                         </div>
-                        <div class="col-sm-4 description">
+                        <div class="col-sm-4 description" ng-class="{comments:sparkConfigCtrl.uneditableMode}">
                             <p class="j-tab-advanced" style="width:100%;">Development in Jupyter</p>
                             <p> Jupyter notebook will behave identical to how it would
                                 if you start the notebook server locally on your machine using a
@@ -83,7 +83,7 @@
                             </md-radio-group>
                             <div ng-include="'views/jupyter/experimentConfig.html'"></div>
                         </div>
-                        <div class="col-sm-4 description">
+                        <div class="col-sm-4 description" ng-class="{comments:sparkConfigCtrl.uneditableMode}">
                             <div ng-if="sparkConfigCtrl.jobConfig.experimentType == 'EXPERIMENT'">
                                 <p class="j-tab-advanced" style="width:100%;">Experiment</p>
                                 <p> Run python wrapper functions on PySpark to run parallel hyperparameter optimization or distributed training orchestrated on PySpark executors.</p>
@@ -140,7 +140,7 @@
                             </md-radio-group>
                             <div ng-include="'views/jupyter/sparkConfig.html'"></div>
                         </div>
-                        <div class="col-sm-4 description">
+                        <div class="col-sm-4 description" ng-class="{comments:sparkConfigCtrl.uneditableMode}">
                             <div ng-if="sparkConfigCtrl.sparkType == 'SPARK_STATIC'">
                                 <p class="j-tab-advanced" style="width:100%;">Spark Static</p>
                                 <p>Spark is a general-purpose distributed data processing engine.</p>

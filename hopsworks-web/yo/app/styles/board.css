@@ -292,6 +292,12 @@ div.story h3, div.task h3 {
   pointer-events: none;
 }
 
+.comments {
+  cursor: auto;
+  opacity: 1.0;
+  pointer-events: auto;
+}
+
 
 .ui-select-bootstrap {
   .ui-select-toggle > .caret {

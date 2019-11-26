@@ -40,8 +40,6 @@ angular.module('hopsWorksApp')
             self.uneditableMode = false;
 
             self.experimentType = '';
-            self.sparkAdvanced = false;
-            self.advanced = false;
             $scope.indextab = 0;
 
             $scope.$watch('jobConfig', function (jobConfig, oldConfig) {

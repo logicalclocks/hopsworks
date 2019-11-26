@@ -56,13 +56,13 @@
             </rzslider>
         </div>
     </div>
-    <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.sparkAdvanced = !sparkConfigCtrl.sparkAdvanced" data-toggle="collapse" data-target="#sparkAdvanced">
+    <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.settings.advanced = !sparkConfigCtrl.settings.advanced" data-toggle="collapse" data-target="#sparkAdvanced">
         Advanced configuration
-        <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.sparkAdvanced, 'fa-chevron-right': !sparkConfigCtrl.sparkAdvanced}" style="margin-left: 5px">
+        <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.settings.advanced, 'fa-chevron-right': !sparkConfigCtrl.settings.advanced}" style="margin-left: 5px">
         </i>
     </h5>
     <div id="sparkAdvanced"
-         ng-class="{'collapse in': sparkConfigCtrl.sparkAdvanced, 'collapse': !sparkConfigCtrl.sparkAdvanced}">
+         ng-class="{'collapse in': sparkConfigCtrl.settings.advanced, 'collapse': !sparkConfigCtrl.settings.advanced}">
         <div ng-include="'views/jupyter/commonAdvancedConfig.html'"></div>
     </div>
 </form>
