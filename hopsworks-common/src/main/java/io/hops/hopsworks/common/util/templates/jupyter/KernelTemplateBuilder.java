@@ -27,6 +27,7 @@ public class KernelTemplateBuilder {
   private String hadoopVersion;
   private String secretDirectory;
   private String hiveEndpoints;
+  private String libHdfsOpts;
   
   private KernelTemplateBuilder() {}
   
@@ -90,6 +91,15 @@ public class KernelTemplateBuilder {
   
   public KernelTemplateBuilder setHiveEndpoints(String hiveEndpoints) {
     this.hiveEndpoints = hiveEndpoints;
+    return this;
+  }
+
+  public String getLibHdfsOpts() {
+    return libHdfsOpts;
+  }
+
+  public KernelTemplateBuilder setLibHdfsOpts(String libHdfsOpts) {
+    this.libHdfsOpts = libHdfsOpts;
     return this;
   }
   

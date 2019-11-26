@@ -24,6 +24,7 @@ public class KernelTemplate extends JupyterTemplate {
   private final String hadoopVersion;
   private final String secretDirectory;
   private final String hiveEndpoints;
+  private final String libHdfsOpts;
   
   public KernelTemplate(KernelTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder. getHadoopHome(), builder.getProject());
@@ -31,6 +32,7 @@ public class KernelTemplate extends JupyterTemplate {
     this.hadoopVersion = builder.getHadoopVersion();
     this.secretDirectory = builder.getSecretDirectory();
     this.hiveEndpoints = builder.getHiveEndpoints();
+    this.libHdfsOpts = builder.getLibHdfsOpts();
   }
   
   public String getAnacondaHome() {
@@ -47,5 +49,9 @@ public class KernelTemplate extends JupyterTemplate {
   
   public String getHiveEndpoints() {
     return hiveEndpoints;
+  }
+
+  public String getLibHdfsOpts() {
+    return libHdfsOpts;
   }
 }
