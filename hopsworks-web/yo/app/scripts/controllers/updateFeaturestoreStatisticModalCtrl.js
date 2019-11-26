@@ -224,7 +224,7 @@ angular.module('hopsWorksApp')
                         "isOpen": false,
                         "visible": true,
                         "value": "",
-                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.path
+                        "title": "App file (.jar, .py or .ipynb) - " + runConfig.appPath
                     };
                     jobState.jobtype = 1
                 }
@@ -233,7 +233,7 @@ angular.module('hopsWorksApp')
                         "isOpen": false,
                         "visible": true,
                         "value": "",
-                        "title": "App file (.py or .ipynb) - " + runConfig.path
+                        "title": "App file (.py or .ipynb) - " + runConfig.appPath
                     };
                     jobState.jobtype = 2
                 }
@@ -253,7 +253,7 @@ angular.module('hopsWorksApp')
                 jobState.jobname = runConfig.appName
                 jobState.runConfig = runConfig
                 jobState.sparkState = {
-                    "selectedJar": runConfig.path
+                    "selectedJar": runConfig.appPath
                 }
                 return jobState
             }
