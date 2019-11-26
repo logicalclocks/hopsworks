@@ -379,38 +379,6 @@ public class AgentController {
         continue;
       }
 
-      //Special case for pytorch
-      if (libraryName.equals("pytorch") || libraryName.equals("pytorch-cpu")) {
-        AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
-        if(cpuHost != null) {
-          PythonDep pytorchCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "pytorch-cpu", version, true, false);
-          deps.add(pytorchCPU);
-        }
-        if(gpuHost != null) {
-          PythonDep pytorchGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "pytorch", version, true, false);
-          deps.add(pytorchGPU);
-        }
-        continue;
-      }
-
-      //Special case for torchvision
-      if (libraryName.equals("torchvision") || libraryName.equals("torchvision-cpu")) {
-        AnacondaRepo repo = libraryFacade.getRepo("pytorch", true);
-        if(cpuHost != null) {
-          PythonDep torchvisionCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "torchvision-cpu", version, true, false);
-          deps.add(torchvisionCPU);
-        }
-        if(gpuHost != null) {
-          PythonDep torchvisionGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.CONDA, "torchvision", version, true, false);
-          deps.add(torchvisionGPU);
-        }
-        continue;
-      }
-
       if (settings.getProvidedPythonLibraryNames().contains(libraryName)) {
         AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
         PythonDep pyDep = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.ALL,
