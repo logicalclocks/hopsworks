@@ -16,9 +16,9 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.Path;
 
@@ -44,7 +44,7 @@ public class FlinkCleaner {
   @EJB
   private Settings settings;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private DistributedFsService dfs;
   
@@ -60,7 +60,7 @@ public class FlinkCleaner {
       String archiveDir = flinkController.getArchiveDir();
       //Delete all without hdfs user
       dfso = dfs.getDfsOps();
-      List<Inode> jobs = inodeFacade.getChildren(archiveDir);
+      List<Inode> jobs = inodeController.getChildren(archiveDir);
       for (Inode job : jobs) {
         if (job.getHdfsUser() == null) {
           dfso.rm(new Path(archiveDir + File.separator + job.getInodePK().getName()), false);

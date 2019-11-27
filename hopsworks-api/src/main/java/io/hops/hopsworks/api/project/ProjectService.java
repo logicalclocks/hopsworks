@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
+import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
@@ -61,8 +62,9 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -83,6 +85,7 @@ import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
@@ -127,8 +130,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -164,7 +169,7 @@ public class ProjectService {
   @Inject
   private ServingService servingService;
   @Inject
-  private DataSetService dataSet;
+  private DatasetResource datasetResource;
   @Inject
   private LocalFsService localFs;
   @Inject
@@ -176,9 +181,13 @@ public class ProjectService {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
+  private DatasetSharedWithFacade datasetSharedWithFacade;
+  @EJB
   private DatasetController datasetController;
   @EJB
   private InodeFacade inodes;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -312,7 +321,7 @@ public class ProjectService {
     }
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     FilePreviewDTO filePreviewDTO;
-    String path = inodes.getPath(inode);
+    String path = inodeController.getPath(inode);
     try {
       filePreviewDTO = datasetController.getReadme(path + "/README.md", dfso);
     } catch (IOException ex) {
@@ -331,15 +340,15 @@ public class ProjectService {
     if (inode == null) {
       return null;
     }
-    List<Dataset> ds = datasetFacade.findByInode(inode);
-    if (ds != null && !ds.isEmpty() && !ds.get(0).isSearchable()) {
+    Dataset ds = datasetFacade.findByInode(inode);
+    if (ds != null && !ds.isSearchable()) {
       return null;
     }
     MoreInfoDTO info = new MoreInfoDTO(inode);
     Users user = userFacade.findByUsername(info.getUser());
     info.setUser(user.getFname() + " " + user.getLname());
-    info.setSize(inodes.getSize(inode));
-    info.setPath(inodes.getPath(inode));
+    info.setSize(inodeController.getSize(inode));
+    info.setPath(inodeController.getPath(inode));
     return info;
   }
 
@@ -356,8 +365,8 @@ public class ProjectService {
     MoreInfoDTO info = new MoreInfoDTO(inode);
     Users user = userFacade.findByUsername(info.getUser());
     info.setUser(user.getFname() + " " + user.getLname());
-    info.setSize(inodes.getSize(inode));
-    info.setPath(inodes.getPath(inode));
+    info.setSize(inodeController.getSize(inode));
+    info.setPath(inodeController.getPath(inode));
     return info;
   }
 
@@ -368,21 +377,19 @@ public class ProjectService {
     Inode inode = inodes.findById(inodeId);
     Project proj = datasetController.getOwningProject(inode);
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
-
     if (ds == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
 
-    List<Dataset> projectsContainingInode = datasetFacade.findByInode(inode);
+    Collection<DatasetSharedWith> projectsContainingInode = proj.getDatasetSharedWithCollectionCollection();
     List<String> sharedWith = new ArrayList<>();
-    for (Dataset d : projectsContainingInode) {
+    for (DatasetSharedWith d : projectsContainingInode) {
       if (!d.getProject().getId().equals(proj.getId())) {
         sharedWith.add(d.getProject().getName());
       }
     }
     DataSetDTO dataset = new DataSetDTO(ds, proj, sharedWith);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
-        dataset).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(dataset).build();
   }
 
   @GET
@@ -518,7 +525,7 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException {
+      FeaturestoreException, JobException, UnsupportedEncodingException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -634,11 +641,11 @@ public class ProjectService {
     this.projectMembers.setProjectId(id);
     return this.projectMembers;
   }
-
+  
   @Path("{projectId}/dataset")
-  public DataSetService datasets(@PathParam("projectId") Integer id) {
-    this.dataSet.setProjectId(id);
-    return this.dataSet;
+  public DatasetResource datasetResource(@PathParam("projectId") Integer id) {
+    this.datasetResource.setProjectId(id);
+    return this.datasetResource;
   }
 
   @Path("{projectId}/localfs")
@@ -705,22 +712,18 @@ public class ProjectService {
     if (!ds.isPublicDs()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, Level.FINE, "datasetId: " + ds.getId());
     }
-
-    Dataset newDS = new Dataset(inode, destProj);
-    newDS.setShared(true);
-
-    if (ds.getDescription() != null) {
-      newDS.setDescription(ds.getDescription());
+  
+    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(destProj, ds);
+    if (datasetSharedWith != null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
+        "Dataset already in " + destProj.getName());
     }
-    if (ds.isPublicDs()) {
-      newDS.setPublicDs(ds.getPublicDs());
-    }
-    newDS.setEditable(DatasetPermissions.OWNER_ONLY);
-    datasetFacade.persistDataset(newDS);
+    // Create the new Dataset entry
+    datasetSharedWith = new DatasetSharedWith(destProj, ds, true);
+    datasetSharedWithFacade.save(datasetSharedWith);
     Users user = jWTHelper.getUserPrincipal(sc);
-
     activityFacade.
-        persistActivity(ActivityFacade.SHARED_DATA + newDS.toString() + " with project " + destProj.getName(),
+        persistActivity(ActivityFacade.SHARED_DATA + ds.getName() + " with project " + destProj.getName(),
              destProj, user, ActivityFlag.DATASET);
 
     hdfsUsersBean.shareDataset(destProj, ds);

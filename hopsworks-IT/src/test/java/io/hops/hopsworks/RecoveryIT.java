@@ -17,7 +17,7 @@ package io.hops.hopsworks;
 
 import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
-import io.hops.hopsworks.util.User;
+import io.hops.hopsworks.util.models.User;
 import io.hops.hopsworks.util.helpers.RegistrationHelper;
 import org.junit.After;
 import org.junit.Before;

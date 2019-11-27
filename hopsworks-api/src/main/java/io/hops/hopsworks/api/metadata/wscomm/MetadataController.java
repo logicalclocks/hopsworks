@@ -71,6 +71,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -108,6 +109,8 @@ public class MetadataController {
   private MetadataFacade metadataFacade;
   @EJB
   private InodeFacade inodeFacade;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private MetaLogFacade metaLogFacade;
   @EJB
@@ -369,15 +372,14 @@ public class MetadataController {
       String name, String metadataJson, SchemalessOp op)
       throws DatasetException,
       MetadataException {
-    Inode inode = inodeFacade.getInodeAtPath(inodePath);
+    Inode inode = inodeController.getInodeAtPath(inodePath);
     if (inode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND,
           Level.FINE,
           "file " + inodePath + "doesn't exist");
     }
     
-    Project project =
-        projectFacade.findByName(inodeFacade.getProjectNameForInode(inode));
+    Project project = projectFacade.findByName(inodeController.getProjectNameForInode(inode));
     String hdfsUserName = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUserName);
     
@@ -420,7 +422,7 @@ public class MetadataController {
 
   public void logTemplateOperation(Template template, Inode inode,
           OperationType optype) {
-    Pair<Inode, Inode> project_dataset = inodeFacade.
+    Pair<Inode, Inode> project_dataset = inodeController.
             getProjectAndDatasetRootForInode(inode);
     Project project = projectFacade.findByInodeId(project_dataset.getL().
             getInodePK().getParentId(),

@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -42,6 +43,8 @@ public class HopsfsTrainingDatasetController {
   private FeaturestoreHopsfsConnectorFacade featurestoreHopsfsConnectorFacade;
   @EJB
   private InodeFacade inodeFacade;
+  @EJB
+  private InodeController inodeController;
   
   /**
    * Persists a hopsfs training dataset
@@ -137,7 +140,7 @@ public class HopsfsTrainingDatasetController {
       (0, trainingDatasetNameWithVersion.length() - (1 + versionLength));
     hopsfsTrainingDatasetDTO.setName(trainingDatasetName);
     hopsfsTrainingDatasetDTO.setHdfsStorePath(
-      inodeFacade.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
+      inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
     hopsfsTrainingDatasetDTO.setLocation(hopsfsTrainingDatasetDTO.getHdfsStorePath());
     return hopsfsTrainingDatasetDTO;
   }

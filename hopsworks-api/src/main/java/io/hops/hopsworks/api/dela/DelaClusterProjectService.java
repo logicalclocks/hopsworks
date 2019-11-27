@@ -100,7 +100,7 @@ public class DelaClusterProjectService {
   public Response share(InodeIdDTO inodeId) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
-    clusterCtrl.shareWithCluster(dataset);
+    clusterCtrl.shareWithCluster(this.project, dataset);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset transfer is started - published");
     return successResponse(json);
@@ -114,7 +114,7 @@ public class DelaClusterProjectService {
   public Response removePublic(@PathParam("inodeId") Long inodeId) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
-    clusterCtrl.unshareFromCluster(dataset);
+    clusterCtrl.unshareFromCluster(this.project, dataset);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset is now private");
     return successResponse(json);

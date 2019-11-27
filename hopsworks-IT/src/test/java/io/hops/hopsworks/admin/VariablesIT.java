@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import io.hops.hopsworks.WebDriverFactory;
 import io.hops.hopsworks.util.DBHelper;
 import io.hops.hopsworks.util.Helpers;
-import io.hops.hopsworks.util.User;
+import io.hops.hopsworks.util.models.User;
 import io.hops.hopsworks.util.helpers.LoginHelper;
 import org.junit.After;
 import static org.junit.Assert.fail;
@@ -59,8 +59,7 @@ public class VariablesIT {
     driver.findElement(By.xpath(".//*[contains(@class, 'ui-icon-check')]")).click();
     try {
       assertEquals("Updated variable : twofactor_auth to: true", driver.findElement(
-          By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Updated variable : twofactor_auth to: true'])"
-              + "[1]/following::p[1]")).getText());
+        By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Logout'])[1]/following::span[2]")).getText());
     } catch (Error e) {
       verificationErrors.append(e.toString());
     }

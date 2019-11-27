@@ -174,7 +174,7 @@ ul.dropdown-messages .dropdown-header {
 }
 .ds-sidenav {
   width: 0;
-  overflow: hidden;
+  overflow: auto;
   position: absolute;
   right: 0;/*start from right*/
   top: 110px;
@@ -187,7 +187,9 @@ ul.dropdown-messages .dropdown-header {
   -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
   background: rgb(250,250,250);
   z-index: 10;
-  height: auto;
+  height: calc(100% - 125px);
+  margin-top: 15px;
+
 }
 .ds-sidenav.open {
     width: 20%;
@@ -201,6 +203,11 @@ ul.dropdown-messages .dropdown-header {
 
 .row-no-margin-left {
   margin-left: 0px !important;
+}
+
+.row-no-margin {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }
 
 

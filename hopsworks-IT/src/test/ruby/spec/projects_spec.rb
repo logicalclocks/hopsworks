@@ -76,16 +76,16 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
           project_id = json_body[:projectId]
-          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/?action=listing&expand=inodes"
           expect_status(200)
-          logs = json_body.detect { |e| e[:name] == "Logs" }
-          resources = json_body.detect { |e| e[:name] == "Resources" }
+          logs = json_body[:items].detect { |e| e[:name] == "Logs" }
+          resources = json_body[:items].detect { |e| e[:name] == "Resources" }
           expect(logs[:description]).to eq ("Contains the logs for jobs that have been run through the Hopsworks platform.")
-          expect(logs[:permission]).to eq ("rwxrwx--T")
-          expect(logs[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          expect(logs[:attributes][:permission]).to eq ("rwxrwx--T")
+          expect(logs[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
           expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
-          expect(resources[:permission]).to eq ("rwxrwx--T")
-          expect(resources[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          expect(resources[:attributes][:permission]).to eq ("rwxrwx--T")
+          expect(resources[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
 
         it 'should create JUPYTER dataset with right permissions and owner' do
@@ -95,12 +95,12 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           get "#{ENV['HOPSWORKS_API']}/project/getProjectInfo/#{projectname}"
           project_id = json_body[:projectId]
-          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/getContent"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/dataset/?action=listing&expand=inodes"
           expect_status(200)
-          notebook = json_body.detect { |e| e[:name] == "Jupyter" }
+          notebook = json_body[:items].detect { |e| e[:name] == "Jupyter" }
           expect(notebook[:description]).to eq("Contains Jupyter notebooks.")
-          expect(notebook[:permission]).to eq("rwxrwx---")
-          expect(notebook[:owner]).to eq("#{@user[:fname]} #{@user[:lname]}")
+          expect(notebook[:attributes][:permission]).to eq("rwxrwx---")
+          expect(notebook[:attributes][:owner]).to eq("#{@user[:fname]} #{@user[:lname]}")
         end
 
         it 'should fail to create a project with an existing name' do
@@ -148,11 +148,11 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           create_dataset_by_name(project, dsname)
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent/#{dsname}"
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}?action=listing&expand=inodes"
           expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/getContent"
-          ds = json_body.detect { |d| d[:name] == dsname }
-          expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/?action=listing&expand=inodes"
+          ds = json_body[:items].detect { |d| d[:name] == dsname }
+          expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
 
         it 'should create a project given only name' do

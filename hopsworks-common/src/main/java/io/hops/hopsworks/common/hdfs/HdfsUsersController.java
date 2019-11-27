@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.hdfs;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -51,7 +51,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -80,13 +79,11 @@ public class HdfsUsersController {
   @EJB
   private DistributedFsService dfsService;
   @EJB
-  private InodeFacade inodes;
+  private InodeController inodes;
   @EJB
   private UserFacade userFacade;
   @EJB
   private DatasetFacade datasetFacade;
-  @EJB
-  private DatasetController datasetController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
 
@@ -429,7 +426,7 @@ public class HdfsUsersController {
    * <p>
    * @param project
    * @param dataset
-   * @throws io.hops.hopsworks.common.exception.DatasetException
+   * @throws DatasetException
    */
   public void unShareDataset(Project project, Dataset dataset) throws DatasetException {
     if (project == null || dataset == null) {
@@ -584,7 +581,7 @@ public class HdfsUsersController {
     if (dataset == null) {
       return null;
     }
-    Project owningProject = datasetController.getOwningProject(dataset);
+    Project owningProject = dataset.getProject();
     return owningProject.getName() + USER_NAME_DELIMITER
         + dataset.getInode().getInodePK().getName();
   }

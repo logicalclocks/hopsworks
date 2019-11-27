@@ -39,35 +39,43 @@
 
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
-import io.hops.common.Pair;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.HopsUtils;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.InvalidQueryException;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
 public class InodeFacade extends AbstractFacade<Inode> {
 
-  private static final Logger logger = Logger.getLogger(InodeFacade.class.
-          getName());
+  private static final Logger LOGGER = Logger.getLogger(InodeFacade.class.getName());
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+  
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private UserFacade userFacade;
 
   @Override
   protected EntityManager getEntityManager() {
@@ -85,10 +93,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public List<Inode> findByParent(Inode parent) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParentId",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByParentId", Inode.class);
     query.setParameter("parentId", parent.getId());
     return query.getResultList();
+  }
+  
+  public Long countByParentId(Inode parent) {
+    TypedQuery<Long> query = em.createNamedQuery("Inode.countByParentId", Long.class);
+    query.setParameter("parentId", parent.getId());
+    return query.getSingleResult();
   }
 
   /**
@@ -97,85 +110,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public List<Inode> findByHdfsUser(HdfsUsers hdfsUser) {
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByHdfsUser",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findByHdfsUser", Inode.class);
     query.setParameter("hdfsUser", hdfsUser);
     return query.getResultList();
-  }
-
-  /**
-   * Get all the children of <i>parent</i>. Alias of findByParent().
-   * <p/>
-   * @param parent
-   * @return
-   */
-  public List<Inode> getChildren(Inode parent) {
-    return findByParent(parent);
-  }
-
-  /**
-   * Get all the children of <i>parent</i>. Alias of findByParent().
-   * <p/>
-   * @param parent
-   * @param children
-   * @return
-   */
-  public void getAllChildren(Inode parent, List<Inode> children) {
-    List<Inode> curr = findByParent(parent);
-    children.addAll(curr);
-
-    for (Inode inode : curr) {
-      if (inode.isDir()) {
-        getAllChildren(inode, children);
-      }
-    }
-  }
-
-  /**
-   * Return the size of an inode
-   *
-   * @param inode
-   * @return
-   */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public long getSize(Inode inode) {
-    if (!inode.isDir()) {
-      return inode.getSize();
-    }
-    long size = 0;
-    List<Inode> children = getChildren(inode);
-    for (Inode i : children) {
-      if (!i.isDir()) {
-        size += i.getSize();
-      } else {
-        size += getSize(i);
-      }
-    }
-    return size;
-  }
-
-  /**
-   * Get a list of the names of the child files (so no directories) of the given
-   * path.
-   * <p/>
-   * @param path
-   * @return A list of filenames, empty if the given path does not have
-   * children.
-   */
-  public List<String> getChildNames(String path) {
-    Inode inode = getInodeAtPath(path);
-    if (inode.isDir()) {
-      List<Inode> inodekids = getChildren(inode);
-      ArrayList<String> retList = new ArrayList<>(inodekids.size());
-      for (Inode i : inodekids) {
-        if (!i.isDir()) {
-          retList.add(i.getInodePK().getName());
-        }
-      }
-      return retList;
-    } else {
-      return Collections.EMPTY_LIST;
-    }
   }
 
   /**
@@ -185,7 +122,6 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param i
    * @return The parent, or null if no parent.
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findParent(Inode i) {
     if(i == null){
       throw new IllegalArgumentException("Inode must be provided.");
@@ -215,55 +151,15 @@ public class InodeFacade extends AbstractFacade<Inode> {
       return null;
     }
   }
-
+  
   /**
    *
-   * @param path
-   * @return null if no such Inode found
+   * @param name
+   * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  private Inode getInode(String path) {
-    // Get the path components
-    String[] p;
-    if (path.charAt(0) == '/') {
-      p = path.substring(1).split("/");
-    } else {
-      p = path.split("/");
-    }
-
-    if (p.length < 1) {
-      return null;
-    }
-
-    //Get the right root node
-    Inode curr = getRootNode(p[0]);
-    if (curr == null) {
-      logger.log(Level.WARNING, "Could not resolve root inode at path: {0}",
-              path);
-      return null;
-    }
-    //Move down the path
-    for (int i = 1; i < p.length; i++) {
-      long partitionId = HopsUtils.
-              calculatePartitionId(curr.getId(), p[i], i + 1);
-      Inode next = findByInodePK(curr, p[i], partitionId);
-      if (next == null) {
-        logger.log(Level.WARNING,
-                "Could not resolve inode at path: {0} and path-component " + i,
-                path);
-        return null;
-      } else {
-        curr = next;
-      }
-    }
-    return curr;
-  }
-  
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private Inode getRootNode(String name) {
+  public Inode getRootNode(String name) {
     long partitionId = HopsUtils.calculatePartitionId(HopsUtils.ROOT_INODE_ID, name, HopsUtils.ROOT_DIR_DEPTH + 1);
-    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findRootByName", Inode.class);
     query.setParameter("name", name);
     query.setParameter("parentId", HopsUtils.ROOT_INODE_ID);
     query.setParameter("partitionId", partitionId);
@@ -272,45 +168,9 @@ public class InodeFacade extends AbstractFacade<Inode> {
       //so name is unique
       return query.getSingleResult();
     } catch (NoResultException e) {
-      logger.log(Level.WARNING,
-              "Could not resolve root inode with name: {0} and partition_id"
-              + partitionId, name);
+      LOGGER.log(Level.WARNING, "Could not resolve root inode with name: {0} and partition_id" + partitionId, name);
       return null;
     }
-  }
-
-  /**
-   * Check whether the given path exists. (Path should not include hdfs://)
-   * <p/>
-   * @param path The path to search for.
-   * @return True if the path exist (i.e. there is an Inode on this path), false
-   * otherwise.
-   */
-  public boolean existsPath(String path) {
-    return getInode(path) != null;
-  }
-
-  /**
-   * Get the Inode at the specified path.
-   * <p/>
-   * @param path
-   * @return Null if path does not exist.
-   */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public Inode getInodeAtPath(String path) {
-    return getInode(path);
-  }
-  
-
-  /**
-   * Get the Inode representing the project root directory of the project with
-   * given name.
-   * <p/>
-   * @param name
-   * @return The sought for Inode, or null if this Inode does not exist.
-   */
-  public Inode getProjectRoot(String name) {
-    return getInode(Utils.getProjectPath(name));
   }
 
   /**
@@ -321,11 +181,8 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @param partitionId
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public Inode findByInodePK(Inode parent, String name, long partitionId) {
-
-    TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey",
-            Inode.class);
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findByPrimaryKey", Inode.class);
     q.setParameter("inodePk", new InodePK(parent.getId(), name, partitionId));
     try {
       return q.getSingleResult();
@@ -333,155 +190,17 @@ public class InodeFacade extends AbstractFacade<Inode> {
       return null;
     }
   }
-
-  /**
-   * Get the project base directory of which the given Inode is a descendant.
-   * <p/>
-   * @param i
-   * @return The Inode representing the project root directory.
-   * @throws IllegalStateException when the given Inode is not under a project
-   * root directory.
-   */
-  public Inode getProjectRootForInode(Inode i) throws IllegalStateException {
-    if (isProjectRoot(i)) {
-      return i;
-    } else {
-      Inode parent = findParent(i);
-      if (parent == null) {
-        throw new IllegalStateException(
-                "Transversing the path from folder did not encounter project root folder.");
-      }
-      return getProjectRootForInode(parent);
+  
+  public Inode findByParentAndName(Inode parent, String name) {
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findByParentAndName", Inode.class);
+    q.setParameter("parentId", parent.getId()).setParameter("name", name);
+    try {
+      return q.getSingleResult();
+    } catch (NoResultException e) {
+      return null;
     }
   }
-
-  /**
-   * Find out if an Inode is a project root directory.
-   * <p/>
-   * @param i
-   * @return
-   */
-  public boolean isProjectRoot(Inode i) {
-    Inode parent = findParent(i);
-    if (!parent.getInodePK().getName().equals(Settings.DIR_ROOT)) {
-      return false;
-    } else {
-      //A node is the project root if its parent has the name $DIR_ROOT and its 
-      //grandparent is the root node
-      return parent.getInodePK().getParentId() == 1;
-    }
-  }
-
-  /**
-   * Get the name of the project of which this Inode is a descendant.
-   * <p/>
-   * @param i
-   * @return
-   * @throws IllegalStateException When the given Inode is not a descendant of
-   * any project.
-   */
-  public String getProjectNameForInode(Inode i) throws IllegalStateException {
-    Inode projectRoot = getProjectRootForInode(i);
-    return projectRoot.getInodePK().getName();
-  }
-
-  /**
-   * Get a list of NavigationPath objects representing the project-relative path
-   * to the given Inode. The first element in the list is the project root
-   * directory.
-   * <p/>
-   * @param i
-   * @return
-   */
-  public List<NavigationPath> getConstituentsPath(Inode i) {
-    if (isProjectRoot(i)) {
-      List<NavigationPath> p = new ArrayList<>();
-      p.add(new NavigationPath(i.getInodePK().getName(), i.getInodePK().
-              getName() + "/"));
-      return p;
-    } else {
-      List<NavigationPath> p = getConstituentsPath(findParent(i));
-      NavigationPath a;
-      if (i.isDir()) {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).
-                getPath() + i.getInodePK().getName() + "/");
-      } else {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).
-                getPath() + i.getInodePK().getName());
-      }
-      p.add(a);
-      return p;
-    }
-  }
-
-  /**
-   * Get the path to the given Inode.
-   * <p/>
-   * @param i
-   * @return
-   */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public String getPath(Inode i) {
-    if(i == null) {
-      throw new IllegalArgumentException("Inode was not provided.");
-    }
-    List<String> pathComponents = new ArrayList<>();
-    Inode parent = i;
-    while (parent.getId() != 1) {
-      pathComponents.add(parent.getInodePK().getName());
-      parent = findParent(parent);
-    }
-    StringBuilder path = new StringBuilder();
-    for (int j = pathComponents.size() - 1; j >= 0; j--) {
-      path.append("/").append(pathComponents.get(j));
-    }
-    return path.toString();
-  }
-
-  /**
-   * Get the inodes in the directory pointed to by the given absolute HDFS path.
-   * <p/>
-   * @param path
-   * @return
-   * @throws IllegalArgumentException If the path does not point to a directory.
-   * @throws java.io.FileNotFoundException If the path does not exist.
-   */
-  public List<Inode> getChildren(String path) throws
-          FileNotFoundException {
-    Inode parent = getInode(path);
-    if (parent == null) {
-      throw new FileNotFoundException("Path not found : " + path);
-    } else if (!parent.isDir()) {
-      throw new FileNotFoundException("Path is not a directory.");
-    }
-    return getChildren(parent);
-  }
-
-  /**
-   * Get the project and dataset base directory of which the given Inode is a
-   * descendant.
-   * <p/>
-   * @param i
-   * @return The Inodes representing the project and dataset root directories.
-   * [ProjectInode, DatasetInode]
-   * @throws IllegalStateException when the given Inode is not under a project
-   * root directory.
-   */
-  public Pair<Inode, Inode> getProjectAndDatasetRootForInode(Inode i) throws
-          IllegalStateException {
-    Inode project = i;
-    Inode dataset = i;
-    do {
-      dataset = project;
-      project = findParent(project);
-      if (project == null) {
-        throw new IllegalStateException(
-                "Transversing the path from folder did not encounter project root folder.");
-      }
-    } while (!isProjectRoot(project));
-    return new Pair<>(project, dataset);
-  }
-
+  
   /**
    * Find all the Inodes that have <i>userId</i> as userId and correspond to an
    * history file.
@@ -489,10 +208,197 @@ public class InodeFacade extends AbstractFacade<Inode> {
    * @return
    */
   public List<Inode> findHistoryFileByHdfsUser(HdfsUsers hdfsUser) {
-    TypedQuery<Inode> query = em.createNamedQuery(
-            "Inode.findHistoryFileByHdfsUser",
-            Inode.class);
+    TypedQuery<Inode> query = em.createNamedQuery("Inode.findHistoryFileByHdfsUser", Inode.class);
     query.setParameter("hdfsUser", hdfsUser);
     return query.getResultList();
+  }
+  
+  public CollectionInfo findByParentAndPartition(Integer offset, Integer limit,
+    Set<? extends AbstractFacade.FilterBy> filter, Set<? extends AbstractFacade.SortBy> sort, Inode parent,
+    Long partitionId, Project project) {
+    String queryStr = buildQuery("SELECT i FROM Inode i ", filter, sort, "i.inodePK.partitionId = :partitionId" +
+      " AND i.inodePK.parentId = :parentId ");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT i.inodePK.name) FROM Inode i ", filter, null,
+      "i.inodePK.partitionId = :partitionId AND i.inodePK.parentId = :parentId ");
+    Long parentId = parent != null ? parent.getId() : null;
+    Query query = em.createQuery(queryStr, Inode.class)
+      .setParameter("parentId", parentId)
+      .setParameter("partitionId", partitionId);
+    Query queryCount = em.createQuery(queryCountStr, Inode.class)
+      .setParameter("parentId", parentId)
+      .setParameter("partitionId", partitionId);
+    return getResult(offset, limit, filter, project, query, queryCount);
+  }
+  
+  public CollectionInfo findByParent(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+    Set<? extends AbstractFacade.SortBy> sort, Inode parent, Project project) {
+    String queryStr = buildQuery("SELECT i FROM Inode i ", filter, sort, "i.inodePK.parentId = :parentId ");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT i.inodePK.name) FROM Inode i ", filter, null,
+      "i.inodePK.parentId = :parentId ");
+    Long parentId = parent != null ? parent.getId() : null;
+    Query query = em.createQuery(queryStr, Inode.class).setParameter("parentId", parentId);
+    Query queryCount = em.createQuery(queryCountStr, Inode.class).setParameter("parentId", parentId);
+    return getResult(offset, limit, filter, project, query, queryCount);
+  }
+  
+  private CollectionInfo getResult(Integer offset, Integer limit, Set<? extends AbstractFacade.FilterBy> filter,
+    Project project, Query query, Query queryCount) {
+    setFilter(filter, query, project);
+    setFilter(filter, queryCount, project);
+    setOffsetAndLim(offset, limit, query);
+    CollectionInfo collectionInfo = new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
+    return collectionInfo;
+  }
+  
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q, Project project) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q, project);
+    }
+  }
+  
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q, Project project) {
+    switch (Filters.valueOf(filterBy.getValue())) {
+      case NAME:
+        q.setParameter(filterBy.getField(), filterBy.getParam());
+        break;
+      case UNDER_CONSTRUCTION:
+        q.setParameter(filterBy.getField(), getBooleanValue(filterBy.getParam()));
+        break;
+      case HDFS_USER:
+        q.setParameter(filterBy.getField(), gethdfsUser(filterBy.getParam()));
+        break;
+      case USER_EMAIL:
+        q.setParameter(filterBy.getField(), getUsers(filterBy.getParam(), project));
+        break;
+      case ACCESS_TIME:
+      case ACCESS_TIME_GT:
+      case ACCESS_TIME_LT:
+      case MODIFICATION_TIME:
+      case MODIFICATION_TIME_GT:
+      case MODIFICATION_TIME_LT:
+        Date date = getDate(filterBy.getField(), filterBy.getParam());
+        q.setParameter(filterBy.getField(), date.getTime());
+        break;
+      case SIZE:
+      case SIZE_LT:
+      case SIZE_GT:
+        q.setParameter(filterBy.getField(), getIntValue(filterBy));
+        break;
+      default:
+        break;
+    }
+  }
+  
+  public HdfsUsers gethdfsUser(String value) {
+    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(value);
+    return hdfsUser;
+  }
+  
+  public HdfsUsers getUsers(String email, Project project) {
+    Users user = userFacade.findByEmail(email);
+    if (project == null) {
+      throw new InvalidQueryException("Filter by email needs a project.");
+    }
+    if (user != null) {
+      String hdfsUserName = hdfsUsersController.getHdfsUserName(project, user);
+      return hdfsUsersFacade.findByName(hdfsUserName);
+    }
+    return null;
+  }
+  
+  public enum Sorts {
+    ID("ID", "i.id ", "ASC"),
+    NAME("NAME", "LOWER(i.inodePK.name) ", "ASC"),
+    MODIFICATION_TIME("MODIFICATION_TIME", "i.modificationTime ", "ASC"),
+    ACCESS_TIME("ACCESS_TIME", "i.accessTime ", "ASC"),
+    SIZE("SIZE", "i.size ", "ASC"),
+    TYPE("TYPE", "i.dir ", "ASC");
+    
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+    
+    private Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+    
+    public String getValue() {
+      return value;
+    }
+    
+    public String getSql() {
+      return sql;
+    }
+    
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getJoin(){
+      return null;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+    
+  }
+  
+  public enum Filters {
+    NAME("NAME", "i.inodePK.name LIKE CONCAT(:name, '%') ", "name", " "),//case
+    USER_EMAIL("USER_EMAIL", "i.hdfsUser =:user ", "user", " "),
+    HDFS_USER("HDFS_USER", "i.hdfsUser =:hdfsUser ", "hdfsUser", " "),
+    UNDER_CONSTRUCTION("UNDER_CONSTRUCTION", "i.underConstruction  =:underConstruction ", "underConstruction", "true"),
+    MODIFICATION_TIME("MODIFICATION_TIME", "i.modificationTime  =:modificationTime ", "modificationTime", ""),
+    MODIFICATION_TIME_LT("MODIFICATION_TIME_LT", "i.modificationTime  <:modificationTime_lt ", "modificationTime_lt",
+      ""),
+    MODIFICATION_TIME_GT("MODIFICATION_TIME_GT", "i.modificationTime  >:modificationTime_gt ", "modificationTime_gt",
+      ""),
+    ACCESS_TIME("ACCESS_TIME", "i.accessTime  =:accessTime ", "accessTime", ""),
+    ACCESS_TIME_LT("ACCESS_TIME_LT", "i.accessTime  <:accessTime_lt ", "accessTime_lt", ""),
+    ACCESS_TIME_GT("ACCESS_TIME_GT", "i.accessTime  >:accessTime_gt ", "accessTime_gt", ""),
+    SIZE("SIZE", "i.size  =:size_eq ", "size_eq", "0"),
+    SIZE_LT("SIZE_LT", "i.size  <:size_lt ", "size_lt", "1"),
+    SIZE_GT("SIZE_GT", "i.size  >:size_gt ", "size_gt", "0");
+    
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+    
+    private Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+    
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+    
+    public String getValue() {
+      return value;
+    }
+    
+    public String getSql() {
+      return sql;
+    }
+    
+    public String getField() {
+      return field;
+    }
+    
+    @Override
+    public String toString() {
+      return value;
+    }
+    
   }
 }

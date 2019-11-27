@@ -1,0 +1,38 @@
+<!--
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<div class="loader loader-sm" ng-show="loading" style="position: unset"></div>
+<div ng-init="maximized=false" class="panel-default" ng-show="file !== null && !loading && selected"
+     ng-class="{'panel-fullscreen': maximized, 'panel': !maximized, 'sidenav-open': sidenavOpen}">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-book"></i> {{heading}}</h3>
+        <ul class="list-inline panel-actions">
+            <li>
+                <md-button id="panel-fullscreen" role="button"
+                           title="{{maximized? 'Minimize (press esc key)':'Maximize'}}"
+                           style="min-height: 20px; min-width: 35px; margin: unset"
+                           ng-click="maximized = !maximized"
+                           ng-keyup="maximized = (($event.keyCode === 27 && maximized)? !maximized : maximized)">
+                    <i class="fa" ng-class="{'fa-compress': maximized, 'fa-expand': !maximized}"></i>
+                </md-button>
+            </li>
+        </ul>
+    </div>
+    <div class="panel-body" style="background-color: white; overflow: auto">
+        <div ng-bind-html="file"></div>
+    </div>
+</div>

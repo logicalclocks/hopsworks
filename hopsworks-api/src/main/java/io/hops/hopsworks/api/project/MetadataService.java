@@ -70,6 +70,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -149,6 +150,8 @@ public class MetadataService {
   @EJB
   private InodeFacade inodeFacade;
   @EJB
+  private InodeController inodeController;
+  @EJB
   private ProjectFacade projectFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
@@ -175,7 +178,7 @@ public class MetadataService {
    * @return
    */
   @GET
-  @Path("{inodepid}")
+  @Path("{projectId}/{inodepid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchMetadataCompact(@PathParam("inodepid") Long inodePid) {
@@ -225,12 +228,10 @@ public class MetadataService {
    * @param inodePid
    * @param inodeName
    * @param tableid
-   * @param sc
-   * @param req
    * @return
    */
   @GET
-  @Path("fetchmetadata/{inodepid}/{inodename}/{tableid}")
+  @Path("{projectId}/fetchmetadata/{inodepid}/{inodename}/{tableid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchMetadata(
@@ -295,12 +296,10 @@ public class MetadataService {
    * Fetches all templates attached to a specific inode
    * <p/>
    * @param inodeid
-   * @param sc
-   * @param req
    * @return
    */
   @GET
-  @Path("fetchtemplatesforinode/{inodeid}")
+  @Path("{projectId}/fetchtemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchTemplatesforInode(@PathParam("inodeid") Long inodeid) {
@@ -328,12 +327,10 @@ public class MetadataService {
    * Fetches all templates not attached to a specific inode
    * <p/>
    * @param inodeid
-   * @param sc
-   * @param req
    * @return
    */
   @GET
-  @Path("fetchavailabletemplatesforinode/{inodeid}")
+  @Path("{projectId}/fetchavailabletemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchAvailableTemplatesForInode(@PathParam("inodeid") Long inodeid) {
@@ -373,14 +370,12 @@ public class MetadataService {
    * <p/>
    * @param inodeid
    * @param templateid
-   * @param sc
-   * @param req
    * @return
    */
   @GET
-  @Path("detachtemplate/{inodeid}/{templateid}")
+  @Path("{projectId}/detachtemplate/{inodeid}/{templateid}")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response detachTemplateFromInode(@PathParam("inodeid") Long inodeid,
           @PathParam("templateid") Integer templateid) throws MetadataException {
 
@@ -439,18 +434,43 @@ public class MetadataService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(
             json).build();
   }
+  
+  @POST
+  @Path("{projectId}/attachTemplate")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response attachTemplate(FileTemplateDTO filetemplateData) {
+    
+    if (filetemplateData == null || filetemplateData.getInodePath() == null
+      || filetemplateData.getInodePath().equals("")) {
+      throw new IllegalArgumentException("filetempleateData was not provided or its InodePath was not set");
+    }
+    
+    String inodePath = filetemplateData.getInodePath();
+    int templateid = filetemplateData.getTemplateId();
+    
+    Inode inode = inodeController.getInodeAtPath(inodePath);
+    Template temp = templatefacade.findByTemplateId(templateid);
+    temp.getInodes().add(inode);
+    
+    //persist the relationship
+    this.templatefacade.updateTemplatesInodesMxN(temp);
+    
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSuccessMessage("The template was attached to file " + inode.getId());
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
 
   /**
    * Fetches the content of a given template
    * <p/>
    * @param templateid
    * @param sender
-   * @param sc
-   * @param req
    * @return
    */
   @GET
-  @Path("fetchtemplate/{templateid}/{sender}")
+  @Path("{projectId}/fetchtemplate/{templateid}/{sender}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchTemplate(@PathParam("templateid") Integer templateid,
@@ -531,7 +551,7 @@ public class MetadataService {
       throw new GenericException(RESTCodes.GenericErrorCode.INCOMPLETE_REQUEST, Level.FINE,
         "Incorrect json message/Missing or incorrect inode name");
     }
-    Inode projectInode = inodeFacade.getProjectRootForInode(inode);
+    Inode projectInode = inodeController.getProjectRootForInode(inode);
     Project project = projectFacade.findByInodeId(projectInode.getInodePK().
             getParentId(), projectInode.getInodePK().getName());
 

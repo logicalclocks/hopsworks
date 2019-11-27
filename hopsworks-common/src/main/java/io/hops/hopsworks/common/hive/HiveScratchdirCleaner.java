@@ -18,10 +18,10 @@
 package io.hops.hopsworks.common.hive;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -60,7 +60,7 @@ public class HiveScratchdirCleaner {
   @EJB
   private Settings settings;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -115,7 +115,7 @@ public class HiveScratchdirCleaner {
       TimeUnit delayTimeunit = settings.getConfTimeTimeUnit(settings.getHiveScratchdirDelay());
       Long threshold = System.currentTimeMillis() - delayTimeunit.toMillis(delayValue);
 
-      List<Inode> scratchDirs = inodeFacade.getChildren(scratchDirParent);
+      List<Inode> scratchDirs = inodeController.getChildren(scratchDirParent);
 
       for (Inode scratchDir : scratchDirs) {
         // Special case for the Hive superuser.

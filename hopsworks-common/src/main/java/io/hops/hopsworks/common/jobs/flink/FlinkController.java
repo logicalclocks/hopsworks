@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
@@ -51,6 +50,8 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.UserGroupInformationService;
+import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
@@ -112,7 +113,7 @@ public class FlinkController {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
 
   
   public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException {
@@ -205,7 +206,7 @@ public class FlinkController {
     Map<String, Project> projectsJobs = new HashMap<>();
     //Read all completed jobs from "historyserver.archive.fs.dir"
     try {
-      List<Inode> jobs = inodeFacade.getChildren(archiveDir);
+      List<Inode> jobs = inodeController.getChildren(archiveDir);
       for (Inode job : jobs) {
         if (job.getHdfsUser() != null) {
           projectsJobs.put(job.getInodePK().getName(), projectFacade.findByName(job.getHdfsUser().getProject()));
@@ -232,7 +233,7 @@ public class FlinkController {
     //Read all completed jobs from "historyserver.archive.fs.dir"
     //Flink history server caches old jobs locally. Server is setup to restart once a day, but until it does we might
     // can jobs that don't exist
-    Inode inode = inodeFacade.getInodeAtPath(archivePath + File.separator + job);
+    Inode inode = inodeController.getInodeAtPath(archivePath + File.separator + job);
     if (inode != null) {
       HdfsUsers hdfsUser = inode.getHdfsUser();
       if (hdfsUser != null) {
@@ -252,7 +253,7 @@ public class FlinkController {
     Yaml yaml = new Yaml();
     try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
       Map<String, Object> obj = (Map<String, Object>) yaml.load(in);
-      return ((String) obj.get("historyserver.archive.fs.dir")).replace("hdfs://", "");
+      return Utils.prepPath((String) obj.get("historyserver.archive.fs.dir"));
     }
   }
   

@@ -91,8 +91,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.common.util.Settings.CERT_PASS_SUFFIX;
 import static io.hops.hopsworks.common.util.Settings.KEYSTORE_SUFFIX;
@@ -104,7 +102,6 @@ import static io.hops.hopsworks.common.util.Settings.TRUSTSTORE_SUFFIX;
 public class CertificateMaterializer {
   private static final Logger LOG = Logger.getLogger(CertificateMaterializer.class.getName());
   
-  private final static Pattern HDFS_SCHEME = Pattern.compile("^hdfs://.*");
   private final static int MAX_NUMBER_OF_RETRIES = 3;
   private final static long RETRY_WAIT_TIMEOUT = 10;
   
@@ -1130,11 +1127,11 @@ public class CertificateMaterializer {
   }
   
   private String normalizeURI(String uri) {
-    Matcher uriMatcher = HDFS_SCHEME.matcher(uri);
-    if (!uriMatcher.matches()) {
-      uri = "hdfs://" + uri;
+    Path path = new Path(uri);
+    if(path.toUri().getScheme()==null){
+      path.setScheme("hopsfs");
     }
-    return uri;
+    return path.toString();
   }
 
   /**

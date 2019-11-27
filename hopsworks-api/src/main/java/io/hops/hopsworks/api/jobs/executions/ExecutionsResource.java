@@ -37,6 +37,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -134,7 +135,8 @@ public class ExecutionsResource {
   public Response execution(
     @ApiParam(value = "start or stop", required = true) @QueryParam("action") Action action,
     @Context SecurityContext sc,
-    @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
+    @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException,
+      UnsupportedEncodingException {
     
     Users user = jWTHelper.getUserPrincipal(sc);
     Execution exec;

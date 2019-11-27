@@ -91,7 +91,7 @@ public class DataSetDTO {
       projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
               getUser().getLname(), member.getUser().getEmail()));
     }
-    this.type = ds.getType();
+    this.type = ds.getDsType();
   }
 
   public DataSetDTO(String name, Long inodeId, Project project) {

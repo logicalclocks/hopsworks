@@ -40,7 +40,9 @@
 package io.hops.hopsworks.common.dao.hdfs.inode;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.dataset.SharedState;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -132,11 +134,41 @@ public final class InodeView {
     this.modification
       = new Date(ds.getInode().getModificationTime().longValue());
     this.accessTime = new Date(ds.getInode().getAccessTime().longValue());
-    this.shared = ds.isShared();
+    this.shared = false;
     this.owningProjectName = parent.inodePK.getName();
-    this.type = ds.getType();
+    this.type = ds.getDsType();
+    this.description = ds.getDescription();
+    this.status = true;
+    if (ds.getInode().getHdfsUser() != null) {
+      this.owner = ds.getInode().getHdfsUser().getUsername();
+    } else {
+      this.owner = "";
+    }
+    this.permission = FsPermission.
+      createImmutable(ds.getInode().getPermission()).toString();
+    this.publicDs = ds.getPublicDs();
+    this.searchable = ds.isSearchable();
+  }
+  
+  public InodeView(Inode parent, DatasetSharedWith ds, String path) {
+    this.name = ds.getDataset().getInode().getInodePK().getName();
+    this.parentId = parent.getId();
+    this.dir = ds.getDataset().getInode().isDir();
+    this.id = ds.getDataset().getInode().getId();
+    this.size = ds.getDataset().getInode().getSize();
+    this.template = ds.getDataset().getInode().getTemplate();
+    this.underConstruction = ds.getDataset().getInode().isUnderConstruction();
+    this.publicId = ds.getDataset().getPublicDsId();
+    this.parent = false;
+    this.path = path;
+    this.modification
+      = new Date(ds.getDataset().getInode().getModificationTime().longValue());
+    this.accessTime = new Date(ds.getDataset().getInode().getAccessTime().longValue());
+    this.shared = true;
+    this.owningProjectName = parent.inodePK.getName();
+    this.type = ds.getDataset().getDsType();
     if (this.shared) {
-      switch (ds.getType()) {
+      switch (ds.getDataset().getDsType()) {
         case DATASET:
           this.owningProjectName = parent.getInodePK().getName();
           break;
@@ -148,17 +180,17 @@ public final class InodeView {
       }
       this.name = this.owningProjectName + Settings.SHARED_FILE_SEPARATOR + this.name;
     }
-    this.description = ds.getDescription();
-    this.status = ds.getStatus();
-    if (ds.getInode().getHdfsUser() != null) {
-      this.owner = ds.getInode().getHdfsUser().getUsername();
+    this.description = ds.getDataset().getDescription();
+    this.status = ds.getAccepted();
+    if (ds.getDataset().getInode().getHdfsUser() != null) {
+      this.owner = ds.getDataset().getInode().getHdfsUser().getUsername();
     } else {
       this.owner = "";
     }
     this.permission = FsPermission.
-      createImmutable(ds.getInode().getPermission()).toString();
-    this.publicDs = ds.getPublicDs();
-    this.searchable = ds.isSearchable();
+      createImmutable(ds.getDataset().getInode().getPermission()).toString();
+    this.publicDs = ds.getDataset().getPublicDs();
+    this.searchable = ds.getDataset().isSearchable();
   }
 
   private InodeView(String name, boolean dir, boolean parent, String path) {
@@ -333,7 +365,7 @@ public final class InodeView {
     this.publicDs = publicDs;
   }
   
-  public void setPublicDsState(Dataset.SharedState sharedState) {
+  public void setPublicDsState(SharedState sharedState) {
     this.publicDs = sharedState.state;
   }
   

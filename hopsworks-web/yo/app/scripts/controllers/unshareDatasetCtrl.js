@@ -38,27 +38,30 @@
  */
 
 angular.module('hopsWorksApp')
-    .controller('UnshareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'dsName', 'dsType',
-        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, dsName, dsType) {
+    .controller('UnshareDatasetCtrl', ['$scope','$uibModalInstance', 'DataSetService', '$routeParams', 'growl', 'ProjectService', 'datasetPath', 'dsType',
+        function ($scope, $uibModalInstance, DataSetService, $routeParams, growl, ProjectService, datasetPath, dsType) {
 
             var self = this;
 
             self.datasets = [];
             self.projects = [];
-            self.dataSet = {'name': dsName, 'description': "", 'projectId': $routeParams.projectID, 'permissions':'OWNER_ONLY', type: dsType};
-            self.dataSets = {'name': dsName, 'description': "", 'projectIds': [], 'permissions':'OWNER_ONLY', type: dsType};
             self.pId = $routeParams.projectID;
+            self.loading = true;
+            self.datasetPath = datasetPath;
+            self.selectedProjects = [];
             var dataSetService = DataSetService(self.pId);
 
-            dataSetService.projectsSharedWith(self.dataSet).then(
+            dataSetService.getDatasetStat(self.datasetPath).then(
                 function (success) {
-                    self.projects = success.data;
+                    self.projects = success.data.projectsSharedWith;
+                    self.loading = false;
                 }, function (error) {
                     if (typeof error.data.usrMsg !== 'undefined') {
                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
                     } else {
                         growl.error("", {title: error.data.errorMsg, ttl: 8000});
                     }
+                    self.loading = false;
                 }
             );
 
@@ -69,19 +72,21 @@ angular.module('hopsWorksApp')
 
             self.unshareDataset = function () {
                 if ($scope.dataSetForm.$valid) {
-                    dataSetService.unshareDataSet(self.dataSets)
-                        .then(function (success) {
-                            $uibModalInstance.close(success);
-                        },
-                        function (error) {
-                            if (typeof error.data.usrMsg !== 'undefined') {
-                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                            } else {
-                                growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                            }
-                        });
+                    var i;
+                    for (i = 0; i < self.selectedProjects.length; i++) {
+                        dataSetService.unshare(self.datasetPath, self.selectedProjects[i])
+                            .then(function (success) {
+                                $uibModalInstance.close(success);
+                            },
+                            function (error) {
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                            });
+                    }
                 }
-
             };
             
             $scope.omitCurrentProject = function (project) {

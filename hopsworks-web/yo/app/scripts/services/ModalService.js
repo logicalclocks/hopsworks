@@ -105,6 +105,14 @@ angular.module('hopsWorksApp')
                     controller: 'UberCtrl as uberCtrl',
                     size: size,
                     resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
                         title: function () {
                             return title;
                         },
@@ -137,13 +145,20 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-
             json: function (size, title, json) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/json.html',
                     controller: 'JSONCtrl as jsonCtrl',
                     size: size,
                     resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
                         title: function () {
                             return title;
                         },
@@ -154,13 +169,20 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-
             confirmShare: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/confirmShareModal.html',
                     controller: 'ModalCtrl as modalCtrl',
                     size: size,
                     resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
                         title: function () {
                             return title;
                         },
@@ -180,15 +202,12 @@ angular.module('hopsWorksApp')
                     controller: 'ProjectCreatorCtrl as projectCreatorCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }]
                     }
@@ -203,7 +222,11 @@ angular.module('hopsWorksApp')
                     resolve: {
                         auth: ['$q','AuthGuardService',
                             function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q);
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
                             }],
                         key: function () {
                             return key;
@@ -222,7 +245,11 @@ angular.module('hopsWorksApp')
                     resolve: {
                         auth: ['$q','AuthGuardService',
                             function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q);
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
                             }],
                         key: function () {
                             return key;
@@ -237,17 +264,14 @@ angular.module('hopsWorksApp')
                     controller: 'SshKeysCtrl as sshKeysCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
-                            }]
+                            }],
                     }
                 });
                 return modalInstance.result;
@@ -258,15 +282,12 @@ angular.module('hopsWorksApp')
                     controller: 'MemberCtrl as memberCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -276,25 +297,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            shareDataset: function (size, dsName, dsType, permissions) {
+            shareDataset: function (size, datasetPath, dsType, permissions) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/shareDataset.html',
                     controller: 'ShareDatasetCtrl as shareDatasetCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
-                        dsName: function () {
-                            return dsName;
+                        datasetPath: function () {
+                            return datasetPath;
                         },
                         permissions: function () {
                             return permissions;
@@ -306,25 +324,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            permissions: function (size, dsName, dsType, permissions) {
+            permissions: function (size, datasetPath, dsType, permissions) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/datasetPermissions.html',
                     controller: 'ShareDatasetCtrl as shareDatasetCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
-                        dsName: function () {
-                            return dsName;
+                        datasetPath: function () {
+                            return datasetPath;
                         },
                         permissions: function () {
                             return permissions;
@@ -336,25 +351,22 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            unshareDataset: function (size, dsName, dsType) {
+            unshareDataset: function (size, datasetPath, dsType) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/unshareDataset.html',
                     controller: 'UnshareDatasetCtrl as unshareDatasetCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
-                        dsName: function () {
-                            return dsName;
+                        datasetPath: function () {
+                            return datasetPath;
                         },
                         dsType: function(){
                             return dsType;
@@ -369,15 +381,12 @@ angular.module('hopsWorksApp')
                     controller: 'ViewSearchResultCtrl as viewSearchResultCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         response: function () {
@@ -399,15 +408,12 @@ angular.module('hopsWorksApp')
                     controller: 'ViewPublicDatasetCtrl as viewPublicDatasetCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projects: function () {
@@ -426,25 +432,29 @@ angular.module('hopsWorksApp')
              * @param {type} location
              * @returns {$uibModal@call;open.result}
              */
-            newFolder: function (size, path) {
+            newFolder: function (size, path, datasetType, isDataset) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/newDataSet.html',
                     controller: 'DataSetCreatorCtrl as datasetCreatorCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                        return $q.promise;
+                                    }, function (error) {
+                                         return $q.reject(error)
+                                });
                             }],
                         path: function () {
                             return path;
+                        },
+                        datasetType: function () {
+                            return datasetType;
+                        },
+                        isDataset: function () {
+                            return isDataset;
                         }
                     }
                 });
@@ -462,15 +472,12 @@ angular.module('hopsWorksApp')
                     controller: 'FilePreviewCtrl as filePreviewCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         fileName: function () {
@@ -489,7 +496,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            upload: function (size, projectId, path, templateId) {
+            upload: function (size, projectId, path, templateId, datasetType) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/fileUpload.html',
                     controller: 'FileUploadCtrl as fileUploadCtrl',
@@ -497,15 +504,12 @@ angular.module('hopsWorksApp')
                     backdrop: 'static', //prevent user interaction with the background
                     keyboard: false,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -516,6 +520,9 @@ angular.module('hopsWorksApp')
                         },
                         templateId: function () {
                             return templateId;
+                        },
+                        datasetType: function () {
+                            return datasetType;
                         }
                     }
                 });
@@ -527,15 +534,12 @@ angular.module('hopsWorksApp')
                     controller: 'SelectFileCtrl as selectFileCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -560,15 +564,12 @@ angular.module('hopsWorksApp')
                     controller: 'SelectEnvYmlCtrl as selectEnvYmlCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         regex: function () {
@@ -587,15 +588,12 @@ angular.module('hopsWorksApp')
                     controller: 'SelectFileCtrl as selectFileCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -620,15 +618,12 @@ angular.module('hopsWorksApp')
                     controller: 'SelectModelServingCtrl as selectModelServingCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         regex: function () {
@@ -647,15 +642,12 @@ angular.module('hopsWorksApp')
                     controller: 'SelectProjectCtrl as selectProjectCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -677,15 +669,12 @@ angular.module('hopsWorksApp')
                     controller: 'SchemaCreateCtrl as schemaCreateCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -704,15 +693,12 @@ angular.module('hopsWorksApp')
                     controller: 'SchemaViewContentCtrl as schemaViewContentCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -735,15 +721,12 @@ angular.module('hopsWorksApp')
                     controller: 'SchemaUpdateContentCtrl as schemaUpdateContentCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -766,15 +749,12 @@ angular.module('hopsWorksApp')
                     controller: 'CreateTopicCtrl as createTopicCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -793,15 +773,12 @@ angular.module('hopsWorksApp')
                     controller: 'CreateAclCtrl as createAclCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -823,15 +800,12 @@ angular.module('hopsWorksApp')
                     controller: 'JobDetailCtrl as jobDetailCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         job: function () {
@@ -850,15 +824,12 @@ angular.module('hopsWorksApp')
                     controller: 'jobUICtrl as jobUICtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         job: function () {
@@ -879,15 +850,12 @@ angular.module('hopsWorksApp')
                     size: 'md',
                     backdrop: 'static',
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         scope: function () {
@@ -904,15 +872,12 @@ angular.module('hopsWorksApp')
                     size: size,
                     backdrop: 'static',
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         title: function () {
@@ -931,15 +896,12 @@ angular.module('hopsWorksApp')
                     controller: 'ImportTemplateCtrl as importTemplateCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }]
                     }
@@ -954,15 +916,12 @@ angular.module('hopsWorksApp')
                     size: 'md',
                     backdrop: 'static',
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         scope: function () {
@@ -979,15 +938,12 @@ angular.module('hopsWorksApp')
                     size: size,
                     backdrop: 'static',
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         templateId: function () {
@@ -1007,15 +963,12 @@ angular.module('hopsWorksApp')
                     size: size,
                     backdrop: 'static',
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         templateId: function () {
@@ -1034,15 +987,12 @@ angular.module('hopsWorksApp')
                     controller: 'MessageCtrl as messageCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         selected: function () {
@@ -1059,7 +1009,14 @@ angular.module('hopsWorksApp')
                     controller: 'SetupDownloadCtrl as setupDownloadCtrl',
                     size: size,
                     resolve: {
-
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
                         projectId: function () {
                             return projectId;
                         },
@@ -1071,18 +1028,7 @@ angular.module('hopsWorksApp')
                         },
                         bootstrap: function () {
                             return params.bootstrap;
-                        },
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
-                                    });
-                            }]
+                        }
                     }
                 });
                 return modalInstance.result;
@@ -1094,15 +1040,12 @@ angular.module('hopsWorksApp')
                     controller: 'NoteCreateCtrl as noteCreateCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         title: function () {
@@ -1159,15 +1102,12 @@ angular.module('hopsWorksApp')
                     controller: 'featuregroupStatisticsCtrl as featuregroupStatisticsCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1195,15 +1135,12 @@ angular.module('hopsWorksApp')
                     controller: 'featurestoreStatisticModalCtrl as featurestoreStatisticModalCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1232,15 +1169,12 @@ angular.module('hopsWorksApp')
                     controller: 'updateFeaturestoreStatisticModalCtrl as updateFeaturestoreStatisticModalCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1272,15 +1206,12 @@ angular.module('hopsWorksApp')
                     controller: 'trainingDatasetStatisticsCtrl as trainingDatasetStatisticsCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1308,15 +1239,12 @@ angular.module('hopsWorksApp')
                     controller: 'featureViewInfoCtrl as featureViewInfoCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1341,15 +1269,12 @@ angular.module('hopsWorksApp')
                     controller: 'storageConnectorViewInfoCtrl as storageConnectorViewInfoCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1374,15 +1299,12 @@ angular.module('hopsWorksApp')
                     controller: 'featuregroupViewInfoCtrl as featuregroupViewInfoCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1407,15 +1329,12 @@ angular.module('hopsWorksApp')
                     controller: 'trainingDatasetViewInfoCtrl as trainingDatasetViewInfoCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1440,15 +1359,12 @@ angular.module('hopsWorksApp')
                     controller: 'selectFeatureTypeCtrl as selectFeatureTypeCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         settings: function () {
@@ -1464,15 +1380,12 @@ angular.module('hopsWorksApp')
                     controller: 'servingViewInfoCtrl as servingViewInfoCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                         projectId: function () {
@@ -1491,15 +1404,12 @@ angular.module('hopsWorksApp')
                     controller: 'DataValidationModalsCtrl as dataValidationModalsCtrl',
                     size: size,
                     resolve: {
-                        auth: ['$q', '$location', 'AuthService',
-                            function ($q, $location, AuthService) {
-                                return AuthService.session().then(
-                                    function (success) {
-                                    },
-                                    function (err) {
-                                        $location.path('/login');
-                                        $location.replace();
-                                        return $q.reject(err);
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function(success){
+                                    }, function (error) {
+                                        return $q.reject(error)
                                     });
                             }],
                             features: function() {

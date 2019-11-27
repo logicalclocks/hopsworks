@@ -67,7 +67,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 
@@ -79,7 +79,7 @@ public class DistributedFsService {
           getName());
   
   @EJB
-  private InodeFacade inodes;
+  private InodeController inodeController;
   @EJB
   private UserGroupInformationService ugiService;
   @EJB
@@ -305,7 +305,7 @@ public class DistributedFsService {
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean isDir(String path) {
-    Inode i = inodes.getInodeAtPath(path);
+    Inode i = inodeController.getInodeAtPath(path);
     if (i != null) {
       return i.isDir();
     }
@@ -320,7 +320,7 @@ public class DistributedFsService {
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Inode getInode(String path) {
-    Inode i = inodes.getInodeAtPath(path);
+    Inode i = inodeController.getInodeAtPath(path);
     return i;
   }
 
@@ -334,9 +334,9 @@ public class DistributedFsService {
    */
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public List<String> getChildNames(String path) {
-    Inode inode = inodes.getInodeAtPath(path);
+    Inode inode = inodeController.getInodeAtPath(path);
     if (inode.isDir()) {
-      List<Inode> inodekids = inodes.getChildren(inode);
+      List<Inode> inodekids = inodeController.getChildren(inode);
       ArrayList<String> retList = new ArrayList<>(inodekids.size());
       for (Inode i : inodekids) {
         if (!i.isDir()) {
@@ -356,9 +356,9 @@ public class DistributedFsService {
    * @return
    */
   public List<Inode> getChildInodes(String path) {
-    Inode inode = inodes.getInodeAtPath(path);
+    Inode inode = inodeController.getInodeAtPath(path);
     if (inode.isDir()) {
-      return inodes.getChildren(inode);
+      return inodeController.getChildren(inode);
     } else {
       return Collections.EMPTY_LIST;
     }

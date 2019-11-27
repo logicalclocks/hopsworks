@@ -104,7 +104,7 @@ public class DelaWorkerController {
     if (dataset.isPublicDs()) {
       return dataset.getPublicDsId();
     }
-    if (dataset.isShared()) {
+    if (dataset.isShared(project)) {
       throw new DelaException(RESTCodes.DelaErrorCode.DATASET_PUBLISH_PERMISSION_ERROR, Level.WARNING,
         DelaException.Source.LOCAL);
     }
@@ -130,7 +130,7 @@ public class DelaWorkerController {
       }
       throw tpe;
     }
-    delaDatasetCtrl.uploadToHops(dataset, publicDSId);
+    delaDatasetCtrl.uploadToHops(project, dataset, publicDSId);
     LOGGER.log(Level.INFO, "{0} shared with hops", publicDSId);
     return publicDSId;
   }
@@ -153,7 +153,7 @@ public class DelaWorkerController {
     delaCtrl.cancel(dataset.getPublicDsId());
     hopsSiteCtrl.cancel(dataset.getPublicDsId());
     delaHdfsCtrl.deleteManifest(project, dataset, user);
-    delaDatasetCtrl.unshareFromHops(dataset);
+    delaDatasetCtrl.unshareFromHops(project, dataset);
   }
 
   public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException,
@@ -175,7 +175,7 @@ public class DelaWorkerController {
     }
 
     ManifestJSON manifest = delaHdfsCtrl.readManifest(project, dataset, user);
-    delaDatasetCtrl.updateDescription(dataset, manifest.getDatasetDescription());
+    delaDatasetCtrl.updateDescription(project, dataset, manifest.getDatasetDescription());
     return manifest;
   }
 

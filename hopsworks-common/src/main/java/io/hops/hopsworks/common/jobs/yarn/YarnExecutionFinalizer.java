@@ -176,7 +176,10 @@ public class YarnExecutionFinalizer {
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
       for (String s : filesToRemove) {
-        if (s.startsWith("hdfs:") && dfso.getFilesystem().exists(new Path(s))) {
+        Path path = new Path(s);
+        String scheme = path.toUri().getScheme();
+        if (scheme != null && (scheme.equals(dfso.getFilesystem().getScheme()) || scheme.equals(dfso.getFilesystem().
+            getAlternativeScheme())) && dfso.getFilesystem().exists(path))  {
           dfso.getFilesystem().delete(new Path(s), true);
         } else {
           org.apache.commons.io.FileUtils.deleteQuietly(new File(s));

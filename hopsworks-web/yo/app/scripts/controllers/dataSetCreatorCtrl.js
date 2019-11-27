@@ -47,16 +47,18 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path',
-          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, path) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path', 'datasetType', 'isDataset',
+          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, path, datasetType, isDataset) {
 
             var self = this;
             self.path = path;
+            self.datasetType = datasetType;
             self.working = false;
             self.datasets = [];
+            self.isDataset = isDataset;
             self.selectedTemplate = {};
             self.temps = [{'temp': "temp"}];
-            self.dataSet = {'name': "", 'description': "", 'template': "", 'searchable': true, 'generateReadme': true};
+            self.dataSet = {'name': "", 'description': undefined, 'template': "", 'searchable': true, 'generateReadme': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
 
@@ -78,12 +80,11 @@ angular.module('hopsWorksApp')
 
             var createDataSetDir = function (dataSet) {
               self.working = true;
-              dataSetService.createDataSetDir(dataSet)
+              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, self.datasetType)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
-                      },
-                      function (error) {
+                      },function (error) {
                         self.working = false;
                         growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
                       });
@@ -91,15 +92,14 @@ angular.module('hopsWorksApp')
 
             var createTopLevelDataSet = function (dataSet) {
               self.working = true;
-              dataSetService.createTopLevelDataSet(dataSet)
+              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, dataSet.generateReadme)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
-                      },
-                              function (error) {
-                                self.working = false;
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-                              });
+                      },function (error) {
+                        self.working = false;
+                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                      });
             };
 
             self.close = function () {
@@ -108,10 +108,10 @@ angular.module('hopsWorksApp')
 
             self.saveDataSetDir = function () {
               self.dataSet.template = self.selectedTemplate.id;
-              if (path) {
+              if (self.path) {
                 //Assign it to new var to avoid showing the 
                 var newDS = angular.copy(self.dataSet);
-                newDS.name = path + '/' + newDS.name;
+                newDS.name = self.path + '/' + newDS.name;
                 createDataSetDir(newDS);
               } else {
                 createTopLevelDataSet(self.dataSet);

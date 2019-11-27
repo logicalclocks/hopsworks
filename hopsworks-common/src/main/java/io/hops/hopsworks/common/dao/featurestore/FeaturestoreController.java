@@ -98,9 +98,9 @@ public class FeaturestoreController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<Featurestore> getProjectFeaturestores(Project project) {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
-    Collection<Dataset> featurestoresDsInproject = dsInProject.stream().filter(ds -> ds.getType()
-        == DatasetType.FEATURESTORE).collect(Collectors.toList());
-    return featurestoresDsInproject.stream().map(ds -> ds.getFeaturestore()).collect(Collectors.toList());
+    Collection<Dataset> featurestoresDsInproject = dsInProject.stream().filter(ds -> ds.getDsType()
+      == DatasetType.FEATURESTORE).collect(Collectors.toList());
+    return featurestoresDsInproject.stream().map(ds -> ds.getFeatureStore()).collect(Collectors.toList());
   }
 
   /**

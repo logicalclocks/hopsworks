@@ -43,7 +43,7 @@
     <ul class="nav sidebar-nav" ng-cloak ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
       <li style="background: #1a1a1a;">
-        <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="text-center" 
+        <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="text-center" id="project_nav_title"
            title="{{projectCtrl.currentProject.projectName.length > 17 ? projectCtrl.currentProject.projectName:''}}">
           {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
           ? '...' : ''}}
@@ -159,7 +159,8 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'" ng-show="projectCtrl.cloak">
+      <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'"
+          ng-show="projectCtrl.cloak" id="metadataTab">
         <a>
           Metadata Designer<span
             class="sub_icon fa fa-edit fa-lg pull-right"></span>
