@@ -19,9 +19,9 @@ package io.hops.hopsworks.common.dao.featurestore.trainingdataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset;
+import io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external.ExternalTrainingDataset;
+import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.persistence.Basic;
