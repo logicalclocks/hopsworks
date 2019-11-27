@@ -173,7 +173,8 @@ public class KafkaInferenceLogger implements InferenceLogger {
 
     // Configure TLS for this producer
     props.setProperty(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, KafkaConst.KAFKA_SECURITY_PROTOCOL);
-
+    props.setProperty(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG,
+      KafkaConst.KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM);
     props.setProperty(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
         settings.getHopsworksTmpCertDir() + File.separator + HopsUtils.getProjectTruststoreName(project.getName(),
             SERVING_MANAGER_USERNAME));
