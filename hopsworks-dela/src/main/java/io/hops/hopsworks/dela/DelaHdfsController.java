@@ -40,7 +40,7 @@ package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -84,7 +84,7 @@ public class DelaHdfsController {
   @EJB
   private DatasetController datasetCtrl;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
@@ -107,7 +107,7 @@ public class DelaHdfsController {
   }
 
   public ManifestJSON writeManifest(Project project, Dataset dataset, Users user) throws DelaException {
-    if (inodeFacade.getChildren(dataset.getInode()).isEmpty()) {
+    if (inodeController.getChildren(dataset.getInode()).isEmpty()) {
       throw new DelaException(RESTCodes.DelaErrorCode.DATASET_EMPTY, Level.WARNING, DelaException.Source.LOCAL);
     }
     LOGGER.log(Settings.DELA_DEBUG, "{0} - writing manifest", dataset.getPublicDsId());
@@ -155,7 +155,7 @@ public class DelaHdfsController {
 
     List<Inode> datasetFiles = new LinkedList<>();
     Map<String, Inode> avroFiles = new HashMap<>();
-    for (Inode i : inodeFacade.getChildren(dataset.getInode())) {
+    for (Inode i : inodeController.getChildren(dataset.getInode())) {
       if (i.isDir()) {
         throw new DelaException(RESTCodes.DelaErrorCode.SUBDIRS_NOT_SUPPORTED, Level.FINE, DelaException.Source.LOCAL);
       }

@@ -37,7 +37,7 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   -->
 
-<div ng-show="metadataCtrl.noTemplates" style="padding-left: 10px" ng-show="!datasetsCtrl.selected">
+<div id="no_extended_metadata" ng-show="metadataCtrl.noTemplates && datasetsCtrl.selected !== null" style="padding-left:10px">
   <div style="display: inline-block">
     <div style="display: inline-block"><h5>No extended metadata.</h5></div>
     <span class="field-info" uib-tooltip="Right click on the file to add a metadata template." style="padding-top: 5px;padding-left:3px">
@@ -45,7 +45,8 @@
     </span>
   </div>
 </div>
-<div ng-hide="metadataCtrl.noTemplates" ng-show="datasetsCtrl.selected">
+<div id="extended_metadata" ng-hide="metadataCtrl.noTemplates || datasetsCtrl.selected === null">
+  <h5>Extended Metadata</h5>
   <div ng-repeat="table in metadataCtrl.metainfo| orderBy:'name'" style="padding-bottom:10px;">
     <div style="background-color:#D8D8D8;padding-left:15px;padding-top: 5px;" >
       <label style="font-size: 16px;">{{table.name| limitTo: 25}}</label>

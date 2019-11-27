@@ -43,8 +43,8 @@
 'use strict';
 
 angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
-        ['$routeParams', '$uibModalInstance', 'file', 'templateId', 'DataSetService',
-          function ($routeParams, $uibModalInstance, file, templateId, DataSetService) {
+        ['$routeParams', '$uibModalInstance', 'file', 'templateId', 'TemplateService',
+          function ($routeParams, $uibModalInstance, file, templateId, TemplateService) {
 
             var self = this;
 
@@ -52,10 +52,10 @@ angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
             self.selectedTemplate = {};
             self.templates = [];
             self.noTemplates = false;
-            
-            var dataSetService = DataSetService($routeParams.projectID);
+            self.loading = true;
+            var templateService = TemplateService($routeParams.projectID);
 
-            dataSetService.fetchAvailableTemplatesforInode(file.id)
+            templateService.fetchAvailableTemplatesforInode(file.id)
                     .then(function(response){
               
                       angular.forEach(response.data, function (value, key) {
@@ -65,6 +65,7 @@ angular.module('hopsWorksApp').controller('AttachTemplateCtrl',
                       if(self.templates.length === 0){
                         self.noTemplates = true;
                       }
+                      self.loading = false;
             });
 
             self.update = function () {

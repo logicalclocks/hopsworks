@@ -126,8 +126,7 @@ public class InodePK implements Serializable {
 
   @Override
   public String toString() {
-    return "se.kth.bbc.project.fb.InodePK[ parentId=" + parentId + ", name="
-            + name + " ]";
+    return "InodePK[ parentId=" + parentId + ", name=" + name + " ]";
   }
 
 }

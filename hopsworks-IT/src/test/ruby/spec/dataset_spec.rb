@@ -40,7 +40,8 @@
 
 describe "On #{ENV['OS']}" do
   describe 'dataset' do
-    after(:all){clean_projects}
+    before(:all) { setVar("download_allowed", "true") }
+    after(:all) { clean_projects }
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -48,7 +49,9 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail" do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
+          dsname = "dataset_#{short_random_id}"
+          query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
+          create_dir(@project, dsname, "&#{query}")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -60,56 +63,61 @@ describe "On #{ENV['OS']}" do
         end
         it 'should work with valid params' do
           dsname = "dataset_#{short_random_id}"
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: true}
-          expect_json(successMessage: "The Dataset was created successfully.")
+          query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
+          create_dir(@project, dsname, "&#{query}")
+          expect_status(201)
+          get_dataset_stat(@project, dsname, "&type=DATASET")
           expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          ds = json_body.detect { |d| d[:name] == dsname }
+          ds = json_body
           expect(ds[:description]).to eq ("test dataset")
-          expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
-          expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
-          expect(ds[:permission]).to eq ("rwxr-x---")
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{dsname}"
-          ds = json_body.detect { |d| d[:name] == "README.md" }
+          expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          expect(ds[:permission]).to eq ("OWNER_ONLY")
+          get_datasets_in_path(@project, dsname, "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "README.md" }
           expect(ds).to be_present
         end
 
         it 'should work with valid params and no README.md' do
-          dsname = "dataset_#{short_random_id}"
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: dsname, description: "test dataset", searchable: true, generateReadme: false}
-          expect_json(successMessage: "The Dataset was created successfully.")
+          dsname = create_random_dataset(@project, true, false)
+          get_dataset_stat(@project, dsname, "&type=DATASET")
           expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          ds = json_body.detect { |d| d[:name] == dsname }
+          ds = json_body
           expect(ds[:description]).to eq ("test dataset")
-          expect(ds[:owningProjectName]).to eq ("#{@project[:projectname]}")
-          expect(ds[:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
-          expect(ds[:permission]).to eq ("rwxr-x---")
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{dsname}"
-          ds = json_body.detect { |d| d[:name] == "README.md" }
-          expect(ds).to be_nil
+          expect(ds[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
+          expect(ds[:permission]).to eq ("OWNER_ONLY")
+          get_datasets_in_path(@project, dsname, "&type=DATASET")
+          expect(json_body[:count]).to be == 0
+          expect_status(200)
         end
 
         it 'should fail to create a dataset with space in the name' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "test dataset", description: "test dataset", searchable: true, generateReadme: true}
+          query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
+          create_dir(@project, "test%20dataset", "&#{query}")
           expect_json(errorCode: 110028)
           expect_status(400)
         end
 
-        it 'should fail to create a dataset with Ö in the name' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testÖjdataset", description: "test dataset", searchable: true, generateReadme: true}
-          expect_json(errorCode: 110028)
-          expect_status(400)
+        it 'should create a folder with space in the name' do
+          dataset = "dataset_#{short_random_id}"
+          create_dir(@project, dataset, "&type=DATASET")
+          expect_status(201)
+          dirname = "#{dataset}/test%20dir"
+          create_dir(@project, dirname, "&type=DATASET")
+          expect_status(201)
+          get_dataset_stat(@project, dirname, "&type=DATASET")
+          expect_status(200)
         end
 
         it 'should fail to create a dataset with Ö in the name' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testÖjdataset", description: "test dataset", searchable: true, generateReadme: true}
+          query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
+          create_dir(@project, "test%C3%96jdataset", "&#{query}")
           expect_json(errorCode: 110028)
           expect_status(400)
         end
 
         it 'should fail to create a dataset with a name that ends with a .' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet", {name: "testdot.", description: "test dataset", searchable: true, generateReadme: true}
+          query = URI.encode_www_form({description: "test dataset.", searchable: true, generate_readme: true})
+          create_dir(@project, "testdot.", "&#{query}")
           expect_json(errorCode: 110028)
           expect_status(400)
         end
@@ -132,7 +140,7 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail to get dataset list" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+          get_datasets_in_path(@project, '', '')
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -142,42 +150,32 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should return dataset list" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          expect_json_types :array
+          get_datasets_in_path(@project, '', '')
+          expect(json_body[:count]).to be > 5
           expect_status(200)
         end
         it "should fail to return dataset list from Projects if path contains ../" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Logs/../../../Projects"
+          get_datasets_in_path(@project, 'Logs/../../../Projects', "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
         it "should fail to check if a dataset is a dir for a project if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/isDir/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
-        it "should fail to count file blocks to a project if path contains ../" do
-          project = get_project
-          newUser = create_user
-          create_session(newUser[:email],"Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/countFileBlocks/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(200)# Always returns 200 but if file does not exist blocks = -1
-          expect(response).to include("-1")
-          reset_session
-        end
+
         it "should fail to upload file to a project if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
@@ -185,77 +183,64 @@ describe "On #{ENV['OS']}" do
                                       flowIdentifier: "3195-someFiletxt", flowFilename: "someFile.txt",
                                       flowRelativePath: "someFile.txt", flowTotalChunks: 1})
           get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/upload/Logs/../../../Projects/#{project[:projectname]}/Logs/?#{file}", {content_type: "multipart/form-data"}
-          expect_status(204)# will upload to project1/dataset/getContent/Logs/Projects/project/Logs/
-          expect(response).to be_empty
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/Projects/#{project[:projectname]}/Logs/"
-          ds = json_body.detect { |d| d[:name] == "someFile.txt" }
-          expect(ds).to be_present
+          expect_status(400)
+          expect_json(errorCode: 110011)
           reset_session
         end
         it "should fail to return dataset list from Projects if path contains .." do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../../Projects/#{project[:projectname]}/"
+          get_datasets_in_path(project1, "Logs/../../../Projects/#{project[:projectname]}/", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
         it "should fail to return dataset list from Projects if path contains ../../Projects/../../Projects" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getContent/Logs/../../Projects/../../Projects/#{project[:projectname]}/"
+          get_datasets_in_path(project1, "Logs/../../Projects/../../Projects/#{project[:projectname]}/", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
         it "should fail to return file from other Projects if path contains .." do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/getFile/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get_dataset_blob(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
         it "should fail to check if file exists from another project if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/fileExists/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get_dataset_stat(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
+          expect_json(errorCode: 110011)
           reset_session
         end
-        it "should fail to preview a file from another project if path contains ../" do
+
+        it "should fail to download a file from another project if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/filePreview/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
+          get_download_token(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "&type=DATASET")
           expect_status(400)
-          expect_json(errorCode: 110018)
-          reset_session
-        end
-        it "should fail to check for download a file from another project if path contains ../" do
-          project = get_project
-          newUser = create_user
-          create_session(newUser[:email],"Pass123")
-          projectname = "project_#{short_random_id}"
-          project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/checkFileForDownload/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(404)
-          expect_json(errorCode: 110008)
+          expect_json(errorCode: 110011)
           reset_session
         end
       end
@@ -268,7 +253,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to delete dataset" do
           project = get_project
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
+          delete_dataset(project, "Logs", "?type=DATASET")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -280,21 +265,23 @@ describe "On #{ENV['OS']}" do
         it "should fail to delete dataset with insufficient privilege" do
           project = get_project
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/Logs"
-          expect_status(500)
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          delete_dataset(project, "Logs", "?type=DATASET")
+          expect_status(403)
+          expect_json(errorCode: 110050)
           reset_session
         end
 
         it "should fail to delete dataset in another project with .. in path" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/file/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(200)#returns 200 if file not found
+          delete_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "?type=DATASET")
+          expect_status(400)
+          expect_json(errorCode: 110011)
           expect(test_file("/Projects/#{project[:projectname]}/Logs/README.md")).to eq(true)
           reset_session
         end
@@ -302,14 +289,14 @@ describe "On #{ENV['OS']}" do
         it "should fail to delete corrupted(owned by glassfish and size=0) file in another project with .. in path" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           hopsworks_user = getHopsworksUser()
           touchz("/Projects/#{project[:projectname]}/Logs/corrupted.txt", hopsworks_user, hopsworks_user)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/corrupted/Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt"
-          expect_status(500)# throws INODE_DELETION_ERROR with 500 status
-          expect_json(errorCode: 110007)
+          delete_corrupted_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/corrupted.txt", "&type=DATASET")
+          expect_status(400)
+          expect_json(errorCode: 110011) #DataSet not found. /Projects/#{project[:projectname]}/Logs
           reset_session
         end
       end
@@ -318,9 +305,8 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should delete dataset" do
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
-          expect_json(successMessage: "DataSet removed from hdfs.")
-          expect_status(200)
+          delete_dataset(@project, "Logs", "?type=DATASET")
+          expect_status(204)
         end
       end
     end
@@ -329,13 +315,15 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_valid_dataset
-          reset_session
         end
         it "should fail to send request" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
+          get_dataset_stat(@project, @dataset[:inode_name], "&type=DATASET")
+          expect_status(200)
+          dataset = json_body
           reset_session
-          post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
+          request_dataset_access(project, dataset[:attributes][:id])
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -344,21 +332,22 @@ describe "On #{ENV['OS']}" do
         before :all do
           with_valid_project
           with_valid_dataset
-          reset_session
         end
         it "should send request" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
-          post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: project[:id]}
-          expect_json(successMessage: "Request sent successfully.")
+          request_access(@project, @dataset, project)
           expect_status(200)
-          create_session(@project[:username],"Pass123") # be the user of the project that owns the dataset
+          create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
           get "#{ENV['HOPSWORKS_API']}/message"
           msg = json_body.detect { |e| e[:content].include? "Dataset name: #{@dataset[:inode_name]}" }
           expect(msg).not_to be_nil
         end
         it "should fail to send request to the same project" do
-          post "#{ENV['HOPSWORKS_API']}/request/access", {inodeId: @dataset[:inode_id], projectId: @project[:id]}
+          get_dataset_stat(@project, @dataset[:inode_name], "&type=DATASET")
+          expect_status(200)
+          dataset = json_body
+          request_dataset_access(@project, dataset[:attributes][:id])
           expect_status(400)
         end
       end
@@ -374,10 +363,10 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_session(project[:username],"Pass123")
+          create_session(project[:username], "Pass123")
           create_dataset_by_name(project, dsname)
           reset_session
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
+          share_dataset(project, dsname, project1[:name], "&type=DATASET")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -392,12 +381,12 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_session(project[:username],"Pass123")
+          create_session(project[:username], "Pass123")
           create_dataset_by_name(project, dsname)
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project1[:id]}
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          share_dataset(project, dsname, project1[:name], "&type=DATASET")
           expect_status(403)
         end
       end
@@ -412,38 +401,37 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name(@project, dsname)
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/shareDataSet", {name: dsname, projectId: project[:id]}
-          expect_json(successMessage: "The Dataset was successfully shared.")
-          expect_status(200)
+          share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
+          expect_status(204)
         end
         it "should share a HiveDB" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
-          share_dataset(@project, "#{@project[:projectname].downcase}.db", project, type="HIVEDB")
-          datasets = get_all_datasets(project)
-          shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname].downcase}::#{@project[:projectname].downcase}.db" }
-          expect(shared_ds).not_to be_nil
+          share_dataset(@project, "#{@project[:projectname].downcase}.db", project[:projectname], "&type=HIVEDB")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{@project[:projectname].downcase}.db", "&type=HIVEDB")
+          shared_ds = json_body
+          expect("#{shared_ds[:name]}").to eq("#{@project[:projectname]}::#{@project[:projectname].downcase}.db")
         end
         it "should appear as pending for datasets not requested" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name(@project, dsname)
-          share_dataset(@project, dsname, project)
-          datasets = get_all_datasets(project)
-          shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname]}::#{dsname}" }
-          expect(shared_ds[:status]).to be false
+          share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          shared_ds = json_body
+          expect(shared_ds[:accepted]).to be false
         end
         it "should appear as accepted for requested datasets" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name(@project, dsname)
-          request_dataset_access(project, ds[:inode_id])
-          share_dataset(@project, dsname, project)
-          datasets = get_all_datasets(project)
-          shared_ds = datasets.detect { |e| e[:name] == "#{@project[:projectname]}::#{dsname}" }
-          expect(shared_ds[:status]).to be true
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          shared_ds = json_body
+          expect(shared_ds[:accepted]).to be true
         end
         it "should fail to make a shared dataset editable with sticky bit" do
           projectname = "project_#{short_random_id}"
@@ -451,9 +439,8 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           permissions = "GROUP_WRITABLE_SB"
           ds = create_dataset_by_name(@project, dsname)
-          share_dataset(@project, dsname, project)
-          put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/permissions",
-              {name: "#{@project[:projectname]}::#{dsname}", permissions: permissions}
+          share_dataset(@project, dsname, project[:projectname], "")
+          update_dataset_permissions(project, "#{@project[:projectname]}::#{dsname}", permissions, "&type=DATASET")
           expect_status(400)
         end
         it "should fail to write on a non editable shared dataset" do
@@ -461,12 +448,11 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name(@project, dsname)
-          share_dataset(@project, dsname, project)
+          share_dataset(@project, dsname, project[:projectname], "")
           # Accept dataset
-          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
+          accept_dataset(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
           # try to write
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
-               {name: "#{@project[:projectname]}::#{dsname}/testdir"}
+          create_dir(project, "#{@project[:projectname]}::#{dsname}/testdir", "&type=DATASET")
           expect_status(403)
         end
         it "should write in an editable shared dataset" do
@@ -476,17 +462,17 @@ describe "On #{ENV['OS']}" do
           permissions = "GROUP_WRITABLE_SB"
           ds = create_dataset_by_name(@project, dsname)
           # Make the dataset editable
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: dsname, permissions: permissions}
-          share_dataset(@project, dsname, project)
+          update_dataset_permissions(@project, dsname, permissions, "&type=DATASET")
+          # share it
+          share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
           # Accept dataset
-          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/accept/#{ds[:inode_id]}"
+          accept_dataset(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
           # Create a directory - from the "target" project
-          post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset",
-               {name: "#{"#{@project[:projectname]}::#{dsname}/testdir"}"}
-          expect_status(200)
+          create_dir(project, "#{@project[:projectname]}::#{dsname}/testdir", "&type=DATASET")
+          expect_status(201)
           # Check if the directory is present
-          get_datasets_in(@project, dsname)
-          ds = json_body.detect { |d| d[:name] == "testdir"}
+          get_datasets_in_path(@project, dsname, "&type=DATASET")
+          ds = json_body[:items].detect { |d| d[:attributes][:name] == "testdir" }
           expect(ds).to be_present
         end
         it "should be able to see content shared dataset with a name that already exist in the target project" do
@@ -496,10 +482,10 @@ describe "On #{ENV['OS']}" do
           create_dataset_by_name(project, dsname)
           ds = create_dataset_by_name(@project, dsname)
           request_dataset_access(project, ds[:inode_id])
-          share_dataset(@project, dsname, project)
-          get_datasets_in(project, "#{@project[:projectname]}::#{dsname}")
+          share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
+          get_datasets_in_path(project, "#{@project[:projectname]}::#{dsname}", "")
           expect_status(200)
-          get_datasets_in(project, dsname)
+          get_datasets_in_path(project, dsname, "")
           expect_status(200)
         end
       end
@@ -517,78 +503,79 @@ describe "On #{ENV['OS']}" do
           permissions = "GROUP_WRITABLE_SB"
           create_dataset_by_name(project, dsname)
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: dsname, permissions: permissions, projectId: project[:id]}
-          expect_json(errorCode: 150068)
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          update_dataset_permissions(project, dsname, permissions, "&type=DATASET")
+          expect_json(errorCode: 110050)
           expect_status(403)
         end
       end
 
       context 'with authentication and sufficient privileges' do
         before :all do
-          with_valid_project
           with_valid_dataset
         end
 
         it "should make the dataset editable with sticky bit" do
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: @dataset[:inode_name], permissions: "GROUP_WRITABLE_SB"}
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
           expect_status(200)
           # check for correct permissions
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          ds = json_body.detect { |d| d[:name] == @dataset[:inode_name]}
-          expect(ds[:permission]).to eq ("rwxrwx--T")
+          get_dataset_stat(@project, @dataset[:inode_name], "&type=DATASET")
+          expect_status(200)
+          ds = json_body
+          expect(ds[:attributes][:permission]).to eq ("rwxrwx--T")
         end
 
         it "should allow data scientist to create a directory" do
           dirname = @dataset[:inode_name] + "/testDir"
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
-          expect_status(200)
-          get_datasets_in(@project, @dataset[:inode_name])
-          createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
-          expect(createdDir[:permission]).to eq ("rwxrwx--T")
+          add_member_to_project(@project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          create_dir(@project, dirname, "&type=DATASET")
+          expect_status(201)
+          get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+          createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "testDir" }
+          expect(createdDir[:attributes][:permission]).to eq ("rwxrwx--T")
         end
 
         it "should fail to delete a directory of another user" do
           create_session(@project[:username], "Pass123")
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
-          expect_status(500)
+          add_member_to_project(@project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          delete_dataset(@project, "#{@dataset[:inode_name]}/testDir", "?type=DATASET")
+          expect_json(errorCode: 110050) # Permission denied.
+          expect_status(403)
           # Directory should still be there
-          get_datasets_in(@project, @dataset[:inode_name])
-          createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
+          get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+          createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "testDir" }
           expect(createdDir).to be_present
         end
 
         it "should make the dataset not editable" do
-          create_session(@project[:username],"Pass123") # be the user of the project that owns the dataset
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: @dataset[:inode_name], permissions: "OWNER_ONLY"}
+          create_session(@project[:username], "Pass123") # be the user of the project that owns the dataset
+          update_dataset_permissions(@project, @dataset[:inode_name], "OWNER_ONLY", "&type=DATASET")
           expect_status(200)
           # check for permission
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
-          ds = json_body.detect { |d| d[:name] == @dataset[:inode_name]}
-          expect(ds[:permission]).to eq ("rwxr-x---")
+          get_dataset_stat(@project, @dataset[:inode_name], "&type=DATASET")
+          ds = json_body
+          expect(ds[:attributes][:permission]).to eq ("rwxr-x---")
           # check for permission inside the dataset directory
-          get_datasets_in(@project, @dataset[:inode_name])
-          createdDir = json_body.detect { |inode| inode[:name] == "testDir" }
-          expect(createdDir[:permission]).to eq ("rwxr-x---")
+          get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+          createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "testDir" }
+          expect(createdDir[:attributes][:permission]).to eq ("rwxr-x---")
         end
 
         it "should fail to create a directory as data scientist" do
           dataset = @dataset[:inode_name]
           dirname = dataset + "/afterDir"
           member = create_user
-          add_member(member[:email], "Data scientist")
-          create_session(member[:email],"Pass123")
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
+          add_member_to_project(@project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          create_dir(@project, dirname, "&type=DATASET")
           expect_status(403)
-          get_datasets_in(@project, @dataset[:inode_name])
-          createdDir = json_body.detect { |inode| inode[:name] == "afterDir" }
+          get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+          createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "afterDir" }
           expect(createdDir).to be_nil
         end
       end
@@ -601,32 +588,28 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to download a file created by another user" do
           # Make the dataset writable by other members of the project
-          put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/permissions", {name: @dataset[:inode_name], permissions: "GROUP_WRITABLE_SB"}
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
           expect_status(200)
 
           dirname = @dataset[:inode_name] + "/afterDir"
           project_owner = @user
           member = create_user
-          add_member(member[:email], "Data owner")
-          create_session(member[:email],"Pass123")
+          add_member_to_project(@project, member[:email], "Data owner")
+          create_session(member[:email], "Pass123")
 
           # Create a subdirectory
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: dirname}
-          expect_status(200)
-
-          # Get README.md inodeId
-          get_datasets_in(@project, @dataset[:inode_name])
-          readme = json_body.detect { |inode| inode[:name] == "README.md" }
+          create_dir(@project, dirname, "&type=DATASET")
+          expect_status(201)
 
           # Copy README.md to the subdirectory
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy", {destPath: "/Projects/#{@project[:projectname]}/#{dirname}/README.md", inodeId: readme[:id]}
-          expect_status(200)
+          copy_dataset(@project, "#{@dataset[:inode_name]}/README.md", "/Projects/#{@project[:projectname]}/#{dirname}/README.md", "&type=DATASET")
+          expect_status(204)
 
           # Log in as project owner, if the project owner is in the dataset group, it should be able to preview
           # the copied README.md file.
           create_session(project_owner[:email], "Pass123")
           # Try to preview the README.md
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/filePreview/#{dirname}/README.md?mode=head"
+          get_dataset_blob(@project, "#{dirname}/README.md", "&type=DATASET")
           expect_status(200)
         end
       end
@@ -643,43 +626,43 @@ describe "On #{ENV['OS']}" do
           ds1name = @dataset[:inode_name]
 
           ds2name = ds1name + "/testDir"
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds2name, description: "test dataset", searchable: false, generateReadme: false}
-          expect_status(200)
+          create_dir(@project, ds2name, "")
+          expect_status(201)
 
           ds3name = ds2name + "/subDir"
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset", {name: ds3name, description: "test dataset", searchable: false, generateReadme: false}
-          expect_status(200)
+          create_dir(@project, ds3name, "")
+          expect_status(201)
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds1name}"
-          ds = json_body.detect { |d| d[:name] == "testDir" }
+          get_dataset_stat(@project, ds1name, "&type=DATASET")
+          ds = json_body
           expect(ds).to be_present
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{ds2name}"
-          ds = json_body.detect { |d| d[:name] == "subDir" }
+          get_dataset_stat(@project, ds2name, "&type=DATASET")
+          ds = json_body
           expect(ds).to be_present
         end
 
         it 'zip directory' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/zip/#{@dataset[:inode_name]}/testDir"
-          expect_status(200)
+          zip_dataset(@project, "#{@dataset[:inode_name]}/testDir", "&type=DATASET")
+          expect_status(204)
 
           wait_for do
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{@dataset[:inode_name]}"
-            ds = json_body.detect { |d| d[:name] == "testDir.zip" }
+            get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir.zip" }
             !ds.nil?
           end
         end
 
         it 'unzip directory' do
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/file/#{@dataset[:inode_name] + "/testDir"}"
-          expect_status(200)
+          delete_dataset(@project, "#{@dataset[:inode_name]}/testDir", "?type=DATASET")
+          expect_status(204)
 
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/unzip/#{@dataset[:inode_name]}/testDir.zip"
-          expect_status(200)
+          unzip_dataset(@project, "#{@dataset[:inode_name]}/testDir.zip", "&type=DATASET")
+          expect_status(204)
 
           wait_for do
-            get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/#{@dataset[:inode_name]}"
-            ds = json_body.detect { |d| d[:name] == "testDir" }
+            get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir" }
             !ds.nil?
           end
         end
@@ -687,28 +670,28 @@ describe "On #{ENV['OS']}" do
         it "should fail to zip a dataset from other projects if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/zip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md"
-          expect_status(404)
-          expect_json(errorCode: 110008)
+          zip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md", "&type=DATASET")
+          expect_status(400)
+          expect_json(errorCode: 110011) # DataSet not found.
           reset_session
         end
         it "should fail to unzip a dataset from other projects if path contains ../" do
           project = get_project
           newUser = create_user
-          create_session(newUser[:email],"Pass123")
+          create_session(newUser[:email], "Pass123")
           projectname = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname)
-          get "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/dataset/unzip/Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip"
-          expect_status(404)
-          expect_json(errorCode: 110008)
+          unzip_dataset(project1, "Logs/../../../Projects/#{project[:projectname]}/Logs/README.md.zip", "&type=DATASET")
+          expect_status(400) # bad request
+          expect_json(errorCode: 110011) # DataSet not found.
           reset_session
         end
       end
     end
-    
+
     describe "#Download" do
       context 'without authentication' do
         before :all do
@@ -716,22 +699,22 @@ describe "On #{ENV['OS']}" do
           reset_session
         end
         it "should fail to get a download token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
+          get_download_token(@project, "Logs/README.md", "?type=DATASET")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
         it "should fail to download file without a token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md"
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/Logs/README.md?type=DATASET"
           expect_json(errorCode: 200003)
           expect_status(401)
         end
         it "should fail to download file with an empty string token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token= "
+          download_dataset_with_token(@project, "Logs/README.md", " ", "&type=DATASET")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
         it "should fail to download file with an empty token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token="
+          download_dataset_with_token(@project, "Logs/README.md", "", "&type=DATASET")
           expect_json(errorCode: 200003)
           expect_status(401)
         end
@@ -741,42 +724,395 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should download Logs/README.md" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
-          expect_status(200)
-          token = json_body[:data][:value]
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token 
+          download_dataset(@project, "Logs/README.md", "type=DATASET")
           expect_status(200)
         end
         it "should fail to download with a token issued for a different file path" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Resources/README.md"
+          get_download_token(@project, "Resources/README.md", "?type=DATASET")
           expect_status(200)
           token = json_body[:data][:value]
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token 
+          download_dataset_with_token(@project, "Logs/README.md", token, "&type=DATASET")
           expect_status(401)
         end
         it "should fail to download more than one file with a single token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Resources/README.md"
+          get_download_token(@project, "Resources/README.md", "?type=DATASET")
           expect_status(200)
           token = json_body[:data][:value]
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Resources/README.md?token=" + token 
+          download_dataset_with_token(@project, "Resources/README.md", token, "&type=DATASET")
           expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Resources/README.md?token=" + token 
+          download_dataset_with_token(@project, "Resources/README.md", token, "&type=DATASET")
           expect_status(401)
         end
         it 'should fail to download a file if variable download_allowed is false' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
-          expect_status(200)
-          token = json_body[:data][:value]
           setVar("download_allowed", 'false')
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/checkFileForDownload/Logs/README.md"
-          expect_status(403)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/fileDownload/Logs/README.md?token=" + token
+          get_download_token(@project, "Logs/README.md", "?type=DATASET")
           expect_status(403)
           #set var back to true
           setVar("download_allowed", "true")
-          expect(getVar("download_allowed").value). to eq "true"
+          expect(getVar("download_allowed").value).to eq "true"
         end
-      end 
+      end
+    end
+    describe '#checks' do
+      before(:all) do
+        with_valid_project
+      end
+      it 'should allow .. if path resolves to a valid file' do
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+        dsname = "dataset_#{short_random_id}"
+        ds = create_dataset_by_name(@project, dsname)
+        request_access(@project, ds, project)
+        share_dataset(@project, dsname, project[:projectname], "")
+        get_dataset_stat(project, "Logs/../../../Projects/#{@project[:projectname]}/#{dsname}", "&type=DATASET")
+        shared_ds = json_body
+        get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+        expect(json_body[:attributes]).to eq (shared_ds[:attributes])# :href can be different
+      end
+      it 'should not allow path with too many ..' do
+        dsname = "dataset_#{short_random_id}"
+        ds = create_dataset_by_name(@project, dsname)
+        get_dataset_stat(@project, "Logs/../../../../Projects/#{@project[:projectname]}/#{dsname}", "&type=DATASET")
+        expect_status(400) # bad request
+        expect_json(errorCode: 110011) # DataSet not found.
+      end
+      it 'should not let users create dataset with type Hive' do
+        dsname = "dataset_#{short_random_id}"
+        create_dir(@project, dsname, "&type=HIVEDB")
+        expect_status(201)
+        expect(json_body[:datasetType]).to eq ("DATASET")
+      end
+      it 'should not let users create dataset with type FS' do
+        dsname = "dataset_#{short_random_id}"
+        create_dir(@project, dsname, "&type=FEATURESTORE")
+        expect_status(201)
+        expect(json_body[:datasetType]).to eq ("DATASET")
+      end
+    end
+    describe '#sort' do
+      context 'top level dataset' do
+        before(:all) do
+          with_valid_project
+          create_datasets(10)
+          create_datasets_for_new_user(5)
+          create_shared_datasets(5, true)
+          get_datasets_in_path(@project, "", "")
+          @datasets = json_body[:items]
+        end
+        it 'should return sorted datasets by id (asc)' do
+          test_sort_by(@project, @datasets, "", "id", "asc", "id")
+        end
+        it 'should return sorted datasets by id (desc)' do
+          test_sort_by(@project, @datasets, "", "id", "desc", "id")
+        end
+        it 'should return sorted datasets by name (asc)' do
+          test_sort_by_str(@project, @datasets, "", "name", "asc", "name")
+        end
+        it 'should return sorted datasets by name (desc)' do
+          test_sort_by_str(@project, @datasets, "", "name", "desc", "name")
+        end
+        it 'should return sorted datasets by searchable (asc)' do
+          test_sort_by(@project, @datasets, "", "searchable", "asc", "searchable")
+        end
+        it 'should return sorted datasets by searchable (desc)' do
+          test_sort_by(@project, @datasets, "", "searchable", "desc", "searchable")
+        end
+        it 'should return sorted datasets by size (asc)' do
+          test_sort_by_attr(@project, @datasets, "", "size", "asc", "size")# dataset size is not set
+        end
+        it 'should return sorted datasets by size (desc)' do
+          test_sort_by_attr(@project, @datasets, "", "size", "desc", "size")
+        end
+        it 'should return sorted datasets by modificationTime (asc)' do
+          test_sort_by_attr(@project, @datasets, "", "modificationTime", "asc", "modification_time")
+        end
+        it 'should return sorted datasets by modificationTime (desc)' do
+          test_sort_by_attr(@project, @datasets, "", "modificationTime", "desc", "modification_time")
+        end
+        it 'should return sorted datasets by accessTime (asc)' do
+          test_sort_by_attr(@project, @datasets, "", "accessTime", "asc", "access_time")
+        end
+        it 'should return sorted datasets by accessTime (desc)' do
+          test_sort_by_attr(@project, @datasets, "", "accessTime", "desc", "access_time")
+        end
+        it 'should return sorted datasets by type (asc)' do
+          test_sort_by_datasetType(@project, @datasets, "", "datasetType", "asc", "type")
+        end
+        it 'should return sorted datasets by type (desc)' do
+          test_sort_by_datasetType(@project, @datasets, "", "datasetType", "desc", "type")
+        end
+      end
+      context 'dataset content' do
+        before(:all) do
+          with_valid_dataset
+          create_dataset_contents(10)
+          create_dataset_contents_for_new_user(5)
+          create_files
+          get_datasets_in_path(@project, @dataset[:inode_name], "")
+          @dataset_content = json_body[:items]
+        end
+        it 'should return sorted dataset content by id (asc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "id", "asc", "id")
+        end
+        it 'should return sorted dataset content by id (desc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name],"id", "desc", "id")
+        end
+        it 'should return sorted dataset content by name (asc)' do
+          test_sort_by_str_attr(@project, @dataset_content, @dataset[:inode_name], "name", "asc", "name")
+        end
+        it 'should return sorted dataset content by name (desc)' do
+          test_sort_by_str_attr(@project, @dataset_content, @dataset[:inode_name],"name", "desc", "name")
+        end
+        it 'should return sorted dataset content by size (asc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "size", "asc", "size")
+        end
+        it 'should return sorted dataset content by size (desc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "size", "desc", "size")
+        end
+        it 'should return sorted dataset content by modificationTime (asc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "asc", "modification_time")
+        end
+        it 'should return sorted dataset content by modificationTime (desc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "desc", "modification_time")
+        end
+        it 'should return sorted dataset content by accessTime (asc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "asc", "access_time")
+        end
+        it 'should return sorted dataset content by accessTime (desc)' do
+          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "desc", "access_time")
+        end
+      end
+    end
+    describe '#filter' do
+      context 'top level dataset' do
+        before(:all) do
+          with_valid_dataset #will create a dataset with name starting with dataset
+          create_datasets(5, searchable=true) # searchable
+          create_datasets(5, searchable=false) # not searchable
+          create_shared_datasets(5, true) # accepted
+          create_shared_datasets(5, false) # pending
+          create_datasets_for_new_user(5)
+          get_datasets_in_path(@project, "", "")
+          @datasets = json_body[:items]
+        end
+        it 'should return only shared datasets' do
+          test_filter_by(@project, [false], "", "shared", "shared:true")
+        end
+        it 'should return only non shared datasets' do
+          test_filter_by(@project, [true], "", "shared", "shared:false")
+        end
+        it 'should return only pending datasets' do
+          test_filter_by(@project, [true], "", "accepted", "accepted:false")
+        end
+        it 'should return only accepted datasets' do
+          test_filter_by(@project, [false], "", "accepted", "accepted:true")
+        end
+        it 'should return only datasets underConstruction' do
+          test_filter_by_attr(@project, [true], "", "underConstruction", "under_construction:false")
+        end
+        it 'should return only searchable datasets' do
+          test_filter_by(@project, [false], "", "searchable", "searchable:true")
+        end
+        it 'should filter by name' do
+          test_filter_by_starts_with(@project, @datasets, "", "name", "name", "data")
+        end
+        it 'should filter by user email' do
+          nonSharedDs = @datasets.map { |o| o if o[:shared]==false}.compact
+          test_filter_by_eq_attr(@project, nonSharedDs, "", "owner", "#{@user[:fname]} #{@user[:lname]}", "user_email",
+                                 @user[:email])
+        end
+        it 'should filter by user project name' do
+          nonSharedDs = @datasets.map { |o| o if o[:shared]==false}.compact
+          test_filter_by_eq_attr(@project, nonSharedDs, "", "owner", "#{@user[:fname]} #{@user[:lname]}", "hdfs_user",
+                                 "#{@project[:projectname]}__#{@user[:username]}")
+        end
+        it 'should filter by size == ' do
+          test_filter_by_eq_attr(@project, @datasets, "", "size", 0, "size", 0)#folders have no size but filter should work
+        end
+        it 'should filter by size > ' do
+          test_filter_by_gt_attr(@project, @datasets, "", "size", -1, "size_gt", -1)
+        end
+        it 'should filter by size < ' do
+          test_filter_by_lt_attr(@project, @datasets, "", "size", 10, "size_lt", 10)
+        end
+        it 'should filter by modificationTime = ' do
+          s = @datasets.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_eq_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time", mt)
+        end
+        it 'should filter by modificationTime <' do
+          s = @datasets.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_lt_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time_lt", mt)
+        end
+        it 'should filter by modificationTime >' do
+          s = @datasets.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_gt_attr(@project, @datasets, "", "modificationTime", s[:attributes][:modificationTime], "modification_time_gt", mt)
+        end
+        it 'should filter by accessTime =' do
+          s = @datasets.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_eq_attr(@project, @datasets, "", "accessTime", acct, "access_time", acct)
+        end
+        it 'should filter datasets by accessTime <' do
+          s = @datasets.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_lt_attr(@project, @datasets, "", "accessTime", acct, "access_time_lt", acct)
+        end
+        it 'should filter datasets by accessTime >' do
+          s = @datasets.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_gt_attr(@project, @datasets, "", "accessTime", acct, "access_time_gt", acct)
+        end
+      end
+      context 'dataset content' do
+        before(:all) do
+          with_valid_dataset
+          create_dataset_contents(10)
+          create_dataset_contents_for_new_user(5)
+          create_files
+          get_datasets_in_path(@project, @dataset[:inode_name], "")
+          @dataset_content = json_body[:items]
+        end
+        it 'should filter by name' do
+          test_filter_by_starts_with_attr(@project, @dataset_content, @dataset[:inode_name], "name", "name", "Sample")#will get the metadat files
+        end
+        it 'should filter by user email' do
+          test_filter_by_eq_attr(@project, @dataset_content, @dataset[:inode_name], "owner", "#{@user[:fname]} #{@user[:lname]}", "user_email",
+                                 @user[:email])
+        end
+        it 'should filter by user project name' do
+          test_filter_by_eq_attr(@project, @dataset_content, @dataset[:inode_name], "owner", "#{@user[:fname]} #{@user[:lname]}", "hdfs_user",
+                                 "#{@project[:projectname]}__#{@user[:username]}")
+        end
+        it 'should filter by size == ' do
+          s = @dataset_content.map { |o| "#{o[:attributes][:size]}" if o[:attributes][:size]>0}.compact
+          size = s.sample
+          test_filter_by_eq_attr(@project, @dataset_content, @dataset[:inode_name], "size", size.to_i, "size", size)
+        end
+        it 'should filter by size > ' do
+          s = @dataset_content.map { |o| "#{o[:attributes][:size]}" if o[:attributes][:size]>1}.compact
+          size = s.sample
+          test_filter_by_gt_attr(@project, @dataset_content, @dataset[:inode_name], "size", size.to_i - 1, "size_gt", size.to_i - 1)
+        end
+        it 'should filter by size < ' do
+          s = @dataset_content.map { |o| "#{o[:attributes][:size]}" if o[:attributes][:size]>0}.compact
+          size = s.sample
+          test_filter_by_lt_attr(@project, @dataset_content, @dataset[:inode_name], "size", size.to_i + 1, "size_lt", size.to_i + 1)
+        end
+        it 'should filter by modificationTime = ' do
+          s = @dataset_content.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_eq_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime",
+                                 s[:attributes][:modificationTime], "modification_time", mt)
+        end
+        it 'should filter by modificationTime <' do
+          s = @dataset_content.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_lt_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime",
+                                 s[:attributes][:modificationTime], "modification_time_lt", mt)
+        end
+        it 'should filter by modificationTime >' do
+          s = @dataset_content.sample
+          mt = s[:attributes][:modificationTime]
+          if mt.length < 24
+            mt.insert(22, "0")
+          end
+          test_filter_by_gt_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime",
+                                 s[:attributes][:modificationTime], "modification_time_gt", mt)
+        end
+        it 'should filter by accessTime =' do
+          s = @dataset_content.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_eq_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", acct, "access_time",
+                                 acct)
+        end
+        it 'should filter datasets by accessTime <' do
+          s = @dataset_content.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_lt_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", acct, "access_time_lt", acct)
+        end
+        it 'should filter datasets by accessTime >' do
+          s = @dataset_content.sample
+          acct = s[:attributes][:accessTime]
+          test_filter_by_gt_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", acct, "access_time_gt", acct)
+        end
+      end
+    end
+    describe '#pagination' do
+      before(:all) do
+        with_valid_dataset
+        create_datasets(15, searchable=true)
+        create_shared_datasets(5, true)
+        get_datasets_in_path(@project, "", "")
+        @datasets = json_body[:items]
+        create_dataset_contents(15)
+        create_files
+        get_datasets_in_path(@project, @dataset[:inode_name], "")
+        @dataset_content = json_body[:items]
+      end
+      context 'top level dataset' do
+        it 'should limit results' do
+          test_offset_limit(@project, @datasets, "", 0, 15)
+        end
+        it 'should ignore if limit < 0.' do
+          test_offset_limit(@project, @datasets, "", 0, -10)
+        end
+        it 'should get all results if limit > len' do
+          test_offset_limit(@project, @datasets, "", 0, 1000)
+        end
+        it 'should get all results from the offset' do
+          test_offset_limit(@project, @datasets, "", 5, 0)
+        end
+        it 'should get limit results from the offset' do
+          test_offset_limit(@project, @datasets, "", 5, 10)
+        end
+        it 'should ignore if offset < 0.' do
+          test_offset_limit(@project, @datasets, "", -1, 10)
+        end
+        it 'should get 0 result if offset >= len.' do
+          test_offset_limit(@project, @datasets, "", 2500, 10)
+        end
+      end
+      context 'dataset content' do
+        it 'should limit results' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 0, 15)
+        end
+        it 'should ignore if limit < 0.' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 0, -10)
+        end
+        it 'should get all results if limit > len' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 0, 1000)
+        end
+        it 'should get all results from the offset' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 5, 0)
+        end
+        it 'should get limit results from the offset' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 5, 10)
+        end
+        it 'should ignore if offset < 0.' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], -1, 10)
+        end
+        it 'should get 0 result if offset >= len.' do
+          test_offset_limit_attr(@project, @dataset_content, @dataset[:inode_name], 2500, 10)
+        end
+      end
     end
     describe 'with Api key' do
       before(:all) do
@@ -791,59 +1127,49 @@ describe "On #{ENV['OS']}" do
           set_api_key_to_header(@invalid_key)
         end
         it 'should fail to access datasets' do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+          get_datasets_in_path(@project, '', '')
           expect_json(errorCode: 320004)
           expect_status(403)
         end
         it 'should fail to create a dataset' do
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet",
-               {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
+          create_dir(@project, "dataset_#{Time.now.to_i}", "&type=DATASET")
           expect_json(errorCode: 320004)
           expect_status(403)
         end
         it 'should fail to delete a dataset' do
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
+          delete_dataset(@project, "Logs", "?type=DATASET")
           expect_status(403)
         end
       end
       context 'with valid scope' do
         it 'should get ' do
           set_api_key_to_header(@key_view)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+          get_datasets_in_path(@project, '', '')
           expect_status(200)
         end
         it 'should create' do
           set_api_key_to_header(@key_create)
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/createTopLevelDataSet",
-               {name: "dataset_#{Time.now.to_i}", description: "test dataset", searchable: true, generateReadme: true}
-          expect_status(200)
+          create_dataset_by_name(@project, "dataset_#{Time.now.to_i}")
+          expect_status(201)
         end
         it 'should move a dataset' do
           set_api_key_to_header(@key_create)
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/",
-               {name: "Resources/test1", description:"", searchable: true, generateReadme: true}
-          expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
-          new_ds = json_body.detect { |e| e[:name] == "test1" }
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/move",
-               {inodeId:new_ds[:id], destPath:"/Projects/#{@project[:projectname]}/Logs/test1"}
-          expect_status(200)
+          create_dir(@project, "Resources/test1", "&type=DATASET")
+          expect_status(201)
+          move_dataset(@project, "Resources/test1", "/Projects/#{@project[:projectname]}/Logs/test1", "&type=DATASET")
+          expect_status(204)
         end
         it 'should copy a dataset' do
           set_api_key_to_header(@key_create)
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/",
-               {name: "Resources/test2", description:"", searchable: true, generateReadme: true}
-          expect_status(200)
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent/Resources"
-          new_ds = json_body.detect { |e| e[:name] == "test2" }
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/copy",
-               {inodeId:new_ds[:id], destPath:"/Projects/#{@project[:projectname]}/Logs/test2"}
-          expect_status(200)
+          create_dir(@project, "Resources/test2", "&type=DATASET")
+          expect_status(201)
+          copy_dataset(@project, "Resources/test2", "/Projects/#{@project[:projectname]}/Logs/test2", "&type=DATASET")
+          expect_status(204)
         end
         it 'should delete' do
           set_api_key_to_header(@key_delete)
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Logs"
-          expect_status(200)
+          delete_dataset(@project, "Logs", "?type=DATASET")
+          expect_status(204)
         end
       end
     end

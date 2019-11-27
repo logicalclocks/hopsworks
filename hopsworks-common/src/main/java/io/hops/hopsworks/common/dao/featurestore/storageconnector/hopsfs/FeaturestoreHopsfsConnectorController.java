@@ -20,9 +20,9 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featorestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -40,7 +40,7 @@ public class FeaturestoreHopsfsConnectorController {
   @EJB
   private FeaturestoreHopsfsConnectorFacade featurestoreHopsfsConnectorFacade;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private DatasetController datasetController;
   
@@ -287,7 +287,7 @@ public class FeaturestoreHopsfsConnectorController {
       FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
     FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new
         FeaturestoreHopsfsConnectorDTO(featurestoreHopsfsConnector);
-    featurestoreHopsfsConnectorDTO.setHopsfsPath(inodeFacade.getPath(
+    featurestoreHopsfsConnectorDTO.setHopsfsPath(inodeController.getPath(
         featurestoreHopsfsConnector.getHopsfsDataset().getInode()));
     return featurestoreHopsfsConnectorDTO;
   }

@@ -40,12 +40,11 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MetadataCtrl', ['$cookies', '$uibModal', '$scope', '$rootScope', '$routeParams',
-          '$filter', 'DataSetService', 'ModalService', 'growl', 'MetadataActionService',
-          'MetadataRestService', 'MetadataHelperService', 'ProjectService',
-          function ($cookies, $uibModal, $scope, $rootScope, $routeParams, $filter, DataSetService,
-                  ModalService, growl, MetadataActionService, MetadataRestService,
-                  MetadataHelperService, ProjectService) {
+        .controller('MetadataCtrl', ['$cookies', '$uibModal', '$scope', '$rootScope', '$routeParams', '$filter',
+            'ModalService', 'growl', 'MetadataActionService', 'MetadataRestService', 'MetadataHelperService',
+            'TemplateService',
+          function ($cookies, $uibModal, $scope, $rootScope, $routeParams, $filter, ModalService, growl,
+                    MetadataActionService, MetadataRestService, MetadataHelperService, TemplateService) {
 
             var self = this;
             self.metaData = {};
@@ -74,7 +73,7 @@ angular.module('hopsWorksApp')
 
             self.attachedDetailedTemplateList = [];
 
-            var dataSetService = DataSetService($routeParams.projectID);
+            var templateService = TemplateService($routeParams.projectID);
 
             //update the current template whenever other users make changes
             var listener = $rootScope.$on("template.change", function (event, response) {
@@ -413,7 +412,7 @@ angular.module('hopsWorksApp')
                       .then(function (success) {
                         data.templateId = success.templateId;
 
-                        dataSetService.attachTemplate(data).then(
+                          templateService.attachTemplate(data).then(
                                 function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                   self.setMetadataTemplate(file);
@@ -436,7 +435,7 @@ angular.module('hopsWorksApp')
               ModalService.detachTemplate('sm', file, templateId)
                       .then(function (success) {
 
-                        dataSetService.detachTemplate(success.fileId, success.templateId)
+                          templateService.detachTemplate(success.fileId, success.templateId)
                                 .then(function (success) {
                                   growl.success(success.data.successMessage, {title: 'Success', ttl: 1000});
                                   self.setMetadataTemplate(file);
@@ -455,7 +454,7 @@ angular.module('hopsWorksApp')
               //assume by default there are no templates
               self.noTemplates = false;
 
-              dataSetService.fetchTemplatesForInode(self.currentFile.id)
+                templateService.fetchTemplatesForInode(self.currentFile.id)
                       .then(function (response) {
                         self.currentFileTemplates = response.data;
 
@@ -776,20 +775,20 @@ angular.module('hopsWorksApp')
               self.meta = [];
               self.metainfo = [];
               self.visibilityInfo = [];
-              var templateId = file.template;
-              self.currentTemplateID = templateId;
+              // var templateId = file.template;
+              // self.currentTemplateID = templateId;
               self.currentFile = file;
               //update the current file reference
               MetadataHelperService.setCurrentFile(file);
               self.currentFile = MetadataHelperService.getCurrentFile();
               self.noTemplates = false;
-              dataSetService.fetchTemplatesForInode(self.currentFile.id)
+                templateService.fetchTemplatesForInode(self.currentFile.id)
                       .then(function (response) {
                         self.currentFileTemplates = response.data;
                         self.attachedDetailedTemplateList = [];
                         var index = 0;
                         angular.forEach(self.currentFileTemplates, function (template, key) {
-                          dataSetService.fetchTemplate(template.templateId, $cookies.get('email'))
+                            templateService.fetchTemplate(template.templateId, $cookies.get('email'))
                                   .then(function (response) {
                                     index++;
                                     self.attachedDetailedTemplateList.push({templateid: template.templateId, content: response.data.successMessage});
@@ -815,7 +814,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.updateMetadataTabs = function () {
-              dataSetService.fetchTemplate(self.selectedTemplate.templateId, $cookies.get('email'))
+                templateService.fetchTemplate(self.selectedTemplate.templateId, $cookies.get('email'))
                       .then(function (response) {
                         var board = response.data.successMessage;
                         self.currentBoard = JSON.parse(board);
@@ -839,7 +838,7 @@ angular.module('hopsWorksApp')
                 var templatecontent = JSON.parse(template.content);
                 var tables = templatecontent.columns;
                 angular.forEach(tables, function (table, key) {
-                  dataSetService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
+                    templateService.fetchMetadata(self.currentFile.parentId, self.currentFile.name, table.id)
                           .then(function (response) {
                             var content = response.data[0];
                             self.reconstructMetadata(table.name, table.id, content.metadataView, table.cards);

@@ -43,7 +43,10 @@ import io.hops.hopsworks.exceptions.InvalidQueryException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.text.DateFormat;
+import java.text.FieldPosition;
 import java.text.ParseException;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -159,9 +162,28 @@ public abstract class AbstractFacade<T> {
   }
   
   public Date getDate(String field, String value) {
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    DateFormat dateFormat = new DateFormat() {
+      static final String FORMAT1 = "yyyy-MM-dd'T'HH:mm:ss.SS";
+      static final String FORMAT2 = "yyyy-MM-dd";
+      final SimpleDateFormat sdf1 = new SimpleDateFormat(FORMAT1);
+      final SimpleDateFormat sdf2 = new SimpleDateFormat(FORMAT2);
+      
+      @Override
+      public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+        throw new UnsupportedOperationException();
+      }
+    
+      @Override
+      public Date parse(String source, ParsePosition pos) {
+        if (source.length() - pos.getIndex() == FORMAT1.length()) {
+          return sdf1.parse(source, pos);
+        } else {
+          return sdf2.parse(source, pos);
+        }
+      }
+    };
     try {
-      return formatter.parse(value);
+      return dateFormat.parse(value);
     } catch (ParseException e) {
       throw new InvalidQueryException(
         "Filter value for " + field + " needs to set valid format. Expected:yyyy-mm-dd hh:mm:ss but found: " + value);

@@ -34,12 +34,12 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -49,6 +49,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -93,7 +94,7 @@ public class TrainingDatasetService {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private DsUpdateOperations dsUpdateOperations;
   @EJB
@@ -162,7 +163,8 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Create training dataset for a featurestore",
       response = TrainingDatasetDTO.class)
   public Response createTrainingDataset(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
-    throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException {
+    throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException,
+      UnsupportedEncodingException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
@@ -182,7 +184,7 @@ public class TrainingDatasetService {
       }
       Dataset trainingDatasetsFolder = featurestoreHopsfsConnector.getHopsfsDataset();
       String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
-        inodeFacade.getPath(trainingDatasetsFolder.getInode()),
+        inodeController.getPath(trainingDatasetsFolder.getInode()),
         hopsfsTrainingDatasetDTO.getName(), hopsfsTrainingDatasetDTO.getVersion());
       org.apache.hadoop.fs.Path fullPath = null;
       try {
@@ -197,7 +199,7 @@ public class TrainingDatasetService {
           throw e;
         }
       }
-      Inode inode = inodeFacade.getInodeAtPath(fullPath.toString());
+      Inode inode = inodeController.getInodeAtPath(fullPath.toString());
       hopsfsTrainingDatasetDTO.setInodeId(inode.getId());
       createdTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user, featurestore,
         hopsfsTrainingDatasetDTO);
@@ -258,7 +260,7 @@ public class TrainingDatasetService {
   public Response deleteTrainingDataset(
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException, DatasetException,
-      ProjectException, HopsSecurityException {
+      ProjectException, HopsSecurityException, UnsupportedEncodingException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO trainingDatasetDTO = trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(
@@ -267,7 +269,7 @@ public class TrainingDatasetService {
     if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
       Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
       String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
-        inodeFacade.getPath(trainingDatasetsFolder.getInode()),
+        inodeController.getPath(trainingDatasetsFolder.getInode()),
         trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
       dsUpdateOperations.deleteDatasetFile(project, user, trainingDatasetDirectoryName);
     } else {
@@ -307,7 +309,8 @@ public class TrainingDatasetService {
     @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
     @QueryParam("updateStats") Boolean updateStats,
     TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException {
+      throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException,
+      UnsupportedEncodingException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
@@ -325,11 +328,11 @@ public class TrainingDatasetService {
           trainingDatasetController.getInodeWithTrainingDatasetIdAndFeaturestore(featurestore, trainingdatasetid);
         Dataset trainingDatasetsFolder = trainingDatasetController.getTrainingDatasetFolder(featurestore.getProject());
         String trainingDatasetDirectoryName = trainingDatasetController.getTrainingDatasetPath(
-          inodeFacade.getPath(trainingDatasetsFolder.getInode()),
+          inodeController.getPath(trainingDatasetsFolder.getInode()),
           trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
         org.apache.hadoop.fs.Path fullPath =
           dsUpdateOperations.moveDatasetFile(project, user, inode, trainingDatasetDirectoryName);
-        Inode newInode = inodeFacade.getInodeAtPath(fullPath.toString());
+        Inode newInode = inodeController.getInodeAtPath(fullPath.toString());
         HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = (HopsfsTrainingDatasetDTO) trainingDatasetDTO;
         hopsfsTrainingDatasetDTO.setInodeId(newInode.getId());
         TrainingDatasetDTO newTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user,

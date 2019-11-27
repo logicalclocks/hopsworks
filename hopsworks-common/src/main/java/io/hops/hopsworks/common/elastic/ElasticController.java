@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -179,10 +180,10 @@ public class ElasticController {
         for (SearchHit hit : hits) {
           ElasticHit eHit = new ElasticHit(hit);
           eHit.setLocalDataset(true);
-          int inode_id = Integer.parseInt(hit.getId());
-          List<Dataset> dsl = datasetFacade.findByInodeId(inode_id);
-          if (!dsl.isEmpty() && dsl.get(0).isPublicDs()) {
-            Dataset ds = dsl.get(0);
+          long inode_id = Long.parseLong(hit.getId());
+          Dataset dsl = datasetController.getDatasetByInodeId(inode_id);
+          if (dsl != null  && dsl.isPublicDs()) {
+            Dataset ds = dsl;
             eHit.setPublicId(ds.getPublicDsId());
           }
           elasticHits.add(eHit);
@@ -305,7 +306,7 @@ public class ElasticController {
     }
 
     Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
-    final long datasetId = dataset.getInodeId();
+    final long datasetId = dataset.getInode().getId();
 
     //hit the indices - execute the queries
     SearchRequestBuilder srb = client.prepareSearch(Settings.META_INDEX);
@@ -479,26 +480,17 @@ public class ElasticController {
     return elasticClient;
   }
 
-  private void projectSearchInSharedDatasets(Client client, Integer projectId,
-      String searchTerm, List<ElasticHit> elasticHits) {
+  private void projectSearchInSharedDatasets(Client client, Integer projectId, String searchTerm,
+    List<ElasticHit> elasticHits) {
     Project project = projectFacade.find(projectId);
-    Collection<Dataset> datasets = project.getDatasetCollection();
-    for (Dataset ds : datasets) {
-      if (ds.isShared()) {
-        List<Dataset> dss = datasetFacade.findByInode(ds.getInode());
-        for (Dataset sh : dss) {
-          if (!sh.isShared()) {
-            long datasetId = ds.getInodeId();
-            executeProjectSearchQuery(client, searchSpecificDataset(datasetId,
-                searchTerm), elasticHits);
-
-            executeProjectSearchQuery(client, datasetSearchQuery(datasetId,
-                searchTerm), elasticHits);
-
-          }
-        }
-      }
+    Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollectionCollection();
+    for (DatasetSharedWith ds : datasetSharedWithCollection) {
+      long datasetId = ds.getDataset().getInode().getId();
+      executeProjectSearchQuery(client, searchSpecificDataset(datasetId, searchTerm), elasticHits);
+      executeProjectSearchQuery(client, datasetSearchQuery(datasetId, searchTerm), elasticHits);
+    
     }
+    
   }
 
   private void executeProjectSearchQuery(Client client, QueryBuilder query, List<ElasticHit> elasticHits) {

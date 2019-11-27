@@ -37,6 +37,34 @@ module HopsFSHelper
     end
   end
 
+  def chmod_local_dir(src, mode, recursive=true)
+    if recursive
+      system "sudo /bin/bash -c  \"chmod -R #{mode} #{src}\""
+    else
+      system "sudo /bin/bash -c  \"chmod #{mode} #{src}\""
+    end
+    if $?.exitstatus > 0
+      raise "Failed chmod local dir: #{src} to #{mode} "
+    end
+  end
+
+  def copy_from_local(src, dest, owner, group, mode, name)
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -copyFromLocal #{src} #{dest}\""
+    if $?.exitstatus > 0
+      raise "Failed to copy: #{src} to #{dest} "
+    end
+
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chown -R #{name}__#{owner}:#{group} #{dest}\""
+    if $?.exitstatus > 0
+      raise "Failed to chown: #{dest} to #{owner}:#{group}"
+    end
+
+    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chmod -R #{mode} #{dest}\""
+    if $?.exitstatus > 0
+      raise "Failed to chmod: #{dest} "
+    end
+  end
+
   def test_dir(path)
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -test -d #{path}\""
     return $?.exitstatus == 0
@@ -61,34 +89,6 @@ module HopsFSHelper
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chmod -R #{mode} #{dest}\""
     if $?.exitstatus > 0
       raise "Failed to chmod directory: #{dest} "
-    end
-  end
-
-  def copy_from_local(src, dest, owner, group, mode, name)
-    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -copyFromLocal #{src} #{dest}\""
-    if $?.exitstatus > 0
-      raise "Failed to copy: #{src} to #{dest} "
-    end
-
-    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chown -R #{name}__#{owner}:#{group} #{dest}\""
-    if $?.exitstatus > 0
-      raise "Failed to chown: #{dest} to #{owner}:#{group}"
-    end
-
-    system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -chmod -R #{mode} #{dest}\""
-    if $?.exitstatus > 0
-      raise "Failed to chmod: #{dest} "
-    end
-  end
-
-  def chmod_local_dir(src, mode, recursive=true)
-    if recursive
-      system "sudo /bin/bash -c  \"chmod -R #{mode} #{src}\""
-    else
-      system "sudo /bin/bash -c  \"chmod #{mode} #{src}\""
-    end
-    if $?.exitstatus > 0
-      raise "Failed chmod local dir: #{src} to #{mode} "
     end
   end
 

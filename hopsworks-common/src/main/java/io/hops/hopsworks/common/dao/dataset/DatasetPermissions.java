@@ -39,12 +39,93 @@
 
 package io.hops.hopsworks.common.dao.dataset;
 
+import org.apache.hadoop.fs.permission.FsAction;
+import org.apache.hadoop.fs.permission.FsPermission;
+
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  * User settable permissions for Datasets.
  * 
  */
+@XmlType
+@XmlEnum
 public enum DatasetPermissions {
-  GROUP_WRITABLE_SB, //1770
-  GROUP_WRITABLE,     //770
-  OWNER_ONLY          //750
+  GROUP_WRITABLE_SB("GROUP_WRITABLE_SB", "rwxrwx--T", "1770"),
+  GROUP_WRITABLE("GROUP_WRITABLE", "rwxrwx---", "770"),
+  OWNER_ONLY("OWNER_ONLY", "rwxr-x---", "750");
+  
+  @XmlEnumValue(value = "displayName")
+  private final String displayName;
+  @XmlEnumValue(value = "permissionStr")
+  private final String permissionStr;
+  @XmlEnumValue(value = "permission")
+  private final String permission;
+  
+  DatasetPermissions(String displayName, String permissionStr, String permission) {
+    this.displayName = displayName;
+    this.permissionStr = permissionStr;
+    this.permission = permission;
+  }
+  
+  public String getDisplayName() {
+    return displayName;
+  }
+  
+  public String getPermissionStr() {
+    return permissionStr;
+  }
+  
+  public String getPermission() {
+    return permission;
+  }
+  
+  public static DatasetPermissions fromPermissionString(String permissionStr) {
+    switch (permissionStr) {
+      case "rwxrwx--T":
+        return DatasetPermissions.GROUP_WRITABLE_SB;
+      case "rwxrwx---":
+        return DatasetPermissions.GROUP_WRITABLE;
+      case "rwxr-x---":
+        return DatasetPermissions.OWNER_ONLY;
+      default:
+        throw new IllegalArgumentException("Dataset permission has no value with the specified permission string.");
+    }
+  }
+  
+  public static DatasetPermissions fromPermission(String permission) {
+    switch (permission) {
+      case "1770":
+        return DatasetPermissions.GROUP_WRITABLE_SB;
+      case "770":
+        return DatasetPermissions.GROUP_WRITABLE;
+      case "750":
+        return DatasetPermissions.OWNER_ONLY;
+      default:
+        throw new IllegalArgumentException("Dataset permission has no value with the specified permission.");
+    }
+  }
+  
+  public static DatasetPermissions fromString(String displayName) {
+    return valueOf(displayName.toUpperCase());
+  }
+  
+  public static DatasetPermissions fromFilePermissions(FsPermission fsPermission) {
+    if (fsPermission.equals(new FsPermission(FsAction.ALL, FsAction.READ_EXECUTE, FsAction.NONE, false))) {
+      return DatasetPermissions.OWNER_ONLY;
+    } else if (fsPermission.equals(new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, true))) {
+      return DatasetPermissions.GROUP_WRITABLE_SB;
+    } else if (fsPermission.equals(new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, false))) {
+      return DatasetPermissions.GROUP_WRITABLE;
+    } else {
+      throw new IllegalArgumentException("Dataset permission has no value with the specified FsPermission.");
+    }
+  }
+  
+  public FsPermission toFsPermission() {
+    return new FsPermission(this.permission);
+  }
+  
 }

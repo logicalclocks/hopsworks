@@ -17,14 +17,12 @@
     <div class="pull-left" style="min-width: 330px; max-width: 330px">
         <span class="list-group-item active">
           <span class="badge pull-left" style="margin-right: 10px;">{{homeCtrl.projects.length}}</span> Projects
-
           <button class="btn btn-success pull-right" id="buttonCreateProject"
                   style="height: 43px;margin-right: -16px;margin-top: -11px;width: 70px; border-radius: 0px;"
                   ng-click="homeCtrl.newProject()">
             <i class="fa fa-plus-circle fa-lg"></i>
             <span style="margin-left:3px;">New</span>
           </button>
-
         </span>
         <div class="list-group-item" style="background-color: #f5f5f5;">
             <div class="input-group">
@@ -60,13 +58,13 @@
             </div>
         </div>
 
-        <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects | orderBy: homeCtrl.sortBy">
+        <div ng-repeat="project in homeCtrl.projects| filter: searchProject:false | orderBy: homeCtrl.sortBy | startFrom:(homeCtrl.currentPageProjects - 1) * homeCtrl.pageSizeProjects | limitTo:homeCtrl.pageSizeProjects">
             <a ng-class="{disabled: project.project.archived, disabled: homeCtrl.working[project.project.id]}"
                href="#!/project/{{project.project.id}}"
                class="list-group-item"
                context-menu
                data-target="menu-{{$index}}"
-               id="{{project.project.name.substr(0, 5) === 'demo_'}}"
+               id="{{project.project.name}}"
                title="{{project.project.name.length > 28 ? project.project.name:''}}">
                 <div ng-if="project.teamRole === 'Data scientist'">
                     <i style="width: 20px; margin-right: 10px; font-size: 20px;" class="fa fa-lock fa-2 pull-left"></i>
@@ -82,7 +80,8 @@
                 {{ project.project.name | limitTo: 28 }}{{project.project.name.length > 28 ? '...' : ''}}
                 <span ng-if="project.project.name.substr(0, 5) === 'demo_'"
                       class="glyphicon glyphicon-play-circle pull-right" style="margin-top: 5px;"></span>
-                <i class="fa fa-cog fa-spin fa-2x  fa-fw pull-right" ng-show="homeCtrl.working[project.project.id]"></i>
+                <i id="project_working" class="fa fa-cog fa-spin fa-2x  fa-fw pull-right"
+                   ng-show="homeCtrl.working[project.project.id]"></i>
             </a>
             <div uib-dropdown class="dropdown position-fixed" id="menu-{{$index}}">
                 <ul uib-dropdown-menu class="dropdown-amore">

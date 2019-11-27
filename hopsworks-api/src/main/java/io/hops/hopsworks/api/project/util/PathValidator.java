@@ -41,8 +41,10 @@ package io.hops.hopsworks.api.project.util;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
@@ -56,11 +58,9 @@ import org.apache.hadoop.fs.Path;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.File;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Stateless
 public class PathValidator {
@@ -72,7 +72,9 @@ public class PathValidator {
   @EJB
   private DatasetController datasetController;
   @EJB
-  private InodeFacade inodeFacade;
+  private DatasetSharedWithFacade datasetSharedWithFacade;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private Settings settings;
 
@@ -88,21 +90,16 @@ public class PathValidator {
    * file/directory) starting from the dataset path
    */
 
-  public DsPath validatePath(Project project, String path) throws DatasetException, ProjectException {
+  public DsPath validatePath(Project project, String path) throws DatasetException, ProjectException,
+      UnsupportedEncodingException {
     DsPath dsPath = new DsPath();
-
-    Pattern authorityPattern = Pattern.compile("(hdfs://[a-zA-Z0-9\\-\\.]{2,255}:[0-9]{4,6})(/.*$)");
-    Matcher urlMatcher = authorityPattern.matcher(path);
-
     if (path == null || path.isEmpty()) {
       throw new IllegalArgumentException("path was not provided.");
-    } else if (urlMatcher.find()) {
-      // Case hdfs://10.0.2.15:8020//Projects/project1/ds/dsRelativePath
-      path = urlMatcher.group(2);
-      dsPath.setFullPath(new Path(path));
-      String[] pathComponents = path.split("/");
-      buildProjectDsRelativePath(project, pathComponents, dsPath);
-    } else if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
+    } 
+    
+    path = Utils.prepPath(path);
+    
+    if (path.startsWith(File.separator + Settings.DIR_ROOT)) {
       // Case /Projects/project1/ds/dsRelativePath
       dsPath.setFullPath(new Path(path));
       String[] pathComponents = path.split("/");
@@ -148,8 +145,11 @@ public class PathValidator {
     }
 
     // If the dataset is shared, make sure that the user can access it
-    if (shared && (ds.getStatus() == Dataset.PENDING)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PENDING, Level.FINE, "datasetId: " + ds.getId());
+    if (shared) {
+      DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, ds);
+      if (datasetSharedWith != null && !datasetSharedWith.getAccepted()) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PENDING, Level.FINE, "datasetId: " + ds.getId());
+      }
     }
     dsPath.setDs(ds);
 
@@ -188,25 +188,20 @@ public class PathValidator {
   private void buildHiveDsRelativePath(Project project, String[] pathComponents, DsPath dsPath)
     throws DatasetException {
     String dsPathStr = File.separator + buildRelativePath(pathComponents, 1, 5);
-    Inode dsInode = inodeFacade.getInodeAtPath(dsPathStr);
+    Inode dsInode = inodeController.getInodeAtPath(dsPathStr);
 
     if (dsInode == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE);
     }
 
-    List<Dataset> dss = datasetFacade.findByInode(dsInode);
-    if (dss == null || dss.isEmpty()) {
+    Dataset originalDataset = datasetFacade.findByInode(dsInode);
+    if (originalDataset == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
 
-    Project owningProject = datasetController.getOwningProject(dss.get(0));
-    Dataset originalDataset = datasetFacade.findByProjectAndInode(owningProject,
-        dss.get(0).getInode());
-
     dsPath.setDs(originalDataset);
 
-    String dsRelativePathStr = buildRelativePath(pathComponents, 5,
-        pathComponents.length);
+    String dsRelativePathStr = buildRelativePath(pathComponents, 5, pathComponents.length);
     if (!dsRelativePathStr.isEmpty()) {
       dsPath.setDsRelativePath(new Path(dsRelativePathStr));
     }

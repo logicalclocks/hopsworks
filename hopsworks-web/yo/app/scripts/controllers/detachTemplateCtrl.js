@@ -44,8 +44,8 @@
 
 var mainModule = angular.module('hopsWorksApp')
         .controller('DetachTemplateCtrl',
-                ['$uibModalInstance', '$routeParams', 'file', 'templateId', 'DataSetService',
-                  function ($uibModalInstance, $routeParams, file, templateId, DataSetService) {
+                ['$uibModalInstance', '$routeParams', 'file', 'templateId', 'TemplateService',
+                  function ($uibModalInstance, $routeParams, file, templateId, TemplateService) {
 
                     var self = this;
 
@@ -58,9 +58,9 @@ var mainModule = angular.module('hopsWorksApp')
                     self.selectedTemplate;
                     self.noTemplates = false;
 
-                    var dataSetService = DataSetService($routeParams.projectID);
+                    var templateService = TemplateService($routeParams.projectID);
 
-                    dataSetService.fetchTemplatesForInode(self.fileId)
+                    templateService.fetchTemplatesForInode(self.fileId)
                             .then(function (response) {
                               self.templates = response.data;
 

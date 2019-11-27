@@ -46,555 +46,407 @@
       <div class="overlay" ></div>
       <div ng-include="'navProject.html'"></div>
       <section>
-        <div>
           <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
             <div id="projectSearchResults">
               <div ng-include="'views/search.html'"></div>
             </div>
           </div>
           <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="DelaClientCtrl as delaClientCtrl">
-            <div growl reference="3" class="pull-right" ></div>
+            <div growl reference="4" class="pull-right" ></div>
             <h3 id="datasetsHeader">
-              <div flex="65">
-                Filter: &nbsp;
-                <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined;" class="file-control active">All</a>
-                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0;" class="file-control">Shared</a>
-                <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 1; datasetsCtrl.status = true;" class="file-control">Public in Cluster</a>
-                <a ng-show="isDelaEnabled" ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 2; datasetsCtrl.status = true;" class="file-control">Public in Hops</a>
-                <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0;" class="file-control">Exclusive</a>
-                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = 0;" class="file-control">Pending</a>
+              <div layout="row" ng-init="active = 'all'" style="display: block;">
+                Filter: &nbsp
+                <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.status = undefined; datasetsCtrl.isPublic = undefined; active = 'all'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='all'}">All</a>
+                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0; active = 'shared'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='shared'}">Shared</a>
+                <a ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 1; datasetsCtrl.status = true; active = 'cluster'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='cluster'}">Public in Cluster</a>
+                <a ng-show="isDelaEnabled"
+                   ng-click="datasetsCtrl.shared = undefined; datasetsCtrl.isPublic = 2; datasetsCtrl.status = true; active = 'hops'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='hops'}">Public in Hops</a>
+                <a ng-click="datasetsCtrl.shared = false; datasetsCtrl.status = true; datasetsCtrl.isPublic = 0; active = 'exclusive'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='exclusive'}">Exclusive</a>
+                <a ng-click="datasetsCtrl.shared = true; datasetsCtrl.status = false; datasetsCtrl.isPublic = 0; active = 'pending'; datasetsCtrl.doFilter(); datasetsCtrl.deselectAll()"
+                   class="file-control" ng-class="{'active': active==='pending'}">Pending</a>
               </div>
-              <div style="margin-left: 450px" flex="20">
-                <div class="input-group" style="margin-top:-25px;">
-                  <input type="text" class="form-control"
-                         ng-model="search" placeholder="Filter...">
-                  <span class="input-group-btn">
-                    <button class="btn btn-default fa fa-filter icon-resize-small" type="button" title="Filter"></button>
-                  </span>
+              <div class="navbar-form navbar-right" style="margin-top:-25px;">
+                <div class="pull-right" style="margin-right:30px; margin-left: 70px;">
+                  <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle"
+                                    ng-click="datasetsCtrl.deselectAll()">
+                  </hamburger-toggle>
                 </div>
               </div>
-
-              <div class="pull-right" style="margin-right:30px; margin-top:-25px;">
-                <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselect()">
-                </hamburger-toggle>
-              </div>
             </h3>
-            <div class="row row-no-margin-left" ng-controller="SearchResultCtrl as searchResultCtrl">
-              <div class="ds-content col-lg-12" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">
-                <div class="row" resizable r-directions="['bottom']" ng-class="{'rg-row-top-ds': readme !== null}">
-                  <div class="col-lg-12 ds-box thin-scrollbar" style="margin-top: 15px;">                    
+            <div class="row row-no-margin-left" ng-controller="SearchResultCtrl as searchResultCtrl" >
+              <div class="ds-content" ng-class="{'sidenav-open': datasetsCtrl.tgState == true}" style="margin-top: -5px; overflow: hidden;">
+                <nav class="navbar navbar-default" style="margin-right: 35px; margin-top: 5px;">
+                  <div class="navbar-form navbar-right">
+                    <div class="form-group">
+                      <div class="input-group" ng-show="datasetsCtrl.isSelectedFiles() === 1" style="width: 250px;">
+                        <input id="fileRef" type="text" class="form-control"
+                               value="{{datasetsCtrl.getSelectedPath(datasetsCtrl.selectedFiles[datasetsCtrl.selected])}}">
+                        <span class="input-group-btn">
+                          <button class="btn btn-default fa fa-clipboard icon-resize-small" type="button"
+                                  ngclipboard
+                                  data-clipboard-target="#fileRef" title="Copy hdfs path">
+                          </button>
+                        </span>
+                      </div>
+                      <div class="input-group" style=" width: 250px;">
+                        <input type="text" class="form-control"
+                               ng-model="datasetsCtrl.searchTerm" placeholder="Filter..."
+                               ng-change="datasetsCtrl.doFilter()">
+                          <span class="input-group-btn">
+                            <button class="btn btn-default fa fa-filter icon-resize-small" type="button"
+                                    title="Filter"
+                                    ng-click="datasetsCtrl.search()"></button>
+                          </span>
+                      </div>
+                      <div class="input-group">
+                        <md-button class="pull-right"
+                                   ng-click="datasetsCtrl.toggleView()"
+                                   data-toggle="view-type" role="button" aria-label="view" aria-haspopup="true"
+                                   aria-expanded="false" style="margin: 0px 0px 0px 0px;">
+                          <span class="fa"
+                                ng-class="{'fa-th' : datasetsCtrl.view === 'grid', 'fa-th-list': datasetsCtrl.view === 'list'}"
+                                aria-hidden="true" style="font-size: 25px;">
+                          </span>
+                        </md-button>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="min-width: 500px">
+                    <md-button ng-if="datasetsCtrl.view === 'list'" class="md-raised" id="creat_dataset"
+                               ng-click="datasetsCtrl.newDataSetModal()" style="border-radius: 5px;">
+                      <i class="fa fa-plus"></i> Create dataset
+                    </md-button>
+                  </div>
+                </nav>
+                <div class="row row-no-margin-left" ng-if="datasetsCtrl.view === 'list'" style="margin-right: 35px;">
+                  <div class="loader loader-sm" ng-show="datasetsCtrl.working"></div>
+                  <table class="table table-hover dataset-table">
+                    <thead>
+                    <tr>
+                      <th style="width: 2%; min-width: 2%"></th>
+                      <th style="width: 65%; min-width: 65%">Name</th>
+                      <th style="width: 18%; min-width: 18%">Owner</th>
+                      <th style="width: 15%; min-width: 15%">Last modified</th>
+                    </tr>
+                    </thead>
+                    <tbody ng-if="(!datasetsCtrl.working && !datasetsCtrl.sortWorking && datasetsCtrl.sortedDataset.length < 1)">
+                      <tr>
+                        <td></td>
+                        <td class="text-muted" style="text-align: center;font-size: 20px;font-weight: bold;"
+                            ng-show="!datasetsCtrl.working && !datasetsCtrl.sortWorking">
+                            No result found.
+                        </td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                    <tbody ng-show="datasetsCtrl.sortedDataset.length > 0">
+                    <tr dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                        pagination-id="dataset_pagination"
+                        current-page="datasetsCtrl.datasetPagination.currentPage"
+                        total-items="datasetsCtrl.filesCount"
+                        id="table-row-{{ dataset.name}}"
+                        title="Browse dataset"
+                        context-menu data-target="table-menu-{{ dataset.name}}"
+                        ng-click="datasetsCtrl.browseDataset(dataset)"
+                        ng-class="{'highlight': datasetsCtrl.selected === dataset.name}">
+                      <td>
+                        <md-checkbox md-no-ink aria-label="Select" class="md-primary"
+                                     ng-show="datasetsCtrl.selected !== dataset.name"
+                                     ng-checked="false"
+                                     title="Select dataset"
+                                     ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true); $event.stopPropagation();"
+                                     style="z-index: 999; margin-right: unset">
+                        </md-checkbox>
+                        <md-checkbox md-no-ink aria-label="Select" class="md-primary"
+                                     ng-show="datasetsCtrl.selected === dataset.name"
+                                     ng-checked="true"
+                                     title="De-select dataset"
+                                     ng-click="datasetsCtrl.deselectAll(); $event.stopPropagation();"
+                                     style="z-index: 999; margin-right: unset">
+                        </md-checkbox>
+                      </td>
+                      <td>
+                        <div layout="row">
+                          <div data-toggle="tooltip" title="Browse dataset" class="icon" style="color: gray;
+                          margin-right: 5px; font-size: 20px;">
+                            <i class="fa"
+                               ng-class="{'fa-file': (!dataset.attributes.dir), 'fa-folder': (dataset.attributes.dir && !selected), 'fa-folder-open': (dataset.attributes.dir && selected), 'fa-database': (dataset.datasetType === 'HIVEDB' || dataset.datasetType === 'FEATURESTORE') , 'fa-eye-slash': (!dataset.accepted), 'fa-cloud-download': (dataset.downloading)}"></i>
+                          </div>
+                          <span data-toggle="tooltip"
+                                title="{{datasetsCtrl.shortDatasetName(dataset).length > 170 ? datasetsCtrl.shortDatasetName(dataset):''}}">
+                                  {{datasetsCtrl.shortDatasetName(dataset)| cut:true:170:'...'}}
+                          </span>
+                        </div>
+                      </td>
+                      <td title="{{dataset.attributes.owner > 40? dataset.attributes.owner : ''}}">
+                        {{dataset.attributes.owner | cut:true:40:'...'}}</td>
+                      <td>{{dataset.attributes.modificationTime | date:'medium' }}</td>
+                      <td>
+                        <dataset-menu uib-dropdown class="position-fixed" id="table-menu-{{dataset.name}}"
+                                      role="datasetsCtrl.role"
+                                      dataset="dataset"
+                                      is_dela_enabled="isDelaEnabled"
+                                      hops_upload_enabled="datasetsCtrl.hopsUploadEnabled()"
+                                      browse_dataset="datasetsCtrl.browseDataset(dataset)"
+                                      delete_dataset="datasetsCtrl.deleteDataset(dataset)"
+                                      permissions="datasetsCtrl.permissions(dataset, permission)"
+                                      attach_template="metadataCtrl.attachTemplate(attributes)"
+                                      detach_template="metadataCtrl.detachTemplate(attributes)"
+                                      show_manifest="datasetsCtrl.showManifest(publicId)"
+                                      share="datasetsCtrl.share(dataset)"
+                                      share_with_cluster="datasetsCtrl.shareWithCluster(id)"
+                                      share_with_hops="datasetsCtrl.shareWithHops(id)"
+                                      unshare="datasetsCtrl.unshare(dataset)"
+                                      unshare_from_cluster="datasetsCtrl.unshareFromCluster(id)"
+                                      unshare_from_hops="datasetsCtrl.unshareFromHops(publicId)">
+                        </dataset-menu>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="row row-no-margin" ng-if="datasetsCtrl.view === 'grid'">
+                  <div class="thin-scrollbar" style="margin-top: 15px;">
                     <div class="file-box">
                       <div  class="file" ng-click="datasetsCtrl.newDataSetModal()">
                         <div class="icon">
-                          <i class="glyphicon glyphicon-plus"></i>
+                          <i class="fa fa-plus"></i>
                         </div>
                         <div class="file-name ng-binding">
-                          <div style="text-align: center; color: green; padding:8px;">
+                          <div id="create_new_dataset" style="text-align: center; color: green; padding:8px;">
                             Create New DataSet
                           </div>
-                          <div class="row"> </div>
+                          <div class="row"></div>
                         </div>
                       </div>
                     </div>
                     <div class="loader loader-sm" ng-show="datasetsCtrl.working"></div>
                     <div ng-if="!datasetsCtrl.working" ng-init="searchResultCtrl.init_ds(datasetsCtrl)"></div>
-
-                    <div
-                            ng-repeat="dataset in datasetsCtrl.getPinnedDatasets() | filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | filter:search track by $index">
-                      <div>
-                        <div ng-init="(iscollapsed$index) = true"
-                             class="file-box" ng-class="{disabled: dataset.downloading}"
-                             context-menu
-                             data-target="menu-{{ dataset.name}}"
-                             id="{{dataset.name}}"
-                        > <!-- the id is used in the tours.-->
-                          <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name,
-                                  'notAccepted' : dataset.status === false}">
-                            <a>
-                              <span class="corner"></span>
-                              <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                                <i class="glyphicon glyphicon-eye-open"></i>
-                              </div>
-                              <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                                <i ng-show="!dataset.downloading && !datasetsCtrl.isHiveDB(dataset)" class="glyphicon"
-                                   ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
-                                <i ng-show="!dataset.downloading && datasetsCtrl.isHiveDB(dataset)"
-                                   class="sub_icon fa fa-database"></i>
-                                <i ng-show="dataset.downloading"  class="glyphicon glyphicon-cloud-download"></i>
-                              </div>
-                              <div class="file-name" data-toggle="tooltip"
-                                   title="Click on the bottom section to view metadata for this dataset."
-                                   ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
-                              <span data-toggle="tooltip"
-                                    title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
-                                {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
-                              </span>
-                                <span class="fa fa-user pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
-                                      title="This dataset is group writable and sticky bit is set."></span>
-                                <span class="fa fa-users pull-right" ng-if="dataset.permission === 'rwxrwx---'" data-toggle="tooltip"
-                                      title="This dataset is group writable."></span>
-                                <br/>
-                                <small><b>Owner:</b>
-                                  <span data-toggle="tooltip"
-                                        title="{{dataset.owner.length > 17 ? dataset.owner:''}}">
-                                  {{dataset.owner| cut:true:17:'...'}}
-                                </span>
-                                </small>
-                                <span ng-if="dataset.publicDs === 2" class="pull-right dataset-icon fa fa-globe"  data-toggle="tooltip"
-                                      title="Dataset is public (within hops)">
-                              </span>
-                                <span ng-if="dataset.publicDs === 1" class="pull-right dataset-icon fa fa-server"  data-toggle="tooltip"
-                                      title="Dataset is public (within cluster)">
-                              </span>
-                                <span ng-if="dataset.publicDs === 0 && dataset.shared === false"
-                                      class="pull-right dataset-icon"
-                                      ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.status === true)}"
-                                      data-toggle="tooltip"
-                                      title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"
-                                >
-                              </span>
-                                <span ng-if="dataset.publicDs !== true && dataset.shared === true"
-                                      class="pull-right dataset-icon"
-                                      ng-class="{'fa fa-users': (dataset.sharedWith > 0 && dataset.status === true)}"
-                                      data-toggle="tooltip"
-                                      title="Shared Dataset"
-                                >
-                              </span>
-                                <span class="pull-right dataset-icon"
-                                      ng-class="{'fa fa-cog fa-spin': (datasetsCtrl.sharingDataset && datasetsCtrl.sharingDataset[dataset.id])}">
-                              </span>
-                              </div>
-                            </a>
-                          </div>
-                        </div>
-                        <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
-                          <ul uib-dropdown-menu class="uib-dropdown-amore">
-                            <li>
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="0"
-                                 ng-click="datasetsCtrl.browseDataset(dataset)">
-                              <span><i class="fa fa-files-o"></i>
-                                Browse files</span>
-                              </a>
-                            </li>
-                            <li ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="1"
-                                 ng-click="datasetsCtrl.deleteDataset(dataset.name)">
-                              <span><i class="fa fa-trash"></i>
-                                Remove DataSet</span>
-                              </a>
-                            </li>
-                            <!-- If this is an imported public dataset, allow it to be removed as well -->
-                            <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 1">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="1"
-                                 ng-click="datasetsCtrl.deleteDataset(dataset.name);">
-                              <span><i class="fa fa-share-alt"></i>
-                                Remove Dataset</span>
-                              </a>
-                            </li>
-
-                            <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner'">
-                              <a tabindex="-1">
-                                <span><i class="glyphicon glyphicon-edit"></i>Permissions</span>
-                              </a>
-                              <ul class="dropdown-menu">
-                                <li ng-if="dataset.permission === 'rwxrwx--T' || dataset.permission === 'rwxrwx---'">
-                                  <a tabindex="-1"
-                                     ng-click="datasetsCtrl.permissions(dataset, 'OWNER_ONLY'); $event.stopPropagation();">
-                                    <span><i class="fa fa-lock"></i> Owner only</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.permission !== 'rwxrwx--T'">
-                                  <a tabindex="-1"
-                                     ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
-                                    <span><i class="fa fa-user"></i> Group writable & sticky bit set</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.permission !== 'rwxrwx---'">
-                                  <a tabindex="-1"
-                                     ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE'); $event.stopPropagation();">
-                                    <span><i class="fa fa-users"></i> Group writable</span>
-                                  </a>
-                                </li>
-                              </ul>
-                            </li>
-                            <li ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'" class="divider"></li>
-                            <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="4"
-                                 ng-click="metadataCtrl.attachTemplate(dataset); $event.stopPropagation();">
-                              <span><i class="fa fa-upload"></i>
-                                Add metadata</span>
-                              </a>
-                            </li>
-                            <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="5"
-                                 ng-click="metadataCtrl.detachTemplate(dataset); $event.stopPropagation();">
-                              <span><i class="fa fa-download"></i>
-                                Remove metadata</span>
-                              </a>
-                            </li>
-                            <!--
-                            <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="5"
-                                 ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
-                                <span><i class="fa fa-file-archive-o"></i>
-                                  Compress</span>
-                              </a>
-                            </li>
-                            -->
-                            <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 2">
-                              <a class="pointer"
-                                 role="menuitem"
-                                 tabindex="6"
-                                 ng-click="datasetsCtrl.showManifest(dataset.publicId); $event.stopPropagation();">
-                                <span>Show Manifest</span>
-                              </a>
-                            </li>
-                            <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
-                            <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
-                              <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
-                              <ul class="dropdown-menu">
-                                <li ng-if="dataset.publicDs === 0">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.share(dataset)">
-                                    <span><i class="fa fa-book"></i> Project</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.publicDs === 0">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.shareWithCluster(dataset.id); $event.stopPropagation();">
-                                    <span><i class="fa fa-server"></i> Cluster</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.publicDs === 0 && isDelaEnabled && delaClientCtrl.hopsUploadEnabled()">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.shareWithHops(dataset.id); $event.stopPropagation();">
-                                    <span><i class="fa fa-globe"></i> Hops</span>
-                                  </a>
-                                </li>
-                              </ul>
-                            </li>
-                            <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
-                            <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)">
-                              <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
-                              <ul class="dropdown-menu">
-                                <li ng-if="dataset.sharedWith > 0">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset)">
-                                    <span><i class="fa fa-book"></i> Project</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.publicDs === 1">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.unshareFromCluster(dataset.id); $event.stopPropagation();">
-                                    <span><i class="fa fa-server"></i> Cluster</span>
-                                  </a>
-                                </li>
-                                <li ng-if="dataset.publicDs === 2">
-                                  <a tabindex="-1" ng-click="datasetsCtrl.unshareFromHops(dataset.publicId); $event.stopPropagation();">
-                                    <span><i class="fa fa-globe"></i> Hops</span>
-                                  </a>
-                                </li>
-                              </ul>
-                            </li>
-                          </ul>
-                        </div>
-                      </div> <!-- end repeat -->
+                    <div class="row row-no-margin"
+                         ng-if="(!datasetsCtrl.working && !datasetsCtrl.sortWorking && datasetsCtrl.sortedDataset.length < 1)">
+                      <div class="text-muted"
+                           style="text-align: center;font-size: 20px;font-weight: bold;margin-top:50px;"
+                           ng-if="!datasetsCtrl.working && !datasetsCtrl.sortWorking">
+                           No result found.</div>
                     </div>
-
-
-                    <div
-                            ng-repeat="dataset in datasetsCtrl.getRegularDatasets() | filter:{shared: datasetsCtrl.shared, status: datasetsCtrl.status, publicDs: datasetsCtrl.isPublic} | filter:search | orderBy: 'name'">
-                      <div>
-                        <div ng-init="(iscollapsed$index) = true"
-                           class="file-box" ng-class="{disabled: dataset.downloading}"
-                           context-menu
-                           data-target="menu-{{ dataset.name}}"
-                           id="{{dataset.name}}"
-                        > <!-- the id is used in the tours.-->
-                        <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name,
-                                  'notAccepted' : dataset.status === false}">
-                          <a>
-                             <span class="corner"></span>
-                            <div ng-if="dataset.status === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                              <i class="glyphicon glyphicon-eye-open"></i>
-                            </div>
-                            <div ng-if="dataset.status === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                              <i ng-show="!dataset.downloading && !datasetsCtrl.isHiveDB(dataset)" class="glyphicon"
-                                 ng-class="{'glyphicon-folder-open': datasetsCtrl.selected === dataset.name, 'glyphicon-folder-close' : datasetsCtrl.selected !== dataset.name}"></i>
-                              <i ng-show="!dataset.downloading && datasetsCtrl.isHiveDB(dataset)"
-                                 class="sub_icon fa fa-database"></i>
-                              <i ng-show="dataset.downloading"  class="glyphicon glyphicon-cloud-download"></i>
-                            </div>
-                            <div class="file-name" data-toggle="tooltip"
-                                  title="Click on the bottom section to view metadata for this dataset."
-                                 ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset); datasetsCtrl.filePreview(dataset, false, true);">
-                              <span data-toggle="tooltip"
-                                    title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
-                                {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
-                              </span>
-                              <span class="fa fa-user pull-right" ng-if="dataset.permission === 'rwxrwx--T'" data-toggle="tooltip"
-                                    title="This dataset is group writable and sticky bit is set."></span>
-                              <span class="fa fa-users pull-right" ng-if="dataset.permission === 'rwxrwx---'" data-toggle="tooltip"
-                                    title="This dataset is group writable."></span>
-                              <br/>
-                              <small><b>Owner:</b>
+                    <div class="row row-no-margin" ng-show="datasetsCtrl.sortedDataset.length > 0">
+                      <div dir-paginate="dataset in datasetsCtrl.sortedDataset | itemsPerPage:datasetsCtrl.datasetPagination.itemsPerPage"
+                           pagination-id="dataset_pagination"
+                           current-page="datasetsCtrl.datasetPagination.currentPage"
+                           total-items="datasetsCtrl.filesCount">
+                        <div>
+                          <div ng-init="(iscollapsed$index) = true"
+                               class="file-box" ng-class="{disabled: dataset.downloading}"
+                               context-menu
+                               data-target="menu-{{ dataset.name}}"
+                               id="{{dataset.name}}"> <!-- the id is used in the tours.-->
+                            <div class="file" ng-class="{'greyed' : datasetsCtrl.selected === dataset.name,
+                                    'notAccepted' : dataset.accepted === false}">
+                              <a>
+                                <div ng-if="dataset.accepted === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
+                                  <i class="fa fa-eye-open"></i>
+                                </div>
+                                <div ng-if="dataset.accepted === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
+                                  <i ng-show="!dataset.downloading && !datasetsCtrl.isHiveDB(dataset)" class="fa"
+                                     ng-class="{'fa-folder-open': datasetsCtrl.selected === dataset.name, 'fa-folder' : datasetsCtrl.selected !== dataset.name}"></i>
+                                  <i ng-show="!dataset.downloading && datasetsCtrl.isHiveDB(dataset)"
+                                     class="sub_icon fa fa-database"></i>
+                                  <i ng-show="dataset.downloading"  class="fa fa-cloud-download"></i>
+                                </div>
+                                <div class="file-name" data-toggle="tooltip"
+                                     title="Click on the bottom section to view metadata for this dataset."
+                                     ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true);">
                                 <span data-toggle="tooltip"
-                                      title="{{dataset.owner.length > 17 ? dataset.owner:''}}">
-                                  {{dataset.owner| cut:true:17:'...'}}
+                                      title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
+                                  {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
                                 </span>
-                              </small>
-                              <span ng-if="dataset.publicDs === 2" class="pull-right dataset-icon fa fa-globe"  data-toggle="tooltip"
-                                    title="Dataset is public (within hops)">
-                              </span>
-                              <span ng-if="dataset.publicDs === 1" class="pull-right dataset-icon fa fa-server"  data-toggle="tooltip"
-                                    title="Dataset is public (within cluster)">
-                              </span>
-                              <span ng-if="dataset.publicDs === 0 && dataset.shared === false"
-                                    class="pull-right dataset-icon"
-                                    ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.status === true)}"
-                                    data-toggle="tooltip"
-                                    title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"
-                                    >
-                              </span>
-                              <span ng-if="dataset.publicDs !== true && dataset.shared === true"
-                                    class="pull-right dataset-icon"
-                                    ng-class="{'fa fa-users': (dataset.sharedWith > 0 && dataset.status === true)}"
-                                    data-toggle="tooltip"
-                                    title="Shared Dataset"
-                                    >
-                              </span>
-                              <span class="pull-right dataset-icon"
-                                    ng-class="{'fa fa-cog fa-spin': (datasetsCtrl.sharingDataset && datasetsCtrl.sharingDataset[dataset.id])}">                                    
-                              </span>
+                                  <span class="fa fa-user pull-right"
+                                        ng-if="dataset.permission === 'GROUP_WRITABLE_SB'" data-toggle="tooltip"
+                                        title="This dataset is group writable and sticky bit is set."></span>
+                                  <span class="fa fa-users pull-right" ng-if="dataset.permission === 'GROUP_WRITABLE'" data-toggle="tooltip"
+                                        title="This dataset is group writable."></span>
+                                  <br/>
+                                  <small><b>Owner:</b>
+                                    <span data-toggle="tooltip"
+                                          title="{{dataset.attributes.owner.length > 17 ? dataset.attributes.owner:''}}">
+                                    {{dataset.attributes.owner| cut:true:17:'...'}}
+                                  </span>
+                                  </small>
+                                  <span ng-if="dataset.publicDataset === 2" class="pull-right dataset-icon fa fa-globe"  data-toggle="tooltip"
+                                        title="Dataset is public (within hops)">
+                                </span>
+                                  <span ng-if="dataset.publicDataset === 1" class="pull-right dataset-icon fa fa-server"  data-toggle="tooltip"
+                                        title="Dataset is public (within cluster)">
+                                </span>
+                                  <span ng-if="dataset.publicDataset === 0 && dataset.shared === false"
+                                        class="pull-right dataset-icon"
+                                        ng-class="{'fa fa-user-plus': (dataset.sharedWith > 0 && dataset.accepted === true)}"
+                                        data-toggle="tooltip"
+                                        title="{{dataset.sharedWith > 0 ? 'Shared with ' + dataset.sharedWith + ' project(s).' : ''}}"
+                                  >
+                                </span>
+                                  <span ng-if="dataset.publicDataset !== true && dataset.shared === true"
+                                        class="pull-right dataset-icon"
+                                        ng-class="{'fa fa-users': (dataset.sharedWith > 0 && dataset.accepted === true)}"
+                                        data-toggle="tooltip"
+                                        title="Shared Dataset"
+                                  >
+                                </span>
+                                  <span class="pull-right dataset-icon"
+                                        ng-class="{'fa fa-cog fa-spin': (datasetsCtrl.sharingDataset && datasetsCtrl.sharingDataset[dataset.id])}">
+                                </span>
+                                </div>
+                              </a>
                             </div>
-                          </a>
-                        </div>
+                          </div>
+                          <dataset-menu uib-dropdown class="position-fixed" id="menu-{{dataset.name}}"
+                                        role="datasetsCtrl.role"
+                                        dataset="dataset"
+                                        is_dela_enabled="isDelaEnabled"
+                                        hops_upload_enabled="datasetsCtrl.hopsUploadEnabled()"
+                                        browse_dataset="datasetsCtrl.browseDataset(dataset)"
+                                        delete_dataset="datasetsCtrl.deleteDataset(dataset)"
+                                        permissions="datasetsCtrl.permissions(dataset, permission)"
+                                        attach_template="metadataCtrl.attachTemplate(attributes)"
+                                        detach_template="metadataCtrl.detachTemplate(attributes)"
+                                        show_manifest="datasetsCtrl.showManifest(publicId)"
+                                        share="datasetsCtrl.share(dataset)"
+                                        share_with_cluster="datasetsCtrl.shareWithCluster(id)"
+                                        share_with_hops="datasetsCtrl.shareWithHops(id)"
+                                        unshare="datasetsCtrl.unshare(dataset)"
+                                        unshare_from_cluster="datasetsCtrl.unshareFromCluster(id)"
+                                        unshare_from_hops="datasetsCtrl.unshareFromHops(publicId)">
+                          </dataset-menu>
+                        </div> <!-- end repeat -->
                       </div>
-                        <div uib-dropdown class="position-fixed" id="menu-{{dataset.name}}">
-                        <ul uib-dropdown-menu class="uib-dropdown-amore">
-                          <li>
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="0"
-                               ng-click="datasetsCtrl.browseDataset(dataset)">
-                              <span><i class="fa fa-files-o"></i>
-                                Browse files</span>
-                            </a>
-                          </li>
-                          <li ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="1"
-                               ng-click="datasetsCtrl.deleteDataset(dataset.name)">
-                              <span><i class="fa fa-trash"></i>
-                                Remove DataSet</span>
-                            </a>
-                          </li>
-                          <!-- If this is an imported public dataset, allow it to be removed as well -->
-                          <li ng-if="dataset.name.indexOf('::') !== -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 1">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="1"
-                               ng-click="datasetsCtrl.deleteDataset(dataset.name);">
-                              <span><i class="fa fa-share-alt"></i>
-                                Remove Dataset</span>
-                            </a>
-                          </li>
-                          
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner'">
-                            <a tabindex="-1">
-                              <span><i class="glyphicon glyphicon-edit"></i>Permissions</span>
-                            </a>
-                            <ul class="dropdown-menu">
-                              <li ng-if="dataset.permission === 'rwxrwx--T' || dataset.permission === 'rwxrwx---'">
-                                <a tabindex="-1"
-                                   ng-click="datasetsCtrl.permissions(dataset, 'OWNER_ONLY'); $event.stopPropagation();">
-                                  <span><i class="fa fa-lock"></i> Owner only</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.permission !== 'rwxrwx--T'">
-                                <a tabindex="-1"
-                                   ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE_SB'); $event.stopPropagation();">
-                                  <span><i class="fa fa-user"></i> Group writable & sticky bit set</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.permission !== 'rwxrwx---'">
-                                <a tabindex="-1"
-                                   ng-click="datasetsCtrl.permissions(dataset, 'GROUP_WRITABLE'); $event.stopPropagation();">
-                                  <span><i class="fa fa-users"></i> Group writable</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'" class="divider"></li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="4"
-                               ng-click="metadataCtrl.attachTemplate(dataset); $event.stopPropagation();">
-                              <span><i class="fa fa-upload"></i>
-                                Add metadata</span>
-                            </a>
-                          </li>
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="5"
-                               ng-click="metadataCtrl.detachTemplate(dataset); $event.stopPropagation();">
-                              <span><i class="fa fa-download"></i>
-                                Remove metadata</span>
-                            </a>
-                          </li>
-                          <!--
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 0">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="5"
-                               ng-click="panel.highlight = true; datasetsCtrl.compress(dataset); $event.stopPropagation();">
-                              <span><i class="fa fa-file-archive-o"></i>
-                                Compress</span>
-                            </a>
-                          </li>
-                          -->
-                          <li ng-if="dataset.name.indexOf('::') === -1" ng-show="datasetsCtrl.role === 'Data owner' && dataset.publicDs === 2">
-                            <a class="pointer"
-                               role="menuitem"
-                               tabindex="6"
-                               ng-click="datasetsCtrl.showManifest(dataset.publicId); $event.stopPropagation();">
-                              <span>Show Manifest</span>
-                            </a>
-                          </li>
-                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner'  && (dataset.publicDs === 0)"></li>
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs === 0)">
-                            <a tabindex="-1"><span><i class="fa fa-share-alt"></i> Share with</span></a>
-                            <ul class="dropdown-menu">
-                              <li ng-if="dataset.publicDs === 0">
-                                <a tabindex="-1" ng-click="datasetsCtrl.share(dataset)">
-                                  <span><i class="fa fa-book"></i> Project</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.publicDs === 0">
-                                <a tabindex="-1" ng-click="datasetsCtrl.shareWithCluster(dataset.id); $event.stopPropagation();">
-                                  <span><i class="fa fa-server"></i> Cluster</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.publicDs === 0 && isDelaEnabled && delaClientCtrl.hopsUploadEnabled()">
-                                <a tabindex="-1" ng-click="datasetsCtrl.shareWithHops(dataset.id); $event.stopPropagation();">
-                                  <span><i class="fa fa-globe"></i> Hops</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </li>
-                          <li class="divider" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)"></li>
-                          <li class="dropdown-submenu" ng-if="dataset.name.indexOf('::') === -1 && datasetsCtrl.role === 'Data owner' && (dataset.publicDs !== 0 || dataset.sharedWith > 0)">
-                            <a tabindex="-1"><span><i class="fa fa-undo"></i> UnShare from</span></a>
-                            <ul class="dropdown-menu">
-                              <li ng-if="dataset.sharedWith > 0">
-                                <a tabindex="-1" ng-click="datasetsCtrl.unshare(dataset)">
-                                  <span><i class="fa fa-book"></i> Project</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.publicDs === 1">
-                                <a tabindex="-1" ng-click="datasetsCtrl.unshareFromCluster(dataset.id); $event.stopPropagation();">
-                                  <span><i class="fa fa-server"></i> Cluster</span>
-                                </a>
-                              </li>
-                              <li ng-if="dataset.publicDs === 2">
-                                <a tabindex="-1" ng-click="datasetsCtrl.unshareFromHops(dataset.publicId); $event.stopPropagation();">
-                                  <span><i class="fa fa-globe"></i> Hops</span>
-                                </a>
-                              </li>
-                            </ul>
-                          </li>
-                        </ul>
-                      </div>
-                      </div> <!-- end repeat -->
                     </div>
-
+                    <div layout="row" class="pull-right" style="margin-right: 35px;">
+                      <dir-pagination-controls
+                              pagination-id="dataset_pagination"
+                              max-size="7"
+                              direction-links="true"
+                              boundary-links="true"
+                              on-page-change="datasetsCtrl.pageChange(newPageNumber)"
+                              class="pull-right">
+                      </dir-pagination-controls>
+                    </div>
                   </div>
                 </div>
-                <!--background-color: rgb(250, 251, 252);-->
-                <div class="row rg-row-bottom-ds" ng-show="readme !== null">
-                  <div class="col-lg-12 ds-box-bottom thin-scrollbar">
-                    <div class="col-lg-12" style="border-style: solid; border-width: 1px; border-radius: 10px; border-color:#eee;">
-                      <!-- README.md is displayed here -->
-                      <div class="row" style="background: #eee; font-size:20px; font-weight: bold; border-radius: 10px 10px 0 0;">
-                        &nbsp;<i class="fa fa-book"></i>&nbsp; README.md</div>
-                      <div class="col-lg-12" >
-                        <div class ="row" ng-bind-html="readme" style="overflow-y: auto; ">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div style="margin-top: 20px; margin-right: 35px">
+                  <file-viewer file="readme"
+                               heading="README.md"
+                               sidenav-open="projectCtrl.isClosed"
+                               selected="datasetsCtrl.selected !== null"
+                               loading="datasetsCtrl.readmeWorking"></file-viewer>
                 </div>
               </div>
             </div>
           </div><!--content wrapper -->
 
           <div ng-if="!mainCtrl.showSearchPage">
-            <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}" style="margin-top:10px;">
-              <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px; height: 100%;">
-                <div style="height: 100%;">
-                  <md-content class="md-padding" style="padding-top: 0px; height: 100%;">
-                    <md-tabs  md-border-bottom md-no-pagination="true" md-center-tabs="true" style="min-height: 100%;">
+            <div class="ds-sidenav" ng-class="{open: datasetsCtrl.tgState}">
+              <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px;">
+                <div>
+                  <md-content class="md-padding" style="padding-top: 0px;">
+                    <md-tabs md-dynamic-height md-border-bottom md-no-pagination="true" md-center-tabs="true">
                       <md-tab label="Details">
                         <div ng-show="datasetsCtrl.selected === null">
                           <div class="file" style="text-align: center;">
                             <div class="icon">
-                              <i class="glyphicon glyphicon-folder-open"></i>
+                              <i class="fa fa-folder-open"></i>
                             </div>
                             Click on a DataSet's name to view its details.
                           </div>
                         </div>
-                        <table id="mytable1" ng-show="datasetsCtrl.selected" class="table table-striped" style="margin-top: 16px; font-size:12px;">
+                        <table id="sidenav_table" ng-show="datasetsCtrl.selected" class="table table-striped"
+                               style="margin-top: -16px; margin-bottom: 0px; font-size:12px;">
+                          <thead>
+                            <th style="width: 31%; min-width: 31%"></th>
+                            <th style="width: 68%; min-width: 68%"></th>
+                            <th style="width: 1%; min-width: 1%"></th>
+                          </thead>
                           <tr style="background-color: #fafafa; border-top: none;">
                             <td style="color: grey;">Name</td>
                             <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].name}}</td>
-                          </tr>
-
-                          <tr style="background-color: #fafafa">
-                            <td style="color: grey;">Description</td>
-                            <td style="color: grey;"><span ng-bind-html="datasetsCtrl.selectedFiles[datasetsCtrl.selected].description"></span></td>
+                            <td style="color: grey;"></td>
                           </tr>
 
                           <tr style="background-color: #fafafa">
                             <td style="color: grey;">Last modified</td>
-                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].modification| date:'short'}}</td>
+                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.modificationTime| date:'medium'}}</td>
+                            <td style="color: grey;"></td>
                           </tr>
 
                           <tr style="background-color: #fafafa">
                             <td style="color: grey;">Owner</td>
-                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].owner}}</td>
+                            <td style="color: grey;">{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.owner}}</td>
+                            <td style="color: grey;"></td>
                           </tr>
-                          <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].publicDs !== 0" style="background-color: #fafafa">
+                          <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].publicDataset !== 0" style="background-color: #fafafa">
                             <td style="color: #ff4081;">Public</td>
                             <td style="color: #ff4081;">This DataSet is public.</td>
+                            <td style="color: grey;"></td>
                           </tr>
 
                           <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].sharedWith > 0 && datasetsCtrl.selectedFiles[datasetsCtrl.selected].shared === false" style="background-color: #fafafa">
                             <td style="color: grey;">Shared</td>
                             <td style="color: grey;">This DataSet is shared with {{datasetsCtrl.selectedFiles[datasetsCtrl.selected].sharedWith}} other project(s)</td>
+                            <td style="color: grey;"></td>
                           </tr>
 
                           <tr ng-show="datasetsCtrl.selectedFiles[datasetsCtrl.selected].shared === true" style="background-color: #fafafa">
                             <td style="color: grey;">Shared</td>
                             <td style="color: grey;">This DataSet is shared with you</td>
+                            <td style="color: grey;"></td>
                           </tr>
 
                           <tr style="background-color: #fafafa">
                             <td style="color: grey;">Searchable</td>
                             <td style="color: grey;">This DataSet is {{datasetsCtrl.selectedFiles[datasetsCtrl.selected].searchable ? "" : "not"}} searchable</td>
+                            <td style="color: grey;"></td>
+                          </tr>
+
+                          <tr style="background-color: #fafafa" title="{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.permission}}">
+                            <td style="color: grey;">Permission</td>
+                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'GROUP_WRITABLE_SB'">
+                              Group writable with sticky bit set.
+                            </td>
+                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'GROUP_WRITABLE'">
+                              Group writable.
+                            </td>
+                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'OWNER_ONLY'">
+                              Owner only.
+                            </td>
+                            <td style="color: grey;"></td>
+                          </tr>
+
+                          <tr style="background-color: #fafafa">
+                            <td style="color:grey;">Description</td>
+                            <td style="color: grey;">
+                              <textarea id="descTextarea" ng-show="editDescription"
+                                        style="resize: both; max-width: 200px" rows="2" cols="30" maxlength="1000"
+                                        wrap="hard"
+                                        ng-model="datasetsCtrl.description"
+                                        ng-keyup="datasetsCtrl.updateDescription($event, datasetsCtrl.selectedFiles[datasetsCtrl.selected], datasetsCtrl.description)">
+                              </textarea>
+                              <p ng-if="!editDescription" style="word-break: break-all">
+                                {{datasetsCtrl.selectedFiles[datasetsCtrl.selected].description}}</p>
+                            </td>
+                            <td>
+                              <i id="editDescriptionToggle" class="fa fa-2x fa-edit pull-right" style="cursor:pointer"
+                                 title="Edit description"
+                                 ng-click="toggleEditDescription(datasetsCtrl.selectedFiles[datasetsCtrl.selected])"></i>
+                            </td>
                           </tr>
                         </table>
                         <!--METADATA PRESENTATION SECTION-->
-                        <div id="board"  style="font-family: Times New Roman; height: 76%;"
+                        <div id="board" style="font-family: Times New Roman;"
                              ng-include="'views/metadata/extendedMetadata.html'">
                         </div>
                       </md-tab>

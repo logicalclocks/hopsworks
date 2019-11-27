@@ -56,6 +56,7 @@
     <class>io.hops.hopsworks.common.dao.util.Variables</class>
     <class>io.hops.hopsworks.common.dao.certificates.UserCerts</class>
     <class>io.hops.hopsworks.common.dao.dataset.Dataset</class>
+    <class>io.hops.hopsworks.common.dao.dataset.DatasetSharedWith</class>
     <class>io.hops.hopsworks.common.dao.dataset.DatasetRequest</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.Inode</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeEncodingStatus</class>
@@ -152,7 +153,9 @@
     <validation-mode>NONE</validation-mode>
     <properties>
       <property name="eclipselink.target-database" value="MYSQL"/>
-      <!--      <property name="eclipselink.logging.level" value="FINE"/>
+      <!--
+      <property name="eclipselink.profiler" value="PerformanceMonitor"/>
+      <property name="eclipselink.logging.level" value="FINE"/>
       <property name="eclipselink.logging.level.sql" value="FINE"/>
       <property name="eclipselink.logging.parameters" value="true"/>
       <property name="eclipselink.logging.logger" value="ServerLogger"/>

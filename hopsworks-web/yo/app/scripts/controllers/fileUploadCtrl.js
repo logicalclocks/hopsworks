@@ -43,13 +43,14 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'projectId', 'path', 'templateId', 'growl', 'flowFactory', 'DataSetService', 'AuthService',
-          function ($uibModalInstance, $scope, projectId, path, templateId, growl, flowFactory, DataSetService, AuthService) {
+        .controller('FileUploadCtrl', ['$uibModalInstance', '$scope', 'growl', 'flowFactory', 'DataSetService', 'AuthService', 'projectId', 'path', 'templateId', 'datasetType',
+          function ($uibModalInstance, $scope, growl, flowFactory, DataSetService, AuthService, projectId, path, templateId, datasetType) {
 
             var self = this;
             self.model = {};
             self.projectId = projectId;
             self.path = path;
+            self.datasetType = datasetType;
             self.templateId = templateId;
             self.errorMsg;
             self.files = {};
@@ -126,9 +127,8 @@ angular.module('hopsWorksApp')
               } else {
                 //Check if files were uploaded successfully and delete wrong ones
                 for (var file in self.files) {
-                  var remPath = 'corrupted/' + self.path + "/" + file;
-                  dataSetService.removeDataSetDir(remPath).then(
-                          function (success) {
+                  var remPath = self.path + "/" + file;
+                  dataSetService.deleteCorrupted(remPath).then(function (success) {
                           }, function (error) {
                   });
                 }

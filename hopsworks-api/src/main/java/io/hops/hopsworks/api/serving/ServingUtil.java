@@ -18,12 +18,12 @@ package io.hops.hopsworks.api.serving;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -31,6 +31,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Level;
@@ -46,7 +47,7 @@ public class ServingUtil {
   @EJB
   private ServingFacade servingFacade;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   
   /**
    * Validates user input before creating or updating a serving. This method contains the common input validation
@@ -56,8 +57,10 @@ public class ServingUtil {
    * @param servingWrapper contains the user-data to validate
    * @param project the project where the serving resides
    * @throws ServingException
+   * @throws java.io.UnsupportedEncodingException
    */
-  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
+  public void validateUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
+      UnsupportedEncodingException {
     // Check that the modelName is present
     if (Strings.isNullOrEmpty(servingWrapper.getServing().getName())) {
       throw new IllegalArgumentException("Serving name not provided");
@@ -95,9 +98,11 @@ public class ServingUtil {
    * @param servingWrapper the user data
    * @param project the project to create the serving for
    * @throws ServingException if the python environment is not activated for the project
+   * @throws java.io.UnsupportedEncodingException
    */
-  public void validateSKLearnUserInput(ServingWrapper servingWrapper, Project project) throws ServingException {
-    
+  public void validateSKLearnUserInput(ServingWrapper servingWrapper, Project project) throws ServingException,
+      UnsupportedEncodingException {
+  
     // Check that the script name is valid and exists
     String scriptName = Utils.getFileName(servingWrapper.getServing().getArtifactPath());
     if(!scriptName.contains(".py")){
@@ -105,10 +110,8 @@ public class ServingUtil {
     }
     String hdfsPath = servingWrapper.getServing().getArtifactPath();
     //Remove hdfs:// if it is in the path
-    if (hdfsPath.substring(0, 7).equalsIgnoreCase("hdfs://")) {
-      hdfsPath = hdfsPath.substring(7);
-    }
-    if(!inodeFacade.existsPath(hdfsPath)){
+    hdfsPath = Utils.prepPath(hdfsPath);
+    if(!inodeController.existsPath(hdfsPath)){
       throw new IllegalArgumentException("Python script path does not exist in HDFS");
     }
     
@@ -147,7 +150,7 @@ public class ServingUtil {
    */
   private void validateTfModelPath(String path, Integer version) throws IllegalArgumentException {
     try {
-      List<Inode> children = inodeFacade.getChildren(Paths.get(path, version.toString()).toString());
+      List<Inode> children = inodeController.getChildren(Paths.get(path, version.toString()).toString());
       
       if (children.stream().noneMatch(inode -> inode.getInodePK().getName().equals("variables")) ||
         children.stream().noneMatch(inode -> inode.getInodePK().getName().contains(".pb"))) {

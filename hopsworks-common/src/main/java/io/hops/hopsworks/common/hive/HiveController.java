@@ -44,7 +44,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -85,7 +85,7 @@ public class HiveController {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private InodeFacade inodeFacade;
+  private InodeController inodeController;
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
@@ -174,17 +174,17 @@ public class HiveController {
 
     // Hive database names are case insensitive and lower case
     Path dbPath = getDbPath(dbName);
-    Inode dbInode = inodeFacade.getInodeAtPath(dbPath.toString());
+    Inode dbInode = inodeController.getInodeAtPath(dbPath.toString());
 
     // Persist Hive db as dataset in the Hopsworks database
     Dataset dbDataset = new Dataset(dbInode, project);
-    dbDataset.setType(datasetType);
+    dbDataset.setDsType(datasetType);
     dbDataset.setSearchable(true);
-    dbDataset.setFeaturestore(featurestore);
+    dbDataset.setFeatureStore(featurestore);
     datasetFacade.persistDataset(dbDataset);
 
     dfso.setMetaEnabled(dbPath);
-    datasetController.logDataset(dbDataset, OperationType.Add);
+    datasetController.logDataset(project, dbDataset, OperationType.Add);
   
     activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user, ActivityFlag.DATASET);
 
@@ -256,12 +256,12 @@ public class HiveController {
       .getByProjectAndDsName(project, this.settings.getHiveWarehouse(), project.getName().toLowerCase() + ".db");
     Dataset featurestoreDs = datasetController.getByProjectAndDsName(project, this.settings.getHiveWarehouse(),
       project.getName().toLowerCase() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX + ".db");
-    if ((projectDs != null && projectDs.getType() == DatasetType.HIVEDB)
+    if ((projectDs != null && projectDs.getDsType() == DatasetType.HIVEDB)
         || forceCleanup) {
       dropDatabase(project, dfso, project.getName());
     }
 
-    if ((featurestoreDs != null && featurestoreDs.getType() == DatasetType.FEATURESTORE)
+    if ((featurestoreDs != null && featurestoreDs.getDsType() == DatasetType.FEATURESTORE)
         || forceCleanup) {
       dropDatabase(project, dfso, project.getName() + FeaturestoreConstants.FEATURESTORE_HIVE_DB_SUFFIX);
     }

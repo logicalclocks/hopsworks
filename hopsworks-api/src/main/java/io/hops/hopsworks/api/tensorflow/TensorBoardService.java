@@ -28,6 +28,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -36,6 +37,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.ApiOperation;
+import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -66,6 +68,8 @@ public class TensorBoardService {
   private ProjectFacade projectFacade;
   @EJB
   private InodeFacade inodesFacade;
+  @EJB
+  private InodeController inodeController;
   @EJB
   private TensorBoardController tensorBoardController;
   @EJB
@@ -118,7 +122,7 @@ public class TensorBoardService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context SecurityContext sc) throws
-      ServiceException, DatasetException, ProjectException, TensorBoardException {
+      ServiceException, DatasetException, ProjectException, TensorBoardException, UnsupportedEncodingException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
@@ -127,7 +131,7 @@ public class TensorBoardService {
     hdfsLogdir = tensorBoardController.replaceNN(hdfsLogdir);
 
     DsPath tbPath = pathValidator.validatePath(this.project, hdfsLogdir);
-    tbPath.validatePathExists(inodesFacade, true);
+    tbPath.validatePathExists(inodeController, true);
 
     TensorBoardDTO tensorBoardDTO = null;
     tensorBoardDTO = tensorBoardController.startTensorBoard(elasticId, this.project, user, hdfsLogdir);

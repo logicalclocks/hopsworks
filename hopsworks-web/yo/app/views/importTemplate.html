@@ -46,21 +46,32 @@
   <div class="modal-header">
     <button class="close" ng-click="importTemplateCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;</button>
-    <h2 class="modal-title">Import/Export Template</h2>
+    <h2 class="modal-title">Import Template</h2>
   </div>
   <div class="modal-body">
-    <form role="form" name="ieForm" ng-submit="" novalidate
-          class="form-validate">
+    <form role="form" name="ieForm" ng-submit="" novalidate class="form-validate">
       <div class="row">
         <fieldset>
-          <div class="control-group col-md-offset-1" style="margin-right: 8.33333%;">
-            <div class="form-group has-feedback">
-              <label class="text-muted control-label"><h2>Import template</h2></label><br>
-              <div class="btn-group btn-group" role="group" aria-label="..." style="min-width: 100%">
-                <div class="btn-group" role="group" style="width: 15%">
-                </div>
-              </div>
-            </div>
+          <div class="col-md-1">
+            <table size="50%">
+              <tr>
+                <td style="margin-left: 10px;">
+                  <span class="btn btn-small btn-info" flow-btn flow-attrs="{accept:'.json'}" id="file-upload">
+                    <i class="glyphicon glyphicon-file"></i>
+                    &nbsp Upload File
+                  </span>
+                </td>
+                <td style="margin-left: 10px;">
+                  <a class="btn btn-small btn-warning" ng-click="$flow.pause()" ng-show="$flow.isUploading()">
+                    <i class="glyphicon glyphicon-pause"></i>
+                    Pause all</a>
+                </td>
+                <td style="margin-left: 10px;">
+                  <span class="label label-info">Total Size: {{importTemplateCtrl.size($flow.getSize())}}</span>
+                </td>
+              </tr>
+              <tr><td colspan='4'>Only .json files are allowed.</td></tr>
+            </table>
           </div>
         </fieldset>
         <div id="files">
@@ -103,7 +114,8 @@
                     <a class="btn btn-mini btn-danger btn-circle" ng-click="file.cancel()">
                       <i class="glyphicon glyphicon-remove-circle"></i>
                     </a>
-                    <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error">
+                    <a class="btn btn-mini btn-info btn-circle" ng-click="file.retry()" ng-show="file.error"
+                       id="retry_template">
                       <i class="glyphicon glyphicon-repeat round"></i>
                     </a>
                   </div>
@@ -112,34 +124,6 @@
             </tbody>
           </table>
         </div>
-        <fieldset>
-          <div class="col-md-1">
-            <table size="50%">
-              <tr>
-                <td style="margin-left: 10px;">
-                  <span class="btn btn-small btn-info" flow-btn flow-attrs="{accept:'.json'}">
-                    <i class="glyphicon glyphicon-file"></i>
-                    &nbsp Upload File
-                  </span>
-                </td>
-                <td style="margin-left: 10px;">
-                  <a class="btn btn-small btn-warning" ng-click="$flow.pause()">
-                    <i class="glyphicon glyphicon-pause"></i>
-                    Pause all</a>
-                </td>
-                <td style="margin-left: 10px;"> 
-                  <a class="btn btn-small btn-danger" ng-click="$flow.cancel()">
-                    <i class="glyphicon glyphicon-remove-circle"></i>
-                    Cancel all</a>
-                </td>
-                <td style="margin-left: 10px;"> 
-                  <span class="label label-info">Total Size: {{importTemplateCtrl.size($flow.getSize())}}</span>
-                </td>
-              </tr>
-              <tr><td colspan='4'>Only .json files are allowed.</td></tr>
-            </table>
-          </div>
-        </fieldset>
       </div>
       <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
         <button class="btn btn-default" type="button" ng-click="importTemplateCtrl.close()">Cancel</button>

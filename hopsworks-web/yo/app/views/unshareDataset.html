@@ -55,18 +55,25 @@
 
                             <div class="btn-group" role="group" style="width: 100%">
                                 <div type="button" class="btn btn-default" style="padding: 3px;width: 100%">
-                                    <ui-select multiple name="project_name" theme="select2"
-                                               ng-model="unshareDatasetCtrl.dataSets.projectIds" style="width: 100%" required>
+                                    <ui-select multiple name="project_name" theme="select2" id="project_select"
+                                               ng-model="unshareDatasetCtrl.selectedProjects" style="width: 100%"
+                                               required>
 
-                                        <ui-select-match placeholder="Select a project to unshare with">{{$item.name}}</ui-select-match>
+                                        <ui-select-match placeholder="Select a project to unshare from">{{$item.name}}</ui-select-match>
 
-                                        <ui-select-choices repeat="project.id as project in unshareDatasetCtrl.projects  | filter: omitCurrentProject | filter: $select.search">
-                                            <div ng-bind-html="project.name | highlight: $select.search"></div>
+                                        <ui-select-choices
+                                                repeat="project.name as project in unshareDatasetCtrl.projects  | filter: omitCurrentProject | filter: $select.search">
+                                            <div>
+                                                <span ng-bind-html="project.name | highlight: $select.search"></span>
+                                            </div>
                                             <small>
-                                                Owner: {{project.owner.fname}} {{project.owner.lname}}
+                                                Owner: {{project.owner}}
                                             </small>
                                         </ui-select-choices>
-
+                                        <ui-select-no-choice>
+                                            <span ng-if="unshareDatasetCtrl.loading" class="loading-dots-sm">Loading</span>
+                                            <span ng-if="!unshareDatasetCtrl.loading">No project found</span>
+                                        </ui-select-no-choice>
                                     </ui-select><br>
                                     <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
                                           dataSetForm.project_name.$error.required"

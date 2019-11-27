@@ -39,7 +39,7 @@
 module ProjectHelper
   def with_valid_project
     @project ||= create_project
-    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing"
     if response.code != 200 # project and logged in user not the same
       @project = create_project
     end
@@ -47,7 +47,7 @@ module ProjectHelper
 
   def with_valid_tour_project(type)
     @project ||= create_project_tour(type)
-    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/getContent"
+    get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/?action=listing"
     if response.code != 200 # project and logged in user not the same
       @project = create_project_tour(type)
     end
@@ -65,6 +65,10 @@ module ProjectHelper
 
   def create_project_by_name(projectname)
     with_valid_session
+    create_project_by_name_existing_user(projectname)
+  end
+
+  def create_project_by_name_existing_user(projectname)
     new_project = {projectName: projectname, description:"", status: 0, services: ["JOBS","JUPYTER", "HIVE", "KAFKA","SERVING", "FEATURESTORE"],
                    projectTeam:[], retentionPeriod: ""}
     post "#{ENV['HOPSWORKS_API']}/project", new_project
@@ -89,7 +93,11 @@ module ProjectHelper
 
   def add_member(member, role)
     with_valid_project
-    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: @project[:id],teamMember: member},teamRole: role}]}
+    add_member_to_project(@project, member, role)
+  end
+
+  def add_member_to_project(project, member, role)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: project[:id],teamMember: member},teamRole: role}]}
     expect_status(200)
     expect_json(successMessage: "One member added successfully")
   end

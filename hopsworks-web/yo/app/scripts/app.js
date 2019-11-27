@@ -242,7 +242,6 @@ angular.module('hopsWorksApp', [
                           }]
                       }
                     })
-
                     .when('/project/:projectID/datasets/:datasetName/:fileName*?', {
                       templateUrl: 'views/datasetsBrowser.html',
                       controller: 'ProjectCtrl as projectCtrl',
@@ -601,7 +600,7 @@ angular.module('hopsWorksApp', [
         }])
         .filter('humanReadableFileSize', ['$filter', 'fileManagerConfig', function($filter, fileManagerConfig) {
           // See https://en.wikipedia.org/wiki/Binary_prefix
-          var decimalByteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+          var decimalByteUnits = [' KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
           var binaryByteUnits = ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
 
           return function(input) {

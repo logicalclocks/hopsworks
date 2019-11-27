@@ -234,7 +234,7 @@ public class RESTCodes {
     FILE_CORRUPTED_REMOVED_FROM_HDFS(6, "Corrupted file removed from hdfs.",
         Response.Status.BAD_REQUEST),
     INODE_DELETION_ERROR(7, "File/Dir could not be deleted.", Response.Status.INTERNAL_SERVER_ERROR),
-    INODE_NOT_FOUND(8, "Inode was not found.", Response.Status.NOT_FOUND),
+    INODE_NOT_FOUND(8, "File not found.", Response.Status.NOT_FOUND),
     DATASET_REMOVED_FROM_HDFS(9, "DataSet removed from hdfs.", Response.Status.BAD_REQUEST),
     SHARED_DATASET_REMOVED(10, "The shared dataset has been removed from this project.",
         Response.Status.BAD_REQUEST),
@@ -295,7 +295,8 @@ public class RESTCodes {
     DOWNLOAD_NOT_ALLOWED(48, "Downloading files is not allowed. Please contact the system administrator for further " +
       "information.", Response.Status.FORBIDDEN),
     DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR),
-    DATASET_ACCESS_PERMISSION_DENIED(50, "Permission denied.", Response.Status.FORBIDDEN);
+    DATASET_ACCESS_PERMISSION_DENIED(50, "Permission denied.", Response.Status.FORBIDDEN),
+    PATH_ENCODING_NOT_SUPPORTED(51, "Unsupported encoding.", Response.Status.BAD_REQUEST);
 
 
     private Integer code;

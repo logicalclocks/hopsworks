@@ -1,0 +1,135 @@
+<!--
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<ul uib-dropdown-menu class="uib-dropdown-amore">
+    <li id="browse">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="0"
+           ng-click="browseDataset({'dataset': dataset}); $event.stopPropagation();">
+           <span><i class="fa fa-files-o"></i>Browse files</span>
+        </a>
+    </li>
+    <li ng-show="role === 'Data owner' && dataset.publicDataset !== 2" id="remove">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="1"
+           ng-click="deleteDataset({'dataset': dataset}); $event.stopPropagation();">
+           <span><i class="fa fa-trash"></i>Remove DataSet</span>
+        </a>
+    </li>
+    <li class="dropdown-submenu" ng-if="!dataset.shared && role === 'Data owner'" id="permissions">
+        <a tabindex="-1" ng-click="$event.stopPropagation();">
+            <span><i class="fa fa-edit"></i>Permissions</span>
+        </a>
+        <ul class="dropdown-menu">
+            <li ng-if="dataset.permission === 'GROUP_WRITABLE_SB' || dataset.permission === 'GROUP_WRITABLE'">
+                <a tabindex="-1"
+                   ng-click="permissions({'dataset': dataset, 'permission': 'OWNER_ONLY'}); $event.stopPropagation();">
+                    <span><i class="fa fa-lock"></i>Owner only</span>
+                </a>
+            </li>
+            <li ng-if="dataset.permission !== 'GROUP_WRITABLE_SB'">
+                <a tabindex="-1"
+                   ng-click="permissions({'dataset': dataset, 'permission':'GROUP_WRITABLE_SB'}); $event.stopPropagation();">
+                    <span><i class="fa fa-user"></i>Group writable & sticky bit set</span>
+                </a>
+            </li>
+            <li ng-if="dataset.permission !== 'GROUP_WRITABLE'">
+                <a tabindex="-1"
+                   ng-click="permissions({'dataset': dataset, 'permission':'GROUP_WRITABLE'}); $event.stopPropagation();">
+                    <span><i class="fa fa-users"></i>Group writable</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li ng-if="!dataset.shared && role === 'Data owner'" class="divider"></li>
+    <li ng-if="!dataset.shared && role === 'Data owner' && dataset.publicDataset === 0" id="add_metadata">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="4"
+           ng-click="attachTemplate({'attributes': dataset.attributes}); $event.stopPropagation();">
+           <span><i class="fa fa-upload"></i>Add metadata</span>
+        </a>
+    </li>
+    <li ng-if="!dataset.shared"
+        ng-show="role === 'Data owner' && dataset.publicDataset === 0" id="remove_metadata">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="5"
+           ng-click="detachTemplate({'attributes': dataset.attributes}); $event.stopPropagation();">
+           <span><i class="fa fa-download"></i>Remove metadata</span>
+        </a>
+    </li>
+    <li ng-if="!dataset.shared"
+        ng-show="role === 'Data owner' && dataset.publicDataset === 2" id="show_manifest">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="6"
+           ng-click="showManifest({'publicId': dataset.publicId}); $event.stopPropagation();">
+            <span>Show Manifest</span>
+        </a>
+    </li>
+    <li class="divider"
+        ng-if="!dataset.shared && role === 'Data owner'  && (dataset.publicDataset === 0)"></li>
+    <li class="dropdown-submenu"
+        ng-if="!dataset.shared && role === 'Data owner' && (dataset.publicDataset === 0)" id="share_with">
+        <a tabindex="-1" ng-click="$event.stopPropagation();"><span><i class="fa fa-share-alt"></i>Share with</span></a>
+        <ul class="dropdown-menu">
+            <li ng-if="dataset.publicDataset === 0">
+                <a tabindex="-1" ng-click="share({'dataset': dataset}); $event.stopPropagation();">
+                    <span><i class="fa fa-book"></i>Project</span>
+                </a>
+            </li>
+            <li ng-if="dataset.publicDataset === 0">
+                <a tabindex="-1" ng-click="shareWithCluster({'id': dataset.id}); $event.stopPropagation();">
+                    <span><i class="fa fa-server"></i>Cluster</span>
+                </a>
+            </li>
+            <li ng-if="dataset.publicDataset === 0 && isDelaEnabled && hopsUploadEnabled()">
+                <a tabindex="-1" ng-click="shareWithHops({'id': dataset.id}); $event.stopPropagation();">
+                    <span><i class="fa fa-globe"></i>Hops</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+    <li class="divider"
+        ng-if="!dataset.shared && role === 'Data owner' && (dataset.publicDataset !== 0 || dataset.sharedWith > 0)"></li>
+    <li class="dropdown-submenu"
+        ng-if="!dataset.shared && role === 'Data owner' && (dataset.publicDataset !== 0 || dataset.sharedWith > 0)"
+        id="unshare_from">
+        <a tabindex="-1" ng-click="$event.stopPropagation();"><span><i class="fa fa-undo"></i>UnShare from</span></a>
+        <ul class="dropdown-menu">
+            <li ng-if="dataset.sharedWith > 0">
+                <a tabindex="-1" ng-click="unshare({'dataset': dataset}); $event.stopPropagation();">
+                    <span><i class="fa fa-book"></i>Project</span>
+                </a>
+            </li>
+            <li ng-if="dataset.publicDataset === 1">
+                <a tabindex="-1" ng-click="unshareFromCluster({'id': dataset.id}); $event.stopPropagation();">
+                    <span><i class="fa fa-server"></i>Cluster</span>
+                </a>
+            </li>
+            <li ng-if="dataset.publicDataset === 2">
+                <a tabindex="-1"
+                   ng-click="unshareFromHops({'publicId': dataset.publicId}); $event.stopPropagation();">
+                    <span><i class="fa fa-globe"></i>Hops</span>
+                </a>
+            </li>
+        </ul>
+    </li>
+</ul>

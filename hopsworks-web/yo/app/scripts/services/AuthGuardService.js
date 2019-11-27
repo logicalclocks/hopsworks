@@ -50,18 +50,20 @@ angular.module('hopsWorksApp')
             };
             var service = {
               guardSession: function($q) {
+                var deferred = $q.defer();
                 AuthService.session().then(
                     function (success) {
                       saveEmail(success.data.data.value);
                       checkIsAdmin();
-                      return $q.promise
+                      return deferred.resolve(success);
                     },
                     function (err) {
                       AuthService.cleanSession();
                       AuthService.removeToken();
                       goToLogin();
-                      return $q.reject(err);
+                      return deferred.reject(err);
                     });
+                return deferred.promise;
               },
               noGuard: function ($q) {
                 AuthService.session().then(

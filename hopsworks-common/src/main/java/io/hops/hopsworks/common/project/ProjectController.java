@@ -43,7 +43,8 @@ import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
@@ -93,6 +94,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -155,6 +157,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -202,9 +205,11 @@ public class ProjectController {
   @EJB
   private InodeFacade inodes;
   @EJB
+  private InodeController inodeController;
+  @EJB
   private DatasetController datasetController;
   @EJB
-  private DatasetFacade datasetFacade;
+  private DatasetSharedWithFacade datasetSharedWithFacade;
   @EJB
   private Settings settings;
   @EJB
@@ -545,7 +550,7 @@ public class ProjectController {
     Path dummy = new Path("/tmp/" + projectName);
     try {
       dfso.touchz(dummy);
-      project.setInode(inodes.getInodeAtPath(dummy.toString()));
+      project.setInode(inodeController.getInodeAtPath(dummy.toString()));
     } catch (IOException ex) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
         "Couldn't get the dummy Inode at: /tmp/" + projectName, ex.getMessage(), ex);
@@ -560,7 +565,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private void setProjectInode(Project project, DistributedFileSystemOps dfso) throws IOException {
-    Inode projectInode = inodes.getProjectRoot(project.getName());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     project.setInode(projectInode);
     this.projectFacade.mergeProject(project);
     this.projectFacade.flushEm();
@@ -569,7 +574,7 @@ public class ProjectController {
   }
 
   private boolean existingProjectFolder(Project project) {
-    Inode projectInode = inodes.getProjectRoot(project.getName());
+    Inode projectInode = inodeController.getProjectRoot(project.getName());
     if (projectInode != null) {
       LOGGER.log(Level.WARNING, "project folder existing for project {0}",
         project.getName());
@@ -695,6 +700,15 @@ public class ProjectController {
     Project project = projectFacade.find(id);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + id);
+    }
+    return project;
+  }
+  
+  public Project findProjectByName(String projectName) throws ProjectException {
+    Project project = projectFacade.findByName(projectName);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectName: " +
+        projectName);
     }
     return project;
   }
@@ -1269,7 +1283,7 @@ public class ProjectController {
           if (!dfso.exists(tmpInodePath.toString())) {
             dfso.touchz(tmpInodePath);
           }
-          Inode tmpInode = inodes.getInodeAtPath(tmpInodePath.toString());
+          Inode tmpInode = inodeController.getInodeAtPath(tmpInodePath.toString());
           if (tmpInode != null) {
             toDeleteProject.setInode(tmpInode);
             projectFacade.persistProject(toDeleteProject);
@@ -1424,8 +1438,8 @@ public class ProjectController {
       // Change owner of history files
       List<Inode> historyInodes = inodeFacade.findHistoryFileByHdfsUser(user);
       for (Inode inode : historyInodes) {
-        dfso.setOwner(new Path(inodeFacade.getPath(inode)),
-          UserGroupInformation.getLoginUser().getUserName(), "hadoop");
+        dfso.setOwner(new Path(inodeController.getPath(inode)),
+            UserGroupInformation.getLoginUser().getUserName(), "hadoop");
       }
 
       Path certsHdfsDir = new Path(settings.getHdfsTmpCertDir() + File.separator + user.getName());
@@ -1761,17 +1775,16 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void fixSharedDatasets(Project project, DistributedFileSystemOps dfso)
-    throws IOException {
-    List<Dataset> sharedDataSets = datasetFacade.findSharedWithProject(project);
-    for (Dataset dataSet : sharedDataSets) {
-      String owner = dataSet.getInode().getHdfsUser().getName();
-      String group = dataSet.getInode().getHdfsGroup().getName();
+  private void fixSharedDatasets(Project project, DistributedFileSystemOps dfso) throws IOException {
+    List<DatasetSharedWith> sharedDataSets = datasetSharedWithFacade.findByProject(project);
+    for (DatasetSharedWith dataSet : sharedDataSets) {
+      String owner = dataSet.getDataset().getInode().getHdfsUser().getName();
+      String group = dataSet.getDataset().getInode().getHdfsGroup().getName();
       List<Inode> children = new ArrayList<>();
-      inodeFacade.getAllChildren(dataSet.getInode(), children);
+      inodeController.getAllChildren(dataSet.getDataset().getInode(), children);
       for (Inode child : children) {
         if (child.getHdfsUser().getName().startsWith(project.getName() + "__")) {
-          Path childPath = new Path(inodeFacade.getPath(child));
+          Path childPath = new Path(inodeController.getPath(child));
           dfso.setOwner(childPath, owner, group);
         }
       }
@@ -1921,7 +1934,7 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectID);
     }
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(Utils.getProjectPath(project.getName()));
+    Inode inode = inodeController.getInodeAtPath(Utils.getProjectPath(project.getName()));
 
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
       project);
@@ -1951,7 +1964,7 @@ public class ProjectController {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "project: " + name);
     }
     //find the project as an inode from hops database
-    Inode inode = inodes.getInodeAtPath(Utils.getProjectPath(name));
+    Inode inode = inodeController.getInodeAtPath(Utils.getProjectPath(name));
 
     List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
       project);
@@ -1965,9 +1978,14 @@ public class ProjectController {
     List<InodeView> kids = new ArrayList<>();
 
     Collection<Dataset> dsInProject = project.getDatasetCollection();
+    Collection<DatasetSharedWith> dsSharedWithProject = project.getDatasetSharedWithCollectionCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
-      kids.add(new InodeView(parent, ds, inodes.getPath(ds.getInode())));
+      kids.add(new InodeView(parent, ds, inodeController.getPath(ds.getInode())));
+    }
+    for (DatasetSharedWith ds : dsSharedWithProject) {
+      parent = inodes.findParent(ds.getDataset().getInode());
+      kids.add(new InodeView(parent, ds, inodeController.getPath(ds.getDataset().getInode())));
     }
 
     //send the project back to client
@@ -2059,7 +2077,7 @@ public class ProjectController {
     if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.HIVE)) {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
-        if (ds.getType() == DatasetType.HIVEDB) {
+        if (ds.getDsType() == DatasetType.HIVEDB) {
           HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
             .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
@@ -2078,7 +2096,7 @@ public class ProjectController {
     if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       List<Dataset> datasets = (List<Dataset>) project.getDatasetCollection();
       for (Dataset ds : datasets) {
-        if (ds.getType() == DatasetType.FEATURESTORE) {
+        if (ds.getDsType() == DatasetType.FEATURESTORE) {
           HdfsDirectoryWithQuotaFeature dbInodeAttrs = hdfsDirectoryWithQuotaFeatureFacade
             .getByInodeId(ds.getInodeId());
           if (dbInodeAttrs == null) {
@@ -2299,7 +2317,7 @@ public class ProjectController {
   public void addTourFilesToProject(String username, Project project,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
     TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException,
-    JobException, GenericException, ServiceException {
+    JobException, GenericException, ServiceException, UnsupportedEncodingException {
 
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {
@@ -2370,13 +2388,13 @@ public class ProjectController {
             udfso.copyInHdfs(new Path(DLDataSrc), new Path(DLDataDst));
             String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_DL_TOUR_DATASET);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode tourDs = inodes.getInodeAtPath(DLDataDst);
+            Inode tourDs = inodeController.getInodeAtPath(DLDataDst);
             datasetController.recChangeOwnershipAndPermission(new Path(DLDataDst),
               FsPermission.createImmutable(tourDs.getPermission()),
               userHdfsName, datasetGroup, dfso, udfso);
             udfso.copyInHdfs(new Path(DLNotebooksSrc + "/*"), new Path(DLNotebooksDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-            Inode jupyterDS = inodes.getInodeAtPath(DLNotebooksDst);
+            Inode jupyterDS = inodeController.getInodeAtPath(DLNotebooksDst);
             datasetController.recChangeOwnershipAndPermission(new Path(DLNotebooksDst),
               FsPermission.createImmutable(jupyterDS.getPermission()),
               userHdfsName, datasetGroup, dfso, udfso);
@@ -2410,7 +2428,7 @@ public class ProjectController {
             udfso.copyInHdfs(new Path(featurestoreExampleDataSrc), new Path(featurestoreExampleDataDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
             userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
-            Inode featurestoreDataDst = inodes.getInodeAtPath(featurestoreExampleDataDst);
+            Inode featurestoreDataDst = inodeController.getInodeAtPath(featurestoreExampleDataDst);
             datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleDataDst),
               FsPermission.createImmutable(featurestoreDataDst.getPermission()),
               userHdfsName, datasetGroup, dfso, udfso);
@@ -2421,7 +2439,7 @@ public class ProjectController {
             udfso.copyInHdfs(new Path(featurestoreExampleNotebooksSrc + "/*"),
               new Path(featurestoreExampleNotebooksDst));
             datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET_JUPYTER);
-            Inode featurestoreNotebooksDst = inodes.getInodeAtPath(featurestoreExampleNotebooksDst);
+            Inode featurestoreNotebooksDst = inodeController.getInodeAtPath(featurestoreExampleNotebooksDst);
             datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleNotebooksDst),
               FsPermission.createImmutable(featurestoreNotebooksDst.getPermission()),
               userHdfsName, datasetGroup, dfso, udfso);

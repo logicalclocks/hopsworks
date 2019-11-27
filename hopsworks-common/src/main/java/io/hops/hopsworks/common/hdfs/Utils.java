@@ -45,10 +45,14 @@ import io.hops.hopsworks.common.util.Settings;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
+import org.apache.hadoop.fs.Path;
 
 public final class Utils {
 
@@ -144,5 +148,30 @@ public final class Utils {
 
     //fetch the whole file content at once
     return scanner.useDelimiter("\\Z").next();
+  }
+  
+  /**
+   * take a String corresponding to a file uri and return only the path part of the it.
+   * And transform shared path into there full path.
+   * @param path the string from which to extract the path
+   * @return the path
+   * @throws UnsupportedEncodingException 
+   */
+  public static String prepPath(String path) throws UnsupportedEncodingException {
+    Path p;
+    String result = path;
+    if (path.contains(Settings.SHARED_FILE_SEPARATOR)) {
+      String[] parts = path.split(Settings.SHARED_FILE_SEPARATOR);
+      p = new Path(parts[0]);
+      //remove hdfs://10.0.2.15:8020//
+      p = new Path(URLDecoder.decode(p.toUri().getRawPath(), StandardCharsets.UTF_8.toString()));
+      result = p.toString() + Settings.SHARED_FILE_SEPARATOR + parts[1];
+    } else {
+      p = new Path(path);
+      //remove hdfs://10.0.2.15:8020//
+      p = new Path(URLDecoder.decode(p.toUri().getRawPath(), StandardCharsets.UTF_8.toString()));
+      result = p.toString();
+    }
+    return result;
   }
 }

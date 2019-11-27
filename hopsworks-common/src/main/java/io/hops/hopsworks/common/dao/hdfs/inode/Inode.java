@@ -64,7 +64,7 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.metadata.Template;
 
 @Entity
-@Table(name = "hops.hdfs_inodes")
+@Table(name = "hdfs_inodes", catalog = "hops")
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "Inode.findAll",
@@ -76,6 +76,9 @@ import io.hops.hopsworks.common.dao.metadata.Template;
   @NamedQuery(name = "Inode.findByParentId",
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId"),
+  @NamedQuery(name = "Inode.countByParentId",
+          query
+          = "SELECT COUNT(DISTINCT i.inodePK.name) FROM Inode i WHERE i.inodePK.parentId = :parentId"),
   @NamedQuery(name = "Inode.findByHdfsUser",
           query
           = "SELECT i FROM Inode i WHERE i.hdfsUser = :hdfsUser"),
@@ -91,18 +94,6 @@ import io.hops.hopsworks.common.dao.metadata.Template;
   @NamedQuery(name = "Inode.findByAccessTime",
           query
           = "SELECT i FROM Inode i WHERE i.accessTime = :accessTime"),
-  @NamedQuery(name = "Inode.findByClientName",
-          query
-          = "SELECT i FROM Inode i WHERE i.clientName = :clientName"),
-  @NamedQuery(name = "Inode.findByClientMachine",
-          query
-          = "SELECT i FROM Inode i WHERE i.clientMachine = :clientMachine"),
-  @NamedQuery(name = "Inode.findByGenerationStamp",
-          query
-          = "SELECT i FROM Inode i WHERE i.generationStamp = :generationStamp"),
-  @NamedQuery(name = "Inode.findByHeader",
-          query
-          = "SELECT i FROM Inode i WHERE i.header = :header"),
   @NamedQuery(name = "Inode.findBySymlink",
           query
           = "SELECT i FROM Inode i WHERE i.symlink = :symlink"),
@@ -112,19 +103,14 @@ import io.hops.hopsworks.common.dao.metadata.Template;
   @NamedQuery(name = "Inode.findByUnderConstruction",
           query
           = "SELECT i FROM Inode i WHERE i.underConstruction = :underConstruction"),
-  @NamedQuery(name = "Inode.findBySubtreeLocked",
-          query
-          = "SELECT i FROM Inode i WHERE i.subtreeLocked = :subtreeLocked"),
-  @NamedQuery(name = "Inode.findBySubtreeLockOwner",
-          query
-          = "SELECT i FROM Inode i WHERE i.subtreeLockOwner = :subtreeLockOwner"),
   @NamedQuery(name = "Inode.findRootByName",
           query
           = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId "
           + "AND i.inodePK.name = :name AND i.inodePK.partitionId = :partitionId"),
+  @NamedQuery(name = "Inode.findByParentAndName",
+          query = "SELECT i FROM Inode i WHERE i.inodePK.parentId = :parentId AND i.inodePK.name = :name"),
   @NamedQuery(name = "Inode.findHistoryFileByHdfsUser",
-      query = "SELECT i FROM Inode i WHERE i.hdfsUser = :hdfsUser AND " + "i.inodePK.name LIKE '%snappy%'")})
-
+          query = "SELECT i FROM Inode i WHERE i.hdfsUser = :hdfsUser AND " + "i.inodePK.name LIKE '%snappy%'")})
 public class Inode implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -148,16 +134,6 @@ public class Inode implements Serializable {
   private HdfsGroups hdfsGroup;
   @Column(name = "permission")
   private short permission;
-  @Size(max = 100)
-  @Column(name = "client_name")
-  private String clientName;
-  @Size(max = 100)
-  @Column(name = "client_machine")
-  private String clientMachine;
-  @Column(name = "generation_stamp")
-  private Integer generationStamp;
-  @Column(name = "header")
-  private BigInteger header;
   @Size(max = 255)
   @Column(name = "symlink")
   private String symlink;
@@ -169,17 +145,16 @@ public class Inode implements Serializable {
   @NotNull
   @Column(name = "under_construction")
   private boolean underConstruction;
-  @Column(name = "subtree_locked")
-  private boolean subtreeLocked;
   @Column(name = "meta_enabled")
   @NotNull
   private boolean metaEnabled;
   @Column(name = "is_dir")
   @NotNull
   private boolean dir;
-
-  @Column(name = "subtree_lock_owner")
-  private BigInteger subtreeLockOwner;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "children_num")
+  private int childrenNum;
 
   @Basic(optional = false)
   @NotNull
@@ -198,13 +173,12 @@ public class Inode implements Serializable {
   }
 
   public Inode(InodePK inodePK, Long id, boolean quotaEnabled,
-          boolean underConstruction, boolean subtreeLocked, boolean metaEnabled,
+          boolean underConstruction, boolean metaEnabled,
           boolean dir) {
     this.inodePK = inodePK;
     this.id = id;
     this.quotaEnabled = quotaEnabled;
     this.underConstruction = underConstruction;
-    this.subtreeLocked = subtreeLocked;
     this.metaEnabled = metaEnabled;
     this.dir = dir;
   }
@@ -214,7 +188,7 @@ public class Inode implements Serializable {
     this(new InodePK(inode.getInodePK().getParentId(), inode.getInodePK().
             getName(), inode.getInodePK().getPartitionId()), inode.getId(),
             inode.isQuotaEnabled(), inode.
-            isUnderConstruction(), inode.isSubtreeLocked(), inode.
+            isUnderConstruction(), inode.
             isMetaEnabled(), inode.isDir());
   }
 
@@ -262,52 +236,12 @@ public class Inode implements Serializable {
     this.permission = permission;
   }
 
-  public String getClientName() {
-    return clientName;
-  }
-
-  public void setClientName(String clientName) {
-    this.clientName = clientName;
-  }
-
-  public String getClientMachine() {
-    return clientMachine;
-  }
-
-  public void setClientMachine(String clientMachine) {
-    this.clientMachine = clientMachine;
-  }
-
-  public Integer getGenerationStamp() {
-    return generationStamp;
-  }
-
-  public void setGenerationStamp(Integer generationStamp) {
-    this.generationStamp = generationStamp;
-  }
-
-  public BigInteger getHeader() {
-    return header;
-  }
-
-  public void setHeader(BigInteger header) {
-    this.header = header;
-  }
-
   public String getSymlink() {
     return symlink;
   }
 
   public void setSymlink(String symlink) {
     this.symlink = symlink;
-  }
-
-  public BigInteger getSubtreeLockOwner() {
-    return subtreeLockOwner;
-  }
-
-  public void setSubtreeLockOwner(BigInteger subtreeLockOwner) {
-    this.subtreeLockOwner = subtreeLockOwner;
   }
 
   public long getSize() {
@@ -317,7 +251,63 @@ public class Inode implements Serializable {
   public void setSize(long size) {
     this.size = size;
   }
-
+  
+  public int getChildrenNum() {
+    return childrenNum;
+  }
+  
+  public void setChildrenNum(int childrenNum) {
+    this.childrenNum = childrenNum;
+  }
+  
+  public HdfsUsers getHdfsUser() {
+    return hdfsUser;
+  }
+  
+  public void setHdfsUser(HdfsUsers hdfsUser) {
+    this.hdfsUser = hdfsUser;
+  }
+  
+  public HdfsGroups getHdfsGroup() {
+    return hdfsGroup;
+  }
+  
+  public void setHdfsGroup(HdfsGroups hdfsGroup) {
+    this.hdfsGroup = hdfsGroup;
+  }
+  
+  public void setDir(boolean dir) {
+    this.dir = dir;
+  }
+  
+  public boolean isDir() {
+    return dir;
+  }
+  
+  public boolean isMetaEnabled() {
+    return metaEnabled;
+  }
+  
+  public void setMetaEnabled(boolean metaEnabled) {
+    this.metaEnabled = metaEnabled;
+  }
+  
+  public boolean isQuotaEnabled() {
+    return quotaEnabled;
+  }
+  
+  public void setQuotaEnabled(boolean quotaEnabled) {
+    this.quotaEnabled = quotaEnabled;
+  }
+  
+  public boolean isUnderConstruction() {
+    return underConstruction;
+  }
+  
+  public void setUnderConstruction(boolean underConstruction) {
+    this.underConstruction = underConstruction;
+  }
+  
   @XmlTransient
   public Collection<Template> getTemplates() {
     return this.templates;
@@ -373,67 +363,9 @@ public class Inode implements Serializable {
     }
     return true;
   }
-
+  
   @Override
   public String toString() {
-    return "se.kth.bbc.project.fb.Inode[ inodePK= " + inodePK + " ]";
+    return "io.hops.hopsworks.common.dao.hdfs.inode.Inode[ inodePK= " + inodePK + " ]";
   }
-
-  public HdfsUsers getHdfsUser() {
-    return hdfsUser;
-  }
-
-  public void setHdfsUser(HdfsUsers hdfsUser) {
-    this.hdfsUser = hdfsUser;
-  }
-
-  public HdfsGroups getHdfsGroup() {
-    return hdfsGroup;
-  }
-
-  public void setHdfsGroup(HdfsGroups hdfsGroup) {
-    this.hdfsGroup = hdfsGroup;
-  }
-
-  public void setDir(boolean dir) {
-    this.dir = dir;
-  }
-
-  public boolean isDir() {
-//    return header.equals(BigInteger.ZERO);
-    return dir;
-  }
-
-  public boolean isMetaEnabled() {
-    return metaEnabled;
-  }
-
-  public void setMetaEnabled(boolean metaEnabled) {
-    this.metaEnabled = metaEnabled;
-  }
-
-  public boolean isQuotaEnabled() {
-    return quotaEnabled;
-  }
-
-  public void setQuotaEnabled(boolean quotaEnabled) {
-    this.quotaEnabled = quotaEnabled;
-  }
-
-  public boolean isSubtreeLocked() {
-    return subtreeLocked;
-  }
-
-  public void setSubtreeLocked(boolean subtreeLocked) {
-    this.subtreeLocked = subtreeLocked;
-  }
-
-  public boolean isUnderConstruction() {
-    return underConstruction;
-  }
-
-  public void setUnderConstruction(boolean underConstruction) {
-    this.underConstruction = underConstruction;
-  }
-
 }

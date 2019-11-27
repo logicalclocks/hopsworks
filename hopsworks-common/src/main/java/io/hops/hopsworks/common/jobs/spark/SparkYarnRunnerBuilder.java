@@ -154,8 +154,7 @@ public class SparkYarnRunnerBuilder {
     builder.addLocalResource(new LocalResourceDTO(
         appExecName, appPath,
         LocalResourceVisibility.APPLICATION.toString(),
-        LocalResourceType.FILE.toString(), null),
-        !appPath.startsWith("hdfs:"));
+        LocalResourceType.FILE.toString(), null), dfsClient);
 
     builder.addToAppMasterEnvironment(YarnRunner.KEY_CLASSPATH,
         Settings.SPARK_LOCRSC_APP_JAR
@@ -261,7 +260,7 @@ public class SparkYarnRunnerBuilder {
         builder.addLocalResource(new LocalResourceDTO(
                 fileName, filePath,
                 LocalResourceVisibility.APPLICATION.toString(),
-                LocalResourceType.FILE.toString(), null), false);
+                LocalResourceType.FILE.toString(), null), dfsClient);
       }
     }
 
@@ -276,7 +275,7 @@ public class SparkYarnRunnerBuilder {
         builder.addLocalResource(new LocalResourceDTO(
           fileName, archivePath,
           LocalResourceVisibility.APPLICATION.toString(),
-          LocalResourceType.ARCHIVE.toString(), null), false);
+          LocalResourceType.ARCHIVE.toString(), null), dfsClient);
       }
     }
 
