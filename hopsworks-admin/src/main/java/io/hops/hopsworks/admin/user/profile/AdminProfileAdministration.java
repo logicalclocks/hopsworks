@@ -66,6 +66,7 @@ import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
+import org.primefaces.context.RequestContext;
 import org.primefaces.extensions.event.ClipboardErrorEvent;
 import org.primefaces.extensions.event.ClipboardSuccessEvent;
 
@@ -248,6 +249,10 @@ public class AdminProfileAdministration implements Serializable {
     this.editStatus = userFacade.findByEmail(this.editingUser.getEmail()).getStatus().name();
     return this.editStatus;
   }
+  
+  public void updateEditingUser() {
+    this.editingUser = userFacade.findByEmail(this.editingUser.getEmail());
+  }
 
   @PostConstruct
   public void init() {
@@ -421,10 +426,12 @@ public class AdminProfileAdministration implements Serializable {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().
       getRequest();
     try {
+      updateEditingUser();
       newPassword = usersController.resetPassword(editingUser, httpServletRequest);
       MessagesController.addInfoMessage("Password reset", "Password reset for: " + editingUser.getEmail());
       LOGGER.log(Level.INFO, "User: {0} reset password for user: {1}",
         new Object[]{httpServletRequest.getRemoteUser(), editingUser.getEmail()});
+      showDialog();
     } catch (UserException e) {
       MessagesController.addErrorMessage("Error resetting password ", e.getMessage());
       LOGGER.log(Level.WARNING, "Error resetting password. User: {0} trying to reset password for user: {1} ",
@@ -442,5 +449,10 @@ public class AdminProfileAdministration implements Serializable {
   
   public void errorListener(final ClipboardErrorEvent errorEvent) {
     MessagesController.addErrorMessage("Error ", errorEvent.getAction());
+  }
+  
+  public void showDialog() {
+    RequestContext context = RequestContext.getCurrentInstance();
+    context.execute("PF('dlg1').show();");
   }
 }
