@@ -43,6 +43,7 @@ import freemarker.template.TemplateException;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.common.jupyter.DockerJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
 import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
@@ -177,6 +178,9 @@ public class JupyterConfigFilesGenerator {
   
   public void createJupyterKernelConfig(Writer out, Project project, JupyterSettings js, String hdfsUser)
       throws IOException {
+    DockerJobConfiguration dockerJobConfiguration = (DockerJobConfiguration)js.getDockerConfig();
+    int libHdfsOptsXmx = (int)(dockerJobConfiguration.getMemory() * 0.2);
+
     KernelTemplate kernelTemplate = KernelTemplateBuilder.newBuilder()
         .setHdfsUser(hdfsUser)
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
@@ -185,9 +189,8 @@ public class JupyterConfigFilesGenerator {
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
         .setProject(project)
         .setHiveEndpoints(settings.getHiveServerHostName(false))
-        .setLibHdfsOpts("-Xmx512m")
+        .setLibHdfsOpts("-Xmx" + libHdfsOptsXmx + "m")
         .build();
-    
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("kernel", kernelTemplate);
     
