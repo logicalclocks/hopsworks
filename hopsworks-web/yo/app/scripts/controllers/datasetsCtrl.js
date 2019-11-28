@@ -766,6 +766,7 @@ angular.module('hopsWorksApp')
             self.deleteSelected = function () {
                 if (Object.keys(self.selectedFiles).length === 1) {
                     self.deleteFile(self.selectedFiles[Object.keys(self.selectedFiles)[0]]);
+                    return;
                 }
                 ModalService.confirm('md', 'Confirm', getDeleteWarnMsg(undefined)).then(function (success) {
                   deleteMultipleFiles();
