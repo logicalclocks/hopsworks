@@ -63,11 +63,11 @@
         </div>
     </div>
     <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
-        <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.advanced = !sparkConfigCtrl.advanced" data-toggle="collapse" data-target="#pythonAdvanced">
+        <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.settings.advanced = !sparkConfigCtrl.settings.advanced" data-toggle="collapse" data-target="#pythonAdvanced">
             Advanced configuration
-            <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.advanced, 'fa-chevron-right': !sparkConfigCtrl.advanced}" style="margin-left: 5px"></i>
+            <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.settings.advanced, 'fa-chevron-right': !sparkConfigCtrl.settings.advanced}" style="margin-left: 5px"></i>
         </h5>
-        <div id="pythonAdvanced" ng-class="{'collapse in': sparkConfigCtrl.advanced, 'collapse': !sparkConfigCtrl.advanced}">
+        <div id="pythonAdvanced" ng-class="{'collapse in': sparkConfigCtrl.settings.advanced, 'collapse': !sparkConfigCtrl.settings.advanced}">
             <div ng-if="sparkConfigCtrl.isJupyter">
                 <div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitBackend">
                     <label class="control-label col-sm-3" for="baseDirEnterprise" uib-tooltip='Project relative path to use as Jupyter base path'>Base Directory: </label>

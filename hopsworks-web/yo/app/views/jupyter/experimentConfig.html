@@ -83,11 +83,11 @@
             </div>
         </div>
     </div>
-    <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.advanced = !sparkConfigCtrl.advanced" data-toggle="collapse" data-target="#expAdvanced">
+    <h5 class="j-tab-advanced" ng-click="sparkConfigCtrl.settings.advanced = !sparkConfigCtrl.settings.advanced" data-toggle="collapse" data-target="#expAdvanced">
         Advanced configuration
-        <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.advanced, 'fa-chevron-right': !sparkConfigCtrl.advanced}" style="margin-left: 5px"></i>
+        <i class="fa" ng-class="{'fa-chevron-down': sparkConfigCtrl.settings.advanced, 'fa-chevron-right': !sparkConfigCtrl.settings.advanced}" style="margin-left: 5px"></i>
     </h5>
-    <div id="expAdvanced" ng-class="{'collapse in': sparkConfigCtrl.advanced, 'collapse': !sparkConfigCtrl.advanced}">
+    <div id="expAdvanced" ng-class="{'collapse in': sparkConfigCtrl.settings.advanced, 'collapse': !sparkConfigCtrl.settings.advanced}">
         <div ng-include="'views/jupyter/commonAdvancedConfig.html'"></div>
     </div>
 </form>
