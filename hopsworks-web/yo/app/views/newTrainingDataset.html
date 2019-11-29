@@ -601,8 +601,7 @@
                                         <div class="col-sm-9">
                                             <ui-select ng-model="newTrainingDatasetCtrl.selectedS3Connector"
                                                        style="z-index: 100"
-                                                       ng-if="newTrainingDatasetCtrl.s3Connectors.length > 0"
-                                            >
+                                                       ng-if="newTrainingDatasetCtrl.s3Connectors.length > 0">
                                                 <ui-select-match placeholder="Select a S3 Connector">
                                                     <span>{{$select.selected.name}}</span>
                                                 </ui-select-match>
@@ -622,6 +621,25 @@
                                                     the training dataset.
                                                 </p>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="col-sm-12" style="margin-bottom: 20px">
+                                        <div class="col-sm-3">
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='The path within the bucket where to store the Training Dataset'></i>
+                                            <label style="margin-left:20px;" class="control-label">
+                                                Path (Optional):
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control"
+                                               placeholder="Path"
+                                               value="newTrainingDatasetCtrl.path"
+                                               ng-model="newTrainingDatasetCtrl.path"
+                                               autofocus
+                                               ng-if="newTrainingDatasetCtrl.sinkType === 1">
                                         </div>
                                     </div>
                                 </div>
