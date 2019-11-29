@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
-import io.hops.hopsworks.common.dao.featurestore.datavalidation.DataValidationController;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -2009,7 +2008,7 @@ public class Settings implements Serializable {
     SERVING("Models", "Contains models to be used for serving."),
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
     TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store"),
-    DATAVALIDATION(DataValidationController.DATA_VALIDATION_DATASET,
+    DATAVALIDATION("DataValidation",
         "Contains rules and results for Features validation");
 
     private final String name;

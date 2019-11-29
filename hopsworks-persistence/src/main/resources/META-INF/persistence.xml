@@ -115,29 +115,28 @@
     <class>io.hops.hopsworks.common.dao.featurestore.Featurestore</class>
     <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup</class>
     <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatistic</class>
     <class>io.hops.hopsworks.common.dao.featurestore.feature.FeaturestoreFeature</class>
     <class>io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector</class>
     <class>io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector</class>
     <class>io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs_trainingdataset.HopsfsTrainingDataset</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.external_trainingdataset.ExternalTrainingDataset</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumn</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.statistics.columns.StatisticColumn</class>
     <class>io.hops.hopsworks.common.dao.maggy.MaggyDriver</class>
     <class>io.hops.hopsworks.common.dao.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey</class>
     <class>io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScope</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.online_featuregroup.OnlineFeaturegroup</class>
+    <class>io.hops.hopsworks.common.dao.featurestore.featuregroup.online.OnlineFeaturegroup</class>
     <!-- Converters -->
     <class>io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusConverter</class>
     <class>io.hops.hopsworks.common.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.common.jupyter.JupyterConfigurationConverter</class>
     <class>io.hops.hopsworks.common.jupyter.DockerConfigurationConverter</class>
-    <class>io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatisticValueConverter</class>
-
+    <class>io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatisticValueConverter</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.common.dao.rstudio.RStudioSettings</class>
 

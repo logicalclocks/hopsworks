@@ -17,11 +17,11 @@
 package io.hops.hopsworks.common.dao.featurestore.featuregroup;
 
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached_featuregroup.CachedFeaturegroup;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.common.dao.featurestore.statisticcolumns.StatisticColumn;
-import io.hops.hopsworks.common.dao.featurestore.stats.FeaturestoreStatistic;
+import io.hops.hopsworks.common.dao.featurestore.statistics.columns.StatisticColumn;
+import io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.persistence.Basic;

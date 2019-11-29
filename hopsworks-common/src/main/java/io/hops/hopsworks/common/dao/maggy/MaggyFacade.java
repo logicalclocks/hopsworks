@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.common.dao.maggy;
 
-import io.hops.hopsworks.common.dao.featurestore.FeaturestoreFacade;
-
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -33,8 +31,6 @@ import java.util.logging.Logger;
  */
 @Stateless
 public class MaggyFacade {
-  
-  private static final Logger LOGGER = Logger.getLogger(FeaturestoreFacade.class.getName());
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

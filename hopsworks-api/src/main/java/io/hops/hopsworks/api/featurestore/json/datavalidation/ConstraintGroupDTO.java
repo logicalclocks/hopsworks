@@ -17,8 +17,8 @@
 package io.hops.hopsworks.api.featurestore.json.datavalidation;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.featurestore.datavalidation.ConstraintGroup;
-import io.hops.hopsworks.common.dao.featurestore.datavalidation.ConstraintGroupLevel;
+import io.hops.hopsworks.common.featurestore.datavalidation.ConstraintGroup;
+import io.hops.hopsworks.common.featurestore.datavalidation.ConstraintGroupLevel;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
