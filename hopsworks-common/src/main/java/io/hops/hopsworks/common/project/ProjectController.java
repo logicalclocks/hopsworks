@@ -2314,18 +2314,18 @@ public class ProjectController {
     activityFacade.persistActivity(activityPerformed, performedOn, performedBy, flag);
   }
 
-  public void addTourFilesToProject(String username, Project project,
+  public String addTourFilesToProject(String username, Project project,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
     TourProjectType projectType) throws DatasetException, HopsSecurityException, ProjectException,
     JobException, GenericException, ServiceException, UnsupportedEncodingException {
-
+    String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {
       String projectPath = Utils.getProjectPath(project.getName());
 
       switch (projectType) {
         case SPARK:
-          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+          datasetController.createDataset(user, project, tourFilesDataset,
             "files for guide projects", -1, false, true, true, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
           try {
@@ -2341,13 +2341,12 @@ public class ProjectController {
                 "More than one spark-examples*.jar found in {0}.", dir.
                   getAbsolutePath());
             }
-            String hdfsJarPath = projectPath + Settings.HOPS_TOUR_DATASET
-              + "/spark-examples.jar";
+            String hdfsJarPath = projectPath + tourFilesDataset + "/spark-examples.jar";
             udfso.copyToHDFSFromLocal(false, file[0].getAbsolutePath(), hdfsJarPath);
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(hdfsJarPath), udfso.getParentPermission(new Path(hdfsJarPath)));
-            udfso.setOwner(new Path(projectPath + Settings.HOPS_TOUR_DATASET + "/spark-examples.jar"),
+            udfso.setOwner(new Path(projectPath + tourFilesDataset + "/spark-examples.jar"),
               userHdfsName, datasetGroup);
 
           } catch (IOException ex) {
@@ -2356,16 +2355,15 @@ public class ProjectController {
           }
           break;
         case KAFKA:
-          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+          datasetController.createDataset(user, project, tourFilesDataset,
             "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesSparkFilename();
-          String kafkaExampleDst = projectPath + Settings.HOPS_TOUR_DATASET +
-            "/" + settings.getHopsExamplesSparkFilename();
+          String kafkaExampleDst = projectPath + tourFilesDataset + "/" + settings.getHopsExamplesSparkFilename();
           try {
             udfso.copyInHdfs(new Path(kafkaExampleSrc), new Path(kafkaExampleDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(kafkaExampleDst), udfso.getParentPermission(new Path(kafkaExampleDst)));
             udfso.setOwner(new Path(kafkaExampleDst), userHdfsName, datasetGroup);
@@ -2376,7 +2374,8 @@ public class ProjectController {
           }
           break;
         case DEEP_LEARNING:
-          datasetController.createDataset(user, project, Settings.HOPS_DL_TOUR_DATASET,
+          tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
+          datasetController.createDataset(user, project, tourFilesDataset,
             "sample training data for notebooks", -1, false, true, true, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
             + "/*";
@@ -2404,29 +2403,29 @@ public class ProjectController {
           }
           break;
         case FEATURESTORE:
-          datasetController.createDataset(user, project, Settings.HOPS_TOUR_DATASET,
+          datasetController.createDataset(user, project, tourFilesDataset,
             "files for guide projects", -1, false, true, true, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesFeaturestoreTourFilename();
           String featurestoreExampleJarDst = projectPath
-            + Settings.HOPS_TOUR_DATASET + "/" + settings.getHopsExamplesFeaturestoreTourFilename();
+            + tourFilesDataset + "/" + settings.getHopsExamplesFeaturestoreTourFilename();
           // Get the sample data and notebooks from /user/<super user>/featurestore_demo/
           String featurestoreExampleDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" +
             Settings.HOPS_FEATURESTORE_TOUR_DATA + "/data";
-          String featurestoreExampleDataDst = projectPath + Settings.HOPS_TOUR_DATASET;
+          String featurestoreExampleDataDst = projectPath + tourFilesDataset;
 
           try {
             //Move example .jar file to HDFS
             udfso.copyInHdfs(new Path(featurestoreExampleJarSrc), new Path(featurestoreExampleJarDst));
-            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            String datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
             String userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             udfso.setPermission(new Path(featurestoreExampleJarDst),
               udfso.getParentPermission(new Path(featurestoreExampleJarDst)));
             udfso.setOwner(new Path(featurestoreExampleJarDst), userHdfsName, datasetGroup);
             //Move example data and notebooks to HDFS
             udfso.copyInHdfs(new Path(featurestoreExampleDataSrc), new Path(featurestoreExampleDataDst));
-            datasetGroup = hdfsUsersController.getHdfsGroupName(project, Settings.HOPS_TOUR_DATASET);
+            datasetGroup = hdfsUsersController.getHdfsGroupName(project, tourFilesDataset);
             userHdfsName = hdfsUsersController.getHdfsUserName(project, user);
             Inode featurestoreDataDst = inodeController.getInodeAtPath(featurestoreExampleDataDst);
             datasetController.recChangeOwnershipAndPermission(new Path(featurestoreExampleDataDst),
@@ -2461,8 +2460,7 @@ public class ProjectController {
           sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
           sparkJobConfiguration.setDynamicAllocationMaxExecutors(3);
           sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
-          sparkJobConfiguration.setArgs(Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + Settings.HOPS_TOUR_DATASET +
-            "/data");
+          sparkJobConfiguration.setArgs(Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + tourFilesDataset + "/data");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
           Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
@@ -2476,6 +2474,7 @@ public class ProjectController {
           break;
       }
     }
+    return tourFilesDataset;
   }
 
   public List<YarnPriceMultiplicator> getYarnMultiplicators() {
