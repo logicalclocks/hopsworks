@@ -577,9 +577,9 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType);
+      String tourFilesDataset = projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType);
       //TestJob dataset
-      datasetController.generateReadme(udfso, "TestJob", readMeMessage, project.getName());
+      datasetController.generateReadme(udfso, tourFilesDataset, readMeMessage, project.getName());
     } catch (Exception ex) {
       projectController.cleanup(project, req.getSession().getId());
       throw ex;
