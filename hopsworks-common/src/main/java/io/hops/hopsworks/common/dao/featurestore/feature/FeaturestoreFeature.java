@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.dao.featurestore.feature;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.on_demand_featuregroup.OnDemandFeaturegroup;
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 
 import javax.persistence.Basic;

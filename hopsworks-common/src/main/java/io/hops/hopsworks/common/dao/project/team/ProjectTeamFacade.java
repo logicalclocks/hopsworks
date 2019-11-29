@@ -38,9 +38,7 @@
  */
 package io.hops.hopsworks.common.dao.project.team;
 
-import io.hops.hopsworks.common.dao.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 
@@ -60,8 +58,6 @@ public class ProjectTeamFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  @EJB
-  private FeaturestoreController featurestoreController;
   @EJB
   private ProjectServiceFacade projectServiceFacade;
 
@@ -255,15 +251,6 @@ public class ProjectTeamFacade {
 
   public void persistProjectTeam(ProjectTeam team) {
     em.persist(team);
-
-    // If the FeatureStore is enabled, add this user to the online FS DB
-    Project project = team.getProject();
-    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      Users user = team.getUser();
-//      if (user != null) {
-//        featurestoreController.createOnlineFeaturestoreUser(project, user);
-//      }
-    }
   }
 
   /**
