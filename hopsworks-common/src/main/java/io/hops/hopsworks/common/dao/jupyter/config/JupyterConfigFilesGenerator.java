@@ -185,6 +185,7 @@ public class JupyterConfigFilesGenerator {
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
         .setProject(project)
         .setHiveEndpoints(settings.getHiveServerHostName(false))
+        .setLibHdfsOpts("-Xmx512m")
         .build();
     
     Map<String, Object> dataModel = new HashMap<>(1);
