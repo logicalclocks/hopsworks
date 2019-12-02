@@ -55,12 +55,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import io.hops.hopsworks.common.dao.kafka.schemas.Subjects;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import io.hops.hopsworks.common.dao.project.Project;
 
@@ -73,19 +75,18 @@ import io.hops.hopsworks.common.dao.project.Project;
   @NamedQuery(name = "ProjectTopics.findAll",
           query = "SELECT p FROM ProjectTopics p"),
   @NamedQuery(name = "ProjectTopics.findByTopicName",
-          query
-          = "SELECT p FROM ProjectTopics p WHERE p.topicName = :topicName"),
+          query = "SELECT p FROM ProjectTopics p WHERE p.topicName = :topicName"),
   @NamedQuery(name = "ProjectTopics.findByProject",
-          query
-          = "SELECT p FROM ProjectTopics p WHERE p.project = :project"),
+          query = "SELECT p FROM ProjectTopics p WHERE p.project = :project"),
   @NamedQuery(name = "ProjectTopics.findByProjectAndTopicName",
-          query
-          = "SELECT p FROM ProjectTopics p WHERE p.project = :project " +
+          query = "SELECT p FROM ProjectTopics p WHERE p.project = :project " +
               "AND p.topicName = :topicName"),
-  @NamedQuery(name = "ProjectTopics.findBySchemaVersion",
-          query
-          = "SELECT p FROM ProjectTopics p WHERE p.schemaTopics.schemaTopicsPK.name "
-          + "= :schema_name AND p.schemaTopics.schemaTopicsPK.version = :schema_version")})
+  @NamedQuery(name = "ProjectTopics.findBySubjectAndVersion",
+          query = "SELECT p FROM ProjectTopics p WHERE p.subjects.subjectsPK.subject = :subject " +
+            "AND p.subjects.subjectsPK.version = :version AND p.project = :project"),
+  @NamedQuery(name = "ProjectTopics.findBySubject",
+          query = "SELECT p FROM ProjectTopics p WHERE p.project = :project AND " +
+            "p.subjects.subjectsPK.subject = :subject")})
 public class ProjectTopics implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -102,7 +103,8 @@ public class ProjectTopics implements Serializable {
   @Column(name = "topic_name")
   private String topicName;
 
-  @JoinColumn(name = "project_id", referencedColumnName = "id")
+  @PrimaryKeyJoinColumn(name = "project_id",
+    referencedColumnName = "id")
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   private Project project;
 
@@ -110,18 +112,19 @@ public class ProjectTopics implements Serializable {
   private Collection<TopicAcls> topicAclsCollection;
 
   @JoinColumns({
-      @JoinColumn(name = "schema_name", referencedColumnName = "name"),
-      @JoinColumn(name = "schema_version", referencedColumnName = "version")})
+      @JoinColumn(name = "subject", referencedColumnName = "subject"),
+      @JoinColumn(name = "subject_version", referencedColumnName = "version"),
+      @JoinColumn(name = "project_id", referencedColumnName = "project_id")})
   @ManyToOne(optional = false)
-  private SchemaTopics schemaTopics;
+  private Subjects subjects;
 
   public ProjectTopics() {
   }
 
-  public ProjectTopics(String topicName, Project project, SchemaTopics schemaTopics) {
+  public ProjectTopics(String topicName, Project project, Subjects subjects) {
     this.topicName = topicName;
     this.project = project;
-    this.schemaTopics = schemaTopics;
+    this.subjects = subjects;
   }
 
   public Integer getId() {
@@ -149,12 +152,12 @@ public class ProjectTopics implements Serializable {
     this.project = project;
   }
 
-  public SchemaTopics getSchemaTopics() {
-    return schemaTopics;
+  public Subjects getSubjects() {
+    return subjects;
   }
 
-  public void setSchemaTopics(SchemaTopics schemaTopics) {
-    this.schemaTopics = schemaTopics;
+  public void setSubjects(Subjects subjects) {
+    this.subjects = subjects;
   }
 
   @Override
@@ -170,7 +173,7 @@ public class ProjectTopics implements Serializable {
     if (topicAclsCollection != null ?
         !topicAclsCollection.equals(topics.topicAclsCollection) : topics.topicAclsCollection != null)
       return false;
-    return schemaTopics != null ? schemaTopics.equals(topics.schemaTopics) : topics.schemaTopics == null;
+    return subjects != null ? subjects.equals(topics.subjects) : topics.subjects == null;
   }
 
   @Override
@@ -179,7 +182,7 @@ public class ProjectTopics implements Serializable {
     result = 31 * result + topicName.hashCode();
     result = 31 * result + (project != null ? project.hashCode() : 0);
     result = 31 * result + (topicAclsCollection != null ? topicAclsCollection.hashCode() : 0);
-    result = 31 * result + (schemaTopics != null ? schemaTopics.hashCode() : 0);
+    result = 31 * result + (subjects != null ? subjects.hashCode() : 0);
     return result;
   }
 

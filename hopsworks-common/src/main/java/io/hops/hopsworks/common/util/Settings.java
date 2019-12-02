@@ -1266,7 +1266,10 @@ public class Settings implements Serializable {
   public static final int INFERENCE_SCHEMAVERSION = 2;
 
   //Kafka constants
-  public static final Set<String> KAFKA_SCHEMA_BLACKLIST = new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME));
+  public static final String PROJECT_COMPATIBILITY_SUBJECT = "projectcompatibility";
+  
+  public static final Set<String> KAFKA_SUBJECT_BLACKLIST =
+    new HashSet<>(Arrays.asList(INFERENCE_SCHEMANAME, PROJECT_COMPATIBILITY_SUBJECT));
 
   public synchronized String getLocalFlinkJarPath() {
     return getFlinkDir() + "/flink.jar";

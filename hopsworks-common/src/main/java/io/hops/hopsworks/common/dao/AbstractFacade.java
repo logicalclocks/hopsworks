@@ -66,6 +66,7 @@ public abstract class AbstractFacade<T> {
 
   public void save(T entity) {
     getEntityManager().persist(entity);
+    getEntityManager().flush();
   }
 
   public T update(T entity) {

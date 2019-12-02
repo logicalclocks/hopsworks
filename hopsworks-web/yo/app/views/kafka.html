@@ -263,7 +263,8 @@
             <td class="col-sm-1 form-inline" style="vertical-align: top !important;">
               <ui-select style="min-width: 70px;" name="schema_topic_version" theme="select2" style="margin-left: 10px"
                          ng-model="row.schemaVersion"
-                         ng-change="kafkaCtrl.updateSchemaVersion(row.name, row.schemaVersion)" required>
+                         ng-change="kafkaCtrl.updateTopicSubjectVersion(row.name, row.schemaName, row.schemaVersion)"
+                         required>
 
                 <ui-select-match placeholder="version">{{$select.selected}}</ui-select-match>
 

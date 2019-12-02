@@ -62,10 +62,11 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
+import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
+import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
@@ -103,6 +104,9 @@ import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.kafka.SchemasController;
+import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
+import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -125,6 +129,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -227,7 +232,7 @@ public class ProjectController {
   @EJB
   private JobFacade jobFacade;
   @EJB
-  private KafkaFacade kafkaFacade;
+  private SubjectsCompatibilityController subjectsCompatibilityController;
   @EJB
   private KafkaController kafkaController;
   @EJB
@@ -273,6 +278,10 @@ public class ProjectController {
   private ProjectTopicsFacade projectTopicsFacade;
   @EJB
   private TopicAclsFacade topicAclsFacade;
+  @EJB
+  private SubjectsController subjectsController;
+  @EJB
+  private SchemasController schemasController;
 
 
   /**
@@ -293,7 +302,7 @@ public class ProjectController {
   public Project createProject(ProjectDTO projectDTO, Users owner,
     List<String> failedMembers, String sessionId)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
-    ServiceException, FeaturestoreException {
+    ServiceException, FeaturestoreException, SchemaException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -717,14 +726,14 @@ public class ProjectController {
   private List<Future<?>> addService(Project project, ProjectServiceEnum service,
     Users user, DistributedFileSystemOps dfso)
     throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-    UserException, FeaturestoreException {
+    UserException, FeaturestoreException, SchemaException, KafkaException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public List<Future<?>> addService(Project project, ProjectServiceEnum service,
     Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
     throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-    UserException, FeaturestoreException {
+    UserException, FeaturestoreException, SchemaException, KafkaException {
 
     List<Future<?>> futureList = new ArrayList<>();
 
@@ -765,6 +774,16 @@ public class ProjectController {
             addKibana(project);
           }
         }
+        break;
+      case KAFKA:
+        subjectsCompatibilityController.setProjectCompatibility(project, SchemaCompatibility.BACKWARD);
+        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+          KafkaConst.INFERENCE_SCHEMA_VERSION_1, true);
+        subjectsCompatibilityController.setSubjectCompatibility(project, Settings.INFERENCE_SCHEMANAME,
+          SchemaCompatibility.NONE);
+        subjectsController.registerNewSubject(project, Settings.INFERENCE_SCHEMANAME,
+          KafkaConst.INFERENCE_SCHEMA_VERSION_2, true);
+        
         break;
     }
 

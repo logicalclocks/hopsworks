@@ -46,23 +46,29 @@ import io.hops.hopsworks.api.kafka.acls.AclsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
-import io.hops.hopsworks.common.dao.kafka.KafkaFacade;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
-import io.hops.hopsworks.common.dao.kafka.SchemaDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheckDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevelDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryErrorDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.kafka.KafkaController;
+import io.hops.hopsworks.common.kafka.SchemasController;
+import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
+import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -88,6 +94,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -95,14 +102,12 @@ import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class KafkaService {
+public class KafkaResource {
 
-  private static final Logger LOGGER = Logger.getLogger(KafkaService.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(KafkaResource.class.getName());
 
   @EJB
   private ProjectFacade projectFacade;
-  @EJB
-  private KafkaFacade kafkaFacade;
   @EJB
   private KafkaController kafkaController;
   @EJB
@@ -111,10 +116,16 @@ public class KafkaService {
   private SharedTopicsFacade sharedTopicsFacade;
   @EJB
   private AclBuilder aclBuilder;
+  @EJB
+  private SubjectsController subjectsController;
+  @EJB
+  private SubjectsCompatibilityController subjectsCompatibilityController;
+  @EJB
+  private SchemasController schemasController;
 
   private Project project;
 
-  public KafkaService() {
+  public KafkaResource() {
   }
   
   public void setProjectId(Integer projectId) {
@@ -324,117 +335,287 @@ public class KafkaService {
     return Response.ok(uri).entity(aclDto).build();
   }
 
-  //validate the new schema
-  @POST
-  @Path("/schema/validate")
+  @ApiOperation(value = "Get schema by its id.")
+  @GET
+  @Path("/schemas/ids/{id}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response ValidateSchemaForTopics(SchemaDTO schemaData) throws KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.validateSchema(schemaData);
-    switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
-      case INVALID:
-        json.setErrorMsg("schema is invalid");
-        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-      case INCOMPATIBLE:
-        json.setErrorMsg("schema is not backward compatible");
-        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-      default:
-        json.setSuccessMessage("schema is valid");
-        return Response.ok().entity(json).build();
+  public Response getSchema(@PathParam("id") Integer id) {
+    try {
+      SubjectDto dto = schemasController.findSchemaById(project, id);
+      return Response.ok().entity(dto).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
-
+  
+  @ApiOperation(value = "Get all registered subjects as a list.")
+  @GET
+  @Path("/subjects")
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getSubjects() {
+    List<String> subjects = subjectsController.getSubjects(project);
+    String array = Arrays.toString(subjects.toArray());
+    GenericEntity<String> entity = new GenericEntity<String>(array) {};
+    return Response.ok().entity(entity).build();
+  }
+  
+  @ApiOperation(value = "Check if the provided schema is registered under specified subject.")
   @POST
-  @Path("/schema/add")
+  @Path("/subjects/{subject}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response checkIfSubjectRegistered(@PathParam("subject") String subject, SubjectDto dto) {
+    try {
+      SubjectDto res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
+      return Response.ok().entity(res).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Delete a subject with all its versions and its compatibility if exists.")
+  @DELETE
+  @Path("/subjects/{subject}")
+  @Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteSubject(@PathParam("subject") String subject) throws KafkaException {
+    try {
+      List<Integer> versions = subjectsController.deleteSubject(project, subject);
+      String array = Arrays.toString(versions.toArray());
+      GenericEntity<String> entity = new GenericEntity<String>(array) {};
+      return Response.ok().entity(entity).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Delete a specific version of a subject (and its compatibility).")
+  @DELETE
+  @Path("/subjects/{subject}/versions/{version}")
+  @Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteSubjectsVersion(@PathParam("subject") String subject, @PathParam("version") String version)
+    throws KafkaException {
+    try {
+      Integer deleted = subjectsController.deleteSubjectsVersion(project, subject, version);
+      GenericEntity<Integer> entity = new GenericEntity<Integer>(deleted) {};
+      return Response.ok().entity(entity).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Upload a new schema.")
+  @POST
+  @Path("/subjects/{subject}/versions")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response postNewSchema(@PathParam("subject") String subject, SubjectDto dto)
+    throws KafkaException {
+    try {
+      SubjectDto res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
+      return Response.ok().entity(res).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Get list of versions of a registered subject.")
+  @GET
+  @Path("/subjects/{subject}/versions")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_PLAIN)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getSubjectVersions(@PathParam("subject") String subject) {
+    try {
+      List<Integer> versions = subjectsController.getSubjectVersions(project, subject);
+      String array = Arrays.toString(versions.toArray());
+      GenericEntity<String> entity = new GenericEntity<String>(array) {};
+      return Response.ok().entity(entity).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Get details of a specific version of a subject.")
+  @GET
+  @Path("/subjects/{subject}/versions/{version}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getSubjectDetails(@PathParam("subject") String subject, @PathParam("version") String version) {
+    try {
+      SubjectDto dto = subjectsController.getSubjectDetails(project, subject, version);
+      return Response.ok().entity(dto).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Get avro schema of a subject and version.")
+  @GET
+  @Path("/subjects/{subject}/versions/{version}/schema")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getSchema(@PathParam("subject") String subject, @PathParam("version") String version) {
+    try {
+      SubjectDto dto = subjectsController.getSubjectDetails(project, subject, version);
+      GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {};
+      return Response.ok().entity(entity).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Check if schema is compatible with a specific subject version.")
+  @POST
+  @Path("/compatibility/subjects/{subject}/versions/{version}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response checkSchemaCompatibility(@PathParam("subject") String subject,
+    @PathParam("version") String version, SubjectDto dto) {
+    try {
+      CompatibilityCheckDto isCompatible =
+        subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
+      return Response.ok().entity(isCompatible).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Get project compatibility level.")
+  @GET
+  @Path("/config")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response getProjectCompatibility() {
+    try {
+      CompatibilityLevelDto dto = subjectsCompatibilityController.getProjectCompatibilityLevel(project);
+      return Response.ok().entity(dto).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
+  
+  @ApiOperation(value = "Set project compatibility level.")
+  @PUT
+  @Path("/config")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response addTopicSchema(SchemaDTO schemaData) throws KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.validateSchema(schemaData);
-    switch (kafkaFacade.schemaBackwardCompatibility(schemaData)) {
-      case INVALID:
-        json.setErrorMsg("schema is invalid");
-        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-      case INCOMPATIBLE:
-        json.setErrorMsg("schema is not backward compatible");
-        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(json).build();
-      default:
-        kafkaFacade.addSchemaForTopics(schemaData);
-        json.setSuccessMessage("Schema for Topic created/updated successfuly");
-        return Response.ok().entity(json).build();
-    }
-  }
-
-  //This API used is to select a schema and its version from the list
-  //of available schemas when creating a topic. 
-  @GET
-  @Path("/schemas")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response listSchemasForTopics() {
-    List<SchemaDTO> schemaDtos = kafkaFacade.listSchemasForTopics();
-    GenericEntity<List<SchemaDTO>> schemas = new GenericEntity<List<SchemaDTO>>(schemaDtos) {};
-    return Response.ok().entity(schemas).build();
-  }
-  
-  
-  @GET
-  @Path("/{topic}/schema")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSchema(@PathParam("topic") String topic) {
-    SchemaDTO schemaDto = kafkaFacade.getSchemaForTopic(topic);
-    if (schemaDto != null) {
-      return Response.ok().
-        entity(schemaDto).build();
-    } else {
-      return Response.status(Response.Status.NOT_FOUND).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+  public Response setProjectCompatibility(CompatibilityDto dto) {
+    try {
+      CompatibilityDto result = subjectsCompatibilityController.setProjectCompatibility(project, dto);
+      return Response.ok().entity(result).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
   
-  @POST
-  @Path("/{topic}/schema/version/{version}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateSchemaVersion(@PathParam("topic") String topic, @PathParam("version") Integer version)
-  throws KafkaException {
-    kafkaController.updateTopicSchemaVersion(project, topic, version);
-    return Response.ok().build();
-  }
-  
-
-  //This API used to select a schema and its version from the list
-  //of available schemas when listing all the available schemas.
+  @ApiOperation(value = "Get subject's compatibility level.")
   @GET
-  @Path("/showSchema/{schemaName}/{schemaVersion}")
+  @Path("/config/{subject}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getSchemaContent(@PathParam("schemaName") String schemaName,
-      @PathParam("schemaVersion") Integer schemaVersion) throws KafkaException {
-    SchemaDTO schemaDtos = kafkaFacade.getSchemaContent(schemaName, schemaVersion);
-    return Response.ok().entity(schemaDtos).build();
+  public Response getSubjectCompatibility(@PathParam("subject") String subject) {
+    try {
+      CompatibilityLevelDto dto = subjectsCompatibilityController.getSubjectCompatibility(project, subject);
+      return Response.ok().entity(dto).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
   }
-
-  //delete the specified version of the given schema.
-  @DELETE
-  @Path("/removeSchema/{schemaName}/{version}")
+  
+  @ApiOperation(value = "Set subject's compatibility level.")
+  @PUT
+  @Path("/config/{subject}")
+  @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteSchema(@PathParam("schemaName") String schemaName, @PathParam("version") Integer version) throws
-      KafkaException {
-    RESTApiJsonResponse json = new RESTApiJsonResponse();
-    kafkaFacade.deleteSchema(schemaName, version);
-    json.setSuccessMessage("Schema version for topic removed successfuly");
-    return Response.ok().entity(json).build();
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+  public Response setSubjectCompatibility(@PathParam("subject") String subject, CompatibilityDto dto){
+    try {
+      CompatibilityDto result = subjectsCompatibilityController.setSubjectCompatibility(project, subject, dto);
+      return Response.ok().entity(result).build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
   }
-
+  
+  @ApiOperation(value = "Get topics subject details.")
+  @GET
+  @Path("/topics/{topic}/subjects")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTopicSubject(@PathParam("topic") String topic) throws KafkaException {
+    SubjectDto subjectDto = kafkaController.getSubjectForTopic(project, topic);
+    return Response.ok().entity(subjectDto).build();
+  }
+  
+  @ApiOperation(value = "Update subject version for a specified topic.")
+  @PUT
+  @Path("/topics/{topic}/subjects/{subject}/versions/{version}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateSubjectVersion(@PathParam("topic") String topic, @PathParam("subject") String subject,
+    @PathParam("version") Integer version) throws KafkaException {
+    try {
+      kafkaController.updateTopicSubjectVersion(project, topic, subject, version);
+      return Response.ok().build();
+    } catch (SchemaException e) {
+      SchemaRegistryErrorDto error =
+        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
+    }
+  }
 }

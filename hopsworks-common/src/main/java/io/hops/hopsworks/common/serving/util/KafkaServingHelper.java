@@ -182,7 +182,7 @@ public class KafkaServingHelper {
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
           "name: " + servingWrapper.getKafkaTopicDTO().getName()));
 
-    if (!topic.getSchemaTopics().getSchemaTopicsPK().getName().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
+    if (!topic.getSubjects().getSubjectsPK().getSubject().equalsIgnoreCase(Settings.INFERENCE_SCHEMANAME)) {
 
       throw new ServingException(RESTCodes.ServingErrorCode.BAD_TOPIC, Level.INFO,
         Settings.INFERENCE_SCHEMANAME + " required");

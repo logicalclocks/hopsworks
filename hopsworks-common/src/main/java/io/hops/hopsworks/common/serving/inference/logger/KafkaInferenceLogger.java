@@ -93,11 +93,11 @@ public class KafkaInferenceLogger implements InferenceLogger {
     }
     
     //Get the schema for the topic and the serializer
-    Schema avroSchema = new Schema.Parser().parse(serving.getKafkaTopic().getSchemaTopics().getContents());
+    Schema avroSchema = new Schema.Parser().parse(serving.getKafkaTopic().getSubjects().getSchema().getSchema());
     Injection<GenericRecord, byte[]> recordSerializer = GenericAvroCodecs.toBinary(avroSchema);
   
     //Get the version of the schema
-    int schemaVersion = serving.getKafkaTopic().getSchemaTopics().getSchemaTopicsPK().getVersion();
+    int schemaVersion = serving.getKafkaTopic().getSubjects().getVersion();
     
     // Create the GenericRecord from the avroSchema
     GenericData.Record inferenceRecord = new GenericData.Record(avroSchema);
