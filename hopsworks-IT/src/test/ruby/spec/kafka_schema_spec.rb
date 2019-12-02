@@ -298,7 +298,7 @@ describe "On #{ENV['OS']}" do
 	      end
 
 	      it 'gets topic subject details' do
-	        json, topic_name = add_topic(project.id, test_subject['subject'], "latest")
+	        json, topic_name = add_topic(project.id, test_subject['subject'], 1)
 	        get_topic_subject_details(project, topic_name)
 	        expect_status(200)
 	        expect_json(subject: test_subject['subject'])
