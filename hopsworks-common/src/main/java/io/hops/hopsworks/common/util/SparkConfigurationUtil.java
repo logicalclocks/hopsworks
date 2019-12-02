@@ -40,6 +40,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
+    String userSparkProperties = sparkJobConfiguration.getProperties();
 
     Map<String, ConfigProperty> sparkProps = new HashMap<>();
 
@@ -141,9 +142,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     if(!Strings.isNullOrEmpty(settings.getKafkaBrokersStr())) {
       addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", settings.getKafkaBrokersStr(), HopsUtils.IGNORE);
     }
-    addToSparkEnvironment(sparkProps, "LIBHDFS_OPTS", "-Xmx96m -Dlog4j.configuration=" +
-            settings.getHadoopSymbolicLinkDir() +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA",
-      HopsUtils.APPEND_SPACE);
     addToSparkEnvironment(sparkProps, "REST_ENDPOINT", settings.getRestEndpoint(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,"HOPSWORKS_USER", usersFullName, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,
@@ -157,6 +155,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE_PEM",
       settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM, HopsUtils.IGNORE);
+    addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
   
     //If DynamicExecutors are not enabled, set the user defined number
     //of executors
@@ -503,14 +502,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS, new ConfigProperty(
             Settings.SPARK_DRIVER_EXTRA_JAVA_OPTIONS, HopsUtils.APPEND_SPACE, extraJavaOptionsSb.toString()));
 
-    String userSparkProperties = sparkJobConfiguration.getProperties();
     Map<String, String> validatedSparkProperties = HopsUtils.validateUserProperties(userSparkProperties,
       settings.getSparkDir());
     // Merge system and user defined properties
-    Map<String, String> sparkParamsAfterMerge = HopsUtils.mergeHopsworksAndUserParams(sparkProps,
-      validatedSparkProperties);
-    return sparkParamsAfterMerge;
-
+    return HopsUtils.mergeHopsworksAndUserParams(sparkProps,
+        validatedSparkProperties);
   }
 
   private void addToSparkEnvironment(Map<String, ConfigProperty> sparkProps, String envName,
@@ -521,6 +517,41 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + envName,
             new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + envName,
                     replacementPolicy, value));
+  }
+
+  private void addLibHdfsOpts(String userSparkProperties, Settings settings, Map<String, ConfigProperty> sparkProps,
+                              SparkJobConfiguration sparkJobConfiguration) {
+
+    String defaultLibHdfsOpts = "-Dlog4j.configuration=" +
+        settings.getHadoopSymbolicLinkDir() +"/etc/hadoop/log4j.properties -Dhadoop.root.logger=ERROR,RFA";
+    Map<String, String> userProperties = HopsUtils.parseUserProperties(userSparkProperties);
+
+    if(userProperties.containsKey(Settings.SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS")) {
+      //if user supplied xmx then append what they provided
+      sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS",
+          new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS",
+              HopsUtils.APPEND_SPACE, defaultLibHdfsOpts));
+    } else {
+      addDefaultXmx(sparkProps, Settings.SPARK_YARN_APPMASTER_ENV, (int)(sparkJobConfiguration.getAmMemory()*0.2),
+          defaultLibHdfsOpts);
+    }
+
+    if(userProperties.containsKey(Settings.SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS")) {
+      //if user supplied xmx then append what they provided
+      sparkProps.put(Settings.SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS",
+          new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS",
+              HopsUtils.APPEND_SPACE, defaultLibHdfsOpts));
+    } else {
+      addDefaultXmx(sparkProps, Settings.SPARK_EXECUTOR_ENV, (int)(sparkJobConfiguration.getExecutorMemory()*0.2),
+          defaultLibHdfsOpts);
+    }
+  }
+
+  private void addDefaultXmx(Map<String, ConfigProperty> sparkProps, String property, int xmxValue,
+                             String defaultLibHdfsOpts) {
+    sparkProps.put(property + "LIBHDFS_OPTS",
+        new ConfigProperty(property + "LIBHDFS_OPTS", HopsUtils.IGNORE,
+            defaultLibHdfsOpts + " -Xmx" + xmxValue + "m"));
   }
 
   //Clean comma-separated resource string
