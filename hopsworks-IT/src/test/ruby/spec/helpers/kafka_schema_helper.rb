@@ -76,4 +76,11 @@ module SchemaHelper
   def get_subject_config(project, subject)
     get "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/kafka/config/#{subject}"
   end
+
+  def get_topic_subject_details(project, topic)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/kafka/topics/#{topic}/subjects"
+  end
+
+  def update_topic_subject_version(project, topic, subject, version)
+    put "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/kafka/topics/#{topic}/subjects/#{subject}/versions/#{version}"
 end

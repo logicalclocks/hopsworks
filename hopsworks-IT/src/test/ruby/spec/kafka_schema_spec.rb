@@ -296,6 +296,29 @@ describe "On #{ENV['OS']}" do
           expect_status(422)
           expect_json(error_code: 42202)
 	      end
+
+	      it 'gets topic subject details' do
+	        json, topic_name = add_topic(project.id, test_subject['subject'], "latest")
+	        get_topic_subject_details(project, topic_name)
+	        expect_status(200)
+	        expect_json(subject: test_subject['subject'])
+	        expect_json(version: 1)
+	        expect_json(schema: "[]")
+	      end
+
+	      it 'updates topic subject version' do
+	        subject = "subject_#{short_random_id}"
+          register_new_schema(project, subject, schema_v1)
+          register_new_schema(project, subject, schema_v2)
+          json, topic_name = add_topic(project.id, subject, 1)
+          get_topic_subject_details(project, topic_name)
+          expect_json(subject: subject)
+          expect_json(version: 1)
+          update_topic_subject_version(project, topic_name, subject, 2)
+          get_topic_subject_details(project, topic_name)
+          expect_json(subject: subject)
+          expect_json(version: 2)
+	      end
       end
     end
   end
