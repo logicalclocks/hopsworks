@@ -83,4 +83,5 @@ module SchemaHelper
 
   def update_topic_subject_version(project, topic, subject, version)
     put "#{ENV['HOPSWORKS_API']}/project/#{project.id.to_s}/kafka/topics/#{topic}/subjects/#{subject}/versions/#{version}"
+  end
 end
