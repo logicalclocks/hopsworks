@@ -61,4 +61,9 @@ public class SchemasFacade extends AbstractFacade<Schemas> {
     }
   }
   
+  @Override
+  public void save(Schemas entity) {
+    super.save(entity);
+    em.flush();
+  }
 }

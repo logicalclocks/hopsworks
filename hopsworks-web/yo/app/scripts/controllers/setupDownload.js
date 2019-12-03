@@ -84,9 +84,6 @@ angular.module('hopsWorksApp')
                           if (topicName === topic.name) {
                             KafkaService.getSchemaContent(self.projectId, topic.schemaName, topic.schemaVersion)
                               .then(function (success) {
-                                console.log("Schema Content: ", success.data);
-                                console.log("Schema: ", schema);
-                                console.log("Schema Content === Schema: ", schema === success.data);
                                 if(schema === success.data) {
                                   self.topicDone[index] = true;
                                   self.topicsMap[fileName] = topicName;
