@@ -122,10 +122,10 @@ angular.module('hopsWorksApp')
               self.num_partitions = 2;
               self.num_replicas = 1;
 
-              for (var i = 0; i < self.schemas.length; i++) {
-                if (angular.equals(self.schemas[i].name, self.tourService
+              for (var i = 0; i < self.subjects.length; i++) {
+                if (angular.equals(self.subjects[i], self.tourService
                   .kafkaSchemaName + "_" + self.projectId)) {
-                  self.schema = self.schemas[i];
+                  self.subject = self.subjects[i];
                   break;
                 }
               }
