@@ -691,4 +691,17 @@ public class FeaturegroupController {
     featuregroupFacade.persist(featuregroup);
     return featuregroup;
   }
+  
+  @TransactionAttribute(TransactionAttributeType.NEVER)
+  public FeaturegroupDTO getCachedFeaturegroupDTO(Featurestore featurestore,
+      Integer featuregroupId) throws FeaturestoreException {
+    FeaturegroupDTO featuregroupDTO = getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
+  
+    if(featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP)
+      throw new FeaturestoreException(
+          RESTCodes.FeaturestoreErrorCode.XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS,
+          Level.FINE);
+    
+    return featuregroupDTO;
+  }
 }

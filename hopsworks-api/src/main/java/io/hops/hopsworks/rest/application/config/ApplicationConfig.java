@@ -79,6 +79,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.airflow.AirflowService.class);
     register(io.hops.hopsworks.api.user.UsersResource.class);
     register(io.hops.hopsworks.api.user.apiKey.ApiKeyResource.class);
+    register(io.hops.hopsworks.api.metadata.XAttrsResource.class);
     
     register(io.hops.hopsworks.api.util.BannerService.class);
     register(io.hops.hopsworks.api.util.ClusterUtilisationService.class);

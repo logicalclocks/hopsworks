@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -738,5 +739,14 @@ public class DistributedFileSystemOps {
    */
   public byte[] getXAttr(Path path, String name) throws IOException {
     return dfs.getXAttr(path, name);
+  }
+  
+  /**
+   * Get all extended attribute for a given file/directory.
+   * @param path
+   * @throws IOException
+   */
+  public Map<String, byte[]> getXAttrs(Path path) throws IOException {
+    return dfs.getXAttrs(path);
   }
 }
