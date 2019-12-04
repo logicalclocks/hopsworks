@@ -343,8 +343,7 @@ public class RESTCodes {
     METADATA_MAX_SIZE_EXCEEDED(5, "Metadata is too long. The maximum " +
         "size for metadata and name is 13500 and 255 characters.",
         Response.Status.BAD_REQUEST),
-    METADATA_MISSING_FIELD(6, "Metadata missing field. Required fields are " +
-        "path, name, and metadata.",
+    METADATA_MISSING_FIELD(6, "Metadata missing attributed name.",
         Response.Status.BAD_REQUEST),
     METADATA_ERROR(7, "Error while processing the extended metadata.",
         Response.Status.INTERNAL_SERVER_ERROR);
@@ -1375,7 +1374,10 @@ public class RESTCodes {
     TRAININGDATASETJOB_MISSPECIFICATION(88, "Training dataset job is misspecified and cannot be created",
       Response.Status.BAD_REQUEST),
     FEATUREGROUP_EXISTS(89, "The feature group you are trying to create does already exist.",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS(90, "Attaching " +
+        "extended attributes is only supported for cached featuregroups.",
+        Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
