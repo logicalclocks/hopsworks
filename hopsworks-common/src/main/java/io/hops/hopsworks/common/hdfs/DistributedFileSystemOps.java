@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import io.hops.metadata.hdfs.entity.MetaStatus;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -610,7 +611,7 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public void setMetaEnabled(Path path) throws IOException {
-    this.dfs.setMetaEnabled(path, true);
+    this.dfs.setMetaStatus(path, MetaStatus.META_ENABLED);
   }
 
   /**
@@ -620,7 +621,7 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public void unsetMetaEnabled(Path path) throws IOException {
-    this.dfs.setMetaEnabled(path, false);
+    this.dfs.setMetaStatus(path, MetaStatus.DISABLED);
   }
   
   /**
