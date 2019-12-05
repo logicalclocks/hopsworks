@@ -124,6 +124,8 @@ public class FeaturestoreService {
   private TrainingDatasetJobControllerIface trainingDatasetJobControllerIface;
   @EJB
   private JobsBuilder jobsBuilder;
+  @Inject
+  private QueryConstructorService queryConstructorService;
 
   private Project project;
 
@@ -447,16 +449,9 @@ public class FeaturestoreService {
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
   }
-  
-  /**
-   * Verify that the name was provided as a path param
-   *
-   * @param featureStoreName the feature store name to verify
-   */
-  private void verifyNameProvided(String featureStoreName) {
-    if (com.google.common.base.Strings.isNullOrEmpty(featureStoreName)) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
-    }
+
+  @Path("/query")
+  public QueryConstructorService constructQuery() {
+    return queryConstructorService;
   }
-  
 }

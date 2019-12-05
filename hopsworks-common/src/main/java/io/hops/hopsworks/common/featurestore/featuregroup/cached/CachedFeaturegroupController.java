@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
  * Class controlling the interaction with the cached_feature_group table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class CachedFeaturegroupController {
   @EJB
   private CachedFeaturegroupFacade cachedFeaturegroupFacade;
@@ -104,7 +105,6 @@ public class CachedFeaturegroupController {
    * @return conn the JDBC connection
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     try {
       //Materialize certs
@@ -149,7 +149,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Users user, Featurestore featurestore)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
@@ -179,7 +178,6 @@ public class CachedFeaturegroupController {
    * @param rows rows result from running SHOW CREATE TABLE
    * @return String representation of SHOW CREATE TABLE in Hive
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private String parseSqlSchemaResult(List<RowValueQueryResult> rows) {
     return StringUtils.join(rows.stream().map
             (row -> StringUtils.join(row.getColumns().stream().map
@@ -195,7 +193,6 @@ public class CachedFeaturegroupController {
    * @param version          version of the featuregroup
    * @return                 the hive table name of the featuregroup (featuregroup_version)
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private String getTblName(String featuregroupName, Integer version) {
     return featuregroupName + "_" + version.toString();
   }
@@ -212,7 +209,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupPreview getFeaturegroupPreview(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
@@ -239,7 +235,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<RowValueQueryResult> getOfflineFeaturegroupPreview(FeaturegroupDTO featuregroupDTO,
     Featurestore featurestore, Users user) throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
@@ -260,7 +255,6 @@ public class CachedFeaturegroupController {
    * @param user the user making the request
    * @return the created entity
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
     throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
@@ -302,7 +296,6 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void createHiveFeaturegroup(CachedFeaturegroupDTO cachedFeaturegroupDTO, Featurestore featurestore,
     Users user, String featureStr, String tableName)
     throws FeaturestoreException, SQLException, HopsSecurityException {
@@ -323,7 +316,6 @@ public class CachedFeaturegroupController {
    * @param featuregroup the entity to convert
    * @return the converted DTO representation
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup) {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     List<FeatureDTO> featureDTOs =
@@ -380,7 +372,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<RowValueQueryResult> getSQLSchemaForFeaturegroup(
       FeaturegroupDTO featuregroupDTO,
       Project project, Users user, Featurestore featurestore)
@@ -401,7 +392,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void dropHiveFeaturegroup(
       FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
       FeaturestoreException, HopsSecurityException {
@@ -424,7 +414,6 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void dropMySQLFeaturegroup(
     CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
     FeaturestoreException {
@@ -446,7 +435,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void executeUpdateHiveQuery(String query, String databaseName, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     //Re-create the connection every time since the connection is database and user-specific
@@ -485,7 +473,6 @@ public class CachedFeaturegroupController {
    * @return list of parsed rows
    * @throws SQLException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<RowValueQueryResult> parseResultset(ResultSet rs) throws SQLException {
     ResultSetMetaData rsmd = rs.getMetaData();
     int columnsNumber = rsmd.getColumnCount();
@@ -517,7 +504,6 @@ public class CachedFeaturegroupController {
    * @throws HopsSecurityException
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<RowValueQueryResult> executeReadHiveQuery(
       String query, String databaseName, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
@@ -555,7 +541,6 @@ public class CachedFeaturegroupController {
    * @param user the user using the connection
    * @param project the project where the connection is used
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void closeConnection(Connection conn, Users user, Project project) {
     try {
       if (conn != null) {
@@ -577,7 +562,6 @@ public class CachedFeaturegroupController {
    * @param mysqlTable whether the DDL is to be used for Hive or MYSQL
    * @return feature schema string for creating hive or MYSQL table
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public String makeCreateTableColumnsStr(List<FeatureDTO> features, String featuregroupDoc, Boolean mysqlTable)
       throws FeaturestoreException {
     StringBuilder schemaStringBuilder = new StringBuilder();
@@ -680,7 +664,6 @@ public class CachedFeaturegroupController {
    * @return a DTO of the created feature group
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public CachedFeaturegroup syncHiveTableWithFeaturestore(Featurestore featurestore,
     CachedFeaturegroupDTO cachedFeaturegroupDTO) throws FeaturestoreException {
   
@@ -704,7 +687,6 @@ public class CachedFeaturegroupController {
    * @param hiveTblId the id of the Hive table in the Hive metastore
    * @return Entity of the created cached feature group
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private CachedFeaturegroup persistCachedFeaturegroupMetadata(Long hiveTblId, OnlineFeaturegroup onlineFeaturegroup) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTableId(hiveTblId);
@@ -724,7 +706,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO enableFeaturegroupOnline(
     Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO,
     Featuregroup featuregroup, Users user)
@@ -765,7 +746,6 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO disableFeaturegroupOnline(
     Featurestore featurestore, Featuregroup featuregroup, Users user)
     throws FeaturestoreException, SQLException {

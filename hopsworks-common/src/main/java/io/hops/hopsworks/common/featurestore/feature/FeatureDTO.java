@@ -61,10 +61,21 @@ public class FeatureDTO {
     this.onlineType = onlineType;
   }
 
+  public FeatureDTO(String name, String type, String description, Boolean primary) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+  }
+
   public FeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
     this.description = description;
+  }
+
+  public FeatureDTO(String name) {
+    this.name = name;
   }
 
   @XmlElement

@@ -130,7 +130,7 @@
           <groupId>org.apache.flink</groupId>
           <artifactId>*</artifactId>
         </exclusion>
-      </exclusions> 
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
