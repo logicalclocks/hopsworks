@@ -498,7 +498,6 @@ angular.module('hopsWorksApp')
               }
               self.showSchemas = 1;
               self.showTopics = -1;
-              self.listSubjects();
             };
 
             self.updateTopicSubjectVersion = function(topic, subject, version) {
