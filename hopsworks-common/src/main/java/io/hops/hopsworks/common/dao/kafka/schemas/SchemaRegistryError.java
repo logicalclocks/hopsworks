@@ -18,16 +18,16 @@ package io.hops.hopsworks.common.dao.kafka.schemas;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class SchemaRegistryErrorDto {
+public class SchemaRegistryError {
   
   private Integer error_code;
   
   private String message;
   
-  public SchemaRegistryErrorDto() {
+  public SchemaRegistryError() {
   }
   
-  public SchemaRegistryErrorDto(Integer error_code, String message) {
+  public SchemaRegistryError(Integer error_code, String message) {
     this.error_code = error_code;
     this.message = message;
   }

@@ -615,7 +615,6 @@ public class RESTCodes {
     SUBJECT_NOT_FOUND(40401, "Subject not found", Response.Status.NOT_FOUND),
     VERSION_NOT_FOUND(40402, "Version not found", Response.Status.NOT_FOUND),
     SCHEMA_NOT_FOUND(40403, "Schema not found", Response.Status.NOT_FOUND),
-    //TODO: make sure it's using the right code - incomplete docs
     INCOMPATIBLE_AVRO_SCHEMA(40901, "Incompatible Avro schema", Response.Status.CONFLICT),
     INVALID_AVRO_SCHEMA(42201, "Invalid Avro schema", Status.UNPROCESSABLE_ENTITY),
     INVALID_VERSION(42202, "Invalid version", Status.UNPROCESSABLE_ENTITY),

@@ -15,8 +15,8 @@
  */
 package io.hops.hopsworks.common.kafka;
 
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityDto;
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevelDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.Compatibility;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility;
@@ -46,25 +46,25 @@ public class SubjectsCompatibilityController {
   @EJB
   private SubjectsFacade subjectsFacade;
   
-  public CompatibilityLevelDto getProjectCompatibilityLevel(Project project) throws SchemaException {
+  public CompatibilityLevel getProjectCompatibilityLevel(Project project) throws SchemaException {
     SchemaCompatibility sc = subjectsCompatibilityFacade.getProjectCompatibility(project)
       .orElseThrow(() ->
         new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.FINE,
           "Project compatibility not found for project " + project.getName()))
       .getCompatibility();
-    return new CompatibilityLevelDto(sc);
+    return new CompatibilityLevel(sc);
   }
   
-  public CompatibilityDto getProjectCompatibility(Project project) throws SchemaException {
+  public Compatibility getProjectCompatibility(Project project) throws SchemaException {
     SchemaCompatibility sc = subjectsCompatibilityFacade.getProjectCompatibility(project)
       .orElseThrow(() ->
         new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.FINE,
           "Project compatibility not found for project " + project.getName()))
       .getCompatibility();
-    return new CompatibilityDto(sc);
+    return new Compatibility(sc);
   }
   
-  public CompatibilityDto setProjectCompatibility(Project project, CompatibilityDto dto) throws
+  public Compatibility setProjectCompatibility(Project project, Compatibility dto) throws
     SchemaException {
     if (dto == null || dto.getCompatibility() == null) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.INVALID_COMPATIBILITY, Level.WARNING,
@@ -74,7 +74,7 @@ public class SubjectsCompatibilityController {
     return getProjectCompatibility(project);
   }
   
-  public CompatibilityDto setProjectCompatibility(Project project, SchemaCompatibility sc) throws
+  public Compatibility setProjectCompatibility(Project project, SchemaCompatibility sc) throws
     SchemaException {
     if (sc == null) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.INVALID_COMPATIBILITY, Level.WARNING,
@@ -84,7 +84,7 @@ public class SubjectsCompatibilityController {
     return getProjectCompatibility(project);
   }
   
-  public CompatibilityLevelDto getSubjectCompatibility(Project project, String subject) throws SchemaException {
+  public CompatibilityLevel getSubjectCompatibility(Project project, String subject) throws SchemaException {
     if (subject == null) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.WARNING,
         "Subject cannot be null");
@@ -98,15 +98,15 @@ public class SubjectsCompatibilityController {
         "subject=" + subject);
     }
     
-    return new CompatibilityLevelDto(sc.get().getCompatibility());
+    return new CompatibilityLevel(sc.get().getCompatibility());
   }
   
-  public CompatibilityDto setSubjectCompatibility(Project project, String subject, CompatibilityDto dto)
+  public Compatibility setSubjectCompatibility(Project project, String subject, Compatibility dto)
     throws SchemaException {
     return setSubjectCompatibility(project, subject, dto.getCompatibility());
   }
   
-  public CompatibilityDto setSubjectCompatibility(Project project, String subject, SchemaCompatibility sc)
+  public Compatibility setSubjectCompatibility(Project project, String subject, SchemaCompatibility sc)
     throws SchemaException {
     if (sc == null) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.INVALID_COMPATIBILITY, Level.WARNING,
@@ -120,7 +120,7 @@ public class SubjectsCompatibilityController {
     }
   
     subjectsCompatibilityFacade.updateSubjectCompatibility(project, subject, sc);
-    CompatibilityLevelDto levelDto = getSubjectCompatibility(project, subject);
-    return new CompatibilityDto(levelDto.getCompatibilityLevel());
+    CompatibilityLevel levelDto = getSubjectCompatibility(project, subject);
+    return new Compatibility(levelDto.getCompatibilityLevel());
   }
 }

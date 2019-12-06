@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheckDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.Schemas;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
@@ -259,7 +259,7 @@ public class SubjectsController {
     return versions;
   }
   
-  public CompatibilityCheckDto checkIfSchemaCompatible(Project project, String subject, String version,
+  public CompatibilityCheck checkIfSchemaCompatible(Project project, String subject, String version,
     String schemaToTest) throws SchemaException {
     
     validateVersion(version);
@@ -288,7 +288,7 @@ public class SubjectsController {
     }
     
     boolean isCompatible = isCompatible(new Schema.Parser().parse(optional.get().getSchema().getSchema()), schema, sc);
-    return new CompatibilityCheckDto(isCompatible);
+    return new CompatibilityCheck(isCompatible);
   }
   
   public Integer deleteSubjectsVersion(Project project, String subject, String version)

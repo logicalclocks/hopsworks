@@ -18,14 +18,14 @@ package io.hops.hopsworks.common.dao.kafka.schemas;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class CompatibilityDto {
+public class Compatibility {
   
   private SchemaCompatibility compatibility;
   
-  public CompatibilityDto() {
+  public Compatibility() {
   }
   
-  public CompatibilityDto(SchemaCompatibility compatibility) {
+  public Compatibility(SchemaCompatibility compatibility) {
     this.compatibility = compatibility;
   }
   

@@ -117,8 +117,10 @@ public class TestRESTCodes {
     for (String key : keySet) {
       restErrorCodes = values.get(key);
       for (RESTErrorCode errorCode : restErrorCodes) {
-        assertTrue(errorCode.toString(), errorCode.getCode() >= errorCode.getRange());
-        assertTrue(errorCode.toString(), errorCode.getCode() < errorCode.getRange() + 10000);
+        if (!(errorCode instanceof RESTCodes.SchemaRegistryErrorCode)) {
+          assertTrue(errorCode.toString(), errorCode.getCode() >= errorCode.getRange());
+          assertTrue(errorCode.toString(), errorCode.getCode() < errorCode.getRange() + 10000);
+        }
       }
     }
   

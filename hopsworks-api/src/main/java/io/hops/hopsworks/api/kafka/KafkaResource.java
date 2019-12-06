@@ -55,10 +55,10 @@ import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheckDto;
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityDto;
-import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevelDto;
-import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryErrorDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
+import io.hops.hopsworks.common.dao.kafka.schemas.Compatibility;
+import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
+import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -347,8 +347,8 @@ public class KafkaResource {
       SubjectDto dto = schemasController.findSchemaById(project, id);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -378,8 +378,8 @@ public class KafkaResource {
       SubjectDto res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
       return Response.ok().entity(res).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -397,8 +397,8 @@ public class KafkaResource {
       GenericEntity<String> entity = new GenericEntity<String>(array) {};
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -416,8 +416,8 @@ public class KafkaResource {
       GenericEntity<Integer> entity = new GenericEntity<Integer>(deleted) {};
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -435,8 +435,8 @@ public class KafkaResource {
       SubjectDto res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
       return Response.ok().entity(res).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -455,8 +455,8 @@ public class KafkaResource {
       GenericEntity<String> entity = new GenericEntity<String>(array) {};
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -473,8 +473,8 @@ public class KafkaResource {
       SubjectDto dto = subjectsController.getSubjectDetails(project, subject, version);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -492,8 +492,8 @@ public class KafkaResource {
       GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {};
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -508,12 +508,12 @@ public class KafkaResource {
   public Response checkSchemaCompatibility(@PathParam("subject") String subject,
     @PathParam("version") String version, SubjectDto dto) {
     try {
-      CompatibilityCheckDto isCompatible =
+      CompatibilityCheck isCompatible =
         subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
       return Response.ok().entity(isCompatible).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -527,11 +527,11 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getProjectCompatibility() {
     try {
-      CompatibilityLevelDto dto = subjectsCompatibilityController.getProjectCompatibilityLevel(project);
+      CompatibilityLevel dto = subjectsCompatibilityController.getProjectCompatibilityLevel(project);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -543,13 +543,13 @@ public class KafkaResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
-  public Response setProjectCompatibility(CompatibilityDto dto) {
+  public Response setProjectCompatibility(Compatibility dto) {
     try {
-      CompatibilityDto result = subjectsCompatibilityController.setProjectCompatibility(project, dto);
+      Compatibility result = subjectsCompatibilityController.setProjectCompatibility(project, dto);
       return Response.ok().entity(result).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -563,11 +563,11 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getSubjectCompatibility(@PathParam("subject") String subject) {
     try {
-      CompatibilityLevelDto dto = subjectsCompatibilityController.getSubjectCompatibility(project, subject);
+      CompatibilityLevel dto = subjectsCompatibilityController.getSubjectCompatibility(project, subject);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -579,13 +579,13 @@ public class KafkaResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
-  public Response setSubjectCompatibility(@PathParam("subject") String subject, CompatibilityDto dto){
+  public Response setSubjectCompatibility(@PathParam("subject") String subject, Compatibility dto){
     try {
-      CompatibilityDto result = subjectsCompatibilityController.setSubjectCompatibility(project, subject, dto);
+      Compatibility result = subjectsCompatibilityController.setSubjectCompatibility(project, subject, dto);
       return Response.ok().entity(result).build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }
@@ -613,8 +613,8 @@ public class KafkaResource {
       kafkaController.updateTopicSubjectVersion(project, topic, subject, version);
       return Response.ok().build();
     } catch (SchemaException e) {
-      SchemaRegistryErrorDto error =
-        new SchemaRegistryErrorDto(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
+      SchemaRegistryError error =
+        new SchemaRegistryError(e.getErrorCode().getCode(), e.getErrorCode().getMessage());
       return Response.status(e.getErrorCode().getRespStatus()).entity(error).build();
     }
   }

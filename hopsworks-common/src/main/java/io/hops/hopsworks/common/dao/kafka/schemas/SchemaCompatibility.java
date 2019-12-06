@@ -15,6 +15,9 @@
  */
 package io.hops.hopsworks.common.dao.kafka.schemas;
 
+/* The values of SchemaCompatibility are defined in the Confluent Schema Registry v5.3.1 docs.
+ * Link: https://docs.confluent.io/5.3.1/schema-registry/develop/api.html#compatibility
+ */
 public enum SchemaCompatibility {
   BACKWARD,
   BACKWARD_TRANSITIVE,
