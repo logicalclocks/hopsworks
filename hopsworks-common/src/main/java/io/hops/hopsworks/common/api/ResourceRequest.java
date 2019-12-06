@@ -161,7 +161,10 @@ public class ResourceRequest {
     LIBRARIES,
     DATASETREQUESTS,
     APIKEY,
-    TEMPLATE;
+    TEMPLATE,
+    XATTRS,
+    FEATURESTORES,
+    FEATUREGROUPS;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

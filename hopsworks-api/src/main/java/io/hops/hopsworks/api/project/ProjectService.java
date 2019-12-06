@@ -52,6 +52,7 @@ import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.metadata.XAttrsResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
@@ -217,7 +218,9 @@ public class ProjectService {
   private ProjectActivitiesResource activitiesResource;
   @Inject
   private FeaturestoreService featurestoreService;
-
+  @Inject
+  private XAttrsResource xattrs;
+  
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
   @GET
@@ -851,5 +854,10 @@ public class ProjectService {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
-
+  
+  @Path("{projectId}/xattrs")
+  public XAttrsResource xattrs(@PathParam("projectId") Integer projectId) {
+    this.xattrs.setProject(projectId);
+    return xattrs;
+  }
 }
