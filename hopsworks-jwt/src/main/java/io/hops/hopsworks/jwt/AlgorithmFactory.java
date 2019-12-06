@@ -26,6 +26,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ws.rs.NotSupportedException;
@@ -89,7 +90,7 @@ public class AlgorithmFactory {
     return Algorithm.ECDSA512(keyProvider);
   }
 
-  private String getSigningKey(String keyId) throws SigningKeyNotFoundException {
+  private byte[] getSigningKey(String keyId) throws SigningKeyNotFoundException {
     Integer id;
     try {
       id = Integer.parseInt(keyId);
@@ -100,7 +101,7 @@ public class AlgorithmFactory {
     if (signingKey == null) {
       throw new SigningKeyNotFoundException("Signing key not found.");
     }
-    return signingKey.getSecret();
+    return Base64.getDecoder().decode(signingKey.getSecret());
   }
 
   private Algorithm getHS256Algorithm(String keyId) throws SigningKeyNotFoundException {
