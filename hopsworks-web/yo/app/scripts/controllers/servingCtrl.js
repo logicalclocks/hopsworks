@@ -92,7 +92,7 @@ angular.module('hopsWorksApp')
 
             this.selectFile = function () {
                 if (self.editServing.servingType === "TENSORFLOW") {
-                    ModalService.selectModelServing('lg', '*', '').then(
+                    ModalService.selectDir('lg', self.projectId, '*', '').then(
                         function (success) {
                             self.onDirSelected(success);
                         },
@@ -127,12 +127,13 @@ angular.module('hopsWorksApp')
                     name = artifactPathSplits[artifactPathSplits.length - 1];
                 }
 
-                datasetService.getContents(relativePath).then(
+                datasetService.getAllDatasets(relativePath).then(
                     function (success) {
                         var versions = [];
-                        for (var version in success.data) {
-                            if (!isNaN(success.data[version].name)) {
-                                versions.push(success.data[version].name);
+                        var files = success.data.items;
+                        for (var version in files) {
+                            if (!isNaN(files[version].attributes.name)) {
+                                versions.push(files[version].attributes.name);
                             } else {
                                 growl.error("Directory doesn't respect the required structure", {
                                     title: 'Error',

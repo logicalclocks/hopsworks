@@ -160,7 +160,7 @@
                                      ng-show="datasetsCtrl.selected !== dataset.name"
                                      ng-checked="false"
                                      title="Select dataset"
-                                     ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true); $event.stopPropagation();"
+                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true); $event.stopPropagation();"
                                      style="z-index: 999; margin-right: unset">
                         </md-checkbox>
                         <md-checkbox md-no-ink aria-label="Select" class="md-primary"
@@ -261,7 +261,7 @@
                                 </div>
                                 <div class="file-name" data-toggle="tooltip"
                                      title="Click on the bottom section to view metadata for this dataset."
-                                     ng-click="datasetsCtrl.select(dataset.name, dataset, $event); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true);">
+                                     ng-click="datasetsCtrl.selectDataset(dataset.name, dataset); metadataCtrl.setMetadataTemplate(dataset.attributes); datasetsCtrl.filePreview(dataset, false, true);">
                                 <span data-toggle="tooltip"
                                       title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
                                   {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
