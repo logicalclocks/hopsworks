@@ -37,7 +37,9 @@ public class AgentView {
   private String hostId;
   private String password;
   private String hadoopHome;
-  
+  @XmlElement(name = "zfskey")
+  private String zfskey;
+
   // Heartbeat
   @XmlElement(name = "agent-time")
   private Long agentTime;
@@ -58,7 +60,10 @@ public class AgentView {
   private List<String> condaReport;
   @XmlElement(name = "recover")
   private Boolean recover;
-  
+  @XmlElement(name = "zfskey-rotated")
+  private String zfskeyRotated;
+
+
   public AgentView() {
   }
   
@@ -169,7 +174,11 @@ public class AgentView {
   private void setRecover(Boolean recover) {
     this.recover = recover;
   }
-  
+
+  public String getZfskey() { return zfskey;  }
+
+  public void setZfskey(String zfskey) { this.zfskey = zfskey; }
+
   public AgentController.AgentHeartbeatDTO toAgentHeartbeatDTO() {
     final List<AgentController.AgentServiceDTO> services = new ArrayList<>();
     if (this.services != null) {
@@ -193,7 +202,7 @@ public class AgentView {
     }
     
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, numGpus, memoryCapacity,
-        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover);
+        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover, zfskey);
   }
   
   @Override

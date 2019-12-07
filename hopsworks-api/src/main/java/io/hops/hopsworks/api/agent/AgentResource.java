@@ -188,6 +188,6 @@ public class AgentResource {
       throw new IllegalArgumentException("Invalid registration request");
     }
     
-    return agentController.register(request.getHostId(), request.getPassword());
+    return agentController.register(request.getHostId(), request.getPassword(), request.getZfskey());
   }
 }

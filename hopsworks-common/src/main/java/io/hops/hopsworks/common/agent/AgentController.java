@@ -84,11 +84,14 @@ public class AgentController {
   private AgentLivenessMonitor agentLivenessMonitor;
 
 
-  public String register(String hostId, String password) {
+  public String register(String hostId, String password, String zfsKey) {
     Hosts host = hostsFacade.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);
     host.setHostname(hostId);
+    if (zfsKey != null && zfsKey.isEmpty() == false) {
+      host.setZfsKey(zfsKey);
+    }
     // Jim: We set the hostname as hopsworks::default pre-populates with the hostname,
     // but it's not the correct hostname for GCE.
     hostsFacade.storeHost(host);
@@ -97,6 +100,7 @@ public class AgentController {
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostsFacade.findByHostname(heartbeat.hostId);
+
     if (host == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
           "hostId: " + heartbeat.hostId);
@@ -119,8 +123,20 @@ public class AgentController {
       recoverUnfinishedCommands(host);
     }
 
+    boolean zfsKeyRequested = false;
+
+    if (heartbeat.zfsKey != null) {
+      if (heartbeat.zfsKey.compareTo("request") == 0) {
+        zfsKeyRequested = true;
+      } else { // key rotation
+        host.setZfsKeyRotated(host.getZfsKey());
+        host.setZfsKey(heartbeat.zfsKey);
+        hostsFacade.storeHost(host);
+      }
+    }
+
     final HeartbeatReplyDTO response = new HeartbeatReplyDTO();
-    addNewCommandsToResponse(host, response);
+    addNewCommandsToResponse(host, response,  zfsKeyRequested);
     return response;
   }
 
@@ -167,7 +183,7 @@ public class AgentController {
     }
   }
 
-  private void addNewCommandsToResponse(final Hosts host, final HeartbeatReplyDTO response) {
+  private void addNewCommandsToResponse(final Hosts host, final HeartbeatReplyDTO response, boolean zfsKeyRequested) {
     final List<CondaCommands> newCondaCommands = new ArrayList<>();
     final List<CondaCommands> allCondaCommands = condaCommandFacade.findByHost(host);
     for (final CondaCommands cc : allCondaCommands) {
@@ -189,6 +205,10 @@ public class AgentController {
     newSystemCommands.sort(ASC_COMPARATOR);
     response.setCondaCommands(newCondaCommands);
     response.setSystemCommands(newSystemCommands);
+    if (zfsKeyRequested) {
+      response.setZfsKey(host.getZfsKey());
+      response.setZfsKeyRotated(host.getZfsKeyRotated());
+    }
   }
 
   private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws ServiceException {
@@ -459,11 +479,14 @@ public class AgentController {
     private final List<CondaCommands> condaCommands;
     private final List<String> condaReport;
     private final Boolean recover;
+    private final String zfsKey;
+    private final String zfsKeyRotated;
 
     public AgentHeartbeatDTO(final String hostId, final Long agentTime, final Integer numGpus,
                              final Long memoryCapacity, final Integer cores, final String privateIp,
                              final List<AgentServiceDTO> services, final List<SystemCommand> systemCommands,
-                             final List<CondaCommands> condaCommands, final List<String> condaReport, Boolean recover) {
+                             final List<CondaCommands> condaCommands, final List<String> condaReport, Boolean recover,
+                             String zfsKey, String zfsKeyRotated) {
       this.hostId = hostId;
       this.agentTime = agentTime;
       this.numGpus = numGpus;
@@ -475,6 +498,8 @@ public class AgentController {
       this.condaCommands = condaCommands;
       this.condaReport = condaReport;
       this.recover = recover;
+      this.zfsKey = zfsKey;
+      this.zfsKeyRotated = zfsKeyRotated;
     }
 
     public String getHostId() {
@@ -516,6 +541,10 @@ public class AgentController {
     public Boolean getRecover() {
       return recover;
     }
+
+    public String getZfsKey() { return zfsKey; }
+
+    public String getZfsKeyRotated() { return zfsKeyRotated; }
   }
 
   public static class AgentServiceDTO {
