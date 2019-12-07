@@ -202,7 +202,7 @@ public class AgentView {
     }
     
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, numGpus, memoryCapacity,
-        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover, zfskey);
+        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover, zfskey, zfskeyRotated);
   }
   
   @Override
