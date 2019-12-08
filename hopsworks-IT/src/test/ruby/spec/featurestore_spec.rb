@@ -369,6 +369,18 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270038).to be true
         end
 
+        it "should not be able to add a cached offline featuregroup to the featurestore with an empty hive table name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil, featuregroup_name: "")
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270038).to be true
+        end
+
         it "should not be able to add a cached offline featuregroup to the featurestore with a hive table name containing upper case" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
