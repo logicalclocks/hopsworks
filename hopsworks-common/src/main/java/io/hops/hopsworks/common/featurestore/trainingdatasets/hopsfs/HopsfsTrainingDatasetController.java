@@ -106,7 +106,7 @@ public class HopsfsTrainingDatasetController {
    * @throws FeaturestoreException
    */
   private void verifyHopsfsTrainingDatasetName(String hopsfsTrainingDatasetName) throws FeaturestoreException {
-    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
     if (hopsfsTrainingDatasetName.length() > FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH ||
       !namePattern.matcher(hopsfsTrainingDatasetName).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,

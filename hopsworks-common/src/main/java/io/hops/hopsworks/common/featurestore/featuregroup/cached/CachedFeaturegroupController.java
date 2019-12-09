@@ -580,7 +580,7 @@ public class CachedFeaturegroupController {
   public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO, Boolean sync)
     throws FeaturestoreException {
 
-    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
 
     if(cachedFeaturegroupDTO.getName().length() > FeaturestoreConstants.CACHED_FEATUREGROUP_NAME_MAX_LENGTH ||
         !namePattern.matcher(cachedFeaturegroupDTO.getName()).matches()) {

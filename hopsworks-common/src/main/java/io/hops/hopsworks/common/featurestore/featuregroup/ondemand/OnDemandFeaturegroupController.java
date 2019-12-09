@@ -124,7 +124,7 @@ public class OnDemandFeaturegroupController {
    * @throws FeaturestoreException
    */
   public void verifyOnDemandFeaturegroupName(String name) throws FeaturestoreException {
-    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
     if(name.length() > FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH  ||
       !namePattern.matcher(name).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
@@ -158,7 +158,7 @@ public class OnDemandFeaturegroupController {
    */
   private void verifyOnDemandFeaturegroupFeatures(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
     if(featureDTOs != null && !featureDTOs.isEmpty()) {
-      Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+      Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
       if(!featureDTOs.stream().filter(f -> {
         return (!namePattern.matcher(f.getName()).matches() || f.getName().length() >
           FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);

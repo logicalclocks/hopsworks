@@ -84,7 +84,7 @@ public class ExternalTrainingDatasetController {
    * @throws FeaturestoreException
    */
   private void verifyExternalTrainingDatasetName(String name) throws FeaturestoreException {
-    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
     if (name.length() > FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH ||
       !namePattern.matcher(name).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
