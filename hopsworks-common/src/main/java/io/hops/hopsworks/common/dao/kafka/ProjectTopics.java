@@ -45,17 +45,14 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -82,11 +79,11 @@ import io.hops.hopsworks.common.dao.project.Project;
           query = "SELECT p FROM ProjectTopics p WHERE p.project = :project " +
               "AND p.topicName = :topicName"),
   @NamedQuery(name = "ProjectTopics.findBySubjectAndVersion",
-          query = "SELECT p FROM ProjectTopics p WHERE p.subjects.subjectsPK.subject = :subject " +
-            "AND p.subjects.subjectsPK.version = :version AND p.project = :project"),
+          query = "SELECT p FROM ProjectTopics p WHERE p.subjects.subject = :subject " +
+            "AND p.subjects.version = :version AND p.project = :project"),
   @NamedQuery(name = "ProjectTopics.findBySubject",
           query = "SELECT p FROM ProjectTopics p WHERE p.project = :project AND " +
-            "p.subjects.subjectsPK.subject = :subject")})
+            "p.subjects.subject = :subject")})
 public class ProjectTopics implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -102,19 +99,16 @@ public class ProjectTopics implements Serializable {
   @Size(min = 1, max = 255)
   @Column(name = "topic_name")
   private String topicName;
-
-  @PrimaryKeyJoinColumn(name = "project_id",
+  
+  @JoinColumn(name = "project_id",
     referencedColumnName = "id")
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @ManyToOne(optional = false)
   private Project project;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "projectTopics")
   private Collection<TopicAcls> topicAclsCollection;
 
-  @JoinColumns({
-      @JoinColumn(name = "subject", referencedColumnName = "subject"),
-      @JoinColumn(name = "subject_version", referencedColumnName = "version"),
-      @JoinColumn(name = "project_id", referencedColumnName = "project_id")})
+  @JoinColumn(name = "subject_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Subjects subjects;
 

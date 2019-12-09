@@ -106,10 +106,7 @@ public class Subjects implements Serializable {
   private Date createdOn;
   
   @JoinColumn(name = "project_id",
-    referencedColumnName = "id",
-    insertable = false,
-    updatable
-      = false)
+    referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
 

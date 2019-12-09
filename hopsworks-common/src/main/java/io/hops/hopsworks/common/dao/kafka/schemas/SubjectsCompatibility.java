@@ -78,9 +78,7 @@ public class SubjectsCompatibility implements Serializable {
   private SchemaCompatibility compatibility;
   
   @JoinColumn(name = "project_id",
-    referencedColumnName = "id",
-    insertable = false,
-    updatable = false)
+    referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
   
