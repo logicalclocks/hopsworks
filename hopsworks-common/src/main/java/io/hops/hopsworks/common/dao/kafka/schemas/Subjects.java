@@ -19,18 +19,20 @@ import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import io.hops.hopsworks.common.dao.project.Project;
@@ -43,15 +45,15 @@ import io.hops.hopsworks.common.dao.project.Project;
           query = "SELECT s FROM Subjects s WHERE s.project = :project"),
   @NamedQuery(name = "Subjects.findBySubject",
           query
-          = "SELECT s FROM Subjects s WHERE s.subjectsPK.subject = :subject AND " +
+          = "SELECT s FROM Subjects s WHERE s.subject = :subject AND " +
             "s.project = :project"),
   @NamedQuery(name = "Subjects.findByVersion",
           query
-          = "SELECT s FROM Subjects s WHERE s.subjectsPK.version = :version AND " +
+          = "SELECT s FROM Subjects s WHERE s.version = :version AND " +
             "s.project = :project"),
   @NamedQuery(name = "Subjects.findBySubjectAndVersion",
-          query = "SELECT s FROM Subjects s WHERE s.subjectsPK.subject = :subject AND " +
-            "s.subjectsPK.version = :version AND s.project = :project"),
+          query = "SELECT s FROM Subjects s WHERE s.subject = :subject AND " +
+            "s.version = :version AND s.project = :project"),
   @NamedQuery(name = "Subjects.findBySchema",
           query = "SELECT s FROM Subjects s WHERE s.schema = :schema AND " +
             "s.project = :project"),
@@ -59,24 +61,39 @@ import io.hops.hopsworks.common.dao.project.Project;
           query = "SELECT s FROM Subjects s WHERE s.createdOn = :createdOn AND " +
             "s.project = :project"),
   @NamedQuery(name = "Subjects.deleteBySubjectAndVersion",
-          query = "DELETE FROM Subjects s WHERE s.subjectsPK.subject = :subject AND " +
-            "s.subjectsPK.version = :version AND s.project = :project"),
+          query = "DELETE FROM Subjects s WHERE s.subject = :subject AND " +
+            "s.version = :version AND s.project = :project"),
   @NamedQuery(name = "Subjects.findBySubjectNameAndSchema",
-          query = "SELECT s FROM Subjects s WHERE s.subjectsPK.subject = :subject AND " +
+          query = "SELECT s FROM Subjects s WHERE s.subject = :subject AND " +
             "s.schema.schema = :schema AND s.project = :project"),
   @NamedQuery(name = "Subjects.findSetOfSubjects",
-          query = "SELECT DISTINCT(s.subjectsPK.subject) FROM Subjects s WHERE s.project = :project"),
+          query = "SELECT DISTINCT(s.subject) FROM Subjects s WHERE s.project = :project"),
   @NamedQuery(name = "Subjects.deleteSubject",
-          query = "DELETE FROM Subjects s WHERE s.project = :project AND s.subjectsPK.subject = :subject"),
+          query = "DELETE FROM Subjects s WHERE s.project = :project AND s.subject = :subject"),
   @NamedQuery(name = "Subjects.findLatestVersionOfSubject",
-          query = "SELECT s FROM Subjects s WHERE s.project = :project AND s.subjectsPK.subject = :subject " +
-            " ORDER BY s.subjectsPK.version DESC")})
+          query = "SELECT s FROM Subjects s WHERE s.project = :project AND s.subject = :subject " +
+            " ORDER BY s.version DESC")})
 public class Subjects implements Serializable {
 
   private static final long serialVersionUID = 1L;
   
-  @EmbeddedId
-  private SubjectsPK subjectsPK;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+  
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+    max = 255)
+  @Column(name = "\"subject\"")
+  private String subject;
+  
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "version")
+  private Integer version;
   
   @JoinColumn(name = "schema_id", referencedColumnName = "id")
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -88,37 +105,61 @@ public class Subjects implements Serializable {
   @Temporal(TemporalType.TIMESTAMP)
   private Date createdOn;
   
-  @PrimaryKeyJoinColumn(name = "project_id", referencedColumnName = "id")
-  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "project_id",
+    referencedColumnName = "id",
+    insertable = false,
+    updatable
+      = false)
+  @ManyToOne(optional = false)
   private Project project;
 
   public Subjects() {
   }
 
   public Subjects(String subject, int version, Schemas schema, Date createdOn, Project project) {
-    this.subjectsPK = new SubjectsPK(subject, version, project.getId());
+    this.subject = subject;
+    this.version = version;
     this.project = project;
     this.schema = schema;
     this.createdOn = createdOn;
   }
   
   public Subjects(String subject, int version, Project project) {
-    this.subjectsPK = new SubjectsPK(subject, version, project.getId());
+    this.subject = subject;
+    this.version = version;
+    this.project = project;
   }
   
   public Subjects(String subject, int version, Schemas schema, Project project) {
-    this.subjectsPK = new SubjectsPK(subject, version, project.getId());
+    this.subject = subject;
+    this.version = version;
     this.project = project;
     this.schema = schema;
     this.createdOn = new Date(System.currentTimeMillis());
   }
   
-  public SubjectsPK getSubjectsPK() {
-    return subjectsPK;
+  public Integer getId() {
+    return id;
   }
   
-  public void setSubjectsPK(SubjectsPK subjectsPK) {
-    this.subjectsPK = subjectsPK;
+  public void setId(Integer id) {
+    this.id = id;
+  }
+  
+  public String getSubject() {
+    return subject;
+  }
+  
+  public void setSubject(String subject) {
+    this.subject = subject;
+  }
+  
+  public Integer getVersion() {
+    return version;
+  }
+  
+  public void setVersion(Integer version) {
+    this.version = version;
   }
   
   public Schemas getSchema() {
@@ -137,8 +178,12 @@ public class Subjects implements Serializable {
     this.createdOn = createdOn;
   }
   
-  public Integer getVersion() {
-    return this.subjectsPK.getVersion();
+  public Project getProject() {
+    return project;
+  }
+  
+  public void setProject(Project project) {
+    this.project = project;
   }
   
   @Override
@@ -152,7 +197,7 @@ public class Subjects implements Serializable {
     
     Subjects subjects = (Subjects) o;
     
-    if (subjectsPK != null ? !subjectsPK.equals(subjects.subjectsPK) : subjects.subjectsPK != null) {
+    if (id != null ? !id.equals(subjects.id) : subjects.id != null) {
       return false;
     }
     if (schema != null ? !schema.equals(subjects.schema) : subjects.schema != null) {
@@ -163,7 +208,7 @@ public class Subjects implements Serializable {
   
   @Override
   public int hashCode() {
-    int result = subjectsPK != null ? subjectsPK.hashCode() : 0;
+    int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (schema != null ? schema.hashCode() : 0);
     result = 31 * result + (createdOn != null ? createdOn.hashCode() : 0);
     return result;
@@ -172,7 +217,7 @@ public class Subjects implements Serializable {
   @Override
   public String toString() {
     return "Subjects{" +
-      "subjectsPK=" + subjectsPK.toString() +
+      "id=" + id +
       ", schema=" + schema +
       ", createdOn=" + createdOn +
       '}';

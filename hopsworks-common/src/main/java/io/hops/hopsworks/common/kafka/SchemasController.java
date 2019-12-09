@@ -17,7 +17,7 @@ package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.schemas.Schemas;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemasFacade;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -65,10 +65,10 @@ public class SchemasController {
     }
   }
   
-  public SubjectDto findSchemaById(Project project, Integer id) throws SchemaException {
+  public SubjectDTO findSchemaById(Project project, Integer id) throws SchemaException {
     Schemas schema = schemasFacade.findSchemaById(project, id).orElseThrow(() ->
       new SchemaException(RESTCodes.SchemaRegistryErrorCode.SCHEMA_NOT_FOUND, Level.FINE,
         "project=" + project.getName() + ", schema_id=" + id));
-    return new SubjectDto(schema.getSchema());
+    return new SubjectDTO(schema.getSchema());
   }
 }

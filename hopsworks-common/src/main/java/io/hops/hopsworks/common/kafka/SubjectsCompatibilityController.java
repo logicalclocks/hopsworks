@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibilityFacade;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibilityPK;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.SchemaException;
@@ -89,9 +88,8 @@ public class SubjectsCompatibilityController {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.WARNING,
         "Subject cannot be null");
     }
-    
-    Optional<SubjectsCompatibility> sc = Optional.ofNullable(
-      subjectsCompatibilityFacade.find(new SubjectsCompatibilityPK(subject, project.getId())));
+  
+    Optional<SubjectsCompatibility> sc = subjectsCompatibilityFacade.findBySubject(project, subject);
     
     if (!sc.isPresent()) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.WARNING,

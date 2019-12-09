@@ -59,7 +59,7 @@ import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
 import io.hops.hopsworks.common.dao.kafka.schemas.Compatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaRegistryError;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.kafka.KafkaController;
@@ -344,7 +344,7 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getSchema(@PathParam("id") Integer id) {
     try {
-      SubjectDto dto = schemasController.findSchemaById(project, id);
+      SubjectDTO dto = schemasController.findSchemaById(project, id);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -373,9 +373,9 @@ public class KafkaResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response checkIfSubjectRegistered(@PathParam("subject") String subject, SubjectDto dto) {
+  public Response checkIfSubjectRegistered(@PathParam("subject") String subject, SubjectDTO dto) {
     try {
-      SubjectDto res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
+      SubjectDTO res = subjectsController.checkIfSchemaRegistered(project, subject, dto.getSchema());
       return Response.ok().entity(res).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -429,10 +429,10 @@ public class KafkaResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response postNewSchema(@PathParam("subject") String subject, SubjectDto dto)
+  public Response postNewSchema(@PathParam("subject") String subject, SubjectDTO dto)
     throws KafkaException {
     try {
-      SubjectDto res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
+      SubjectDTO res = subjectsController.registerNewSubject(project, subject, dto.getSchema(), false);
       return Response.ok().entity(res).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -470,7 +470,7 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getSubjectDetails(@PathParam("subject") String subject, @PathParam("version") String version) {
     try {
-      SubjectDto dto = subjectsController.getSubjectDetails(project, subject, version);
+      SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
       return Response.ok().entity(dto).build();
     } catch (SchemaException e) {
       SchemaRegistryError error =
@@ -488,7 +488,7 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getSchema(@PathParam("subject") String subject, @PathParam("version") String version) {
     try {
-      SubjectDto dto = subjectsController.getSubjectDetails(project, subject, version);
+      SubjectDTO dto = subjectsController.getSubjectDetails(project, subject, version);
       GenericEntity<String> entity = new GenericEntity<String>(dto.getSchema()) {};
       return Response.ok().entity(entity).build();
     } catch (SchemaException e) {
@@ -506,7 +506,7 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response checkSchemaCompatibility(@PathParam("subject") String subject,
-    @PathParam("version") String version, SubjectDto dto) {
+    @PathParam("version") String version, SubjectDTO dto) {
     try {
       CompatibilityCheck isCompatible =
         subjectsController.checkIfSchemaCompatible(project, subject, version, dto.getSchema());
@@ -597,8 +597,8 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getTopicSubject(@PathParam("topic") String topic) throws KafkaException {
-    SubjectDto subjectDto = kafkaController.getSubjectForTopic(project, topic);
-    return Response.ok().entity(subjectDto).build();
+    SubjectDTO subjectDTO = kafkaController.getSubjectForTopic(project, topic);
+    return Response.ok().entity(subjectDTO).build();
   }
   
   @ApiOperation(value = "Update subject version for a specified topic.")

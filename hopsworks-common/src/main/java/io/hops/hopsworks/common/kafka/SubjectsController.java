@@ -19,7 +19,7 @@ import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityCheck;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.Schemas;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDto;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
 import io.hops.hopsworks.common.dao.kafka.schemas.Subjects;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility;
@@ -80,7 +80,7 @@ public class SubjectsController {
     return versions;
   }
   
-  public SubjectDto getSubjectDetails(Project project, String subject, String version) throws SchemaException {
+  public SubjectDTO getSubjectDetails(Project project, String subject, String version) throws SchemaException {
     validateVersion(version);
     if (subjectsFacade.findSubjectByName(project, subject).isEmpty()) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.FINE, "subject=" +
@@ -96,8 +96,8 @@ public class SubjectsController {
     
     if (optional.isPresent()) {
       Subjects res = optional.get();
-      return new SubjectDto(res.getSchema().getId(),
-        res.getSubjectsPK().getSubject(),
+      return new SubjectDTO(res.getSchema().getId(),
+        res.getSubject(),
         res.getVersion(),
         res.getSchema().getSchema());
     }
@@ -107,7 +107,7 @@ public class SubjectsController {
     }
   }
   
-  public SubjectDto registerNewSubject(Project project, String subject, String schemaContent,
+  public SubjectDTO registerNewSubject(Project project, String subject, String schemaContent,
     boolean isEnablingKafkaService) throws KafkaException, SchemaException {
     validateSubject(subject, isEnablingKafkaService);
     Schema schema;
@@ -121,7 +121,7 @@ public class SubjectsController {
     Optional<Subjects> optionalSubject =
       subjectsFacade.findSubjectByNameAndSchema(project, subject, schema.toString());
     if (optionalSubject.isPresent()) {
-      return new SubjectDto(optionalSubject.get().getSchema().getId());
+      return new SubjectDTO(optionalSubject.get().getSchema().getId());
     }
     //check if schema compatible - return 409 of not
     if(!isCompatible(project, subject, schema)) {
@@ -136,7 +136,7 @@ public class SubjectsController {
   
     Schemas schemas = schemasController.addNewSchema(project, schema.toString());
     Integer id = subjectsFacade.insertNewSubject(project, subject, schemas, latestVersion + 1);
-    return new SubjectDto(id);
+    return new SubjectDTO(id);
   }
   
   public void validateSubject(String subject, boolean isEnablingKafkaService) throws KafkaException {
@@ -219,7 +219,7 @@ public class SubjectsController {
     }
   }
   
-  public SubjectDto checkIfSchemaRegistered(Project project, String subject, String schemaContent) throws
+  public SubjectDTO checkIfSchemaRegistered(Project project, String subject, String schemaContent) throws
     SchemaException {
     if (!subjectsFacade.getListOfSubjects(project).contains(subject)) {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SUBJECT_NOT_FOUND, Level.FINE, "subject=" +
@@ -237,7 +237,7 @@ public class SubjectsController {
       throw new SchemaException(RESTCodes.SchemaRegistryErrorCode.SCHEMA_NOT_FOUND, Level.FINE,
         "schema=" + schema.toString());
     }
-    return new SubjectDto(optional.get());
+    return new SubjectDTO(optional.get());
   }
   
   public List<Integer> deleteSubject(Project project, String subject) throws SchemaException, KafkaException {

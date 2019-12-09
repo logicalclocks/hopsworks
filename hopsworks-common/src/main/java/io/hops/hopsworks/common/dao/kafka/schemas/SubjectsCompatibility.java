@@ -19,16 +19,19 @@ import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
@@ -40,17 +43,33 @@ import java.io.Serializable;
 @NamedQueries({
   @NamedQuery(name = "SubjectsCompatibility.setProjectCompatibility",
     query = "UPDATE SubjectsCompatibility s SET s.compatibility = :compatibility " +
-      "WHERE s.subjectsCompatibilityPK.subject = 'projectcompatibility' AND s.project = :project"),
+      "WHERE s.subject = 'projectcompatibility' AND s.project = :project"),
   @NamedQuery(name = "SubjectsCompatibility.getProjectCompatibility",
     query = "SELECT s FROM SubjectsCompatibility s WHERE s.project = :project AND " +
-      "s.subjectsCompatibilityPK.subject = 'projectcompatibility'"),
+      "s.subject = 'projectcompatibility'"),
   @NamedQuery(name = "SubjectsCompatibility.getSubjectCompatibility",
     query = "SELECT s FROM SubjectsCompatibility s WHERE s.project = :project AND " +
-      "s.subjectsCompatibilityPK.subject = :subject"),
+      "s.subject = :subject"),
   @NamedQuery(name = "SubjectsCompatibility.setSubjectCompatibility",
     query = "UPDATE SubjectsCompatibility s SET s.compatibility = :compatibility " +
-      "WHERE s.subjectsCompatibilityPK.subject = :subject AND s.project = :project")})
+      "WHERE s.subject = :subject AND s.project = :project"),
+  @NamedQuery(name = "SubjectsCompatibility.findBySubject",
+    query = "SELECT s FROM SubjectsCompatibility s WHERE s.project = :project AND " +
+      "s.subject = :subject")})
 public class SubjectsCompatibility implements Serializable {
+  
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Basic(optional = false)
+  @Column(name = "id")
+  private Integer id;
+  
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+    max = 255)
+  @Column(name = "subject")
+  private String subject;
   
   @Basic(optional = false)
   @NotNull
@@ -65,24 +84,30 @@ public class SubjectsCompatibility implements Serializable {
   @ManyToOne(optional = false)
   private Project project;
   
-  @EmbeddedId
-  private SubjectsCompatibilityPK subjectsCompatibilityPK;
   
   public SubjectsCompatibility() {
   }
   
   public SubjectsCompatibility(String subject, Project project, SchemaCompatibility compatibility) {
-    this.subjectsCompatibilityPK = new SubjectsCompatibilityPK(subject, project.getId());
+    this.subject = subject;
+    this.project = project;
     this.compatibility = compatibility;
   }
   
-  public SubjectsCompatibilityPK getSubjectsCompatibilityPK() {
-    return subjectsCompatibilityPK;
+  public Integer getId() {
+    return id;
   }
   
-  public void setSubjectsCompatibilityPK(
-    SubjectsCompatibilityPK subjectsCompatibilityPK) {
-    this.subjectsCompatibilityPK = subjectsCompatibilityPK;
+  public void setId(Integer id) {
+    this.id = id;
+  }
+  
+  public String getSubject() {
+    return subject;
+  }
+  
+  public void setSubject(String subject) {
+    this.subject = subject;
   }
   
   public SchemaCompatibility getCompatibility() {
@@ -104,14 +129,14 @@ public class SubjectsCompatibility implements Serializable {
   @Override
   public int hashCode() {
     int hash = 0;
-    hash += (subjectsCompatibilityPK != null ? subjectsCompatibilityPK.hashCode() : 0);
+    hash += (id != null ? id.hashCode() : 0);
     return hash;
   }
   
   @Override
   public String toString() {
     return "io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility[ subject=" +
-      subjectsCompatibilityPK.getSubject() + ", project_id=" + subjectsCompatibilityPK.getProjectId() +
+      subject + ", project_id=" + project.getId() +
       ", compatibility=" + compatibility +"]";
   }
 }

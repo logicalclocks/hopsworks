@@ -19,38 +19,38 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /*
  * Confluent Schema Registry does not follow the Hopsworks RESTful
- * guidelines so SubjectDto doesn't extend RestDTO
+ * guidelines so SubjectDTO doesn't extend RestDTO
  */
 @XmlRootElement
-public class SubjectDto {
+public class SubjectDTO {
   
   private Integer id;
   private String subject;
   private Integer version;
   private String schema;
   
-  public SubjectDto() {
+  public SubjectDTO() {
   }
   
-  public SubjectDto(String schema) {
+  public SubjectDTO(String schema) {
     this.schema = schema;
   }
   
-  public SubjectDto(Integer id) {
+  public SubjectDTO(Integer id) {
     this.id = id;
   }
   
-  public SubjectDto(Integer id, String subject, Integer version, String schema) {
+  public SubjectDTO(Integer id, String subject, Integer version, String schema) {
     this.id = id;
     this.subject = subject;
     this.version = version;
     this.schema = schema;
   }
   
-  public SubjectDto(Subjects subject) {
+  public SubjectDTO(Subjects subject) {
     this.id = subject.getSchema().getId();
-    this.subject = subject.getSubjectsPK().getSubject();
-    this.version = subject.getSubjectsPK().getVersion();
+    this.subject = subject.getSubject();
+    this.version = subject.getVersion();
     this.schema = subject.getSchema().getSchema();
   }
   

@@ -40,6 +40,18 @@ public class SubjectsCompatibilityFacade extends AbstractFacade<SubjectsCompatib
     super(SubjectsCompatibility.class);
   }
   
+  public Optional<SubjectsCompatibility> findBySubject(Project project, String subject) {
+    try {
+      return Optional.of(
+        em.createNamedQuery("SubjectsCompatibility.findBySubject", SubjectsCompatibility.class)
+          .setParameter("project", project)
+          .setParameter("subject", subject)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
   public Optional<SubjectsCompatibility> getProjectCompatibility(Project project) {
     try {
       return Optional.of(
@@ -56,11 +68,14 @@ public class SubjectsCompatibilityFacade extends AbstractFacade<SubjectsCompatib
   }
   
   public void updateSubjectCompatibility(Project project, String subject, SchemaCompatibility sc) {
-    SubjectsCompatibility subjectsCompatibility = find(new SubjectsCompatibilityPK(subject, project.getId()));
+    SubjectsCompatibility subjectsCompatibility;
+    Optional<SubjectsCompatibility> optional = findBySubject(project, subject);
     boolean newSubjectsCompatibility = false;
-    if (subjectsCompatibility == null) {
+    if (!optional.isPresent()) {
       subjectsCompatibility = new SubjectsCompatibility(subject, project, sc);
       newSubjectsCompatibility = true;
+    } else {
+      subjectsCompatibility = optional.get();
     }
     
     subjectsCompatibility.setCompatibility(sc);
