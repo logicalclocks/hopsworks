@@ -558,7 +558,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectEnvironmentYml: function (size, regex, errorMsg) {
+            selectEnvironmentYml: function (size, projectId, regex, errorMsg) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectEnvYml.html',
                     controller: 'SelectEnvYmlCtrl as selectEnvYmlCtrl',
@@ -572,6 +572,9 @@ angular.module('hopsWorksApp')
                                         return $q.reject(error)
                                     });
                             }],
+                        projectId: function () {
+                            return projectId;
+                        },
                         regex: function () {
                             return regex;
                         },
@@ -607,30 +610,6 @@ angular.module('hopsWorksApp')
                         },
                         dirAllowed: function () {
                             return dirAllowed;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            selectModelServing: function (size, regex, errorMsg) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/selectModelServing.html',
-                    controller: 'SelectModelServingCtrl as selectModelServingCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        regex: function () {
-                            return regex;
-                        },
-                        errorMsg: function () {
-                            return errorMsg;
                         }
                     }
                 });

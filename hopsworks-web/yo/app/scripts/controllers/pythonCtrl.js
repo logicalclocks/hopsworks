@@ -429,7 +429,7 @@ angular.module('hopsWorksApp')
             };
 
             self.selectYmlFile = function () {
-                ModalService.selectEnvironmentYml('lg', self.selectFileRegexes['yml'.toUpperCase()], self.selectFileErrorMsgs['yml'.toUpperCase()]).then(
+                ModalService.selectEnvironmentYml('lg', self.projectId, self.selectFileRegexes['yml'.toUpperCase()], self.selectFileErrorMsgs['yml'.toUpperCase()]).then(
                     function (success) {
                         self.startLoading("Issuing commands to create environment ...")
 
