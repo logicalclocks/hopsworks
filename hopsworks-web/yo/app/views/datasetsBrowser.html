@@ -203,10 +203,6 @@
                           style="width: 16%; min-width: 16%">Owner
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.owner'"
                               ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('project'); datasetsCtrl.resetSelected();" ng-if="datasetsCtrl.isShared()"
-                          style="width: 10%; min-width: 10%">Project
-                        <span class="glyphicon sort-icon" ng-show="sortKey === 'project'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
                       <th ng-click="sort('attributes.modificationTime'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()" style="width: 18%; min-width: 18%">Last modified
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.modificationTime'"
                               ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
