@@ -597,6 +597,7 @@ public class KafkaController {
           pt.getProjectId(),
           topic.getSubjects().getSubject(),
           topic.getSubjects().getVersion(),
+          topic.getSubjects().getSchema().getSchema(),
           true))
         .ifPresent(topics::add);
     }
