@@ -286,6 +286,16 @@ angular.module('hopsWorksApp')
                 //The user changed their mind.
               });
             };
+
+            self.viewSharedSchemaContent = function(schemaName, schemaContent){
+
+              ModalService.viewSharedSchemaContent('lg', self.projectId, schemaName, schemaContent).then(
+                function (success) {
+
+                }, function (error) {
+                  //The user changed their mind.
+                });
+            };
             
             self.updateSchemaContent = function(schema){
                 

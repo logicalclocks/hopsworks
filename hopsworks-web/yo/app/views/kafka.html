@@ -324,6 +324,7 @@
               <thead>
                 <tr>
                   <th class="col-sm-10">Shared Topics</th>
+                  <th class="col-sm-1">Schema</th>
                   <th class="col-sm-1">Unshare</th>
                 </tr>
               </thead>
@@ -332,6 +333,13 @@
                 <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.sharedTopics">
 
                   <td><b>{{row.name}}</b></td>
+                  <td class="col-sm-2">
+                    <button type="button"
+                            ng-click="kafkaCtrl.viewSharedSchemaContent(row.name, row.schemaContent)"
+                            class="btn btn-sm btn-primary">
+                      View<i style="margin-left: 10px"></i>
+                    </button>
+                  </td>
                   <td>
                     <button type="button" ng-click="kafkaCtrl.unshareTopicFromProject(row.ownerProjectId, row.name)"
                             class="btn btn-sm btn-danger">
