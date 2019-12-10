@@ -41,8 +41,8 @@
  * Controller for the file selection dialog.
  */
 angular.module('hopsWorksApp')
-    .controller('SelectEnvYmlCtrl', ['$uibModalInstance', 'growl', 'regex', 'errorMsg',
-        function($uibModalInstance, growl, regex, errorMsg) {
+    .controller('SelectEnvYmlCtrl', ['$uibModalInstance', 'DatasetBrowserService', 'growl', 'projectId', 'regex', 'errorMsg',
+        function($uibModalInstance, DatasetBrowserService, growl, projectId, regex, errorMsg) {
 
             var self = this;
 
@@ -50,8 +50,9 @@ angular.module('hopsWorksApp')
             self.environmentYmlDef = {};
             self.envMode = "";
             self.isDir = false;
-
-
+            self.selected = -1;
+            self.datasetBrowser = new DatasetBrowserService(projectId, "ALL", 114);
+            self.datasetBrowser.getAll();
             /**
              * Close the modal dialog.
              * @returns {undefined}
@@ -90,42 +91,22 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.click = function(datasetsCtrl, file, isDirectory) {
-                if (file.dir) {
-                    self.select(file.path, true);
-                    datasetsCtrl.openDir(file);
+            self.selectEnvYml = function(pythonCtrl, index, file) {
+                if (file.attributes.dir) {
+                    self.select(file.attributes.path, true);
+                    self.datasetBrowser.select(file, index)
                 } else {
-                    self.select(file.path, false);
-                }
-            };
-
-
-
-
-            self.selectEnvYml = function(pythonCtrl, datasetsCtrl, file) {
-                if (file.dir) {
-                    self.select(file.path, true);
-                    datasetsCtrl.openDir(file);
-                } else {
-                    self.select(file.path, false);
+                    self.select(file.attributes.path, false);
                     if (self.envMode === 'CPU') {
-                        self.environmentYmlDef.cpuYmlPath = file.path;
+                        self.environmentYmlDef.cpuYmlPath = file.attributes.path;
                         self.envMode = "";
                     } else if (self.envMode === 'GPU') {
-                        self.environmentYmlDef.gpuYmlPath = file.path;
+                        self.environmentYmlDef.gpuYmlPath = file.attributes.path;
                         self.envMode = "";
                     } else if (self.envMode === 'ALL') {
-                        self.environmentYmlDef.allYmlPath = file.path;
+                        self.environmentYmlDef.allYmlPath = file.attributes.path;
                         self.envMode = "";
                     }
-                }
-            };
-
-            self.back = function(datasetsCtrl) {
-                if (datasetsCtrl.pathArray.length <= 1) {
-                    datasetsCtrl.getAllDatasets();
-                } else {
-                    datasetsCtrl.back();
                 }
             };
 
