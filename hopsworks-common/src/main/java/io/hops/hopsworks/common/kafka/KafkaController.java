@@ -129,8 +129,6 @@ public class KafkaController {
   private TopicAclsFacade topicAclsFacade;
   @EJB
   private ProjectController projectController;
-  @EJB
-  private SubjectsController subjectsController;
   
   public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
