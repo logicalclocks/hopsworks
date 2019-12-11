@@ -1628,5 +1628,53 @@ public class RESTCodes {
       return range;
     }
   }
-
+  
+  public enum ElasticErrorCode implements RESTErrorCode {
+    
+    SIGNING_KEY_ERROR(0, "Couldn't get or create the elk signing key",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    JWT_NOT_CREATED(1, "Jwt for elk couldn't be created",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    KIBANA_REQ_ERROR(2, "Error while executing Kibana request",
+        Response.Status.BAD_REQUEST),
+    ELASTIC_CONNECTION_ERROR(3, "Couldn't connect to Elasticsearch",
+        Response.Status.SERVICE_UNAVAILABLE),
+    ELASTIC_INTERNAL_REQ_ERROR(4, "Error while executing Elasticsearch request",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ELASTIC_QUERY_ERROR(5, "Error while executing a user query on " +
+        "Elasticsearch", Response.Status.BAD_REQUEST),
+    INVALID_ELASTIC_ROLE(6, "Invalid elastic security role",
+        Response.Status.INTERNAL_SERVER_ERROR);
+    
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+    private final int range = 330000;
+  
+    ElasticErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 }

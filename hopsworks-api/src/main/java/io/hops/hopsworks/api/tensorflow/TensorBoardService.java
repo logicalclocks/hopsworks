@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -121,8 +122,10 @@ public class TensorBoardService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context SecurityContext sc) throws
-      ServiceException, DatasetException, ProjectException, TensorBoardException, UnsupportedEncodingException {
+  public Response startTensorBoard(@PathParam("elasticId") String elasticId, @Context SecurityContext sc)
+      throws
+      ServiceException, DatasetException, ProjectException,
+      TensorBoardException, UnsupportedEncodingException, ElasticException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
 
