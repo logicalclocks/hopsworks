@@ -40,6 +40,7 @@ import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -86,6 +87,8 @@ public class FeaturegroupController {
   private StatisticColumnController statisticColumnController;
   @EJB
   private StatisticColumnFacade statisticColumnFacade;
+  @EJB
+  private FeaturestoreInputValidation featurestoreInputValidation;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -143,17 +146,20 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
     throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
-    
-    //Verify basic feature group input information
-    verifyFeaturegroupUserInput(featuregroupDTO, featurestore);
-    
+
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+
+    //Verify feature group input type
+    verifyFeaturegroupType(featuregroupDTO, featurestore);
+
     //Verify statistics input (more detailed input verification is delegated to lower level controllers)
     verifyStatisticsInput(featuregroupDTO);
-    
+
     //Extract metadata
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-  
+
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
     CachedFeaturegroup cachedFeaturegroup = null;
@@ -266,15 +272,29 @@ public class FeaturegroupController {
   public FeaturegroupDTO updateFeaturegroupMetadata(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
     Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
-    //Get jobs
-    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-    //Store jobs
-    featurestoreJobController.insertJobs(featuregroup, jobs);
-    //Update on-demand feature group metadata
+  
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_UPDATING_METADATA, Level.FINE,
+        ", updating metadata of featuregroups is currently only supported for on-demand feature groups.");
+    }
+
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+
+    //Verify feature group input type
+    verifyFeaturegroupType(featuregroupDTO, featurestore);
+
+    // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
         (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
+    
+    //Get jobs
+    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
+    //Store jobs
+    featurestoreJobController.insertJobs(featuregroup, jobs);
+
     return convertFeaturegrouptoDTO(featuregroup);
   }
   
@@ -583,14 +603,14 @@ public class FeaturegroupController {
   }
 
   /**
-   * Verify user input
+   * Verify input feature group type
    *
    * @param featuregroupDTO the provided user input
    * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  private void verifyFeaturegroupUserInput(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
+  private void verifyFeaturegroupType(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
     throws FeaturestoreException {
     if (featurestore == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
@@ -620,8 +640,12 @@ public class FeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturegroupDTO syncHiveTableWithFeaturestore(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
     Users user) throws FeaturestoreException {
-    //Verify basic feature group input information
-    verifyFeaturegroupUserInput(featuregroupDTO, featurestore);
+  
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+  
+    //Verify feature group input type
+    verifyFeaturegroupType(featuregroupDTO, featurestore);
   
     //Verify statistics input (more detailed input verification is delegated to lower level controllers)
     verifyStatisticsInput(featuregroupDTO);

@@ -33,7 +33,6 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
@@ -42,6 +41,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalT
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -85,6 +85,8 @@ public class TrainingDatasetController {
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
   private FeaturestoreJobController featurestoreJobController;
+  @EJB
+  private FeaturestoreInputValidation featurestoreInputValidation;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -137,9 +139,11 @@ public class TrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public TrainingDatasetDTO createTrainingDataset(Users user, Featurestore featurestore,
     TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
-    
-    //Verify input
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO, false);
+    // Verify input specific for training dataset
     verifyTrainingDatasetInput(trainingDatasetDTO, featurestore);
+    // Statistics
     verifyStatisticsInput(trainingDatasetDTO);
     
     //Get username
@@ -331,23 +335,23 @@ public class TrainingDatasetController {
       Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
   
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO, false);
+  
+    // Verify training dataset specific information
+    verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
+  
     //Get jobs
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
     //Store jobs
     featurestoreJobController.insertJobs(trainingDataset, jobs);
-  
+    
+    // Update metadata
+    trainingDataset.setDataFormat(trainingDataset.getDataFormat());
+    trainingDataset.setDescription(trainingDatasetDTO.getDescription());
+    TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
     // Store features
     featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
-    
-    if(!Strings.isNullOrEmpty(trainingDatasetDTO.getDataFormat())){
-      verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
-      trainingDataset.setDataFormat(trainingDataset.getDataFormat());
-    }
-    if(!Strings.isNullOrEmpty(trainingDatasetDTO.getDescription())){
-      verifyTrainingDatasetDescriptiopn(trainingDatasetDTO.getDescription());
-      trainingDataset.setDescription(trainingDatasetDTO.getDescription());
-    }
-    TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
     switch (updatedTrainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
         hopsfsTrainingDatasetController.updateHopsfsTrainingDatasetMetadata(trainingDataset.getHopsfsTrainingDataset(),
@@ -451,17 +455,6 @@ public class TrainingDatasetController {
   }
   
   /**
-   * Verify feature store for creating and updating training datasets
-   *
-   * @param featurestore the featurestore to verify
-   */
-  private void verifyFeaturestore(Featurestore featurestore) {
-    if (featurestore == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
-    }
-  }
-  
-  /**
    * Verify training dataset type
    *
    * @param trainingDatasetType the training dataset type to verify
@@ -512,54 +505,7 @@ public class TrainingDatasetController {
   }
   
   /**
-   * Verify user input training dataset description
-   *
-   * @param description the description to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetDescriptiopn(String description) throws FeaturestoreException {
-    if(!Strings.isNullOrEmpty(description) &&
-      description.length()
-        > FeaturestoreConstants.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_DESCRIPTION, Level.FINE,
-        ", the description of a training dataset should be less than "
-        + FeaturestoreConstants.TRAINING_DATASET_DESCRIPTION_MAX_LENGTH + " " + "characters");
-    }
-  }
-  
-  /**
-   * Verify user input features
-   *
-   * @param featureDTOS the features to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyTrainingDatasetFeatures(List<FeatureDTO> featureDTOS) throws FeaturestoreException {
-    if (featureDTOS != null && !featureDTOS.isEmpty()) {
-      if(!featureDTOS.stream().filter(f -> {
-        return (Strings.isNullOrEmpty(f.getName()) || f.getName().length() >
-          FeaturestoreConstants.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()){
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-          ", the feature name in a training dataset group should be less than "
-            + FeaturestoreConstants.TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH + " characters");
-      }
-      if(!featureDTOS.stream().filter(f -> {
-        if(Strings.isNullOrEmpty(f.getDescription())){
-          f.setDescription("-");
-        }
-        return (f.getDescription().length() >
-          FeaturestoreConstants.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-          ", the feature description in a training dataset should be less than "
-          + FeaturestoreConstants.TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
-      }
-    }
-  }
-  
-  /**
-   * Verify user input
+   * Verify training dataset specific input
    *
    * @param trainingDatasetDTO the provided user input
    * @param featurestore    the feature store to perform the operation against
@@ -567,12 +513,9 @@ public class TrainingDatasetController {
    */
   private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Featurestore featurestore)
     throws FeaturestoreException {
-    verifyFeaturestore(featurestore);
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
-    verifyTrainingDatasetDescriptiopn(trainingDatasetDTO.getDescription());
-    verifyTrainingDatasetFeatures(trainingDatasetDTO.getFeatures());
   }
   
   /**

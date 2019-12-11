@@ -416,11 +416,15 @@ module FeaturestoreHelper
     return json_result, training_dataset_name
   end
 
-  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id)
+  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil)
     type = "externalTrainingDatasetDTO"
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
-    training_dataset_name = "training_dataset_#{random_id}"
+    if name == nil
+      training_dataset_name = "training_dataset_#{random_id}"
+    else
+      training_dataset_name = name
+    end
     json_data = {
         name: training_dataset_name,
         jobs: [],

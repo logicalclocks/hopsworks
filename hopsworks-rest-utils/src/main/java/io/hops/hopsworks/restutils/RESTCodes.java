@@ -1335,9 +1335,6 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     ILLEGAL_HOPSFS_CONNECTOR_DATASET(37, "Illegal Hopsfs connector dataset",
       Response.Status.BAD_REQUEST),
-    ILLEGAL_FEATUREGROUP_NAME(38, "Illegal feature group name", Response.Status.BAD_REQUEST),
-    ILLEGAL_FEATUREGROUP_DESCRIPTION(39, "Illegal feature group description",
-      Response.Status.BAD_REQUEST),
     ILLEGAL_FEATURE_NAME(40, "Illegal feature name",
       Response.Status.BAD_REQUEST),
     ILLEGAL_FEATURE_DESCRIPTION(41, "Illegal feature description",
@@ -1359,11 +1356,8 @@ public class RESTCodes {
       " supported", Response.Status.BAD_REQUEST),
     TRAINING_DATASET_VERSION_NOT_PROVIDED(52, "Training Dataset version was not provided",
       Response.Status.BAD_REQUEST),
-    ILLEGAL_TRAINING_DATASET_NAME(53, "Illegal training dataset name", Response.Status.BAD_REQUEST),
     S3_CONNECTOR_ID_NOT_PROVIDED(54, "S3 Connector Id was not provided", Response.Status.BAD_REQUEST),
     HOPSFS_CONNECTOR_ID_NOT_PROVIDED(55, "HopsFS Connector Id was not provided", Response.Status.BAD_REQUEST),
-    ILLEGAL_TRAINING_DATASET_DESCRIPTION(56, "Illegal training dataset description",
-      Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_DATA_FORMAT(57, "Illegal training dataset data format",
       Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_VERSION(58, "Illegal training dataset version",
@@ -1428,7 +1422,11 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS(90, "Attaching " +
         "extended attributes is only supported for cached featuregroups.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_ENTITY_NAME(91, "Illegal feature store entity name", Response.Status.BAD_REQUEST),
+    ILLEGAL_ENTITY_DESCRIPTION(92, "Illegal featurestore entity description", Response.Status.BAD_REQUEST),
+    ERROR_UPDATING_METADATA(93, "An error occurred when trying to update feature store metadata",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
