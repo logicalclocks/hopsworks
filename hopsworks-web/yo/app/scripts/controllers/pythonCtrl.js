@@ -20,9 +20,10 @@
 
 angular.module('hopsWorksApp')
     .controller('PythonCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonService',
-        'ModalService', '$interval', '$mdDialog', 'UtilsService', 'VariablesService', 'MachineTypeService',
+        'ModalService', '$interval', '$mdDialog', 'UtilsService',
+        'VariablesService', 'MachineTypeService', 'ElasticService',
         function ($scope, $route, $routeParams, growl, $location, PythonService, ModalService, $interval, $mdDialog,
-                  UtilsService, VariablesService, MachineTypeService) {
+                  UtilsService, VariablesService, MachineTypeService, ElasticService) {
 
 
             var self = this;
@@ -381,22 +382,32 @@ angular.module('hopsWorksApp')
 
             self.showCommandsLogs = function (condaCommand, inProgress) {
                 var projectName = UtilsService.getProjectName();
-                var query = ""
+                var op = condaCommand.commands.items[0].op;
+                var artifact = ""
+                var artifact_version = ""
                 if (condaCommand.type == 'environmentDTO') {
-                    query = "operation: \"" + condaCommand.commands.items[0].op + "\" && artifact: \"" + projectName + "\" && artifact_version: \"" + condaCommand.pythonVersion + "\"";
+                   artifact = projectName;
+                   artifact_version = condaCommand.pythonVersion;
                 } else {
-                    query = "operation: \"" + condaCommand.commands.items[0].op + "\" && artifact: \"" + condaCommand.library + "\" && artifact_version: \"" + condaCommand.version + "\"";
+                   artifact = condaCommand.library;
+                   artifact_version = condaCommand.version;
                 }
-                if (inProgress) {
-                    // Return code -1 to 1 - INSTALLING -> SUCCEED/FAILED
-                    query += "&& return_code:[-1 TO 1]";
-                }
-                query = encodeURIComponent(query);
-                self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId
-                    + "#/discover?_g=()&_a=(columns:!('@timestamp',host,operation,artifact,artifact_version,return_code,return_message)"
-                    + ",index:'" + projectName.toLowerCase() + "_kagent-*',interval:auto,"
-                    + "query:(language:lucene,query:'" + query + "'),sort:!('@timestamp',desc))";
-                self.showLogs = true;
+
+                ElasticService.getJwtToken(self.projectId).then(
+                  function (success) {
+                   var kibanaUrl = success.data.kibanaUrl;
+                   self.kibanaUI = kibanaUrl + "projectId=" + self.projectId
+                                     + "#/discover?_g=()&_a=(columns:!(operation,artifact,artifact_version,return_code),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,"
+                                     + "index:'"+ projectName.toLowerCase() +"_kagent-*',key:operation,negate:!f,params:(query:" + op +"),type:phrase,"
+                                     + "value:" + op + "),query:(match:(operation:(query:"+ op +",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,"
+                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',key:artifact,negate:!f,params:(query:"+ artifact +"),type:phrase,"
+                                     + "value:"+ artifact +"),query:(match:(artifact:(query:"+ artifact +",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,"
+                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',key:artifact_version,negate:!f,params:(query:'" + artifact_version + "'),type:phrase,value:'" + artifact_version + "'),query:(match:(artifact_version:(query:'" + artifact_version + "',type:phrase))))),"
+                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
+                    self.showLogs = true;
+                  }, function (error) {
+                    showErrorGrowl(error);
+                 });
             };
 
             self.showMainUI = function() {

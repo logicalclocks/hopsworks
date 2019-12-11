@@ -61,7 +61,6 @@ angular.module('hopsWorksApp')
 
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
-            var elasticService = ElasticService();
 
             if (!angular.isUndefined($routeParams.datasetName)) {
               self.searchType = "datasetCentric";
@@ -255,7 +254,7 @@ angular.module('hopsWorksApp')
                 var searchHits;
                 //triggering a global search
                 self.searchResult = [];
-                elasticService.globalSearch(self.searchTerm)
+                ElasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
                           searchHits = response.data;
                           if (searchHits.length > 0) {
@@ -284,7 +283,7 @@ angular.module('hopsWorksApp')
                 var searchHits;
                 //triggering a global search
                 self.searchResult = [];
-                elasticService.globalSearch(self.searchTerm)
+                ElasticService.globalSearch(self.searchTerm)
                         .then(function (response) {
                           searchHits = response.data;
                           if (searchHits.length > 0) {
@@ -300,7 +299,7 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "projectCentric") {
-                elasticService.projectSearch($routeParams.projectID, self.searchTerm)
+                ElasticService.projectSearch($routeParams.projectID, self.searchTerm)
                         .then(function (response) {
                           self.searching = false;
                           var searchHits = response.data;
@@ -316,7 +315,7 @@ angular.module('hopsWorksApp')
                           growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
                         });
               } else if (self.searchType === "datasetCentric") {
-                elasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm)
+                ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm)
                         .then(function (response) {
                           self.searching = false;
                           var searchHits = response.data;

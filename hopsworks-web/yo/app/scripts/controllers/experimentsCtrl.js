@@ -19,9 +19,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('ExperimentsCtrl', ['$scope', '$timeout', 'growl', 'ProjectService', 'JobService', 'TensorBoardService', '$interval',
-        '$routeParams', '$route', '$sce', '$window',
+        '$routeParams', '$route', '$sce', '$window', 'ElasticService',
         function($scope, $timeout, growl, ProjectService, JobService, TensorBoardService, $interval,
-            $routeParams, $route, $sce, $window) {
+            $routeParams, $route, $sce, $window, ElasticService) {
 
             var self = this;
             self.appIds = [];
@@ -153,10 +153,12 @@ angular.module('hopsWorksApp')
 
             self.kibanaUI = function() {
                 startLoading("Loading Experiments Overview...");
-                ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                ElasticService.getJwtToken(self.projectId).then(
                     function (success) {
-                        var projectName = success.projectName;
-                        self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/dashboard/" + projectName.toLowerCase() + "_experiments_summary-dashboard?_g=" +
+                         var projectName = success.data.projectName;
+                         var kibanaUrl = success.data.kibanaUrl;
+                        self.ui = kibanaUrl + "projectId=" + self.projectId +
+                        "#/dashboard/" + projectName.toLowerCase() + "_experiments_summary-dashboard?_g=" +
                             "(refreshInterval:('$$hashKey':'object:161',display:'10%20seconds',pause:!f,section:1,value:10000),time:(from:now-15m,mode:quick,to:now))&_a=" +
                             "(description:'A%20summary%20of%20all%20experiments%20run%20in%20this%20project',filters:!(),fullScreenMode:!f,options:(darkTheme:!f,hidePanelTitles:!" +
                             "f,useMargins:!t),panels:!((gridData:(h:9,i:'1',w:12,x:0,y:0),id:" + projectName.toLowerCase() + "_experiments_summary-search,panelIndex:'1',type:search,version:'6.2.3'))," +

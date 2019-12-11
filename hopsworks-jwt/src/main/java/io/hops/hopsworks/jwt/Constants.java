@@ -32,4 +32,8 @@ public class Constants {
   public static final String ONE_TIME_JWT_SIGNING_KEY_NAME = "oneTimeKey";
   public static final String OLD_ONE_TIME_JWT_SIGNING_KEY_NAME = ONE_TIME_JWT_SIGNING_KEY_NAME + "_old";
   public static final long ONE_TIME_JWT_LIFETIME_MS = 60000l;
+  
+  public final static String ELK_SIGNING_KEY_NAME = "elk_jwt_signing_key";
+  public final static String ELK_VALID_PROJECT_NAME = "pn";
+  
 }

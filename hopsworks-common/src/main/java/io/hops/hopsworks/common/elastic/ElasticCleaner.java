@@ -38,9 +38,8 @@
  */
 package io.hops.hopsworks.common.elastic;
 
-import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.common.util.Settings;
-import org.elasticsearch.cluster.metadata.IndexMetaData;
 
 import javax.ejb.EJB;
 import javax.ejb.Schedule;
@@ -72,7 +71,8 @@ public class ElasticCleaner {
     LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
     try {
-      Map<String, IndexMetaData> indices = elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX
+      Map<String, Long> indices =
+          elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_SERVING_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_KAGENT_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX
@@ -80,7 +80,7 @@ public class ElasticCleaner {
       for (String index : indices.keySet()) {
         //Get current timestamp
         long currentTime = System.currentTimeMillis();
-        long indexCreationTime = indices.get(index).getCreationDate();
+        long indexCreationTime = indices.get(index);
         if (currentTime - indexCreationTime > settings.getElasticLogsIndexExpiration()) {
           //If index was created before the threshold, delete it asynchronously. If operation fails
           //we log it and the next day it will be retried.
@@ -88,7 +88,7 @@ public class ElasticCleaner {
           LOGGER.log(Level.INFO, "Deletedindex:{0}", index);
         }
       }
-    } catch (ServiceException ex) {
+    } catch (ElasticException ex) {
       LOGGER.log(Level.SEVERE, "Index deletion failed", ex);
     }
 

@@ -96,6 +96,7 @@ import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -442,8 +443,9 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(
       ProjectDTO projectDTO, @PathParam("projectId") Integer id,
-      @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
-      ServiceException, FeaturestoreException, UserException {
+      @Context SecurityContext sc)
+      throws ProjectException, DatasetException, HopsSecurityException,
+      ServiceException, FeaturestoreException, UserException, ElasticException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -521,8 +523,10 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
-      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException, UnsupportedEncodingException {
+      GenericException, KafkaException, ProjectException, UserException,
+      ServiceException, HopsSecurityException,
+      FeaturestoreException, JobException, UnsupportedEncodingException,
+      ElasticException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -597,8 +601,9 @@ public class ProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
-      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException {
+      GenericException, KafkaException, ProjectException, UserException,
+      ServiceException, HopsSecurityException,
+      FeaturestoreException, ElasticException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     List<String> failedMembers = null;

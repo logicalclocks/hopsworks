@@ -44,7 +44,6 @@
 
 angular.module('hopsWorksApp')
         .factory('ElasticService', ['$http', function ($http) {
-            return function () {
               var services = {
                 /**
                  * Do a global search hitting two indices: 'project' and 'datasets'
@@ -75,9 +74,15 @@ angular.module('hopsWorksApp')
                  */
                 datasetSearch: function (projectId, datasetName, searchTerm) {
                   return $http.get('/api/elastic/datasetsearch/' + projectId + '/' + datasetName + '/' + searchTerm);
+                },
+                /**
+                 Get Jwt Token for the user in the project to access Kibana and
+                 Elasticsearch.
+                */
+                getJwtToken : function(projectId){
+                  return $http.get('/api/elastic/jwt/' + projectId);
                 }
               };
               return services;
-            };
           }]);
 
