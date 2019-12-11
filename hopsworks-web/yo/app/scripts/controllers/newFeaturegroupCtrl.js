@@ -108,14 +108,8 @@ angular.module('hopsWorksApp')
             //Constants
             self.hiveDatabases = [self.featurestore.featurestoreName, self.projectName]
             self.hiveRegexp = self.settings.featurestoreRegex;
-            self.cachedFeaturegroupNameMaxLength = self.settings.cachedFeaturegroupFeatureNameMaxLength
-            self.cachedFeaturegroupDescriptionMaxLength = self.settings.cachedFeaturegroupFeatureDescriptionMaxLength
-            self.cachedFeaturegroupFeatureNameMaxLength = self.settings.cachedFeaturegroupFeatureNameMaxLength
-            self.cachedFeaturegroupFeatureDescriptionMaxLength = self.settings.cachedFeaturegroupFeatureDescriptionMaxLength
-            self.onDemandFeaturegroupNameMaxLength = self.settings.onDemandFeaturegroupNameMaxLength
-            self.onDemandFeaturegroupDescriptionMaxLength = self.settings.onDemandFeaturegroupDescriptionMaxLength
-            self.onDemandFeaturegroupFeatureNameMaxLength = self.settings.onDemandFeaturegroupFeatureNameMaxLength
-            self.onDemandFeaturegroupFeatureDescriptionMaxLength = self.settings.onDemandFeaturegroupFeatureDescriptionMaxLength
+            self.featurestoreEntityNameMaxLength = self.settings.featurestoreEntityNameMaxLength
+            self.featurestoreEntityDescriptionMaxLength = self.settings.featurestoreEntityDescriptionMaxLength
             self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
             self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
             self.onDemandFeaturegroupSqlQueryMaxLength = self.settings.onDemandFeaturegroupSqlQueryMaxLength
@@ -558,8 +552,7 @@ angular.module('hopsWorksApp')
                 }
 
                 //Validate Name and Description
-                if (!self.onDemandFeaturegroupName || self.onDemandFeaturegroupName.search(self.hiveRegexp) == -1
-                    || self.onDemandFeaturegroupName.length > self.onDemandFeaturegroupNameMaxLength) {
+                if (!self.onDemandFeaturegroupName || self.onDemandFeaturegroupName.search(self.hiveRegexp) == -1) {
                     self.onDemandFeaturegroupNameWrongValue = -1;
                     self.onDemandFeaturegroupWrong_values = -1;
                 } else {
@@ -568,7 +561,7 @@ angular.module('hopsWorksApp')
                 if (!self.onDemandFeaturegroupDoc || self.onDemandFeaturegroupDoc == undefined) {
                     self.onDemandFeaturegroupDoc = ""
                 }
-                if (self.onDemandFeaturegroupDoc && self.onDemandFeaturegroupDoc.length > self.onDemandFeaturegroupDescriptionMaxLength) {
+                if (self.onDemandFeaturegroupDoc && self.onDemandFeaturegroupDoc.length > self.featurestoreEntityDescriptionMaxLength) {
                     self.onDemandFeaturegroupDocWrongValue = -1;
                     self.onDemandFeaturegroupWrong_values = -1;
                 } else {
@@ -581,8 +574,7 @@ angular.module('hopsWorksApp')
                 var numberOfPrimary = 0
                 for (i = 0; i < self.onDemandFeaturegroupFeatures.length; i++) {
                     featureNames.push(self.onDemandFeaturegroupFeatures[i].name)
-                    if (self.onDemandFeaturegroupFeatures[i].name === "" || self.onDemandFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1 ||
-                        self.onDemandFeaturegroupFeatures[i].name.length > self.onDemandFeaturegroupFeatureNameMaxLength) {
+                    if (self.onDemandFeaturegroupFeatures[i].name === "" || self.onDemandFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1) {
                         self.onDemandFeaturegroupFeaturesNameWrongValue[i] = -1
                         self.onDemandFeaturegroupWrong_values = -1;
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
@@ -593,7 +585,7 @@ angular.module('hopsWorksApp')
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
                     }
                     if (self.onDemandFeaturegroupFeatures[i].description && self.onDemandFeaturegroupFeatures[i].description.length >
-                        self.onDemandFeaturegroupFeatureDescriptionMaxLength) {
+                        self.featurestoreEntityDescriptionMaxLength) {
                         self.onDemandFeaturegroupFeaturesDocWrongValue[i] = -1
                         self.onDemandFeaturegroupWrong_values = -1;
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
@@ -680,8 +672,7 @@ angular.module('hopsWorksApp')
                 }
 
                 //Validate Name and Description
-                if (!self.cachedFeaturegroupName || self.cachedFeaturegroupName.search(self.hiveRegexp) == -1
-                    || self.cachedFeaturegroupName.length > self.cachedFeaturegroupNameMaxLength) {
+                if (!self.cachedFeaturegroupName || self.cachedFeaturegroupName.search(self.hiveRegexp) == -1) {
                     self.cachedFeaturegroupNameWrongValue = -1;
                     self.cachedFeaturegroupWrong_values = -1;
                 } else {
@@ -690,7 +681,7 @@ angular.module('hopsWorksApp')
                 if (!self.cachedFeaturegroupDoc || self.cachedFeaturegroupDoc == undefined) {
                     self.cachedFeaturegroupDoc = ""
                 }
-                if (self.cachedFeaturegroupDoc && self.cachedFeaturegroupDoc.length > self.cachedFeaturegroupDescriptionMaxLength) {
+                if (self.cachedFeaturegroupDoc && self.cachedFeaturegroupDoc.length > self.featurestoreEntityDescriptionMaxLength) {
                     self.cachedFeaturegroupDocWrongValue = -1;
                     self.cachedFeaturegroupWrong_values = -1;
                 } else {
@@ -703,8 +694,7 @@ angular.module('hopsWorksApp')
                 var numberOfPrimary = 0
                 for (i = 0; i < self.cachedFeaturegroupFeatures.length; i++) {
                     featureNames.push(self.cachedFeaturegroupFeatures[i].name)
-                    if (self.cachedFeaturegroupFeatures[i].name === "" || self.cachedFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1 ||
-                        self.cachedFeaturegroupFeatures[i].name.length > self.cachedFeaturegroupFeatureNameMaxLength) {
+                    if (self.cachedFeaturegroupFeatures[i].name === "" || self.cachedFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1 ) {
                         self.cachedFeaturegroupFeaturesNameWrongValue[i] = -1
                         self.cachedFeaturegroupWrong_values = -1;
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
@@ -722,7 +712,7 @@ angular.module('hopsWorksApp')
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
                     }
                     if (self.cachedFeaturegroupFeatures[i].description && self.cachedFeaturegroupFeatures[i].description.length >
-                        self.cachedFeaturegroupFeatureDescriptionMaxLength) {
+                        self.featurestoreEntityDescriptionMaxLength) {
                         self.cachedFeaturegroupFeaturesDocWrongValue[i] = -1
                         self.cachedFeaturegroupWrong_values = -1;
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
