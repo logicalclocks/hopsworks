@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.UserProfileDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
@@ -64,6 +65,7 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -80,6 +82,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.GenericEntity;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -183,6 +186,109 @@ public class UsersController {
     }
     
     return null;
+  }
+  
+  public UserProfileDTO acceptUser(HttpServletRequest req, Users initiator, Integer userId, Users newUser)
+    throws UserException, ServiceException {
+    Users u = userFacade.find(userId);
+    if (u != null) {
+      if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
+        Collection<BbcGroup> groups = null;
+        if (newUser != null) {
+          groups = newUser.getBbcGroupCollection();
+        }
+        if (groups == null || groups.isEmpty()) {
+          BbcGroup bbcGroup = bbcGroupFacade.findByGroupName("HOPS_USER");
+          groups = new ArrayList<>();
+          groups.add(bbcGroup);
+        }
+        u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
+        u.setBbcGroupCollection(groups);
+        u = userFacade.update(u);
+        StringBuilder sb = new StringBuilder();
+        for (BbcGroup group : u.getBbcGroupCollection()) {
+          sb.append(group.getGroupName()).append(", ");
+        }
+        auditManager.registerRoleChange(initiator,
+          RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
+            name(), sb.toString(), u, req);
+        auditManager.registerRoleChange(initiator, UserAccountStatus.ACTIVATED_ACCOUNT.name(),
+          AccountsAuditActions.SUCCESS.name(), "", u, req);
+        sendConfirmationMail(u);
+      } else {
+        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
+          "status: "+ u.getStatus().name() + " to status " + UserAccountStatus.ACTIVATED_ACCOUNT.name());
+      }
+    } else {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    return new UserProfileDTO(u);
+  }
+  
+  private void sendConfirmationMail(Users user) throws ServiceException {
+    try {
+      //send confirmation email
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+        UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+        UserAccountsEmailMessages.
+          accountActivatedMessage(user.getEmail()));
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
+  }
+  
+  public UserProfileDTO rejectUser(HttpServletRequest req, Users initiator, Integer userId)
+    throws UserException, ServiceException {
+    Users u = userFacade.find(userId);
+    if (u != null) {
+      u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
+      u = userFacade.update(u);
+    
+      auditManager.registerRoleChange(initiator, UserAccountStatus.SPAM_ACCOUNT.name(),
+        AccountsAuditActions.SUCCESS.name(), "", u, req);
+      sendRejectionEmail(u);
+    } else {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    return new UserProfileDTO(u);
+  }
+  
+  private void sendRejectionEmail(Users user) throws ServiceException {
+    try {
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+        UserAccountsEmailMessages.ACCOUNT_REJECT,
+        UserAccountsEmailMessages.accountRejectedMessage());
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
+  }
+  
+  public UserProfileDTO pendUser(HttpServletRequest req, Integer userId) throws UserException, ServiceException {
+    Users u = userFacade.find(userId);
+    if (u != null) {
+      if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
+        u = resendAccountVerificationEmail(u, req);
+      } else {
+        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
+          "status: "+ u.getStatus().name() + ", to pending status");
+      }
+    } else {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    
+    return new UserProfileDTO(u);
+  }
+  
+  private Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
+    try {
+      authController.sendNewValidationKey(user, req);
+      return user;
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
   }
   
   /**
@@ -453,6 +559,34 @@ public class UsersController {
       AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user, req);
     userFacade.update(user);
     return user;
+  }
+  
+  public UserProfileDTO updateUser(Integer userIdToUpdate, HttpServletRequest req, Users newUser,
+    Users initiator) throws UserException {
+    Users u = userFacade.find(userIdToUpdate);
+    if (u == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+  
+    if (newUser.getStatus() != null) {
+      u.setStatus(newUser.getStatus());
+      auditManager.registerRoleChange(initiator, AccountsAuditActions.CHANGEDSTATUS.name(),
+        AccountsAuditActions.SUCCESS.name(), u.getStatusName(), u, req);
+    }
+    if (newUser.getBbcGroupCollection() != null) {
+      u.setBbcGroupCollection(newUser.getBbcGroupCollection());
+      StringBuilder sb = new StringBuilder();
+      for (BbcGroup group : u.getBbcGroupCollection()) {
+        sb.append(group.getGroupName()).append(", ");
+      }
+      auditManager.registerRoleChange(initiator, RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
+        name(), sb.toString(), u, req);
+    }
+    if (newUser.getMaxNumProjects() != null) {
+      u.setMaxNumProjects(newUser.getMaxNumProjects());
+    }
+    u = userFacade.update(u);
+    return new UserProfileDTO(u);
   }
 
   public SshKeyDTO addSshKey(int id, String name, String sshKey) {
@@ -739,5 +873,22 @@ public class UsersController {
       }
       userFacade.removeByEmail(u.getEmail());
     }
+  }
+  
+  public Users getUserById(Integer id) throws UserException {
+    if (id == null) {
+      throw new IllegalArgumentException("id can not be null");
+    }
+    Users user = userFacade.find(id);
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    return user;
+  }
+  
+  public GenericEntity<List<BbcGroup>> getAllGroups() {
+    List<BbcGroup> list = bbcGroupFacade.findAll();
+    return new GenericEntity<List<BbcGroup>>(list) {
+    };
   }
 }

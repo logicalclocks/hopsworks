@@ -36,14 +36,15 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.api.user;
+package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class UserProfileDTO extends RestDTO<UserDTO> {
+public class UserProfileDTO extends RestDTO<UserProfileDTO> {
 
+  private Integer id;
   private String firstname;
   private String lastname;
   private String email;
@@ -59,7 +60,31 @@ public class UserProfileDTO extends RestDTO<UserDTO> {
 
   public UserProfileDTO() {
   }
-
+  
+  public UserProfileDTO(Users user) {
+    this.id = user.getUid();
+    this.firstname = user.getFname();
+    this.lastname = user.getLname();
+    this.email = user.getEmail();
+    this.username = user.getUsername();
+    this.phoneNumber = user.getMobile();
+    this.accountType = user.getMode().toString();
+    this.twoFactor = user.getTwoFactor();
+    this.toursState = user.getToursState();
+    this.status = user.getStatus().getValue();
+    this.maxNumProjects = user.getMaxNumProjects();
+    this.numCreatedProjects = user.getNumCreatedProjects();
+    this.numActiveProjects = user.getNumActiveProjects();
+  }
+  
+  public Integer getId() {
+    return id;
+  }
+  
+  public void setId(Integer id) {
+    this.id = id;
+  }
+  
   public String getFirstname() {
     return firstname;
   }

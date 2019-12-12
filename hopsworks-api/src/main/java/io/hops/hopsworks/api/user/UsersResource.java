@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.dao.user.UserProfileDTO;
 import io.hops.hopsworks.common.dao.user.UserProjectDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
