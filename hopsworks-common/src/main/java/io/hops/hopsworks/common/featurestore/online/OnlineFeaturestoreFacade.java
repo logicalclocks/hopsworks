@@ -19,6 +19,8 @@ package io.hops.hopsworks.common.featurestore.online;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -35,6 +37,7 @@ import java.util.List;
  * Online-Featurestore has its own JDBC Connection Pool defined in persistence unit `featurestorePU`
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 public class OnlineFeaturestoreFacade {
   @PersistenceContext(unitName = "featurestorePU")
   private EntityManager em;
@@ -194,10 +197,21 @@ public class OnlineFeaturestoreFacade {
    * @param dbUser the database username to revoke privileges for
    */
   public void revokeUserPrivileges(String dbName, String dbUser) {
-    //Prepared statements with parameters can only be done for
-    //WHERE/HAVING Clauses, not names of tables or databases
     try{
-      em.createNativeQuery("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";").executeUpdate();
+      // If the grant does not exists, MySQL returns a 1141 error which JPA catches and logs it together with the stack
+      // trace, polluting the logs. To avoid this we first query the information_schema to check that the grant exists,
+      // if so, we remove it
+      int numGrants = (int) em.createNativeQuery(
+          "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")
+          .setParameter(1, dbUser)
+          .setParameter(2, dbName)
+          .getSingleResult();
+
+      if (numGrants != 0) {
+        //Prepared statements with parameters can only be done for
+        //WHERE/HAVING Clauses, not names of tables or databases
+        em.createNativeQuery("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";").executeUpdate();
+      }
     } catch (Exception e) {
       //This is fine since it might mean that the user does not have the privileges or does not exist
     }
