@@ -86,6 +86,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
+import io.hops.hopsworks.common.elastic.KibanaClient;
 import io.hops.hopsworks.common.experiments.TensorBoardController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
@@ -122,6 +123,7 @@ import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -172,10 +174,8 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -301,8 +301,9 @@ public class ProjectController {
    */
   public Project createProject(ProjectDTO projectDTO, Users owner,
     List<String> failedMembers, String sessionId)
-    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, HopsSecurityException,
-    ServiceException, FeaturestoreException, SchemaException {
+      throws DatasetException, GenericException, KafkaException,
+      ProjectException, UserException, HopsSecurityException,
+      ServiceException, FeaturestoreException, ElasticException, SchemaException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -725,15 +726,15 @@ public class ProjectController {
   // Used only during project creation
   private List<Future<?>> addService(Project project, ProjectServiceEnum service,
     Users user, DistributedFileSystemOps dfso)
-    throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-    UserException, FeaturestoreException, SchemaException, KafkaException {
+      throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
+      UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
     return addService(project, service, user, dfso, dfso);
   }
 
   public List<Future<?>> addService(Project project, ProjectServiceEnum service,
     Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-    throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-    UserException, FeaturestoreException, SchemaException, KafkaException {
+      throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
+      UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
 
     List<Future<?>> futureList = new ArrayList<>();
 
@@ -746,7 +747,7 @@ public class ProjectController {
       case JUPYTER:
         addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso);
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
-          addKibana(project);
+          addKibana(project, user);
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
         }
         break;
@@ -759,7 +760,7 @@ public class ProjectController {
       case JOBS:
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
           addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
-          addKibana(project);
+          addKibana(project, user);
         }
         break;
       case FEATURESTORE:
@@ -771,7 +772,7 @@ public class ProjectController {
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
             addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso);
-            addKibana(project);
+            addKibana(project, user);
           }
         }
         break;
@@ -839,10 +840,12 @@ public class ProjectController {
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-    throws ProjectException, DatasetException, HopsSecurityException, UserException {
+      throws ProjectException, DatasetException, HopsSecurityException,
+      UserException, ElasticException {
 
     addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
-    elasticController.createIndexPattern(project, project.getName().toLowerCase() + "_serving-*");
+    elasticController.createIndexPattern(project, user,
+        project.getName().toLowerCase() + "_serving-*");
     // If Kafka is not enabled for the project, enable it
     if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
       projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.KAFKA);
@@ -1622,8 +1625,10 @@ public class ProjectController {
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj, Users owner)
-    throws IOException, InterruptedException, HopsSecurityException, ServiceException, ProjectException,
-    GenericException, TensorBoardException, FeaturestoreException {
+      throws IOException, InterruptedException, HopsSecurityException,
+      ServiceException, ProjectException,
+      GenericException, TensorBoardException, FeaturestoreException,
+      ElasticException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -2535,17 +2540,20 @@ public class ProjectController {
    * Handles Kibana related indices and templates for projects.
    *
    * @param project project
+   * @param user user
    * @throws ProjectException ProjectException
    * @throws ServiceException ServiceException
    */
-  public void addKibana(Project project) throws ProjectException, ServiceException {
+  public void addKibana(Project project, Users user) throws ProjectException,
+      ServiceException, ElasticException {
 
     String projectName = project.getName().toLowerCase();
 
-    elasticController.createIndexPattern(project, projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
-    elasticController.createIndexPattern(project,
+    elasticController.createIndexPattern(project, user,
+        projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
+    elasticController.createIndexPattern(project, user,
       project.getName().toLowerCase() + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN);
-    elasticController.createIndexPattern(project,
+    elasticController.createIndexPattern(project, user,
       project.getName().toLowerCase() + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN);
     // Create index and index-pattern for experiment service
     String indexName = projectName + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
@@ -2553,7 +2561,7 @@ public class ProjectController {
       elasticController.createIndex(indexName);
     }
 
-    elasticController.createIndexPattern(project, indexName);
+    elasticController.createIndexPattern(project, user, indexName);
 
     String savedSummarySearch =
       "{\"attributes\":{\"title\":\"Experiments summary\",\"description\":\"\",\"hits\":0,\"columns\"" +
@@ -2564,11 +2572,9 @@ public class ProjectController {
         "{\\\"index\\\":\\\"" + indexName + "\\\",\\\"highlightAll\\\":true,\\\"version\\\":true" +
         ",\\\"query\\\":{\\\"language\\\":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":" +
         "[]}\"}}}";
-
-    Map<String, String> params = new HashMap<>();
-    params.put("op", "POST");
-    params.put("data", savedSummarySearch);
-    JSONObject resp = elasticController.sendKibanaReq(params, "search", indexName + "_summary-search", true);
+    
+    JSONObject resp = elasticController.updateKibana(project, user,
+        KibanaClient.KibanaType.Search, indexName + "_summary-search", savedSummarySearch);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_SEARCH_ERROR, Level.SEVERE,
@@ -2588,10 +2594,10 @@ public class ProjectController {
         ",\"kibanaSavedObjectMeta\":{\"searchSourceJSON\":\"{\\\"query\\\":{\\\"language\\\"" +
         ":\\\"lucene\\\",\\\"query\\\":\\\"\\\"},\\\"filter\\\":[],\\\"highlightAll\\\":" +
         "true,\\\"version\\\":true}\"}}}";
-    params.clear();
-    params.put("op", "POST");
-    params.put("data", savedSummaryDashboard);
-    resp = elasticController.sendKibanaReq(params, "dashboard", indexName + "_summary-dashboard", true);
+    
+    resp = elasticController.updateKibana(project, user,
+        KibanaClient.KibanaType.Dashboard, indexName + "_summary-dashboard",
+        savedSummaryDashboard);
 
     if (!(resp.has("updated_at") || (resp.has("statusCode") && resp.get("statusCode").toString().equals("409")))) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_DASHBOARD_ERROR, Level.SEVERE,
@@ -2599,10 +2605,8 @@ public class ProjectController {
     }
   }
 
-  public void removeElasticsearch(Project project) throws ServiceException {
-    Map<String, String> params = new HashMap<>();
-    params.put("op", "DELETE");
-
+  public void removeElasticsearch(Project project)
+      throws ServiceException, ElasticException {
     List<ProjectServiceEnum> projectServices = projectServicesFacade.
       findEnabledServicesForProject(project);
 
@@ -2616,31 +2620,29 @@ public class ProjectController {
 
     if (projectServices.contains(ProjectServiceEnum.JOBS) || projectServices.contains(ProjectServiceEnum.JUPYTER)) {
       //1. Delete visualizations, saved searches, dashboards
-      List<String> projectNames = new ArrayList<>();
-      projectNames.add(project.getName());
-      LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectNames);
-      elasticController.deleteProjectSavedObjects(projectNames);
+      LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectName);
+      elasticController.deleteProjectSavedObjects(projectName);
 
       //2. Delete logs Kibana Index
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern", projectName + "_logs-*");
+      JSONObject resp = elasticController.deleteIndexPattern(project, projectName + "_logs-*");
       LOGGER.log(Level.FINE, resp.toString(4));
-      resp = elasticController.sendKibanaReq(params, "index-pattern",
-        projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+      resp = elasticController.deleteIndexPattern(project,
+          projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
       LOGGER.log(Level.FINE, resp.toString(4));
       LOGGER.log(Level.FINE, "removeElasticsearch-2:{0}", projectName);
 
       //3. Delete beam job service and sdk worker Kibana indices
       String beamjobserviceIndex = projectName + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN;
       String beamsdkharnessIndex = projectName + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN;
-      resp = elasticController.sendKibanaReq(params, "index-pattern", beamjobserviceIndex, false);
+      resp = elasticController.deleteIndexPattern(project, beamjobserviceIndex);
       LOGGER.log(Level.FINE, "Deleting beamjobserviceIndex resp:" + resp.toString(4));
-      resp = elasticController.sendKibanaReq(params, "index-pattern", beamsdkharnessIndex, false);
+      resp = elasticController.deleteIndexPattern(project, beamsdkharnessIndex);
       LOGGER.log(Level.FINE, "Deleting beamsdkharnessIndex resp:" + resp.toString(4));
       LOGGER.log(Level.FINE, "removeElasticsearch-3:{0}", projectName);
     }
 
     if (projectServices.contains(ProjectServiceEnum.SERVING)) {
-      JSONObject resp = elasticController.sendKibanaReq(params, "index-pattern",
+      JSONObject resp = elasticController.deleteIndexPattern(project,
         projectName + Settings.ELASTIC_SERVING_INDEX_PATTERN);
       LOGGER.log(Level.FINE, resp.toString(4));
     }

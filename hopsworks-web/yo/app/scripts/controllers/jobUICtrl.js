@@ -42,10 +42,11 @@
  * Controller for the job UI dialog. 
  */
 angular.module('hopsWorksApp')
-        .controller('JobUICtrl', ['$scope', '$timeout', 'growl', 'ProjectService', 'JobService', '$interval', 'StorageService',
-          '$routeParams', '$route', '$sce', '$window',
+        .controller('JobUICtrl', ['$scope', '$timeout', 'growl',
+        'ProjectService', 'JobService', '$interval', 'StorageService',
+        'ElasticService', '$routeParams', '$route', '$sce', '$window',
           function ($scope, $timeout, growl, ProjectService, JobService, $interval, StorageService,
-                  $routeParams, $route, $sce, $window) {
+                  ElasticService, $routeParams, $route, $sce, $window) {
 
             var self = this;
             self.job;
@@ -219,10 +220,11 @@ angular.module('hopsWorksApp')
             };
             var kibanaUIInt = function () {
               if (self.job === undefined || self.job === null) {
-                  ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                  ElasticService.getJwtToken(self.projectId).then(
                         function (success) {
-                          var projectName = success.projectName;
-                self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + 
+                          var projectName = success.data.projectName;
+                          var kibanaUrl = success.data.kibanaUrl;
+                          self.ui = kibanaUrl + "projectId=" + self.projectId +
                         "#/discover?_g=()&_a=(columns:!(logdate,host,priority,logger_name,log_message),"+
                         "filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'" + projectName.toLowerCase() 
                         +"_logs-*',key:jobid,negate:!f,params:(query:notebook,type:phrase),type:phrase,value:notebook),"+
@@ -249,11 +251,13 @@ angular.module('hopsWorksApp')
               } else {
                   //Get project name
                   //TODO(Theofilos): remove when we replace projectId with projectName
-                  ProjectService.get({}, {'id': self.projectId}).$promise.then(
+                  ElasticService.getJwtToken(self.projectId).then(
                       function (success) {
-                          var projectName = success.projectName;
+                          var projectName = success.data.projectName;
+                           var kibanaUrl = success.data.kibanaUrl;
                           //if not jupyter we should have a job
-                          self.ui = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId + "#/discover?_g=()&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),index:'"
+                          self.ui = kibanaUrl + "projectId=" + self.projectId +
+                          "#/discover?_g=()&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),index:'"
                               + projectName.toLowerCase() + "_logs-*',interval:auto,query:(language:lucene,query:jobname=\"" + self.job.name + "\"),sort:!(logdate,desc))";
                           self.current = "kibanaUI";
                           var iframe = document.getElementById('ui_iframe');

@@ -488,8 +488,7 @@ angular.module('hopsWorksApp')
              */
             self.getAllDatasets = function () {
                 //Get the path for an empty patharray: will get the datasets
-                var path = ""
-                self.dataSetService.getContents(path).then(
+                self.dataSetService.getAllDatasets("").then(
                     function (success) {
                         self.datasets = success.data;
                         self.initVariables()

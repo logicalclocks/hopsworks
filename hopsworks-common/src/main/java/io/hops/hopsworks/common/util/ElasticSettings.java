@@ -23,14 +23,33 @@ public class ElasticSettings {
   public final static String ELASTIC_IP_DEFAULT="127.0.0.1";
   public final static int ELASTIC_PORT_DEFAULT = 9300;
   public final static int ELASTIC_REST_PORT_DEFAULT = 9200;
+  public final static boolean ELASTIC_OPENDISTRO_SECURTIY_ENABLED_DEFAULT = false;
+  public final static boolean ELASTIC_HTTPS_ENABLED_DEFAULT = false;
+  public final static String ELASTIC_ADMIN_USER_DEFAULT="admin";
+  public final static String ELASTIC_ADMIN_PASSWORD_DEFAULT="adminpw";
+  public final static boolean ELASTIC_JWT_ENABLED_DEFAULT= false;
+  public final static String ELASTIC_JWT_URL_PARAMETER_DEFAULT ="jt";
+  public final static int ELASTIC_JWT_EXP_MS_DEFAULT = 10 * 60 * 1000;
+  
+  public final static String ELASTIC_ADMIN_ROLE = "admin";
   
   private final List<String> elasticIps;
   private final int elasticPort;
   private final int elasticRestPort;
+  private final boolean openDistroEnabled;
+  private final boolean httpsEnabled;
+  private final String adminUser;
+  private final String adminPassword;
+  private final boolean elasticJWTEnabled;
+  private final String elasticJWTURLParameter;
+  private final int elasticJWTExpMs;
   
   private int rrIndex = 0;
   
-  public ElasticSettings(String elasticIps, int elasticPort, int elasticRestPort){
+  public ElasticSettings(String elasticIps, int elasticPort,
+      int elasticRestPort, boolean openDistroSecurityEnabled,
+      boolean httpsEnabled, String adminUser, String adminPassword,
+      boolean elasticJWTEnabled, String elasticJWTURLParameter, int elasticJWTExpMs){
     String[] ips = elasticIps.split(",");
     List<String> validIps = new ArrayList<>();
     for (String ip : ips) {
@@ -41,6 +60,13 @@ public class ElasticSettings {
     this.elasticIps = validIps;
     this.elasticPort = elasticPort;
     this.elasticRestPort = elasticRestPort;
+    this.openDistroEnabled = openDistroSecurityEnabled;
+    this.httpsEnabled = httpsEnabled;
+    this.adminUser = adminUser;
+    this.adminPassword = adminPassword;
+    this.elasticJWTEnabled = elasticJWTEnabled;
+    this.elasticJWTURLParameter = elasticJWTURLParameter;
+    this.elasticJWTExpMs = elasticJWTExpMs;
   }
   
   public List<String> getElasticIps() {
@@ -52,11 +78,16 @@ public class ElasticSettings {
   }
   
   public String getElasticRESTEndpoint() {
-    return getElasticIp() + ":" + elasticRestPort;
+    return (isHttpsEnabled() ? "https" :
+        "http") + "://" + getElasticIp() + ":" + elasticRestPort;
   }
   
   public int getElasticPort() {
     return elasticPort;
+  }
+  
+  public int getElasticRESTPort() {
+    return elasticRestPort;
   }
   
   private String getElasticIp(){
@@ -64,5 +95,33 @@ public class ElasticSettings {
       rrIndex = 0;
     }
     return elasticIps.get(rrIndex++);
+  }
+  
+  public boolean isOpenDistroSecurityEnabled() {
+    return openDistroEnabled;
+  }
+  
+  public boolean isHttpsEnabled() {
+    return httpsEnabled;
+  }
+  
+  public String getAdminUser() {
+    return adminUser;
+  }
+  
+  public String getAdminPassword() {
+    return adminPassword;
+  }
+  
+  public boolean isElasticJWTEnabled() {
+    return elasticJWTEnabled;
+  }
+  
+  public String getElasticJWTURLParameter() {
+    return elasticJWTURLParameter;
+  }
+  
+  public int getElasticJWTExpMs() {
+    return elasticJWTExpMs;
   }
 }

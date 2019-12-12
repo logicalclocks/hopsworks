@@ -21,6 +21,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.user.ServiceJWTDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
@@ -44,6 +45,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -152,5 +154,28 @@ public class JWTResource {
     jWTHelper.invalidateServiceToken(token);
     
     return Response.ok().build();
+  }
+  
+  @GET
+  @Path("/elk/key")
+  @ApiOperation(value = "Get the signing key for ELK if exists otherwise " +
+      "create a new one and return")
+  public Response getSigningKeyforELK() throws ElasticException {
+    String signingKey = jWTHelper.getSigningKeyForELK();
+    return Response.ok().entity(signingKey).build();
+  }
+  
+  @GET
+  @Path("/elk/token/{projectId}")
+  @ApiOperation(value = "Create elastic jwt token for the provided project as" +
+      " Data Owner.")
+  public Response createELKTokenAsDataOwner(@PathParam(
+      "projectId") Integer projectId) throws ElasticException {
+    if (projectId == null) {
+      throw new IllegalArgumentException("projectId was not provided.");
+    }
+    ElasticJWTResponseDTO
+        jWTResponseDTO = jWTHelper.createTokenForELKAsDataOwner(projectId);
+    return Response.ok().entity(jWTResponseDTO).build();
   }
 }

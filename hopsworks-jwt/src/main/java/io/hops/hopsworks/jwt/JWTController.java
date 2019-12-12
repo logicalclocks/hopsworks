@@ -731,5 +731,32 @@ public class JWTController {
       jwtSigningKeyFacade.remove(jwtSigningKey);
     }
   }
-
+  
+  /**
+   * Get the ELK signing key, create a new one if doesn't exists then returns
+   * it.
+   * @param alg
+   * @return
+   * @throws NoSuchAlgorithmException
+   */
+  public String getSigningKeyForELK(SignatureAlgorithm alg) throws NoSuchAlgorithmException {
+    return getOrCreateSigningKey(Constants.ELK_SIGNING_KEY_NAME, alg).getSecret();
+  }
+  
+  /**
+   * Creare a token with the ELK signing key.
+   * @return
+   * @throws DuplicateSigningKeyException
+   * @throws NoSuchAlgorithmException
+   * @throws SigningKeyNotFoundException
+   */
+  public String createTokenForELK(String subjectName, String issuer,
+      Map<String, Object> claims, Date expiresAt, SignatureAlgorithm alg)
+      throws DuplicateSigningKeyException, NoSuchAlgorithmException,
+      SigningKeyNotFoundException {
+    
+    return createToken(Constants.ELK_SIGNING_KEY_NAME,
+        false, issuer, null, expiresAt, null, subjectName,
+        claims, alg);
+  }
 }
