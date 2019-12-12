@@ -40,6 +40,9 @@
 package io.hops.hopsworks.common.hdfs;
 
 import com.google.common.base.CharMatcher;
+import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.util.Settings;
 
 import java.io.File;
@@ -88,8 +91,38 @@ public final class Utils {
     return path.substring(0, startName);
   }
 
-  public static String getProjectPath(String projectname) {
-    return "/" + Settings.DIR_ROOT + "/" + projectname + "/";
+  public static String getProjectPath(String projectName) {
+    return "/" + Settings.DIR_ROOT + "/" + projectName + "/";
+  }
+  
+  public static String getFileSystemDatasetPath(Dataset dataset, Settings settings) {
+    if(DatasetType.FEATURESTORE.equals(dataset.getDsType())) {
+      return getFeaturestorePath(dataset.getProject(), settings);
+    } else if(DatasetType.HIVEDB.equals(dataset.getDsType())) {
+      return getHiveDBPath(dataset.getProject(), settings);
+    } else {
+      return "/" + Settings.DIR_ROOT + "/" + dataset.getProject().getName() + "/" + dataset.getName() + "/";
+    }
+  }
+  
+  public static String getHiveDBName(Project project) {
+    return project.getName() + ".db";
+  }
+  
+  public static String getHiveDBPath(Project project, Settings settings) {
+    return settings.getHiveWarehouse() + "/" + getHiveDBName(project);
+  }
+  
+  public static String getFeaturestoreName(Project project) {
+    return project.getName().toLowerCase() + "_featurestore.db";
+  }
+  
+  public static String getFeaturestorePath(Project project, Settings settings) {
+    return settings.getHiveWarehouse() + "/" + getFeaturestoreName(project);
+  }
+  
+  public static String getFeaturegroupName(String featuregroupName, Integer version) {
+    return featuregroupName + "_" + version.toString();
   }
 
   public static String ensurePathEndsInSlash(String path) {
