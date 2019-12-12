@@ -21,6 +21,9 @@ public class DockerJobConfiguration extends JobConfiguration {
   @XmlElement
   private int memory = 2048;
 
+  @XmlElement
+  private int gpus = 0;
+
   public int getCores() {
     return cores;
   }
@@ -35,6 +38,14 @@ public class DockerJobConfiguration extends JobConfiguration {
 
   public void setMemory(int memory) {
     this.memory = memory;
+  }
+
+  public int getGpus() {
+    return gpus;
+  }
+
+  public void setGpus(int gpus) {
+    this.gpus = gpus;
   }
 
   @Override

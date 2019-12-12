@@ -312,6 +312,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
   private static final String VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION = "kube_docker_max_memory_allocation";
   private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
+  private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
 
   // Container image versions
@@ -712,6 +713,8 @@ public class Settings implements Serializable {
           KUBE_DOCKER_MAX_CORES_ALLOCATION);
       KUBE_DOCKER_CORES_FRACTION = setDoubleVar(VARIABLE_KUBE_DOCKER_CORES_FRACTION,
           KUBE_DOCKER_CORES_FRACTION);
+      KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
+          KUBE_DOCKER_MAX_GPUS_ALLOCATION);
 
       JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
 
@@ -3463,6 +3466,12 @@ public class Settings implements Serializable {
   public synchronized Integer getKubeDockerMaxCoresAllocation() {
     checkCache();
     return KUBE_DOCKER_MAX_CORES_ALLOCATION;
+  }
+
+  private Integer KUBE_DOCKER_MAX_GPUS_ALLOCATION = 1;
+  public synchronized Integer getKubeDockerMaxGpusAllocation() {
+    checkCache();
+    return KUBE_DOCKER_MAX_GPUS_ALLOCATION;
   }
 
   private Double KUBE_DOCKER_CORES_FRACTION = 1.0;

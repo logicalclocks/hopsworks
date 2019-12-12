@@ -87,6 +87,7 @@ public class KubeJupyterManager implements JupyterManager {
   public static final String CONF = "conf";
   public static final String HADOOP = "hadoop";
   public static final String JUPYTER = "jupyter";
+  public static final String JUPYTER_NVIDIA = "jupyter_nvidia";
   public static final String JWT = "jwt";
   public static final String KERNELS = "kernels";
   public static final String FLINK = "flink";
@@ -124,7 +125,6 @@ public class KubeJupyterManager implements JupyterManager {
   private KubeClientService kubeClientService;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -233,13 +233,23 @@ public class KubeJupyterManager implements JupyterManager {
     } else if(dockerConfig.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum cores "
           + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
+    } else if(dockerConfig.getGpus() > settings.getKubeDockerMaxGpusAllocation()) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum gpus "
+          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " gpus");
     }
-    return new ResourceRequirementsBuilder()
-        .addToLimits("memory", new QuantityBuilder()
-            .withAmount(dockerConfig.getMemory() + "Mi").build())
-        .addToLimits("cpu", new QuantityBuilder()
-            .withAmount(Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build())
-        .build();
+
+    ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
+    resources
+        .addToLimits("memory", new QuantityBuilder().withAmount(dockerConfig.getMemory() + "Mi").build())
+        .addToLimits("cpu", new QuantityBuilder().withAmount(
+            Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build());
+
+    int requestedGPUs = dockerConfig.getGpus();
+    if(requestedGPUs > 0) {
+      resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
+          .withAmount(Double.toString(dockerConfig.getGpus())).build());
+    }
+    return resources.build();
   }
 
 
@@ -249,7 +259,8 @@ public class KubeJupyterManager implements JupyterManager {
                                    Integer nodePort, String jupyterMode) {
     return new ContainerBuilder()
       .withName(JUPYTER)
-      .withImage(settings.getKubeRegistry() + "/jupyter:" + settings.getJupyterImgVersion())
+      .withImage(settings.getKubeRegistry() + "/" + getDockerImageName(resourceRequirements) + ":"
+          + settings.getJupyterImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withReadinessProbe(
         new ProbeBuilder()
@@ -310,7 +321,7 @@ public class KubeJupyterManager implements JupyterManager {
           jupyterMode)
       .build();
   }
-  
+
   private PodSpec buildPodSpec(String kubeProjectUser, String anacondaEnv, Container container) {
     
     return new PodSpecBuilder()
@@ -323,7 +334,7 @@ public class KubeJupyterManager implements JupyterManager {
               .withPath(anacondaEnv)
               .build())
           .build(),
-        new VolumeBuilder()
+          new VolumeBuilder()
           .withName(CERTS)
           .withSecret(
             new SecretVolumeSourceBuilder()
@@ -519,5 +530,15 @@ public class KubeJupyterManager implements JupyterManager {
       });
 
     return Stream.concat(allNotebooks.stream(), orphaned).collect(Collectors.toList());
+  }
+
+  private String getDockerImageName(ResourceRequirements resourceRequirements) {
+    if(resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
+      int requestedGPUs = Double.valueOf(resourceRequirements.getLimits().get("nvidia.com/gpu").getAmount()).intValue();
+      if(requestedGPUs > 0) {
+        return JUPYTER_NVIDIA;
+      }
+    }
+    return JUPYTER;
   }
 }

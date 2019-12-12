@@ -123,11 +123,19 @@ angular.module('hopsWorksApp')
                   self.hasDockerCores = false;
                   self.maxDockerCores = -1;
               });
+                VariablesService.getVariable('kube_docker_max_gpus_allocation')
+                  .then(function (success) {
+                    self.hasDockerGpus = true;
+                    self.maxDockerGpus = parseInt(success.data.successMessage);
+                  }, function (error) {
+                    self.hasDockerGpus = false;
+                    self.maxDockerGpus = -1;
+                });
             };
 
-            self.range = function (max) {
+            self.range = function (min, max) {
                 var input = [];
-                for (var i = 1; i <= max; i++) {
+                for (var i = min; i <= max; i++) {
                     input.push(i);
                 }
                 return input;
