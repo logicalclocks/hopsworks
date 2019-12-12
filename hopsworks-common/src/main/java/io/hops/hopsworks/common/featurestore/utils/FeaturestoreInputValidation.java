@@ -45,9 +45,9 @@ public class FeaturestoreInputValidation {
       featurestoreEntityDTO.getDescription().length() >
         FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ENTITY_DESCRIPTION, Level.FINE,
-        ", the provided description for the entity " + featurestoreEntityDTO.getName() + " is too long. Entity " +
-          "descriptions cannot be longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH +
-          " characters.");
+        ", the provided description for the entity " + featurestoreEntityDTO.getName() + " is too long with "
+          + featurestoreEntityDTO.getDescription().length() + " characters. Entity descriptions cannot be longer than "
+          + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
     }
     
     // features
@@ -63,20 +63,22 @@ public class FeaturestoreInputValidation {
    * @param featureDTOs the feature list to verify
    */
   private void verifyFeatureList(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
-    if(featureDTOs != null && !featureDTOs.isEmpty()) {
+    if (featureDTOs != null && !featureDTOs.isEmpty()) {
       Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-      if (featureDTOs.stream().anyMatch(f -> !namePattern.matcher(f.getName()).matches())) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-          ", one or more of the provided feature names is invalid. Feature names can only contain lower " +
-            "case characters, numbers and underscores and cannot be longer than " +
-            FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
-      }
-  
-      if (featureDTOs.stream().anyMatch(f -> !Strings.isNullOrEmpty(f.getDescription()) &&
-        f.getDescription().length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH)) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-          ", one or more of the provided feature descriptions is too long. Feature descriptions cannot be longer than "
-            + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
+      for (FeatureDTO featureDTO : featureDTOs) {
+        if (!namePattern.matcher(featureDTO.getName()).matches()) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+            ", the provided feature name " + featureDTO.getName() + " is invalid. Feature names can only contain " +
+              "lower case characters, numbers and underscores and cannot be longer than " +
+              FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
+        }
+        if (!Strings.isNullOrEmpty(featureDTO.getDescription()) &&
+          featureDTO.getDescription().length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+            ", the provided feature description of " + featureDTO.getName() + " is too long with " +
+              featureDTO.getDescription().length() + " characters. Feature descriptions cannot be longer than " +
+              FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
+        }
       }
     }
   }
