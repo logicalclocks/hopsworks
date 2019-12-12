@@ -42,9 +42,13 @@ public class ElasticUtils {
   }
   
   public static String getValidRole(String role) throws ElasticException {
-    if(role != null &&
-        (role.equals(ProjectRoleTypes.DATA_OWNER.getRole())
-            || role.equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()))){
+    if(role == null){
+      throw new ElasticException(RESTCodes.ElasticErrorCode.INVALID_ELASTIC_ROLE_USER,
+          Level.SEVERE, "Invalid security role");
+    }
+    
+    if(role.equals(ProjectRoleTypes.DATA_OWNER.getRole())
+            || role.equals(ProjectRoleTypes.DATA_SCIENTIST.getRole())){
       return role.trim().toLowerCase().replace(" ", "_");
     }
     throw new ElasticException(RESTCodes.ElasticErrorCode.INVALID_ELASTIC_ROLE,
