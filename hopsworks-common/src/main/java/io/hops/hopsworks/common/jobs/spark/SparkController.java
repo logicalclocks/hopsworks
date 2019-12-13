@@ -122,7 +122,8 @@ public class SparkController {
       String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
       String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
       sparkConfig.setAppPath(pyAppPath);
-      jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath);
+      jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
+          JupyterController.NotebookConversion.PY);
     }
 
     SparkJob sparkjob = null;

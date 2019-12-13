@@ -87,31 +87,41 @@
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToTensorflow()" ng-show="projectCtrl.showTensorflow()">
-        <a>
-          Tensorflow
-          <img ng-show="projectCtrl.activeService !== 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200_bw.png"/>
-          <img ng-show="projectCtrl.activeService === 'tensorflow'" class="pull-right" style="margin-left:10px" height="25" src="images/tf-175x200.png"/>
-        </a>
-      </li>
-
-
       <li ng-click="projectCtrl.goToRStudio()" ng-show="projectCtrl.showRStudio()">
         <a>
           RStudio<img class="pull-right" style="margin-right:15px" height="25" src="images/rstudio.png">
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToTfServing()" ng-show="projectCtrl.showTfServing()" id="servingTab">
-        <a class="left-right">
-          Model Serving
-          <img class="pull-right" style="margin-right:10px" height="25" src="images/tf-175x200_bw.png"/>
+      <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
+        <a>
+          Feature Store<span class="sub_icon fa fa-database fa-lg pull-right"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToExperiments()" ng-show="projectCtrl.showExperiments()" id="experimentsTab">
-        <a>
+        <a class="left-right">
           Experiments<img class="pull-right" style="margin-right:8px" height="27" src="images/experiments.png"/>
+          <i uib-tooltip="Experiments service is experiencing issues and is not working properly."
+             tooltip-placement="auto right"
+             ng-class="{'pull-left fa fa-ban text-danger': (clusterUtilCtrl.ElasticBan || clusterUtilCtrl.EpipeBan || clusterUtilCtrl.HdfsBan)}" aria-hidden="true" style="margin-top: 3px"></i>
+        </a>
+      </li>
+
+      <li ng-click="projectCtrl.goToModels()" ng-show="projectCtrl.showModels()" id="modelsTab">
+        <a class="left-right">
+          Models<img class="pull-right" style="margin-right:11px" height="24" src="images/models.png"/>
+          <i uib-tooltip="Models service is experiencing issues and is not working properly."
+             tooltip-placement="auto right"
+             ng-class="{'pull-left fa fa-ban text-danger': (clusterUtilCtrl.ElasticBan || clusterUtilCtrl.EpipeBan || clusterUtilCtrl.HdfsBan)}" aria-hidden="true" style="margin-top: 3px"></i>
+        </a>
+      </li>
+
+
+      <li ng-click="projectCtrl.goToServing()" ng-show="projectCtrl.showServing()" id="servingTab">
+        <a class="left-right">
+          Model Serving
+          <img class="pull-right" style="margin-right:8px" height="24" src="images/serving.png"/>
         </a>
       </li>
 
@@ -122,12 +132,6 @@
                src="images/airflow-200x198-bw.png"/>
           <img ng-show="projectCtrl.activeService === 'airflow'" class="pull-right" style="margin-left:10px; margin-right:10px" height="25"
                src="images/airflow-200x198.png"/>
-        </a>
-      </li>
-
-      <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
-        <a>
-          Feature Store<span class="sub_icon fa fa-database fa-lg pull-right"></span>
         </a>
       </li>
       

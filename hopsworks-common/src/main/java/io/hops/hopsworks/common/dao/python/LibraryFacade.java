@@ -75,7 +75,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
   public PythonDep getOrCreateDep(AnacondaRepo repo, MachineType machineType,
                                   CondaCommandFacade.CondaInstallType installType,
                                   String dependency, String version, boolean create, boolean preinstalled) {
-
     TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
     deps.setParameter("version", version);
@@ -98,7 +97,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
         em.flush();
       }
     }
-
     return dep;
   }
   

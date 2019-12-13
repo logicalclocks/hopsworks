@@ -38,8 +38,8 @@
  */
 
 angular.module('hopsWorksApp')
-        .controller('FilePreviewCtrl', ['$uibModalInstance','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode',
-          function ($uibModalInstance, DataSetService, growl, fileName, filePath, projectId, mode) {
+        .controller('FilePreviewCtrl', ['$uibModalInstance','DataSetService', 'growl', 'fileName', 'filePath', 'projectId', 'mode', '$sce',
+          function ($uibModalInstance, DataSetService, growl, fileName, filePath, projectId, mode, $sce) {
             var self = this;
             self.modes = ['head','tail'];
             self.filePath = filePath;
@@ -72,8 +72,10 @@ angular.module('hopsWorksApp')
                         self.content = self.fileDetails.preview.content;
                         self.extension = self.fileDetails.preview.extension;
                         self.loading = false;
-                        if (self.type === 'image') {
+                        if(self.content==='image') {
                             self.getImageWidthHeight();
+                        } else if(self.content==='html') {
+                            self.content = $sce.trustAsHtml(self.content);
                         }
                       }, function (error) {
                          self.loading = false;

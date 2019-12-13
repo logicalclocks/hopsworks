@@ -1,0 +1,178 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+
+<div class="modal-header">
+  <button class="close" ng-click="experimentDetailCtrl.close()" data-dismiss="modal" aria-hidden="true"
+          type="button">&times;</button>
+  <h2 class="modal-title">Experiment - {{experimentDetailCtrl.experiment.name}} - Detailed Information</h2>
+</div>
+
+<div class="modal-body" style="overflow: auto;">
+  <div class="row">
+    <div ng-if="experimentDetailCtrl.loading" class="loadingwrap">
+      <div class="loading-content">
+        <div class="loader-in-wrap"></div>
+        {{experimentDetailCtrl.loadingText}}
+      </div>
+    </div>
+
+    <table class="table table-hover" style="margin-left: 10px; overflow: auto">
+      <thead style="border:none;">
+      <th style="width: 20%">Property</th>
+      <th style="width: 80%">Value</th>
+
+      </thead>
+      <tbody>
+      <tr ng-if="experimentDetailCtrl.experiment.id">
+        <td>Id</td>
+        <td>{{experimentDetailCtrl.experiment.id}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.name">
+        <td>Name</td>
+        <td>{{experimentDetailCtrl.experiment.name}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.metric">
+        <td>Metric</td>
+        <td>{{experimentDetailCtrl.experiment.metric}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.userFullName">
+        <td>User</td>
+        <td>{{experimentDetailCtrl.experiment.userFullName}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.started">
+        <td>Started</td>
+        <td>{{experimentDetailCtrl.experiment.started | date:'medium'}}</td>'
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.finished">
+        <td>Finished</td>
+        <td>{{experimentDetailCtrl.experiment.finished | date:'medium'}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.experimentType">
+        <td>ExperimentType</td>
+        <td>{{experimentDetailCtrl.experiment.experimentType}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.function">
+        <td>Function</td>
+        <td>{{experimentDetailCtrl.experiment.function}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.direction">
+        <td>Direction</td>
+        <td>{{experimentDetailCtrl.experiment.direction}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.optimizationKey">
+        <td>Optimization key</td>
+        <td>{{experimentDetailCtrl.experiment.optimizationKey}}</td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.bestDir">
+        <td>Best Output Directory</td>
+        <td><a ng-click="experimentDetailCtrl.goToDirectory(experimentDetailCtrl.experiment.bestDir)">{{experimentDetailCtrl.experiment.bestDir}}</a></td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.modelLink">
+        <td>Model</td>
+        <td>
+          <a ng-click="experimentDetailCtrl.goToDirectory(experimentDetailCtrl.modelLink)">{{experimentDetailCtrl.modelLink}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td>State</td>
+
+        <td>
+        <span ng-if="experimentDetailCtrl.experiment.state === 'NEW' || experimentDetailCtrl.experiment.state === 'SUBMITTED' || experimentDetailCtrl.experiment.state === 'RUNNING'" style="color: #0066bb">
+                          {{experimentDetailCtrl.experiment.state}}
+                        </span>
+        <span ng-if="experimentDetailCtrl.experiment.state === 'FINISHED'" style="color: #00A000">
+                          {{experimentDetailCtrl.experiment.state}}
+                        </span>
+        <span ng-if="experimentDetailCtrl.experiment.state === 'KILLED' || experimentDetailCtrl.experiment.state === 'FAILED' || experimentDetailCtrl.experiment.state === 'UNKNOWN'" style="color: #880000">
+                          {{experimentDetailCtrl.experiment.state}}
+                        </span>
+        </td>
+      </tr>
+      <tr ng-if="experimentDetailCtrl.experiment.description">
+        <td>Description</td>
+        <td>{{experimentDetailCtrl.experiment.description}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top: 11px; heigth: 2em;"><label
+          ng-click="experimentDetailCtrl.showProvenance()">
+                                        <span class="glyphicon glyphicon-chevron-right"
+                                              ng-if="!experimentDetailCtrl.showProvenanceView"></span>
+    <span class="glyphicon glyphicon-chevron-down"
+          ng-if="experimentDetailCtrl.showProvenanceView"></span>
+    Provenance File Operations </label>
+  </div>
+
+  <div class="row" ng-if="experimentDetailCtrl.showProvenanceView">
+    <table class="table table-hover" ng-if="experimentDetailCtrl.experiment.provenance.filesRead.length > 0">
+      <thead>
+        <th colspan="1">Input files</th>
+      </thead>
+      <tbody>
+      <tr ng-repeat="file in experimentDetailCtrl.experiment.provenance.filesRead track by $index">
+        <td>{{file}}</td>
+      </tr>
+      </tbody>
+    </table>
+    <table class="table table-hover" ng-if="experimentDetailCtrl.experiment.provenance.filesOutput.length > 0">
+      <thead>
+      <th colspan="1">Output files</th>
+      </thead>
+      <tbody>
+      <tr ng-repeat="file in experimentDetailCtrl.experiment.provenance.filesOutput track by $index">
+        <td>{{file}}</td>
+      </tr>
+      </tbody>
+    </table>
+    <table class="table table-hover" ng-if="experimentDetailCtrl.experiment.provenance.filesDeleted.length > 0">
+      <thead>
+      <th colspan="1">Deleted files</th>
+      </thead>
+      <tbody>
+      <tr ng-repeat="file in experimentDetailCtrl.experiment.provenance.filesDeleted track by $index">
+        <td>{{file}}</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

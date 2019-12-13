@@ -56,6 +56,12 @@ angular.module('hopsWorksApp')
               },
               getKafkaStatus: function () {
                 return $http.get('/api/kmon/groups/kafka');
+              },
+              getHopsStatus: function () {
+                return $http.get('/api/kmon/groups/Hops');
+              },
+              getELKStatus: function () {
+                return $http.get('/api/kmon/groups/ELK');
               }
             };
           }]);

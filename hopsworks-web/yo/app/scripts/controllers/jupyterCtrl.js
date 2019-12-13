@@ -61,7 +61,7 @@ angular.module('hopsWorksApp')
             self.jupyterSettings = {};
             $scope.tgState = true;
             self.config = {};
-            self.numNotEnabledEnvs = 0;
+            self.ongoingCondaOps = 0;
             self.opsStatus = {};
             self.pythonVersion;
 
@@ -223,7 +223,7 @@ angular.module('hopsWorksApp')
                         }
                         self.pythonVersion = count > 0? envs[0].pythonVersion : "0.0";
                         self.opsStatus = opsStatusList;
-                        self.numNotEnabledEnvs = opsStatusList.length;
+                        self.ongoingCondaOps = opsStatusList.length;
                     }, function (error) {
 
                     });
@@ -373,25 +373,6 @@ angular.module('hopsWorksApp')
                           if(self.jupyterSettings.baseDir === self.dirs[i].name) {
                             self.selected = self.dirs[i];
                           }
-                        }
-
-                        if (self.jupyterSettings.project.name.startsWith("demo_deep_learning")) {
-                            //Activate anaconda
-                            PythonService.enabled(self.projectId).then(
-                                function(success) {},
-                                function(error) {
-                                    growl.warning("Anaconda environment is not enabled for the project", {
-                                        ttl: 10000
-                                    });
-                                    PythonService.createEnvironmentFromVersion(self.projectId, "3.6", "true").then(
-                                        function(success) {
-                                            checkJupyterInstalled();
-                                        },
-                                        function(error) {
-                                            growl.error("Could not enable Anaconda", {title: 'Error', ttl: 5000});
-                                        });
-                                });
-
                         }
 
                         if (self.jupyterSettings.shutdownLevel <= "6") {

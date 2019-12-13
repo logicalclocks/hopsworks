@@ -55,7 +55,8 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     UNINSTALL,
     UPGRADE,
     CLEAN,
-    YML;
+    YML,
+    EXPORT;
 
     public boolean isEnvOp() {
       return CondaOp.isEnvOp(this);
@@ -63,7 +64,8 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   
     public static boolean isEnvOp(CondaOp arg) {
       if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE) == 0 || arg.compareTo(CondaOp.YML) == 0 ||
-        arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.BACKUP) == 0 || arg.compareTo(CondaOp.CLEAN) == 0) {
+        arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.BACKUP) == 0 || arg.compareTo(CondaOp.CLEAN) == 0
+        || arg.compareTo(CondaOp.EXPORT) == 0) {
         return true;
       }
       return false;
@@ -127,7 +129,7 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     List<CondaCommands> commands = getCommandsForProject(proj);
     for (CondaCommands cc : commands) {
       // delete the conda library command if it has the same name as the input library name
-      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.YML)) {
+      if (cc.getOp().equals(CondaOp.CREATE) || cc.getOp().equals(CondaOp.YML) || cc.getOp().equals(CondaOp.EXPORT)) {
         em.remove(cc);
       }
     }

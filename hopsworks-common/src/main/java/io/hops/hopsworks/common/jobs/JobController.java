@@ -54,8 +54,10 @@ import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.spark.SparkController;
+import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 import org.eclipse.persistence.exceptions.DatabaseException;
 
 import javax.ejb.EJB;
@@ -63,6 +65,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -85,6 +88,8 @@ public class JobController {
   private SparkController sparkController;
   @EJB
   private ExecutionController executionController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
 
   
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
@@ -184,6 +189,23 @@ public class JobController {
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+
+  public void versionProgram(SparkJobConfiguration job, Project project, Users user, Path path)
+      throws JobException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      String username = hdfsUsersController.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      udfso.copyInHdfs(new Path(job.getAppPath()), path);
+    } catch (IOException ioe) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_PROGRAM_VERSIONING_FAILED, Level.FINEST, "path: " +
+          job.getAppPath(), "versioning failed", ioe);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);

@@ -167,7 +167,7 @@ describe "On #{ENV['OS']}" do
           # Check that the topic has been created correctly
           serving_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/"
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/topics"
-	  expect(json_body[:items].count).to eq 1
+	      expect(json_body[:items].count).to eq 1
           expect(json_body[:items][0][:schemaName]).to eql INFERENCE_SCHEMA_NAME
         end
 

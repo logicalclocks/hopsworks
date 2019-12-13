@@ -74,7 +74,6 @@ import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Ip;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -150,8 +149,6 @@ public class JupyterService {
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private JWTHelper jWTHelper;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
   @EJB
   private JupyterController jupyterController;
   @EJB
@@ -469,7 +466,8 @@ public class JupyterService {
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath);
+    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath,
+        JupyterController.NotebookConversion.PY);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

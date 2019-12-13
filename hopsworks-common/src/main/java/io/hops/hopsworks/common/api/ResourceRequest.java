@@ -164,7 +164,11 @@ public class ResourceRequest {
     TEMPLATE,
     XATTRS,
     FEATURESTORES,
-    FEATUREGROUPS;
+    FEATUREGROUPS,
+    EXPERIMENTS,
+    TENSORBOARD,
+    RESULTS,
+    MODELS;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
