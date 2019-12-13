@@ -171,6 +171,7 @@ public class ElasticService {
   @GET
   @Path("jwt/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response createJwtToken(@Context SecurityContext sc, @PathParam(
       "projectId") Integer projectId) throws ElasticException {
