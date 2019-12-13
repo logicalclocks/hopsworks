@@ -49,8 +49,9 @@ import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
-import io.hops.hopsworks.common.dao.kafka.SchemaTopics;
-import io.hops.hopsworks.common.dao.kafka.SchemaTopicsFacade;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
+import io.hops.hopsworks.common.dao.kafka.schemas.Subjects;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
@@ -67,6 +68,7 @@ import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
@@ -122,7 +124,7 @@ public class KafkaController {
   @EJB
   private HopsKafkaAdminClient hopsKafkaAdminClient;
   @EJB
-  private SchemaTopicsFacade schemaTopicsFacade;
+  private SubjectsFacade subjectsFacade;
   @EJB
   private TopicAclsFacade topicAclsFacade;
   @EJB
@@ -194,8 +196,8 @@ public class KafkaController {
     List<TopicDTO> topics = new ArrayList<>();
     for (ProjectTopics pt : ptList) {
       topics.add(new TopicDTO(pt.getTopicName(),
-        pt.getSchemaTopics().getSchemaTopicsPK().getName(),
-        pt.getSchemaTopics().getSchemaTopicsPK().getVersion(),
+        pt.getSubjects().getSubject(),
+        pt.getSubjects().getVersion(),
         false));
     }
     return topics;
@@ -204,8 +206,8 @@ public class KafkaController {
   public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
     throws KafkaException, InterruptedException, ExecutionException {
     
-    SchemaTopics schema =
-      schemaTopicsFacade.findSchemaByNameAndVersion(topicDto.getSchemaName(), topicDto.getSchemaVersion())
+    Subjects schema =
+      subjectsFacade.findSubjectByNameAndVersion(project, topicDto.getSchemaName(), topicDto.getSchemaVersion())
         .orElseThrow(() ->
           new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
     
@@ -591,8 +593,9 @@ public class KafkaController {
       projectTopicsFacade.findTopicByName(pt.getSharedTopicsPK().getTopicName())
         .map(topic -> new TopicDTO(pt.getSharedTopicsPK().getTopicName(),
           pt.getProjectId(),
-          topic.getSchemaTopics().getSchemaTopicsPK().getName(),
-          topic.getSchemaTopics().getSchemaTopicsPK().getVersion(),
+          topic.getSubjects().getSubject(),
+          topic.getSubjects().getVersion(),
+          topic.getSubjects().getSchema().getSchema(),
           true))
         .ifPresent(topics::add);
     }
@@ -604,9 +607,9 @@ public class KafkaController {
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topicName));
     
-    String schemaName = pt.getSchemaTopics().getSchemaTopicsPK().getName();
+    String schemaName = pt.getSubjects().getSubject();
   
-    SchemaTopics st = schemaTopicsFacade.findSchemaByNameAndVersion(schemaName, schemaVersion)
+    Subjects st = subjectsFacade.findSubjectByNameAndVersion(project, schemaName, schemaVersion)
       .orElseThrow(() ->
         new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_VERSION_NOT_FOUND, Level.FINE,
         "schema: " + schemaName + ", version: " + schemaVersion));
@@ -674,6 +677,32 @@ public class KafkaController {
     }
     
     topicAclsFacade.remove(ta);
+  }
+  
+  public SubjectDTO getSubjectForTopic(Project project, String topic) throws KafkaException {
+    Optional<ProjectTopics> pt = projectTopicsFacade.findTopicByNameAndProject(project, topic);
+    if (!pt.isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
+        "project=" + project.getName() + ", topic=" + topic);
+    }
+    
+    return new SubjectDTO(pt.get().getSubjects());
+  }
+  
+  public void updateTopicSubjectVersion(Project project, String topic, String subject, Integer version)
+    throws KafkaException, SchemaException {
+    ProjectTopics pt = projectTopicsFacade.findTopicByNameAndProject(project, topic)
+      .orElseThrow(() ->
+        new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,  "topic: " + topic));
+  
+    String topicSubject = pt.getSubjects().getSubject();
+  
+    Subjects st = subjectsFacade.findSubjectByNameAndVersion(project, subject, version)
+      .orElseThrow(() ->
+        new SchemaException(RESTCodes.SchemaRegistryErrorCode.VERSION_NOT_FOUND, Level.FINE,
+          "schema: " + topicSubject + ", version: " + version));
+  
+    projectTopicsFacade.updateTopicSchemaVersion(pt, st);
   }
 }
 

@@ -40,6 +40,9 @@ import javax.xml.bind.annotation.XmlRootElement;
  * 18. Activities error codes start with "26".
  * 19. Featurestore error codes start with "27".
  * 20. Python error codes start with "28".
+ *
+ * Schema Registry error codes are violating the convention. Following the confluent docs, they return a 5 digits
+ * codes starting with the http status code and then a number. e.g. 50001 for Internal Server Error
  */
 
 @XmlRootElement
@@ -602,6 +605,54 @@ public class RESTCodes {
     }
 
   }
+  
+  /**
+   * Schema Registry codes are compatible with Confluent Schema Registry v5.3.1
+   * https://docs.confluent.io/5.3.1/schema-registry/develop/api.html
+   */
+  public enum SchemaRegistryErrorCode implements RESTErrorCode {
+    SUBJECT_NOT_FOUND(40401, "Subject not found", Response.Status.NOT_FOUND),
+    VERSION_NOT_FOUND(40402, "Version not found", Response.Status.NOT_FOUND),
+    SCHEMA_NOT_FOUND(40403, "Schema not found", Response.Status.NOT_FOUND),
+    INCOMPATIBLE_AVRO_SCHEMA(40901, "Incompatible Avro schema", Response.Status.CONFLICT),
+    INVALID_AVRO_SCHEMA(42201, "Invalid Avro schema", Status.UNPROCESSABLE_ENTITY),
+    INVALID_VERSION(42202, "Invalid version", Status.UNPROCESSABLE_ENTITY),
+    INVALID_COMPATIBILITY(42203, "Invalid compatibility level", Status.UNPROCESSABLE_ENTITY),
+    INTERNAL_SERVER_ERROR(50001, "Error in the backend datastore", Response.Status.INTERNAL_SERVER_ERROR),
+    OPERATION_TIMED_OUT(50002, "Operation timed out", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_FORWARDING_REQUEST(50003, "Error while forwarding the request to the primary",
+      Response.Status.INTERNAL_SERVER_ERROR);
+  
+    private Integer code;
+    private String message;
+    private Response.StatusType respStatus;
+  
+    SchemaRegistryErrorCode(Integer code, String message, Response.StatusType respStatus) {
+      this.code = code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+  
+    @Override
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+  
+    @Override
+    public String getMessage() {
+      return message;
+    }
+  
+    @Override
+    public int getRange() {
+      return 0;
+    }
+  }
 
   public enum KafkaErrorCode implements RESTErrorCode {
 
@@ -628,7 +679,7 @@ public class RESTCodes {
     ACL_NOT_FOR_TOPIC(13, "ACL does not belong to the specified topic", Response.Status.BAD_REQUEST),
     SCHEMA_IN_USE(14, "Schema is currently used by topics. topic", Response.Status.PRECONDITION_FAILED),
     BAD_NUM_PARTITION(15, "Invalid number of partitions", Response.Status.BAD_REQUEST),
-    CREATE_SCHEMA_RESERVED_NAME(16, "The provided schema name is reserved",
+    CREATE_SUBJECT_RESERVED_NAME(16, "The provided subject name is reserved for system calls",
       Response.Status.METHOD_NOT_ALLOWED),
     DELETE_RESERVED_SCHEMA(17, "The schema is reserved and cannot be deleted",
       Response.Status.METHOD_NOT_ALLOWED),

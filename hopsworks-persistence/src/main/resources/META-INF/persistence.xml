@@ -62,7 +62,9 @@
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeEncodingStatus</class>
     <class>io.hops.hopsworks.common.dao.hdfs.inode.InodeOps</class>
     <class>io.hops.hopsworks.common.dao.kafka.ProjectTopics</class>
-    <class>io.hops.hopsworks.common.dao.kafka.SchemaTopics</class>
+    <class>io.hops.hopsworks.common.dao.kafka.schemas.Subjects</class>
+    <class>io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility</class>
+    <class>io.hops.hopsworks.common.dao.kafka.schemas.Schemas</class>
     <class>io.hops.hopsworks.common.dao.kafka.SharedTopics</class>
     <class>io.hops.hopsworks.common.dao.kafka.TopicAcls</class>
     <class>io.hops.hopsworks.common.dao.log.meta.MetaLog</class>

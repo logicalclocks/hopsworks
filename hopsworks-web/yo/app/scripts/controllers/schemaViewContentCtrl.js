@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
               KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
                  function (success) {
                  self.schemaContents = success.data;
-                 $scope.jsonObj = success.data.contents;
+                 $scope.jsonObj = success.data;
                  }, function (error) {
                  growl.error(error.data.errorMsg, {title: 'Could not get schema for topic', ttl: 5000, referenceId: 21});
                  });

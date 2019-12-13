@@ -82,13 +82,26 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
       .path(topicName);
   }
   
+  public UriBuilder topicUri(UriInfo uriInfo, Integer projectId, String topicName) {
+    return uriInfo.getBaseUriBuilder()
+      .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+      .path(Integer.toString(projectId))
+      .path(ResourceRequest.Name.KAFKA.toString().toLowerCase())
+      .path(ResourceRequest.Name.TOPICS.toString().toLowerCase())
+      .path(topicName);
+  }
+  
   public UriBuilder sharedProjectUri(UriInfo uriInfo, Project project, String topicName) {
     return topicUri(uriInfo, project, topicName)
       .path(ResourceRequest.Name.SHARED.toString().toLowerCase());
   }
   
   private TopicDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, TopicDTO topic, Project project) {
-    topic.setHref(topicUri(uriInfo, project, topic.getName()).build());
+    if (topic.isShared()) {
+      topic.setHref(topicUri(uriInfo, topic.getOwnerProjectId(), topic.getName()).build());
+    } else {
+      topic.setHref(topicUri(uriInfo, project, topic.getName()).build());
+    }
     expand(topic, resourceRequest);
     return topic;
   }

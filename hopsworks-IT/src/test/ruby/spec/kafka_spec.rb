@@ -79,41 +79,16 @@ describe "On #{ENV['OS']}" do
       it "should be able to create a kafka topic using the schema" do
         project = get_project
         schema = get_schema
-        json_result, kafka_topic_name = add_topic(project.id, schema.name, 1)
+        json_result, kafka_topic_name = add_topic(project.id, schema.subject, 1)
         expect_status(201)
-      end
-    end
-
-    context 'with valid project, kafka service enabled, a kafka schema, and a kafka topic' do
-      before :all do
-        with_valid_project
-        project = get_project
-        with_kafka_schema(project.id)
-        with_kafka_topic(project.id)
-      end
-      after :all do
-        clean_projects
-      end
-
-      it "should not be able to delete the schema that is being used by the topic" do
-        project = get_project
-        schema = get_schema
-        delete_schema(project.id, schema.name, 1)
-        expect_status(412)
       end
 
       it "should be able to delete the topic" do
+	with_kafka_topic(@project[:id])
         project = get_project
         topic = get_topic
         delete_topic(project.id, topic)
         expect_status(204)
-      end
-
-      it "should be able to delete the schema when it is not being used by a topic" do
-        project = get_project
-        schema = get_schema
-        delete_schema(project.id, schema.name, 1)
-        expect_status(200)
       end
     end
 
@@ -123,7 +98,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         with_kafka_schema(project.id)
         schema = get_schema
-	create_topics(project.id, 10, schema.name, 1)
+	create_topics(project.id, 10, schema.subject, 1)
       end
       after :all do
         clean_projects

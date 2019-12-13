@@ -56,6 +56,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -136,11 +137,8 @@ public class ProjectsAdmin {
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context HttpServletRequest request, @Context SecurityContext sc,
-      ProjectDTO projectDTO)
-      throws DatasetException, GenericException, KafkaException,
-      ProjectException, UserException,
-      ServiceException, HopsSecurityException, FeaturestoreException,
-      ElasticException {
+      ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
+      ServiceException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null || !user.getEmail().equals(settings.getAdminEmail())) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,

@@ -693,6 +693,33 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            viewSharedSchemaContent: function (size, projectId, schemaName, schemaContent) {
+              var modalInstance = $uibModal.open({
+                templateUrl: 'views/sharedSchemaViewContent.html',
+                controller: 'SharedSchemaViewContentCtrl as sharedSchemaViewContentCtrl',
+                size: size,
+                resolve: {
+                  auth: ['$q','AuthGuardService',
+                    function ($q, AuthGuardService) {
+                      return AuthGuardService.guardSession($q).then(
+                        function(success){
+                        }, function (error) {
+                          return $q.reject(error)
+                        });
+                    }],
+                  projectId: function () {
+                    return projectId;
+                  },
+                  schemaName: function () {
+                    return schemaName;
+                  },
+                  schemaContent: function () {
+                    return schemaContent;
+                  }
+                }
+              });
+              return modalInstance.result;
+            },
 
             updateSchemaContent: function (size, projectId, schemaName, schemaVersion) {
                 var modalInstance = $uibModal.open({

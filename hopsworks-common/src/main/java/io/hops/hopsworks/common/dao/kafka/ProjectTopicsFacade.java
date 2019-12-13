@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.dao.kafka;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.kafka.schemas.Subjects;
 import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.ejb.Stateless;
@@ -70,8 +71,23 @@ public class ProjectTopicsFacade extends AbstractFacade<ProjectTopics> {
     }
   }
   
-  public void updateTopicSchemaVersion(ProjectTopics pt, SchemaTopics st) {
-    pt.setSchemaTopics(new SchemaTopics(st.schemaTopicsPK.getName(), st.schemaTopicsPK.getVersion()));
+  public List<ProjectTopics> findTopiscBySubjectAndVersion(Project project, String subject, Integer version) {
+    return em.createNamedQuery("ProjectTopics.findBySubjectAndVersion", ProjectTopics.class)
+      .setParameter("project", project)
+      .setParameter("subject", subject)
+      .setParameter("version", version)
+      .getResultList();
+  }
+  
+  public List<ProjectTopics> findTopicsBySubject(Project project, String subject) {
+    return em.createNamedQuery("ProjectTopics.findBySubject", ProjectTopics.class)
+      .setParameter("project", project)
+      .setParameter("subject", subject)
+      .getResultList();
+  }
+  
+  public void updateTopicSchemaVersion(ProjectTopics pt, Subjects st) {
+    pt.setSubjects(st);
     update(pt);
   }
   
