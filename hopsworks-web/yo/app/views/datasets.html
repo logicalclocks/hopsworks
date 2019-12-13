@@ -176,7 +176,7 @@
                           <div data-toggle="tooltip" title="Browse dataset" class="icon" style="color: gray;
                           margin-right: 5px; font-size: 20px;">
                             <i class="fa"
-                               ng-class="{'fa-file': (!dataset.attributes.dir), 'fa-folder': (dataset.attributes.dir && !selected), 'fa-folder-open': (dataset.attributes.dir && selected), 'fa-database': (dataset.datasetType === 'HIVEDB' || dataset.datasetType === 'FEATURESTORE') , 'fa-eye-slash': (!dataset.accepted), 'fa-cloud-download': (dataset.downloading)}"></i>
+                               ng-class="{'fa-file': (!dataset.attributes.dir), 'fa-folder': (dataset.attributes.dir && datasetsCtrl.selected !== dataset.name && dataset.accepted === true), 'fa-folder-open': (dataset.attributes.dir && datasetsCtrl.selected === dataset.name && dataset.accepted === true), 'fa-database': ((dataset.datasetType === 'HIVEDB' || dataset.datasetType === 'FEATURESTORE') && dataset.accepted === true) , 'fa-eye-slash': (dataset.accepted === false), 'fa-cloud-download': (dataset.downloading)}"></i>
                           </div>
                           <span data-toggle="tooltip"
                                 title="{{datasetsCtrl.shortDatasetName(dataset).length > 170 ? datasetsCtrl.shortDatasetName(dataset):''}}">
@@ -250,7 +250,7 @@
                                     'notAccepted' : dataset.accepted === false}">
                               <a>
                                 <div ng-if="dataset.accepted === false" data-toggle="tooltip" title="Shared Dataset. Click on this dataset to accept/reject it." class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
-                                  <i class="fa fa-eye-open"></i>
+                                  <i class="fa fa-eye-slash"></i>
                                 </div>
                                 <div ng-if="dataset.accepted === true" data-toggle="tooltip" title="Click here to enter this dataset" class="icon" ng-click="datasetsCtrl.browseDataset(dataset)">
                                   <i ng-show="!dataset.downloading && !datasetsCtrl.isHiveDB(dataset)" class="fa"
