@@ -1644,7 +1644,9 @@ public class RESTCodes {
     ELASTIC_QUERY_ERROR(5, "Error while executing a user query on " +
         "Elasticsearch", Response.Status.BAD_REQUEST),
     INVALID_ELASTIC_ROLE(6, "Invalid elastic security role",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    INVALID_ELASTIC_ROLE_USER(7, "Invalid elastic security role for a user",
+        Response.Status.UNAUTHORIZED);
     
     private Integer code;
     private String message;
