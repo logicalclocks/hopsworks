@@ -59,8 +59,11 @@ angular.module('hopsWorksApp')
             self.working = false;
             
             self.schemas = [];
+            self.subject;
+            self.subjects = [];
             self.schema;
             self.schemaVersion;
+            self.subjectVersions = [];
             
             self.init = function() {
                 if (self.projectIsGuide) {
@@ -80,20 +83,38 @@ angular.module('hopsWorksApp')
                             growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
                         }
                    });
-                   
-               KafkaService.getSchemasForTopics(self.projectId).then(
-                    function (success){
-                      self.schemas = success.data;
-                    }, function (error) {
-                       if (typeof error.data.usrMsg !== 'undefined') {
-                           growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                       } else {
-                           growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 21});
-                       }
-                      });
+
+              KafkaService.getSubjects(self.projectId).then(
+                function (success) {
+                  // get list of subjects
+                  var data = new TextDecoder('utf-8').decode(success.data);
+                  self.subjects = data.slice(1,-1).replace(/\s/g,'').split(",");
+                }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  } else {
+                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  }
+                }
+              );
             };
             
-            self.init();            
+            self.init();
+
+            self.getVersionsForSubject = function(subject) {
+              KafkaService.getSubjectVersions(self.projectId, subject).then(
+                function(success) {
+                  var data = new TextDecoder('utf-8').decode(success.data);
+                  self.subjectVersions = data.slice(1,-1).replace(/\s/g,'').split(",");
+                }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  } else {
+                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  }
+                }
+              )
+            };
 
             self.guidePopulateTopic = function () {
               self.topicName = self.tourService.kafkaTopicName
@@ -101,10 +122,10 @@ angular.module('hopsWorksApp')
               self.num_partitions = 2;
               self.num_replicas = 1;
 
-              for (var i = 0; i < self.schemas.length; i++) {
-                if (angular.equals(self.schemas[i].name, self.tourService
+              for (var i = 0; i < self.subjects.length; i++) {
+                if (angular.equals(self.subjects[i], self.tourService
                   .kafkaSchemaName + "_" + self.projectId)) {
-                  self.schema = self.schemas[i];
+                  self.subject = self.subjects[i];
                   break;
                 }
               }
@@ -134,7 +155,7 @@ angular.module('hopsWorksApp')
                 self.topicName_wrong_value = 1;
               }
               
-              if(!self.schema || !self.schemaVersion){
+              if(!self.subject || !self.schemaVersion){
                 self.topicSchema_wrong_value = -1;
                 self.wrong_values=-1;
               }
@@ -151,7 +172,7 @@ angular.module('hopsWorksApp')
               topicDetails.name=self.topicName;
               topicDetails.numOfPartitions =self.num_partitions;
               topicDetails.numOfReplicas =self.num_replicas;
-              topicDetails.schemaName = self.schema.name;
+              topicDetails.schemaName = self.subject;
               topicDetails.schemaVersion = self.schemaVersion;                                  
 
               KafkaService.createTopic(self.projectId, topicDetails).then(

@@ -194,7 +194,7 @@ public class ZookeeperTopicCleanerTimer {
 
   /**
    * Get kafka broker endpoints and update them in Settings.
-   * These topics are used for passing broker endpoints to HopsUtil and to KafkaFacade.
+   * These topics are used for passing broker endpoints to HopsUtil and to Kafka controllers.
    */
   @Schedule(persistent = false,
       minute = "*/1",

@@ -84,10 +84,7 @@ angular.module('hopsWorksApp')
                           if (topicName === topic.name) {
                             KafkaService.getSchemaContent(self.projectId, topic.schemaName, topic.schemaVersion)
                               .then(function (success) {
-                                console.log("Schema Content: ", success.data.contents);
-                                console.log("Schema: ", schema);
-                                console.log("Schema Content === Schema: ", schema === success.data.contents);
-                                if(schema === success.data.contents) {
+                                if(schema === success.data) {
                                   self.topicDone[index] = true;
                                   self.topicsMap[fileName] = topicName;
                                   self.showCreate[index] = false;
@@ -111,13 +108,7 @@ angular.module('hopsWorksApp')
 
                 self.createTopic = function (topicName, schema, fileName, index) {
 
-                    var schemaDetail = {};
-                    schemaDetail.name = topicName;
-                    schemaDetail.contents = schema;
-                    schemaDetail.version = 1;
-                    schemaDetail.versions = [];
-
-                    KafkaService.createSchema(self.projectId, schemaDetail).then(
+                    KafkaService.postNewSubject(self.projectId, topicName, schema).then(
                       function (success) {
                           var topicDetails = {};
                           topicDetails.name = topicName;

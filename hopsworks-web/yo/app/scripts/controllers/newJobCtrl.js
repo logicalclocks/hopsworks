@@ -114,7 +114,7 @@ angular.module('hopsWorksApp')
                 .then(
                   function (success) {
                     self.topics = [];
-                    var topics = success.data;
+                    var topics = success.data.items;
                     for (var i = 0; i < topics.length; i++) {
                         self.topics.push(topics[i]['name']);
                     }

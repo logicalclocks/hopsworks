@@ -13,9 +13,10 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.dao.kafka;
+package io.hops.hopsworks.common.dao.kafka.schemas;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.project.Project;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -24,7 +25,7 @@ import javax.persistence.PersistenceContext;
 import java.util.Optional;
 
 @Stateless
-public class SchemaTopicsFacade extends AbstractFacade<SchemaTopics> {
+public class SchemasFacade extends AbstractFacade<Schemas> {
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -34,27 +35,35 @@ public class SchemaTopicsFacade extends AbstractFacade<SchemaTopics> {
     return em;
   }
   
-  public SchemaTopicsFacade() {
-    super(SchemaTopics.class);
+  public SchemasFacade() {
+    super(Schemas.class);
   }
   
-  public Optional<SchemaTopics> findSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
+  public Optional<Schemas> findSchemaById(Project project, Integer id) {
     try {
-      return Optional.of(find(new SchemaTopicsPK(schemaName, schemaVersion)));
-    } catch (NullPointerException e) {
-      return Optional.empty();
-    }
-  }
-  
-  @Deprecated
-  public Optional<SchemaTopics> getSchemaByNameAndVersion(String schemaName, Integer schemaVersion) {
-    try {
-      return Optional.of(em.createNamedQuery("SchemaTopics.findByNameAndVersion", SchemaTopics.class)
-        .setParameter("name", schemaName)
-        .setParameter("version", schemaVersion)
+      return Optional.of(em.createNamedQuery("Schemas.findById", Schemas.class)
+        .setParameter("project", project)
+        .setParameter("id", id)
         .getSingleResult());
     } catch (NoResultException e) {
       return Optional.empty();
     }
+  }
+  
+  public Optional<Schemas> findBySchema(Project project, String schema) {
+    try {
+      return Optional.of(em.createNamedQuery("Schemas.findBySchema", Schemas.class)
+        .setParameter("project", project)
+        .setParameter("schema", schema)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
+  
+  @Override
+  public void save(Schemas entity) {
+    super.save(entity);
+    em.flush();
   }
 }
