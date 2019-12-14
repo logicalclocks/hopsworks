@@ -222,7 +222,8 @@ public class JupyterConfigFilesGenerator {
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)
-        .setWhiteListedKernels(getWhitelistedKernels(js))
+        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonVersion()) +
+            "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'")
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
         .setJupyterCertsDirectory(certsDir)
         .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
@@ -342,25 +343,6 @@ public class JupyterConfigFilesGenerator {
       FileUtils.deleteDirectory(new File(jp.getProjectUserPath()));
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Could not delete Jupyter directory: " + jp.getProjectUserPath(), e);
-    }
-  }
-
-  /**
-   * If user selected Python kernel option then only show python kernel in jupyter
-   * If user selected Experiment option, only show PySpark kernel
-   * If user selected Spark option, only show spark, pyspark and sparkr kernels
-   * @param js
-   * @return whitelisted kernels
-   */
-  private String getWhitelistedKernels(JupyterSettings js) {
-    if(js.isPythonKernel()) {
-      return "'" + pythonKernelName(js.getProject().getPythonVersion()) + "'";
-    }
-    SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)js.getJobConfig();
-    if(sparkJobConfiguration.getExperimentType() != null) {
-      return "'pysparkkernel'";
-    } else {
-      return "'pysparkkernel', 'sparkkernel', 'sparkrkernel'";
     }
   }
 }
