@@ -65,10 +65,12 @@ angular.module('hopsWorksApp')
             self.selectedS3Connector = null
             self.selectedHopsfsConnector = null
             self.sinkType = 0
+            self.path = ""
 
             //Constants
             self.trainingDatasetNameMaxLength = self.settings.hopsfsTrainingDatasetNameMaxLength
             self.trainingDatasetDescriptionMaxLength = self.settings.trainingDatasetDescriptionMaxLength
+            self.trainingDatasetNameRegexp = self.settings.featurestoreRegex
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
             self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatasetDtoType
@@ -255,14 +257,12 @@ angular.module('hopsWorksApp')
                         self.queryPlanWrongValue = -1;
                         self.joinKeyWrongValue = -1;
                     }
-                    if (self.sinkType === 1 && (self.selectedS3Connector === null || !self.selectedS3Connector
-                        || self.selectedS3Connector === null)) {
+                    if (self.sinkType === 1 && (self.selectedS3Connector === null || !self.selectedS3Connector)) {
                         self.trainingDatasetSinkNotSelected = -1
                         self.sinkWrongValue = -1
                         self.trainingDatasetWrong_values = -1;
                     }
-                    if (self.sinkType === 0 && (self.selectedHopsfsConnector === null || !self.selectedHopsfsConnector
-                        || self.selectedHopsfsConnector === null)) {
+                    if (self.sinkType === 0 && (self.selectedHopsfsConnector === null || !self.selectedHopsfsConnector)) {
                         self.trainingDatasetSinkNotSelected = -1
                         self.sinkWrongValue = -1
                         self.trainingDatasetWrong_values = -1;
@@ -330,12 +330,8 @@ angular.module('hopsWorksApp')
              * Cart dropdown toggle
              */
             self.toggleCart = function () {
-                if (self.showCart) {
-                    self.showCart = false
-                } else {
-                    self.showCart = true
-                }
-            }
+                self.showCart = !self.showCart;
+            };
 
             /**
              * Opens the modal to view feature information
@@ -353,12 +349,8 @@ angular.module('hopsWorksApp')
              * Whether to show the filter search advanced filter form in the UI
              */
             self.setFeatureSearchFilterForm = function () {
-                if (self.featureSearchFilterForm) {
-                    self.featureSearchFilterForm = false;
-                } else {
-                    self.featureSearchFilterForm = true;
-                }
-            }
+                self.featureSearchFilterForm = !self.featureSearchFilterForm;
+            };
 
             /**
              * Removes a feature from the basket of selected features
@@ -710,6 +702,17 @@ angular.module('hopsWorksApp')
             }
 
             /**
+             * Utility function to get the name of the selected connector
+             */
+            self.getConnectorName = function() {
+                if (self.sinkType === 0) {
+                    return self.selectedHopsfsConnector.name;
+                } else { 
+                    return self.selectedS3Connector.name;
+                }
+            };
+
+            /**
              * Sets up the JSON input arguments for a job to create a new training dataset using the Feature Store API
              * and Spark
              *
@@ -717,7 +720,7 @@ angular.module('hopsWorksApp')
              * @returns the configured JSON
              */
             self.setupJobArgs = function (fileName) {
-                var argsJson = {
+                return {
                     "operation": "create_td",
                     "featurestore": self.featurestore.featurestoreName,
                     "features": self.featureBasket,
@@ -732,10 +735,11 @@ angular.module('hopsWorksApp')
                     "featureCorrelation": false,
                     "clusterAnalysis": false,
                     "featureHistograms": false,
-                    "statColumns": []
-                }
-                return argsJson
-            }
+                    "statColumns": [],
+                    "sink": self.getConnectorName(),
+                    "path": self.path
+                };
+            };
 
             /**
              * Sets up the job configuration for creating a training dataset using Spark and the Featurestore API
@@ -748,7 +752,7 @@ angular.module('hopsWorksApp')
                 var path = ""
                 var mainClass = ""
                 var jobType = ""
-                if (self.trainingDatasetFormat == "petastorm" || self.trainingDatasetFormat == "npy") {
+                if (self.trainingDatasetFormat === "petastorm" || self.trainingDatasetFormat === "npy") {
                     path = self.featurestoreUtilPythonExecutable
                     mainClass = self.settings.featurestoreUtilPythonMainClass
                     jobType = self.pySparkJobType
@@ -757,7 +761,7 @@ angular.module('hopsWorksApp')
                     mainClass = self.settings.featurestoreUtil4jMainClass
                     jobType = self.sparkJobType
                 }
-                var runConfig = {
+                return {
                     type: "sparkJobConfiguration",
                     appName: jobName,
                     amQueue: "default",
@@ -776,10 +780,9 @@ angular.module('hopsWorksApp')
                     "spark.executor.gpus": 0,
                     "spark.executor.instances": 1,
                     "spark.executor.memory": 4000,
-                    "spark.tensorflow.num.ps": 0,
-                }
-                return runConfig
-            }
+                    "spark.tensorflow.num.ps": 0
+                };
+            };
 
             /**
              * Update the sink type for the training dataset
@@ -788,7 +791,7 @@ angular.module('hopsWorksApp')
              */
             self.setSinkType = function (sinkType) {
                 self.sinkType = sinkType
-            }
+            };
 
             /**
              * Returns a formatted date string
@@ -797,26 +800,22 @@ angular.module('hopsWorksApp')
              */
             self.createdOn = function (dateStr) {
                 return FeaturestoreService.formatDateAndTime(new Date(dateStr))
-            }
+            };
 
             /**
              * Initialize controller
              */
             self.init = function () {
                 self.initVariables()
-            }
+            };
 
             /**
              * Boolean parameter indicating whether a spark job should be configured for creating the new training
              * dataset
              */
             self.setConfigureJob = function() {
-                if(self.configureJob){
-                    self.configureJob = false
-                } else {
-                    self.configureJob = true
-                }
-            }
+                self.configureJob = !self.configureJob;
+            };
 
             /**
              * Function called when the user press "add Feature" button in the update-training-dataset form

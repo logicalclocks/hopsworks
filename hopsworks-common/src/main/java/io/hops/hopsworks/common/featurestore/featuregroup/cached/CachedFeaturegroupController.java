@@ -580,7 +580,7 @@ public class CachedFeaturegroupController {
   public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO, Boolean sync)
     throws FeaturestoreException {
 
-    Pattern namePattern = Pattern.compile(FeaturestoreConstants.FEATURESTORE_REGEX);
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
 
     if(cachedFeaturegroupDTO.getName().length() > FeaturestoreConstants.CACHED_FEATUREGROUP_NAME_MAX_LENGTH ||
         !namePattern.matcher(cachedFeaturegroupDTO.getName()).matches()) {
@@ -598,16 +598,15 @@ public class CachedFeaturegroupController {
           + FeaturestoreConstants.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " characters");
     }
     //Only need to verify the DDL when creating table from Scratch and not Syncing
-    if(!sync){
-      if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-        return (Strings.isNullOrEmpty(f.getName()) ||
-          !namePattern.matcher(f.getName()).matches() || f.getName().length()
+    if (!sync) {
+      if (!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
+        return (!namePattern.matcher(f.getName()).matches() || f.getName().length()
           > FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
       }).collect(Collectors.toList()).isEmpty()) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
           ", the feature name in a cached feature group should be less than "
             + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
-            "the regular expression: " +  FeaturestoreConstants.FEATURESTORE_REGEX);
+            "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
       }
   
       if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {

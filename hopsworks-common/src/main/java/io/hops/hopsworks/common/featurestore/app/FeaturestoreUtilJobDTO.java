@@ -51,13 +51,15 @@ public class FeaturestoreUtilJobDTO {
   private String jdbcString;
   private List<String> jdbcArguments;
   private Boolean online = false;
+  private String sink;
+  private String path;
 
   public FeaturestoreUtilJobDTO(
       List<FeatureDTO> features, List<FeaturegroupDTO> featuregroups, String featurestore, String trainingDataset,
       String featuregroup, String joinKey, String description, String dataFormat, int version, Boolean descriptiveStats,
       Boolean featureCorrelation, Boolean clusterAnalysis, Boolean featureHistograms, List<String> statColumns,
       String operation, String sqlQuery, String hiveDatabase, String jdbcString, List<String> jdbcArguments,
-      String fileName, Boolean online) {
+      String fileName, Boolean online, String sink, String path) {
     this.features = features;
     this.featuregroups = featuregroups;
     this.featurestore = featurestore;
@@ -79,6 +81,8 @@ public class FeaturestoreUtilJobDTO {
     this.jdbcArguments = jdbcArguments;
     this.fileName = fileName;
     this.online = online;
+    this.sink = sink;
+    this.path = path;
   }
 
   public FeaturestoreUtilJobDTO() {
@@ -272,7 +276,24 @@ public class FeaturestoreUtilJobDTO {
   public void setOnline(Boolean online) {
     this.online = online;
   }
-  
+
+  public String getSink() {
+    return sink;
+  }
+
+  public void setSink(String sink) {
+    this.sink = sink;
+  }
+
+  @XmlElement
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
   @Override
   public String toString() {
     return "FeaturestoreUtilJobDTO{" +
@@ -297,6 +318,8 @@ public class FeaturestoreUtilJobDTO {
       ", jdbcString='" + jdbcString + '\'' +
       ", jdbcArguments=" + jdbcArguments +
       ", online=" + online +
+      ", sink='" + sink + '\'' +
+      ", path='" + path + '\'' +
       '}';
   }
 }

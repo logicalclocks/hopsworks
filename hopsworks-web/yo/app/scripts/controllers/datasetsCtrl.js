@@ -1343,6 +1343,16 @@ angular.module('hopsWorksApp')
               "opacity": 0.2
             };
 
+            self.selectDataset = function (selectedIndex, file) {
+                self.resetSelected();
+                self.tgState = true;
+                self.selected = file.name;
+                self.selectedFiles[file.name] = file;
+                self.selectedFiles[file.name].selectedIndex = selectedIndex;
+                self.menustyle.opacity = 1.0;
+                self.lastSelected = selectedIndex;
+            };
+
             /**
              * Select an inode; updates details panel.
              * @param {type} selectedIndex

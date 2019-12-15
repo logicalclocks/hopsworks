@@ -49,12 +49,13 @@ angular.module('hopsWorksApp')
                 self.content_empty = 1;
                 self.message ="";
                 self.validSchema = "invalid";
+                self.subjects;
 
                 self.init = function () {
 
                     KafkaService.getSchemaContent(self.projectId, schemaName, self.schemaVersion).then(
                             function (success) {
-                                $scope.jsonObj = success.data.contents;
+                                $scope.jsonObj = success.data;
                             }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Could not get schema for topic', ttl: 5000, referenceId: 21});
                     });
@@ -81,23 +82,59 @@ angular.module('hopsWorksApp')
                     //schemaDetail.version =self.version;
                     schemaDetail.versions =[];
 
-                    KafkaService.validateSchema(self.projectId, schemaDetail).then(
-                            function (success) {
-                                self.message = "schema is valid";
-                                self.validSchema="";
-                            }, function (error) {
-                                self.message = error.data.errorMsg;
-                    });
+                  KafkaService.getSubjects(self.projectId).then(
+                    function (success) {
+                      // get list of subjects
+                      var data = new TextDecoder('utf-8').decode(success.data);
+                      self.subjects = data.slice(1,-1).replace(/\s/g,'').split(",");
+                      if (self.subjects.indexOf(self.schemaName) < 0) {
+                        self.message = "schema is valid";
+                        self.validSchema="";
+                        if (self.projectIsGuide) {
+                          self.tourService.resetTours();
+                          self.tourService.currentStep_TourFour = 1;
+                        }
+                      } else {
+                        KafkaService.validateSchema(self.projectId, self.schemaName, self.contents).then(
+                          function (success) {
+                            if (success.data.is_compatible === true) {
+                              self.message = "schema is valid";
+                              self.validSchema="";
+                              if (self.projectIsGuide) {
+                                self.tourService.resetTours();
+                                self.tourService.currentStep_TourFour = 1;
+                              }
+                            } else {
+                              self.message = "schema is invalid"
+                            }
+                          }, function (error) {
+                            //if subject doesn't exist it is still valid
+                            if (error.data.errorCode === 40401) {
+                              self.message = "schema is valid";
+                              self.validSchema="";
+                              if (self.projectIsGuide) {
+                                self.tourService.resetTours();
+                                self.tourService.currentStep_TourFour = 1;
+                              }
+                            } else {
+                              self.message = error.data.errorMsg;//   "schema is invalid";
+                            }
+                          });
+                      }
+
+                    }, function (error) {
+                      if (typeof error.data.usrMsg !== 'undefined') {
+                        growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      } else {
+                        growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                      }
+                    }
+                  );
+
                  };
                 
                 self.createSchema = function () {                   
-                    
-                    var schemaDetail = {};
-                    schemaDetail.name = schemaName;
-                    schemaDetail.contents =self.contents;
-                    schemaDetail.version = self.schemaVersion + 1;
-
-                    KafkaService.createSchema(self.projectId, schemaDetail).then(
+                    KafkaService.postNewSubject(self.projectId, schemaName, self.contents).then(
                             function (success) {
                                 $uibModalInstance.close(success);
                             }, function (error) {

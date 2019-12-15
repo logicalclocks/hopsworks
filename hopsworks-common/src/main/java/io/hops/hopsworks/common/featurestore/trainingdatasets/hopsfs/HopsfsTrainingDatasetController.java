@@ -32,6 +32,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * Class controlling the interaction with the hopsfs_training_dataset table and required business logic
@@ -105,11 +106,13 @@ public class HopsfsTrainingDatasetController {
    * @throws FeaturestoreException
    */
   private void verifyHopsfsTrainingDatasetName(String hopsfsTrainingDatasetName) throws FeaturestoreException {
-    if(hopsfsTrainingDatasetName.length() >
-      FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH) {
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
+    if (hopsfsTrainingDatasetName.length() > FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH ||
+      !namePattern.matcher(hopsfsTrainingDatasetName).matches()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
-        ", the name of a hopsfs training dataset should be less than "
-          + FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters");
+        ", the name of a hopsfs training dataset should be less than " +
+          FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters and match " +
+          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
     }
   }
 

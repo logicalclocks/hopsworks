@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.python.library;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.python.library.command.LibraryCommandsResource;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchBuilder;
 import io.hops.hopsworks.api.python.library.search.LibrarySearchDTO;
@@ -26,10 +27,12 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -56,6 +59,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -80,7 +84,9 @@ public class LibraryResource {
   private LibraryCommandsResource libraryCommandsResource;
   @EJB
   private EnvironmentController environmentController;
-
+  @EJB
+  private JWTHelper jwtHelper;
+  
   private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.]+");
   private static final Pattern CHANNEL_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-:/~?&\\.]+");
 
@@ -144,16 +150,19 @@ public class LibraryResource {
   @Path("{library}")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response uninstall(@PathParam("library") String library)
-    throws ServiceException, GenericException, ProjectException, PythonException {
+  public Response uninstall(@Context
+      SecurityContext sc, @PathParam("library") String library)
+      throws ServiceException, GenericException, ProjectException,
+      PythonException, ElasticException {
     validatePattern(library);
+    Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion);
     if (settings.getPreinstalledPythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
     }
 
-    environmentController.checkCondaEnvExists(project);
+    environmentController.checkCondaEnvExists(project, user);
 
     commandsController.deleteCommands(project, library);
     libraryController.uninstallLibrary(project, library);
@@ -173,8 +182,9 @@ public class LibraryResource {
                           @QueryParam("machine") LibraryFacade.MachineType machine,
                           @Context UriInfo uriInfo,
                           @Context HttpServletRequest req)
-    throws ServiceException, GenericException, PythonException, ProjectException {
-
+      throws ServiceException, GenericException, PythonException,
+      ProjectException, ElasticException {
+    Users user = jwtHelper.getUserPrincipal(req);
     if (version == null || version.isEmpty()) {
       throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);
     }
@@ -211,7 +221,7 @@ public class LibraryResource {
       }
     }
 
-    environmentController.checkCondaEnvExists(project);
+    environmentController.checkCondaEnvExists(project, user);
   
     PythonDep dep = libraryController.addLibrary(project, CondaCommandFacade.
         CondaInstallType.valueOf(packageManager.name().toUpperCase()), machine, channel, library, version);

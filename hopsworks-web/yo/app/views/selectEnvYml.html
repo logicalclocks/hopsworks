@@ -100,28 +100,50 @@
 
   <div ng-if="selectEnvYmlCtrl.envMode === 'CPU' || selectEnvYmlCtrl.envMode === 'ALL' || selectEnvYmlCtrl.envMode === 'GPU'" class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 
-    <table class="table table-hover">
-      <tbody ng-model="datasetsCtrl.files">
-      <tr ng-click="selectEnvYmlCtrl.back(datasetsCtrl)">
-        <td style="padding: 0px">&nbsp &nbsp
-          <a style="font-size:25px">..</a>
-        </td>
-      </tr>
-      <a href="selectFile.html"></a>
-      <tr ng-repeat="file in datasetsCtrl.files| filter:{status: true} | orderBy: 'name'" ng-class="{ 'highlight': datasetsCtrl.selected === {{ $index}}, 'expanded' : expanded }" ng-click="selectEnvYmlCtrl.selectEnvYml(pythonCtrl, datasetsCtrl, file);">
-        <td>
-          <i ng-show="file.dir" class="glyphicon glyphicon-folder-close" style="padding-right: 10px; color: #757575;"></i>
-          <i ng-show="!file.dir" class="glyphicon glyphicon-file" style="padding-right: 10px; color: #757575;"></i> {{file.name}}
-        </td>
-      </tr>
-      </tbody>
-      <tfoot>
-      <tr>
-        <td>
-          <div class="loader loader-sm" ng-show="datasetsCtrl.working" style="position: static;"></div>
-        </td>
-      </tr>
-      </tfoot>
-    </table>
+    <div class="table-responsive" style="overflow: hidden;">
+      <h4 class="row text-muted" style="margin-bottom: 15px; margin-left: 10px;">
+        /{{ selectEnvYmlCtrl.datasetBrowser.projectName}}/{{ selectEnvYmlCtrl.datasetBrowser.relativePath}}
+      </h4>
+      <div growl reference="114" class="pull-right" ></div>
+      <table class="table table-hover" id="select_file">
+        <tbody>
+        <tr ng-click="selectEnvYmlCtrl.datasetBrowser.back()">
+          <td style="padding: 0px">&nbsp &nbsp
+            <a style="font-size:25px">..</a>
+          </td>
+        </tr>
+        <tr dir-paginate="file in selectEnvYmlCtrl.datasetBrowser.files | itemsPerPage:selectEnvYmlCtrl.datasetBrowser.pageSize"
+            pagination-id="file_select_pagination"
+            current-page="selectEnvYmlCtrl.datasetBrowser.currentPage"
+            total-items="selectEnvYmlCtrl.datasetBrowser.filesCount"
+            ng-click="selectEnvYmlCtrl.selectEnvYml(pythonCtrl, $index, file);"
+            ng-class="{'highlight': selectEnvYmlCtrl.datasetBrowser.selected === $index }">
+          <td>
+            <i ng-show="file.attributes.dir" class="fa fa-folder" style="padding-right: 10px; color: #757575;"></i>
+            <i ng-show="!file.attributes.dir" class="fa fa-file" style="padding-right: 10px; color: #757575;"></i>
+            {{file.attributes.name}}
+          </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+          <td>
+            <div class="loader loader-sm" ng-show="selectEnvYmlCtrl.datasetBrowser.working" style="position: static;"
+                 id="select_file_loading"></div>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+      <div layout="row" class="pull-right" style="margin-top: -20px; margin-bottom: -20px">
+        <dir-pagination-controls
+                pagination-id="file_select_pagination"
+                max-size="7"
+                direction-links="true"
+                boundary-links="true"
+                on-page-change="selectEnvYmlCtrl.datasetBrowser.pageChange(newPageNumber)"
+                class="pull-right">
+        </dir-pagination-controls>
+      </div>
+    </div>
   </div>
 </div>

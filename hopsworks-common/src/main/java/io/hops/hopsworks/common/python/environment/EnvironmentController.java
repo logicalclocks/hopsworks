@@ -36,6 +36,7 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -106,12 +107,14 @@ public class EnvironmentController {
     }
   }
   
-  public void checkCondaEnvExists(Project project) throws ServiceException, ProjectException, PythonException {
+  public void checkCondaEnvExists(Project project, Users user)
+      throws ServiceException, ProjectException, PythonException,
+      ElasticException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
     if (!project.getCondaEnv()) {
-      createKibanaIndex(project);
+      createKibanaIndex(project, user);
       copyOnWriteCondaEnv(project);
     }
   }
@@ -324,7 +327,7 @@ public class EnvironmentController {
   
   public String createEnvironmentFromYml(String allYmlPath, String cpuYmlPath, String gpuYmlPath,
     boolean installJupyter, Users user, Project project) throws PythonException,
-      ServiceException, ProjectException {
+      ServiceException, ProjectException, ElasticException {
     if ((project.getConda() || project.getCondaEnv())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
@@ -339,7 +342,7 @@ public class EnvironmentController {
       String allYml = getYmlFromPath(new Path(allYmlPath), username);
       String pythonVersion = findPythonVersion(allYml);
       version = pythonVersion;
-      createKibanaIndex(project);
+      createKibanaIndex(project, user);
       createProjectInDb(project, version, LibraryFacade.MachineType.ALL, allYml, installJupyter);
       project.setPythonVersion(version);
       projectFacade.update(project);
@@ -369,7 +372,7 @@ public class EnvironmentController {
             "python version mismatch between .yml files.");
       }
       version = pythonVersionCPUYml;
-      createKibanaIndex(project);
+      createKibanaIndex(project, user);
       createProjectInDb(project, version, LibraryFacade.MachineType.CPU, cpuYml, installJupyter);
       createProjectInDb(project, version, LibraryFacade.MachineType.GPU, gpuYml, installJupyter);
     
@@ -484,14 +487,16 @@ public class EnvironmentController {
     }
   }
 
-  public void createKibanaIndex(Project project) throws ServiceException, ProjectException {
+  public void createKibanaIndex(Project project, Users user)
+      throws ServiceException,
+      ProjectException, ElasticException {
     String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
         LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
     if (!elasticController.indexExists(indexName)) {
       elasticController.createIndex(indexName);
     }
     // Kibana index pattern for conda commands logs
-    elasticController
-        .createIndexPattern(project, project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+    elasticController.createIndexPattern(project, user,
+            project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
   }
 }

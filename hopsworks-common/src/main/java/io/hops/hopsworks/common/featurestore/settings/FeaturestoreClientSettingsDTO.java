@@ -30,7 +30,7 @@ import java.util.List;
 public class FeaturestoreClientSettingsDTO {
   
   private int featurestoreStatisticsMaxCorrelations = FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS;
-  private String featurestoreRegex = FeaturestoreConstants.FEATURESTORE_REGEX;
+  private String featurestoreRegex = FeaturestoreConstants.FEATURESTORE_REGEX.toString();
   private int storageConnectorNameMaxLength = FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH;
   private int storageConnectorDescriptionMaxLength =
     FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH;

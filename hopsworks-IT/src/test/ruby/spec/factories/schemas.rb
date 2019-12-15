@@ -1,6 +1,6 @@
 =begin
  This file is part of Hopsworks
- Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ Copyright (C) 2019, Logical Clocks AB. All rights reserved
 
  Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,8 +13,8 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
-class SchemaTopics < ActiveRecord::Base
+class Schemas < ActiveRecord::Base
   def self.table_name
-    "schema_topics"
+    "schemas"
   end
 end

@@ -49,7 +49,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobsResource;
-import io.hops.hopsworks.api.kafka.KafkaService;
+import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
@@ -65,7 +65,6 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnPriceMultiplicator;
@@ -74,7 +73,6 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.pia.Pia;
 import io.hops.hopsworks.common.dao.project.pia.PiaFacade;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -98,12 +96,14 @@ import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -160,7 +160,7 @@ public class ProjectService {
   @Inject
   private ProjectMembersService projectMembers;
   @Inject
-  private KafkaService kafka;
+  private KafkaResource kafka;
   @Inject
   private JupyterService jupyter;
   @Inject
@@ -203,10 +203,6 @@ public class ProjectService {
   private PiaFacade piaFacade;
   @EJB
   private JWTHelper jWTHelper;
-  @EJB
-  private FeaturestoreController featurestoreController;
-  @EJB
-  private ProjectServiceFacade projectServiceFacade;
   @Inject
   private DelaProjectService delaService;
   @Inject
@@ -449,7 +445,7 @@ public class ProjectService {
   public Response updateProject(
       ProjectDTO projectDTO, @PathParam("projectId") Integer id,
       @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
-      ServiceException, FeaturestoreException, UserException {
+      ServiceException, FeaturestoreException, UserException, ElasticException, SchemaException, KafkaException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -528,7 +524,7 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException, UnsupportedEncodingException {
+      FeaturestoreException, JobException, UnsupportedEncodingException, ElasticException, SchemaException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -604,7 +600,7 @@ public class ProjectService {
   public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException {
+      FeaturestoreException, ElasticException, SchemaException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     List<String> failedMembers = null;
@@ -762,7 +758,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/kafka")
-  public KafkaService kafka(@PathParam("projectId") Integer id) {
+  public KafkaResource kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
     return this.kafka;
   }

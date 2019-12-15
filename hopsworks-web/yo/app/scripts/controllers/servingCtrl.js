@@ -22,9 +22,10 @@
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
         'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService',
+        'KafkaService', 'JobService','ElasticService',
         function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonDepsService,
-                  ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService) {
+                  ModalService, $interval, StorageService, $mdSidenav,
+                  DataSetService, KafkaService, ElasticService) {
 
             var self = this;
 
@@ -92,7 +93,7 @@ angular.module('hopsWorksApp')
 
             this.selectFile = function () {
                 if (self.editServing.servingType === "TENSORFLOW") {
-                    ModalService.selectModelServing('lg', '*', '').then(
+                    ModalService.selectDir('lg', self.projectId, '*', '').then(
                         function (success) {
                             self.onDirSelected(success);
                         },
@@ -127,12 +128,13 @@ angular.module('hopsWorksApp')
                     name = artifactPathSplits[artifactPathSplits.length - 1];
                 }
 
-                datasetService.getContents(relativePath).then(
+                datasetService.getAllDatasets(relativePath).then(
                     function (success) {
                         var versions = [];
-                        for (var version in success.data) {
-                            if (!isNaN(success.data[version].name)) {
-                                versions.push(success.data[version].name);
+                        var files = success.data.items;
+                        for (var version in files) {
+                            if (!isNaN(files[version].attributes.name)) {
+                                versions.push(files[version].attributes.name);
                             } else {
                                 growl.error("Directory doesn't respect the required structure", {
                                     title: 'Error',
@@ -470,12 +472,23 @@ angular.module('hopsWorksApp')
              * @param serving the serving to show the logs for
              */
             self.showServingLogs = function (serving) {
-                var projectName = UtilsService.getProjectName();
-                self.kibanaUI = "/hopsworks-api/kibana/app/kibana?projectId=" + self.projectId +
-                    "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
-                    "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
-                    "query:(language:lucene,query:'modelname:" + serving.name + "'),sort:!('@timestamp',desc))";
-                self.showLogs = true;
+             var projectName = UtilsService.getProjectName();
+             ElasticService.getJwtToken(self.projectId).then(
+                 function (success) {
+                    var kibanaUrl = success.data.kibanaUrl;
+                     self.kibanaUI = kibanaUrl + "projectId=" + self.projectId +
+                                        "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
+                                        "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
+                                        "query:(language:lucene,query:'modelname:" + serving.name + "'),sort:!('@timestamp',desc))";
+                     self.showLogs = true;
+
+                 }, function (error) {
+                     if (typeof error.data.usrMsg !== 'undefined') {
+                         growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                          growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+             });
             };
 
             self.showDetailedInformation = function (serving) {
