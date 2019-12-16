@@ -51,6 +51,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -218,36 +219,26 @@ public class FeaturegroupService {
   }
 
   /**
-   * Retrieve a specific feature group based name. Allow filtering on version.
+   * Endpoint for retrieving a featuregroup with a specified name in a specified featurestore
    *
-   * @param name name of the featuregroup
-   * @param version queryParam with the desired version
+   * @param featureGroupName name of the featuregroup
    * @return JSON representation of the featuregroup
    */
   @GET
-  // Anything else that is not just number should use this endpoint
-  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}")
+  @Path("/{featureGroupName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version",
-      response = FeaturegroupDTO.class)
-  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
-                                  @PathParam("name") String name,
-                                  @ApiParam(value = "Filter by a specific version")
-                                  @QueryParam("version") Integer version, @Context SecurityContext sc) {
-    verifyNameProvided(name);
-    List<FeaturegroupDTO> featuregroupDTO;
-    if (version == null) {
-      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, name);
-    } else {
-      featuregroupDTO = Arrays.asList(featuregroupController
-          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version));
-    }
-    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
-    return Response.ok().entity(featuregroupGeneric).build();
+  @ApiOperation(value = "Get specific featuregroup from a specific featurestore", response = FeaturegroupDTO.class)
+  public Response getFeatureGroup(@ApiParam(value = "Name of the featuregroup", required = true)
+                                  @PathParam("featureGroupName") String featureGroupName) {
+    verifyNameProvided(featureGroupName);
+    FeaturegroupDTO featuregroupDTO =
+        featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
+    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
+        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
   }
 
   /**
@@ -503,28 +494,18 @@ public class FeaturegroupService {
     }
   }
 
+
   /**
-   * Verify that the name was provided as a path param
+   * Verify that the user id was provided as a path param
    *
-   * @param featureGroupName the feature group name to verify
+   * @param featureGroupName the feature group id to verify
    */
   private void verifyNameProvided(String featureGroupName) {
     if (Strings.isNullOrEmpty(featureGroupName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
-
-  /**
-   * Verify that the version was provided as a path param
-   *
-   * @param featureVersion the feature group version to verify
-   */
-  private void verifyVersionProvided(Integer featureVersion) {
-    if (featureVersion == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
-          FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
-    }
-  }
+  
   
   /**
    * Endpoint for syncing a Hive Table with the Feature Store

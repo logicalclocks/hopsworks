@@ -271,6 +271,19 @@ public class FeaturegroupController {
   /**
    * Retrieves a featuregroup with a particular id from a particular featurestore
    *
+   * @param name name of the featuregroup
+   * @param featurestore the featurestore that the featuregroup belongs to
+   * @return XML/JSON DTO of the featuregroup
+   */
+  public FeaturegroupDTO getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name) {
+    Featuregroup featuregroup = verifyFeaturegroupName(name, featurestore);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+
+
+  /**
+   * Retrieves a featuregroup with a particular id from a particular featurestore
+   *
    * @param id           id of the featuregroup
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
@@ -612,7 +625,7 @@ public class FeaturegroupController {
    * @param featuregroupId the id of the feature group
    * @return the featuregroup with the id if it passed the validation
    */
-  private Featuregroup verifyFeaturegroupId(Featurestore featurestore, Integer featuregroupId) {
+  private Featuregroup verifyFeaturegroupId(Integer featuregroupId, Featurestore featurestore) {
     Featuregroup featuregroup = null;
     if(featurestore != null){
       featuregroup = featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore);
@@ -627,36 +640,21 @@ public class FeaturegroupController {
   }
 
   /**
-   * Verifies the name of a feature group
+   * Verify input feature group type
+   * Verifies the id of a feature group
    *
+   * @param featureGroupName the id of the feature group
    * @param featurestore the featurestore to query
-   * @param featureGroupName the name of the feature group
    * @return the featuregroup with the id if it passed the validation
    */
-  private List<Featuregroup> verifyFeaturegroupName(Featurestore featurestore, String featureGroupName) {
-    List<Featuregroup> featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
-    if (featuregroup == null || featuregroup.isEmpty()) {
+  private Featuregroup verifyFeaturegroupName(String featureGroupName, Featurestore featurestore) {
+    Featuregroup featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
+    if (featuregroup == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
         "feature group name " + featureGroupName);
     }
     return featuregroup;
   }
-
-  /**
-   * Verifies the name and version of a feature group
-   *
-   * @param featurestore the featurestore to query
-   * @param featureGroupName the name of the feature group
-   * @param version the version of the feature group
-   * @return the featuregroup with the id if it passed the validation
-   */
-  private Featuregroup verifyFeaturegroupNameVersion(Featurestore featurestore, String featureGroupName,
-                                                     Integer version) {
-    return featuregroupFacade.findByNameVersionAndFeaturestore(featureGroupName, version, featurestore)
-        .orElseThrow(() -> new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
-        "feature group name: " + featureGroupName + " feature group version: " + version));
-  }
-
 
   /**
    * Verify user input
