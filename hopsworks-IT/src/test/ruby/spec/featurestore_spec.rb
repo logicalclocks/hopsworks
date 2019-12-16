@@ -581,6 +581,30 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.size).to eq 2
         end
 
+        it "should fail to get a feature group without version" do 
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+
+          # Create first version
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+
+          # Get the first version
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores#{featurestore_id}/featuregroups/#{featuregroup_name}/version/"
+          get get_featuregroup_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status(400)
+        end
+
+        it "should fail to get a feature store by name that does not exists" do 
+          # Get the first version
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores#{featurestore_id}/featuregroups/doesnotexists/version/1"
+          get get_featuregroup_endpoint
+          parsed_json = JSON.parse(response.body)
+          expect_status(400)
+        end
+
         it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -1119,7 +1143,25 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json['name']).to be training_dataset_name
         end
 
+        it "should fail to get a training dataset without the version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          expect_status(201)
 
+          # Get the list  
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores#{featurestore_id}/trainingdatasets/#{training_dataset_name}/version/"
+          get get_training_datasets_endpoint 
+          expect_status(400)
+        end
+
+        it "should fail to get a training dataset with a name that does not exists" do
+          # Get the list  
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores#{featurestore_id}/trainingdatasets/doesnotexists/"
+          get get_training_datasets_endpoint 
+          expect_status(400)
+        end
 
       end
     end
