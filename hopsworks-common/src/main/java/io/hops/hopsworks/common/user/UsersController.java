@@ -44,7 +44,6 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.UserProfileDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
@@ -188,44 +187,7 @@ public class UsersController {
     return null;
   }
   
-  public UserProfileDTO acceptUser(HttpServletRequest req, Users initiator, Integer userId, Users newUser)
-    throws UserException, ServiceException {
-    Users u = userFacade.find(userId);
-    if (u != null) {
-      if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
-        Collection<BbcGroup> groups = null;
-        if (newUser != null) {
-          groups = newUser.getBbcGroupCollection();
-        }
-        if (groups == null || groups.isEmpty()) {
-          BbcGroup bbcGroup = bbcGroupFacade.findByGroupName("HOPS_USER");
-          groups = new ArrayList<>();
-          groups.add(bbcGroup);
-        }
-        u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
-        u.setBbcGroupCollection(groups);
-        u = userFacade.update(u);
-        StringBuilder sb = new StringBuilder();
-        for (BbcGroup group : u.getBbcGroupCollection()) {
-          sb.append(group.getGroupName()).append(", ");
-        }
-        auditManager.registerRoleChange(initiator,
-          RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
-            name(), sb.toString(), u, req);
-        auditManager.registerRoleChange(initiator, UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-          AccountsAuditActions.SUCCESS.name(), "", u, req);
-        sendConfirmationMail(u);
-      } else {
-        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
-          "status: "+ u.getStatus().name() + " to status " + UserAccountStatus.ACTIVATED_ACCOUNT.name());
-      }
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-    return new UserProfileDTO(u);
-  }
-  
-  private void sendConfirmationMail(Users user) throws ServiceException {
+  public void sendConfirmationMail(Users user) throws ServiceException {
     try {
       //send confirmation email
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
@@ -238,23 +200,7 @@ public class UsersController {
     }
   }
   
-  public UserProfileDTO rejectUser(HttpServletRequest req, Users initiator, Integer userId)
-    throws UserException, ServiceException {
-    Users u = userFacade.find(userId);
-    if (u != null) {
-      u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
-      u = userFacade.update(u);
-    
-      auditManager.registerRoleChange(initiator, UserAccountStatus.SPAM_ACCOUNT.name(),
-        AccountsAuditActions.SUCCESS.name(), "", u, req);
-      sendRejectionEmail(u);
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-    return new UserProfileDTO(u);
-  }
-  
-  private void sendRejectionEmail(Users user) throws ServiceException {
+  public void sendRejectionEmail(Users user) throws ServiceException {
     try {
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
         UserAccountsEmailMessages.ACCOUNT_REJECT,
@@ -265,23 +211,7 @@ public class UsersController {
     }
   }
   
-  public UserProfileDTO pendUser(HttpServletRequest req, Integer userId) throws UserException, ServiceException {
-    Users u = userFacade.find(userId);
-    if (u != null) {
-      if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-        u = resendAccountVerificationEmail(u, req);
-      } else {
-        throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
-          "status: "+ u.getStatus().name() + ", to pending status");
-      }
-    } else {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-    
-    return new UserProfileDTO(u);
-  }
-  
-  private Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
+  public Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
     try {
       authController.sendNewValidationKey(user, req);
       return user;
@@ -559,34 +489,6 @@ public class UsersController {
       AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user, req);
     userFacade.update(user);
     return user;
-  }
-  
-  public UserProfileDTO updateUser(Integer userIdToUpdate, HttpServletRequest req, Users newUser,
-    Users initiator) throws UserException {
-    Users u = userFacade.find(userIdToUpdate);
-    if (u == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
-    }
-  
-    if (newUser.getStatus() != null) {
-      u.setStatus(newUser.getStatus());
-      auditManager.registerRoleChange(initiator, AccountsAuditActions.CHANGEDSTATUS.name(),
-        AccountsAuditActions.SUCCESS.name(), u.getStatusName(), u, req);
-    }
-    if (newUser.getBbcGroupCollection() != null) {
-      u.setBbcGroupCollection(newUser.getBbcGroupCollection());
-      StringBuilder sb = new StringBuilder();
-      for (BbcGroup group : u.getBbcGroupCollection()) {
-        sb.append(group.getGroupName()).append(", ");
-      }
-      auditManager.registerRoleChange(initiator, RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
-        name(), sb.toString(), u, req);
-    }
-    if (newUser.getMaxNumProjects() != null) {
-      u.setMaxNumProjects(newUser.getMaxNumProjects());
-    }
-    u = userFacade.update(u);
-    return new UserProfileDTO(u);
   }
 
   public SshKeyDTO addSshKey(int id, String name, String sshKey) {

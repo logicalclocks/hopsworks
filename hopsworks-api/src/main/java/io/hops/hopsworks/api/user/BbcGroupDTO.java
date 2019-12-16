@@ -13,9 +13,10 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.dao.user;
+package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.dao.user.BbcGroup;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;

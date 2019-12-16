@@ -24,7 +24,7 @@ module AdminUsersHelper
 
   def admin_update_user(id, user)
     json_data = user.to_json
-    post "#{ENV['HOPSWORKS_API']}/admin/users/" + id.to_s, json_data
+    put "#{ENV['HOPSWORKS_API']}/admin/users/" + id.to_s, json_data
   end
 
   def admin_accept_user(id, user = {})

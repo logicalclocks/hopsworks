@@ -41,14 +41,14 @@ package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.user.BbcGroupDTO;
-import io.hops.hopsworks.common.dao.user.UserProfileDTO;
+import io.hops.hopsworks.api.user.UserProfileBuilder;
+import io.hops.hopsworks.api.user.BbcGroupDTO;
+import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.api.user.UsersBeanParam;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -62,7 +62,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -78,14 +77,14 @@ import javax.ws.rs.core.UriInfo;
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class UsersAdmin {
+public class UsersAdminResource {
 
   @EJB
   private JWTHelper jWTHelper;
   @EJB
   private UsersBuilder usersBuilder;
   @EJB
-  private UsersController usersController;
+  private UserProfileBuilder userProfileBuilder;
   
   @ApiOperation(value = "Get all users profiles.")
   @GET
@@ -114,7 +113,7 @@ public class UsersAdmin {
   }
   
   @ApiOperation(value = "Update user profile specified by id.")
-  @POST
+  @PUT
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response updateUser(
@@ -123,13 +122,13 @@ public class UsersAdmin {
     @PathParam("id") Integer id,
     Users user) throws UserException {
     
-    UserProfileDTO dto = usersController.updateUser(
+    userProfileBuilder.updateUser(
       id,
       req,
       user,
       jWTHelper.getUserPrincipal(sc));
     
-    return Response.ok().entity(dto).build();
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Accept user specified by id.")
@@ -139,7 +138,7 @@ public class UsersAdmin {
   public Response acceptUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @PathParam("id") Integer id, Users user) throws UserException, ServiceException {
     
-    usersController.acceptUser(
+    userProfileBuilder.acceptUser(
       req,
       jWTHelper.getUserPrincipal(sc),
       id,
@@ -154,7 +153,7 @@ public class UsersAdmin {
   public Response rejectUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @PathParam("id") Integer id) throws UserException, ServiceException {
     
-    usersController.rejectUser(
+    userProfileBuilder.rejectUser(
       req,
       jWTHelper.getUserPrincipal(sc),
       id);
@@ -168,7 +167,7 @@ public class UsersAdmin {
   public Response pendingUser(@Context HttpServletRequest req, @PathParam("id") Integer id)
     throws UserException, ServiceException {
     
-    usersController.pendUser(req, id);
+    userProfileBuilder.pendUser(req, id);
   
     return Response.noContent().build();
   }
