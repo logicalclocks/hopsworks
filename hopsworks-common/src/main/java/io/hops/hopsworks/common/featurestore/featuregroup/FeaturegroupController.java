@@ -244,17 +244,29 @@ public class FeaturegroupController {
   }
 
   /**
-   * Retrieves a featuregroup with a particular id from a particular featurestore
+   * Retrieves a list of feature groups with a specific name from a specific feature store
    *
    * @param name name of the featuregroup
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */
-  public FeaturegroupDTO getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name) {
-    Featuregroup featuregroup = verifyFeaturegroupName(name, featurestore);
-    return convertFeaturegrouptoDTO(featuregroup);
+  public List<FeaturegroupDTO> getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name) {
+    List<Featuregroup> featuregroup = verifyFeaturegroupName(featurestore, name);
+    return featuregroup.stream().map(this::convertFeaturegrouptoDTO).collect(Collectors.toList());
   }
 
+  /**
+   * Retrieves a list of feature groups with a specific name from a specific feature store
+   *
+   * @param name name of the featuregroup
+   * @param featurestore the featurestore that the featuregroup belongs to
+   * @return XML/JSON DTO of the featuregroup
+   */
+  public FeaturegroupDTO getFeaturegroupWithNameVersionAndFeaturestore(Featurestore featurestore, String name,
+                                                                       Integer version) {
+    Featuregroup featuregroup = verifyFeaturegroupNameVersion(featurestore, name, version);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
 
   /**
    * Retrieves a featuregroup with a particular id from a particular featurestore
@@ -264,7 +276,7 @@ public class FeaturegroupController {
    * @return XML/JSON DTO of the featuregroup
    */
   public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id) {
-    Featuregroup featuregroup = verifyFeaturegroupId(id, featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, id);
     return convertFeaturegrouptoDTO(featuregroup);
   }
 
@@ -278,8 +290,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO updateFeaturegroupMetadata(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
-  
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
+
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_UPDATING_METADATA, Level.FINE,
         ", updating metadata of feature groups is currently only supported for on-demand feature groups.");
@@ -333,7 +345,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
     Users user) throws FeaturestoreException, SQLException {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -356,7 +368,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
     Users user) throws FeaturestoreException, SQLException {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -379,7 +391,7 @@ public class FeaturegroupController {
 
   public FeaturegroupDTO updateFeaturegroupStats(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     verifyStatisticsInput(featuregroupDTO);
     featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
       featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
@@ -398,9 +410,9 @@ public class FeaturegroupController {
   
   public FeaturegroupDTO updateFeaturegroupStatsSettings(
     Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
-    featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     // update the settings and persist, if setting not define keep previous value
     verifyAndSetFeaturegroupStatsSettings(featuregroupDTO, featuregroup);
     featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
@@ -471,7 +483,7 @@ public class FeaturegroupController {
    */
   public Optional<Featuregroup> getFeaturegroupByDTO(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
     if (featuregroupDTO.getId() != null) {
-      return Optional.of(verifyFeaturegroupId(featuregroupDTO.getId(), featurestore));
+      return Optional.of(verifyFeaturegroupId(featurestore, featuregroupDTO.getId()));
     }
 
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
@@ -596,11 +608,11 @@ public class FeaturegroupController {
   /**
    * Verifies the id of a feature group
    *
-   * @param featuregroupId the id of the feature group
    * @param featurestore the featurestore to query
+   * @param featuregroupId the id of the feature group
    * @return the featuregroup with the id if it passed the validation
    */
-  private Featuregroup verifyFeaturegroupId(Integer featuregroupId, Featurestore featurestore) {
+  private Featuregroup verifyFeaturegroupId(Featurestore featurestore, Integer featuregroupId) {
     Featuregroup featuregroup = null;
     if(featurestore != null){
       featuregroup = featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore);
@@ -615,21 +627,40 @@ public class FeaturegroupController {
   }
 
   /**
-   * Verify input feature group type
-   * Verifies the id of a feature group
+   * Verifies the name of a feature group
    *
-   * @param featureGroupName the id of the feature group
    * @param featurestore the featurestore to query
+   * @param featureGroupName the name of the feature group
    * @return the featuregroup with the id if it passed the validation
    */
-  private Featuregroup verifyFeaturegroupName(String featureGroupName, Featurestore featurestore) {
-    Featuregroup featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
-    if (featuregroup == null) {
+  private List<Featuregroup> verifyFeaturegroupName(Featurestore featurestore, String featureGroupName) {
+    List<Featuregroup> featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
+    if (featuregroup == null || featuregroup.isEmpty()) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
         "feature group name " + featureGroupName);
     }
     return featuregroup;
   }
+
+  /**
+   * Verifies the name and version of a feature group
+   *
+   * @param featurestore the featurestore to query
+   * @param featureGroupName the name of the feature group
+   * @param version the version of the feature group
+   * @return the featuregroup with the id if it passed the validation
+   */
+  private Featuregroup verifyFeaturegroupNameVersion(Featurestore featurestore, String featureGroupName,
+                                                     Integer version) {
+    Featuregroup featuregroup =
+        featuregroupFacade.findByNameVersionAndFeaturestore(featureGroupName, version, featurestore);
+    if (featuregroup == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
+        "feature group name: " + featureGroupName + " feature group version: " + version);
+    }
+    return featuregroup;
+  }
+
 
   /**
    * Verify user input

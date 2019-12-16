@@ -197,6 +197,7 @@ public class FeaturegroupService {
    * @param featuregroupId id of the featuregroup
    * @return JSON representation of the featuregroup
    */
+  @Deprecated
   @GET
   @Path("/{featuregroupId}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -216,7 +217,7 @@ public class FeaturegroupService {
   }
 
   /**
-   * Endpoint for retrieving a featuregroup with a specified name in a specified featurestore
+   * Endpoint for retrieving a list of feature groups with a specified name in a specified feature store
    *
    * @param featureGroupName name of the featuregroup
    * @return JSON representation of the featuregroup
@@ -227,15 +228,41 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get specific featuregroup from a specific featurestore", response = FeaturegroupDTO.class)
-  public Response getFeatureGroup(@ApiParam(value = "Name of the featuregroup", required = true)
+  @ApiOperation(value = "Get a list of feature groups with a specific name", response = List.class)
+  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("featureGroupName") String featureGroupName) {
     verifyNameProvided(featureGroupName);
-    FeaturegroupDTO featuregroupDTO =
+    List<FeaturegroupDTO> featuregroupDTO =
         featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
+    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
+        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
+    return Response.ok().entity(featuregroupGeneric).build();
+  }
+
+  /**
+   * Endpoint to retrieve a feature group based on name and version
+   *
+   * @param featureGroupName name of the featuregroup
+   * @return JSON representation of the featuregroup
+   */
+  @GET
+  @Path("/{featureGroupName}/version/{version}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get a feature group with a specific name and version", response = FeaturegroupDTO.class)
+  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
+                                  @PathParam("featureGroupName") String featureGroupName,
+                                  @ApiParam(value = "Version of the feature group", required = true)
+                                  @PathParam("version") Integer version) {
+    verifyNameProvided(featureGroupName);
+    verifyVersionProvided(version);
+    FeaturegroupDTO featuregroupDTO =
+        featuregroupController.getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+    return Response.ok().entity(featuregroupGeneric).build();
   }
 
   /**
@@ -492,18 +519,28 @@ public class FeaturegroupService {
     }
   }
 
-
   /**
-   * Verify that the user id was provided as a path param
+   * Verify that the name was provided as a path param
    *
-   * @param featureGroupName the feature group id to verify
+   * @param featureGroupName the feature group name to verify
    */
   private void verifyNameProvided(String featureGroupName) {
     if (Strings.isNullOrEmpty(featureGroupName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
-  
+
+  /**
+   * Verify that the version was provided as a path param
+   *
+   * @param featureVersion the feature group version to verify
+   */
+  private void verifyVersionProvided(Integer featureVersion) {
+    if (featureVersion == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
+          FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
+    }
+  }
   
   /**
    * Endpoint for syncing a Hive Table with the Feature Store
