@@ -24,6 +24,18 @@ public final class KafkaConst {
   public static final String DLIMITER = "[\"]";
   public static final String KAFKA_ENDPOINT_IDENTIFICATION_ALGORITHM = "";
   
+  public static final String INFERENCE_SCHEMA_VERSION_1 = "{\"fields\": [{\"name\": \"modelId\", \"type\": \"int\"}, " +
+    "{ \"name\": \"modelName\", \"type\": \"string\" }, {  \"name\": \"modelVersion\",  \"type\": \"int\" }, " +
+    "{  \"name\": \"requestTimestamp\",  \"type\": \"long\" }, {  \"name\": \"responseHttpCode\",  \"type\": " +
+    "\"int\" }, {  \"name\": \"inferenceRequest\",  \"type\": \"string\" }, {  \"name\": \"inferenceResponse\"," +
+    "  \"type\": \"string\" }  ],  \"name\": \"inferencelog\",  \"type\": \"record\" }";
+  public static final String INFERENCE_SCHEMA_VERSION_2 = "{\"fields\": [{\"name\": \"modelId\", \"type\": \"int\"}, " +
+    "{ \"name\": \"modelName\", \"type\": \"string\" }, {  \"name\": \"modelVersion\",  \"type\": \"int\" }, " +
+    "{  \"name\": \"requestTimestamp\",  \"type\": \"long\" }, {  \"name\": \"responseHttpCode\",  " +
+    "\"type\": \"int\" }, {  \"name\": \"inferenceRequest\",  \"type\": \"string\" }, {  " +
+    "\"name\": \"inferenceResponse\",  \"type\": \"string\" }, { \"name\": \"servingType\", \"type\": \"string\" } ]," +
+    "  \"name\": \"inferencelog\",  \"type\": \"record\" }";
+  
   public static String buildPrincipalName(String projectName, String userName) {
     return projectName + PROJECT_DELIMITER + userName;
   }

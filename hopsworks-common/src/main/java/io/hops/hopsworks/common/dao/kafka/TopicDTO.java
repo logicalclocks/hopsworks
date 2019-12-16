@@ -58,6 +58,8 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
 
   private Integer schemaVersion;
   
+  private String schemaContent;
+  
   private Integer ownerProjectId;
   
   private Boolean isShared;
@@ -73,11 +75,13 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
     this.name = name;
   }
   
-  public TopicDTO(String name, Integer ownerProjectId, String schemaName, Integer schemaVersion, Boolean isShared) {
+  public TopicDTO(String name, Integer ownerProjectId, String schemaName, Integer schemaVersion, String
+    schemaContent, Boolean isShared) {
     this.name = name;
     this.ownerProjectId = ownerProjectId;
     this.schemaName = schemaName;
     this.schemaVersion = schemaVersion;
+    this.schemaContent = schemaContent;
     this.isShared = isShared;
   }
 
@@ -168,5 +172,17 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   
   public void setOwnerProjectId(Integer ownerProjectId) {
     this.ownerProjectId = ownerProjectId;
+  }
+  
+  public String getSchemaContent() {
+    return schemaContent;
+  }
+  
+  public void setSchemaContent(String schemaContent) {
+    this.schemaContent = schemaContent;
+  }
+  
+  public Boolean getShared() {
+    return isShared;
   }
 }

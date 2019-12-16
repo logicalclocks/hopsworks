@@ -15,14 +15,23 @@
  */
 package io.hops.hopsworks.api.kafka.topics;
 
+import io.swagger.annotations.ApiParam;
+
 import javax.ws.rs.QueryParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class TopicsBeanParam {
   
+  @QueryParam("sort_by")
+  @ApiParam(value = "ex. sort_by=name:asc,schema_name:desc",
+    allowableValues = "name:asc,name:desc,schema_name:asc,schema_name:desc")
   private String sortBy;
   private final Set<TopicsSortBy> sortBySet;
+  @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=shared:true",
+    allowableValues = "filter_by=shared:true,filter_by=shared:false",
+    allowMultiple = true)
   private Set<TopicsFilterBy> filter;
   
   public TopicsBeanParam(

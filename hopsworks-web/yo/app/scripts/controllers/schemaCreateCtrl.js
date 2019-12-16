@@ -52,6 +52,7 @@ angular.module('hopsWorksApp')
             self.message ="";
             self.validSchema = "valid";
             self.projectIsGuide = projectIsGuide;
+            self.subjects;
 
             self.init = function(){
               if (self.projectIsGuide) {
@@ -91,7 +92,8 @@ angular.module('hopsWorksApp')
                 self.wrong_values = -1;
               }
 
-              if(self.schemaName && self.schemaName !== null && self.schemaName.toLowerCase() === "inferenceschema"){
+              if(self.schemaName && self.schemaName !== null &&
+                (self.schemaName.toLowerCase() === "inferenceschema") || self.schemaName.toLowerCase() === "projectcompatibility"){
                   self.schemaName_reserved = -1;
                   self.wrong_values = -1;
               }
@@ -104,24 +106,56 @@ angular.module('hopsWorksApp')
               if(self.wrong_values === -1){
                   return;
               }
-                  
-                var schemaDetail ={};
-                schemaDetail.name=self.schemaName;
-                schemaDetail.contents =self.content;
-                //schemaDetail.version =self.version;
-                schemaDetail.versions =[];
-                  
-              KafkaService.validateSchema(self.projectId, schemaDetail).then(
+
+              KafkaService.getSubjects(self.projectId).then(
+                function (success) {
+                  // get list of subjects
+                  var data = new TextDecoder('utf-8').decode(success.data);
+                  self.subjects = data.slice(1,-1).replace(/\s/g,'').split(",");
+                  if (self.subjects.indexOf(self.schemaName) < 0) {
+                    self.message = "schema is valid";
+                    self.validSchema="";
+                    if (self.projectIsGuide) {
+                      self.tourService.resetTours();
+                      self.tourService.currentStep_TourFour = 1;
+                    }
+                  } else {
+                    KafkaService.validateSchema(self.projectId, self.schemaName, self.content).then(
                       function (success) {
+                        if (success.data.is_compatible === true) {
                           self.message = "schema is valid";
                           self.validSchema="";
                           if (self.projectIsGuide) {
                             self.tourService.resetTours();
                             self.tourService.currentStep_TourFour = 1;
                           }
+                        } else {
+                          self.message = "schema is invalid"
+                        }
                       }, function (error) {
+                        //if subject doesn't exist it is still valid
+                        if (error.data.errorCode === 40401) {
+                          self.message = "schema is valid";
+                          self.validSchema="";
+                          if (self.projectIsGuide) {
+                            self.tourService.resetTours();
+                            self.tourService.currentStep_TourFour = 1;
+                          }
+                        } else {
                           self.message = error.data.errorMsg;;//   "schema is invalid";
-              });
+                        }
+                      });
+                  }
+
+                }, function (error) {
+                  if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  } else {
+                    growl.error("", {title: error.data.errorMsg, ttl: 8000, referenceId: 10});
+                  }
+                }
+              );
+
             };
 
             self.createSchema = function () {
@@ -150,13 +184,7 @@ angular.module('hopsWorksApp')
                   return;
               }
               
-            var schemaDetail ={};
-              schemaDetail.name=self.schemaName;
-              schemaDetail.contents =self.content;
-              //schemaDetail.version =self.version;
-              schemaDetail.versions =[];
-
-              KafkaService.createSchema(self.projectId, schemaDetail).then(
+              KafkaService.postNewSubject(self.projectId, self.schemaName, self.content).then(
                       function (success) {
                           $uibModalInstance.close(success);
                           if (self.projectIsGuide) {

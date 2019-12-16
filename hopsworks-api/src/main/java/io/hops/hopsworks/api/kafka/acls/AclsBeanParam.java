@@ -16,14 +16,27 @@
 
 package io.hops.hopsworks.api.kafka.acls;
 
+import io.swagger.annotations.ApiParam;
+
 import javax.ws.rs.QueryParam;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class AclsBeanParam {
   
+  @QueryParam("sort_by")
+  @ApiParam(value = "ex. sort_by=id:desc,host:asc",
+    allowableValues = "id:asc,id:desc,host:asc,host:desc,operation_type:asc,operation_type:desc,permission_type:asc," +
+      "permission_type:desc,project_name:asc,project_name:desc,role:asc,role:desc,user_email:asc,user_email:desc")
   private String sortBy;
   private final Set<AclsSortBy> sortBySet;
+  @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=permission_type:allow&operation_type:write",
+    allowableValues = "filter_by=id:1,filter_by=host:*,filter_by=operation_type:read,filter_by=operation_type:write," +
+      "filter_by=operation_type:details,filter_by=operation_type:*,filter_by=permission_type:allow," +
+      "filter_by=permission_type:deny,filter_by=project_name:project1,filter_by=role:*,filter_by=role:Data Scientist," +
+      "filter_by=role:Data Owner,filter_by=user_email:admin@hopsworks.ai",
+    allowMultiple = true)
   private Set<AclsFilterBy> filter;
   
   public AclsBeanParam(

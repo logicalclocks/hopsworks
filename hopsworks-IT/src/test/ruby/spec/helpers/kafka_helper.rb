@@ -54,15 +54,13 @@ module KafkaHelper
 
   def create_schema(project_id, kafka_schema_name = "kafka_schema_#{random_id}")
     schema_name = add_schema(project_id, kafka_schema_name)
-    SchemaTopics.find_by(name:schema_name, version: 1)
+    Subjects.find_by(subject: schema_name, version: 1, project_id: project_id)
   end
 
   def add_schema(project_id, kafka_schema_name = "kafka_schema_#{random_id}")
-    add_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/schema/add"
+    add_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/kafka/subjects/" + kafka_schema_name + "/versions"
     json_data = {
-        name: kafka_schema_name,
-        contents: "[]",
-        versions: []
+       schema: "[]"
     }
     json_data = json_data.to_json
     json_result = post add_schema_endpoint, json_data
@@ -86,7 +84,7 @@ module KafkaHelper
 
   def delete_schema(project_id, kafka_schema_name, kafka_schema_version)
     delete_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s +
-        "/kafka/removeSchema/#{kafka_schema_name}/#{kafka_schema_version}"
+	    "/kafka/subjects/#{kafka_schema_name}/versions/#{kafka_schema_version}"
     delete delete_schema_endpoint
   end
 
