@@ -261,7 +261,7 @@ public class TrainingDatasetService {
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/{trainingDatasetName}")
+  @Path("/name/{trainingDatasetName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -287,7 +287,7 @@ public class TrainingDatasetService {
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/{trainingDatasetName}/version/{version}")
+  @Path("/name/{trainingDatasetName}/version/{version}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
