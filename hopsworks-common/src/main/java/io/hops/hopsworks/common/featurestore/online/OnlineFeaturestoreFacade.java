@@ -37,11 +37,11 @@ import java.util.List;
  * Online-Featurestore has its own JDBC Connection Pool defined in persistence unit `featurestorePU`
  */
 @Stateless
-@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class OnlineFeaturestoreFacade {
   @PersistenceContext(unitName = "featurestorePU")
   private EntityManager em;
-  
+
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
    *
@@ -60,7 +60,7 @@ public class OnlineFeaturestoreFacade {
       return 0.0;
     }
   }
-  
+
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
    *
@@ -80,7 +80,7 @@ public class OnlineFeaturestoreFacade {
       return 0.0;
     }
   }
-  
+
   /**
    * Gets the features of a online featuregroup from the MySQL metadata
    *
@@ -102,7 +102,7 @@ public class OnlineFeaturestoreFacade {
     }
     return featureDTOs;
   }
-  
+
   /**
    * Gets the features of a online featuregroup from the MySQL metadata
    *
@@ -115,7 +115,7 @@ public class OnlineFeaturestoreFacade {
       .getResultList();
     return (String) schemaObjects.get(0)[1];
   }
-  
+
   /**
    * Gets the type of a MySQL table
    *
@@ -134,7 +134,7 @@ public class OnlineFeaturestoreFacade {
       return "-";
     }
   }
-  
+
   /**
    * Gets the number of rows in a MySQL table
    *
@@ -153,7 +153,7 @@ public class OnlineFeaturestoreFacade {
       return 0;
     }
   }
-  
+
   /**
    * Create an Online Featurestore Database. Fails if the database already exists.
    *
@@ -165,7 +165,7 @@ public class OnlineFeaturestoreFacade {
     //Don't add 'IF EXISTS', this call should fail if the database already exists
     em.createNativeQuery("CREATE DATABASE " + db + ";").executeUpdate();
   }
-  
+
   /**
    * Removes an Online Featurestore Database
    *
@@ -176,7 +176,7 @@ public class OnlineFeaturestoreFacade {
     //WHERE/HAVING Clauses, not names of tables or databases
     em.createNativeQuery("DROP DATABASE IF EXISTS " + db + ";").executeUpdate();
   }
-  
+
   /**
    * Create an Online Featurestore Databasse User
    *
@@ -189,7 +189,7 @@ public class OnlineFeaturestoreFacade {
       .setParameter(2, pw)
       .executeUpdate();
   }
-  
+
   /**
    * Revokes user privileges for a user on a specific online featurestore
    *
@@ -216,7 +216,7 @@ public class OnlineFeaturestoreFacade {
       //This is fine since it might mean that the user does not have the privileges or does not exist
     }
   }
-  
+
   /**
    * Grant database privileges of a "data owner" role in a online featurestore
    *
@@ -228,7 +228,7 @@ public class OnlineFeaturestoreFacade {
     //WHERE/HAVING Clauses, not names of tables or databases
     em.createNativeQuery("GRANT ALL PRIVILEGES ON " + dbName + ".* TO " + dbUser + ";").executeUpdate();
   }
-  
+
   /**
    * Grant database privileges of a "data scientist" role in a online featurestore
    *
@@ -238,7 +238,7 @@ public class OnlineFeaturestoreFacade {
   public void grantDataScientistPrivileges(String dbName, String dbUser) {
     em.createNativeQuery("GRANT SELECT ON " + dbName + ".* TO " + dbUser + ";").executeUpdate();
   }
-  
+
   /**
    * Removes a database user for an online featurestore
    *
@@ -251,7 +251,7 @@ public class OnlineFeaturestoreFacade {
       .setParameter(1, dbUser)
       .executeUpdate();
   }
-  
+
   /**
    * Get all users for a particular mysql online feature store database
    *
@@ -264,7 +264,7 @@ public class OnlineFeaturestoreFacade {
       .getResultList();
     return users;
   }
-  
+
 
   /**
    * Checks if a mysql database exists
@@ -288,5 +288,5 @@ public class OnlineFeaturestoreFacade {
       return false;
     }
   }
-  
+
 }
