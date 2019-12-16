@@ -81,7 +81,41 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
       return null;
     }
   }
-  
+
+  /**
+   * Retrieves a list of featuregroups (different versions) given its name and featurestore from the database
+   *
+   * @param name name of the featuregroup
+   * @param featurestore featurestore of the featuregroup
+   * @return a single Featuregroup entity
+   */
+  public List<Featuregroup> findByNameAndFeaturestore(String name, Featurestore featurestore) {
+    return em.createNamedQuery("Featuregroup.findByFeaturestoreAndName", Featuregroup.class)
+          .setParameter("featurestore", featurestore)
+          .setParameter("name", name)
+          .getResultList();
+  }
+
+  /**
+   * Retrieves a featuregroups given its name, version and feature store
+   *
+   * @param name name of the featuregroup
+   * @param version version of the featurestore
+   * @param featurestore featurestore of the featuregroup
+   * @return a single Featuregroup entity
+   */
+  public Featuregroup findByNameVersionAndFeaturestore(String name, Integer version, Featurestore featurestore) {
+    try {
+      return em.createNamedQuery("Featuregroup.findByFeaturestoreAndNameVersion", Featuregroup.class)
+          .setParameter("featurestore", featurestore)
+          .setParameter("version", version)
+          .setParameter("name", name)
+          .getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
   /**
    * Retrieves all featuregroups from the database
    *

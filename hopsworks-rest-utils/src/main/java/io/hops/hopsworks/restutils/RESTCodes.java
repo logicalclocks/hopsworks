@@ -1431,7 +1431,9 @@ public class RESTCodes {
     ILLEGAL_ENTITY_NAME(91, "Illegal feature store entity name", Response.Status.BAD_REQUEST),
     ILLEGAL_ENTITY_DESCRIPTION(92, "Illegal featurestore entity description", Response.Status.BAD_REQUEST),
     ERROR_UPDATING_METADATA(93, "An error occurred when trying to update feature store metadata",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    FEATUREGROUP_NAME_NOT_PROVIDED(94, "Feature group name was not provided", Response.Status.BAD_REQUEST),
+    TRAINING_DATASET_NAME_NOT_PROVIDED(95, "Training dataset name was not provided", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

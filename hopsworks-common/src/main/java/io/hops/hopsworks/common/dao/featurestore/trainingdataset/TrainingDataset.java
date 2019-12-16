@@ -47,6 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity class representing the training_dataset table in Hopsworks database.
@@ -61,7 +62,11 @@ import java.util.Date;
     @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featurestore = :featurestore"),
     @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
-        "WHERE td.featurestore = :featurestore AND td.id = :id")})
+        "WHERE td.featurestore = :featurestore AND td.id = :id"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore AND td.name= :name AND td.version = :version"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore AND td.name = :name")})
 public class TrainingDataset implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -69,6 +74,9 @@ public class TrainingDataset implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+  @Basic(optional = false)
+  @Column(name = "name")
+  private String name;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
@@ -229,38 +237,57 @@ public class TrainingDataset implements Serializable {
   public void setJobs(Collection<FeaturestoreJob> jobs) {
     this.jobs = jobs;
   }
-  
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof TrainingDataset)) return false;
+    if (o == null || getClass() != o.getClass()) return false;
 
     TrainingDataset that = (TrainingDataset) o;
-    
-    if (id != null && !id.equals(that.id)) return false;
-    if (!hdfsUserId.equals(that.hdfsUserId)) return false;
-    if (!version.equals(that.version)) return false;
-    if (!dataFormat.equals(that.dataFormat)) return false;
-    if (!description.equals(that.description)) return false;
-    if (!trainingDatasetType.equals(that.trainingDatasetType)) return false;
-    if (created != null && !created.equals(that.created)) return false;
-    if (!creator.equals(that.creator)) return false;
-    if (features != null && !features.equals(that.features)) return false;
-    return featurestore.equals(that.featurestore);
+
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(name, that.name)) return false;
+    if (!Objects.equals(featurestore, that.featurestore)) return false;
+    if (!Objects.equals(hdfsUserId, that.hdfsUserId)) return false;
+    if (!Objects.equals(created, that.created)) return false;
+    if (!Objects.equals(creator, that.creator)) return false;
+    if (!Objects.equals(version, that.version)) return false;
+    if (!Objects.equals(dataFormat, that.dataFormat)) return false;
+    if (!Objects.equals(description, that.description)) return false;
+    if (!Objects.equals(statistics, that.statistics)) return false;
+    if (!Objects.equals(features, that.features)) return false;
+    if (!Objects.equals(jobs, that.jobs)) return false;
+    if (trainingDatasetType != that.trainingDatasetType) return false;
+    if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset))
+      return false;
+    return Objects.equals(externalTrainingDataset, that.externalTrainingDataset);
   }
 
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + featurestore.hashCode();
-    result = 31 * result + hdfsUserId.hashCode();
-    result = 31 * result + dataFormat.hashCode();
-    result = 31 * result + version.hashCode();
-    result = 31 * result + description.hashCode();
-    result = 31 * result + trainingDatasetType.hashCode();
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (featurestore != null ? featurestore.hashCode() : 0);
+    result = 31 * result + (hdfsUserId != null ? hdfsUserId.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
+    result = 31 * result + (creator != null ? creator.hashCode() : 0);
+    result = 31 * result + (version != null ? version.hashCode() : 0);
+    result = 31 * result + (dataFormat != null ? dataFormat.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
-    result = 31 * result + creator.hashCode();
+    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
+    result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);
+    result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
+    result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
     return result;
   }
 }

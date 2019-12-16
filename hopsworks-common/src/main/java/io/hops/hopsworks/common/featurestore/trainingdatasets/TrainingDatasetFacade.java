@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,6 +77,42 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
           .getSingleResult();
     } catch (NoResultException e) {
       return null;
+    }
+  }
+
+  /**
+   * Retrieves a list of trainingDataset (different versions) given their name and feature store from the database
+   *
+   * @param name name of the trainingDataset
+   * @param featurestore featurestore of the trainingDataset
+   * @return a single TrainingDataset entity
+   */
+  public List<TrainingDataset> findByNameAndFeaturestore(String name, Featurestore featurestore) {
+    return em.createNamedQuery("TrainingDataset.findByFeaturestoreAndName", TrainingDataset.class)
+          .setParameter("featurestore", featurestore)
+          .setParameter("name", name)
+          .getResultList();
+  }
+
+  /**
+   * Retrieves a training dataset given its name, version and feature store from the database
+   *
+   * @param name name of the trainingDataset
+   * @param version version of the trainingDataset
+   * @param featurestore featurestore of the trainingDataset
+   * @return a single TrainingDataset entity
+   */
+  public Optional<TrainingDataset> findByNameVersionAndFeaturestore(String name, Integer version,
+                                                                    Featurestore featurestore) {
+    try {
+      return Optional.of(
+          em.createNamedQuery("TrainingDataset.findByFeaturestoreAndNameVersion", TrainingDataset.class)
+          .setParameter("featurestore", featurestore)
+          .setParameter("name", name)
+          .setParameter("version", version)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
 

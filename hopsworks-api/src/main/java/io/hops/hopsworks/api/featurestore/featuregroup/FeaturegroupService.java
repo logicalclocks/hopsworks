@@ -50,6 +50,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -204,12 +205,34 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
-  public Response getFeatureGroupFromFeatureStore(@ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId")
-          Integer featuregroupId) {
+  public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
+                                  @PathParam("featuregroupId") Integer featuregroupId) {
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
+    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
+        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+  }
+
+  /**
+   * Endpoint for retrieving a featuregroup with a specified name in a specified featurestore
+   *
+   * @param featureGroupName name of the featuregroup
+   * @return JSON representation of the featuregroup
+   */
+  @GET
+  @Path("/{featureGroupName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get specific featuregroup from a specific featurestore", response = FeaturegroupDTO.class)
+  public Response getFeatureGroup(@ApiParam(value = "Name of the featuregroup", required = true)
+                                  @PathParam("featureGroupName") String featureGroupName) {
+    verifyNameProvided(featureGroupName);
+    FeaturegroupDTO featuregroupDTO =
+        featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -231,7 +254,7 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
-  public Response deleteFeatureGroupFromFeatureStore(
+  public Response deleteFeatureGroup(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
     verifyIdProvided(featuregroupId);
@@ -466,6 +489,18 @@ public class FeaturegroupService {
   private void verifyIdProvided(Integer featuregroupId) {
     if (featuregroupId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
+    }
+  }
+
+
+  /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param featureGroupName the feature group id to verify
+   */
+  private void verifyNameProvided(String featureGroupName) {
+    if (Strings.isNullOrEmpty(featureGroupName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
   

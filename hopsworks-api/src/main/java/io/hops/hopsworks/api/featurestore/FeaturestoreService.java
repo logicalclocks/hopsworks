@@ -48,7 +48,6 @@ import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJ
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -117,8 +116,6 @@ public class FeaturestoreService {
   private TrainingDatasetService trainingDatasetService;
   @Inject
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private DataValidationResource dataValidationService;
   @Inject

@@ -246,6 +246,19 @@ public class FeaturegroupController {
   /**
    * Retrieves a featuregroup with a particular id from a particular featurestore
    *
+   * @param name name of the featuregroup
+   * @param featurestore the featurestore that the featuregroup belongs to
+   * @return XML/JSON DTO of the featuregroup
+   */
+  public FeaturegroupDTO getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name) {
+    Featuregroup featuregroup = verifyFeaturegroupName(name, featurestore);
+    return convertFeaturegrouptoDTO(featuregroup);
+  }
+
+
+  /**
+   * Retrieves a featuregroup with a particular id from a particular featurestore
+   *
    * @param id           id of the featuregroup
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
@@ -269,7 +282,7 @@ public class FeaturegroupController {
   
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_UPDATING_METADATA, Level.FINE,
-        ", updating metadata of featuregroups is currently only supported for on-demand feature groups.");
+        ", updating metadata of feature groups is currently only supported for on-demand feature groups.");
     }
 
     // Verify general entity related information
@@ -603,6 +616,23 @@ public class FeaturegroupController {
 
   /**
    * Verify input feature group type
+   * Verifies the id of a feature group
+   *
+   * @param featureGroupName the id of the feature group
+   * @param featurestore the featurestore to query
+   * @return the featuregroup with the id if it passed the validation
+   */
+  private Featuregroup verifyFeaturegroupName(String featureGroupName, Featurestore featurestore) {
+    Featuregroup featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
+    if (featuregroup == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
+        "feature group name " + featureGroupName);
+    }
+    return featuregroup;
+  }
+
+  /**
+   * Verify user input
    *
    * @param featuregroupDTO the provided user input
    * @param featurestore    the feature store to perform the operation against
@@ -699,6 +729,7 @@ public class FeaturegroupController {
   private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, HdfsUsers hdfsUser, Users user,
     FeaturegroupDTO featuregroupDTO, CachedFeaturegroup cachedFeaturegroup, OnDemandFeaturegroup onDemandFeaturegroup) {
     Featuregroup featuregroup = new Featuregroup();
+    featuregroup.setName(featuregroupDTO.getName());
     featuregroup.setFeaturestore(featurestore);
     featuregroup.setHdfsUserId(hdfsUser.getId());
     featuregroup.setCreated(new Date());

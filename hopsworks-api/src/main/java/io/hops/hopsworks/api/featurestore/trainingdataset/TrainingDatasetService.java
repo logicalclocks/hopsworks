@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -228,7 +229,10 @@ public class TrainingDatasetService {
    * @param trainingdatasetid id of the training dataset to get
    * @return return a JSON representation of the training dataset with the given id
    * @throws FeaturestoreException
+   *
+   * @deprecated : use getTrainingDatasetByName instead
    */
+  @Deprecated
   @GET
   @Path("/{trainingdatasetid}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -237,11 +241,37 @@ public class TrainingDatasetService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
-  public Response getTrainingDatasetWithId(@ApiParam(value = "Id of the training dataset", required = true)
+  public Response getTrainingDatasetById(@ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     TrainingDatasetDTO trainingDatasetDTO =
         trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
+    GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
+        new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetGeneric).build();
+  }
+
+  /**
+   * Endpoint for getting a training dataset with a particular id
+   *
+   * @param trainingDatasetName name of the training dataset to get
+   * @return return a JSON representation of the training dataset with the given id
+   * @throws FeaturestoreException
+   */
+  @GET
+  @Path("/{trainingDatasetName}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get a training dataset with a specific name from a feature store",
+      response = TrainingDatasetDTO.class)
+  public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training", required = true)
+                                           @PathParam("trainingDatasetName") String trainingDatasetName) throws FeaturestoreException {
+
+    verifyNameProvided(trainingDatasetName);
+    TrainingDatasetDTO trainingDatasetDTO =
+        trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingDatasetName);
     GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
         new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetGeneric).build();
@@ -372,6 +402,18 @@ public class TrainingDatasetService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
     }
   }
+
+   /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param trainingDatasetName the training dataset id to verify
+   */
+  private void verifyNameProvided(String trainingDatasetName) {
+    if (Strings.isNullOrEmpty(trainingDatasetName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
+    }
+  }
+
   
   /**
    * Persist the activity of editing a training dataset and return the response to the client
