@@ -223,7 +223,7 @@ public class FeaturegroupService {
    * @return JSON representation of the featuregroup
    */
   @GET
-  @Path("/{featureGroupName}")
+  @Path("/name/{featureGroupName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -246,7 +246,7 @@ public class FeaturegroupService {
    * @return JSON representation of the featuregroup
    */
   @GET
-  @Path("/{featureGroupName}/version/{version}")
+  @Path("/name/{featureGroupName}/version/{version}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
