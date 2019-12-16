@@ -63,8 +63,9 @@ import java.util.Objects;
         "WHERE td.featurestore = :featurestore"),
     @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featurestore = :featurestore AND td.id = :id"),
-    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion", query = "SELECT td FROM TrainingDataset td " +
-        "WHERE td.featurestore = :featurestore AND td.name= :name AND td.version = :version"),
+    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
+        query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore " +
+            "AND td.name= :name AND td.version = :version"),
     @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
         "WHERE td.featurestore = :featurestore AND td.name = :name")})
 public class TrainingDataset implements Serializable {
