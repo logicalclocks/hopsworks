@@ -70,6 +70,8 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "DEACTIVATED_ACCOUNT"}
         admin_update_user(id, data)
+        expect_status(204)
+        admin_get_user_by_id(id)
         expect_status(200)
         expect_json(status: 3)
       end
@@ -78,6 +80,8 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {maxNumProjects: 77}
         admin_update_user(id, data)
+        expect_status(204)
+        admin_get_user_by_id(id)
         expect_status(200)
         expect_json(maxNumProjects: 77)
       end
@@ -86,22 +90,22 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	expect_status(200)
-	admin_accept_user(id)
-	expect_status(204)
-	admin_get_user_by_id(id)
-	expect_status(200)
-	expect_json(status: 2)
+	      expect_status(204)
+	      admin_accept_user(id)
+	      expect_status(204)
+	      admin_get_user_by_id(id)
+	      expect_status(200)
+	      expect_json(status: 2)
       end
 
       it "fails to accept a user with status different than verified" do 
         id = user[:id]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	expect_status(200)
-	admin_accept_user(id)
-	expect_status(400)
-	expect_json(errorCode: 160046)
+	      expect_status(204)
+	      admin_accept_user(id)
+	      expect_status(400)
+	      expect_json(errorCode: 160046)
       end
 
       it "fails to accept a user with an invalid id" do
@@ -129,7 +133,7 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	expect_status(200)
+	      expect_status(204)
         admin_pend_user(id)
         expect_status(204)
       end
@@ -138,7 +142,7 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	expect_status(200)
+	      expect_status(204)
         admin_pend_user(id)
         expect_status(400)
         expect_json(errorCode: 160046)
