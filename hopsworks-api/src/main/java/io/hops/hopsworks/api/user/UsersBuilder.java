@@ -18,18 +18,24 @@ package io.hops.hopsworks.api.user;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
+import io.hops.hopsworks.common.dao.user.BbcGroup;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
+import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.exceptions.UserException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 @Stateless
@@ -40,6 +46,10 @@ public class UsersBuilder {
   private UserFacade userFacade;
   @EJB
   private RemoteUserFacade remoteUserFacade;
+  @EJB
+  private UsersController usersController;
+  @EJB
+  private BbcGroupFacade bbcGroupFacade;
 
   public UserDTO uri(UserDTO dto, UriInfo uriInfo) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
@@ -97,6 +107,7 @@ public class UsersBuilder {
     uri(dto, uriInfo, user);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
+      dto.setId(user.getUid());
       dto.setFirstname(user.getFname());
       dto.setLastname(user.getLname());
       dto.setEmail(user.getEmail());
@@ -113,6 +124,13 @@ public class UsersBuilder {
       dto.setNumActiveProjects(user.getNumActiveProjects());
       dto.setToursState(user.getToursState());
     }
+    return dto;
+  }
+  
+  public UserProfileDTO buildById(UriInfo uriInfo, Integer id) throws UserException {
+    Users user = usersController.getUserById(id);
+    UserProfileDTO dto = new UserProfileDTO(user);
+    uri(dto, uriInfo, user);
     return dto;
   }
 
@@ -139,6 +157,21 @@ public class UsersBuilder {
     }
     return dto;
   }
+  
+  public UserProfileDTO buildFullItems(UriInfo uriInfo, ResourceRequest resourceRequest) {
+    UserProfileDTO dto = new UserProfileDTO();
+    dto.setHref(uriInfo.getAbsolutePathBuilder().build());
+    expand(dto, resourceRequest);
+    if (dto.isExpand()) {
+      AbstractFacade.CollectionInfo collectionInfo = userFacade.findAll(resourceRequest.getOffset(),
+        resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort());
+      //set the count
+      dto.setCount(collectionInfo.getCount());
+      collectionInfo.getItems().forEach(( user ) -> dto.addItem(buildFull(uriInfo, resourceRequest, (Users) user)));
+  
+    }
+    return dto;
+  }
 
   public Comparator<Users> getComparator(ResourceRequest resourceRequest) {
     Set<UserFacade.SortBy> sortBy = (Set<UserFacade.SortBy>) resourceRequest.getSort();
@@ -146,6 +179,16 @@ public class UsersBuilder {
       return new UsersComparator(sortBy);
     }
     return null;
+  }
+  
+  public BbcGroupDTO buildUserGroups(UriInfo uriInfo) {
+    BbcGroupDTO dto = new BbcGroupDTO();
+    List<BbcGroup> list = bbcGroupFacade.findAll();
+    URI href = uriInfo.getAbsolutePathBuilder().build();
+    dto.setHref(href);
+    dto.setCount(Integer.toUnsignedLong(list.size()));
+    list.forEach(group -> dto.addItem(new BbcGroupDTO(group, href)));
+    return dto;
   }
 
   class UsersComparator implements Comparator<Users> {
