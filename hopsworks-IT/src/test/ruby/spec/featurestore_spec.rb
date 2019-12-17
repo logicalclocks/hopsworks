@@ -1111,9 +1111,9 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name, version: 2)
           expect_status(201)
 
-          # Get the list  
+          # Get the first version
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}?version=1"
-          get get_training_datasets_endpoint 
+          get get_training_datasets_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
           expect(parsed_json['version']).to be 1 
