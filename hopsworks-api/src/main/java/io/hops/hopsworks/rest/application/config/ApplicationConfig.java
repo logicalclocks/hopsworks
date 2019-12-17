@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.rest.application.config;
 
+import io.hops.hopsworks.api.admin.UsersAdminResource;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -94,7 +95,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.host.machine.MachineTypeResource.class);
 
     // admin
-    register(io.hops.hopsworks.api.admin.UsersAdmin.class);
+    register(UsersAdminResource.class);
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
     register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
     register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
