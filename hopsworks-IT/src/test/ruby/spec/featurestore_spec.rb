@@ -550,7 +550,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"]).to eq featuregroup_name
           expect(parsed_json["version"]).to eq 1 
 
-          # Get the first version
+          # Get the second version
           get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=2"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
