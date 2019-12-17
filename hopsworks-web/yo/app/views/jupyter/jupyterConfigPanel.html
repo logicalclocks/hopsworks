@@ -44,7 +44,7 @@
                     <div class="row">
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Python</h2>
-                            <p>Starting Jupyter with this mode will enable the Python Kernel.</p>
+                            <p>Starting Jupyter with this mode will configure the Python Kernel.</p>
                             <div ng-include="'views/jupyter/pythonConfig.html'"></div>
                         </div>
                         <div class="col-sm-4 description" ng-class="{comments:sparkConfigCtrl.uneditableMode}">
@@ -63,7 +63,7 @@
                     <div class="row">
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Experiments</h2>
-                            <p>Starting Jupyter with this mode will enable the PySpark Kernel.</p>
+                            <p>Starting Jupyter with this mode will configure the PySpark Kernel.</p>
                             <md-radio-group ng-model="sparkConfigCtrl.jobConfig.experimentType">
                                 <table class="button-table">
                                     <tbody>
@@ -127,7 +127,7 @@
                     <div class="row">
                         <div class="col-sm-8">
                             <h2 class="j-tab-heading">Spark</h2>
-                            <p>Starting Jupyter with this mode will enable the Spark, PySpark and SparkR Kernel.</p>
+                            <p>Starting Jupyter with this mode will configure the Spark, PySpark and SparkR Kernel.</p>
                             <md-radio-group ng-model="sparkConfigCtrl.sparkType">
                                 <table class="button-table">
                                     <tbody>
