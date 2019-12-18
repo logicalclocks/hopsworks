@@ -397,10 +397,12 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
-              type: "test",
-              name: "--",
-              description: "--",
-              primary: false
+              {
+                  type: "test",
+                  name: "--",
+                  description: "--",
+                  primary: false
+              }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
           parsed_json = JSON.parse(json_result)
@@ -414,10 +416,12 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
-              type: "test",
-              name: "test_feat_no_description",
-              description: "",
-              primary: false
+              {
+                  type: "test",
+                  name: "test_feat_no_description",
+                  description: "",
+                  primary: false
+              }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
           parsed_json = JSON.parse(json_result)
