@@ -105,7 +105,6 @@ import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -280,9 +279,6 @@ public class ProjectController {
   private TopicAclsFacade topicAclsFacade;
   @EJB
   private SubjectsController subjectsController;
-  @EJB
-  private SchemasController schemasController;
-
 
   /**
    * Creates a new project(project), the related DIR, the different services in
