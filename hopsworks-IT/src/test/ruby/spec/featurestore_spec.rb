@@ -393,7 +393,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270091).to be true
         end
 
-        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
+        it "should not be able to add a offline cached featuregroup to the featurestore with invalid feature name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
@@ -401,7 +401,7 @@ describe "On #{ENV['OS']}" do
                   type: "test",
                   name: "--",
                   description: "--",
-                  primary: false
+                  primary: true
               }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
@@ -412,6 +412,26 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270040).to be true
         end
 
+        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          features = [
+              {
+                  type: "test",
+                  name: "test",
+                  description: "--",
+                  primary: false
+              }
+          ]
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270017).to be true
+        end
+
+
         it "should be able to add a offline cached featuregroup to the featurestore with empty feature description" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -420,7 +440,7 @@ describe "On #{ENV['OS']}" do
                   type: "test",
                   name: "test_feat_no_description",
                   description: "",
-                  primary: false
+                  primary: true
               }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
