@@ -451,7 +451,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json["features"].length).to be 1
-          expect(parsed_json["features"].first["description"]).to be ""
+          expect(parsed_json["features"].first["description"] == "").to be true
         end
 
         it "should be able to preview a offline cached featuregroup in the featurestore" do
