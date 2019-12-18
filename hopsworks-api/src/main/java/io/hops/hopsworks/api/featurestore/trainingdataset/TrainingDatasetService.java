@@ -73,6 +73,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 
@@ -234,7 +235,7 @@ public class TrainingDatasetService {
    */
   @Deprecated
   @GET
-  @Path("/{trainingdatasetid}")
+  @Path("/{trainingdatasetid: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -259,51 +260,30 @@ public class TrainingDatasetService {
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/name/{trainingDatasetName}")
+  @Path("/{trainingDatasetName: [a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a list of training datasets with a specific name from a feature store",
+  @ApiOperation(value = "Get a list of training datasets with a specific name, filter by version",
       response = List.class)
   public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training dataset", required = true)
-                                           @PathParam("trainingDatasetName") String trainingDatasetName)
+                                           @PathParam("trainingDatasetName") String trainingDatasetName,
+                                           @ApiParam(value = "Filter by a specific version")
+                                           @QueryParam("version") Integer version)
       throws FeaturestoreException {
     verifyNameProvided(trainingDatasetName);
-    List<TrainingDatasetDTO> trainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithNameAndFeaturestore(featurestore, trainingDatasetName);
+    List<TrainingDatasetDTO> trainingDatasetDTO;
+    if (version == null) {
+      trainingDatasetDTO =
+          trainingDatasetController.getTrainingDatasetWithNameAndFeaturestore(featurestore, trainingDatasetName);
+    } else {
+      trainingDatasetDTO = Arrays.asList(trainingDatasetController
+          .getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDatasetName, version));
+    }
+
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetGeneric =
         new GenericEntity<List<TrainingDatasetDTO>>(trainingDatasetDTO) {};
-    return Response.ok().entity(trainingDatasetGeneric).build();
-  }
-
-  /**
-   * Endpoint for getting a training dataset based on the name and version
-   *
-   * @param trainingDatasetName name of the training dataset to get
-   * @return return a JSON representation of the training dataset with the given id
-   * @throws FeaturestoreException
-   */
-  @GET
-  @Path("/name/{trainingDatasetName}/version/{version}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a training dataset with a specific name and version from a feature store",
-      response = TrainingDatasetDTO.class)
-  public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training dataset", required = true)
-                                           @PathParam("trainingDatasetName") String trainingDatasetName,
-                                           @ApiParam(value = "Version of the training dataset", required = true)
-                                           @PathParam("version") Integer version)
-      throws FeaturestoreException {
-    verifyNameProvided(trainingDatasetName);
-    verifyVersionProvided(version);
-    TrainingDatasetDTO trainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithNameVersionAndFeaturestore(featurestore,
-            trainingDatasetName, version);
-    GenericEntity<TrainingDatasetDTO> trainingDatasetGeneric =
-        new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
     return Response.ok().entity(trainingDatasetGeneric).build();
   }
 

@@ -543,7 +543,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           # Get the first version
-          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/name/#{featuregroup_name}/version/1"
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -551,7 +551,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["version"]).to eq 1 
 
           # Get the first version
-          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/name/#{featuregroup_name}/version/2"
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=2"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -574,7 +574,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           # Get the list  
-          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/name/#{featuregroup_name}"
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -583,7 +583,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to get a feature store by name that does not exists" do 
           # Get the first version
-          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/name/doesnotexists/version/1"
+          get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/doesnotexists?version=1"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(422)
@@ -1094,7 +1094,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           # Get the list  
-          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/name/#{training_dataset_name}"
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}"
           get get_training_datasets_endpoint 
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -1112,14 +1112,14 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           # Get the list  
-          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/name/trainingdatasets/#{training_dataset_name}/version/1"
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}?version=1"
           get get_training_datasets_endpoint 
           parsed_json = JSON.parse(response.body)
           expect_status(200)
           expect(parsed_json['version']).to be 1 
           expect(parsed_json['name']).to be training_dataset_name
 
-          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/name/#{training_dataset_name}/version/2"
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}/version/2"
           get get_training_datasets_endpoint 
           parsed_json = JSON.parse(response.body)
           expect_status(200)
@@ -1129,7 +1129,7 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to get a training dataset with a name that does not exists" do
           # Get the list  
-          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/name/doesnotexists/"
+          get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint 
           expect_status(422)
         end

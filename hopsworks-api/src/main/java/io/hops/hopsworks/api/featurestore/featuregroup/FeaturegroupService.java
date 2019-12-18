@@ -27,19 +27,19 @@ import io.hops.hopsworks.api.metadata.XAttrsBuilder;
 import io.hops.hopsworks.api.metadata.XAttrsController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -74,6 +74,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -199,7 +200,7 @@ public class FeaturegroupService {
    */
   @Deprecated
   @GET
-  @Path("/{featuregroupId}")
+  @Path("/{featuregroupId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -217,51 +218,34 @@ public class FeaturegroupService {
   }
 
   /**
-   * Endpoint for retrieving a list of feature groups with a specified name in a specified feature store
+   * Retrieve a specific feature group based name. Allow filtering on version.
    *
    * @param featureGroupName name of the featuregroup
+   * @param version queryParam with the desired version
    * @return JSON representation of the featuregroup
    */
   @GET
-  @Path("/name/{featureGroupName}")
+  // Anything else that is not just number should use this endpoint
+  @Path("/{featureGroupName: [a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a list of feature groups with a specific name", response = List.class)
-  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
-                                  @PathParam("featureGroupName") String featureGroupName) {
-    verifyNameProvided(featureGroupName);
-    List<FeaturegroupDTO> featuregroupDTO =
-        featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
-    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
-    return Response.ok().entity(featuregroupGeneric).build();
-  }
-
-  /**
-   * Endpoint to retrieve a feature group based on name and version
-   *
-   * @param featureGroupName name of the featuregroup
-   * @return JSON representation of the featuregroup
-   */
-  @GET
-  @Path("/name/{featureGroupName}/version/{version}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a feature group with a specific name and version", response = FeaturegroupDTO.class)
+  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version", response = List.class)
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("featureGroupName") String featureGroupName,
-                                  @ApiParam(value = "Version of the feature group", required = true)
-                                  @PathParam("version") Integer version) {
+                                  @ApiParam(value = "Filter by a specific version")
+                                  @QueryParam("version") Integer version) {
     verifyNameProvided(featureGroupName);
-    verifyVersionProvided(version);
-    FeaturegroupDTO featuregroupDTO =
-        featuregroupController.getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+    List<FeaturegroupDTO> featuregroupDTO;
+    if (version == null) {
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
+    } else {
+      featuregroupDTO = Arrays.asList(featuregroupController
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version));
+    }
+    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
+        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
     return Response.ok().entity(featuregroupGeneric).build();
   }
 
