@@ -43,7 +43,7 @@ public class FeaturestoreInputValidation {
    * @param featurestoreEntityDTO the user input data for the entity
    * @throws FeaturestoreException
    */
-  public void verifyUserInput(FeaturestoreEntityDTO featurestoreEntityDTO, Boolean sync)
+  public void verifyUserInput(FeaturestoreEntityDTO featurestoreEntityDTO)
     throws FeaturestoreException {
     
     Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
@@ -67,10 +67,7 @@ public class FeaturestoreInputValidation {
     }
     
     // features
-    // Only need to verify the DDL when creating table from Scratch and not Syncing
-    if (!sync) {
-      verifyFeatureList(featurestoreEntityDTO.getFeatures());
-    }
+    verifyFeatureList(featurestoreEntityDTO.getFeatures());
   }
   
   /**

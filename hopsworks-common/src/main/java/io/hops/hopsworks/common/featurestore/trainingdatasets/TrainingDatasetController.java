@@ -140,7 +140,7 @@ public class TrainingDatasetController {
   public TrainingDatasetDTO createTrainingDataset(Users user, Featurestore featurestore,
     TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO, false);
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
     // Verify input specific for training dataset
     verifyTrainingDatasetInput(trainingDatasetDTO, featurestore);
     // Statistics
@@ -336,7 +336,7 @@ public class TrainingDatasetController {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
   
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO, false);
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
   
     // Verify training dataset specific information
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());

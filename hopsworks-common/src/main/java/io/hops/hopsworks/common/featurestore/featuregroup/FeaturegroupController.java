@@ -148,7 +148,7 @@ public class FeaturegroupController {
     throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
 
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
 
     //Verify feature group input type
     verifyFeaturegroupType(featuregroupDTO, featurestore);
@@ -279,7 +279,7 @@ public class FeaturegroupController {
     }
 
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
 
     //Verify feature group input type
     verifyFeaturegroupType(featuregroupDTO, featurestore);
@@ -642,7 +642,7 @@ public class FeaturegroupController {
     Users user) throws FeaturestoreException {
   
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO, false);
+    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
   
     //Verify feature group input type
     verifyFeaturegroupType(featuregroupDTO, featurestore);
