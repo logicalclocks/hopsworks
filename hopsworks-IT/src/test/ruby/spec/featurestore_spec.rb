@@ -410,6 +410,22 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270040).to be true
         end
 
+        it "should be able to add a offline cached featuregroup to the featurestore with empty feature description" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          features = [
+              type: "test",
+              name: "test_feat_no_description",
+              description: "",
+              primary: false
+          ]
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["features"].length).to be 1
+          expect(parsed_json["features"].first["description"] == "").to be true
+        end
+
         it "should be able to preview a offline cached featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

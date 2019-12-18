@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup;
@@ -620,9 +621,11 @@ public class CachedFeaturegroupController {
         } else {
           schemaStringBuilder.append(feature.getOnlineType());
         }
-        schemaStringBuilder.append(" COMMENT '");
-        schemaStringBuilder.append(feature.getDescription());
-        schemaStringBuilder.append("'");
+        if (Strings.isNullOrEmpty(feature.getDescription())) {
+          schemaStringBuilder.append(" COMMENT '");
+          schemaStringBuilder.append(feature.getDescription());
+          schemaStringBuilder.append("'");
+        }
         schemaStringBuilder.append(", ");
       } else {
         if(!firstPartition){
@@ -638,9 +641,11 @@ public class CachedFeaturegroupController {
         } else {
           partitionStringBuilder.append(feature.getOnlineType());
         }
-        partitionStringBuilder.append(" COMMENT '");
-        partitionStringBuilder.append(feature.getDescription());
-        partitionStringBuilder.append("'");
+        if (Strings.isNullOrEmpty(feature.getDescription())) {
+          partitionStringBuilder.append(" COMMENT '");
+          partitionStringBuilder.append(feature.getDescription());
+          partitionStringBuilder.append("'");
+        }
       }
       if (i == features.size() - 1){
         Boolean firstPrimary = true;
