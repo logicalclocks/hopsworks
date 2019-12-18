@@ -574,7 +574,7 @@ angular.module('hopsWorksApp')
                 var numberOfPrimary = 0
                 for (i = 0; i < self.onDemandFeaturegroupFeatures.length; i++) {
                     featureNames.push(self.onDemandFeaturegroupFeatures[i].name)
-                    if (self.onDemandFeaturegroupFeatures[i].name === "" || self.onDemandFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1) {
+                    if (self.onDemandFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1) {
                         self.onDemandFeaturegroupFeaturesNameWrongValue[i] = -1
                         self.onDemandFeaturegroupWrong_values = -1;
                         self.onDemandFeaturegroupFeaturesWrongValue = -1;
@@ -694,7 +694,7 @@ angular.module('hopsWorksApp')
                 var numberOfPrimary = 0
                 for (i = 0; i < self.cachedFeaturegroupFeatures.length; i++) {
                     featureNames.push(self.cachedFeaturegroupFeatures[i].name)
-                    if (self.cachedFeaturegroupFeatures[i].name === "" || self.cachedFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1 ) {
+                    if (self.cachedFeaturegroupFeatures[i].name.search(self.hiveRegexp) == -1 ) {
                         self.cachedFeaturegroupFeaturesNameWrongValue[i] = -1
                         self.cachedFeaturegroupWrong_values = -1;
                         self.cachedFeaturegroupFeaturesWrongValue = -1;
