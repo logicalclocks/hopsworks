@@ -398,10 +398,12 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           features = [
               {
-                  type: "test",
+                  type: "INT",
                   name: "--",
                   description: "--",
-                  primary: true
+                  primary: true,
+                  onlineType: nil,
+                  partition: false
               }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)

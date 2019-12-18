@@ -621,7 +621,7 @@ public class CachedFeaturegroupController {
         } else {
           schemaStringBuilder.append(feature.getOnlineType());
         }
-        if (Strings.isNullOrEmpty(feature.getDescription())) {
+        if (!Strings.isNullOrEmpty(feature.getDescription())) {
           schemaStringBuilder.append(" COMMENT '");
           schemaStringBuilder.append(feature.getDescription());
           schemaStringBuilder.append("'");
@@ -641,7 +641,7 @@ public class CachedFeaturegroupController {
         } else {
           partitionStringBuilder.append(feature.getOnlineType());
         }
-        if (Strings.isNullOrEmpty(feature.getDescription())) {
+        if (!Strings.isNullOrEmpty(feature.getDescription())) {
           partitionStringBuilder.append(" COMMENT '");
           partitionStringBuilder.append(feature.getDescription());
           partitionStringBuilder.append("'");
