@@ -64,6 +64,7 @@ import io.hops.hopsworks.common.dao.user.sshkey.SshKeysPK;
 import io.hops.hopsworks.common.dao.user.sshkey.SshkeysFacade;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
@@ -80,6 +81,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.GenericEntity;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -183,6 +185,40 @@ public class UsersController {
     }
     
     return null;
+  }
+  
+  public void sendConfirmationMail(Users user) throws ServiceException {
+    try {
+      //send confirmation email
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+        UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+        UserAccountsEmailMessages.
+          accountActivatedMessage(user.getEmail()));
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
+  }
+  
+  public void sendRejectionEmail(Users user) throws ServiceException {
+    try {
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+        UserAccountsEmailMessages.ACCOUNT_REJECT,
+        UserAccountsEmailMessages.accountRejectedMessage());
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
+  }
+  
+  public Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
+    try {
+      authController.sendNewValidationKey(user, req);
+      return user;
+    } catch (MessagingException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
+        e);
+    }
   }
   
   /**
@@ -739,5 +775,22 @@ public class UsersController {
       }
       userFacade.removeByEmail(u.getEmail());
     }
+  }
+  
+  public Users getUserById(Integer id) throws UserException {
+    if (id == null) {
+      throw new IllegalArgumentException("id can not be null");
+    }
+    Users user = userFacade.find(id);
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    return user;
+  }
+  
+  public GenericEntity<List<BbcGroup>> getAllGroups() {
+    List<BbcGroup> list = bbcGroupFacade.findAll();
+    return new GenericEntity<List<BbcGroup>>(list) {
+    };
   }
 }
