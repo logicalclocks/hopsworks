@@ -166,7 +166,7 @@ public class JobsResource {
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response put (
-    JobConfiguration config,
+    @ApiParam(value = "Job configuration parameters", required = true) JobConfiguration config,
     @ApiParam(value = "name", required = true) @PathParam("name") String name,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException {

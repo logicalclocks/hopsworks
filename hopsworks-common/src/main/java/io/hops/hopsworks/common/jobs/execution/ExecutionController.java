@@ -92,6 +92,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -144,19 +145,9 @@ public class ExecutionController {
   private static final String REMOTE_PROTOCOL = "hdfs://";
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Execution start(Jobs job, Users user) throws JobException, GenericException, ServiceException,
-    ProjectException, UnsupportedEncodingException {
-    //A job can only have one execution running
-    List<Execution> jobExecs = execFacade.findByJob(job);
-    if(!jobExecs.isEmpty()) {
-      //Sort descending based on executionId
-      jobExecs.sort((lhs, rhs) -> rhs.getId().compareTo(lhs.getId()));
-      if(!jobExecs.get(0).getState().isFinalState()){
-        throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_INVALID_STATE, Level.FINE,
-          "Cannot start an execution while another one for the same job has not finished.");
-      }
-    }
-
+  public Execution start(Jobs job, String args, Users user) throws JobException, GenericException, ServiceException,
+    ProjectException {
+    
     // A user should not be able to start a job if the project is prepaid and it doesn't have quota.
     if(job.getProject().getPaymentType().equals(PaymentType.PREPAID)){
       YarnProjectsQuota projectQuota = yarnProjectsQuotaFacade.findByProjectName(job.getProject().getName());
@@ -172,13 +163,19 @@ public class ExecutionController {
         //Materialize certs
         return flinkController.startJob(job, user);
       case SPARK:
-        exec = sparkController.startJob(job, user);
+        exec = sparkController.startJob(job, args, user);
         if (exec == null) {
           throw new IllegalArgumentException("Problem getting execution object for: " + job.getJobType());
         }
         SparkJobConfiguration config = (SparkJobConfiguration) job.getJobConfig();
         String path = config.getAppPath();
-        String pathOfInode = Utils.prepPath(path);
+        String pathOfInode;
+        try {
+          pathOfInode = Utils.prepPath(path);
+        } catch (UnsupportedEncodingException ex) {
+          throw new JobException(RESTCodes.JobErrorCode.JOB_START_FAILED, Level.FINE,
+            "Job name: " + job.getName(), ex.getMessage(), ex);
+        }
         Inode inode = inodeController.getInodeAtPath(pathOfInode);
         String inodeName = inode.getInodePK().getName();
 
@@ -189,7 +186,7 @@ public class ExecutionController {
         if(!job.getProject().getConda()){
           throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINEST);
         }
-        exec = sparkController.startJob(job, user);
+        exec = sparkController.startJob(job, args, user);
         if (exec == null) {
           throw new IllegalArgumentException("Error while getting execution object for: " + job.getJobType());
         }
@@ -208,13 +205,13 @@ public class ExecutionController {
       case PYSPARK:
       case FLINK:
       case BEAM_FLINK:
-        //Get all the executions that are in a non-final state, should be only one.
+        //Get all the executions that are in a non-final state
         List<Execution> executions = execFacade.findByJobAndNotFinished(job);
         if (executions != null && !executions.isEmpty()) {
           for (Execution execution : executions) {
             //An execution when it's initializing might not have an appId in hopsworks
             if (execution.getAppId() != null) {
-              killExecution(job, execution);
+              stopExecution(execution);
             }
           }
           return execFacade.findById(executions.get(0).getId());
@@ -225,15 +222,25 @@ public class ExecutionController {
     }
   }
   
-  public void killExecution(Jobs job, Execution execution) throws JobException {
+  public Execution stopExecution(Integer id) throws JobException {
+    Execution execution = execFacade.findById(id);
+    return stopExecution(execution);
+  }
+  
+  public Execution stopExecution(Execution execution) throws JobException {
+    if(execution.getAppId() == null){
+      throw new JobException(RESTCodes.JobErrorCode.APPLICATIONID_NOT_FOUND, Level.FINE,
+        "execution.id: " +execution.getId());
+    }
     YarnClientWrapper yarnClientWrapper = null;
     try {
       yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
       yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
       async.getYarnExecutionFinalizer().removeAllNecessary(execution);
+      return execFacade.findById(execution.getId());
     } catch (IOException | YarnException ex) {
       LOGGER.log(Level.SEVERE,
-        "Could not kill job for job:" + job.getName() + "with appId:" + execution.getAppId(), ex);
+        "Could not kill job for job:" + execution.getJob().getName() + "with appId:" + execution.getAppId(), ex);
       throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, Level.WARNING, ex.getMessage(), null, ex);
     } finally {
       ycs.closeYarnClient(yarnClientWrapper);
@@ -263,12 +270,14 @@ public class ExecutionController {
         .SUCCEEDED));
       String hdfsPath = REMOTE_PROTOCOL + path;
       if (!Strings.isNullOrEmpty(path) && dfso.exists(hdfsPath)) {
+        Project project = execution.getJob().getProject();
+        stdPath = path.split(project.getName())[1];
+        int fileIndex = stdPath.lastIndexOf('/');
+        String stdDirPath = stdPath.substring(0, fileIndex);
+        dto.setPath(Settings.DIR_ROOT + File.separator + project.getName() + stdDirPath + File.separator +  "std" +
+          dto.getType().getName().toLowerCase() + ".log");
         if (dfso.listStatus(new org.apache.hadoop.fs.Path(hdfsPath))[0].getLen() > settings.getJobLogsDisplaySize()) {
-          Project project = execution.getJob().getProject();
-          stdPath = path.split(project.getName())[1];
-          int fileIndex = stdPath.lastIndexOf('/');
-          String stdDirPath = stdPath.substring(0, fileIndex);
-          dto.setPath("/project/" + project.getId() + "/datasets" + stdDirPath);
+          dto.setLog("Log is too big to display in browser. Click on the download button to get the log file.");
         } else {
           try (InputStream input = dfso.open(hdfsPath)) {
             message = IOUtils.toString(input, "UTF-8");

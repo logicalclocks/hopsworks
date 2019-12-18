@@ -446,10 +446,11 @@ angular.module('hopsWorksApp')
                     },
                     function (error) {
                         self.ignorePoll = false;
-                        growl.error(error.data.errorMsg, {
-                            title: 'Error',
-                            ttl: 15000
-                        });
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 10000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 10000});
+                        }
                     });
 
             };

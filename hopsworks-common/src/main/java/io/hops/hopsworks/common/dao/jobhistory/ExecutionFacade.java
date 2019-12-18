@@ -226,11 +226,15 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   public enum Sorts {
     ID("ID", "e.id ", "ASC"),
     SUBMISSIONTIME("SUBMISSIONTIME", "e.submissionTime ", "DESC"),
+    USER("CREATOR", "LOWER(CONCAT (e.user.fname, e.user.lname)) " , "ASC"),
+    USER_FIRST_NAME("USER_FIRSTNAME", "e.user.fname " , "ASC"),
+    USER_LAST_NAME("USER_LASTNAME", "e.user.lname " , "ASC"),
     STATE("STATE", "e.state ", "ASC"),
     FINALSTATUS("FINALSTATUS", "e.finalStatus ", "ASC"),
     APPID("APPID", "e.appId ", "DESC"),
     PROGRESS("PROGRESS", "e.progress ", "ASC"),
     DURATION("DURATION", "e.executionStop-e.executionStart ", "ASC");
+
     private final String value;
     private final String sql;
     private final String defaultParam;
@@ -312,12 +316,12 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   //====================================================================================================================
   
   public Execution create(Jobs job, Users user, String stdoutPath, String stderrPath, JobFinalStatus finalStatus,
-    float progress, String hdfsUser) {
-    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath, finalStatus, progress, hdfsUser);
+    float progress, String hdfsUser, String args) {
+    return create(job, user, JobState.INITIALIZING, stdoutPath, stderrPath, finalStatus, progress, hdfsUser, args);
   }
 
   public Execution create(Jobs job, Users user, JobState state, String stdoutPath, String stderrPath,
-    JobFinalStatus finalStatus, float progress, String hdfsUser) {
+    JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
     //Check if state is ok
     if (state == null) {
       state = JobState.INITIALIZING;
@@ -327,7 +331,7 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     }
     //Create new object
     Execution exec = new Execution(state, job, user, new java.util.Date(), stdoutPath, stderrPath, finalStatus,
-      progress, hdfsUser);
+      progress, hdfsUser, args);
     //And persist it
     em.persist(exec);
     em.flush();

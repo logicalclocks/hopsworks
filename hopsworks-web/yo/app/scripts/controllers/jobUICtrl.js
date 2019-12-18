@@ -52,9 +52,9 @@ angular.module('hopsWorksApp')
             self.job;
             self.jobtype; //Holds the type of job.
             self.execFile; //Holds the name of the main execution file
-            self.showExecutions = false;
             self.projectId = $routeParams.projectID;
             self.jobName = $routeParams.name;
+            self.isExecution = true;
             self.appId = $routeParams.appId;
             self.appIds = [];
             self.ui = "";
@@ -73,10 +73,11 @@ angular.module('hopsWorksApp')
             };
             var stopLoading = function () {
               self.loading = false;
-              self.loadingText = "";
+              self.loadingText = '';
             };
             var getAppId = function (callback) {
-              if (self.appId === undefined || self.appId === null || self.appId === "") {
+              if (self.appId === undefined || self.appId === null || self.appId === '' || self.appId === false) {
+                self.isExecution = false;
                 JobService.getAllExecutions(self.projectId, self.job.name, '?sort_by=submissiontime:desc&offset=0&limit=1').then(
                         function (success) {
                             if(typeof success.data.items !== 'undefined') {
@@ -94,8 +95,8 @@ angular.module('hopsWorksApp')
                   stopLoading();
                 });
               } else {
-                callback();
-              }
+                  callback();
+               }
             };
             var getAppIds = function () {
               if (self.job) {
@@ -119,6 +120,7 @@ angular.module('hopsWorksApp')
             var getJobUI = function () {
               if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
                 self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                self.appId = StorageService.recover(self.projectId + "_jobui_appId" + self.jobName);
                 StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
                 self.jobType = self.job.jobType;
               }
@@ -131,7 +133,7 @@ angular.module('hopsWorksApp')
 
             var getJobUIInt = function () {
               //If job is not flink
-                if (!self.isLivy && (self.job.jobType === 'FLINK' || self.job.jobType === 'BEAM_FLINK')) {
+                if (!self.isLivy && (typeof self.job !== "undefined" && (self.job.jobType === 'FLINK' || self.job.jobType === 'BEAM_FLINK'))) {
                     //Get Flink master url from job
                     self.ui = '/hopsworks-api/flinkmaster/' + self.appId + '/';
                     JobService.getFlinkMaster(self.appId).then(
@@ -193,18 +195,7 @@ angular.module('hopsWorksApp')
                 $timeout(stopLoading(), 2000);
             };
 
-            self.yarnUI = function () {
 
-              if (self.job === undefined || self.job === null) {
-                if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
-                  self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
-                  StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
-                }
-              }
-
-              startLoading("Loading YARN UI...");
-              getAppId(yarnUIInt);
-            };
             var yarnUIInt = function () {
                 self.ui = '/hopsworks-api/yarnui/cluster/app/' + self.appId;
                         self.current = "yarnUI";
@@ -215,11 +206,23 @@ angular.module('hopsWorksApp')
                         // This timeout is ignored when the iframe is loaded, replacing the overlay
                         $timeout(stopLoading(), 5000);
             };
-            self.kibanaUI = function () {
-              getAppId(kibanaUIInt);
-            };
-            var kibanaUIInt = function () {
+
+            self.yarnUI = function () {
+
               if (self.job === undefined || self.job === null) {
+                  if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
+                      self.job = StorageService.recover(self.projectId + "_jobui_" + self.jobName);
+                      StorageService.store(self.projectId + "_jobui_" + self.jobName, self.job);
+                  }
+              }
+
+              startLoading("Loading YARN UI...");
+              getAppId(yarnUIInt);
+            };
+
+
+            var kibanaUIInt = function () {
+              if (typeof self.isLivy !== 'undefined'  && self.isLivy === true ) {
                   ElasticService.getJwtToken(self.projectId).then(
                         function (success) {
                           var projectName = success.data.projectName;
@@ -253,12 +256,14 @@ angular.module('hopsWorksApp')
                   //TODO(Theofilos): remove when we replace projectId with projectName
                   ElasticService.getJwtToken(self.projectId).then(
                       function (success) {
-                          var projectName = success.data.projectName;
+                          var projectName = success.data.projectName.toLowerCase();
                            var kibanaUrl = success.data.kibanaUrl;
+                          if (self.isExecution === null || self.isExecution === false){
+                              self.ui = kibanaUrl + "#/discover?_g=(filters:!())&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"+projectName+"_logs-*',key:jobname,negate:!f,params:(query:" + self.job.name + "),type:phrase,value:" + self.job.name + "),query:(match:(jobname:(query:"+self.job.name+",type:phrase))))),index:'"+projectName+"_logs-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
+                          } else {
+                              self.ui = kibanaUrl + "#/discover?_g=(filters:!())&_a=(columns:!(logdate,host,priority,logger_name,log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"+projectName+"_logs-*',key:application,negate:!f,params:(query:" + self.appId + "),type:phrase,value:" + self.appId + "),query:(match:(application:(query:"+self.appId+",type:phrase))))),index:'"+projectName+"_logs-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
+                          }
                           //if not jupyter we should have a job
-                          self.ui = kibanaUrl + "projectId=" + self.projectId +
-                          "#/discover?_g=()&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),index:'"
-                              + projectName.toLowerCase() + "_logs-*',interval:auto,query:(language:lucene,query:jobname=\"" + self.job.name + "\"),sort:!(logdate,desc))";
                           self.current = "kibanaUI";
                           var iframe = document.getElementById('ui_iframe');
                           if (iframe !== null) {
@@ -276,6 +281,9 @@ angular.module('hopsWorksApp')
                       });
 
               }
+            };
+            self.kibanaUI = function () {
+                getAppId(kibanaUIInt);
             };
             self.grafanaUI = function () {
               startLoading("Loading Grafana UI...");

@@ -89,8 +89,6 @@ public abstract class JobConfiguration {
    */
   public abstract JobType getJobType();
   
-  public abstract String getJobTypeName();
-
   public String getAppName() {
     return appName;
   }

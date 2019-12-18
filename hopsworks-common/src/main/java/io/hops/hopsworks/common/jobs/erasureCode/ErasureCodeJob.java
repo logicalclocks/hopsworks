@@ -82,7 +82,7 @@ public class ErasureCodeJob extends HopsJob {
 
   @Override
   protected void runJob(DistributedFileSystemOps udfso,
-          DistributedFileSystemOps dfso) {
+          DistributedFileSystemOps dfso, String args) {
     boolean jobSucceeded = false;
     try {
       //do compress the file

@@ -89,11 +89,17 @@ public class AsynchronousJobExecutor {
   private BaseHadoopClientsService baseHadoopClientsService;
   @EJB
   private TfLibMappingUtil tfLibMappingUtil;
-
+  
   @Asynchronous
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void startExecution(HopsJob job) {
-    job.execute();
+    startExecution(job, null);
+  }
+  
+  @Asynchronous
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+  public void startExecution(HopsJob job, String args) {
+    job.execute(args);
   }
 
   public ExecutionFacade getExecutionFacade() {

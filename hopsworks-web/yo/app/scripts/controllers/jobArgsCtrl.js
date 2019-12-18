@@ -13,31 +13,28 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.jobs.beam;
 
-import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
+'use strict';
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+angular.module('hopsWorksApp')
+    .controller('JobArgsCtrl', ['$uibModalInstance',  'title', 'msg', 'args',
+        function ($uibModalInstance, title, msg, args) {
 
-/**
- * Beam job configuration. Specifies which runner to use.
- */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.NONE)
-public class BeamFlinkJobConfiguration extends FlinkJobConfiguration {
-  
-  public BeamFlinkJobConfiguration(){
-  
-  }
-  
-  @Override
-  @XmlElement(name="jobType")
-  public JobType getJobType() {
-    return JobType.BEAM_FLINK;
-  }
-  
-}
+            var self = this;
+            self.title = title;
+            self.msg = msg;
+            self.args = args;
+
+            self.ok = function () {
+                $uibModalInstance.close({args: self.args});
+            };
+
+            self.cancel = function () {
+                $uibModalInstance.dismiss('cancel');
+            };
+
+            self.reject = function () {
+                $uibModalInstance.dismiss('reject');
+            };
+
+        }]);

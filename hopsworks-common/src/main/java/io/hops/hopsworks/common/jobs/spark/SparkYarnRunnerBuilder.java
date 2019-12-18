@@ -236,7 +236,6 @@ public class SparkYarnRunnerBuilder {
       builder.addJavaOption(option);
     }
 
-    //Add local resources to spark environment too
     for (String s : jobArgs) {
       amargs.append(" --arg '").append(s).append("'");
     }

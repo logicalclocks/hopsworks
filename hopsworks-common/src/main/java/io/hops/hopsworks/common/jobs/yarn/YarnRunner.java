@@ -70,6 +70,7 @@ import org.apache.hadoop.yarn.client.api.YarnClientApplication;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.apache.parquet.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -207,10 +208,17 @@ public class YarnRunner {
    * @throws IOException Can occur upon opening and moving execution and input files.
    * @throws java.net.URISyntaxException
    */
-  ApplicationId startAppMaster(Project project, DistributedFileSystemOps dfso, String username) throws
+  ApplicationId startAppMaster(Project project, DistributedFileSystemOps dfso, String username, String args) throws
     YarnException, IOException, URISyntaxException, InterruptedException {
     logger.info("Starting application master.");
     if (jobType == JobType.SPARK || jobType == JobType.PYSPARK) {
+  
+      if(!Strings.isNullOrEmpty(args)) {
+        String[] argsArray= args.trim().split(" ");
+        for (String s : argsArray) {
+          amArgs = amArgs + " --arg '" + s + "'";
+        }
+      }
       //Get application id
       
       YarnClientApplication app = yarnClient.createApplication();
