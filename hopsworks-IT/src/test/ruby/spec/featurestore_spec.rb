@@ -547,16 +547,16 @@ describe "On #{ENV['OS']}" do
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json["name"]).to eq featuregroup_name
-          expect(parsed_json["version"]).to eq 1 
+          expect(parsed_json[0]["name"]).to eq featuregroup_name
+          expect(parsed_json[0]["version"]).to eq 1
 
           # Get the second version
           get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=2"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json["name"]).to eq featuregroup_name
-          expect(parsed_json["version"]).to eq 2
+          expect(parsed_json[0]["name"]).to eq featuregroup_name
+          expect(parsed_json[0]["version"]).to eq 2
         end
 
         it "should be able to get a list of feature group versions based on name" do 
@@ -1116,15 +1116,15 @@ describe "On #{ENV['OS']}" do
           get get_training_datasets_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json['version']).to be 1 
-          expect(parsed_json['name']).to be training_dataset_name
+          expect(parsed_json[0]['version']).to be 1
+          expect(parsed_json[0]['name']).to be training_dataset_name
 
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}/version/2"
           get get_training_datasets_endpoint 
           parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json['version']).to be 2 
-          expect(parsed_json['name']).to be training_dataset_name
+          expect(parsed_json[0]['version']).to be 2
+          expect(parsed_json[0]['name']).to be training_dataset_name
         end
 
         it "should fail to get a training dataset with a name that does not exists" do
