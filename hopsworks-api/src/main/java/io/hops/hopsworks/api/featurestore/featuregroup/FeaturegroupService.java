@@ -219,51 +219,34 @@ public class FeaturegroupService {
   }
 
   /**
-   * Endpoint for retrieving a list of feature groups with a specified name in a specified feature store
+   * Retrieve a specific feature group based name. Allow filtering on version.
    *
    * @param featureGroupName name of the featuregroup
+   * @param version queryParam with the desired version
    * @return JSON representation of the featuregroup
    */
   @GET
-  @Path("/name/{featureGroupName}")
+  // Anything else that is not just number should use this endpoint
+  @Path("/{featureGroupName: [a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a list of feature groups with a specific name", response = List.class)
-  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
-                                  @PathParam("featureGroupName") String featureGroupName) {
-    verifyNameProvided(featureGroupName);
-    List<FeaturegroupDTO> featuregroupDTO =
-        featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
-    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
-        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
-    return Response.ok().entity(featuregroupGeneric).build();
-  }
-
-  /**
-   * Endpoint to retrieve a feature group based on name and version
-   *
-   * @param featureGroupName name of the featuregroup
-   * @return JSON representation of the featuregroup
-   */
-  @GET
-  @Path("/name/{featureGroupName}/version/{version}")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a feature group with a specific name and version", response = FeaturegroupDTO.class)
+  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version", response = List.class)
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("featureGroupName") String featureGroupName,
-                                  @ApiParam(value = "Version of the feature group", required = true)
-                                  @PathParam("version") Integer version) {
+                                  @ApiParam(value = "Filter by a specific version")
+                                  @QueryParam("version") Integer version) {
     verifyNameProvided(featureGroupName);
-    verifyVersionProvided(version);
-    FeaturegroupDTO featuregroupDTO =
-        featuregroupController.getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-        new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
+    List<FeaturegroupDTO> featuregroupDTO;
+    if (version == null) {
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
+    } else {
+      featuregroupDTO = Arrays.asList(featuregroupController
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version));
+    }
+    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
+        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
     return Response.ok().entity(featuregroupGeneric).build();
   }
 
