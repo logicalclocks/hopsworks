@@ -840,15 +840,15 @@ public class ProjectController {
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
-      throws ProjectException, DatasetException, HopsSecurityException,
-      UserException, ElasticException {
+    throws ProjectException, DatasetException, HopsSecurityException,
+    UserException, ElasticException, ServiceException, SchemaException, FeaturestoreException, KafkaException {
 
     addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso);
     elasticController.createIndexPattern(project, user,
         project.getName().toLowerCase() + "_serving-*");
     // If Kafka is not enabled for the project, enable it
     if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-      projectServicesFacade.addServiceForProject(project, ProjectServiceEnum.KAFKA);
+      addService(project, ProjectServiceEnum.KAFKA, user, dfso, udfso);
     }
     return addServingManager(project);
   }
