@@ -105,7 +105,7 @@
           <!-- Set up the job details -->
           <div uib-accordion-group class="panel-default" heading="{{newJobCtrl.accordion4.title}} {{newJobCtrl.accordion4.value}}"
                is-open="newJobCtrl.accordion4.isOpen"
-               ng-show="(newJobCtrl.jobtype === 1 || newJobCtrl.jobtype === 2) && newJobCtrl.accordion4.visible"
+               ng-show="newJobCtrl.jobtype === 1 && newJobCtrl.accordion4.visible"
                id="chooseParametersAndArguments">
             <!-- Spark.PySpark -->
             <div>

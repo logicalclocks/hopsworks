@@ -438,6 +438,8 @@ angular.module('hopsWorksApp')
                 case 2:
                   self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
+                  self.accordion5.visible = true;
+                  self.accordion5.isOpen = true;
                   selectedType = "PySpark";
                   break;
                 case 3:
@@ -537,6 +539,10 @@ angular.module('hopsWorksApp')
               self.accordion5.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
+              if (self.jobtype === 2){
+                self.accordion5.isOpen = true;
+                self.accordion3.visible = true;
+              }
             };
 
             /**

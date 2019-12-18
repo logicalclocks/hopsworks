@@ -125,7 +125,7 @@ public class ExecutionsResource {
   }
   
   
-  @ApiOperation(value = "Start/Stop an execution(run) of the job",
+  @ApiOperation(value = "Stop an execution(run) of the job",
     notes = "Stops an execution of a job by providing the status.",
     response = ExecutionDTO.class)
   @PUT
@@ -134,7 +134,7 @@ public class ExecutionsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response execution(
+  public Response stopExecution(
     @ApiParam(value = "Id of execution.", required = true) @PathParam("id") Integer id,
     @ApiParam(value = "status to set.", required = true) Status status,
     @Context SecurityContext sc,
@@ -154,7 +154,7 @@ public class ExecutionsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response execution(
+  public Response startExecution(
     @ApiParam(value = "Arguments for executing the job") String args,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {

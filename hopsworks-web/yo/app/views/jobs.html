@@ -397,7 +397,7 @@
 
                               <button
                                     uib-tooltip="Monitoring UI"
-                                    ng-if="job.jobType === 'SPARK'"
+                                    ng-if="job.jobType === 'SPARK' || job.jobType === 'PYSPARK'"
                                     ng-disabled = "execution.state === 'INITIALIZING' || execution.state === 'APP_MASTER_START_FAILED'"
                                     type="button" class="btn btn-default fa fa-eye"
                                     ng-click="jobsCtrl.showExecutionUI(execution);$event.stopPropagation();">
