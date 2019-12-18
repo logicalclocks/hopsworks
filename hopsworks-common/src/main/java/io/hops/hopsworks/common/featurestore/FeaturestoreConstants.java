@@ -33,7 +33,7 @@ public class FeaturestoreConstants {
   }
 
   public static final int FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
-  public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^[a-z0-9_]{1,63}$");
+  public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^(?=.{1,63}$)([a-z0-9_]*[a-z]{1}[a-z0-9_]*)$");
   public static final int FEATURESTORE_ENTITY_NAME_MAX_LENGTH = 63; // limited by NDB due to online fg
   public static final int FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH = 256; // can possibly 1000, but the one for
   // features is limited to 256
