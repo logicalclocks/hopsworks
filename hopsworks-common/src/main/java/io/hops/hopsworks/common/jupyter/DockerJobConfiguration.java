@@ -43,9 +43,4 @@ public class DockerJobConfiguration extends JobConfiguration {
     return JobType.DOCKER;
   }
 
-  @Override
-  @XmlElement(name="jobTypeName")
-  public String getJobTypeName() {
-    return JobType.DOCKER.getName();
-  }
 }

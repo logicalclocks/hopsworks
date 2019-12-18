@@ -91,7 +91,6 @@ public class ImportController implements ImportControllerIface {
     SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
     sparkJobConfiguration.setAppName(featuregroupImportJobDTO.getFeaturegroup());
     sparkJobConfiguration.setAppPath(settings.getFeaturestoreImportJobPath());
-    sparkJobConfiguration.setArgs("--job_spec hdfs://" + jsonJobConfigPath);
     sparkJobConfiguration.setExecutorCores(featuregroupImportJobDTO.getExecutorCores());
     sparkJobConfiguration.setExecutorMemory(featuregroupImportJobDTO.getExecutorMemory());
     sparkJobConfiguration.setAmVCores(featuregroupImportJobDTO.getAmCores());

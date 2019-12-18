@@ -260,7 +260,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
       }
     }
   
-    String jsonJobConfigFilePath = writeUtilArgsToHdfs(user, project, trainingDatasetJobDTO);
+    writeUtilArgsToHdfs(user, project, trainingDatasetJobDTO);
   
     if (!sql) {
       verifyFeatureExistence(trainingDatasetJobDTO.getFeatures(), featurestore,
@@ -270,19 +270,18 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
     // Create the job if it doesn't exists.
     Jobs job = jobFacade.findByProjectAndName(project, trainingDatasetJobDTO.getTrainingDataset());
     if (job == null) {
-      job = createJob(user, project, trainingDatasetJobDTO, jsonJobConfigFilePath);
+      job = createJob(user, project, trainingDatasetJobDTO);
     }
     
     return job;
   }
   
   private Jobs createJob(Users user, Project project,
-    TrainingDatasetJobDTO trainingDatasetJobDTO, String jsonJobConfigPath) {
+    TrainingDatasetJobDTO trainingDatasetJobDTO) {
     SparkJobConfiguration sparkJobConfiguration = new SparkJobConfiguration();
     sparkJobConfiguration.setAppName(trainingDatasetJobDTO.getTrainingDataset());
     String jobPath = settings.getFeaturestoreTrainingDatasetJobPath(trainingDatasetJobDTO.getSqlQuery());
     sparkJobConfiguration.setAppPath(jobPath);
-    sparkJobConfiguration.setArgs("--job_spec " + jsonJobConfigPath);
     sparkJobConfiguration.setExecutorCores(trainingDatasetJobDTO.getExecutorCores());
     sparkJobConfiguration.setExecutorMemory(trainingDatasetJobDTO.getExecutorMemory());
     sparkJobConfiguration.setAmVCores(trainingDatasetJobDTO.getAmCores());
