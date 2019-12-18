@@ -48,9 +48,9 @@ public class ExecutionsBuilder {
   
   
   /**
-   * @param dto
-   * @param uriInfo
-   * @param execution
+   * @param dto dto
+   * @param uriInfo uriInfo
+   * @param execution execution
    * @return uri to single execution
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Execution execution) {
@@ -66,9 +66,9 @@ public class ExecutionsBuilder {
   }
   
   /**
-   * @param dto
-   * @param uriInfo
-   * @param job
+   * @param dto dto
+   * @param uriInfo uriInfo
+   * @param job job
    * @return uri to all the executions of a job
    */
   public ExecutionDTO uri(ExecutionDTO dto, UriInfo uriInfo, Jobs job) {
@@ -101,6 +101,7 @@ public class ExecutionsBuilder {
       dto.setStderrPath(execution.getStderrPath());
       dto.setAppId(execution.getAppId());
       dto.setHdfsUser(execution.getHdfsUser());
+      dto.setArgs(execution.getArgs());
       dto.setFinalStatus(execution.getFinalStatus());
       dto.setProgress(execution.getProgress());
       dto.setUser(usersBuilder.build(uriInfo, resourceRequest, execution.getUser()));

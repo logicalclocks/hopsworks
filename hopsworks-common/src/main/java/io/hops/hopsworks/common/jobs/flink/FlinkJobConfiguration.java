@@ -154,12 +154,6 @@ public class FlinkJobConfiguration extends YarnJobConfiguration {
     return JobType.FLINK;
   }
   
-  @Override
-  @XmlElement(name="jobTypeName")
-  public String getJobTypeName() {
-    return JobType.FLINK.getName();
-  }
-  
   public String getProperties() {
     return properties;
   }

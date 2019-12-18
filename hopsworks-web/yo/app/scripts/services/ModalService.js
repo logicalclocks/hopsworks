@@ -129,6 +129,25 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            jobArgs: function (size, title, msg, args) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/jobArgsModal.html',
+                    controller: 'JobArgsCtrl as jobArgsCtrl',
+                    size: size,
+                    resolve: {
+                        title: function () {
+                            return title;
+                        },
+                        msg: function () {
+                            return msg;
+                        },
+                        args: function () {
+                            return args;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             alert: function (size, title, msg) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/alertModal.html',
@@ -824,6 +843,33 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            executionDetails: function (size, job, execution) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/executionDetails.html',
+                    controller: 'ExecutionDetailsCtrl as executionDetailsCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', '$location', 'AuthService',
+                            function ($q, $location, AuthService) {
+                                return AuthService.session().then(
+                                    function (success) {
+                                    },
+                                    function (err) {
+                                        $location.path('/login');
+                                        $location.replace();
+                                        return $q.reject(err);
+                                    });
+                            }],
+                        job: function () {
+                            return job;
+                        },
+                        execution: function () {
+                            return execution;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             jobUI: function (size, job, projectId) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/jobUI.html',
@@ -1039,7 +1085,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-
             noteCreate: function (size, title, msg, val) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/noteCreateModal.html',

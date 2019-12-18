@@ -87,11 +87,6 @@ public class SparkJob extends YarnJob {
     if (runnerbuilder == null) {
       runnerbuilder = new SparkYarnRunnerBuilder(jobs);
       runnerbuilder.setJobName(jobconfig.getAppName());
-      //Check if the user provided application arguments
-      if (jobconfig.getArgs() != null && !jobconfig.getArgs().isEmpty()) {
-        String[] jobArgs = jobconfig.getArgs().trim().split(" ");
-        runnerbuilder.addAllJobArgs(jobArgs);
-      }
     }
     //Set Kafka params
     runnerbuilder.setServiceProps(serviceProps);

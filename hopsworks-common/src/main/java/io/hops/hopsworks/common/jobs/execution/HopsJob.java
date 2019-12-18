@@ -149,7 +149,7 @@ public abstract class HopsJob {
    * <p/>
    * @throws IllegalStateException If no Execution id has been requested yet.
    */
-  public final void execute() {
+  public final void execute(String args) {
     if (!initialized) {
       throw new IllegalStateException(
               "Cannot execute before acquiring an Execution id.");
@@ -178,7 +178,7 @@ public abstract class HopsJob {
               cleanup();
               return null;
             }
-            runJob(udfso, dfso);
+            runJob(udfso, dfso, args);
             return null;
           } finally {
             if (dfso != null) {
@@ -220,7 +220,7 @@ public abstract class HopsJob {
    * @param dfso
    */
   protected abstract void runJob(DistributedFileSystemOps udfso,
-          DistributedFileSystemOps dfso);
+          DistributedFileSystemOps dfso, String args);
 
   /**
    * Called after runJob() completes, allows the job to perform some cleanup, if
@@ -237,8 +237,12 @@ public abstract class HopsJob {
    * @return Unique Execution object associated with this job.
    */
   public final Execution requestExecutionId() {
+    return requestExecutionId(null);
+  }
+  
+  public final Execution requestExecutionId(String args) {
     execution = services.getExecutionFacade().create(jobs, user, null, null, null, null, 0, hdfsUser.
-        getUserName());
+      getUserName(), args);
     initialized = (execution.getId() != null);
     return execution;
   }

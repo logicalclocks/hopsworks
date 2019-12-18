@@ -2484,13 +2484,13 @@ public class ProjectController {
           sparkJobConfiguration.setDynamicAllocationMinExecutors(1);
           sparkJobConfiguration.setDynamicAllocationMaxExecutors(3);
           sparkJobConfiguration.setDynamicAllocationInitialExecutors(1);
-          sparkJobConfiguration.setArgs(Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + tourFilesDataset + "/data");
           sparkJobConfiguration.setAppName(Settings.HOPS_FEATURESTORE_TOUR_JOB_NAME);
           sparkJobConfiguration.setLocalResources(new LocalResourceDTO[0]);
           Jobs job = jobController.putJob(user, project, null, sparkJobConfiguration);
           activityFacade.persistActivity(ActivityFacade.CREATED_JOB + job.getName(), project, user,
             ActivityFlag.SERVICE);
-          executionController.start(job, user);
+          executionController
+            .start(job, Settings.HOPS_FEATURESTORE_TOUR_JOB_INPUT_PARAM + tourFilesDataset + "/data", user);
           activityFacade.persistActivity(ActivityFacade.RAN_JOB + job.getName(), project, user,
             ActivityFlag.SERVICE);
           break;

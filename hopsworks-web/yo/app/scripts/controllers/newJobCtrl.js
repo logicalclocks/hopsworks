@@ -60,9 +60,6 @@ angular.module('hopsWorksApp')
             self.showUpdateWarning = false;
             self.updateWarningMsg = "Job already exists. Are you sure you want to update it?";
 
-            // keep the proposed configurations
-            self.autoConfigResult;
-
             //Set some (semi-)constants
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
@@ -321,6 +318,15 @@ angular.module('hopsWorksApp')
                   self.tourService.currentStep_TourSix = 1;
                   self.kafkaGuideTransition();
                 }
+                if(self.jobname === "SparkPi") {
+                  StorageService.store("tour_args_" + self.jobname, "10");
+                } else if(self.jobname === "KafkaDemoProducer") {
+                  StorageService.store("tour_args_" + self.jobname, "producer " + self.tourService.kafkaTopicName);
+                } else if(self.jobname === "KafkaDemoConsumer") {
+                  StorageService.store("tour_args_" + self.jobname, "consumer " + self.tourService.kafkaTopicName);
+                } else if(self.jobname === "featurestore_tour_job") {
+                  StorageService.store("tour_args_" + self.jobname, "--input TestJob/data");
+                }
               }
 
               self.runConfig.appName = self.jobname;
@@ -364,7 +370,7 @@ angular.module('hopsWorksApp')
               }
               if (self.phase === 0) {
                 if (!self.jobname) {
-                  self.jobname = "Job-" + Math.round(new Date().getTime() / 1000);
+                  self.jobname = "SparkPi";
                   self.putAction = "Create";
                 }
                 self.phase = 1;
@@ -383,8 +389,6 @@ angular.module('hopsWorksApp')
             self.templateFormButton = function(){
               JobService.getJob(self.projectId, self.jobname).then(
                   function (success) {
-                    //growl.warning("Job already exists. Are you sure you want to update it?", {title: "Warning",
-                    // ttl: 15000});
                     self.showUpdateWarning = true;
                     self.putAction = "Update";
                   }, function (error) {
@@ -434,6 +438,8 @@ angular.module('hopsWorksApp')
                 case 2:
                   self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
+                  self.accordion5.visible = true;
+                  self.accordion5.isOpen = true;
                   selectedType = "PySpark";
                   break;
                 case 3:
@@ -506,10 +512,6 @@ angular.module('hopsWorksApp')
                       (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === '')) {
                 self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
               }
-              if (self.jobtype === 1 && self.projectIsGuide &&
-                      (typeof self.runConfig.args === 'undefined' || self.runConfig.args === '')) {
-                self.runConfig.args = '10';
-              }
               // For Kafka tour
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 7;
@@ -523,13 +525,6 @@ angular.module('hopsWorksApp')
             self.populateKafkaJobParameters = function () {
               self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StructuredStreamingKafka';
               var jobState = self.tourService.kafkaJobCreationState;
-              if (angular.equals('producer', jobState)) {
-                self.runConfig.args = 'producer ' + self.guideKafkaTopics[0];
-              } else if (angular.equals('consumer', jobState)) {
-                self.runConfig.args = "consumer " + self.guideKafkaTopics[0];
-              } else {
-                self.runConfig.args = "Internal error, something went wrong. Select manually!";
-              }
             };
 
             /**
@@ -544,6 +539,10 @@ angular.module('hopsWorksApp')
               self.accordion5.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
+              if (self.jobtype === 2){
+                self.accordion5.isOpen = true;
+                self.accordion3.visible = true;
+              }
             };
 
             /**
@@ -747,36 +746,6 @@ angular.module('hopsWorksApp')
             };
 
             init(); //Call upon create;
-
-            /**
-             * Creates a jobDetails object with the arguments typed by the user and send
-             * these attributes to the server. The server responds with the results from the
-             * heuristic search.
-             * @param {type} filterValue
-             * @returns {undefined}
-             */
-            this.autoConfig = function (filterValue) {
-              self.isSpin = true;
-
-              self.autoConfigResult = {};
-              var jobDetails = {};
-              jobDetails.className = self.runConfig.mainClass;
-              jobDetails.selectedJar = self.sparkState.selectedJar;
-              jobDetails.inputArgs = self.runConfig.args;
-              jobDetails.jobType = self.getJobType();
-              jobDetails.projectId = self.projectId;
-              jobDetails.jobName = self.jobname;
-              jobDetails.filter = filterValue;
-
-              if (!angular.isUndefined(jobDetails.className) && !angular.isUndefined(jobDetails.inputArgs) &&
-                      !angular.isUndefined(jobDetails.selectedJar) && !angular.isUndefined(jobDetails.jobType)) {
-
-                self.configAlert = false;
-              } else {
-                self.configAlert = true;
-                self.isSpin = false;
-              }
-            };
 
             /**
              * Checks the value of the proposed configuration.

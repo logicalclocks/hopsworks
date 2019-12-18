@@ -172,7 +172,7 @@ public class JobController {
     try {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      LOGGER.log(Level.INFO, "Inspecting executable job program by {0} at path: {1}", new Object[]{username, path});
+      LOGGER.log(Level.FINE, "Inspecting executable job program by {0} at path: {1}", new Object[]{username, path});
       if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
               || path.endsWith(".ipynb"))) {
         throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");

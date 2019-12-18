@@ -75,9 +75,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
   private String mainClass;
 
   @XmlElement
-  private String args;
-
-  @XmlElement
   private String properties;
 
   @XmlElement
@@ -142,14 +139,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
 
   public void setMainClass(String mainClass) {
     this.mainClass = mainClass;
-  }
-
-  public String getArgs() {
-    return args;
-  }
-
-  public void setArgs(String args) {
-    this.args = args;
   }
 
   public String getProperties() {
@@ -265,18 +254,6 @@ public class SparkJobConfiguration extends YarnJobConfiguration {
       return JobType.PYSPARK;
     } else {
       return JobType.SPARK;
-    }
-  }
-
-  @Override
-  @XmlElement(name="jobTypeName")
-  public String getJobTypeName() {
-    if (this.mainClass == null) {
-      return null;
-    } else if(this.mainClass.equals(Settings.SPARK_PY_MAINCLASS)) {
-      return JobType.PYSPARK.getName();
-    } else {
-      return JobType.SPARK.getName();
     }
   }
 
