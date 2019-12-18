@@ -583,6 +583,8 @@ describe "On #{ENV['OS']}" do
 
         it "should fail to get a feature store by name that does not exists" do 
           # Get the first version
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
           get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/doesnotexists?version=1"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
@@ -1128,7 +1130,9 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should fail to get a training dataset with a name that does not exists" do
-          # Get the list  
+          # Get the list
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint 
           expect_status(422)
