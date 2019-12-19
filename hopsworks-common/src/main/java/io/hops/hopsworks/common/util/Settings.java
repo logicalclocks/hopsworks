@@ -351,7 +351,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
   private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
-  
+
+  // ZFS
+  private static final String VARIABLE_ZFS_POOL = "zpool";
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -729,11 +732,14 @@ public class Settings implements Serializable {
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
   
-      KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
-          KIBANA_HTTPS_ENABELED);
+      KIBANA_HTTPS_ENABLED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
+              KIBANA_HTTPS_ENABLED);
   
-      KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
-          KIBANA_MULTI_TENANCY_ENABELED);
+      KIBANA_MULTI_TENANCY_ENABLED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
+              KIBANA_MULTI_TENANCY_ENABLED);
+
+      ZFS_POOL = setStrVar(VARIABLE_ZFS_POOL, ZFS_POOL);
+
       cached = true;
     }
   }
@@ -1598,7 +1604,7 @@ public class Settings implements Serializable {
 
   public synchronized String getKibanaUri() {
     checkCache();
-    return (KIBANA_HTTPS_ENABELED ? "https" : "http") + "://" + KIBANA_IP +
+    return (KIBANA_HTTPS_ENABLED ? "https" : "http") + "://" + KIBANA_IP +
         ":" + KIBANA_PORT;
   }
   
@@ -3646,17 +3652,24 @@ public class Settings implements Serializable {
     return REQUESTS_VERIFY;
   }
   
-  private  Boolean KIBANA_HTTPS_ENABELED = false;
+  private  Boolean KIBANA_HTTPS_ENABLED = false;
   public synchronized Boolean isKibanaHTTPSEnabled() {
     checkCache();
-    return KIBANA_HTTPS_ENABELED;
+    return KIBANA_HTTPS_ENABLED;
   }
   
-  private  Boolean KIBANA_MULTI_TENANCY_ENABELED = false;
+  private  Boolean KIBANA_MULTI_TENANCY_ENABLED = false;
   public synchronized Boolean isKibanaMultiTenancyEnabled() {
     checkCache();
-    return KIBANA_MULTI_TENANCY_ENABELED;
+    return KIBANA_MULTI_TENANCY_ENABLED;
   }
-  
+
+  private  String  ZFS_POOL= "";
+  public synchronized String getZfsPool() {
+    checkCache();
+    return ZFS_POOL;
+  }
+
+
   public static final int ELASTIC_KIBANA_NO_CONNECTIONS = 5;
 }

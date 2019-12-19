@@ -89,13 +89,12 @@ public class AgentController {
     host.setAgentPassword(password);
     host.setRegistered(true);
     host.setHostname(hostId);
-    if (zfsKey != null && zfsKey.isEmpty() == false) {
-      host.setZfsKey(zfsKey);
-    }
+    host.setZfsKey(zfsKey);
     // Jim: We set the hostname as hopsworks::default pre-populates with the hostname,
     // but it's not the correct hostname for GCE.
     hostsFacade.storeHost(host);
-    return settings.getHadoopVersionedDir();
+//    return settings.getHadoopVersionedDir();
+    return host.getZfsKey();
   }
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
@@ -128,10 +127,12 @@ public class AgentController {
     if (heartbeat.zfsKey != null) {
       if (heartbeat.zfsKey.compareTo("request") == 0) {
         zfsKeyRequested = true;
-      } else { // key rotation
+      } else  if (heartbeat.zfsKey.compareTo("request") == 0) {
         host.setZfsKeyRotated(host.getZfsKey());
         host.setZfsKey(heartbeat.zfsKey);
         hostsFacade.storeHost(host);
+      } else {
+
       }
     }
 

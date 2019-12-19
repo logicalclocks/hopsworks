@@ -42,6 +42,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.swagger.annotations.Api;
@@ -77,6 +78,8 @@ public class AgentResource {
   private NoCacheResponse noCacheResponse;
   @EJB
   private AgentController agentController;
+  @EJB
+  private Settings settings;
 
   final static Logger logger = Logger.getLogger(AgentResource.class.getName());
 
@@ -165,6 +168,7 @@ public class AgentResource {
     final AgentView agentReply = new AgentView();
     agentReply.setSystemCommands(systemCommands);
     agentReply.setCondaCommands(condaCommands);
+    agentReply.setZfskey(hbReply.getZfsKey());
     return agentReply;
   }
   
@@ -186,6 +190,11 @@ public class AgentResource {
     }
     if (request.getHostId() == null || request.getPassword() == null) {
       throw new IllegalArgumentException("Invalid registration request");
+    }
+    if (settings.getZfsPool().isEmpty() == false) {
+      if (request.getZfskey().isEmpty()) {
+        throw new IllegalArgumentException("Registration request error. ZFS Pool is set, but the ZFS Key was empty.");
+      }
     }
     
     return agentController.register(request.getHostId(), request.getPassword(), request.getZfskey());
