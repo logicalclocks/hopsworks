@@ -119,8 +119,13 @@ public class KafkaServingHelper {
     if (serving.getKafkaTopic() == null) {
       return null;
     }
+    
+    ProjectTopics topic = serving.getKafkaTopic();
 
-    return new TopicDTO(serving.getKafkaTopic().getTopicName());
+    return new TopicDTO(topic.getTopicName(),
+      topic.getSubjects().getSubject(),
+      topic.getSubjects().getVersion(),
+      topic.getSubjects().getSchema().getSchema());
   }
 
   private ProjectTopics setupKafkaTopic(Project project, ServingWrapper servingWrapper) throws
