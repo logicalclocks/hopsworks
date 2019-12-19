@@ -1799,6 +1799,9 @@ public class RESTCodes {
     EXPERIMENT_EXECUTABLE_COPY_FAILED(4, "Error occurred when copying experiment executable.",
         Response.Status.INTERNAL_SERVER_ERROR),
     EXPERIMENT_LIST_FAILED(5, "Error occurred when fetching experiments.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EXPERIMENT_MARSHALLING_FAILED(6,
+        "Error occurred during marshalling/unmarshalling of experiment json.",
         Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
@@ -1842,7 +1845,10 @@ public class RESTCodes {
     METRIC_NOT_NUMBER(2, "Could not cast provided metric to double.",
         Response.Status.BAD_REQUEST),
     MODEL_LIST_FAILED(3, "Error occurred when fetching models.",
-                           Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    MODEL_MARSHALLING_FAILED(4,
+        "Error occurred during marshalling/unmarshalling of model json.",
+        Response.Status.INTERNAL_SERVER_ERROR);;
 
     private int code;
     private String message;
