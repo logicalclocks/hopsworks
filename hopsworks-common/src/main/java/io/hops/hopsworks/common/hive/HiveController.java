@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -59,6 +60,7 @@ import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 
@@ -96,7 +98,9 @@ public class HiveController {
   private DatasetController datasetController;
   @EJB
   private ActivityFacade activityFacade;
-
+  @EJB
+  private HopsFSProvenanceController fsProvenanceCtrl;
+  
   private final static String driver = "org.apache.hive.jdbc.HiveDriver";
   private final static Logger logger = Logger.getLogger(HiveController.class.getName());
 
@@ -167,7 +171,8 @@ public class HiveController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
-                               String dbName, DatasetType datasetType, Featurestore featurestore) throws IOException {
+                               String dbName, DatasetType datasetType, Featurestore featurestore)
+    throws IOException {
     if(datasetType != DatasetType.HIVEDB && datasetType != DatasetType.FEATURESTORE) {
       throw new IllegalArgumentException("Invalid dataset type for hive database");
     }
@@ -183,11 +188,6 @@ public class HiveController {
     dbDataset.setFeatureStore(featurestore);
     datasetFacade.persistDataset(dbDataset);
 
-    dfso.setMetaEnabled(dbPath);
-    datasetController.logDataset(project, dbDataset, OperationType.Add);
-  
-    activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user, ActivityFlag.DATASET);
-
     try {
       // Assign database directory to the user and project group
       hdfsUsersBean.addDatasetUsersGroups(user, project, dbDataset, dfso);
@@ -195,6 +195,11 @@ public class HiveController {
       // Make the dataset editable by default
       final FsPermission fsPermission = FsPermissions.rwxrwx___T;
       dfso.setPermission(dbPath, fsPermission);
+  
+      fsProvenanceCtrl.newHiveDatasetProvCore(project, dbPath.toString(), dfso);
+      datasetController.logDataset(project, dbDataset, OperationType.Add);
+      activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
+        ActivityFlag.DATASET);
 
       // Set the default quota
       switch (datasetType) {
@@ -206,7 +211,7 @@ public class HiveController {
           break;
       }
       projectFacade.setTimestampQuotaUpdate(project, new Date());
-    } catch (IOException e) {
+    } catch (IOException | ProvenanceException e) {
       logger.log(Level.SEVERE, "Cannot assign Hive database directory " + dbPath.toString() +
           " to correct user/group. Trace: " + e);
 

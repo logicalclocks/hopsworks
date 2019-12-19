@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
@@ -212,7 +213,7 @@ public class DelaProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startDownload(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException {
+    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException, ProvenanceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     //dataset not createed yet
 

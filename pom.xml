@@ -110,6 +110,15 @@
         <module>hopsworks-jupyter-git</module>
       </modules>
     </profile>
+    <profile>
+      <id>testing</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>hopsworks-testing</module>
+      </modules>
+    </profile>
   </profiles>
 
   <properties>

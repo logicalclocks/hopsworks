@@ -376,8 +376,97 @@
                 </table>
               </uib-tab>
 
-            </uib-tabset>
-          </div>
+              <uib-tab index="3" heading="Provenance">
+
+                <h3>Hopsworks Provenance Settings</h3>
+                <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;" ng-controller="ProvenanceCtrl as provenanceCtrl">
+                  <div class="panel-body">
+                    <b id="projectProvenance">
+                      <div class="control-group col-md-offset-1">
+                        <fieldset>
+                          <table st-table="rowCollection" class="table table-striped">
+                            <thead>
+                            <tr>
+                              <th style="width:20%">None/Meta/Min/Full</th>
+                              <th></th>
+                            </tr>
+                            <tr>
+                                <th style="width:20%">
+                                  <div style="margin-bottom: 10px;">
+                                    <md-radio-group ng-model="provenanceCtrl.projectProvenanceStatus"
+                                                    class="md-primary pull-right" layout="row">
+                                      <md-radio-button ng-repeat="m in provenanceCtrl.provStatus" ng-value="m.id"
+                                                       uib-tooltip="{{m.label}}" aria-label="{{m.label}}"
+                                                       ng-disabled="true"/>
+                                    </md-radio-group>
+                                  </div>
+                                </th>
+                              <th style="width:80%">Project Provenance Status</th>
+                            </tr>
+                          </table>
+                        </fieldset>
+                        <fieldset>
+                          <table st-table="rowCollection" class="table table-striped"
+                                 ng-show="provenanceCtrl.datasetsProvenanceStatus.length > 0">
+                            <thead>
+                            <tr>
+                              <th></th>
+                              <th style="width:80%">Datasets</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="dataset in provenanceCtrl.datasetsProvenanceStatus">
+                              <td>
+                                <div style="margin-top: 10px;">
+                                  <md-radio-group ng-model="dataset.status" class="md-primary pull-right"
+                                                  layout="row" layout-align="start center">
+                                    <md-radio-button ng-repeat="m in provenanceCtrl.provStatus" ng-value="m.id"
+                                                     uib-tooltip="{{m.label}}" ng-disabled="true"
+                                                     aria-label="{{m.id}}"/>
+                                  </md-radio-group>
+                                </div>
+                              </td>
+                              <td><b>{{dataset.name}}</b></td>
+                            </tr>
+                            </tbody>
+                          </table>
+                        </fieldset>
+                        <fieldset>
+                          <table st-table="rowCollection" class="table table-striped">
+                            <thead>
+                            <tr>
+                              <th style="width:30%">Tracked</th>
+                              <th style="width:70%"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                              <td><b>FS Datasets</b></td>
+                              <td><b>{{provenanceCtrl.provFSDatasetsSize}}</b></td>
+                            </tr>
+                            <tr>
+                              <td><b>Experiments</b></td>
+                              <td><b>{{provenanceCtrl.provExperimentsSize}}</b></td>
+                            </tr>
+                            <tr>
+                              <td><b>Models</b></td>
+                              <td><b>{{provenanceCtrl.provModelsSize}}</b></td>
+                            </tr>
+                            <tr>
+                              <td><b>Training Datasets</b></td>
+                              <td><b>{{provenanceCtrl.provTrainingDatasetsSize}}</b></td>
+                            </tr>
+                            </tbody>
+                          </table>
+                        </fieldset>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </uib-tab>
+          </uib-tabset>
+        </div>
 
 
       </section>
