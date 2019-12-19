@@ -13,6 +13,8 @@ gem 'coderay', '1.1.1'
 gem 'rspec_junit_formatter'
 gem 'file-tail'
 gem 'jwt', '2.2.1'
+#https://github.com/composite-primary-keys/composite_primary_keys - 8.1.7 works with active records 4.2.7
+gem 'composite_primary_keys', '=8.1.7'
 
 group :development do
   gem 'dotenv'

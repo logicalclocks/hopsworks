@@ -32,6 +32,9 @@ public class ElasticSettings {
   public final static int ELASTIC_JWT_EXP_MS_DEFAULT = 10 * 60 * 1000;
   
   public final static String ELASTIC_ADMIN_ROLE = "admin";
+
+  public final static Integer DEFAULT_SCROLL_PAGE_SIZE = 1000;
+  public final static Integer MAX_SCROLL_PAGE_SIZE = 10000;
   
   private final List<String> elasticIps;
   private final int elasticPort;
@@ -123,5 +126,13 @@ public class ElasticSettings {
   
   public int getElasticJWTExpMs() {
     return elasticJWTExpMs;
+  }
+  
+  public Integer getDefaultScrollPageSize() {
+    return DEFAULT_SCROLL_PAGE_SIZE;
+  }
+  
+  public Integer getMaxScrollPageSize() {
+    return MAX_SCROLL_PAGE_SIZE;
   }
 }

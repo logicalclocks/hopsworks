@@ -43,7 +43,8 @@ angular.module('hopsWorksApp')
         .factory("ProjectService", ['$resource', function ($resource) {
             return $resource(
                     "/api/project/:id",
-                    {id: "@id", projectName: "@projectName", inodeId: "@inodeId", type: "@type"},
+                    {id: "@id", projectName: "@projectName", inodeId: "@inodeId", type: "@type",
+                      provStateType: "@provStateType"},
             {
               "save": {
                 method: "POST",
@@ -119,6 +120,19 @@ angular.module('hopsWorksApp')
               "importPublicDataset": {
                 url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
                 'method': 'GET'                  
+              },
+              "getProjectProvenanceStatus": {
+                url: '/api/project/:id/provenance?type=PROJECT',
+                method: 'GET'
+              },
+              "getDatasetsProvenanceStatus": {
+                url: '/api/project/:id/provenance?type=DATASETS',
+                method: 'GET',
+                isArray: true
+              },
+              "provStates": {
+                url: '/api/project/:id/provenance/states?filter_by=ML_TYPE::provStateType&return_type=COUNT',
+                method: 'GET'
               }
             }
             );

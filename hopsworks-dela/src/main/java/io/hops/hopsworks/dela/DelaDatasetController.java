@@ -47,8 +47,12 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -82,6 +86,8 @@ public class DelaDatasetController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private HopsFSProvenanceController fsProvenanceController;
 
   public Dataset uploadToHops(Project project, Dataset dataset, String publicDSId) {
     dataset.setPublicDsState(SharedState.HOPS);
@@ -105,7 +111,7 @@ public class DelaDatasetController {
   }
   
   public Dataset download(Project project, Users user, String publicDSId, String name)
-    throws DelaException {
+    throws DelaException, ProvenanceException {
     Dataset dataset;
     try {
       dataset = createDataset(user, project, name, "");
@@ -149,11 +155,18 @@ public class DelaDatasetController {
   }
 
   public Dataset createDataset(Users user, Project project, String name, String description)
-    throws DatasetException, HopsSecurityException {
-
-    datasetCtrl.createDataset(user, project, name, description, -1, true, false, false,
-      dfs.getDfsOps());
-    return datasetController.getByProjectAndDsName(project, null, name);
+    throws DatasetException, HopsSecurityException, ProvenanceException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
+      datasetCtrl.createDataset(user, project, name, description, -1, projectMetaStatus,
+        false, false, dfso);
+      return datasetController.getByProjectAndDsName(project, null, name);
+    } finally {
+      if(dfso != null) {
+        dfso.close();
+      }
+    }
   }
   
   public List<Dataset> getLocalPublicDatasets() {

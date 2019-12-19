@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetDTO;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -44,6 +45,7 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -99,6 +101,8 @@ public class TrainingDatasetService {
   private DsUpdateOperations dsUpdateOperations;
   @EJB
   private FeaturestoreHopsfsConnectorFacade featurestoreHopsfsConnectorFacade;
+  @EJB
+  private HopsFSProvenanceController fsProvenanceCtrl;
 
   private Project project;
   private Featurestore featurestore;
@@ -164,7 +168,7 @@ public class TrainingDatasetService {
       response = TrainingDatasetDTO.class)
   public Response createTrainingDataset(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
     throws DatasetException, HopsSecurityException, ProjectException, FeaturestoreException,
-      UnsupportedEncodingException {
+      UnsupportedEncodingException, ProvenanceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
@@ -200,6 +204,8 @@ public class TrainingDatasetService {
         }
       }
       Inode inode = inodeController.getInodeAtPath(fullPath.toString());
+      fsProvenanceCtrl.trainingDatasetAttachXAttr(user, project, fullPath.toString(),
+        trainingDatasetDTO.getFeatures());
       hopsfsTrainingDatasetDTO.setInodeId(inode.getId());
       createdTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user, featurestore,
         hopsfsTrainingDatasetDTO);
@@ -310,7 +316,7 @@ public class TrainingDatasetService {
     @QueryParam("updateStats") Boolean updateStats,
     TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException,
-      UnsupportedEncodingException {
+      UnsupportedEncodingException, ProvenanceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
@@ -333,6 +339,8 @@ public class TrainingDatasetService {
         org.apache.hadoop.fs.Path fullPath =
           dsUpdateOperations.moveDatasetFile(project, user, inode, trainingDatasetDirectoryName);
         Inode newInode = inodeController.getInodeAtPath(fullPath.toString());
+        fsProvenanceCtrl.trainingDatasetAttachXAttr(user, project, fullPath.toString(),
+          trainingDatasetDTO.getFeatures());
         HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = (HopsfsTrainingDatasetDTO) trainingDatasetDTO;
         hopsfsTrainingDatasetDTO.setInodeId(newInode.getId());
         TrainingDatasetDTO newTrainingDatasetDTO = trainingDatasetController.createTrainingDataset(user,
