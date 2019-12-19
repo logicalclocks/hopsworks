@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.models;
 
-import io.hops.hopsworks.api.experiments.ExperimentsBuilder;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
