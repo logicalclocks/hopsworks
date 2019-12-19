@@ -62,3 +62,4 @@
     <p class="filepreview" style="padding: 20px 20px 0px 20px; margin-bottom: 0px"  tabindex="0">{{filePreviewCtrl.content}}</p>
   </div>
 </div>
+<div class="modal-body" ng-show="filePreviewCtrl.type === 'html'" ng-bind-html="filePreviewCtrl.content"></div>

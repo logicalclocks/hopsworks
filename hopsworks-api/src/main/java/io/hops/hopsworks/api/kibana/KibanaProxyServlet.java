@@ -76,7 +76,7 @@ public class KibanaProxyServlet extends ProxyServlet {
   private BaseHadoopClientsService clientsService;
   
   private static final Logger LOG = Logger.getLogger(KibanaProxyServlet.class.getName());
-  
+
   @Override
   protected void initTarget() throws ServletException {
     targetUri = settings.getKibanaUri();

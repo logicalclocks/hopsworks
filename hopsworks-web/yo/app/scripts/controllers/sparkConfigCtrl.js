@@ -14,11 +14,10 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-/**
- * Controller for the serving page.
- */
 'use strict';
-
+/**
+ * Controller for configuring Spark jobs and notebooks.
+ */
 angular.module('hopsWorksApp')
     .controller('SparkConfigCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location', '$timeout',

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
@@ -31,7 +32,6 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -46,12 +46,14 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
+import javax.ws.rs.client.ClientBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -63,14 +65,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static java.util.logging.Level.INFO;
-
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JupyterController {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterController.class.getName());
 
+  @EJB
+  private DistributedFsService dfs;
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
@@ -103,8 +105,8 @@ public class JupyterController {
   private JupyterNbVCSController jupyterNbVCSController;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath)
-      throws ServiceException {
+  public String convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath,
+                                     NotebookConversion notebookConversion)  throws ServiceException {
 
     String conversionDir = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
     notebookPath = notebookPath.replace(" ", "\\ ");
@@ -118,7 +120,9 @@ public class JupyterController {
         .addCommand(settings.getAnacondaProjectDir(project))
         .addCommand(pyPath)
         .addCommand(conversionDir)
+        .addCommand(notebookConversion.name())
         .setWaitTimeout(60l, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
+        .redirectErrorStream(true)
         .build();
 
     LOGGER.log(Level.FINE, processDescriptor.toString());
@@ -127,9 +131,17 @@ public class JupyterController {
       if (!processResult.processExited() || processResult.getExitCode() != 0) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
             "error code: " + processResult.getExitCode(), "Failed to convert " + notebookPath
-          + "\nstderr: " + processResult.getStderr()
-          + "\nstdout: " + processResult.getStdout());
+            + "\nstderr: " + processResult.getStderr()
+            + "\nstdout: " + processResult.getStdout());
       }
+      String stdOut = processResult.getStdout();
+      if(!Strings.isNullOrEmpty(stdOut) && notebookConversion.equals(NotebookConversion.HTML)) {
+        StringBuilder renderedNotebookSB = new StringBuilder(stdOut);
+        int startIndex = renderedNotebookSB.indexOf("<html>");
+        int stopIndex = renderedNotebookSB.length();
+        return renderedNotebookSB.substring(startIndex, stopIndex);
+      }
+      return null;
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
           ex);
@@ -149,7 +161,7 @@ public class JupyterController {
     try {
       shutdown(project, hdfsUser, user, secret, pid, port, true);
     } catch (Exception e) {
-      LOGGER.log(INFO, "Encountered exception while cleaning up", e);
+      LOGGER.log(Level.INFO, "Encountered exception while cleaning up", e);
     }
     jupyterJWTManager.cleanJWT(pid, port);
   }
@@ -218,9 +230,6 @@ public class JupyterController {
       }
       FileUtils.deleteQuietly(new File(jupyterHomePath));
       jupyterJWTManager.cleanJWT(pid, port);
-      for(LivyMsg.Session session: sessions) {
-        updateRunningExperimentAsKilled(project, session);
-      }
       livyController.deleteAllLivySessions(hdfsUser);
     }
   }
@@ -232,37 +241,8 @@ public class JupyterController {
     for(LivyMsg.Session session: sessions) {
       if(session.getAppId().equalsIgnoreCase(appId)) {
         livyController.deleteLivySession(session.getId());
-        updateRunningExperimentAsKilled(project, session);
         break;
       }
-    }
-  }
-
-  private void updateRunningExperimentAsKilled(Project project, LivyMsg.Session session) {
-    try {
-      String experimentsIndex = project.getName().toLowerCase()
-        + "_" + Settings.ELASTIC_EXPERIMENTS_INDEX;
-      // when jupyter is shutdown the experiment status should be updated accordingly as KILLED
-
-      String sessionAppId = session.getAppId();
-
-      String experiment = elasticController.findExperiment(experimentsIndex, sessionAppId);
-
-      JSONObject json = new JSONObject(experiment);
-      json = json.getJSONObject("hits");
-      JSONArray hits = json.getJSONArray("hits");
-      for(int i = 0; i < hits.length(); i++) {
-        JSONObject obj = (JSONObject)hits.get(i);
-        JSONObject source = obj.getJSONObject("_source");
-        String status = source.getString("status");
-
-        if(status.equalsIgnoreCase(JobState.RUNNING.name())) {
-          source.put("status", "KILLED");
-          elasticController.updateExperiment(experimentsIndex, obj.getString("_id"), source);
-        }
-      }
-    } catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception while updating RUNNING status to KILLED on experiments", e);
     }
   }
 
@@ -278,7 +258,7 @@ public class JupyterController {
     jupyterManager.projectCleanup(project);
   }
 
-  public JupyterSettings updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {
+  public void updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {
 
     //Save the current shutdown level
     JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
@@ -295,7 +275,70 @@ public class JupyterController {
     expirationDate = cal.getTime();
     jupyterProject.setExpires(expirationDate);
     jupyterFacade.update(jupyterProject);
+  }
 
-    return jupyterSettings;
+  public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath)
+      throws ServiceException {
+
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+
+    String relativeNotebookPath = null;
+    try {
+      JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
+          .target(settings.getRestEndpoint() + "/hopsworks-api/jupyter/" + jp.getPort() + "/api/sessions?token="
+              + jp.getToken())
+          .request()
+          .method("GET")
+          .readEntity(String.class));
+
+      boolean foundKernel = false;
+      for (int i = 0; i < sessionsArray.length(); i++) {
+        JSONObject session = (JSONObject) sessionsArray.get(i);
+        JSONObject kernel = (JSONObject) session.get("kernel");
+        String kernelId = kernel.getString("id");
+        if (kernelId.equals(sessionKernelId)) {
+          relativeNotebookPath = session.getString("path");
+          foundKernel = true;
+        }
+      }
+
+      if(!foundKernel) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
+            Level.FINE, "failed to find kernel " + sessionKernelId);
+      }
+
+      //Get the content of the notebook should work in both spark and python kernels irregardless of contents manager
+      if (!Strings.isNullOrEmpty(relativeNotebookPath)) {
+        JSONObject notebookContents = new JSONObject(ClientBuilder.newClient()
+            .target(settings.getRestEndpoint() + "/hopsworks-api/jupyter/" + jp.getPort() +
+                "/api/contents/" + relativeNotebookPath + "?content=1&token=" + jp.getToken())
+            .request()
+            .method("GET")
+            .readEntity(String.class));
+        JSONObject notebookJSON = (JSONObject)notebookContents.get("content");
+        DistributedFileSystemOps udfso = null;
+        try {
+          String username = hdfsUsersController.getHdfsUserName(project, user);
+          udfso = dfs.getDfsOps(username);
+          udfso.create(outputPath, notebookJSON.toString());
+        } catch(IOException e) {
+          throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
+              Level.FINE, "failed to save notebook content", e.getMessage(), e);
+        } finally {
+          if (udfso != null) {
+            dfs.closeDfsClient(udfso);
+          }
+        }
+      }
+    } catch(Exception e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
+          Level.FINE, "failed to version notebook", e.getMessage(), e);
+    }
+  }
+
+  public enum NotebookConversion {
+    PY,
+    HTML
   }
 }

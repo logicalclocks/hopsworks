@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.experiments;
+package io.hops.hopsworks.common.experiments.tensorboard;
 
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -26,7 +26,6 @@ import io.hops.hopsworks.common.dao.tensorflow.TensorBoardPK;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -42,8 +41,6 @@ import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -80,21 +77,23 @@ public class TensorBoardController {
     return new TensorBoardDTO(tb);
   }
 
-
   /**
    * Start the TensorBoard for the specific user in this project with the specified elasticId containing the logdir
-   * @param elasticId
+   * @param mlId
    * @param project
    * @param user
+   * @param tensorBoardLogdir
    * @return
    * @throws IOException
    */
-  public TensorBoardDTO startTensorBoard(String elasticId, Project project, Users user, String hdfsLogdir)
-    throws TensorBoardException, ServiceException {
-    //Kill existing TensorBoard
-    TensorBoard tb = null;
+  public TensorBoardDTO startTensorBoard(String mlId, Project project, Users user, String tensorBoardLogdir)
+    throws TensorBoardException {
+
+    tensorBoardLogdir = prependNameNode(tensorBoardLogdir);
+
     TensorBoardDTO tensorBoardDTO = null;
-    tb = tensorBoardFacade.findForProjectAndUser(project, user);
+
+    TensorBoard tb = tensorBoardFacade.findForProjectAndUser(project, user);
 
     if(tb != null) {
       cleanup(tb);
@@ -107,12 +106,13 @@ public class TensorBoardController {
       String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
       String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
 
-      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, hdfsLogdir, tfLdLibraryPath,
+      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, tensorBoardLogdir,
+          tfLdLibraryPath,
               tensorBoardDirectory);
       Date lastAccessed = new Date();
-      tensorBoardDTO.setElasticId(elasticId);
+      tensorBoardDTO.setMlId(mlId);
       tensorBoardDTO.setLastAccessed(lastAccessed);
-      tensorBoardDTO.setHdfsLogdir(hdfsLogdir);
+      tensorBoardDTO.setHdfsLogdir(tensorBoardLogdir);
 
       TensorBoard newTensorBoard = new TensorBoard();
       TensorBoardPK tensorBoardPK = new TensorBoardPK();
@@ -122,9 +122,9 @@ public class TensorBoardController {
       newTensorBoard.setPid(tensorBoardDTO.getPid());
       newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
       newTensorBoard.setHdfsUserId(hdfsUser.getId());
-      newTensorBoard.setElasticId(elasticId);
+      newTensorBoard.setMlId(mlId);
       newTensorBoard.setLastAccessed(lastAccessed);
-      newTensorBoard.setHdfsLogdir(hdfsLogdir);
+      newTensorBoard.setHdfsLogdir(tensorBoardLogdir);
       newTensorBoard.setSecret(tensorBoardDirectory);
       tensorBoardFacade.persist(newTensorBoard);
     } catch(IOException e) {
@@ -174,20 +174,12 @@ public class TensorBoardController {
   }
 
   /**
-   * Replace the namenode host:port which may be old (the path is previously read from elastic)
+   * Prepend hdfs://namenode_ip:port to hdfs path
    * @param hdfsPath
-   * @return HDFS path with updated namenode host:port
+   * @return HDFS path with namenode authority
    */
-  public String replaceNN(String hdfsPath)  {
+  public String prependNameNode(String hdfsPath)  {
     String endPoint = hdfsLeDescriptorsFacade.getRPCEndpoint();
-
-    Pattern urlPattern = Pattern.compile("([a-zA-Z0-9\\-\\.]{2,255}:[0-9]{1,6})(/.*$)");
-    Matcher urlMatcher = urlPattern.matcher(hdfsPath);
-    String elasticNNHost = "";
-    if (urlMatcher.find()) {
-      elasticNNHost = urlMatcher.group(1);
-    }
-    hdfsPath = hdfsPath.replaceFirst(elasticNNHost, endPoint);
-    return hdfsPath;
+    return "hdfs://" + endPoint + hdfsPath;
   }
 }

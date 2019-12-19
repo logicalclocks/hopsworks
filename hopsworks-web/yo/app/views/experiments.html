@@ -1,6 +1,6 @@
 <!--
   ~ This file is part of Hopsworks
-  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
   ~
   ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
   ~ the GNU Affero General Public License as published by the Free Software Foundation,
@@ -16,83 +16,280 @@
 <div ng-controller="MainCtrl as mainCtrl">
     <div ng-controller="ProjectCtrl as projectCtrl">
         <div ng-include="'nav.html'"></div>
-        <div id="wrapper" class="toggled">
+        <div id="wrapper" class="toggled" ng-controller="ExperimentCtrl as experimentCtrl">
             <div class="overlay"></div>
             <div ng-include="'navProject.html'"></div>
-            <div class="">
-                <section ng-controller="ExperimentsCtrl as experimentsCtrl">
-                    <!-- Page Content -->
-                    <div class="content-wrapper hide-border" style="margin-left: 2px;">
-                        <div ng-if="experimentsCtrl.loading" class="loadingwrap">
-                            <div class="loading-content">
-                                <div class="loader-in-wrap"></div>
-                                {{experimentsCtrl.loadingText}}
-                            </div>
-                        </div>
-                        <div class="row" style="margin-left: 5px;">
-                            <div class="row" style="padding-bottom:3px">
-                                <div class="col-md-12" ng-if="experimentsCtrl.tb === ''">
-                           <span class="col-md-3" style="margin-left:-15px;">
-                           <button ng-click="experimentsCtrl.kibanaUI();
-                              $event.stopPropagation();"
-                                   class="btn btn-primary btn-md fa fa-table" style="font-size:0.9em; padding:7px 10px; background-color:#005571;"
-                                   onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Experiments Summary
-                           </button>
-                           </span>
-                                    <div class="col-md-1">
-                                        <img height="30" src="images/tf-175x200.png" style="float:right;"/>
-                                    </div>
-                                    <span class="field-info input-group col-md-4" ng-if="experimentsCtrl.tb === ''" uib-tooltip="Search for specific experiment given id" style="padding-left:3px;">
-                              <input type="text" class="form-control" style="height: 32px;" placeholder="Start TensorBoard for given experiment _id" ng-model="experimentsCtrl.id" ng-keyup="experimentsCtrl.hitEnter($event);">
-                              <div class="input-group-btn" style="width: 54px;">
-                                 <button class="btn btn-default" style="color: #028e9b; padding: 6px 12px; height:32px;"
-                                         ng-click="experimentsCtrl.startTB(); $event.stopPropagation();" type="button">
-                                 <i class="fa fa-line-chart"></i>
-                                 </button>
-                              </div>
-                           </span>
-                                </div>
-                                <div class="col-md-12" ng-if="experimentsCtrl.tb !== ''">
-                           <span class="col-md-4" style="margin-left:-15px; padding-bottom:1px;">
-                           <button style="font-size:0.9em; padding:7px 10px; background-color:#005571;"
-                                   ng-click="experimentsCtrl.kibanaUI();
-                              $event.stopPropagation();"
-                                   class="btn btn-primary btn-md fa fa-table"
-                                   onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Experiments Summary
-                           </button>
-                               <button uib-tooltip="View TensorBoard"
-                                       tooltip-placement="auto top"
-                                       ng-click="experimentsCtrl.viewTB();
-                              $event.stopPropagation();"
-                                       type="button" class="btn btn-md" style="padding:2px 5px; border:1px solid gray;"
-                                       onmouseover="this.style.backgroundColor='lightgray'" onmouseout="this.style.backgroundColor='white'">
-                                   <img src="images/tf-175x200.png" height="29" />
-                           </button>
-                               <button uib-tooltip="Shutdown TensorBoard"
-                                       tooltip-placement="auto top"
-                                       ng-click="experimentsCtrl.stopTB();"
-                                       type="button" class="btn btn-danger btn-md glyphicon glyphicon-off" style="padding:6px 11px; margin-bottom:1px;">
-                           </button>
 
-                           </span>
-                                    <span style="font-size:16px; margin-right:25px; float:right; padding-top:5px;">
-                                        <span>
-                                        <a ng-click="experimentsCtrl.newWindow()"><i class="glyphicon glyphicon-new-window"></i> New Window</a>
-                                            </span>
-                           </span>
-                                    <span style="font-size:16px; margin-right:40px; float:right; padding-top:5px;">
-                                        <span>
-                                        Showing TensorBoard for experiment   <b>{{experimentsCtrl.tb.elasticId}}</b>
-                                            </span>
-                           </span>
-                                </div>
-                            </div>
-                            <div ng-if="experimentsCtrl.ui !== ''">
-                                <iframe style="overflow-y: auto" id="ui_iframe"  ng-src="{{experimentsCtrl.ui}}" width="99%" height ="86%"></iframe>
-                            </div>
-                        </div>
+            <div class="content-wrapper" ng-controller="TensorBoardCtrl as tensorBoardCtrl">
+
+                <div ng-if="tensorBoardCtrl.loading" class="loadingwrap">
+                    <div class="loading-content">
+                        <div class="loader-in-wrap"></div>
+                        {{tensorBoardCtrl.loadingHeadingText}}
+                        <br>
+                        <br>
+                        {{tensorBoardCtrl.loadingBottomText}}
                     </div>
-                </section>
+                </div>
+                <div ng-if="experimentCtrl.loading" class="loadingwrap">
+                    <div class="loading-content">
+                        <div class="loader-in-wrap"></div>
+                        {{experimentCtrl.loadingText}}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-9 col-md-9 col-lg-9 form-inline">
+                        <label>Search
+                            <input class="form-control" style="margin-left: 10px;" ng-model="experimentCtrl.experimentsFilter"
+                                   ng-model-options="{debounce: 800}" ng-change="experimentCtrl.getExperiments()" placeholder="Experiment name">
+                            <md-datepicker ng-change="experimentCtrl.getExperiments()"
+                                           ng-model="experimentCtrl.experimentsFromDate"
+                                           md-placeholder="From"></md-datepicker>
+                            <md-datepicker ng-change="experimentCtrl.getExperiments()"
+                                           ng-model="experimentCtrl.experimentsToDate"
+                                           md-placeholder="To"></md-datepicker>
+                        </label>
+                    </div>
+
+
+                    <div class="col-sm-2 col-md-2 col-lg-2">
+                            <ui-select ng-model="experimentCtrl.memberSelected" theme="bootstrap"
+                                       on-select="experimentCtrl.updateMember(); experimentCtrl.getExperiments();" style="z-index: 1;" id="memberList">
+                                <ui-select-match >
+                                    <span ng-bind="experimentCtrl.memberSelected.name"></span>
+                                </ui-select-match>
+                                <ui-select-choices repeat="member in (experimentCtrl.membersList | filter: $select.search) track by member.name">
+                                    <span ng-bind="member.name | highlight: $select.search"></span>
+                                </ui-select-choices>
+                            </ui-select>
+                    </div>
+                    <div class="col-sm-1 col-md-1 col-lg-1">
+                    <div class="pull-right btn-group">
+                        <span style="float: right; margin-right:30px; " class="glyphicon glyphicon-refresh fa-2x" ng-click="experimentCtrl.getExperiments()" role="button" tabindex="0" ng-class="{'spin-icon':experimentCtrl.updating}"> </span>
+                    </div>
+                    </div>
+
+                </div>
+            <div>
+            <table class="table table-hover">
+                <thead style="border:none;">
+                <th style="width: 16%" ng-click="experimentCtrl.sortByExperiments('name')">
+                    Name
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'name'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span></th>
+                <th style="width: 11%" ng-click="experimentCtrl.sortByExperiments('metric')">
+                    Metric
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'metric'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>
+                </th>
+                <th style="width: 15%" ng-click="experimentCtrl.sortByExperiments('user')">
+                    User
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'user'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>
+                </th>
+                <th style="width: 14%" ng-click="experimentCtrl.sortByExperiments('start')">
+                    Start
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'start'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>
+                </th>
+                <th style="width: 14%" ng-click="experimentCtrl.sortByExperiments('end')">
+                    End
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'end'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>
+                </th>
+                <th style="width: 8%" ng-click="experimentCtrl.sortByExperiments('state')">
+                    State
+                    <span class="glyphicon sort-icon" ng-show="experimentCtrl.sortType == 'state'" ng-class="{'glyphicon-chevron-up':!experimentCtrl.reverse,'glyphicon-chevron-down':experimentCtrl.reverse}"></span>
+                </th>
+                <th style="width: 14%">Actions</th>
+                <th style="width: 3%"></th>
+                </thead>
+                <tbody>
+                    <tr dir-paginate-start="experiment in experimentCtrl.experiments | itemsPerPage:experimentCtrl.pageSize"
+                        pagination-id="experiments_pagination"
+                        current-page="experimentCtrl.currentPage"
+                        total-items="experimentCtrl.totalItems" ng-class="{'active':experimentCtrl.expandExperiment[experiment.id]}">
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)">
+                            {{experiment.name}}
+                        </td>
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)"> {{experiment.metric}} </td>
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)"> {{experiment.userFullName}} </td>
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)"> {{experiment.started | date:'medium'}} </td>
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)"> {{experiment.finished | date:'medium'}} </td>
+                        <td data-target="#{{experiment.id}}" ng-click="experimentCtrl.getResults(experiment, false)">
+                            <span ng-if="experiment.state === 'NEW' || experiment.state === 'SUBMITTED' || experiment.state === 'RUNNING'" style="color: #0066bb">
+                              {{experiment.state}}
+                            </span>
+                            <span ng-if="experiment.state === 'FINISHED'" style="color: #00A000">
+                              {{experiment.state}}
+                            </span>
+                            <span ng-if="experiment.state === 'KILLED' || experiment.state === 'FAILED' || experiment.state === 'UNKNOWN'" style="color: #880000">
+                              {{experiment.state}}
+                            </span>
+                        </td>
+                        <td class="fs-table" style="padding:5px;">
+                            <div class="btn-group fs-btn" role="group">
+                                <button uib-tooltip="Show TensorBoard" ng-click="tensorBoardCtrl.start(experiment.id);
+                                  $event.stopPropagation();" class="btn glyphicon" style="background-color:lightgray;">
+                                    <img src="images/tf-2.png" height="20" />
+                                </button>
+                                <button style="background-color: rgb(51, 122, 183)"
+                                        class="glyphicon glyphicon-eye-open btn btn-primary"
+                                        uib-tooltip="Open Spark UI"
+                                        ng-click="experimentCtrl.viewMonitor(experiment); $event.stopPropagation();"
+                                        type="button">
+                                </button>
+                                <button type="button" class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
+                                        ng-click="experimentCtrl.deleteExperiment(experiment.id); $event.stopPropagation();"></button>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="glyphicon glyphicon-refresh" ng-class="{'spin-icon':experimentCtrl.expanding[experiment.id]}" ng-show="experimentCtrl.expanding[experiment.id]" style="margin-top: 3px;"> </span>
+                        </td>
+                    </tr>
+                    <tr dir-paginate-end>
+                        {{experiment.id}}
+                        <td style="padding:5px;" colspan="12">
+                            <div ng-if="experimentCtrl.expandExperiment[experiment.id]" class="animate-if" id="{{experiment.id}}">
+                                <table class="table table-hover" style="margin-left: 10px; overflow: scroll; width: 100%; margin: 0 auto;">
+                                    <thead style="border:none;">
+                                    <th style="width: 20%"></th>
+                                    <th style="width: 80%"></th>
+
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-if="experiment.description">
+                                        <td>Description</td>
+                                        <td>{{experiment.description}}</td>
+                                    </tr>
+                                    <tr ng-if="experiment.function">
+                                        <td>Function</td>
+                                        <td>{{experiment.function}}</td>
+                                    </tr>
+                                    <tr ng-if="experiment.direction">
+                                        <td>Direction</td>
+                                        <td ng-if="experiment.direction.toUpperCase()=='MAX'"><span class="glyphicon glyphicon-arrow-up"></span> Maximize {{experiment.optimizationKey}}</td>
+                                        <td ng-if="experiment.direction.toUpperCase()=='MIN'"><span class="glyphicon glyphicon-arrow-down"></span> Minimize {{experiment.optimizationKey}}</td>
+                                    </tr>
+                                    <tr ng-if="experiment.optimizationKey">
+                                        <td>Optimization key</td>
+                                        <td>{{experiment.optimizationKey}}</td>
+                                    </tr>
+                                    <tr ng-if="experiment.experimentType">
+                                        <td>ExperimentType</td>
+                                        <td>{{experiment.experimentType}}</td>
+                                    </tr>
+                                    <tr ng-if="experiment.environment && experiment.environment.length > 0">
+                                        <td>Anaconda Environment</td>
+                                        <td>
+                                            <div ng-if="experiment.environment.length == 1">
+                                                <button type="button" class="btn btn-default fa fa-camera" title="View"
+                                                        ng-click="experimentCtrl.viewFile(experiment.environment[0])"></button>
+                                                <button type="button" class="btn btn-default fa fa-cloud-download" title="Download"
+                                                        ng-click="experimentCtrl.downloadFile(experiment.environment[0])"></button>
+                                            </div>
+                                            <div ng-if="experiment.environment.length == 2">
+                                                <button type="button" class="btn btn-default fa fa-camera" title="View CPU .yml"
+                                                        ng-click="experimentCtrl.viewFile(experiment.environment[0])"></button>
+                                                <button type="button" class="btn btn-default fa fa-cloud-download" title="Download CPU .yml"
+                                                        ng-click="experimentCtrl.downloadFile(experiment.environment[0])"></button>
+                                                <button type="button" class="btn btn-default fa fa-camera" title="View GPU .yml"
+                                                        ng-click="experimentCtrl.viewFile(experiment.environment[1])"></button>
+                                                <button type="button" class="btn btn-default fa fa-cloud-download" title="Download GPU .yml"
+                                                        ng-click="experimentCtrl.downloadFile(experiment.environment[1])"></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="!experiment.environment">
+                                        <td>Anaconda Environment</td>
+                                        <td>
+                                            <span style="color:red;">Environment could not be exported.</span>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="experiment.program">
+                                        <td>Program</td>
+                                        <td>
+                                            <button type="button" class="btn btn-default fa fa-camera" title="View"
+                                                    ng-click="experimentCtrl.viewFile(experiment.program)"></button>
+                                            <button type="button" class="btn btn-default fa fa-cloud-download" title="Download"
+                                                    ng-click="experimentCtrl.downloadFile(experiment.program)"></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Experiment Directory</td>
+                                        <td><a ng-click="experimentCtrl.goToDirectory('Experiments/' + experiment.id)">Experiments/{{experiment.id}}</a></td>
+                                    </tr>
+                                    <tr ng-if="experiment.bestDir">
+                                        <td>Best Output Directory</td>
+                                        <td><a ng-click="experimentCtrl.goToDirectory(experiment.bestDir)">{{experiment.bestDir}}</a></td>
+                                    </tr>
+                                    <tr ng-if="experiment.model">
+                                        <td>Model</td>
+                                        <td><a ng-click="experimentCtrl.goToModel(experiment.model)">{{experimentCtrl.buildModelLink(experiment.model)}}</a></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <div ng-if="!experimentCtrl.all_headers[experiment.id] || experimentCtrl.all_headers[experiment.id].length == 0" style="margin-left:35px;">
+                                    <div ng-if="experiment.state === 'RUNNING'">
+                                        This experiment is still running, results are visible once the experiment reached <span style="color: #00A000"> FINISHED </span> state.
+                                    </div>
+                                </div>
+                                <table class="table table-hover" style="margin-left: 10px; overflow: scroll; width: 100%; margin: 0 auto;">
+                                    <thead>
+                                    <tr>
+                                        <th ng-if="experimentCtrl.hp_headers[experiment.id].length > 0" colspan="{{experimentCtrl.hp_headers[experiment.id].length}}">Parameters</th>
+                                        <th ng-if="experimentCtrl.metric_headers[experiment.id].length > 0" colspan="{{experimentCtrl.metric_headers[experiment.id].length}}">Outputs</th>
+                                    </tr>
+
+                                    <tr>
+                                        <th ng-repeat="header in experimentCtrl.all_headers[experiment.id]" style="width: {{100/experimentCtrl.all_headers[experiment.id].length}}%;" ng-click="experimentCtrl.sortByResults(header, experiment)">
+                                            {{header}}
+                                            <span class="glyphicon sort-icon" ng-show="experimentCtrl.resultSortType[experiment.id] == header" ng-class="{'glyphicon-chevron-up':!experimentCtrl.resultsReverse[experiment.id],'glyphicon-chevron-down':experimentCtrl.resultsReverse[experiment.id]}"></span>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr dir-paginate="result in experimentCtrl.experimentResults[experiment.id] | itemsPerPage:experimentCtrl.pageSize"
+                                        pagination-id="experiment.id"
+                                        current-page="experimentCtrl.currentResultPage[experiment.id]"
+                                        total-items="experimentCtrl.resultTotalItems[experiment.id]">
+                                        <td data-ng-repeat="cell in result.row">
+                                            <div ng-if="cell.file">
+                                                <button type="button" class="btn btn-default fa fa-camera" title="Preview"
+                                                        ng-click="experimentCtrl.viewFile(cell.data)"></button>
+                                            </div>
+                                            <div ng-if="!cell.file">
+                                                {{cell.data}}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <dir-pagination-controls
+                                        class="pull-right"
+                                        max-size="experimentCtrl.maxPaginationLinks"
+                                        pagination-id="experiment.id"
+                                        direction-links="true"
+                                        boundary-links="true"
+                                        on-page-change="experimentCtrl.getResults(experiment, true)">
+                                </dir-pagination-controls>
+                            </div>
+                        </td>
+
+                    </tr>
+                </tbody>
+            </table>
+            <dir-pagination-controls
+                    class="pull-right"
+                    max-size="experimentCtrl.maxPaginationLinks"
+                    pagination-id="experiments_pagination"
+                    direction-links="true"
+                    boundary-links="true"
+                    on-page-change="experimentCtrl.getNewExperimentPage()">
+            </dir-pagination-controls>
+            </div>
+            <div>
+                <h3 class="text-muted ng-hide" style="text-align: center;" ng-show="experimentCtrl.experiments.length == 0 && experimentCtrl.loaded" aria-hidden="true">
+                    No Experiments to show
+                </h3>
+            </div>
             </div>
         </div>
     </div>

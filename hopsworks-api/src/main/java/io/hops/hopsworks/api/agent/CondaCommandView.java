@@ -278,7 +278,7 @@ public class CondaCommandView {
       this.lib = null;
       this.environmentYml = null;
       this.installJupyter = null;
-    
+
       return this;
     }
   }

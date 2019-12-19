@@ -37,8 +37,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.api.tensorflow;
+package io.hops.hopsworks.api.experiments.tensorboard;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
@@ -96,6 +97,12 @@ public class TensorBoardProxyServlet extends ProxyServlet {
       HttpServletResponse servletResponse)
       throws ServletException, IOException {
     String email = servletRequest.getUserPrincipal().getName();
+
+    if (Strings.isNullOrEmpty(email)) {
+      servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
+          "You don't have access to this TensorBoard");
+      return;
+    }
     LOGGER.log(Level.FINE, "Request URL: {0}", servletRequest.getRequestURL());
 
     String uri = servletRequest.getRequestURI();

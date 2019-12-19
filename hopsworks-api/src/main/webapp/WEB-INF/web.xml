@@ -197,7 +197,7 @@
   <!-- tensorboard proxy servlet -->
   <servlet>
     <servlet-name>TensorBoardProxyServlet</servlet-name>
-    <servlet-class>io.hops.hopsworks.api.tensorflow.TensorBoardProxyServlet</servlet-class>
+    <servlet-class>io.hops.hopsworks.api.experiments.tensorboard.TensorBoardProxyServlet</servlet-class>
     <init-param>
       <param-name>targetUri</param-name>
       <param-value>http://localhost:80/</param-value>

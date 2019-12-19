@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
+import io.hops.hopsworks.common.api.RestDTO;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -27,14 +28,14 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
-public class TensorBoardDTO {
+public class TensorBoardDTO extends RestDTO<TensorBoardDTO> {
 
   @JsonIgnore
   private BigInteger pid;
 
   private String endpoint;
 
-  private String elasticId;
+  private String mlId;
 
   private Date lastAccessed;
 
@@ -44,23 +45,16 @@ public class TensorBoardDTO {
 
   private UserDTO user;
 
-  public TensorBoardDTO(){}
+  public TensorBoardDTO(){
+
+  }
 
   public TensorBoardDTO(TensorBoard tensorBoard) {
     this.pid = tensorBoard.getPid();
     this.endpoint = tensorBoard.getEndpoint();
-    this.elasticId = tensorBoard.getElasticId();
+    this.mlId = tensorBoard.getMlId();
     this.lastAccessed = tensorBoard.getLastAccessed();
     this.hdfsLogdir = tensorBoard.getHdfsLogdir();
-  }
-
-  public TensorBoardDTO(BigInteger pid, int hdfsUserId, String endpoint, String elasticId, Date lastAccessed,
-                        String hdfsLogdir) {
-    this.pid = pid;
-    this.endpoint = endpoint;
-    this.elasticId = elasticId;
-    this.lastAccessed = lastAccessed;
-    this.hdfsLogdir = hdfsLogdir;
   }
 
   public BigInteger getPid() {
@@ -79,12 +73,12 @@ public class TensorBoardDTO {
     this.endpoint = endpoint;
   }
 
-  public String getElasticId() {
-    return elasticId;
+  public String getMlid() {
+    return mlId;
   }
 
-  public void setElasticId(String elasticId) {
-    this.elasticId = elasticId;
+  public void setMlId(String mlId) {
+    this.mlId = mlId;
   }
 
   public Date getLastAccessed() {

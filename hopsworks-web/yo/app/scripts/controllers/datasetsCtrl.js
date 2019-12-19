@@ -1029,11 +1029,15 @@ angular.module('hopsWorksApp')
                 });
               } else {
                 self.readmeWorking = false;
-                ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
-                        function (success) {
-
-                        }, function (error) {
-                });
+                if(filePath.endsWith('.ipynb')) {
+                    ModalService.filePreview('xl', fileName, filePath, self.projectId, "head").then(
+                        function(success) {},
+                        function(error) {});
+                } else {
+                    ModalService.filePreview('lg', fileName, filePath, self.projectId, "head").then(
+                        function (success) {},
+                        function (error) {});
+                }
               }
             };
 
