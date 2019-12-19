@@ -24,7 +24,6 @@ import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
@@ -59,8 +58,6 @@ import javax.ws.rs.core.UriInfo;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TensorBoardResource {
 
-  @EJB
-  private InodeController inodeController;
   @EJB
   private TensorBoardController tensorBoardController;
   @EJB
