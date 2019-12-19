@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = CachedFeaturegroupDTO.class, name = "OnlineFeaturegroupDTO"),
-    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "HopsfsTrainingDatasetDTO")})
+    @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
   private FeaturegroupType featuregroupType;

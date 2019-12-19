@@ -30,7 +30,7 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -80,6 +79,8 @@ public class CachedFeaturegroupController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private HopsFSProvenanceController fsController;
+  @EJB
+  private FeaturestoreInputValidation featurestoreInputValidation;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
@@ -263,9 +264,7 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
     throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
-    //Verify User Input
-    verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO, false);
-    
+
     //Prepare DDL statement
     String hiveFeatureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
       cachedFeaturegroupDTO.getDescription(), false);
@@ -575,59 +574,6 @@ public class CachedFeaturegroupController {
   }
 
   /**
-   * Verify user input specific for creation of on-demand training dataset
-   *
-   * @param cachedFeaturegroupDTO the user input data for creating the feature group
-   * @throws FeaturestoreException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void verifyCachedFeaturegroupUserInput(CachedFeaturegroupDTO cachedFeaturegroupDTO, Boolean sync)
-    throws FeaturestoreException {
-
-    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-
-    if(cachedFeaturegroupDTO.getName().length() > FeaturestoreConstants.CACHED_FEATUREGROUP_NAME_MAX_LENGTH ||
-        !namePattern.matcher(cachedFeaturegroupDTO.getName()).matches()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
-          ", the name of a cached feature group should be less than "
-          + FeaturestoreConstants.CACHED_FEATUREGROUP_NAME_MAX_LENGTH + " characters and match " +
-          "the regular expression: " +  FeaturestoreConstants.FEATURESTORE_REGEX);
-    }
-
-    if(!Strings.isNullOrEmpty(cachedFeaturegroupDTO.getDescription()) &&
-        cachedFeaturegroupDTO.getDescription().length() >
-          FeaturestoreConstants.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION, Level.FINE,
-          ", the descritpion of a cached feature group should be less than "
-          + FeaturestoreConstants.CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " characters");
-    }
-    //Only need to verify the DDL when creating table from Scratch and not Syncing
-    if (!sync) {
-      if (!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-        return (!namePattern.matcher(f.getName()).matches() || f.getName().length()
-          > FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-          ", the feature name in a cached feature group should be less than "
-            + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
-            "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
-      }
-  
-      if(!cachedFeaturegroupDTO.getFeatures().stream().filter(f -> {
-        if(Strings.isNullOrEmpty(f.getDescription())){
-          f.setDescription("-");
-        }
-        return (f.getDescription().length() >
-          FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-          ", the feature description in a cached feature group should be less than "
-            + FeaturestoreConstants.CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
-      }
-    }
-  }
-
-  /**
    * Returns a String with Columns from a JSON featuregroup
    * that can be used for a HiveQL CREATE TABLE statement or MySQL
    *
@@ -675,9 +621,11 @@ public class CachedFeaturegroupController {
         } else {
           schemaStringBuilder.append(feature.getOnlineType());
         }
-        schemaStringBuilder.append(" COMMENT '");
-        schemaStringBuilder.append(feature.getDescription());
-        schemaStringBuilder.append("'");
+        if (!Strings.isNullOrEmpty(feature.getDescription())) {
+          schemaStringBuilder.append(" COMMENT '");
+          schemaStringBuilder.append(feature.getDescription());
+          schemaStringBuilder.append("'");
+        }
         schemaStringBuilder.append(", ");
       } else {
         if(!firstPartition){
@@ -693,9 +641,11 @@ public class CachedFeaturegroupController {
         } else {
           partitionStringBuilder.append(feature.getOnlineType());
         }
-        partitionStringBuilder.append(" COMMENT '");
-        partitionStringBuilder.append(feature.getDescription());
-        partitionStringBuilder.append("'");
+        if (!Strings.isNullOrEmpty(feature.getDescription())) {
+          partitionStringBuilder.append(" COMMENT '");
+          partitionStringBuilder.append(feature.getDescription());
+          partitionStringBuilder.append("'");
+        }
       }
       if (i == features.size() - 1){
         Boolean firstPrimary = true;
@@ -738,8 +688,6 @@ public class CachedFeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public CachedFeaturegroup syncHiveTableWithFeaturestore(Featurestore featurestore,
     CachedFeaturegroupDTO cachedFeaturegroupDTO) throws FeaturestoreException {
-    //Verify User Input
-    verifyCachedFeaturegroupUserInput(cachedFeaturegroupDTO, true);
   
     //Get Hive Table Metadata
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());

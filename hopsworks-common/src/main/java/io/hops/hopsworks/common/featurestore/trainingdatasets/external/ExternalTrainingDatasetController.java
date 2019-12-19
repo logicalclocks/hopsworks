@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external.ExternalTrainingDataset;
@@ -30,7 +29,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 /**
  * Class controlling the interaction with the external_training_dataset table and required business logic
@@ -51,15 +49,10 @@ public class ExternalTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public ExternalTrainingDataset createExternalTrainingDataset(ExternalTrainingDatasetDTO externalTrainingDatasetDTO)
       throws FeaturestoreException {
-    //Verify user input
-    verifyExternalTrainingDatasetInput(externalTrainingDatasetDTO);
-    //Get S3 Connector
-    FeaturestoreS3Connector featurestoreS3Connector = featurestoreS3ConnectorFacade.find(
-      externalTrainingDatasetDTO.getS3ConnectorId());
-    if(featurestoreS3Connector == null){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
-        Level.FINE, "hopsfsConnector: " + externalTrainingDatasetDTO.getS3ConnectorId());
-    }
+    // Verify external training datasset specifc input
+    FeaturestoreS3Connector featurestoreS3Connector =
+      verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
+    
     ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
     externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
     externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
@@ -75,23 +68,6 @@ public class ExternalTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeExternalTrainingDataset(ExternalTrainingDataset externalTrainingDataset) {
     externalTrainingDatasetFacade.remove(externalTrainingDataset);
-  }
-  
-  /**
-   * Verify the name of an external training dataset
-   *
-   * @param name the name
-   * @throws FeaturestoreException
-   */
-  private void verifyExternalTrainingDatasetName(String name) throws FeaturestoreException {
-    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-    if (name.length() > FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH ||
-      !namePattern.matcher(name).matches()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
-        ", the name of an external training dataset should be less than "
-          + FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH + " characters and match " +
-          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
-    }
   }
   
   /**
@@ -130,18 +106,6 @@ public class ExternalTrainingDatasetController {
         trainingDataset.getExternalTrainingDataset().getName() + "_" + trainingDataset.getVersion());
     return externalTrainingDatasetDTO;
   }
-
-  /**
-   * Verify user input specific for creation of external training dataset
-   *
-   * @param externalTrainingDatasetDTO the input data to use when creating the external training dataset
-   * @throws FeaturestoreException
-   */
-  private void verifyExternalTrainingDatasetInput(ExternalTrainingDatasetDTO externalTrainingDatasetDTO)
-    throws FeaturestoreException {
-    verifyExternalTrainingDatasetName(externalTrainingDatasetDTO.getName());
-    verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
-  }
   
   /**
    * Updates metadata of an external training dataset in the feature store
@@ -153,17 +117,13 @@ public class ExternalTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateExternalTrainingDatasetMetadata(ExternalTrainingDataset externalTrainingDataset,
     ExternalTrainingDatasetDTO externalTrainingDatasetDTO) throws FeaturestoreException {
+    // Verify User Input specific for external training datasets
+    FeaturestoreS3Connector featurestoreS3Connector =
+      verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
     
-    if(!Strings.isNullOrEmpty(externalTrainingDatasetDTO.getName())){
-      verifyExternalTrainingDatasetName(externalTrainingDatasetDTO.getName());
-      externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
-    }
-  
-    if(externalTrainingDatasetDTO.getS3ConnectorId() != null){
-      FeaturestoreS3Connector featurestoreS3Connector =
-        verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
-      externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
-    }
+    externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
+    externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
+    
     externalTrainingDatasetFacade.updateExternalTrainingDatasetMetadata(externalTrainingDataset);
   }
 
