@@ -107,7 +107,7 @@ public class JobScheduler {
         return;
       }
       //Run scheduled job
-      executionController.start(job, job.getCreator());
+      executionController.start(job, null, job.getCreator());
     } catch(Exception e) {
       logger.log(Level.SEVERE, "Failed to start an execution for job " + jobId, e);
     }

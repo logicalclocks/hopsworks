@@ -75,9 +75,4 @@ public class ErasureCodeJobConfiguration extends JobConfiguration {
     return JobType.ERASURE_CODING;
   }
   
-  @Override
-  @XmlElement(name="jobTypeName")
-  public String getJobTypeName() {
-    return JobType.ERASURE_CODING.getName();
-  }
 }

@@ -153,6 +153,18 @@ public class InodeFacade extends AbstractFacade<Inode> {
   }
   
   /**
+   * find inode by id
+   * <p/>
+   * @param id
+   * @return
+   */
+  public List<Inode> findByIdList(List<Long> ids) {
+    TypedQuery<Inode> q = em.createNamedQuery("Inode.findByIdInList", Inode.class);
+    q.setParameter("idList", ids);
+    return q.getResultList();
+  }
+  
+  /**
    *
    * @param name
    * @return

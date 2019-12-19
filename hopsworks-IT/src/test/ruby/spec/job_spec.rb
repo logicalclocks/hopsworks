@@ -56,12 +56,10 @@ describe "On #{ENV['OS']}" do
         #get job, change args and config params and put it
         get_job(@project[:id], job_spark_1, nil)
         config = json_body[:config]
-        config[:args] = '100'
         config[:'spark.executor.memory'] = '2048'
         create_sparktour_job(@project, job_spark_1, "jar", config)
         expect_status(200)
         get_job(@project[:id], job_spark_1, nil)
-        expect(json_body[:config][:args]).to eq "100"
         expect(json_body[:config][:'spark.executor.memory']).to eq 2048
       end
       it "should get a single spark job" do
@@ -136,7 +134,7 @@ describe "On #{ENV['OS']}" do
         clean_jobs(@project[:id])
       end
       it "start a flink session cluster, test proxy servlet" do
-        start_execution(@project[:id], job_flink_beam)
+        start_execution(@project[:id], job_flink_beam, nil)
         execution_id = json_body[:id]
         app_id = ''
         wait_for_execution do
@@ -148,7 +146,7 @@ describe "On #{ENV['OS']}" do
         get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
         expect_status(200)
         #Kill job
-        stop_execution(@project[:id], job_flink_beam)
+        stop_execution(@project[:id], job_flink_beam, execution_id)
       end
       # it "get flink history server" do
       #   #Get flink master
@@ -168,7 +166,7 @@ describe "On #{ENV['OS']}" do
       it 'should delete job with non-finished execution and cleanup tmp files and get status of new job correctly' do
         create_sparktour_job(@project, job_spark_1, 'jar', nil)
         create_sparktour_job(@project, job_spark_2, 'jar', nil)
-        start_execution(@project[:id], job_spark_1)
+        start_execution(@project[:id], job_spark_1, nil)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
         appId = ''
@@ -178,8 +176,8 @@ describe "On #{ENV['OS']}" do
           appId = json_body[:appId]
         end
         #kill job
-        stop_execution(@project[:id], job_spark_1)
-        start_execution(@project[:id], job_spark_2)
+        stop_execution(@project[:id], job_spark_1, execution_id)
+        start_execution(@project[:id], job_spark_2, nil)
         execution_id = json_body[:id]
         wait_for_execution do
           get_execution(@project[:id], job_spark_2, execution_id)
@@ -192,7 +190,7 @@ describe "On #{ENV['OS']}" do
       end
       it 'should delete flink job with non-finished execution and cleanup tmp files and get status of new job correctly' do
         create_flink_job(@project, job_flink, nil, false)
-        start_execution(@project[:id], job_flink)
+        start_execution(@project[:id], job_flink, nil)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
         appId = ''
@@ -202,7 +200,7 @@ describe "On #{ENV['OS']}" do
           appId = json_body[:appId]
         end
         #kill job
-        stop_execution(@project[:id], job_flink)
+        stop_execution(@project[:id], job_flink, execution_id)
         execution_id = json_body[:id]
         wait_for_execution do
           get_execution(@project[:id], job_flink, execution_id)
@@ -445,13 +443,13 @@ describe "On #{ENV['OS']}" do
 
         describe "Jobs filter latest_execution" do
           it "should execute two jobs and search based on finalStatus" do
-            start_execution(@project[:id], job_spark_1)
+            start_execution(@project[:id], job_spark_1, nil)
             execution_id = json_body[:id]
             wait_for_execution do
               get_execution(@project[:id], job_spark_1, execution_id)
               json_body[:state].eql? "FINISHED"
             end
-            start_execution(@project[:id], job_spark_2)
+            start_execution(@project[:id], job_spark_2, nil)
             execution_id = json_body[:id]
             wait_for_execution do
               get_execution(@project[:id], job_spark_2, execution_id)

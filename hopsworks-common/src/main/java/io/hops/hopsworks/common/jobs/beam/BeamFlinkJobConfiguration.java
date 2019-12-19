@@ -40,10 +40,4 @@ public class BeamFlinkJobConfiguration extends FlinkJobConfiguration {
     return JobType.BEAM_FLINK;
   }
   
-  @Override
-  @XmlElement(name="jobTypeName")
-  public String getJobTypeName() {
-    return JobType.BEAM_FLINK.getName();
-  }
-  
 }

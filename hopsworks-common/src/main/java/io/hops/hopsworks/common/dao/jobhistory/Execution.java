@@ -180,6 +180,11 @@ public class Execution implements Serializable {
   @Column(name = "hdfs_user")
   private String hdfsUser;
   
+  @NotNull
+  @Size(max = 10000)
+  @Column(name = "args", nullable = true)
+  private String args;
+  
   @Basic(optional = false)
   @NotNull
   @Column(name = "finalStatus")
@@ -208,8 +213,7 @@ public class Execution implements Serializable {
   }
 
   public Execution(JobState state, Jobs job, Users user, Date submissionTime, String stdoutPath, String stderrPath,
-    JobFinalStatus finalStatus, float progress,
-    String hdfsUser) {
+    JobFinalStatus finalStatus, float progress, String hdfsUser, String args) {
     this.submissionTime = submissionTime;
     this.state = state;
     this.stdoutPath = stdoutPath;
@@ -217,6 +221,7 @@ public class Execution implements Serializable {
     this.job = job;
     this.user = user;
     this.hdfsUser = hdfsUser;
+    this.args = args == null ? "" : args;
     this.finalStatus = finalStatus;
     this.progress = progress;
     this.executionStart = -1;
@@ -263,7 +268,8 @@ public class Execution implements Serializable {
   }
 
   public long getExecutionDuration() {
-    if (executionStart == -1) {
+    if (executionStart == -1 || state == JobState.APP_MASTER_START_FAILED || state == JobState.INITIALIZATION_FAILED ||
+      state == JobState.INITIALIZING) {
       return 0;
     }
     if (executionStop > executionStart) {
@@ -354,7 +360,15 @@ public class Execution implements Serializable {
   public void setHdfsUser(String hdfsUser){
     this.hdfsUser = hdfsUser;
   }
-
+  
+  public String getArgs() {
+    return args;
+  }
+  
+  public void setArgs(String args) {
+    this.args = args;
+  }
+  
   public void setFilesToRemove(List<String> filesToRemove){
     List<FilesToRemove> toRemove = new ArrayList<>();
     for(String fileToRemove: filesToRemove){

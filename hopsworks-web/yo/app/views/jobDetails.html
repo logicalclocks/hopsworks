@@ -100,7 +100,7 @@
         </div>
     </div>
     </div>
-    <div uib-accordion-group  class="panel-default" heading="Configuration">    
+    <div uib-accordion-group  class="panel-default" is-open="true" heading="Configuration">
       <!-- Spark configuration -->
       <div ng-show="jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration'">
         <div class="row">
@@ -123,10 +123,6 @@
         <div class="row">
           <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
-        </div>
-        <div class="row">
-          <div class="text-right col-md-4">Job arguments <i class="fa fa-info-circle" uib-tooltip="The arguments to be passed to the main method of the class entered above." style="margin-left: 10px"></i></div>
-          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.args}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.experimentType === 'EXPERIMENT' || jobDetailCtrl.job.runConfig.experimentType === 'PARALLEL_EXPERIMENTS' || jobDetailCtrl.job.runConfig.experimentType === 'DISTRIBUTED_TRAINING'">
           <div class="text-right col-md-4">Experiment Type <i class="fa fa-info-circle" uib-tooltip="The type of Machine Learning experiment" style="margin-left: 10px"></i></div>

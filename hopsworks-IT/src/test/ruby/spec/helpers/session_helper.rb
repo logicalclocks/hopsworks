@@ -140,7 +140,7 @@ module SessionHelper
   def create_session(email, password)
     reset_session
     post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), { content_type: 'application/x-www-form-urlencoded'}
-    if !headers["set_cookie"][1].nil?
+    if !headers["set_cookie"].nil? && !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
     else 

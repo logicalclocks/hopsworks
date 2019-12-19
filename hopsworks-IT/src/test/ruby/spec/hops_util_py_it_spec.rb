@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to run the python tests" do
           project = get_project
           # Start job
-          start_execution(project.id, get_python_it_tests_job_name("3.6"))
+          start_execution(project.id, get_python_it_tests_job_name("3.6"), nil)
           expect_status(201)
           execution_id = json_body[:id]
 
@@ -74,7 +74,7 @@ describe "On #{ENV['OS']}" do
             project = get_project
 
             # Start job
-            start_execution(project.id, get_python_it_tests_job_name("2.7"))
+            start_execution(project.id, get_python_it_tests_job_name("2.7"), nil)
             expect_status(201)
             execution_id = json_body[:id]
 

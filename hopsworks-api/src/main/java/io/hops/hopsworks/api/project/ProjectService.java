@@ -53,6 +53,7 @@ import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
+import io.hops.hopsworks.api.provenance.ProvenanceResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
@@ -92,6 +93,8 @@ import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.project.TourProjectType;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
@@ -104,6 +107,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -215,7 +219,11 @@ public class ProjectService {
   private FeaturestoreService featurestoreService;
   @Inject
   private XAttrsResource xattrs;
-  
+  @Inject
+  private ProvenanceResource provenance;
+  @EJB
+  private HopsFSProvenanceController fsProvenanceController;
+
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
   @GET
@@ -445,7 +453,8 @@ public class ProjectService {
   public Response updateProject(
       ProjectDTO projectDTO, @PathParam("projectId") Integer id,
       @Context SecurityContext sc) throws ProjectException, DatasetException, HopsSecurityException,
-      ServiceException, FeaturestoreException, UserException, ElasticException, SchemaException, KafkaException {
+      ServiceException, FeaturestoreException, UserException, ElasticException, SchemaException, KafkaException,
+      ProvenanceException{
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -473,7 +482,9 @@ public class ProjectService {
       for (String s : projectDTO.getServices()) {
         ProjectServiceEnum se = null;
         se = ProjectServiceEnum.valueOf(s.toUpperCase());
-        List<Future<?>> serviceFutureList = projectController.addService(project, se, user, dfso, udfso);
+        ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
+        List<Future<?>> serviceFutureList
+          = projectController.addService(project, se, user, dfso, udfso, projectMetaStatus);
         if (serviceFutureList != null) {
           // Wait for the futures
           for (Future f : serviceFutureList) {
@@ -524,7 +535,8 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException, UnsupportedEncodingException, ElasticException, SchemaException {
+      FeaturestoreException, JobException, UnsupportedEncodingException, ElasticException, SchemaException,
+      ProvenanceException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -576,7 +588,9 @@ public class ProjectService {
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      String tourFilesDataset = projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType);
+      ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
+      String tourFilesDataset
+        = projectController.addTourFilesToProject(user.getEmail(), project, dfso, dfso, demoType, projectMetaStatus);
       //TestJob dataset
       datasetController.generateReadme(udfso, tourFilesDataset, readMeMessage, project.getName());
     } catch (Exception ex) {
@@ -854,5 +868,11 @@ public class ProjectService {
   public XAttrsResource xattrs(@PathParam("projectId") Integer projectId) {
     this.xattrs.setProject(projectId);
     return xattrs;
+  }
+
+  @Path("{projectId}/provenance")
+  public ProvenanceResource provenance(@PathParam("projectId") Integer id) {
+    this.provenance.setProjectId(id);
+    return provenance;
   }
 }

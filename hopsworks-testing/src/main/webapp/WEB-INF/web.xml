@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+-->
+
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
+  <context-param>
+    <param-name>javax.faces.PROJECT_STAGE</param-name>
+    <param-value>Development</param-value>
+  </context-param>
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <!-- Other servlets -->
+
+  <servlet>
+    <servlet-name>Jersey2Config</servlet-name>
+    <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+    <init-param>
+      <param-name>api.version</param-name>
+      <param-value>${project.version}</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.title</param-name>
+      <param-value>Hopsworks Testing api</param-value>
+    </init-param>
+    <init-param>
+      <param-name>swagger.api.basepath</param-name>
+      <param-value>/hopsworks-testing/api</param-value>
+    </init-param>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
+  <security-role>
+    <role-name>HOPS_ADMIN</role-name>
+  </security-role>
+  <security-role>
+    <role-name>HOPS_USER</role-name>
+  </security-role>
+  <security-role>
+    <role-name>CLUSTER_AGENT</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AUDITOR</role-name>
+  </security-role>
+  <security-role>
+    <role-name>AGENT</role-name>
+  </security-role>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Viewpoint Secure URLs</web-resource-name>
+      <url-pattern>/*</url-pattern>
+    </web-resource-collection>
+  </security-constraint>
+  <login-config>
+    <auth-method>BASIC</auth-method>
+    <realm-name>cauthRealm</realm-name>
+  </login-config>
+  <context-param>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  <session-config>
+    <session-timeout>600</session-timeout>
+    <cookie-config>
+      <name>SESSION</name>
+      <path>/</path>
+      <http-only>false</http-only>
+      <secure>false</secure>
+    </cookie-config>
+  </session-config>
+</web-app>

@@ -214,6 +214,7 @@
         <version>3.0.0</version>
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
+          <attachClasses>true</attachClasses>
           <webResources>
             <resource>
               <filtering>true</filtering>

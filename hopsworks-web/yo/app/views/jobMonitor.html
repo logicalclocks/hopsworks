@@ -137,7 +137,7 @@
                   </button>
                 </span>
                 <span
-                        ng-if="jobUICtrl.isLivy !== 'true' && jobUICtrl.job.jobType !== 'FLINK' && jobUICtrl.job.jobType !== 'BEAM_FLINK'">
+                        ng-if="jobUICtrl.isExecution === false && jobUICtrl.isLivy !== 'true' && jobUICtrl.job.jobType !== 'FLINK' && jobUICtrl.job.jobType !== 'BEAM_FLINK'">
                   <ui-select name="appId" theme="select2"  ng-model="jobUICtrl.appId" on-select="jobUICtrl.refresh()">
 
                     <ui-select-match placeholder="Select an appId">{{$select.selected.id}}</ui-select-match>
@@ -156,8 +156,8 @@
               </div>
               <div ng-if="jobUICtrl.ui === '' && jobUICtrl.job.jobType !== 'FLINK'
                        && jobUICtrl.job.jobType !== 'BEAM_FLINK'">
-                This job has not run yet. Please select a previous execution(appId) from the drop down list on the right
-                .</div>
+                No previous runs found for this job. You need to run a job at least once to access this UI.
+              </div>
               <div ng-if="jobUICtrl.ui === '' && (jobUICtrl.job.jobType === 'FLINK' || jobUICtrl.job.jobType === 'BEAM_FLINK')">
                 <iframe style="overflow-y: auto" id="ui_iframe_flink"  ng-src="/hopsworks-api/flinkhistoryserver/" width="98%"
                         height ="89%"></iframe></div>

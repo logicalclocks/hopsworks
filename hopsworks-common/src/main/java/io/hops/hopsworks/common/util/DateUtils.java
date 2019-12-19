@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.util;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -29,8 +30,13 @@ public final class DateUtils {
   public static Date localDateTime2Date(LocalDateTime dateTime) {
     return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
   }
-  
+
+  public static LocalDateTime millis2LocalDateTime(long millis) {
+    return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime();
+  }
+
   public static LocalDateTime getNow() {
     return LocalDateTime.now();
   }
+
 }

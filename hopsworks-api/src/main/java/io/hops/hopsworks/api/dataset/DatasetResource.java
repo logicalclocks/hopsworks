@@ -42,9 +42,13 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.core.Provenance;
+import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -102,6 +106,8 @@ public class DatasetResource {
   private DownloadService downloadService;
   @Inject
   private UploadService uploader;
+  @EJB
+  private HopsFSProvenanceController fsProvenanceController;
 
   private Integer projectId;
   private String projectName;
@@ -212,19 +218,30 @@ public class DatasetResource {
     @QueryParam("searchable") Boolean searchable, @QueryParam("generate_readme") Boolean generateReadme,
     @QueryParam("destination_path") String destPath, @QueryParam("destination_type") DatasetType destDatasetType,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws DatasetException, ProjectException,
-    HopsSecurityException {
+    HopsSecurityException, ProvenanceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
     Project project = this.getProject();
+    ProvTypeDTO metaStatus;
+    if(searchable != null && searchable) {
+      ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
+      if(Inode.MetaStatus.DISABLED.equals(projectMetaStatus.getMetaStatus())) {
+        metaStatus = Provenance.Type.META.dto;
+      } else {
+        metaStatus = projectMetaStatus;
+      }
+    } else {
+      metaStatus = Provenance.Type.DISABLED.dto;
+    }
     switch (action == null? DatasetActions.Post.CREATE : action) {
       case CREATE:
         datasetPath = datasetHelper.getNewDatasetPath(project, path, DatasetType.DATASET);//can only create dataset
         if (datasetPath.isTopLevelDataset()) {
           checkIfDataOwner(project, user);
         }
-        datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName()
-            , datasetPath.isTopLevelDataset(), templateId, description, searchable, generateReadme);
+        datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
+          datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
         ResourceRequest resourceRequest;
         if (datasetPath.isTopLevelDataset()) {
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
