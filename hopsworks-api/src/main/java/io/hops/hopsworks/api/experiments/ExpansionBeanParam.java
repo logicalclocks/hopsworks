@@ -25,7 +25,7 @@ import java.util.Set;
 
 public class ExpansionBeanParam {
   @QueryParam("expand")
-  @ApiParam(value = "ex. expand=tensorboard", allowableValues = "expand=tensorboard, expand=results, expand=provenance")
+  @ApiParam(value = "ex. expand=tensorboard", allowableValues = "expand=tensorboard, expand=results")
   private Set<ExperimentExpansions> expansions;
 
   public ExpansionBeanParam(@QueryParam("expand") Set<ExperimentExpansions> expansions) {
