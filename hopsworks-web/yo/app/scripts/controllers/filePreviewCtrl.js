@@ -74,8 +74,6 @@ angular.module('hopsWorksApp')
                         self.loading = false;
                         if(self.type==='image') {
                             self.getImageWidthHeight();
-                        } else if(self.type==='html') {
-                            self.content = $sce.trustAsHtml(self.content);
                         }
                       }, function (error) {
                          self.loading = false;
