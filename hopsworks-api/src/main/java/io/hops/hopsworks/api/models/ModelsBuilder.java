@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ModelsBuilder {
 
-  private final String MODEL_SUMMARY_XATTR_NAME = "model_summary";
+  public final static String MODEL_SUMMARY_XATTR_NAME = "model_summary";
 
   private static final Logger LOGGER = Logger.getLogger(ModelsBuilder.class.getName());
   @EJB

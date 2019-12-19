@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.models;
 
+import io.hops.hopsworks.api.experiments.ExperimentsBuilder;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.common.dao.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -106,7 +107,7 @@ public class ModelsController {
       EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
       flags.add((XAttrSetFlag.CREATE));
 
-      dfso.setXAttr(modelPath, "provenance.model_summary", model, flags);
+      dfso.setXAttr(modelPath, "provenance." + ModelsBuilder.MODEL_SUMMARY_XATTR_NAME, model, flags);
 
     } catch(IOException | JAXBException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.ATTACH_XATTR_ERROR, Level.SEVERE,
