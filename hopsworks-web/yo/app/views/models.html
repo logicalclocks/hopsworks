@@ -1,0 +1,168 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div ng-controller="MainCtrl as mainCtrl">
+    <div ng-controller="ProjectCtrl as projectCtrl">
+        <div ng-include="'nav.html'"></div>
+        <div id="wrapper" class="toggled" ng-controller="ModelCtrl as modelCtrl">
+            <div class="overlay"></div>
+            <div ng-include="'navProject.html'"></div>
+            <div class="content-wrapper">
+                <div class="row">
+                    <div class="col-sm-9 col-md-9 col-lg-9 form-inline">
+                        <label>Search
+                            <input class="form-control" style="margin-left: 10px;" ng-model="modelCtrl.modelsNameFilter"
+                                   ng-model-options="{debounce: 200}" ng-change="modelCtrl.getAll()" placeholder="Model name">
+                            <input class="form-control" style="margin-left: 10px;" ng-model="modelCtrl.modelsVersionFilter"
+                                   ng-model-options="{debounce: 200}" ng-change="modelCtrl.getAll()" placeholder="Model version">
+                        </label>
+                    </div>
+                    <div class="col-sm-2 col-md-2 col-lg-2">
+                        <ui-select ng-model="modelCtrl.memberSelected" theme="bootstrap"
+                                   on-select="modelCtrl.updateMember(); modelCtrl.getAll();" style="z-index: 1;" id="memberList">
+                            <ui-select-match >
+                                <span ng-bind="modelCtrl.memberSelected.name"></span>
+                            </ui-select-match>
+                            <ui-select-choices repeat="member in (modelCtrl.membersList | filter: $select.search) track by member.name">
+                                <span ng-bind="member.name | highlight: $select.search"></span>
+                            </ui-select-choices>
+                        </ui-select>
+                    </div>
+                    <div class="col-sm-1 col-md-1 col-lg-1">
+                        <div class="pull-right btn-group">
+                            <span style="float: right; margin-right:30px; " class="glyphicon glyphicon-refresh fa-2x" ng-click="modelCtrl.getAll()" role="button" tabindex="0" ng-class="{'spin-icon':modelCtrl.updating}"> </span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <table class="table table-condensed table-hover" style="border-collapse:collapse;" data-toggle="table" data-pagination="true" data-search="true" data-show-pagination-switch="true">
+                        <thead style="border:none;">
+                        <tr>
+                            <th style="width: 22%" ng-click="modelCtrl.sortBy('name')" >
+                                Name
+                                <span class="glyphicon sort-icon" ng-show="modelCtrl.sortType == 'name'" ng-class="{'glyphicon-chevron-up':!modelCtrl.reverse,'glyphicon-chevron-down':modelCtrl.reverse}"></span></th>
+                            <th style="width: 15%" ng-click="modelCtrl.sortBy('count')">
+                                Versions
+                                <span class="glyphicon sort-icon" ng-show="modelCtrl.sortType == 'count'" ng-class="{'glyphicon-chevron-up':!modelCtrl.reverse,'glyphicon-chevron-down':modelCtrl.reverse}"></span></th>
+                            </th>
+                            <th style="width: 15%" ng-click="modelCtrl.sortBy('created')">
+                                Last Updated
+                                <span class="glyphicon sort-icon" ng-show="modelCtrl.sortType == 'created'" ng-class="{'glyphicon-chevron-up':!modelCtrl.reverse,'glyphicon-chevron-down':modelCtrl.reverse}"></span></th>
+                            <th style="width: 45%" ng-click="modelCtrl.sortBy('description')">
+                                Description
+                                <span class="glyphicon sort-icon" ng-show="modelCtrl.sortType == 'description'" ng-class="{'glyphicon-chevron-up':!modelCtrl.reverse,'glyphicon-chevron-down':modelCtrl.reverse}"></span></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr dir-paginate-start="model in modelCtrl.models | orderBy:modelCtrl.sortType:modelCtrl.reverse | itemsPerPage: modelCtrl.pageSize"
+                            pagination-id="models_pagination" ng-class="{'active':modelCtrl.expandModel[model.name]}">
+                            <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)" style="padding:8px;"><span style="font-size:12px;" class="glyphicon glyphicon-chevron-right" ng-show="modelCtrl.selectedModel[model.name]"></span>{{model.name}}</td>
+                            <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)">{{model.count}}</td>
+                            <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)">{{model.created | date:'medium'}}</td>
+                            <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)">{{model.description}} </td>
+                        </tr>
+                        <tr dir-paginate-end>
+                            <td colspan="12">
+                                <div ng-if="modelCtrl.expandModel[model.name]" class="animate-if" id="{{model.name}}">
+                                    <table class="table" style="border-collapse: collapse;">
+                                        <thead>
+                                            <tr>
+                                                <th style="border: none;" colspan=1></th>
+                                                <th style="border: none;" colspan=1></th>
+                                                <th style="border: none;" colspan=1></th>
+                                                <th style="border: none;" ng-if="modelCtrl.metricHeaders[model.name].length > 0" colspan="{{modelCtrl.metricHeaders[model.name].length}}">Metrics</th>
+                                            </tr>
+                                            <tr>
+                                                <th ng-repeat="header in modelCtrl.allHeaders[model.name]" ng-click="sortBy(header, model.name)" style="width:5%;" ng-if="$index === 0">
+                                                    {{header}} <span ng-show="modelSortType[model.name] === header" ng-class="{'fa fa-caret-down': modelReverse[model.name], 'fa fa-caret-up': !modelReverse[model.name]}"></span></a>
+                                                </th>
+                                                <th ng-repeat="header in modelCtrl.allHeaders[model.name]" ng-click="sortBy(header, model.name)" ng-style="{ 'width': (90/(modelCtrl.allHeaders[model.name].length)) + '%' }" ng-if="$index > 0">
+                                                    {{header}} <span ng-show="modelSortType[model.name] === header" ng-class="{'fa fa-caret-down': modelReverse[model.name], 'fa fa-caret-up': !modelReverse[model.name]}"></span></a>
+                                                </th>
+                                                <th style="width:5%;">
+
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr dir-paginate="version in modelCtrl.modelData[model.name] | orderBy:modelSortType[model.name]:modelReverse[model.name] | itemsPerPage:modelCtrl.pageSize" pagination-id="model.name">
+                                                <td data-ng-repeat="cell in version">
+                                                    <div ng-if="$index > 2" ng-style="{ 'width': modelCtrl.getWidth(model.name, $index, cell) + '%' }" style="background-color:lightblue; color:rgb(85, 85, 85); font-size:16px; border-radius: 0 !important; text-align:left; margin-top:5px;">
+                                                        <span style="margin-left:5px;">
+                                                        {{cell}}
+                                                        </span>
+                                                    </div>
+                                                    <div ng-if="$index === 0 || $index === 2" style="color:rgb(85, 85, 85); font-size:16px; border-radius: 0 !important; text-align:left;">
+                                                        <span style="margin-left:5px;">
+                                                        {{cell}}
+                                                        </span>
+                                                    </div>
+                                                    <div ng-if="$index === 1" style="color:rgb(85, 85, 85); font-size:16px; border-radius: 0 !important; text-align:left;">
+                                                        <span style="margin-left:5px;">
+                                                        {{cell | date:'medium'}}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="fs-table">
+                                                    <div class="btn-group fs-btn" role="group">
+                                                        <button style="background-color: rgb(51, 122, 183)"
+                                                                class="glyphicon glyphicon-eye-open btn btn-primary"
+                                                                uib-tooltip="Show more information"
+                                                                ng-click="modelCtrl.showDetailedInformation(model.name, version.Version); $event.stopPropagation();"
+                                                                type="button">
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <dir-pagination-controls
+                                            class="pull-right"
+                                            max-size="modelCtrl.maxPaginationLinks"
+                                            pagination-id="model.name"
+                                            direction-links="true"
+                                            boundary-links="true">
+                                    </dir-pagination-controls>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <dir-pagination-controls
+                            class="pull-right"
+                            max-size="modelCtrl.maxPaginationLinks"
+                            pagination-id="models_pagination"
+                            direction-links="true"
+                            boundary-links="true">
+                    </dir-pagination-controls>
+                </div>
+
+                <div>
+                    <h3 class="text-muted ng-hide" style="text-align: center;" ng-show="modelCtrl.models.length == 0 && modelCtrl.loaded" aria-hidden="true">
+                        No Models to show
+                    </h3>
+                </div>
+
+                <div ng-if="modelCtrl.loading" class="loadingwrap">
+                    <div class="loading-content">
+                        <div class="loader-in-wrap"></div>
+                        {{modelCtrl.loadingText}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -177,12 +177,16 @@
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.instances']}}</div>
         </div>
         <div class="row">
-          <div class="text-right col-md-4">Number of executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+          <div class="text-right col-md-4">Executor cores <i class="fa fa-info-circle" uib-tooltip="The number of cores that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.cores']}}</div>
         </div>
         <div class="row">
           <div class="text-right col-md-4">Executor memory (MB)<i class="fa fa-info-circle" uib-tooltip="The amount of memory, in MB, that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.memory']}}</div>
+        </div>
+        <div class="row" ng-if="jobDetailCtrl.job.runConfig.experimentType">
+          <div class="text-right col-md-4">Executor gpus<i class="fa fa-info-circle" uib-tooltip="The number of GPUs that should be requested for each Spark executor in this job." style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['spark.executor.gpus']}}</div>
         </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.properties !== undefined && jobDetailCtrl.job.runConfig.properties!== ''">
           <div class="text-right col-md-4">Properties <i class="fa fa-info-circle" uib-tooltip="Job properties." style="margin-left: 10px"></i></div>

@@ -117,7 +117,7 @@ public class ApplicationConfig extends ResourceConfig {
 
     //maggy
     register(io.hops.hopsworks.api.maggy.MaggyService.class);
-    
+
     //provenance
     register(io.hops.hopsworks.api.provenance.ProvenanceResource.class);
 

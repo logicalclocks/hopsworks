@@ -23,10 +23,9 @@ import java.io.IOException;
 import java.util.Map;
 
 public abstract class ConfigurationUtil {
-  
-  public abstract Map<String, String> getFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-    Settings settings, String hdfsUser,
-    String usersFullName, String tfLibraryPath,
-    Map<String, String> extraJavaOptions)
-    throws IOException;
+  public abstract Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
+                                                                    Settings settings, String hdfsUser,
+                                                                    String tfLibraryPath,
+                                                                    Map<String, String> extraJavaOptions)
+                                                                      throws IOException;
 }

@@ -22,10 +22,10 @@
 angular.module('hopsWorksApp')
     .controller('servingCtrl', ['$scope', '$routeParams', 'growl', 'ServingService', 'UtilsService', '$location',
         'PythonService', 'ModalService', '$interval', 'StorageService', '$mdSidenav', 'DataSetService',
-        'KafkaService', 'JobService','ElasticService',
-        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonDepsService,
-                  ModalService, $interval, StorageService, $mdSidenav,
-                  DataSetService, KafkaService, ElasticService) {
+        'KafkaService', 'JobService','ElasticService', 'ModelService',
+        function ($scope, $routeParams, growl, ServingService, UtilsService, $location, PythonService,
+                  ModalService, $interval, StorageService, $mdSidenav, DataSetService, KafkaService, JobService,
+                  ElasticService, ModelService) {
 
             var self = this;
 
@@ -44,12 +44,18 @@ angular.module('hopsWorksApp')
             self.showLogs = false;
             self.kibanaUI = "";
 
+            self.selectedModel;
+            self.models = [];
+
             self.projectKafkaTopics = [];
             self.kafkaDefaultNumPartitions = 1;
             self.kafkaDefaultNumReplicas = 1;
             self.kafkaMaxNumReplicas = 1;
 
             self.servings = [];
+            self.loaded = false;
+            self.loading = false;
+            self.loadingText = "";
 
             self.editServing = {};
             self.editServing.batchingEnabled = false;
@@ -105,7 +111,6 @@ angular.module('hopsWorksApp')
                     ModalService.selectFile('lg', self.projectId, self.sklearnScriptRegex, self.sklearnSelectScriptErrorMsg,
                         false).then(
                         function (success) {
-                            var projectName = UtilsService.getProjectName();
                             self.onFileSelected(success);
                         }, function (error) {
                             //The user changed their mind.
@@ -176,7 +181,7 @@ angular.module('hopsWorksApp')
              */
             self.onDirSelected = function (artifactPath) {
                 if (self.editServing.servingType === "TENSORFLOW") {
-                    self.validateTfModelPath(artifactPath, self.editServing.name);
+                    self.validateTfModelPath(artifactPath, undefined);
                 }
             };
 
@@ -236,18 +241,34 @@ angular.module('hopsWorksApp')
             };
 
             self.getAllServings = function () {
+                if(!self.loaded) {
+                    startLoading('Loading Servings...')
+                }
                 ServingService.getAllServings(self.projectId).then(
                     function (success) {
+                        stopLoading();
                         if (!self.ignorePoll) {
                             self.servings = success.data;
+                            self.loaded = true;
                         }
                     },
                     function (error) {
+                        stopLoading();
+                        self.loaded = true;
                         growl.error(error.data.errorMsg, {
                             title: 'Error',
                             ttl: 15000
                         });
                     });
+            };
+
+            var startLoading = function(label) {
+                self.loading = true;
+                self.loadingText = label;
+            };
+            var stopLoading = function() {
+                self.loading = false;
+                self.loadingText = "";
             };
 
             self.filterTopics = function (topic) {
@@ -354,7 +375,7 @@ angular.module('hopsWorksApp')
                 // Check that python kernel is enabled if it is a sklearn serving, as the flask serving will be launched
                 // inside the project anaconda environment
                 if (self.editServing.servingType === "SKLEARN") {
-                    PythonDepsService.enabled(self.projectId).then(
+                    PythonService.enabled(self.projectId).then(
                         function (success) {
                             self.doCreateOrUpdate()
                         },
@@ -455,6 +476,37 @@ angular.module('hopsWorksApp')
 
             };
 
+            self.fetchAsync = function (modelNameLike) {
+                self.loadingModels = false;
+                var query = '';
+                if(modelNameLike) {
+                    query = '?filter_by=name_like:' + modelNameLike;
+                }
+                ModelService.getAll(self.projectId, query).then(
+                    function(success) {
+                        if(success.data.items) {
+                            var modelNames = new Set();
+                            for(var i = 0; i < success.data.items.length; i < i++) {
+                                modelNames.add(success.data.items[i].name)
+                            }
+                            console.log(modelNames)
+                            self.models = Array.from(modelNames);
+                            console.log(self.models)
+                        } else {
+                            self.models = [];
+                        }
+                        self.loadingModels = true;
+                    },
+                    function(error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                        self.loadingModels = true;
+                    });
+            };
+
             /**
              * Function called when the user is switching between the form for creating a TFServing vs a SkLearnServing
              *
@@ -466,6 +518,12 @@ angular.module('hopsWorksApp')
                 self.editServing.modelVersion = ""
                 self.editServing.servingType = servingType
             }
+
+            self.setFullModelPath = function() {
+                var projectName = UtilsService.getProjectName();
+                self.editServing.artifactPath = '/Projects/' + projectName + '/Models/' + self.editServing.artifactPath;
+                self.validateTfModelPath(self.editServing.artifactPath, undefined);
+            };
 
             /**
              * Called when the user press the "Logs" button

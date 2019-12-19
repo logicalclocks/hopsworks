@@ -29,11 +29,10 @@ import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -41,18 +40,13 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -61,7 +55,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -115,7 +109,7 @@ public class EnvironmentController {
     }
     if (!project.getCondaEnv()) {
       createKibanaIndex(project, user);
-      copyOnWriteCondaEnv(project);
+      copyOnWriteCondaEnv(project, user);
     }
   }
 
@@ -126,52 +120,8 @@ public class EnvironmentController {
     // Insert all deps in current listing
     libraryController.addPythonDepsForProject(project, pythonDeps);
   }
-
-  public JsonObject getMachineTypes() throws ServiceException {
-
-    JsonObjectBuilder response = Json.createObjectBuilder();
-
-    String cpuHost = hostsFacade.findCPUHost();
-
-    if (cpuHost != null) {
-      response.add("CPU", true);
-    } else {
-      response.add("CPU", false);
-    }
-
-    String gpuHost = hostsFacade.findGPUHost();
-    if (gpuHost != null) {
-      response.add("GPU", true);
-    } else {
-      response.add("GPU", false);
-    }
-
-    if (cpuHost == null && gpuHost == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
-          "Could not find any CPU or GPU host");
-    } else {
-      return response.build();
-    }
-  }
   
-  public boolean isEnvironmentReady(Project project) {
-    CondaCommandFacade.CondaOp operation;
-    CondaCommandFacade.CondaStatus status;
-    List<CondaCommands> ops = condaCommandFacade.getCommandsForProject(project);
-    for (CondaCommands condaCommand : ops) {
-      operation = condaCommand.getOp();
-      if (operation.equals(CondaCommandFacade.CondaOp.CREATE) || operation.equals(CondaCommandFacade.CondaOp.YML)) {
-        status = condaCommand.getStatus();
-        if (status.equals(CondaCommandFacade.CondaStatus.NEW) || status.equals(CondaCommandFacade.CondaStatus.ONGOING))
-        {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  
-  public Collection<PythonDep> createProjectInDb(Project project, String pythonVersion,
+  private Collection<PythonDep> createProjectInDb(Project project, Users user, String pythonVersion,
     LibraryFacade.MachineType machineType, String environmentYml, Boolean installJupyter) throws ServiceException {
     
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
@@ -182,13 +132,13 @@ public class EnvironmentController {
     }
     
     if (environmentYml != null) {
-      condaEnvironmentOp(CondaCommandFacade.CondaOp.YML, pythonVersion, project, pythonVersion, machineType,
-        environmentYml, installJupyter);
+      condaEnvironmentOp(CondaCommandFacade.CondaOp.YML, pythonVersion, project, user, pythonVersion, machineType,
+        environmentYml, installJupyter, false);
       setCondaEnv(project, true);
     } else {
       validateCondaHosts(machineType);
     }
-    
+
     List<PythonDep> all = new ArrayList<>();
     enableConda(project);
     return all;
@@ -206,8 +156,8 @@ public class EnvironmentController {
     project.setCondaEnv(condaEnv);
     projectFacade.mergeProject(project);
   }
-  
-  
+
+
   private List<Hosts> validateCondaHosts(LibraryFacade.MachineType machineType) throws ServiceException {
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
     if (hosts.isEmpty()) {
@@ -222,31 +172,25 @@ public class EnvironmentController {
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void copyOnWriteCondaEnv(Project project) throws ServiceException {
-    condaEnvironmentOp(CondaCommandFacade.CondaOp.CREATE, project.getPythonVersion(), project,
-      project.getPythonVersion(), LibraryFacade.MachineType.ALL, null, false);
+  public void copyOnWriteCondaEnv(Project project, Users user) throws ServiceException {
     setCondaEnv(project, true);
+    condaEnvironmentOp(CondaCommandFacade.CondaOp.CREATE, project.getPythonVersion(), project, user,
+      project.getPythonVersion(), LibraryFacade.MachineType.ALL, null, false, false);
   }
   
   /**
    *
    * @param proj
    */
-  public void removeEnvironment(Project proj) throws ServiceException {
+  public void removeEnvironment(Project proj, Users user) throws ServiceException {
     commandsController.deleteCommandsForProject(proj);
     if (proj.getCondaEnv()) {
-      condaEnvironmentRemove(proj);
+      condaEnvironmentRemove(proj, user);
       setCondaEnv(proj, false);
     }
     removePythonForProject(proj);
   }
-  
-  /**
-   * @param srcProject
-   */
-  public void cloneProject(Project srcProject, Project destProj) throws ServiceException {
-    condaEnvironmentClone(srcProject, destProj);
-  }
+
   /**
    * Asynchronous execution of conda operations
    *
@@ -255,32 +199,40 @@ public class EnvironmentController {
    * @param pythonVersion
    * @param arg
    */
-  private void condaEnvironmentOp(CondaCommandFacade.CondaOp op, String pythonVersion, Project proj,
+  private void condaEnvironmentOp(CondaCommandFacade.CondaOp op, String pythonVersion, Project proj, Users user,
     String arg, LibraryFacade.MachineType machineType, String environmentYml,
-    Boolean installJupyter)
+    Boolean installJupyter, boolean singleHost)
     throws ServiceException {
-    
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
     List<Hosts> hosts = validateCondaHosts(machineType);
-    for (Hosts h : hosts) {
-      // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
-      CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
-        op, CondaCommandFacade.CondaStatus.NEW, CondaCommandFacade.CondaInstallType.ENVIRONMENT, machineType,
-        proj, pythonVersion, "", "defaults", new Date(), arg, environmentYml, installJupyter);
+    if (singleHost) {
+      CondaCommands cc = new CondaCommands(hosts.get(new Random().nextInt(hosts.size())), settings.getAnacondaUser(),
+          user, op, CondaCommandFacade.CondaStatus.NEW, CondaCommandFacade.CondaInstallType.ENVIRONMENT, machineType,
+          proj, pythonVersion, "", "defaults", new Date(), arg, environmentYml, installJupyter,
+          projectUtils.getCurrentCondaEnvironment(proj));
       condaCommandFacade.save(cc);
+    } else {
+      for (Hosts h : hosts) {
+        // For environment operations, we don't care about the Conda Channel, so we just pick 'defaults'
+        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(),
+            user, op, CondaCommandFacade.CondaStatus.NEW, CondaCommandFacade.CondaInstallType.ENVIRONMENT, machineType,
+            proj, pythonVersion, "", "defaults", new Date(), arg, environmentYml, installJupyter,
+            projectUtils.getCurrentCondaEnvironment(proj));
+        condaCommandFacade.save(cc);
+      }
     }
   }
   
-  private void condaEnvironmentRemove(Project proj) throws ServiceException {
-    condaEnvironmentOp(CondaCommandFacade.CondaOp.REMOVE, "", proj,
-      "", LibraryFacade.MachineType.ALL, null, false);
+  private void condaEnvironmentRemove(Project proj, Users user) throws ServiceException {
+    condaEnvironmentOp(CondaCommandFacade.CondaOp.REMOVE, "", proj, user,
+      "", LibraryFacade.MachineType.ALL, null, false, false);
   }
   
-  private void condaEnvironmentClone(Project srcProj, Project destProj) throws ServiceException {
-    condaEnvironmentOp(CondaCommandFacade.CondaOp.CLONE, "", srcProj, destProj.getName(),
-      LibraryFacade.MachineType.ALL, null, false);
+  private void condaEnvironmentClone(Project srcProj, Project destProj, Users user) throws ServiceException {
+    condaEnvironmentOp(CondaCommandFacade.CondaOp.CLONE, "", srcProj, user, destProj.getName(),
+      LibraryFacade.MachineType.ALL, null, false, false);
   }
   
   public CondaCommands getOngoingEnvCreation(Project proj) {
@@ -295,14 +247,13 @@ public class EnvironmentController {
     }
     return null;
   }
-  
-  
+
   public void cleanupConda() throws ServiceException {
     List<Project> projects = projectFacade.findAll();
     if (projects != null && !projects.isEmpty()) {
       Project project = projects.get(0);
-      condaEnvironmentOp(CondaCommandFacade.CondaOp.CLEAN, "", project, "",
-        LibraryFacade.MachineType.ALL, "", false);
+      condaEnvironmentOp(CondaCommandFacade.CondaOp.CLEAN, "", project, project.getOwner(), "",
+        LibraryFacade.MachineType.ALL, "", false, false);
     }
   }
   
@@ -343,7 +294,7 @@ public class EnvironmentController {
       String pythonVersion = findPythonVersion(allYml);
       version = pythonVersion;
       createKibanaIndex(project, user);
-      createProjectInDb(project, version, LibraryFacade.MachineType.ALL, allYml, installJupyter);
+      createProjectInDb(project, user, version, LibraryFacade.MachineType.ALL, allYml, installJupyter);
       project.setPythonVersion(version);
       projectFacade.update(project);
       return version;
@@ -372,9 +323,10 @@ public class EnvironmentController {
             "python version mismatch between .yml files.");
       }
       version = pythonVersionCPUYml;
+
       createKibanaIndex(project, user);
-      createProjectInDb(project, version, LibraryFacade.MachineType.CPU, cpuYml, installJupyter);
-      createProjectInDb(project, version, LibraryFacade.MachineType.GPU, gpuYml, installJupyter);
+      createProjectInDb(project, user, version, LibraryFacade.MachineType.CPU, cpuYml, installJupyter);
+      createProjectInDb(project, user, version, LibraryFacade.MachineType.GPU, gpuYml, installJupyter);
     
       project.setPythonVersion(version);
       projectFacade.update(project);
@@ -382,33 +334,41 @@ public class EnvironmentController {
     }
   }
   
-  public void exportEnv(Users user, Project project) throws PythonException, ServiceException {
+  public String[] exportEnv(Project project, Users user, String projectRelativeExportPath)
+      throws PythonException, ServiceException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
-    String cpuHost = hostsFacade.findCPUHost();
 
+    String cpuHost = hostsFacade.findCPUHost();
     Date date = new Date();
 
+    ArrayList<String> ymlList = new ArrayList<>();
+    long exportTime = date.getTime();
     if (cpuHost != null) {
-      exportEnvironment(cpuHost, "environment_cpu_" + date.getTime() + ".yml", hdfsUser, project);
+      String cpuYmlPath = projectRelativeExportPath + "/" + "environment_cpu_" + exportTime + ".yml";
+      condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
+          cpuYmlPath, LibraryFacade.MachineType.CPU, null, false, true);
+      ymlList.add(cpuYmlPath);
     }
     String gpuHost = hostsFacade.findGPUHost();
     if (gpuHost != null) {
-      exportEnvironment(gpuHost, "environment_gpu_" + date.getTime() + ".yml", hdfsUser, project);
+      String gpuYmlPath = projectRelativeExportPath + "/" + "environment_gpu_" + exportTime + ".yml";
+      condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
+          gpuYmlPath, LibraryFacade.MachineType.GPU, null, false, true);
+      ymlList.add(gpuYmlPath);
     }
+    return ymlList.toArray(new String[0]);
   }
   
-  public void createEnv(String version, Project project) throws PythonException,
-    ServiceException {
+  public void createEnv(Project project, Users user, String version) throws PythonException,
+      ServiceException, ProjectException {
     if (project.getConda() || project.getCondaEnv()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
-    createProjectInDb(project, version, LibraryFacade.MachineType.ALL, null, false);
+    createProjectInDb(project, user, version, LibraryFacade.MachineType.ALL, null, false);
     project.setPythonVersion(version);
     projectFacade.update(project);
-    
     synchronizeDependencies(project);
   }
   
@@ -451,41 +411,6 @@ public class EnvironmentController {
       }
     }
   }
-  
-  private void exportEnvironment(String host, String environmentFile, String hdfsUser, Project project)
-    throws ServiceException {
-    
-    String secretDir = DigestUtils.sha256Hex(hdfsUser + environmentFile);
-    String exportPath = settings.getStagingDir() + Settings.PRIVATE_DIRS + secretDir;
-    File exportDir = new File(exportPath);
-    exportDir.mkdirs();
-
-    String prog = settings.getHopsworksDomainDir() + "/bin/condaexport.sh";
-    
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-      .addCommand("/usr/bin/sudo")
-      .addCommand(prog)
-      .addCommand(exportPath)
-      .addCommand(project.getName())
-      // Conda environment name
-      .addCommand(projectUtils.getCurrentCondaEnvironment(project))
-      .addCommand(host)
-      .addCommand(environmentFile)
-      .addCommand(hdfsUser)
-      .setWaitTimeout(180L, TimeUnit.SECONDS)
-      .ignoreOutErrStreams(false)
-      .build();
-    try {
-      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-  
-      if (processResult.getExitCode() != 0) {
-        throw new IOException("A problem occurred when exporting the environment.");
-      }
-    } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR, Level.SEVERE, "host: " + host + ","
-        + " environmentFile: " + environmentFile + ", " + "hdfsUser: " + hdfsUser, ex.getMessage(), ex);
-    }
-  }
 
   public void createKibanaIndex(Project project, Users user)
       throws ServiceException,
@@ -498,5 +423,23 @@ public class EnvironmentController {
     // Kibana index pattern for conda commands logs
     elasticController.createIndexPattern(project, user,
             project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
+  }
+
+  public void uploadYmlInProject(Project project, Users user, String environmentYml, String relativePath)
+      throws ServiceException {
+    DistributedFileSystemOps udfso = null;
+    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+    try {
+      udfso = dfs.getDfsOps(hdfsUser);
+      Path projectYmlPath = new Path(Utils.getProjectPath(project.getName()) + "/" + relativePath);
+      udfso.create(projectYmlPath, environmentYml);
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_EXPORT_ERROR,
+          Level.SEVERE, "path: " + relativePath, ex.getMessage(), ex);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
   }
 }

@@ -130,7 +130,7 @@ describe "On #{ENV['OS']}" do
           kafka_topic_list = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/kafka/topics"
 
           kafka_topic_name = JSON.parse(serving_list).select { |serving| serving['name'] == "testModel1"}[0]['kafkaTopicDTO']['name']
-          kafka_topic = JSON.parse(kafka_topic_list).select { |topic| topic['name'] == kafka_topic_name}
+          kafka_topic = JSON.parse(kafka_topic_list)['items'].select { |topic| topic['name'] == kafka_topic_name}
           expect(kafka_topic.size).to eq 1
           expect(kafka_topic[0]['schemaName']).to eql INFERENCE_SCHEMA_NAME
         end

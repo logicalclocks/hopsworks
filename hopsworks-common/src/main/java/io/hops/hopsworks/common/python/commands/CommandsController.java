@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -65,6 +67,8 @@ public class CommandsController {
   private WebCommunication web;
   @EJB
   private LibraryFacade libraryFacade;
+  @EJB
+  private ProjectUtils projectUtils;
   
   @Resource(lookup = "concurrent/kagentExecutorService")
   ManagedExecutorService kagentExecutorService;
@@ -133,8 +137,8 @@ public class CommandsController {
   }
 
 
-  public PythonDep condaOp(CondaCommandFacade.CondaOp op, CondaCommandFacade.CondaInstallType installType,
-    LibraryFacade.MachineType machineType, Project proj, String channelUrl, String lib, String version)
+  public PythonDep condaOp(CondaCommandFacade.CondaOp op, Users user, CondaCommandFacade.CondaInstallType installType,
+                   LibraryFacade.MachineType machineType, Project proj, String channelUrl, String lib, String version)
     throws ServiceException, GenericException {
     
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
@@ -163,8 +167,9 @@ public class CommandsController {
       projectFacade.update(proj);
   
       for (Hosts h : hosts) {
-        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(), op, CondaCommandFacade.CondaStatus.NEW,
-          installType, machineType, proj, lib, version, channelUrl, new Date(), "", null, false);
+        CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(), user, op,
+            CondaCommandFacade.CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
+            new Date(), "", null, false, projectUtils.getCurrentCondaEnvironment(proj));
         condaCommandFacade.save(cc);
       }
     } catch (Exception ex) {
@@ -176,13 +181,13 @@ public class CommandsController {
   
   public void updateCondaCommandStatus(Integer commandID, CondaCommandFacade.CondaStatus status, String arguments)
     throws ServiceException {
-    updateCondaCommandStatus(commandID, status,
-      null, null, arguments, null, null, null, null, null);
+    updateCondaCommandStatus(commandID, status, null, null, arguments, null,
+        null, null, null, null,  null);
   }
   
   public void updateCondaCommandStatus(int commandId, CondaCommandFacade.CondaStatus condaStatus,
     CondaCommandFacade.CondaInstallType installType, LibraryFacade.MachineType machineType, String arg, String proj,
-    CondaCommandFacade.CondaOp opType, String lib, String version, String channel) throws ServiceException {
+    Users user, CondaCommandFacade.CondaOp opType, String lib, String version, String channel) throws ServiceException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaCommandFacade.CondaStatus.SUCCESS) {
@@ -198,6 +203,7 @@ public class CommandsController {
           boolean finished = true;
           for (CondaCommands c : ongoingCommands) {
             if (c.getOp().compareTo(opType) == 0
+              && c.getUserId().getUid().compareTo(user.getUid()) == 0
               && c.getLib().compareTo(lib) == 0
               && c.getVersion().compareTo(version) == 0
               && c.getInstallType().name().compareTo(installType.name()) == 0

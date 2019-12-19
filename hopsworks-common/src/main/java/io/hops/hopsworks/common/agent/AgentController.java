@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.python.commands.CommandsController;
+import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -74,6 +75,8 @@ public class AgentController {
   private LibraryFacade libraryFacade;
   @EJB
   private LibraryController libraryController;
+  @EJB
+  private EnvironmentController environmentController;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -228,7 +231,7 @@ public class AgentController {
       if (command != null) {
         commandsController.updateCondaCommandStatus(
           commandId, status, command.getInstallType(), command.getMachineType(),
-          args, projectName, opType, lib, version, channelUrl);
+          args, projectName, command.getUserId(), opType, lib, version, channelUrl);
         
         if (command.getOp().equals(CondaCommandFacade.CondaOp.YML) &&
             settings.getHopsworksIp().equals(command.getHostId().getHostIp()) &&
@@ -241,6 +244,12 @@ public class AgentController {
               projectId.getPythonDepCollection());
           // Insert all deps in current listing
           libraryController.addPythonDepsForProject(projectId, pythonDeps);
+        }
+
+        if (command.getOp().equals(CondaCommandFacade.CondaOp.EXPORT) &&
+            status.equals(CondaCommandFacade.CondaStatus.SUCCESS)) {
+          environmentController.uploadYmlInProject(command.getProjectId(), command.getUserId(),
+              cc.getEnvironmentYml(), command.getArg() );
         }
 
         // An upgrade results in an unknown version installed, query local conda

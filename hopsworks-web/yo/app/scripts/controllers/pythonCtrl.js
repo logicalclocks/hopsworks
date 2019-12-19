@@ -38,6 +38,7 @@ angular.module('hopsWorksApp')
             self.loadingText = "";
 
             $scope.activeForm;
+            $scope.indextab = 0;
 
             self.condaResultsMsgShowing = false;
 
@@ -118,7 +119,7 @@ angular.module('hopsWorksApp')
 
             var showErrorGrowl = function (error) {
                 var errorMsg = typeof error.data.usrMsg !== 'undefined'? error.data.usrMsg : '';
-                growl.error(errorMsg, {title: error.data.errorMsg, ttl: 5000});
+                growl.error(errorMsg, {title: error.data.errorMsg, ttl: 10000});
             };
 
             //bit ugly code but some custom behaviour was needed to fix the checkboxes:
@@ -350,6 +351,21 @@ angular.module('hopsWorksApp')
                     });
             }
 
+            self.deleteEnvironmentCommands = function() {
+                PythonService.deleteEnvironmentCommands(self.projectId, self.pythonVersion).then(
+                    function (success) {
+                        growl.success("Anaconda Environment commands deleted.", {
+                            title: 'Done',
+                            ttl: 5000
+                        });
+                        $route.reload();
+                    },
+                    function (error) {
+                        self.enabling = false;
+                        showErrorGrowl(error);
+                    });
+            }
+
             self.destroyAnaconda = function () {
 
                 ModalService.confirm('sm', 'Remove Environment?',
@@ -416,12 +432,13 @@ angular.module('hopsWorksApp')
 
             self.exportEnvironment = function () {
                 self.exporting = true;
+                $scope.indextab = 3;
                 PythonService.exportEnvironment(self.projectId).then(
                     function (success) {
                         self.exporting = false;
-                        growl.success("Exporting environment completed successfully. Check your Resources dataset for the .yml file(s)", {
-                            title: 'Done',
-                            ttl: 20000
+                        growl.success("Exporting environment operation ongoing. Check your Resources dataset for the .yml file(s) once the operation is finished.", {
+                            title: 'Export Ongoing...',
+                            ttl: 10000
                         });
                     },
                     function (error) {

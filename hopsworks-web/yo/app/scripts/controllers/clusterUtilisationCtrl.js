@@ -66,6 +66,10 @@ angular.module('hopsWorksApp')
             self.YarnWarn = false;
             self.KafkaBan = false;
             self.KafkaWarn = false;
+            self.EpipeBan = false;
+            self.ElasticBan = false;
+            self.ElasticWarn = false;
+
             
             var getClusterUtilisation = function () {
                 ClusterUtilService.getYarnMetrics().then(
@@ -178,7 +182,7 @@ angular.module('hopsWorksApp')
                         }
 
                       }, function (error) {
-                console.log("problem getting HDFS status");
+                console.log("problem getting YARN status");
               });
             };
 
@@ -205,7 +209,50 @@ angular.module('hopsWorksApp')
                         }
 
                       }, function (error) {
-                console.log("problem getting HDFS status");
+                console.log("problem getting Kafka status");
+              });
+            };
+
+            var getHopsStatus = function () {
+              ClusterUtilService.getHopsStatus().then(
+                      function (success) {
+                        success.data.forEach(function (status) {
+                          if (status.service === "epipe" && status.status === "Stopped") {
+                            self.EpipeBan = true;
+                          }
+                        });
+                      }, function (error) {
+                console.log("problem getting Hops status");
+              });
+            };
+
+            var getELKStatus = function () {
+              ClusterUtilService.getELKStatus().then(
+                      function (success) {
+                        var nbInstances = 0;
+                        var nbRunningInstances = 0;
+                        success.data.forEach(function (status) {
+                          if (status.service == "elasticsearch") {
+                              if(status.status === "Started") {
+                                nbRunningInstances++;
+                              } else {
+                                nbInstances++;
+                              }
+                          }
+                        });
+                        if (nbRunningInstances > nbInstances * 2 / 3) {
+                          self.ElasticBan = false;
+                          self.ElasticWarn = false;
+                        } else if (nbRunningInstances > nbInstances * 1 / 3) {
+                          self.ElasticBan = false;
+                          self.ElasticWarn = true;
+                        } else {
+                          self.ElasticBan = true;
+                          self.ElasticWarn = false;
+                        }
+
+                      }, function (error) {
+                console.log("problem getting ELK status");
               });
             };
             
@@ -216,6 +263,9 @@ angular.module('hopsWorksApp')
             getHdfsStatus();
             getYarnStatus();
             getKafkaStatus();
+            getHopsStatus();
+            getELKStatus();
+
             $scope.$on("$destroy", function () {
               $interval.cancel(getClusterUtilisationInterval);
             });

@@ -72,6 +72,7 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -80,6 +81,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -147,6 +149,8 @@ public class DatasetController {
   private DatasetRequestFacade datasetRequest;
   @EJB
   private HopsFSProvenanceController fsProvController;
+  @EJB
+  private JupyterController jupyterController;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -653,6 +657,11 @@ public class DatasetController {
         } else {
           throw new DatasetException(RESTCodes.DatasetErrorCode.IMAGE_SIZE_INVALID, Level.FINE);
         }
+      } else if(fileExtension.equalsIgnoreCase("ipynb")) {
+        String html = jupyterController.convertIPythonNotebook(username, fullPath.toString(), project, "''",
+            JupyterController.NotebookConversion.HTML);
+        filePreviewDTO = new FilePreviewDTO(Settings.FILE_PREVIEW_HTML_TYPE, fileExtension.toLowerCase(),
+            html);
       } else {
         try (DataInputStream dis = new DataInputStream(is)) {
           int sizeThreshold = Settings.FILE_PREVIEW_TXT_SIZE_BYTES; //in bytes
@@ -672,7 +681,7 @@ public class DatasetController {
             new String(headContent));
         }
       }
-    } catch (IOException ex) {
+    } catch (IOException | ServiceException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "path: " +
         fullPath.toString(), ex.getMessage(), ex);
     } finally {

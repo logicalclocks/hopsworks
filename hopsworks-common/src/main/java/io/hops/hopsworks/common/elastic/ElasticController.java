@@ -39,8 +39,6 @@
 
 package io.hops.hopsworks.common.elastic;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
@@ -56,10 +54,6 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.util.EntityUtils;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Request;
@@ -69,7 +63,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.json.JSONArray;
@@ -168,53 +161,10 @@ public class ElasticController {
         Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
 
-  public String findExperiment(String index, String app_id)
-      throws ServiceException, ElasticException {
-
-    RestHighLevelClient client = getClient();
-    
-    SearchResponse searchResponse = executeSearchQuery(client, index,
-        QueryBuilders.matchQuery("app_id", app_id));
-    
-    int status = searchResponse.status().getStatus();
-    if(status != 200) {
-      LOG.log(Level.SEVERE, "Unexpected response code " + searchResponse.status().getStatus() +
-          " when updating experiment in Elastic. " + searchResponse.toString());
-    }
-
-    return searchResponse.toString();
-  }
-
-  public void updateExperiment(String index, String id, JSONObject source)
-      throws IOException, ElasticException {
-
-    RestHighLevelClient client = getClient();
-
-    Map<String, Object> map;
-
-    ObjectMapper mapper = new ObjectMapper();
-    map = mapper.readValue(source.toString(),
-        new TypeReference<HashMap<String, Object>>() {
-        });
-  
-    IndexRequest indexRequest = new IndexRequest(index);
-    indexRequest.id(id);
-    indexRequest.source(map);
-    
-    IndexResponse indexResponse = client.index(indexRequest,
-        RequestOptions.DEFAULT);
-
-    int status = indexResponse.status().getStatus();
-    if(status != 200) {
-      LOG.log(Level.SEVERE, "Unexpected response code " + indexResponse.status().getStatus() +
-              " when updating experiment in Elastic. " + indexResponse.toString());
-    }
-
-  }
-
   public List<ElasticHit> projectSearch(Integer projectId, String searchTerm)
       throws ServiceException, ElasticException {
     RestHighLevelClient client = getClient();
+
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
@@ -368,8 +318,8 @@ public class ElasticController {
     //Get all project indices
     Map<String, Long> indices = getIndices(project.getName() +
       "_(((logs|serving|" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN + "|" +
-      Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN + ")-\\d{4}.\\d{2}.\\d{2})|(" + Settings.ELASTIC_EXPERIMENTS_INDEX +
-      ")| (" + Settings.ELASTIC_KAGENT_INDEX_PATTERN + "))");
+      Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN + ")-\\d{4}.\\d{2}.\\d{2})|(" +
+        Settings.ELASTIC_KAGENT_INDEX_PATTERN + "))");
     for (String index : indices.keySet()) {
       if (!deleteIndex(index)) {
         LOG.log(Level.SEVERE, "Could not delete project index:{0}", index);
@@ -673,35 +623,6 @@ public class ElasticController {
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR,
           Level.INFO,"Error while checking index existence", e.getMessage(), e);
     }
-  }
-  
-  public String getLogdirFromElastic(Project project, String elasticId)
-      throws ProjectException, ElasticException {
-    Map<String, String> params = new HashMap<>();
-    params.put("op", "GET");
-    String projectName = project.getName().toLowerCase();
-
-    String experimentsIndex = projectName + "_experiments";
-    
-    RestHighLevelClient client = getClient();
-    
-    boolean foundEntry;
-    GetResponse resp;
-    try {
-      resp = client.get(new GetRequest(experimentsIndex, elasticId),
-          RequestOptions.DEFAULT);
-      foundEntry = resp.isExists();
-    } catch (Exception ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND, Level.SEVERE,
-        "project:" + project.getName()+ ", index: " + elasticId, ex.getMessage(), ex);
-    }
-
-    if(!foundEntry) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.TENSORBOARD_ELASTIC_INDEX_NOT_FOUND, Level.WARNING,
-        "project:" + project.getName()+ ", index: " + elasticId);
-    }
-
-    return (String) resp.getSource().get("logdir");
   }
 }
 

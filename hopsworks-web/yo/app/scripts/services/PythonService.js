@@ -51,6 +51,9 @@ angular.module('hopsWorksApp')
               removeEnvironment: function (projectId, pythonVersion) {
                 return $http.delete('/api/project/' + projectId + '/python/environments/' + pythonVersion);
               },
+              deleteEnvironmentCommands: function (projectId, pythonVersion) {
+                return $http.delete('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/commands');
+              },
               getEnvironments: function (projectId) {
                 return $http.get('/api/project/' + projectId + '/python/environments?expand=commands');
               },
