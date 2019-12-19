@@ -256,12 +256,12 @@ public class TrainingDatasetService {
   /**
    * Endpoint for getting a list of training dataset based on the name
    *
-   * @param trainingDatasetName name of the training dataset to get
+   * @param name name of the training dataset to get
    * @return return a JSON representation of the training dataset with the given id
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/{trainingDatasetName: [a-z0-9_]+}")
+  @Path("/{name: [a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -269,18 +269,18 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Get a list of training datasets with a specific name, filter by version",
       response = List.class)
   public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training dataset", required = true)
-                                           @PathParam("trainingDatasetName") String trainingDatasetName,
+                                           @PathParam("name") String name,
                                            @ApiParam(value = "Filter by a specific version")
                                            @QueryParam("version") Integer version)
       throws FeaturestoreException {
-    verifyNameProvided(trainingDatasetName);
+    verifyNameProvided(name);
     List<TrainingDatasetDTO> trainingDatasetDTO;
     if (version == null) {
       trainingDatasetDTO =
-          trainingDatasetController.getTrainingDatasetWithNameAndFeaturestore(featurestore, trainingDatasetName);
+          trainingDatasetController.getTrainingDatasetWithNameAndFeaturestore(featurestore, name);
     } else {
       trainingDatasetDTO = Arrays.asList(trainingDatasetController
-          .getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDatasetName, version));
+          .getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, name, version));
     }
 
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetGeneric =

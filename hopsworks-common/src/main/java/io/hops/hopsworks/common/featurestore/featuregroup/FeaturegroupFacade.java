@@ -105,15 +105,16 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param featurestore featurestore of the featuregroup
    * @return a single Featuregroup entity
    */
-  public Featuregroup findByNameVersionAndFeaturestore(String name, Integer version, Featurestore featurestore) {
+  public Optional<Featuregroup> findByNameVersionAndFeaturestore(String name, Integer version,
+                                                                 Featurestore featurestore) {
     try {
-      return em.createNamedQuery("Featuregroup.findByFeaturestoreAndNameVersion", Featuregroup.class)
+      return Optional.of(em.createNamedQuery("Featuregroup.findByFeaturestoreAndNameVersion", Featuregroup.class)
           .setParameter("featurestore", featurestore)
           .setParameter("version", version)
           .setParameter("name", name)
-          .getSingleResult();
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 
