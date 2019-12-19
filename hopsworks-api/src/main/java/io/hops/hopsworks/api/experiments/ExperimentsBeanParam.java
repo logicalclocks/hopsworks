@@ -26,10 +26,13 @@ import java.util.Set;
 public class ExperimentsBeanParam {
   @QueryParam("sort_by")
   @ApiParam(value = "ex. sort_by=name:desc",
-      allowableValues = "name:desc,name:asc")
+      allowableValues = "name:desc,name:asc,metric:desc,metric:asc," +
+          "user:desc,user:asc,start:desc,start:asc,end:desc,end:asc,state:desc,state:asc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=name_eq:mnist&filter_by=state:RUNNING",
+      allowMultiple = true)
   private Set<FilterBy> filter;
   @BeanParam
   private ExpansionBeanParam expansions;

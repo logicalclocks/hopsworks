@@ -24,10 +24,13 @@ import java.util.Set;
 
 public class ModelsBeanParam {
   @QueryParam("sort_by")
-  @ApiParam(value = "ex. sort_by=name:desc")
+  @ApiParam(value = "ex. sort_by=name:desc or sort_by=accuracy:desc",
+      allowableValues = "name:desc,name:asc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=name_eq:mnist&filter_by:version:1",
+      allowMultiple = true)
   private Set<FilterBy> filter;
 
   private Set<SortBy> getSortBy(String param) {
