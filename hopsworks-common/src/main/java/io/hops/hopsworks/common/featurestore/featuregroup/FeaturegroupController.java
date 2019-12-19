@@ -652,13 +652,9 @@ public class FeaturegroupController {
    */
   private Featuregroup verifyFeaturegroupNameVersion(Featurestore featurestore, String featureGroupName,
                                                      Integer version) {
-    Featuregroup featuregroup =
-        featuregroupFacade.findByNameVersionAndFeaturestore(featureGroupName, version, featurestore);
-    if (featuregroup == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
-        "feature group name: " + featureGroupName + " feature group version: " + version);
-    }
-    return featuregroup;
+    return featuregroupFacade.findByNameVersionAndFeaturestore(featureGroupName, version, featurestore)
+        .orElseThrow(() -> new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
+        "feature group name: " + featureGroupName + " feature group version: " + version));
   }
 
 

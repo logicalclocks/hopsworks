@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -50,7 +51,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -220,29 +220,30 @@ public class FeaturegroupService {
   /**
    * Retrieve a specific feature group based name. Allow filtering on version.
    *
-   * @param featureGroupName name of the featuregroup
+   * @param name name of the featuregroup
    * @param version queryParam with the desired version
    * @return JSON representation of the featuregroup
    */
   @GET
   // Anything else that is not just number should use this endpoint
-  @Path("/{featureGroupName: [a-z0-9_]+}")
+  @Path("/{name: [a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version", response = List.class)
+  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version",
+      response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
-                                  @PathParam("featureGroupName") String featureGroupName,
+                                  @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
                                   @QueryParam("version") Integer version) {
-    verifyNameProvided(featureGroupName);
+    verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
-      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, featureGroupName);
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, name);
     } else {
       featuregroupDTO = Arrays.asList(featuregroupController
-          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, featureGroupName, version));
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version));
     }
     GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};

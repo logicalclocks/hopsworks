@@ -58,8 +58,8 @@ import java.util.stream.Collectors;
   @JsonSubTypes.Type(value = TrainingDatasetDTO.class, name = "TrainingDatasetDTO")})
 public abstract class FeaturestoreEntityDTO {
   private Integer featurestoreId;
-  private String featurestoreName = null;
-  private String description = null;
+  private String featurestoreName;
+  private String description;
   private Date created;
   private String creator;
   private Integer version;
