@@ -219,6 +219,10 @@ public class HopsFSProvenanceController {
       for (Dataset dataset : project.getDatasetCollection()) {
         String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
         ProvCoreDTO provCore = getProvCoreXAttr(datasetPath, udfso);
+        if(provCore == null) {
+          throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
+            "malformed dataset - provenance", "no provenance core xattr");
+        }
         ProvDatasetDTO dsState = new ProvDatasetDTO(dataset.getName(), dataset.getInode().getId(), provCore.getType());
         result.add(dsState);
       }
