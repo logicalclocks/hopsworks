@@ -72,9 +72,9 @@ angular.module('hopsWorksApp')
                         self.content = self.fileDetails.preview.content;
                         self.extension = self.fileDetails.preview.extension;
                         self.loading = false;
-                        if(self.content==='image') {
+                        if(self.type==='image') {
                             self.getImageWidthHeight();
-                        } else if(self.content==='html') {
+                        } else if(self.type==='html') {
                             self.content = $sce.trustAsHtml(self.content);
                         }
                       }, function (error) {
