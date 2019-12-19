@@ -50,6 +50,41 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["projectName"] == project.projectname).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
+
+        it "should be able to get shared feature stores" do
+          project = get_project
+          projectname = "project_#{short_random_id}"
+          second_project = create_project_by_name(projectname)
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+
+          list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
+          get list_project_featurestores_endpoint
+          json_body = JSON.parse(response.body)
+          expect_status(200)
+          # The dataset has not been accepted yet, so it should not be returned in the feature store list
+          expect(json_body.length == 1)
+          project_featurestore = json_body.select {
+             |d| d["featurestoreName"] == "#{project.projectname.downcase}_featurestore"  }
+          expect(project_featurestore).to be_present
+          second_featurestore = json_body.select {
+            |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
+          expect(second_featurestore.length).to be 0
+
+          accept_dataset(@project, "#{projectname}_featurestore.db", "&type=FEATURESTORE")
+
+          list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
+          get list_project_featurestores_endpoint
+          json_body = JSON.parse(response.body)
+          expect_status(200)
+          # The dataset has been accepted, so it should return the second feature store as well
+          expect(json_body.length == 2)
+          project_featurestore = json_body.select {
+             |d| d["featurestoreName"] == "#{project.projectname.downcase}_featurestore"  }
+          expect(project_featurestore).to be_present
+          second_featurestore = json_body.select {
+            |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
+          expect(second_featurestore).to be_present
+        end
       end
     end
 
