@@ -131,7 +131,7 @@ public class ModelsBuilder {
 
   //Build specific
   public ModelDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                        ProvStateElastic fileProvenanceHit) {
+                        ProvStateElastic fileProvenanceHit) throws ModelsException {
 
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, project, fileProvenanceHit);

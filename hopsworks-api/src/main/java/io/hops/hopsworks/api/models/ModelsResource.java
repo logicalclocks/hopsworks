@@ -28,8 +28,6 @@ import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ElasticException;
-import io.hops.hopsworks.exceptions.ExperimentsException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -119,14 +117,14 @@ public class ModelsResource {
       @PathParam("id") String id,
       @Context UriInfo uriInfo,
       @BeanParam ModelsBeanParam modelsBeanParam)
-      throws ExperimentsException, ProvenanceException, ElasticException {
-    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
+      throws ProvenanceException, ModelsException {
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     ProvStateElastic fileState = modelsController.getModel(project, id);
     if(fileState != null) {
       ModelDTO dto = modelsBuilder.build(uriInfo, resourceRequest, project, fileState);
       return Response.ok().entity(dto).build();
     } else {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_NOT_FOUND, Level.FINE);
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_NOT_FOUND, Level.FINE);
     }
   }
 

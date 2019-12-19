@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.experiments;
 
 import io.hops.hopsworks.api.experiments.dto.ExperimentDTO;
 import io.hops.hopsworks.api.experiments.dto.results.ExperimentResultSummaryDTO;
+import io.hops.hopsworks.exceptions.ExperimentsException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 
@@ -33,6 +35,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
+import java.util.logging.Level;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -58,7 +61,7 @@ public class ExperimentConverter {
     }
   }
 
-  public ExperimentDTO unmarshalDescription(String jsonConfig) {
+  public ExperimentDTO unmarshalDescription(String jsonConfig) throws ExperimentsException {
     try {
       Unmarshaller unmarshaller = jaxbExperimentSummaryContext.createUnmarshaller();
       StreamSource json = new StreamSource(new StringReader(jsonConfig));
@@ -66,19 +69,21 @@ public class ExperimentConverter {
       unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       return unmarshaller.unmarshal(json, ExperimentDTO.class).getValue();
     } catch(Exception e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
+          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonConfig, e);
     }
-    return null;
   }
 
-  public ExperimentResultSummaryDTO unmarshalResults(String jsonConfig) {
+  public ExperimentResultSummaryDTO unmarshalResults(String jsonResults) throws ExperimentsException {
     try {
       Unmarshaller unmarshaller = jaxbExperimentResultsWrapperContext.createUnmarshaller();
-      StreamSource json = new StreamSource(new StringReader(jsonConfig));
+      StreamSource json = new StreamSource(new StringReader(jsonResults));
       unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       return unmarshaller.unmarshal(json, ExperimentResultSummaryDTO.class).getValue();
     } catch(Exception e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
+          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonResults, e);
     }
-    return null;
   }
 }

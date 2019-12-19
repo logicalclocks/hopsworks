@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.models;
 
 import io.hops.hopsworks.api.models.dto.ModelDTO;
+import io.hops.hopsworks.exceptions.ModelsException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 
@@ -32,6 +34,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
+import java.util.logging.Level;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -50,7 +53,7 @@ public class ModelConverter {
     }
   }
 
-  public ModelDTO unmarshalDescription(String jsonConfig) {
+  public ModelDTO unmarshalDescription(String jsonConfig) throws ModelsException {
     try {
       Unmarshaller unmarshaller = jaxbExperimentSummaryContext.createUnmarshaller();
       StreamSource json = new StreamSource(new StringReader(jsonConfig));
@@ -58,7 +61,8 @@ public class ModelConverter {
       unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       return unmarshaller.unmarshal(json, ModelDTO.class).getValue();
     } catch(Exception e) {
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
+          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonConfig, e);
     }
-    return null;
   }
 }
