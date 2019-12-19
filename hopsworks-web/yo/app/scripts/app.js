@@ -590,8 +590,11 @@ angular.module('hopsWorksApp', [
         })
         .filter('strLimit', ['$filter', function($filter) {
             return function(input, limit, more) {
+                if (typeof input === 'undefined') {
+                  return "";
+                }
                 if (input.length <= limit) {
-                    return input;
+                  return input;
                 }
                 return $filter('limitTo')(input, limit) + (more || '...');
             };
@@ -640,26 +643,6 @@ angular.module('hopsWorksApp', [
                 return filtered;
             };
         }])
-        .filter('dateRangeFilterFeatures', ['$filter', function() {
-            return function(items, fromDate, toDate) {
-                var filtered = [];
-                //var from_date = Date.parse(fromDate);
-                // var to_date = Date.parse(toDate);
-                angular.forEach(items, function(item) {
-                    var createdDate = new Date(item.date)
-                    if(createdDate > fromDate && createdDate < toDate) {
-                        filtered.push(item);
-                    }
-                });
-                return filtered;
-            };
-        }])
-        .filter('featuresNotInFeaturegroupsFilter', ['$filter', function() {
-        return function(item) {
-            var filtered = [];
-            return filtered;
-        };
-        }])
         .filter('featureSearchFilterByFg', ['$filter', function() {
             return function(items, searchText) {
                 var filtered = [];
@@ -668,11 +651,7 @@ angular.module('hopsWorksApp', [
                         if (item.featuregroup.name.indexOf(searchText) >= 0 ) {
                             filtered.push(item);
                         }
-                    } else {
-                        if (item.trainingDataset.name.indexOf(searchText) >= 0 ) {
-                            filtered.push(item);
-                        }
-                    }
+                    } 
                 });
                 return filtered;
             };

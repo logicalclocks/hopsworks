@@ -23,7 +23,7 @@
 <div growl reference="21" class="pull-right"></div>
 <div class="modal-body">
     <p style="font-weight: bold">Select <span style="text-decoration: underline">either</span> a pre-defined type or a custom type</p>
-    <div class="view-info">
+    <div class="view-info" ng-if="!selectFeatureTypeCtrl.online">
         <div class="col-md-12">
             <div class="col-sm-12" style="margin-bottom: 20px">
                 <div class="col-sm-5">
@@ -33,9 +33,7 @@
                        style="margin-left: 10px"></i>
                 </div>
                 <div class="col-sm-7">
-                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedHiveType"
-                               style="z-index: 100"
-                    >
+                    <ui-select ng-model="selectFeatureTypeCtrl.predefinedHiveType" style="z-index: 100">
                         <ui-select-match placeholder="Select a pre-defined Hive feature type">
                             <span>{{$select.selected}}</span>
                         </ui-select-match>
@@ -47,7 +45,7 @@
             </div>
         </div>
     </div>
-    <div class="view-info">
+    <div class="view-info" ng-if="selectFeatureTypeCtrl.online">
         <div class="col-md-12">
             <div class="col-sm-12" style="margin-bottom: 20px">
                 <div class="col-sm-5">
@@ -58,8 +56,7 @@
                 </div>
                 <div class="col-sm-7">
                     <ui-select ng-model="selectFeatureTypeCtrl.predefinedMysqlType"
-                               style="z-index: 99"
-                    >
+                               style="z-index: 99">
                         <ui-select-match placeholder="Select a pre-defined MySQL feature type">
                             <span>{{$select.selected}}</span>
                         </ui-select-match>
@@ -91,11 +88,11 @@
     <div class="view-info">
         <div class="col-md-12">
             <div class="col-sm-12">
-                <div ng-if="selectFeatureTypeCtrl.duplicateTypeSelection === -1" style="color: red">
+                <div ng-if="selectFeatureTypeCtrl.duplicateTypeSelection" style="color: red">
                     Select <span style="font-weight:bold">one</span> of (1) a predefined Hive data type;
                     (2) a pre-defined MySQL data type; or (3) a custom type.
                 </div>
-                <div ng-if="selectFeatureTypeCtrl.noSelection === -1" style="color: red">
+                <div ng-if="selectFeatureTypeCtrl.noSelection" style="color: red">
                     "You have not selected a feature type"
                 </div>
             </div>

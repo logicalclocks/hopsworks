@@ -23,36 +23,6 @@ angular.module('hopsWorksApp')
             return {
 
                 /**
-                 * Utility function that formats a date into a string (MMM Do YY)
-                 *
-                 * @param inputDate the date to format
-                 * @returns a formatted date string
-                 */
-                formatDate: function(inputDate) {
-                    return moment(inputDate).format('MMM Do YY');
-                },
-
-                /**
-                 * Utility function for formatting a date into a time string (HH:mm)
-                 *
-                 * @param inputDate the date to format
-                 * @returns {*} a formatted time string
-                 */
-                formatTime: function(inputDate) {
-                    return moment(inputDate).format('HH:mm');
-                },
-
-                /**
-                 * Utility function for formatting a date into a dateAndtime string ('MMMM Do YYYY, h:mm a')
-                 * @param inputDate
-                 * @returns {*} a formatted date and time string
-                 */
-                formatDateAndTime: function(inputDate) {
-                    return moment(inputDate).format('MMMM Do YYYY, h:mm a');
-                },
-
-
-                /**
                  * Sends a POST request to the backend for creating a feature group
                  *
                  * @param projectId project where the featuregroup will be created
@@ -207,6 +177,11 @@ angular.module('hopsWorksApp')
                 getFeaturegroupSample: function(projectId, featurestore, featuregroup) {
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/preview");
+                },
+
+                getFeaturegroupCustomMetadata: function(projectId, featurestore, featuregroup) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/xattrs");
                 },
 
                 /**

@@ -126,62 +126,52 @@ angular.module('hopsWorksApp')
             //front-end variables
             self.cached_fg_accordion1 = {
                 "isOpen": true,
-                "visible": true,
                 "value": "",
                 "title": "Feature Group Name"
             };
             self.cached_fg_accordion2 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Feature Group Description"
             };
             self.cached_fg_accordion3 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Feature Group Schema (Optional)"
             };
             self.cached_fg_accordion4 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "SQL Query (Optional)"
             };
             self.cached_fg_accordion5 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Create"
             };
 
             self.on_demand_fg_accordion1 = {
                 "isOpen": true,
-                "visible": true,
                 "value": "",
                 "title": "Feature Group Name"
             };
             self.on_demand_fg_accordion2 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Feature Group Description"
             };
             self.on_demand_fg_accordion3 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Feature Group Schema (Optional)"
             };
             self.on_demand_fg_accordion4 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "SQL Query"
             };
             self.on_demand_fg_accordion5 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Create"
             };
@@ -220,27 +210,17 @@ angular.module('hopsWorksApp')
                         }
                     }
                     self.cached_fg_accordion1.isOpen = true
-                    self.cached_fg_accordion1.visible = true
                     self.cached_fg_accordion2.isOpen = false
-                    self.cached_fg_accordion2.visible = true
                     self.cached_fg_accordion3.isOpen = false
-                    self.cached_fg_accordion3.visible = true
                     self.cached_fg_accordion4.isOpen = false
-                    self.cached_fg_accordion4.visible = true
                     self.cached_fg_accordion5.isOpen = true
-                    self.cached_fg_accordion5.visible = true
                     self.cached_fg_accordion5.title = "Update"
 
                     self.on_demand_fg_accordion1.isOpen = true
-                    self.on_demand_fg_accordion1.visible = true
                     self.on_demand_fg_accordion2.isOpen = false
-                    self.on_demand_fg_accordion2.visible = true
                     self.on_demand_fg_accordion3.isOpen = false
-                    self.on_demand_fg_accordion3.visible = true
                     self.on_demand_fg_accordion4.isOpen = false
-                    self.on_demand_fg_accordion4.visible = true
                     self.on_demand_fg_accordion5.isOpen = true
-                    self.on_demand_fg_accordion5.visible = true
                     self.on_demand_fg_accordion5.title = "Update"
                 }
                 if (self.featuregroup != null && self.featuregroupOperation === 'NEW_VERSION') {
@@ -264,27 +244,17 @@ angular.module('hopsWorksApp')
                     self.cachedFeaturegroupHeading = 'Create New Version of Cached Feature Group'
 
                     self.cached_fg_accordion1.isOpen = true
-                    self.cached_fg_accordion1.visible = true
                     self.cached_fg_accordion2.isOpen = false
-                    self.cached_fg_accordion2.visible = true
                     self.cached_fg_accordion3.isOpen = false
-                    self.cached_fg_accordion3.visible = true
                     self.cached_fg_accordion4.isOpen = false
-                    self.cached_fg_accordion4.visible = true
                     self.cached_fg_accordion5.isOpen = true
-                    self.cached_fg_accordion5.visible = true
                     self.cached_fg_accordion5.title = "Create New Version"
 
                     self.on_demand_fg_accordion1.isOpen = true
-                    self.on_demand_fg_accordion1.visible = true
                     self.on_demand_fg_accordion2.isOpen = false
-                    self.on_demand_fg_accordion2.visible = true
                     self.on_demand_fg_accordion3.isOpen = false
-                    self.on_demand_fg_accordion3.visible = true
                     self.on_demand_fg_accordion4.isOpen = false
-                    self.on_demand_fg_accordion4.visible = true
                     self.on_demand_fg_accordion5.isOpen = true
-                    self.on_demand_fg_accordion5.visible = true
                     self.on_demand_fg_accordion5.title = "Create New Version"
                 }
             }
@@ -350,7 +320,6 @@ angular.module('hopsWorksApp')
                         }
                         self.cachedPhase = 1;
                         self.cached_fg_accordion2.isOpen = true; //Open description selection
-                        self.cached_fg_accordion2.visible = true; //Display description selection
                     }
                     self.cached_fg_accordion1.value = " - " + self.cachedFeaturegroupName; //Edit panel title
                 }
@@ -369,7 +338,6 @@ angular.module('hopsWorksApp')
                         }
                         self.onDemandPhase = 1;
                         self.on_demand_fg_accordion2.isOpen = true; //Open description selection
-                        self.on_demand_fg_accordion2.visible = true; //Display description selection
                     }
                     self.on_demand_fg_accordion1.value = " - " + self.onDemandFeaturegroupName; //Edit panel title
                 }
@@ -387,9 +355,6 @@ angular.module('hopsWorksApp')
                             self.cachedFeaturegroupDoc = "-";
                         }
                         self.cachedPhase = 2;
-                        self.cached_fg_accordion3.visible = true;
-                        self.cached_fg_accordion4.visible = true;
-                        self.cached_fg_accordion5.visible = true;
                         self.cached_fg_accordion5.isOpen = true;
                     }
                     self.cached_fg_accordion2.value = " - " + self.cachedFeaturegroupDoc; //Edit panel title
@@ -408,9 +373,6 @@ angular.module('hopsWorksApp')
                             self.onDemandFeaturegroupDoc = "-";
                         }
                         self.onDemandPhase = 2;
-                        self.on_demand_fg_accordion3.visible = true;
-                        self.on_demand_fg_accordion4.visible = true;
-                        self.on_demand_fg_accordion5.visible = true;
                         self.on_demand_fg_accordion5.isOpen = true;
                     }
                     self.on_demand_fg_accordion2.value = " - " + self.onDemandFeaturegroupDoc; //Edit panel title
@@ -480,7 +442,7 @@ angular.module('hopsWorksApp')
              * @param feature the feature to define the type for
              */
             self.selectFeatureType = function (feature) {
-                ModalService.selectFeatureType('lg', self.settings).then(
+                ModalService.selectFeatureType('lg', false, self.settings).then(
                     function (success) {
                         feature.type = success
                     },
@@ -496,7 +458,7 @@ angular.module('hopsWorksApp')
              * @param feature the feature to define the type for
              */
             self.selectOnlineFeatureType = function (feature) {
-                ModalService.selectFeatureType('lg', self.settings).then(
+                ModalService.selectFeatureType('lg', true, self.settings).then(
                     function (success) {
                         feature.onlineType = success
                     },
