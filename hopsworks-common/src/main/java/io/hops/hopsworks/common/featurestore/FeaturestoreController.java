@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.featurestore;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
@@ -54,6 +55,7 @@ import java.util.stream.Collectors;
  * Class controlling the interaction with the feature_store table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeaturestoreController {
   
   @EJB
@@ -71,22 +73,22 @@ public class FeaturestoreController {
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   
-  private static JAXBContext featurestoreUtilJobArgsJaxbContext = null;
-  private static Marshaller featurestoreUtilJobArgsMarshaller = null;
+  private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
+  private Marshaller featurestoreUtilJobArgsMarshaller = null;
+
   private static final String FEATURESTORE_UTIL_ARGS_PATH = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR
       + "%s" + Path.SEPARATOR + FeaturestoreConstants.FEATURESTORE_UTIL_4J_ARGS_DATASET + Path.SEPARATOR + "%s";
   private static final String HDFS_FILE_PATH = "hdfs://%s";
 
-  /**
+  /*
    * Retrieves a list of all featurestores for a particular project
    *
    * @param project the project to retrieve featurestores for
    * @return a list of DTOs for the featurestores
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeaturestoreDTO> getFeaturestoresForProject(Project project) {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
-    return featurestores.stream().map(fs -> convertFeaturestoreToDTO(fs)).collect(Collectors.toList());
+    return featurestores.stream().map(this::convertFeaturestoreToDTO).collect(Collectors.toList());
   }
 
   /**
@@ -95,12 +97,16 @@ public class FeaturestoreController {
    * @param project the project to list featurestores for
    * @return a list of featurestore entities
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private List<Featurestore> getProjectFeaturestores(Project project) {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
-    Collection<Dataset> featurestoresDsInproject = dsInProject.stream().filter(ds -> ds.getDsType()
-      == DatasetType.FEATURESTORE).collect(Collectors.toList());
-    return featurestoresDsInproject.stream().map(ds -> ds.getFeatureStore()).collect(Collectors.toList());
+    // Add all datasets shared with the project
+    dsInProject.addAll(project.getDatasetSharedWithCollectionCollection().stream()
+        // Filter out datasets which have not been accepted
+        .filter(DatasetSharedWith::getAccepted)
+        .map(DatasetSharedWith::getDataset).collect(Collectors.toList()));
+    return  dsInProject.stream()
+        .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
+        .map(Dataset::getFeatureStore).collect(Collectors.toList());
   }
 
   /**
@@ -110,21 +116,15 @@ public class FeaturestoreController {
    * @param featurestoreName the name of the featurestore
    * @return a list of DTOs for the featurestores
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithName(Project project, String featurestoreName)
       throws FeaturestoreException {
-    List<Featurestore> featurestores = getProjectFeaturestores(project);
-    List<FeaturestoreDTO> featurestoreDTOs = featurestores.stream().map(fs -> convertFeaturestoreToDTO(fs)).collect(
-        Collectors.toList());
-    List<FeaturestoreDTO> featurestoresDTOWithName = featurestoreDTOs.stream().filter(fs -> fs.getFeaturestoreName().
-        equals(featurestoreName))
-        .collect(Collectors.toList());
-    if (featurestoresDTOWithName.size() != 1) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName());
-    }
-    //Featurestore name corresponds to Hive databases so uniqueness is enforced by Hive
-    return featurestoresDTOWithName.get(0);
+    return getProjectFeaturestores(project).stream()
+        .map(this::convertFeaturestoreToDTO)
+        .filter(fs -> fs.getFeaturestoreName().equals(featurestoreName))
+        .findFirst()
+        //Featurestore name corresponds to Hive databases so uniqueness is enforced by Hive
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+          Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName()));
   }
 
   /**
@@ -135,17 +135,14 @@ public class FeaturestoreController {
    * @return a DTO representation of the featurestore
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public FeaturestoreDTO getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
       throws FeaturestoreException {
-    List<Featurestore> featurestores = getProjectFeaturestores(project);
-    List<Featurestore> featurestoresWithId = featurestores.stream().filter(fs -> fs.getId().equals(featurestoreId)).
-        collect(Collectors.toList());
-    if (featurestoresWithId.size() != 1) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName());
-    }
-    return convertFeaturestoreToDTO(featurestoresWithId.get(0));
+    return getProjectFeaturestores(project).stream()
+        .filter(fs -> fs.getId().equals(featurestoreId))
+        .map(this::convertFeaturestoreToDTO)
+        .findAny()
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+          Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName()));
   }
 
   /**
@@ -154,7 +151,6 @@ public class FeaturestoreController {
    * @param id the id of the featurestore
    * @return featurestore entity with the given id
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Featurestore getFeaturestoreWithId(Integer id) throws FeaturestoreException {
     Featurestore featurestore = featurestoreFacade.findById(id);
     if (featurestore == null) {
@@ -173,7 +169,6 @@ public class FeaturestoreController {
    * @return the created featurestore
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName,
       Dataset trainingDatasetsFolder) throws FeaturestoreException, IOException {
 
