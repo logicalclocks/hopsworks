@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
@@ -30,10 +29,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.List;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the on_demand_feature_group table and required business logic
@@ -56,15 +52,10 @@ public class OnDemandFeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnDemandFeaturegroup createOnDemandFeaturegroup(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
       throws FeaturestoreException {
-    //Verify User Input
-    verifyOnDemandFeaturegroupUserInput(onDemandFeaturegroupDTO);
-    //Get JDBC Connector
-    FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(
-        onDemandFeaturegroupDTO.getJdbcConnectorId());
-    if(featurestoreJdbcConnector == null){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ON_DEMAND_FEATUREGROUP_JDBC_CONNECTOR_NOT_FOUND,
-          Level.FINE, "jdbConnectorId: " + onDemandFeaturegroupDTO.getJdbcConnectorId());
-    }
+    //Verify User Input specific for on demand feature groups
+    FeaturestoreJdbcConnector featurestoreJdbcConnector =
+      verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
+    verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
     //Persist on-demand featuregroup
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
@@ -90,94 +81,21 @@ public class OnDemandFeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
     OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
+    // Verify User Input specific for on demand feature groups
+    FeaturestoreJdbcConnector featurestoreJdbcConnector =
+      verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
+    verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
     
-    if(!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getName())){
-      verifyOnDemandFeaturegroupName(onDemandFeaturegroupDTO.getName());
-      onDemandFeaturegroup.setName(onDemandFeaturegroupDTO.getName());
-    }
-    if(!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getDescription())){
-      verifyOnDemandFeaturegroupDescription(onDemandFeaturegroupDTO.getDescription());
-      onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-    }
-    if(onDemandFeaturegroupDTO.getJdbcConnectorId() != null) {
-      FeaturestoreJdbcConnector featurestoreJdbcConnector =
-        verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
-      onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
-    }
-    if(!Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery())){
-      verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
-    }
-    //Update metadata in on_demand_feature_group table
+    // Update metadata in entity
+    onDemandFeaturegroup.setName(onDemandFeaturegroupDTO.getName());
+    onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
+    onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
+    onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
+    
+    // finally persist in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
-    
-    //Update feature metadata in feature_store_feature table
-    if(onDemandFeaturegroupDTO.getFeatures() != null && !onDemandFeaturegroupDTO.getFeatures().isEmpty()) {
-      verifyOnDemandFeaturegroupFeatures(onDemandFeaturegroupDTO.getFeatures());
-      featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
-        onDemandFeaturegroupDTO.getFeatures());
-    }
-  }
-  
-  /**
-   * Verifies the name of an on-demand feature group
-   * @param name
-   * @throws FeaturestoreException
-   */
-  public void verifyOnDemandFeaturegroupName(String name) throws FeaturestoreException {
-    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-    if(name.length() > FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH  ||
-      !namePattern.matcher(name).matches()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_NAME, Level.FINE,
-        ", the name of an on-demand feature group should be less than "
-        + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH + " characters and match " +
-          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
-    }
-  }
-  
-  /**
-   * Verifies the description of an on-demand feature group
-   *
-   * @param description the description to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyOnDemandFeaturegroupDescription(String description) throws FeaturestoreException {
-    if(!Strings.isNullOrEmpty(description) &&
-      description.length()
-        > FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_DESCRIPTION, Level.FINE,
-        ", the descritpion of an on-demand feature group should be less than "
-        + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH + " " +
-        "characters");
-    }
-  }
-  
-  /**
-   * Verifies the user input feature list for an on-demand feature group
-   *
-   * @param featureDTOs the feature list to verify
-   */
-  private void verifyOnDemandFeaturegroupFeatures(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
-    if(featureDTOs != null && !featureDTOs.isEmpty()) {
-      Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-      if(!featureDTOs.stream().filter(f -> {
-        return (!namePattern.matcher(f.getName()).matches() || f.getName().length() >
-          FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()){
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-          ", the feature name in an on-demand feature group should be less than "
-            + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH + " characters and match " +
-            "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
-      }
-      if(!featureDTOs.stream().filter(f -> {
-        return (!Strings.isNullOrEmpty(f.getDescription()) &&
-          f.getDescription().length() >
-            FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH);
-      }).collect(Collectors.toList()).isEmpty()){
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-          ", the feature description in an on-demand feature group should be less than "
-            + FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH + " characters");
-      }
-    }
+    featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
+      onDemandFeaturegroupDTO.getFeatures());
   }
   
   /**
@@ -219,21 +137,6 @@ public class OnDemandFeaturegroupController {
         ", SQL Query cannot exceed " +
           FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH + "characters.");
     }
-  }
-  
-  /**
-   * Verify user input specific for creation of on-demand feature group
-   *
-   * @param onDemandFeaturegroupDTO the input data to use when creating the feature group
-   * @throws FeaturestoreException
-   */
-  private void verifyOnDemandFeaturegroupUserInput(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
-    throws FeaturestoreException {
-    verifyOnDemandFeaturegroupName(onDemandFeaturegroupDTO.getName());
-    verifyOnDemandFeaturegroupDescription(onDemandFeaturegroupDTO.getDescription());
-    verifyOnDemandFeaturegroupFeatures(onDemandFeaturegroupDTO.getFeatures());
-    verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
-    verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
   }
   
   /**

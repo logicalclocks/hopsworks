@@ -68,8 +68,8 @@ angular.module('hopsWorksApp')
             self.path = ""
 
             //Constants
-            self.trainingDatasetNameMaxLength = self.settings.hopsfsTrainingDatasetNameMaxLength
-            self.trainingDatasetDescriptionMaxLength = self.settings.trainingDatasetDescriptionMaxLength
+            self.trainingDatasetNameMaxLength = self.settings.featurestoreEntityNameMaxLength
+            self.trainingDatasetDescriptionMaxLength = self.settings.featurestoreEntityDescriptionMaxLength
             self.trainingDatasetNameRegexp = self.settings.featurestoreRegex
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
@@ -229,8 +229,7 @@ angular.module('hopsWorksApp')
                 self.trainingDatasetSinkNotSelected = 1
                 self.sinkWrongValue = 1
                 self.working = true;
-                if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1
-                    || self.trainingDatasetName.length > self.trainingDatasetNameMaxLength) {
+                if (!self.trainingDatasetName || self.trainingDatasetName.search(self.trainingDatasetNameRegexp) == -1) {
                     self.trainingDatasetNameWrongValue = -1;
                     self.trainingDatasetWrong_values = -1;
                 } else {
