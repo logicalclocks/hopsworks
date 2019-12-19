@@ -156,7 +156,7 @@ public class DelaDatasetController {
 
   public Dataset createDataset(Users user, Project project, String name, String description)
     throws DatasetException, HopsSecurityException, ProvenanceException {
-    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps dfso = dfs.getDfsOps();
     try {
       ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
       datasetCtrl.createDataset(user, project, name, description, -1, projectMetaStatus,
