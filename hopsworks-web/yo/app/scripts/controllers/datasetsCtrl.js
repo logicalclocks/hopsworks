@@ -919,10 +919,16 @@ angular.module('hopsWorksApp')
             };
 
             self.convertIPythonNotebook = function (file) {
-              var filePath = file.attributes.path;
               growl.info("Converting...",
                       {title: 'Conversion running in background, please wait...', ttl: 5000, referenceId: 4});
-              JupyterService.convertIPythonNotebook(self.projectId, filePath).then(
+              //Construct the path to the notebook
+              var nbPaths = self.currentPath.slice(2);
+              var nbPath = "";
+              nbPaths.forEach(function (entry) {
+                  nbPath += entry + "/"
+              });
+              nbPath += file;
+              JupyterService.convertIPythonNotebook(self.projectId, nbPath).then(
                       function (success) {
                         self.showSuccess(success, "Finished - refreshing directory contents", 4);
                         getDirContents();
@@ -1167,10 +1173,10 @@ angular.module('hopsWorksApp')
             var renameModal = function (file, name) {
               ModalService.enterName('sm', "Rename File or Directory", name).then(
                       function (success) {
-                        var filePathArray = file.attributes.path.split('/');
+                        var filePathArray = file.split('/');
                         filePathArray.pop();
                         filePathArray.push(success.newName);
-                        dataSetService.move(file.attributes.path, filePathArray.join('/')).then(
+                        dataSetService.move(file, filePathArray.join('/')).then(
                                 function (success) {
                                   getDirContents();
                                   self.all_selected = false;
