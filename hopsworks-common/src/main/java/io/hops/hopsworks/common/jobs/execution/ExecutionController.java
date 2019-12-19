@@ -501,10 +501,6 @@ public class ExecutionController {
   // TensorBoard
   //====================================================================================================================
   
-  public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, Execution execution, Jobs job) throws JobException {
-    return getTensorBoardUrls(user, execution.getAppId(), job.getProject());
-  }
-  
   public List<YarnAppUrlsDTO> getTensorBoardUrls(Users user, String appId, Project project)
     throws JobException {
     List<YarnAppUrlsDTO> urls = new ArrayList<>();
@@ -516,10 +512,10 @@ public class ExecutionController {
       udfso = dfs.getDfsOps(hdfsUser);
       FileStatus[] statuses = udfso.getFilesystem().globStatus(
         new org.apache.hadoop.fs.Path(
-          "/Projects/" + project.getName() + "/Experiments/" + appId + "/TensorBoard.*"));
+          "/Projects/" + project.getName() + "/Experiments/" + appId + "*/TensorBoard.*"));
     
       for (FileStatus status : statuses) {
-        LOGGER.log(Level.FINE, "Reading tensorboard for: {0}", status.getPath());
+        LOGGER.log(Level.FINE, "Reading TensorBoard for: {0}", status.getPath());
         FSDataInputStream in = null;
         try {
           in = udfso.open(new org.apache.hadoop.fs.Path(status.getPath().toString()));
@@ -531,7 +527,7 @@ public class ExecutionController {
           String name = status.getPath().getName();
           urls.add(new YarnAppUrlsDTO(name, url));
         } catch (Exception e) {
-          LOGGER.log(Level.WARNING, "Problem reading file with tensorboard address from HDFS: " + e.getMessage());
+          LOGGER.log(Level.WARNING, "Problem reading file with TensorBoard address from HDFS: " + e.getMessage());
         } finally {
           org.apache.hadoop.io.IOUtils.closeStream(in);
         }

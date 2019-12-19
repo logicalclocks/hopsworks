@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.dao.python;
 
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.Users;
+
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -130,6 +132,9 @@ public class CondaCommands implements Serializable {
           max = 52)
   @Column(name = "user")
   private String user;
+  @JoinColumn(name = "user_id", referencedColumnName = "uid")
+  @ManyToOne(optional = false)
+  private Users userId;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -200,17 +205,19 @@ public class CondaCommands implements Serializable {
   public CondaCommands() {
   }
 
-  public CondaCommands(Hosts h, String user, CondaCommandFacade.CondaOp op,
+  public CondaCommands(Hosts h, String user, Users userId, CondaCommandFacade.CondaOp op,
                        CondaCommandFacade.CondaStatus status, CondaCommandFacade.CondaInstallType installType,
                        LibraryFacade.MachineType machineType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
+                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
+                       String environmentName) {
     this.hostId = h;
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
     }
     this.user = user;
+    this.userId = userId;
     this.op = op;
-    this.proj = project.getName();
+    this.proj = environmentName;
     this.projectId = project;
     this.status = status;
     this.installType = installType;
@@ -381,4 +388,11 @@ public class CondaCommands implements Serializable {
         + ", channel=" + channelUrl + " ]";
   }
 
+  public Users getUserId() {
+    return userId;
+  }
+
+  public void setUserId(Users userId) {
+    this.userId = userId;
+  }
 }

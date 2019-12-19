@@ -80,7 +80,7 @@ public class CondaController implements Serializable {
 
   @PostConstruct
   public void init() {
-    logger.info("init CondaController");
+    logger.fine("init CondaController");
     loadCommands();
   }
 
@@ -161,10 +161,8 @@ public class CondaController implements Serializable {
 
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
             commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
-                command.getInstallType(),
-
-              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-              command.getVersion(), command.getChannelUrl());
+                command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
+                command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
 
           } else {
             this.output = "FAILED. \r\n" + processResult.getStdout();
@@ -200,9 +198,8 @@ public class CondaController implements Serializable {
             condaCommandFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
             commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
-                command.getInstallType(),
-              command.getMachineType(), command.getArg(), command.getProj(), command.getOp(), command.getLib(),
-              command.getVersion(), command.getChannelUrl());
+                command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
+                command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
             loadCommands();
           } else {
             this.output = "FAILED. \r\n" + processResult.getStdout();

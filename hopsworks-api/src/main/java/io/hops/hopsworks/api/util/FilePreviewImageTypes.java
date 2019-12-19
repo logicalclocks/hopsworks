@@ -52,5 +52,4 @@ public enum FilePreviewImageTypes {
   EXIF,
   BMP,
   BPG
-
 }

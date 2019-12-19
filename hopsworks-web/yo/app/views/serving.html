@@ -40,47 +40,30 @@
                                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
                                 </div>
                                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-                                    <div class="btn-group blocks" style="padding: 0px;">
-                                        <div style="display: inline-block; vertical-align: top;">
-                                            <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                                <label class="btn btn-default btn-md" id="tensorflow_serving_lbl"
-                                                       ng-click="servingCtrl.setServingType('TENSORFLOW');"
-                                                       ng-class="{unset: servingCtrl.editServing.servingType !== 'TENSORFLOW'}"
-                                                       style="margin:2px; background:rgb(108, 117, 125); color:white;">
-                                                    <input type="radio" value="TENSORFLOW_SERVING"
-                                                           id="TENSORFLOW_SERVING">
-                                                    TensorFlow
-                                                    <i class="fa fa-info-circle"
-                                                       uib-tooltip="Serving of TensorFlow models"
-                                                       tooltip-placement="left" style="margin-left: 10px">
-                                                    </i>
-                                                </label>
-                                                <label class="btn btn-default btn-md" id="sklearn_serving_lbl"
-                                                       ng-click="servingCtrl.setServingType('SKLEARN');"
-                                                       ng-class="{unset: servingCtrl.editServing.servingType !== 'SKLEARN'}"
-                                                       style="margin:2px; background:rgb(108, 117, 125); color:white;">
-                                                    <input type="radio" value="SKLEARN_SERVING"
-                                                           id="SKLEARN_SERVING">
-                                                    Sci-kit Learn (SkLearn)
-                                                    <i class="fa fa-info-circle"
-                                                       uib-tooltip="Serving of SkLearn models"
-                                                       tooltip-placement="left" style="margin-left: 10px">
-                                                    </i>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <br>
-                                    </div>
+                                    <md-radio-group ng-model="servingCtrl.editServing.servingType">
+                                        <table class="button-table">
+                                            <tbody>
+                                            <tr>
+                                                <td>
+                                                    <md-radio-button value="TENSORFLOW" class="md-primary" ng-click="servingCtrl.setServingType('TENSORFLOW');">TensorFlow</md-radio-button>
+                                                </td>
+                                                <td>
+                                                    <md-radio-button value="SKLEARN" class="md-primary" ng-click="servingCtrl.setServingType('SKLEARN');">Sci-kit Learn (SkLearn)
+                                                    </md-radio-button>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-radio-group>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" style="text-align: right;">
-                                    <div ng-if="servingCtrl.editServing.servingType === 'SKLEARN'">
+                                    <div ng-show="servingCtrl.editServing.servingType === 'SKLEARN'">
                                         <div>
                                             <label>
-                                                <button style="margin-top: 5px;" id="selectArchiveButton"
-                                                        class="btn btn-default" ng-click="servingCtrl.selectFile()">
+                                                <button class="btn btn-default" ng-click="servingCtrl.selectFile()" style="margin-top: 5px;">
                                                     <span>Python Script</span>
                                                 </button>
                                             </label>
@@ -89,13 +72,13 @@
                                                style="margin-left: 10px"></i>
                                         </div>
                                         <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
-                                        <div style="margin-top: 9px; heigth: 2em;"><label>Serving Version</label></div>
+                                        <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
                                     </div>
 
-                                    <div ng-if="servingCtrl.editServing.servingType === 'TENSORFLOW'">
+                                    <div ng-show="servingCtrl.editServing.servingType === 'TENSORFLOW'">
                                         <div>
                                             <label>
-                                                <button style="margin-top: 5px;" id="selectArchiveButton"
+                                                <button style="margin-top: 5px;"
                                                         class="btn btn-default" ng-click="servingCtrl.selectFile()">
                                                     <span>Model</span>
                                                 </button>
@@ -105,8 +88,7 @@
                                                style="margin-left: 10px"></i>
                                         </div>
 
-                                        <div style="margin-top: 7px; heigth: 2em;"><label>Model
-                                            Name</label></div>
+                                        <div style="margin-top: 7px; heigth: 2em;"><label>Serving Name</label></div>
                                         <div style="margin-top: 9px; heigth: 2em;"><label>Model Version</label></div>
                                         <div style="margin-top: 15px; heigth: 2em;"
                                              ng-if="servingCtrl.sliderOptions.options.ceil > 1">
@@ -125,8 +107,27 @@
                                 </div>
 
                                 <div class="col-xs-6 col-sm-6 col-md-6 col-lg-5">
-                                    <input style="margin-top: 5px" type="text" class="form-control" id="archives"
-                                           ng-model="servingCtrl.editServing.artifactPath">
+
+                                    <ui-select tagging tagging="tagTransform" ng-model="servingCtrl.editServing.artifactPath" style="margin-top:5px;" theme="bootstrap" title="Search for servable models" ng-show="servingCtrl.editServing.servingType === 'TENSORFLOW'" on-select="servingCtrl.setFullModelPath()">
+                                        <ui-select-match placeholder="Enter model name...">{{servingCtrl.editServing.artifactPath}}</ui-select-match>
+                                        <ui-select-choices
+                                                refresh="servingCtrl.fetchAsync($select.search)"
+                                                refresh-delay="200"
+                                                repeat="model in servingCtrl.models">
+                                            <div>
+                                                <span ng-bind-html="model"></span>
+                                            </div>
+                                        </ui-select-choices>
+                                        <ui-select-no-choice>
+                                            <div>
+                                                <span ng-if="servingCtrl.loadingModels" class="loading-dots-sm" style="padding-left:5px;"> Searching</span>
+                                                <span ng-if="!servingCtrl.loadingModels" style="padding-left:5px;">{{servingCtrl.selectNoChoice}}</span>
+                                            </div>
+                                        </ui-select-no-choice>
+                                    </ui-select>
+
+                                    <input style="margin-top: 5px" type="text" class="form-control"
+                                           ng-model="servingCtrl.editServing.artifactPath" ng-show="servingCtrl.editServing.servingType === 'SKLEARN'">
 
                                     <input style="margin-top: 5px" name="name" class="form-control" type="text"
                                            ng-model="servingCtrl.editServing.name">
@@ -301,20 +302,21 @@
                                 <td> {{serving.created | date:'medium'}}</td>
                                 </td>
                                 <td> {{serving.status}}</td>
-                                <td>
+                                <td class="fs-table">
+                                    <div class="btn-group fs-btn" role="group">
                                     <button class="btn btn-info glyphicon glyphicon-edit" uib-tooltip="Edit"
-                                            style="margin-right:-3px"
                                             ng-click="servingCtrl.updateServing(serving); $event.stopPropagation();"></button>
                                     <button class="btn btn-danger glyphicon glyphicon-trash" uib-tooltip="Delete"
-                                            style="margin-right: -3px;"
                                             ng-click="servingCtrl.deleteServing(serving); $event.stopPropagation();"></button>
                                     <button class="btn btn-warning glyphicon glyphicon-list" uib-tooltip="Show Logs"
                                             style="margin-right: -3px;"
                                             ng-click="servingCtrl.showServingLogs(serving); $event.stopPropagation();"></button>
-                                    <button class="btn btn-primary glyphicon glyphicon-eye-open"
-                                            uib-tooltip="Show Detailed Information" style="margin-right: -3px;"
+                                    <button style="background-color: rgb(51, 122, 183)"
+                                            class="btn btn-primary glyphicon glyphicon-eye-open"
+                                            uib-tooltip="Show Detailed Information"
                                             ng-click="servingCtrl.showDetailedInformation(serving); $event.stopPropagation();">
                                     </button>
+                                    </div>
                                 </td>
                             </tr>
                             </tbody>
@@ -327,6 +329,11 @@
                                 boundary-links="true">
                         </dir-pagination-controls>
                     </div>
+                <div>
+                    <h3 class="text-muted ng-hide" style="text-align: center;" ng-show="servingCtrl.servings.length < 1 && servingCtrl.loaded" aria-hidden="true">
+                        No Servings to show
+                    </h3>
+                </div>
                     <!-- /#wrapper -->
                 </div>
                 <div class="" ng-if="servingCtrl.showLogs === true">
@@ -338,6 +345,12 @@
                     </button>
                     <iframe style="overflow-y: auto;" id="ui_iframe" ng-src="{{servingCtrl.kibanaUI}}" width="99%"
                             height="86%"></iframe>
+                </div>
+                <div ng-if="servingCtrl.loading" class="loadingwrap">
+                    <div class="loading-content">
+                        <div class="loader-in-wrap"></div>
+                        {{servingCtrl.loadingText}}
+                    </div>
                 </div>
             </div>
         </div>

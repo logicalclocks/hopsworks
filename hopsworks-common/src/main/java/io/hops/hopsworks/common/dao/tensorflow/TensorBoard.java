@@ -75,6 +75,8 @@ import java.util.Date;
         "t.tensorBoardPK.userId = :userId")
         , @NamedQuery(name = "TensorBoard.findByUserEmail", query = "SELECT t FROM TensorBoard t WHERE " +
         "t.users.email = :email")
+        , @NamedQuery(name = "TensorBoard.findByMlId", query = "SELECT t FROM TensorBoard t WHERE " +
+        "t.mlId = :mlId")
         , @NamedQuery(name = "TensorBoard.findByProjectAndUser", query = "SELECT t FROM TensorBoard t WHERE " +
         "t.tensorBoardPK.projectId = :projectId AND t.tensorBoardPK.userId = :userId")})
 public class TensorBoard implements Serializable {
@@ -98,8 +100,8 @@ public class TensorBoard implements Serializable {
 
   @Size(min = 1,
           max = 100)
-  @Column(name = "elastic_id")
-  private String elasticId;
+  @Column(name = "ml_id")
+  private String mlId;
 
   @Basic(optional = false)
   @NotNull
@@ -141,12 +143,12 @@ public class TensorBoard implements Serializable {
     this.setTensorBoardPK(tensorBoardPK);
   }
 
-  public TensorBoard(TensorBoardPK tensorBoardPK, BigInteger pid, String endpoint, String elasticId,
+  public TensorBoard(TensorBoardPK tensorBoardPK, BigInteger pid, String endpoint, String mlId,
                            Date lastAccessed, String hdfsLogdir, String secret, int hdfsUserId) {
     this.setTensorBoardPK(tensorBoardPK);
     this.setPid(pid);
     this.setEndpoint(endpoint);
-    this.setElasticId(elasticId);
+    this.setMlId(mlId);
     this.setLastAccessed(lastAccessed);
     this.setHdfsLogdir(hdfsLogdir);
     this.setSecret(secret);
@@ -201,12 +203,12 @@ public class TensorBoard implements Serializable {
     this.hdfsUserId = hdfsUserId;
   }
 
-  public String getElasticId() {
-    return elasticId;
+  public String getMlId() {
+    return mlId;
   }
 
-  public void setElasticId(String elasticId) {
-    this.elasticId = elasticId;
+  public void setMlId(String mlId) {
+    this.mlId = mlId;
   }
 
   public String getSecret() {

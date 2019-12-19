@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs.HopsfsTr
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -32,7 +31,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 
 /**
  * Class controlling the interaction with the hopsfs_training_dataset table and required business logic
@@ -57,13 +55,12 @@ public class HopsfsTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public HopsfsTrainingDataset createHopsfsTrainingDataset(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO)
       throws FeaturestoreException {
-    //Verify user input
-    verifyHopsfsTrainingDatasetInput(hopsfsTrainingDatasetDTO);
+    //Verify hopsfs training datasset specifc input
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
+      verifyHopsfsTrainingDatasetConnectorId(hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
     //Get Inode
     Inode inode = inodeFacade.findById(hopsfsTrainingDatasetDTO.getInodeId());
-    //Get HOPSFS Connector
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = featurestoreHopsfsConnectorFacade.find(
-      hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
+    
     HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
     hopsfsTrainingDataset.setInode(inode);
     hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(featurestoreHopsfsConnector);
@@ -87,45 +84,18 @@ public class HopsfsTrainingDatasetController {
    * @param hopsfsConnectorId the id to verify
    * @throws FeaturestoreException
    */
-  private void verifyHopsfsTrainingDatasetConnectorId(Integer hopsfsConnectorId) throws FeaturestoreException {
-    if(hopsfsConnectorId == null){
+  private FeaturestoreHopsfsConnector verifyHopsfsTrainingDatasetConnectorId(Integer hopsfsConnectorId)
+    throws FeaturestoreException {
+    if (hopsfsConnectorId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_ID_NOT_PROVIDED.getMessage());
     }
     FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
       featurestoreHopsfsConnectorFacade.find(hopsfsConnectorId);
-    if(featurestoreHopsfsConnector == null) {
+    if (featurestoreHopsfsConnector == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND, Level.FINE,
         "HOPSFS connector with id: " + hopsfsConnectorId + " was not found");
     }
-  }
-  
-  /**
-   * Verify hopsfs training dataset name
-   *
-   * @param hopsfsTrainingDatasetName the name to verify
-   * @throws FeaturestoreException
-   */
-  private void verifyHopsfsTrainingDatasetName(String hopsfsTrainingDatasetName) throws FeaturestoreException {
-    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-    if (hopsfsTrainingDatasetName.length() > FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH ||
-      !namePattern.matcher(hopsfsTrainingDatasetName).matches()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_NAME, Level.FINE,
-        ", the name of a hopsfs training dataset should be less than " +
-          FeaturestoreConstants.HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH + " characters and match " +
-          "the regular expression: " + FeaturestoreConstants.FEATURESTORE_REGEX);
-    }
-  }
-
-  /**
-   * Verify user input specific for creation of hopsfs training dataset
-   *
-   * @param hopsfsTrainingDatasetDTO the input data to use when creating the feature group
-   * @throws FeaturestoreException
-   */
-  private void verifyHopsfsTrainingDatasetInput(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO)
-    throws FeaturestoreException {
-    verifyHopsfsTrainingDatasetName(hopsfsTrainingDatasetDTO.getName());
-    verifyHopsfsTrainingDatasetConnectorId(hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
+    return featurestoreHopsfsConnector;
   }
   
   /**

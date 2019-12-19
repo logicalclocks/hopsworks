@@ -299,7 +299,8 @@ public class RESTCodes {
       "information.", Response.Status.FORBIDDEN),
     DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR),
     DATASET_ACCESS_PERMISSION_DENIED(50, "Permission denied.", Response.Status.FORBIDDEN),
-    PATH_ENCODING_NOT_SUPPORTED(51, "Unsupported encoding.", Response.Status.BAD_REQUEST);
+    PATH_ENCODING_NOT_SUPPORTED(51, "Unsupported encoding.", Response.Status.BAD_REQUEST),
+    ATTACH_XATTR_ERROR(52, "Failed to attach Xattr.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;
@@ -418,7 +419,8 @@ public class RESTCodes {
     JOB_DELETION_FORBIDDEN(25, "Your role does not allow to delete this job.",  Response.Status.FORBIDDEN),
     UNAUTHORIZED_EXECUTION_ACCESS(26, "This execution does not belong to a job of this project. ",
       Response.Status.FORBIDDEN),
-    APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND);
+    APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND),
+    JOB_PROGRAM_VERSIONING_FAILED(28, "Failed to version application program", Response.Status.INTERNAL_SERVER_ERROR);
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -571,7 +573,10 @@ public class RESTCodes {
     JUPYTER_SERVER_ALREADY_RUNNING(43, "Jupyter Notebook Server is already running", Response.Status.BAD_REQUEST),
     ERROR_EXECUTING_REMOTE_COMMAND(44, "Error executing command over SSH", Response.Status.INTERNAL_SERVER_ERROR),
     OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST),
-    GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST);
+
+    GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST),
+    JUPYTER_NOTEBOOK_VERSIONING_FAILED(47, "Failed to version notebook", Response.Status.INTERNAL_SERVER_ERROR);
+
 
     private Integer code;
     private String message;
@@ -1335,9 +1340,6 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     ILLEGAL_HOPSFS_CONNECTOR_DATASET(37, "Illegal Hopsfs connector dataset",
       Response.Status.BAD_REQUEST),
-    ILLEGAL_FEATUREGROUP_NAME(38, "Illegal feature group name", Response.Status.BAD_REQUEST),
-    ILLEGAL_FEATUREGROUP_DESCRIPTION(39, "Illegal feature group description",
-      Response.Status.BAD_REQUEST),
     ILLEGAL_FEATURE_NAME(40, "Illegal feature name",
       Response.Status.BAD_REQUEST),
     ILLEGAL_FEATURE_DESCRIPTION(41, "Illegal feature description",
@@ -1359,11 +1361,8 @@ public class RESTCodes {
       " supported", Response.Status.BAD_REQUEST),
     TRAINING_DATASET_VERSION_NOT_PROVIDED(52, "Training Dataset version was not provided",
       Response.Status.BAD_REQUEST),
-    ILLEGAL_TRAINING_DATASET_NAME(53, "Illegal training dataset name", Response.Status.BAD_REQUEST),
     S3_CONNECTOR_ID_NOT_PROVIDED(54, "S3 Connector Id was not provided", Response.Status.BAD_REQUEST),
     HOPSFS_CONNECTOR_ID_NOT_PROVIDED(55, "HopsFS Connector Id was not provided", Response.Status.BAD_REQUEST),
-    ILLEGAL_TRAINING_DATASET_DESCRIPTION(56, "Illegal training dataset description",
-      Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_DATA_FORMAT(57, "Illegal training dataset data format",
       Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_VERSION(58, "Illegal training dataset version",
@@ -1428,7 +1427,11 @@ public class RESTCodes {
       Response.Status.BAD_REQUEST),
     XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS(90, "Attaching " +
         "extended attributes is only supported for cached featuregroups.",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_ENTITY_NAME(91, "Illegal feature store entity name", Response.Status.BAD_REQUEST),
+    ILLEGAL_ENTITY_DESCRIPTION(92, "Illegal featurestore entity description", Response.Status.BAD_REQUEST),
+    ERROR_UPDATING_METADATA(93, "An error occurred when trying to update feature store metadata",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -1467,10 +1470,12 @@ public class RESTCodes {
    */
   public enum TensorBoardErrorCode implements RESTErrorCode {
 
-    TENSORBOARD_CLEANUP_ERROR(1, "Failed when deleting a running TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
-    TENSORBOARD_START_ERROR(2, "Failed to start TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
-    TENSORBOARD_FETCH_ERROR(3, "Error while fetching TensorBoard from database",
-            Response.Status.INTERNAL_SERVER_ERROR);
+    TENSORBOARD_CLEANUP_ERROR(1, "Error when deleting a running TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_START_ERROR(2, "Error to start TensorBoard", Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_FETCH_ERROR(3, "Error while fetching TensorBoard information",
+            Response.Status.INTERNAL_SERVER_ERROR),
+    TENSORBOARD_NOT_FOUND(4, "Could not find TensorBoard",
+        Response.Status.NOT_FOUND);
 
     private Integer code;
     private String message;
@@ -1749,32 +1754,127 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     FS_ERROR(6, "Provenance xattr - file system error",
       Response.Status.INTERNAL_SERVER_ERROR);
+
     private int code;
     private String message;
     private Response.Status respStatus;
     public final int range = 340000;
-    
+
     ProvenanceErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;
     }
-  
-    @Override
-    public Response.StatusType getRespStatus() {
-      return respStatus;
-    }
-  
+
     @Override
     public Integer getCode() {
       return code;
     }
-  
+
     @Override
     public String getMessage() {
       return message;
     }
-  
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+  public enum ExperimentsErrorCode implements RESTErrorCode {
+
+    EXPERIMENT_NOT_FOUND(0, "No experiment found for provided id.",
+        Response.Status.NOT_FOUND),
+    RESULTS_NOT_FOUND(1, "No results found for provided id.",
+        Response.Status.NOT_FOUND),
+    RESULTS_RETRIEVAL_ERROR(2, "Error occurred when retrieving experiment results.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EXPERIMENT_EXECUTABLE_NOT_FOUND(3, "Could not find experiment executable.",
+        Response.Status.BAD_REQUEST),
+    EXPERIMENT_EXECUTABLE_COPY_FAILED(4, "Error occurred when copying experiment executable.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EXPERIMENT_LIST_FAILED(5, "Error occurred when fetching experiments.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    EXPERIMENT_MARSHALLING_FAILED(6,
+        "Error occurred during marshalling/unmarshalling of experiment json.",
+        Response.Status.INTERNAL_SERVER_ERROR);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 350000;
+
+
+    ExperimentsErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+  public enum ModelsErrorCode implements RESTErrorCode {
+
+    MODEL_NOT_FOUND(0, "No model found for provided name and version.",
+        Response.Status.NOT_FOUND),
+    KEY_NOT_STRING(1, "metrics key is not a string.",
+        Response.Status.NOT_FOUND),
+    METRIC_NOT_NUMBER(2, "Could not cast provided metric to double.",
+        Response.Status.BAD_REQUEST),
+    MODEL_LIST_FAILED(3, "Error occurred when fetching models.",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    MODEL_MARSHALLING_FAILED(4,
+        "Error occurred during marshalling/unmarshalling of model json.",
+        Response.Status.INTERNAL_SERVER_ERROR);;
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 360000;
+
+    ModelsErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
     @Override
     public int getRange() {
       return range;

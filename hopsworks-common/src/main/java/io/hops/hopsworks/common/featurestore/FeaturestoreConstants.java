@@ -33,7 +33,10 @@ public class FeaturestoreConstants {
   }
 
   public static final int FEATURESTORE_STATISTICS_MAX_CORRELATIONS= 50;
-  public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^[a-z0-9_]+$");
+  public static final Pattern FEATURESTORE_REGEX = Pattern.compile("^(?=.{1,63}$)([a-z0-9_]*[a-z]{1}[a-z0-9_]*)$");
+  public static final int FEATURESTORE_ENTITY_NAME_MAX_LENGTH = 63; // limited by NDB due to online fg
+  public static final int FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH = 256; // can possibly 1000, but the one for
+  // features is limited to 256
   public static final int STORAGE_CONNECTOR_NAME_MAX_LENGTH = 1000;
   public static final int STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH = 1000;
   public static final int JDBC_STORAGE_CONNECTOR_CONNECTIONSTRING_MAX_LENGTH = 5000;
@@ -41,21 +44,9 @@ public class FeaturestoreConstants {
   public static final int S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH = 5000;
   public static final int S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH = 1000;
   public static final int S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH = 1000;
-  public static final int CACHED_FEATUREGROUP_NAME_MAX_LENGTH = 767;
-  public static final int CACHED_FEATUREGROUP_DESCRIPTION_MAX_LENGTH = 256;
-  public static final int CACHED_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH = 767;
-  public static final int CACHED_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH = 256;
-  public static final int ON_DEMAND_FEATUREGROUP_NAME_MAX_LENGTH = 1000;
-  public static final int ON_DEMAND_FEATUREGROUP_DESCRIPTION_MAX_LENGTH = 1000;
-  public static final int ON_DEMAND_FEATUREGROUP_FEATURE_NAME_MAX_LENGTH = 1000;
-  public static final int ON_DEMAND_FEATUREGROUP_FEATURE_DESCRIPTION_MAX_LENGTH = 10000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
     "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
-  public static final int EXTERNAL_TRAINING_DATASET_NAME_MAX_LENGTH = 256;
-  public static final int HOPSFS_TRAINING_DATASET_NAME_MAX_LENGTH = 256;
-  public static final int TRAINING_DATASET_FEATURE_NAME_MAX_LENGTH = 1000;
-  public static final int TRAINING_DATASET_FEATURE_DESCRIPTION_MAX_LENGTH = 10000;
   public static final String ON_DEMAND_FEATUREGROUP_TYPE = FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
   public static final String CACHED_FEATUREGROUP_TYPE = FeaturegroupType.CACHED_FEATURE_GROUP.name();
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
@@ -67,7 +58,6 @@ public class FeaturestoreConstants {
   public static final String EXTERNAL_TRAINING_DATASET_TYPE = TrainingDatasetType.EXTERNAL_TRAINING_DATASET.name();
   public static final String HOPSFS_TRAINING_DATASET_DTO_TYPE = "hopsfsTrainingDatasetDTO";
   public static final String EXTERNAL_TRAINING_DATASET_DTO_TYPE = "externalTrainingDatasetDTO";
-  public static final int TRAINING_DATASET_DESCRIPTION_MAX_LENGTH = 10000;
   public static final String S3_CONNECTOR_DTO_TYPE = "featurestoreS3ConnectorDTO";
   public static final String JDBC_CONNECTOR_DTO_TYPE = "featurestoreJdbcConnectorDTO";
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";

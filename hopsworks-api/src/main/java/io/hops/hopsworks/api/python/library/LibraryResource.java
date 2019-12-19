@@ -86,7 +86,7 @@ public class LibraryResource {
   private EnvironmentController environmentController;
   @EJB
   private JWTHelper jwtHelper;
-  
+
   private static final Pattern VALIDATION_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-\\.]+");
   private static final Pattern CHANNEL_PATTERN = Pattern.compile("[a-zA-Z0-9_\\-:/~?&\\.]+");
 
@@ -165,7 +165,7 @@ public class LibraryResource {
     environmentController.checkCondaEnvExists(project, user);
 
     commandsController.deleteCommands(project, library);
-    libraryController.uninstallLibrary(project, library);
+    libraryController.uninstallLibrary(project, user, library);
     return Response.noContent().build();
   }
 
@@ -223,7 +223,7 @@ public class LibraryResource {
 
     environmentController.checkCondaEnvExists(project, user);
   
-    PythonDep dep = libraryController.addLibrary(project, CondaCommandFacade.
+    PythonDep dep = libraryController.addLibrary(project, user, CondaCommandFacade.
         CondaInstallType.valueOf(packageManager.name().toUpperCase()), machine, channel, library, version);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     LibraryDTO libraryDTO = librariesBuilder.build(uriInfo, resourceRequest, dep, project);

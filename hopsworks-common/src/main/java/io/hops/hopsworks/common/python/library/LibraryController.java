@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -74,10 +75,10 @@ public class LibraryController {
     return libraryFacade.findByDependencyAndProject(dependency, project);
   }
 
-  public void uninstallLibrary(Project project, String libName) throws ServiceException, GenericException {
+  public void uninstallLibrary(Project project, Users user, String libName) throws ServiceException, GenericException {
     for (PythonDep dep : project.getPythonDepCollection()) {
       if (dep.getDependency().equals(libName)) {
-        uninstallLibrary(project, dep.getInstallType(), dep.getMachineType(), dep.getRepoUrl().getUrl(), libName,
+        uninstallLibrary(project, user,  dep.getInstallType(), dep.getMachineType(), dep.getRepoUrl().getUrl(), libName,
           dep.getVersion());
         break;
       }
@@ -102,17 +103,17 @@ public class LibraryController {
     projectFacade.update(proj);
   }
   
-  public PythonDep addLibrary(Project proj, CondaCommandFacade.CondaInstallType installType,
-    LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version) throws ServiceException
-    , GenericException {
-    return commandsController.condaOp(CondaCommandFacade.CondaOp.INSTALL, installType, machineType, proj,
+  public PythonDep addLibrary(Project proj, Users user, CondaCommandFacade.CondaInstallType installType,
+                   LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version)
+      throws ServiceException, GenericException {
+    return commandsController.condaOp(CondaCommandFacade.CondaOp.INSTALL, user, installType, machineType, proj,
       channelUrl, dependency, version);
   }
   
-  public void uninstallLibrary(Project proj, CondaCommandFacade.CondaInstallType installType,
+  public void uninstallLibrary(Project proj, Users user, CondaCommandFacade.CondaInstallType installType,
     LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version)
     throws ServiceException, GenericException {
-    commandsController.condaOp(CondaCommandFacade.CondaOp.UNINSTALL, installType, machineType, proj, channelUrl,
+    commandsController.condaOp(CondaCommandFacade.CondaOp.UNINSTALL, user, installType, machineType, proj, channelUrl,
       dependency, version);
   }
   

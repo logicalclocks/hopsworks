@@ -21,14 +21,16 @@ import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class FlinkConfigurationUtil extends ConfigurationUtil {
   @Override
-  public Map<String, String> getFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-    Settings settings, String hdfsUser, String usersFullName, String tfLibraryPath,
-    Map<String, String> extraJavaOptions) {
+  public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
+                                                    Settings settings, String hdfsUser,
+                                                    String tfLdLibraryPath, Map<String,
+                                                    String> extraJavaOptions) throws IOException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     
     Map<String, ConfigProperty> flinkProps = new HashMap<>();

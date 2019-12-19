@@ -166,8 +166,8 @@ a:focus {
   min-width: 900px;
 }
 
-.modal-xlg {
-  min-width: 99%;
+.modal-xl {
+  min-width: 1200px;
 }
 
 /* Project list in home */
@@ -605,4 +605,9 @@ md-input-container {
 
 #python-install-progress .progress-bar {
   border-radius: unset !important;
+}
+
+.spin-icon {
+    -webkit-animation: spin 2000ms infinite linear;
+    animation: spin 2000ms infinite linear;
 }

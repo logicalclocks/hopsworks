@@ -59,11 +59,13 @@
             </div>
           </div>
           <h3 id="projectSetings" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
-
-
-          <div ng-init="indextab = 0">
+          <div>
 
             <uib-tabset active="indextab">
+              <div class="pull-right">
+                <a href="http://hops-py.logicalclocks.com/" target="_blank">See hops python docs</a>
+                <img style="margin-right:5px" width="35" src="images/python_logo_colored.png" />
+              </div>
 
               <uib-tab index="0" heading="Conda Libraries">
 
@@ -714,7 +716,7 @@
                                     ng-click="pythonCtrl.showCommandsLogs(row, false)">
                               <i class="fa fa-bars"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML'" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT')" type="submit"
                                     class="btn btn-md btn-danger"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Remove the conda command to clean up this environment"
@@ -728,6 +730,13 @@
                                     tooltip-placement="auto left"
                                     uib-tooltip="Remove the conda command to clean up this environment"
                                     ng-click="pythonCtrl.deleteEnvironment()">
+                              <i class="fa fa-trash"></i>
+                            </button>
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) === 'EXPORT'" type="submit"
+                                    class="btn btn-md btn-danger"
+                                    tooltip-placement="auto left"
+                                    uib-tooltip="Remove the conda command to clean up this environment"
+                                    ng-click="pythonCtrl.deleteEnvironmentCommands()">
                               <i class="fa fa-trash"></i>
                             </button>
                             <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML'" type="submit"
@@ -751,11 +760,7 @@
                   <iframe style="overflow-y: auto;" id="ui_iframe" ng-src="{{pythonCtrl.kibanaUI}}" width="99%"
                     height="80%"></iframe>
                 </div>
-
-              <div class="pull-right">
-                <a href="http://hops-py.logicalclocks.com/" target="_blank">See hops python docs</a>
-                <img style="margin-right:5px" width="35" src="images/python_logo_colored.png" />
-              </div>
+              </uib-tab>
             </uib-tabset>
           </div>
         </div>

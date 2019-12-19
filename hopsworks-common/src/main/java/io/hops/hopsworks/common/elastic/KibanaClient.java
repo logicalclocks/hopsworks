@@ -17,13 +17,16 @@ package io.hops.hopsworks.common.elastic;
 
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
+import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.directory.api.util.Strings;
+import org.apache.hadoop.util.ExponentialBackOff;
 import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -53,6 +56,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
@@ -73,7 +77,8 @@ public class KibanaClient {
   
   private PoolingHttpClientConnectionManager connectionManager;
   private CloseableHttpClient client;
-  
+  private ExponentialBackOff.Builder backOffPolicy;
+
   public enum KibanaType{
     Visualization("visualization"),
     Search("search"),
@@ -97,7 +102,7 @@ public class KibanaClient {
     POST,
     DELETE
   }
-  
+
   @PostConstruct
   public void init() throws RuntimeException {
     try {
@@ -108,6 +113,11 @@ public class KibanaClient {
     } catch (IOException | GeneralSecurityException ex) {
       throw new RuntimeException(ex);
     }
+    backOffPolicy = new ExponentialBackOff.Builder()
+        .setMaximumRetries(3)
+        .setInitialIntervalMillis(500)
+        .setMaximumIntervalMillis(3000)
+        .setMultiplier(1.5);
   }
   
   @PreDestroy
@@ -185,6 +195,33 @@ public class KibanaClient {
       String data, Users user, Project project) throws ElasticException {
     return execute(method, type, id, data, user, project, false, false);
   }
+
+  private HttpUriRequest buildHttpRequest(HttpMethod method, String url, String data) throws ElasticException {
+    HttpUriRequest httpRequest = null;
+    switch (method) {
+      case GET:
+        httpRequest = new HttpGet(url);
+        break;
+      case DELETE:
+        httpRequest = new HttpDelete(url);
+        break;
+      case POST:
+        httpRequest = new HttpPost(url);
+        if (data != null) {
+          try {
+            ((HttpPost) httpRequest).setEntity(new StringEntity(data));
+          } catch (UnsupportedEncodingException e) {
+            throw new ElasticException(RESTCodes.ElasticErrorCode.KIBANA_REQ_ERROR,
+                Level.INFO, "Failed execute a Kibana request on " + url,
+                e.getMessage(), e);
+          }
+        }
+        break;
+      default:
+        throw new IllegalArgumentException("Unsupported method " + method);
+    }
+    return httpRequest;
+  }
   
   private JSONObject execute(HttpMethod method, KibanaType type, String id,
       String data, Users user, Project project,
@@ -204,24 +241,8 @@ public class KibanaClient {
     }
     
     try {
-      HttpUriRequest httpRequest = null;
-      switch (method) {
-        case GET:
-          httpRequest = new HttpGet(url);
-          break;
-        case DELETE:
-          httpRequest = new HttpDelete(url);
-          break;
-        case POST:
-          httpRequest = new HttpPost(url);
-          if (data != null) {
-            ((HttpPost) httpRequest).setEntity(new StringEntity(data));
-          }
-          break;
-        default:
-          throw new IllegalArgumentException("Unsupported method " + method);
-      }
-      
+      final HttpUriRequest httpRequest = buildHttpRequest(method, url, data);
+
       httpRequest.setHeader("kbn-xsrf", "required");
       httpRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
       
@@ -241,15 +262,25 @@ public class KibanaClient {
                   Base64.getEncoder().encodeToString(userPass.getBytes()));
         }
       }
-      
-      return client.execute(httpRequest, new ResponseHandler<JSONObject>() {
+
+      HttpRetryableAction<JSONObject> retryableAction = new HttpRetryableAction<JSONObject>(backOffPolicy) {
         @Override
-        public JSONObject handleResponse(HttpResponse httpResponse)
-            throws IOException {
-          String response = EntityUtils.toString(httpResponse.getEntity());
-          return new JSONObject(response);
+        public JSONObject performAction() throws ClientProtocolException, IOException {
+          return client.execute(httpRequest, httpResponse -> {
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode / 100 == 2) {
+              String response = EntityUtils.toString(httpResponse.getEntity());
+              return Strings.isEmpty(response) ? new JSONObject() : new JSONObject(response);
+            } else if (statusCode / 100 == 4) {
+              throw new NotRetryableClientProtocolException(httpResponse.toString());
+            } else {
+              // Retry
+              throw new ClientProtocolException();
+            }
+          });
         }
-      });
+      };
+      return retryableAction.tryAction();
     } catch (IOException e) {
       throw new ElasticException(RESTCodes.ElasticErrorCode.KIBANA_REQ_ERROR,
           Level.INFO, "Failed execute a Kibana request on " + url,

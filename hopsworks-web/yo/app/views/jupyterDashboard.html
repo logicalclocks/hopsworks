@@ -58,8 +58,8 @@
                   <img height="40" src="images/jupyter.png"/>
                 </div>
                 <div class="col-md-10 col-lg-10">
-                  <div class="ng-scope" ng-if="jupyterCtrl.numNotEnabledEnvs > 0" style="margin-top:12px;">
-                    <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Anaconda environment installing...
+                  <div class="ng-scope" ng-if="jupyterCtrl.ongoingCondaOps > 0" style="margin-top:12px;">
+                    <i class="fa fa-spinner fa-spin" style="font-size:18px;"></i> &nbsp;Ongoing Anaconda operation...
                   </div>
                   <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="!jupyterCtrl.condaEnabled" style="margin-top:12px;">
                     <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
@@ -77,7 +77,7 @@
               </button>
             </div>
             <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===true">
-              <button class="btn btn-info btn-md" ng-click="jupyterCtrl.tgState=true; sparkConfigCtrl.uneditableMode=false;">
+              <button class="btn btn-primary btn-md" ng-click="jupyterCtrl.tgState=true; sparkConfigCtrl.uneditableMode=false;">
                 <i class="fa fa-share" style="margin-right:5px;"></i>View Notebook Server
               </button>
             </div>
@@ -121,7 +121,7 @@
                                 uib-tooltip="Open ApplicationUI"
                                 tooltip-placement="auto right"
                                 ng-click="jupyterCtrl.showLivyUI(session.appId)"
-                                type="button" class="btn btn-info btn-sm" >
+                                type="button" class="btn btn-primary btn-sm" >
                           <span class="glyphicon glyphicon-eye-open" ></span>
                         </button>
                         <button
@@ -215,7 +215,7 @@
                                 <button id="openNotebook" uib-tooltip="Open a new Browser Tab to connect to the running Jupyter Notebook Server"
                                         tooltip-placement="auto right"
                                         ng-click="jupyterCtrl.openWindow()"
-                                        type="button" class="btn btn-info btn-sm">
+                                        type="button" class="btn btn-primary btn-sm">
                                   <span class="glyphicon glyphicon-eye-open" ></span>
                                 </button>
                               </td>
@@ -347,7 +347,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="To shut down Jupyter click this stop icon. Note that any running jobs that were started in Jupyter will be killed along with it."
-                tourtip-step="9"
+                tourtip-step="8"
                 tourtip-element="#shutdownNotebook"
                 tourtip-placement="left"
                 tourtip-next-label="Next"
@@ -357,7 +357,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="The current configuration for the Jupyter Notebook Server can be viewed by clicking this button."
-                tourtip-step="10"
+                tourtip-step="9"
                 tourtip-element="#viewConfig"
                 tourtip-placement="bottom"
                 tourtip-next-label="Next"
@@ -367,9 +367,9 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="This is the time left until the Jupyter Notebook Server and running jobs inside is automatically shut down."
-                tourtip-step="11"
+                tourtip-step="10"
                 tourtip-element="#minuteSpan"
-                tourtip-placement="right"
+                tourtip-placement="left"
                 tourtip-next-label="Next"
                 on-proceed=""
                 tourtip-offset-vertical="-30"
@@ -377,9 +377,9 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="Here you can add more hours in case you need more time before Jupyter is shut down."
-                tourtip-step="12"
+                tourtip-step="11"
                 tourtip-element="#addHours"
-                tourtip-placement="right"
+                tourtip-placement="left"
                 tourtip-next-label="Next"
                 on-proceed=""
                 tourtip-offset-vertical="-30"
@@ -387,7 +387,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="Each Spark application inside Jupyter will be listed here, giving access to the SparkUI and more monitoring information for that particular application."
-                tourtip-step="13"
+                tourtip-step="12"
                 tourtip-element="#monitor"
                 tourtip-placement="right"
                 tourtip-next-label="Next"
@@ -397,7 +397,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="After running one of the notebooks you can monitor the training in TensorBoard and find history about your experiments in the Experiments service. For an experiment to be listed in the service it must be launched using the experiment module in the hops python library."
-                tourtip-step="14"
+                tourtip-step="13"
                 tourtip-element="#experimentsTab"
                 tourtip-placement="right"
                 tourtip-next-label="Next"
@@ -407,7 +407,7 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="Experiments are stored in the Experiments dataset, be sure to check it out after running one of the provided notebooks."
-                tourtip-step="15"
+                tourtip-step="14"
                 tourtip-element="#datasetsTab"
                 tourtip-placement="right"
                 tourtip-next-label="Next"
@@ -416,9 +416,9 @@
         ></virtual-step>
         <virtual-step
                 class="ng-scope"
-                tourtip="All project members share an Anaconda environment. Navigate to the Python service to install more libraries using pip or conda package managers."
-                tourtip-step="16"
-                tourtip-element="#pythonTab"
+                tourtip="In the Model repository general information about models can be found and different versions compared based on metrics like accuracy."
+                tourtip-step="15"
+                tourtip-element="#modelsTab"
                 tourtip-placement="right"
                 tourtip-next-label="Next"
                 tourtip-offset-vertical="-15"
@@ -427,8 +427,18 @@
         <virtual-step
                 class="ng-scope"
                 tourtip="To serve a model you have trained, navigate to the Model Serving service."
-                tourtip-step="17"
+                tourtip-step="16"
                 tourtip-element="#servingTab"
+                tourtip-placement="right"
+                tourtip-next-label="Next"
+                tourtip-offset-vertical="-15"
+                on-proceed=""
+        ></virtual-step>
+        <virtual-step
+                class="ng-scope"
+                tourtip="All project members share an Anaconda environment. Navigate to the Python service to install more libraries using pip or conda package managers."
+                tourtip-step="17"
+                tourtip-element="#pythonTab"
                 tourtip-placement="right"
                 tourtip-next-label="Finish The Tour"
                 tourtip-offset-vertical="-15"

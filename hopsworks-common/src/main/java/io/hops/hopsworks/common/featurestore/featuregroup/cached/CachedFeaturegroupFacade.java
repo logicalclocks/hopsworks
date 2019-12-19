@@ -79,7 +79,7 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
     ArrayList<FeatureDTO> featureDTOs = new ArrayList<>();
     for (Object[] featureObject : featureObjects) {
       FeatureDTO featureDTO = new FeatureDTO((String) featureObject[0], (String) featureObject[1],
-          (String) featureObject[2]);
+          featureObject[2] == null ? "": (String) featureObject[2]);
       featureDTOs.add(featureDTO);
     }
     featureDTOs.addAll(getHivePartitionKeys(hiveTableId));

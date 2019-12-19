@@ -100,9 +100,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should succeeds to infer from a serving with kafka logging" do
-            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
-                inputs: test_data
-            }
+            post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {inputs: test_data}
             expect_status(200)
             parsed_json = JSON.parse(response.body)
             expect(parsed_json.key?("predictions")).to be true

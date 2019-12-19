@@ -50,6 +50,41 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["projectName"] == project.projectname).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
+
+        it "should be able to get shared feature stores" do
+          project = get_project
+          projectname = "project_#{short_random_id}"
+          second_project = create_project_by_name(projectname)
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+
+          list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
+          get list_project_featurestores_endpoint
+          json_body = JSON.parse(response.body)
+          expect_status(200)
+          # The dataset has not been accepted yet, so it should not be returned in the feature store list
+          expect(json_body.length == 1)
+          project_featurestore = json_body.select {
+             |d| d["featurestoreName"] == "#{project.projectname.downcase}_featurestore"  }
+          expect(project_featurestore).to be_present
+          second_featurestore = json_body.select {
+            |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
+          expect(second_featurestore.length).to be 0
+
+          accept_dataset(@project, "#{projectname}_featurestore.db", "&type=FEATURESTORE")
+
+          list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
+          get list_project_featurestores_endpoint
+          json_body = JSON.parse(response.body)
+          expect_status(200)
+          # The dataset has been accepted, so it should return the second feature store as well
+          expect(json_body.length == 2)
+          project_featurestore = json_body.select {
+             |d| d["featurestoreName"] == "#{project.projectname.downcase}_featurestore"  }
+          expect(project_featurestore).to be_present
+          second_featurestore = json_body.select {
+            |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
+          expect(second_featurestore).to be_present
+        end
       end
     end
 
@@ -366,7 +401,20 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270038).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
+        end
+
+        it "should not be able to add a cached offline featuregroup to the featurestore with a number only hive table name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      featuregroup_name: "1111")
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
         it "should not be able to add a cached offline featuregroup to the featurestore with an empty hive table name" do
@@ -378,7 +426,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270038).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
         it "should not be able to add a cached offline featuregroup to the featurestore with a hive table name containing upper case" do
@@ -390,17 +438,34 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270038).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
-        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
+        it "should not be able to add a cached offline featuregroup to the featurestore with a too long hive table name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      featuregroup_name: "a"*65)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
+        end
+
+        it "should not be able to add a offline cached featuregroup to the featurestore with invalid feature name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
-              type: "test",
-              name: "--",
-              description: "--",
-              primary: false
+              {
+                  type: "INT",
+                  name: "--",
+                  description: "--",
+                  primary: true,
+                  onlineType: nil,
+                  partition: false
+              }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
           parsed_json = JSON.parse(json_result)
@@ -408,6 +473,46 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270040).to be true
+        end
+
+        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          features = [
+              {
+                  type: "test",
+                  name: "test",
+                  description: "--",
+                  primary: false
+              }
+          ]
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270017).to be true
+        end
+
+
+        it "should be able to add a offline cached featuregroup to the featurestore with empty feature description" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          features = [
+              {
+                  type: "INT",
+                  name: "test_feat_no_description",
+                  description: "",
+                  primary: true,
+                  onlineType: nil,
+                  partition: false
+              }
+          ]
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["features"].length).to be 1
+          expect(parsed_json["features"].first["description"] == "").to be true
         end
 
         it "should be able to preview a offline cached featuregroup in the featurestore" do
@@ -463,7 +568,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
-        it "should be able to update the metadata of a cached featuregroup from the featurestore" do
+        it "should not be able to update the metadata of a cached featuregroup from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -471,8 +576,14 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           featuregroup_id = parsed_json["id"]
           featuregroup_version = parsed_json["version"]
-          update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id, featuregroup_version)
-          expect_status(200)
+          json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270093).to be true
         end
 
         it "should be able to update the statistics settings of a cached featuregroup" do
@@ -542,7 +653,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270038).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
         it "should not be able to add an on-demand featuregroup to the featurestore without a SQL query" do
@@ -722,7 +833,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["id"] == featuregroup_id).to be true
         end
 
-        it "should be able to update the metadata of a cached online featuregroup from the featurestore" do
+        it "should not be able to update the metadata of a cached online featuregroup from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
@@ -730,8 +841,15 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           featuregroup_id = parsed_json["id"]
           featuregroup_version = parsed_json["version"]
-          update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id, featuregroup_version)
-          expect_status(200)
+          json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                      featuregroup_version)
+          parsed_json = JSON.parse(json_result)
+
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270093).to be true
         end
 
         it "should be able to enable online serving for a offline cached feature group" do
@@ -826,7 +944,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270053).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore without specifying a data format" do
@@ -937,6 +1055,21 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
           expect(parsed_json["s3ConnectorId"] == connector_id).to be true
+        end
+
+        it "should not be able to add an external training dataset to the featurestore with upper case characters" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          training_dataset_name = "TEST_training_dataset"
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id,
+                                                                         name:training_dataset_name)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270091).to be true
         end
 
         it "should not be able to add an external training dataset to the featurestore without specifying a s3 connector" do

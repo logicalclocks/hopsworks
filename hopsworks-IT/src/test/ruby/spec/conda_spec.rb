@@ -354,6 +354,10 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, python_version)
             export_env(@project[:id], @project[:python_version])
             expect_status(200)
+
+            wait_for do
+              CondaCommands.find_by(proj: @project[:projectname]).nil?
+            end
           end
 
           it 'remove env' do

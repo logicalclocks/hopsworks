@@ -106,4 +106,16 @@ public class TensorBoardFacade {
     q.setParameter("projectId", project.getId());
     return q.getResultList();
   }
+
+  public TensorBoard findByMlId(String mlId) {
+    try {
+      TypedQuery<TensorBoard> q = em.createNamedQuery("TensorBoard.findByMlId", TensorBoard.class);
+      q.setParameter("mlId", mlId);
+      TensorBoard tb = q.getSingleResult();
+      return tb;
+    } catch (NoResultException nre) {
+      //This is fine
+    }
+    return null;
+  }
 }
