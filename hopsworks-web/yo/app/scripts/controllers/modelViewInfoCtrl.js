@@ -32,11 +32,13 @@ angular.module('hopsWorksApp')
 
             self.goToExperiment = function () {
                 StorageService.store(self.projectId + "_experiment", model.experimentId);
-                $window.open('#!/project/' + self.projectId + '/experiments', '_blank');
+                $location.path('project/' + self.projectId + '/experiments');
+                self.close();
             };
 
             self.goToModelVersion = function () {
-                $window.open('#!/project/' + self.projectId + '/datasets/Models/' + model.name + '/' + model.version, '_blank');
+                $location.path('project/' + self.projectId + '/datasets/Models/' + model.name + '/' + model.version);
+                self.close();
             };
 
             /**
