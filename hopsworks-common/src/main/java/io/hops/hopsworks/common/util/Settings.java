@@ -564,7 +564,7 @@ public class Settings implements Serializable {
           , ElasticSettings.ELASTIC_JWT_ENABLED_DEFAULT);
       String elasticJWTUrlParameter = setStrVar(VARIABLE_ELASTIC_JWT_URL_PARAMETER,
           ElasticSettings.ELASTIC_JWT_URL_PARAMETER_DEFAULT);
-      int elasticJWTEXPMS = setIntVar(VARIABLE_ELASTIC_JWT_EXP_MS,
+      long elasticJWTEXPMS = setLongVar(VARIABLE_ELASTIC_JWT_EXP_MS,
           ElasticSettings.ELASTIC_JWT_EXP_MS_DEFAULT);
       ELASTIC_SETTINGS = new ElasticSettings(elasticIps, elasticPort,
           elasticRestPort, elasticOpenDistroEnabled, elasticHttpsEnabled,
@@ -1448,7 +1448,7 @@ public class Settings implements Serializable {
     return ELASTIC_SETTINGS.getElasticJWTURLParameter();
   }
   
-  public synchronized int getElasicJwtExpMs() {
+  public synchronized long getElasicJwtExpMs() {
     checkCache();
     return ELASTIC_SETTINGS.getElasticJWTExpMs();
   }
