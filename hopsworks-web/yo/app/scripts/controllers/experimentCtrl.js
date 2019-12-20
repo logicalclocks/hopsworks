@@ -20,9 +20,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'MembersService', 'UserService', 'ModalService', 'ProjectService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', '$interval',
-        '$routeParams', '$route', '$sce', 'JobService',
+        '$routeParams', '$route', '$sce', 'JobService', '$location',
         function($scope, $timeout, growl, $window, MembersService, UserService, ModalService, ProjectService, ExperimentService, TensorBoardService, DataSetService, StorageService, $interval,
-            $routeParams, $route, $sce, JobService) {
+            $routeParams, $route, $sce, JobService, $location) {
 
             var self = this;
 
@@ -272,7 +272,7 @@ angular.module('hopsWorksApp')
              * @param serviceName project page
              */
             self.goToExperiment = function (experiment_id) {
-                $window.open('#!/project/' + self.projectId + '/datasets/Experiments/' + experiment_id, '_blank');
+                $location.path('project/' + self.projectId + '/datasets/Experiments/' + experiment_id);
             };
 
             self.init = function () {
@@ -454,7 +454,7 @@ angular.module('hopsWorksApp')
             };
 
             self.goToDirectory = function (path) {
-                $window.open('#!/project/' + self.projectId + '/datasets/' + path, '_blank');
+                $location.path('project/' + self.projectId + '/datasets/' + path);
             };
 
             self.goToModel = function(model) {
@@ -463,7 +463,7 @@ angular.module('hopsWorksApp')
                     var modelName = model.substr(0, splitIndex);
                     var modelVersion = model.substr(splitIndex + 1, model.length);
                     StorageService.store(self.projectId + "_model", model);
-                    $window.open('#!/project/' + self.projectId + '/models', '_blank');
+                    $location.path('project/' + self.projectId + '/models');
                 }
             };
 
