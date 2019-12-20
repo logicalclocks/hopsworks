@@ -162,8 +162,12 @@ public class ExperimentsResource {
         experimentSummary.setEnvironment(
               environmentController.exportEnv(project, user,
                   Settings.HOPS_EXPERIMENTS_DATASET + "/" + id));
-        experimentSummary.setProgram(experimentsController.versionProgram(project, user,
-            experimentSummary.getJobName(), experimentSummary.getKernelId(), id));
+        try {
+          experimentSummary.setProgram(experimentsController.versionProgram(project, user,
+              experimentSummary.getJobName(), experimentSummary.getKernelId(), id));
+        } catch(Exception e) {
+          LOGGER.log(Level.SEVERE, "Could not version notebook " + e.getMessage());
+        }
       }
       experimentsController.attachExperiment(id, project, usersFullName, experimentSummary, xAttrSetFlag);
     } else {

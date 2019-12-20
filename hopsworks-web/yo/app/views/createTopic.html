@@ -122,7 +122,7 @@
   <tour class="ng-scope"
         step="createTopicCtrl.tourService.currentStep_TourFive"
         post-tour="closeTour()"
-        ng-if="createTopicCtrl.tourService.showTips">
+        ng-if="createTopicCtrl.tourService.showTips && createTopicCtrl.tourService.activeTour === 'kafka'">
     <virtual-step
             class="ng-scope"
             tourtip="Click Next OR click on the 'Create' button to continue"

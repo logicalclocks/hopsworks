@@ -29,7 +29,7 @@ public class ElasticSettings {
   public final static String ELASTIC_ADMIN_PASSWORD_DEFAULT="adminpw";
   public final static boolean ELASTIC_JWT_ENABLED_DEFAULT= false;
   public final static String ELASTIC_JWT_URL_PARAMETER_DEFAULT ="jt";
-  public final static int ELASTIC_JWT_EXP_MS_DEFAULT = 10 * 60 * 1000;
+  public final static long ELASTIC_JWT_EXP_MS_DEFAULT = 10 * 60 * 1000;
   
   public final static String ELASTIC_ADMIN_ROLE = "admin";
 
@@ -45,14 +45,14 @@ public class ElasticSettings {
   private final String adminPassword;
   private final boolean elasticJWTEnabled;
   private final String elasticJWTURLParameter;
-  private final int elasticJWTExpMs;
+  private final long elasticJWTExpMs;
   
   private int rrIndex = 0;
   
   public ElasticSettings(String elasticIps, int elasticPort,
       int elasticRestPort, boolean openDistroSecurityEnabled,
       boolean httpsEnabled, String adminUser, String adminPassword,
-      boolean elasticJWTEnabled, String elasticJWTURLParameter, int elasticJWTExpMs){
+      boolean elasticJWTEnabled, String elasticJWTURLParameter, long elasticJWTExpMs){
     String[] ips = elasticIps.split(",");
     List<String> validIps = new ArrayList<>();
     for (String ip : ips) {
@@ -124,7 +124,7 @@ public class ElasticSettings {
     return elasticJWTURLParameter;
   }
   
-  public int getElasticJWTExpMs() {
+  public long getElasticJWTExpMs() {
     return elasticJWTExpMs;
   }
   
