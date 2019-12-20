@@ -158,7 +158,7 @@ public class KubeJupyterManager implements JupyterManager {
           jupyterPaths.getCertificatesDir(), allowOrigin);
       Writer sparkMagicConfig = new StringWriter();
       jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
-          jupyterPaths.getConfDirPath(), user.getFname() + " " + user.getLname());
+          jupyterPaths.getConfDirPath());
       
       kubeClientService.createOrUpdateConfigMap(project, user, CONF_SUFFIX,
         ImmutableMap.of(
