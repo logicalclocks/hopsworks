@@ -179,7 +179,7 @@ public class AgentResource {
     return agentController.heartbeat(request.toAgentHeartbeatDTO());
   }
   
-  private String handleRegister(AgentView request) {
+  private String handleRegister(AgentView request) throws ServiceException {
     logger.log(Level.FINE, "Handling register");
     if (request == null) {
       throw new IllegalArgumentException("Registration request is null");

@@ -46,8 +46,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Stateless
 public class HostsFacade extends AbstractFacade<Hosts> {
@@ -63,85 +66,79 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   protected EntityManager getEntityManager() {
     return em;
   }
-
-  public List<Hosts> findAllHosts() {
-    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.find", Hosts.class);
-    return query.getResultList();
+  
+  @Override
+  public void save(Hosts entity) {
+    super.save(entity);
+    getEntityManager().flush();
   }
-
-  public Hosts findByHostIp(String hostIp) {
-    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-HostIp",
-            Hosts.class).setParameter("hostIp", hostIp);
+  
+  public CollectionInfo findHosts(Integer offset,
+    Integer limit,
+    Set<? extends FilterBy> filters,
+    Set<? extends AbstractFacade.SortBy> sorts) {
+    String queryStr = buildQuery("SELECT h FROM Hosts h ", filters,
+      sorts, "");
+    String queryCountStr = buildQuery("SELECT COUNT(DISTINCT(h.id)) FROM Hosts h ",
+      filters, sorts, "");
+    Query query = em.createQuery(queryStr, Hosts.class);
+    Query queryCount = em.createQuery(queryCountStr, Hosts.class);
+    setOffsetAndLim(offset, limit, query);
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
+  }
+  
+  
+  public Optional<Hosts> findByHostIp(String hostIp) {
     try {
-      return query.getSingleResult();
+      return Optional.of(em.createNamedQuery("Hosts.findByHostIp", Hosts.class)
+        .setParameter("hostIp", hostIp)
+        .getSingleResult());
     } catch (NoResultException ex) {
-      return null;
+      return Optional.empty();
     }
   }
   
-  public Hosts findByHostname(String hostname) {
-    TypedQuery<Hosts> query = em.createNamedQuery("Hosts.findBy-Hostname",
-      Hosts.class).setParameter("hostname", hostname);
+  public Optional<Hosts> findByHostname(String hostname) {
     try {
-      return query.getSingleResult();
+      return Optional.of(em.createNamedQuery("Hosts.findByHostname", Hosts.class)
+        .setParameter("hostname", hostname)
+        .getSingleResult());
     } catch (NoResultException ex) {
-      return null;
+      return Optional.empty();
     }
   }
 
-  public String findCPUHost() {
-    List<Hosts> hosts = findAllHosts();
-    for(Hosts host: hosts){
-      if(host.getNumGpus() == 0 && host.getCondaEnabled()){
-        return host.getHostname();
-      }
-    }
-    return null;
-  }
-
-  public String findGPUHost() {
-    List<Hosts> hosts = findAllHosts();
-    for(Hosts host: hosts){
-      if(host.getNumGpus() > 0 && host.getCondaEnabled()){
-        return host.getHostname();
-      }
-    }
-    return null;
-  }
-
-
-  public boolean hostExists(String hostId) {
+  public Optional<String> findCPUHost() {
     try {
-      return findByHostname(hostId) != null;
-    } catch (Exception e) {
-      return false;
+      return Optional.of(em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class)
+        .getSingleResult())
+        .map(Hosts::getHostname);
+    } catch (NoResultException ex) {
+      return Optional.empty();
     }
   }
 
-  public Hosts storeHost(Hosts host) {
-    return em.merge(host);
-  }
-  
-  public boolean removeByHostname(String hostname) {
-    Hosts host = findByHostname(hostname);
-    if (host != null) {
-      em.remove(host);
-      return true;
+  public Optional<String> findGPUHost() {
+    try {
+      return Optional.of(em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class)
+        .getSingleResult())
+        .map(Hosts::getHostname);
+    } catch (NoResultException ex) {
+      return Optional.empty();
     }
-    return false;
   }
 
   public List<Hosts> getCondaHosts(LibraryFacade.MachineType machineType) {
     TypedQuery<Hosts> query;
     switch (machineType) {
       case CPU:
-        query = em.createNamedQuery("Hosts.findBy-conda-enabled-cpu", Hosts.class);
+        query = em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class);
         break;
       case GPU:
-        query = em.createNamedQuery("Hosts.findBy-conda-enabled-gpu", Hosts.class);
+        query = em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class);
         break;
       default:
-        query = em.createNamedQuery("Hosts.findBy-conda-enabled", Hosts.class);
+        query = em.createNamedQuery("Hosts.findByCondaEnabled", Hosts.class);
     }
 
     return query.getResultList();
@@ -165,5 +162,77 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   public Long totalMemoryCapacity() {
     TypedQuery<Long> query = em.createNamedQuery("Host.TotalMemoryCapacity", Long.class);
     return query.getSingleResult();
+  }
+  
+  public enum Sorts {
+    HOSTNAME("HOSTNAME", "LOWER(h.hostname)", "ASC");
+  
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+  
+    Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+  
+    public String getValue() {
+      return value;
+    }
+  
+    public String getSql() {
+      return sql;
+    }
+  
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+  
+    public String getJoin() {
+      return null;
+    }
+  
+    @Override
+    public String toString() {
+      return value;
+    }
+  }
+  
+  public enum Filters {
+    HOSTNAME("HOSTNAME", "h.hostname = :hostname", "hostname" , "");
+  
+    private final String value;
+    private final String sql;
+    private final String field;
+    private final String defaultParam;
+  
+    Filters(String value, String sql, String field, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.field = field;
+      this.defaultParam = defaultParam;
+    }
+  
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+  
+    public String getValue() {
+      return value;
+    }
+  
+    public String getSql() {
+      return sql;
+    }
+  
+    public String getField() {
+      return field;
+    }
+  
+    @Override
+    public String toString() {
+      return value;
+    }
   }
 }

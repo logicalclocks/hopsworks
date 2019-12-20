@@ -30,4 +30,20 @@ module HostsHelper
   def find_all_registered_hosts()
     Host.where(registered: true)
   end
+
+  def admin_get_all_cluster_nodes()
+    get "#{ENV['HOPSWORKS_API']}/admin/hosts"
+  end
+
+  def admin_get_cluster_node_by_hostname(hostname)
+    get "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname
+  end
+
+  def admin_create_update_cluster_node(hostname, node)
+    put "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname, node.to_json
+  end
+
+  def admin_delete_cluster_node_by_hostname(hostname)
+    delete "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname
+  end
 end
