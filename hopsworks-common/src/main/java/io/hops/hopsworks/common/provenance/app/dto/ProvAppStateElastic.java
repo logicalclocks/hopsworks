@@ -35,7 +35,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 @XmlRootElement
 public class ProvAppStateElastic implements Comparator<ProvAppStateElastic> {
 
-  private static final Logger LOG = Logger.getLogger(ProvAppStateElastic.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(ProvAppStateElastic.class.getName());
 
   private String id;
   private float score;
@@ -69,11 +69,10 @@ public class ProvAppStateElastic implements Comparator<ProvAppStateElastic> {
       result.appUser = ProvHelper.extractElasticField(map, ProvAParser.Field.APP_USER);
       result.readableTimestamp = ProvHelper.extractElasticField(map, ProvAParser.Field.R_TIMESTAMP);
   
-      for (Map.Entry<String, Object> entry : map.entrySet()) {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.INFO,
-          "field:" + entry.getKey() + "not managed in file state return");
+      if(!map.isEmpty()) {
+        LOGGER.log(Level.FINE, "fields:{0} not managed in file state return", map.keySet());
       }
-    }catch(ClassCastException e) {
+    } catch(ClassCastException e) {
       String msg = "mismatch between DTO class and ProvAParser field types (elastic)";
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING, msg, msg, e);
     }
