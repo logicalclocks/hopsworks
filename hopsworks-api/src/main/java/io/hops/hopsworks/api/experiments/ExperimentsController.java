@@ -90,7 +90,9 @@ public class ExperimentsController {
         && experimentSummary.getFinished() == null
         && experimentSummary.getDuration() != null) {
       ProvStateElastic fileState = getExperiment(project, id);
-      experimentSummary.setFinished(fileState.getCreateTime() + experimentSummary.getDuration());
+      if(fileState != null) {
+        experimentSummary.setFinished(fileState.getCreateTime() + experimentSummary.getDuration());
+      }
     }
 
     DistributedFileSystemOps dfso = null;
