@@ -159,7 +159,7 @@ describe "On #{ENV['OS']}" do
 
             # Elasticsearch index should have been created for this project
             index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
-            head "#{ENV['ELASTIC_API']}/#{index_name}"
+            elastic_head "#{index_name}"
 
             Airborne.configure do |config|
               config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
@@ -375,13 +375,13 @@ describe "On #{ENV['OS']}" do
 
             # Elasticsearch index should have been deleted
             index_name = "#{@project[:projectname]}_kagent-*"
-            response = head "#{ENV['ELASTIC_API']}/_cat/indices/#{index_name}"
+            response = elastic_get "_cat/indices/#{index_name}"
 
             Airborne.configure do |config|
               config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
             end
 
-            expect(response).to  eq("")
+            expect(response.body).to  eq(nil)
 
             if not conda_exists
               skip "Anaconda is not installed in the machine or test is run locally"
