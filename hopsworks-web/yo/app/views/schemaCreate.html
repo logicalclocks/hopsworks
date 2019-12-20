@@ -90,7 +90,7 @@
     <tour class="ng-scope"
           step="schemaCreateCtrl.tourService.currentStep_TourFour"
           post-tour="closeTour()"
-          ng-if="schemaCreateCtrl.tourService.showTips">
+          ng-if="schemaCreateCtrl.tourService.showTips && schemaCreateCtrl.tourService.activeTour === 'kafka'">
         <virtual-step
                 class="ng-scope"
                 tourtip="Click Next OR click on the 'Validate' button to continue"
