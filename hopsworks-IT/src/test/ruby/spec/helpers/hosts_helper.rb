@@ -46,4 +46,11 @@ module HostsHelper
   def admin_delete_cluster_node_by_hostname(hostname)
     delete "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname
   end
+
+  def delete_all_cluster_nodes_except(except)
+    admin_get_all_cluster_nodes()
+    items = json_body[:items]
+    items = items.reject {|i| except.include?(i[:hostname])}
+    items.each { |i| admin_delete_cluster_node_by_hostname(i[:hostname]) }
+  end
 end

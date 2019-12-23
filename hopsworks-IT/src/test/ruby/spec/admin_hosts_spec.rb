@@ -48,6 +48,14 @@ describe "On #{ENV['OS']}" do
         with_admin_session()
       end
 
+      let(:init_hostnames) {
+       Host.find(:all).map(&:hostname)
+      }
+
+      after :all do
+        delete_all_cluster_nodes_except(init_hostnames)
+      end
+
       it "gets the list of all cluster nodes" do
         admin_get_all_cluster_nodes()
         expect_status(200)
@@ -69,7 +77,7 @@ describe "On #{ENV['OS']}" do
 
       it "creates a new cluster node" do
         hostname = "#{short_random_id}"
-	ip = "#{short_random_id}"
+	      ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": ip
@@ -82,14 +90,14 @@ describe "On #{ENV['OS']}" do
 
       it "creates a new cluster node and then updates it" do
         hostname = "#{short_random_id}"
-	ip = "#{short_random_id}"
+	      ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(201)
-	new_ip = "#{short_random_id}"
+	      new_ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": new_ip
