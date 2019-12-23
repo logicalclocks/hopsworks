@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
-@Api(value = "Admin")
+@Api(value = "Admin Hosts")
 @Produces(MediaType.APPLICATION_JSON)
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HostsAdminResource {

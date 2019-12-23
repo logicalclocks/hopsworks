@@ -1,0 +1,119 @@
+=begin
+ This file is part of Hopsworks
+ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+
+ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ the GNU Affero General Public License as published by the Free Software Foundation,
+ either version 3 of the License, or (at your option) any later version.
+
+ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU Affero General Public License for more details.
+
+ You should have received a copy of the GNU Affero General Public License along with this program.
+ If not, see <https://www.gnu.org/licenses/>.
+=end
+
+describe "On #{ENV['OS']}" do
+  describe "Admin hosts ops" do
+    after :all do
+      reset_session
+    end
+
+    context "without authentication" do
+      before :all do
+        reset_session
+      end
+      it "restricts requests for admin resources from non-admin accounts" do
+        admin_get_all_cluster_nodes()
+        expect_status(401)
+        expect_json(errorCode: 200003)
+      end
+    end
+
+    context "with user authentication" do
+      before :all do
+        with_valid_session()
+      end
+
+      it "restricts requests for admin resources from a normal user account" do
+        admin_get_all_cluster_nodes()
+        expect_status(403)
+        expect_json(errorCode: 200014)
+      end
+    end
+
+    context "with admin authentication and validated user" do
+      before :all do
+        with_admin_session()
+      end
+
+      it "gets the list of all cluster nodes" do
+        admin_get_all_cluster_nodes()
+        expect_status(200)
+        expect(json_body[:count]).to be > 0
+      end
+
+      it "gets cluster node by hostname" do
+        admin_get_all_cluster_nodes()
+        hostname = json_body[:items].first[:hostname]
+        admin_get_cluster_node_by_hostname(hostname)
+        expect_status(200)
+      end
+
+      it "fails to get cluster node by random hostname" do
+        admin_get_cluster_node_by_hostname("#{short_random_id}")
+        expect_status(404)
+        expect_json(errorCode: 100025)
+      end
+
+      it "creates a new cluster node" do
+        hostname = "#{short_random_id}"
+        json_data = {
+          "hostname": hostname,
+          "hostIp": "192.168.1.1"
+        }
+        admin_create_update_cluster_node(hostname, json_data)
+        expect_status(201)
+        expect_json(hostname: hostname)
+        expect_json(hostId: "192.168.1.1")
+      end
+
+      it "creates a new cluster node and then updates it" do
+        hostname = "#{short_random_id}"
+        json_data = {
+          "hostname": hostname,
+          "hostIp": "192.168.1.1"
+        }
+        admin_create_update_cluster_node(hostname, json_data)
+        expect_status(201)
+        json_data = {
+          "hostname": hostname,
+          "hostIp": "192.168.1.2"
+        }
+        admin_create_update_cluster_node(hostname, json_data)
+        expect_status(204)
+        admin_get_cluster_node_by_hostname(hostname)
+        expect_status(200)
+        expect_json(hostId: "192.168.1.2")
+      end
+
+      it "creates and deletes a cluster node" do
+        hostname = "#{short_random_id}"
+        json_data = {
+          "hostname": hostname,
+          "hostIp": "192.168.1.1"
+        }
+        admin_create_update_cluster_node(hostname, json_data)
+        expect_status(201)
+        admin_delete_cluster_node_by_hostname(hostname)
+        expect_status(204)
+      end
+
+      it "fails to delete a cluster node with random hostname" do
+        admin_delete_cluster_node_by_hostname("#{short_random_id}")
+        expect_status(404)
+      end
+    end
+  end
+end

@@ -10,15 +10,20 @@ import java.util.Set;
 public class HostsBeanParam {
   
   @QueryParam("sort_by")
-  @ApiParam(value = "",
-    allowableValues = "")
+  @ApiParam(value = "ex. sort_by=id:desc,hostname:asc",
+    allowableValues = "id:asc,id:desc,hostname:asc,hostname:desc,host_ip:asc,host_ip:desc," +
+      "public_ip:asc,public_ip:desc,private_ip:asc,private_ip:desc,cores:asc,cores:desc,num_gpus:asc," +
+      "num_gpus:desc,memory_capacity:asc,memory_capacity:desc")
   private String sortBy;
   private final Set<SortBy> sortBySet;
   @QueryParam("filter_by")
-  @ApiParam(value = "",
-    allowableValues = "",
+  @ApiParam(value = "ex. filter_by=hostname:hopsworks0&registered:true",
+    allowableValues = "filter_by=hostname:hopsworks0.com,filter_by=host_ip:192.168.1.1," +
+      "filter_by=public_ip:192.168.1.1,filter_by=private_ip:192.168.1.1,filter_by=registered:true," +
+      "filter_by=conda_enabled:true",
     allowMultiple = true)
   private Set<FilterBy> filter;
+
   
   public HostsBeanParam(
     @QueryParam("sort_by")

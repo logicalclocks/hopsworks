@@ -165,7 +165,14 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   }
   
   public enum Sorts {
-    HOSTNAME("HOSTNAME", "LOWER(h.hostname)", "ASC");
+    ID("ID", "h.id", "ASC"),
+    HOSTNAME("HOSTNAME", "LOWER(h.hostname)", "ASC"),
+    HOST_IP("HOST_IP", "LOWER(h.host_ip)", "ASC"),
+    PUBLIC_IP("PUBLIC_IP", "LOWER(h.public_ip)", "ASC"),
+    PRIVATE_IP("PRIVATE_IP", "LOWER(h.private_ip)", "ASC"),
+    CORES("CORES", "h.cores", "ASC"),
+    NUM_GPUS("NUM_GPUS", "h.num_gpus", "ASC"),
+    MEMORY_CAPACITY("MEMORY_CAPACITY", "h.memory_capacity", "ASC");
   
     private final String value;
     private final String sql;
@@ -200,7 +207,12 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   }
   
   public enum Filters {
-    HOSTNAME("HOSTNAME", "h.hostname = :hostname", "hostname" , "");
+    HOSTNAME("HOSTNAME", "h.hostname = :hostname", "hostname" , ""),
+    HOST_IP("HOST_IP", "h.host_ip = :host_ip", "host_ip", ""),
+    PUBLIC_IP("PUBLIC_IP", "h.public_ip = :public_ip", "public_ip", ""),
+    PRIVATE_IP("PRIVATE_IP", "h.private_ip = :private_ip", "private_ip", ""),
+    REGISTERED("REGISTERED", "h.registered = :registered", "registered", "false"),
+    CONDA_ENABLED("CONDA_ENABLED", "h.conda_enabled = :conda_enabled", "conda_enabled", "false");
   
     private final String value;
     private final String sql;
