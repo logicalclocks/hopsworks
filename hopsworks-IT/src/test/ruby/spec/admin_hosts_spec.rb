@@ -69,40 +69,44 @@ describe "On #{ENV['OS']}" do
 
       it "creates a new cluster node" do
         hostname = "#{short_random_id}"
+	ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
-          "hostIp": "192.168.1.1"
+          "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(201)
         expect_json(hostname: hostname)
-        expect_json(hostId: "192.168.1.1")
+        expect_json(hostIp: ip)
       end
 
       it "creates a new cluster node and then updates it" do
         hostname = "#{short_random_id}"
+	ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
-          "hostIp": "192.168.1.1"
+          "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(201)
+	new_ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
-          "hostIp": "192.168.1.2"
+          "hostIp": new_ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(204)
         admin_get_cluster_node_by_hostname(hostname)
         expect_status(200)
-        expect_json(hostId: "192.168.1.2")
+        expect_json(hostIp: new_ip)
       end
 
       it "creates and deletes a cluster node" do
         hostname = "#{short_random_id}"
+	ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
-          "hostIp": "192.168.1.1"
+          "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(201)
