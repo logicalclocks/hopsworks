@@ -46,14 +46,13 @@ describe "On #{ENV['OS']}" do
     context "with admin authentication and validated user" do
       before :all do
         with_admin_session()
+	@init_hostnames = find_all_hostnames() 
       end
-
-      let(:init_hostnames) {
-       Host.find(:all).map(&:hostname)
-      }
+      
+      let(:init_hosts) { find_all_hostnames() } 
 
       after :all do
-        delete_all_cluster_nodes_except(init_hostnames)
+        delete_all_cluster_nodes_except(@init_hostnames)
       end
 
       it "gets the list of all cluster nodes" do

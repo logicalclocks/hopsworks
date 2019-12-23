@@ -31,6 +31,10 @@ module HostsHelper
     Host.where(registered: true)
   end
 
+  def find_all_hostnames()
+    Host.all.map(&:hostname)
+  end
+
   def admin_get_all_cluster_nodes()
     get "#{ENV['HOPSWORKS_API']}/admin/hosts"
   end
