@@ -73,4 +73,16 @@ module HostsHelper
       admin_create_update_cluster_node(hostname, json_data)
     end
   end
+
+  def add_test_host()
+    json_data = {
+      "hostname": "test",
+      "hostIp": "192.168.1.1",
+      "publicIp": "192.168.1.2",
+      "privateIp": "192.168.1.3",
+      "registered": true,
+      "condaEnabled": true
+    }
+    admin_create_update_cluster_node("test", json_data)
+  end
 end

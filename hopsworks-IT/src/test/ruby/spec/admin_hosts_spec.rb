@@ -139,42 +139,42 @@ describe "On #{ENV['OS']}" do
       it "sorts by id asc" do
         hosts = find_all_hosts().map(&:id).sort
         admin_get_all_cluster_nodes("?sort_by=id:asc")
-        res = json_body[:items].map { |i| "#{i[:id]}" }
+        res = json_body[:items].map { |i| i[:id] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by id desc" do
         hosts = find_all_hosts().map(&:id).sort.reverse
         admin_get_all_cluster_nodes("?sort_by=id:desc")
-        res = json_body[:items].map { |i| "#{i[:id]}" }
+        res = json_body[:items].map { |i| i[:id] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by num_gpus asc" do
         hosts = find_all_hosts().map(&:num_gpus).sort
         admin_get_all_cluster_nodes("?sort_by=num_gpus:asc")
-        res = json_body[:items].map { |i| "#{i[:num_gpus]}" }
+        res = json_body[:items].map { |i| i[:num_gpus] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by num_gpus desc" do
         hosts = find_all_hosts().map(&:num_gpus).sort.reverse
         admin_get_all_cluster_nodes("?sort_by=num_gpus:desc")
-        res = json_body[:items].map { |i| "#{i[:num_gpus]}" }
+        res = json_body[:items].map { |i| i[:num_gpus] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by memory_capacity asc" do
         hosts = find_all_hosts().map(&:memory_capacity).sort
         admin_get_all_cluster_nodes("?sort_by=memory_capacity:asc")
-        res = json_body[:items].map { |i| "#{i[:memory_capacity]}" }
+        res = json_body[:items].map { |i| i[:memory_capacity] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by memory_capacity desc" do
         hosts = find_all_hosts().map(&:memory_capacity).sort.reverse
         admin_get_all_cluster_nodes("?sort_by=memory_capacity:desc")
-        res = json_body[:items].map { |i| "#{i[:memory_capacity]}" }
+        res = json_body[:items].map { |i| i[:memory_capacity] }
         expect(res).to eq(hosts)
       end
 
@@ -237,18 +237,18 @@ describe "On #{ENV['OS']}" do
       it "sorts by cores asc" do
         hosts = find_all_hosts().map(&:cores).sort
         admin_get_all_cluster_nodes("?sort_by=cores:asc")
-        res = json_body[:items].map { |i| "#{i[:cores]}" }
+        res = json_body[:items].map { |i| i[:cores] }
         expect(res).to eq(hosts)
       end
 
       it "sorts by cores desc" do
         hosts = find_all_hosts().map(&:cores).sort.reverse
         admin_get_all_cluster_nodes("?sort_by=cores:desc")
-        res = json_body[:items].map { |i| "#{i[:cores]}" }
+        res = json_body[:items].map { |i| i[:cores] }
         expect(res).to eq(hosts)
       end
 
-      it "sorts by id asc and hostname asc" do
+      it "sorts by host_ip asc and hostname asc" do
         hosts = find_all_hosts().sort do |a,b|
           res = (a[:id] <=> b[:id])
           res = (a[:hostname].downcase <=> b[:hostname].downcase) if res == 0
