@@ -137,14 +137,14 @@ describe "On #{ENV['OS']}" do
       end
 
       it "sorts by id asc" do
-        hosts = find_all_hosts().map(&:id).sort_by(&:downcase)
+        hosts = find_all_hosts().map(&:id).sort
         admin_get_all_cluster_nodes("?sort_by=id:asc")
         res = json_body[:items].map { |i| "#{i[:id]}" }
         expect(res).to eq(hosts)
       end
 
       it "sorts by id desc" do
-        hosts = find_all_hosts().map(&:id).sort_by(&:downcase).reverse
+        hosts = find_all_hosts().map(&:id).sort.reverse
         admin_get_all_cluster_nodes("?sort_by=id:desc")
         res = json_body[:items].map { |i| "#{i[:id]}" }
         expect(res).to eq(hosts)
