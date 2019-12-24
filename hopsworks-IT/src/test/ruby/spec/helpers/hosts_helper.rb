@@ -31,6 +31,10 @@ module HostsHelper
     Host.where(registered: true)
   end
 
+  def find_all_hosts()
+    Host.all
+  end
+
   def find_all_hostnames()
     Host.all.map(&:hostname)
   end
