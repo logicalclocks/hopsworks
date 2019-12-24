@@ -151,48 +151,113 @@ describe "On #{ENV['OS']}" do
       end
 
       it "sorts by num_gpus asc" do
+        hosts = find_all_hosts().map(&:num_gpus).sort
+        admin_get_all_cluster_nodes("?sort_by=num_gpus:asc")
+        res = json_body[:items].map { |i| "#{i[:num_gpus]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by num_gpus desc" do
+        hosts = find_all_hosts().map(&:num_gpus).sort.reverse
+        admin_get_all_cluster_nodes("?sort_by=num_gpus:desc")
+        res = json_body[:items].map { |i| "#{i[:num_gpus]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by memory_capacity asc" do
+        hosts = find_all_hosts().map(&:memory_capacity).sort
+        admin_get_all_cluster_nodes("?sort_by=memory_capacity:asc")
+        res = json_body[:items].map { |i| "#{i[:memory_capacity]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by memory_capacity desc" do
+        hosts = find_all_hosts().map(&:memory_capacity).sort.reverse
+        admin_get_all_cluster_nodes("?sort_by=memory_capacity:desc")
+        res = json_body[:items].map { |i| "#{i[:memory_capacity]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by hostname asc" do
+        hosts = find_all_hosts().map(&:hostname).sort_by(&:downcase)
+        admin_get_all_cluster_nodes("?sort_by=hostname:asc")
+        res = json_body[:items].map { |i| "#{i[:hostname]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by hostname desc" do
+        hosts = find_all_hosts().map(&:hostname).sort_by(&:downcase).reverse
+        admin_get_all_cluster_nodes("?sort_by=hostname:desc")
+        res = json_body[:items].map { |i| "#{i[:hostname]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by host_ip asc" do
+        hosts = find_all_hosts().map(&:host_ip).sort_by(&:downcase)
+        admin_get_all_cluster_nodes("?sort_by=host_ip:asc")
+        res = json_body[:items].map { |i| "#{i[:host_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by host_ip desc" do
+        hosts = find_all_hosts().map(&:host_ip).sort_by(&:downcase).reverse
+        admin_get_all_cluster_nodes("?sort_by=host_ip:desc")
+        res = json_body[:items].map { |i| "#{i[:host_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by public_ip asc" do
+        hosts = find_all_hosts().map(&:public_ip).sort_by(&:downcase)
+        admin_get_all_cluster_nodes("?sort_by=public_ip:asc")
+        res = json_body[:items].map { |i| "#{i[:public_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by public_ip desc" do
+        hosts = find_all_hosts().map(&:public_ip).sort_by(&:downcase).reverse
+        admin_get_all_cluster_nodes("?sort_by=public_ip:desc")
+        res = json_body[:items].map { |i| "#{i[:public_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by private_ip asc" do
+        hosts = find_all_hosts().map(&:private_ip).sort_by(&:downcase)
+        admin_get_all_cluster_nodes("?sort_by=private_ip:asc")
+        res = json_body[:items].map { |i| "#{i[:private_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by private_ip desc" do
+        hosts = find_all_hosts().map(&:private_ip).sort_by(&:downcase).reverse
+        admin_get_all_cluster_nodes("?sort_by=private_ip:desc")
+        res = json_body[:items].map { |i| "#{i[:private_ip]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by cores asc" do
+        hosts = find_all_hosts().map(&:cores).sort
+        admin_get_all_cluster_nodes("?sort_by=cores:asc")
+        res = json_body[:items].map { |i| "#{i[:cores]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by cores desc" do
+        hosts = find_all_hosts().map(&:cores).sort.reverse
+        admin_get_all_cluster_nodes("?sort_by=cores:desc")
+        res = json_body[:items].map { |i| "#{i[:cores]}" }
+        expect(res).to eq(hosts)
       end
 
       it "sorts by id asc and hostname asc" do
+        hosts = find_all_hosts().sort do |a,b|
+          res = (a[:id] <=> b[:id])
+          res = (a[:hostname].downcase <=> b[:hostname].downcase) if res == 0
+          res
+        end
+        hosts = hosts.map(&:id &:hostname)
+        admin_get_all_cluster_nodes("?sort_by=id:asc,hostname:asc")
+        res = json_body[:items].map { |i| "#{i[:id]}"  "#{i[:hostname]}"}
+        expect(res).to eq(hosts)
       end
 
       it "sorts by id asc and hostame desc" do
