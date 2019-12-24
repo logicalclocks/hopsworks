@@ -35,8 +35,8 @@ module HostsHelper
     Host.all.map(&:hostname)
   end
 
-  def admin_get_all_cluster_nodes()
-    get "#{ENV['HOPSWORKS_API']}/admin/hosts"
+  def admin_get_all_cluster_nodes(more = "")
+    get "#{ENV['HOPSWORKS_API']}/admin/hosts" + more
   end
 
   def admin_get_cluster_node_by_hostname(hostname)
@@ -56,5 +56,17 @@ module HostsHelper
     items = json_body[:items]
     items = items.reject {|i| except.include?(i[:hostname])}
     items.each { |i| admin_delete_cluster_node_by_hostname(i[:hostname]) }
+  end
+
+  def add_test_hosts()
+    for i in 1..10
+      hostname = "#{short_random_id}"
+      ip = "#{short_random_id}"
+      json_data = {
+        "hostname": hostname,
+        "hostIp": ip
+      }
+      admin_create_update_cluster_node(hostname, json_data)
+    end
   end
 end

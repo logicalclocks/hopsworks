@@ -46,10 +46,8 @@ describe "On #{ENV['OS']}" do
     context "with admin authentication and validated user" do
       before :all do
         with_admin_session()
-	@init_hostnames = find_all_hostnames() 
+	      @init_hostnames = find_all_hostnames()
       end
-      
-      let(:init_hosts) { find_all_hostnames() } 
 
       after :all do
         delete_all_cluster_nodes_except(@init_hostnames)
@@ -76,7 +74,7 @@ describe "On #{ENV['OS']}" do
 
       it "creates a new cluster node" do
         hostname = "#{short_random_id}"
-	      ip = "#{short_random_id}"
+        ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": ip
@@ -89,14 +87,14 @@ describe "On #{ENV['OS']}" do
 
       it "creates a new cluster node and then updates it" do
         hostname = "#{short_random_id}"
-	      ip = "#{short_random_id}"
+        ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": ip
         }
         admin_create_update_cluster_node(hostname, json_data)
         expect_status(201)
-	      new_ip = "#{short_random_id}"
+        new_ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": new_ip
@@ -110,7 +108,7 @@ describe "On #{ENV['OS']}" do
 
       it "creates and deletes a cluster node" do
         hostname = "#{short_random_id}"
-	ip = "#{short_random_id}"
+        ip = "#{short_random_id}"
         json_data = {
           "hostname": hostname,
           "hostIp": ip
@@ -125,6 +123,122 @@ describe "On #{ENV['OS']}" do
         admin_delete_cluster_node_by_hostname("#{short_random_id}")
         expect_status(404)
       end
+    end
+
+    context 'Cluster nodes sorts and filters with admin authentication' do
+      before :all do
+        with_admin_session()
+        @init_hostnames = find_all_hostnames()
+        add_test_hosts()
+      end
+
+      after :all do
+        delete_all_cluster_nodes_except(@init_hostnames)
+      end
+
+      it "sorts by id asc" do
+      end
+
+      it "sorts by id desc" do
+      end
+
+      it "sorts by num_gpus asc" do
+      end
+
+      it "sorts by num_gpus desc" do
+      end
+
+      it "sorts by memory_capacity asc" do
+      end
+
+      it "sorts by memory_capacity desc" do
+      end
+
+      it "sorts by hostname asc" do
+      end
+
+      it "sorts by hostname desc" do
+      end
+
+      it "sorts by host_ip asc" do
+      end
+
+      it "sorts by host_ip desc" do
+      end
+
+      it "sorts by public_ip asc" do
+      end
+
+      it "sorts by public_ip desc" do
+      end
+
+      it "sorts by private_ip asc" do
+      end
+
+      it "sorts by private_ip desc" do
+      end
+
+      it "sorts by cores asc" do
+      end
+
+      it "sorts by cores desc" do
+      end
+
+      it "sorts by id asc and hostname asc" do
+      end
+
+      it "sorts by id asc and hostame desc" do
+      end
+
+      it "sorts by id desc and hostame asc" do
+      end
+
+      it "sorts by id desc and hostame desc" do
+      end
+
+      it "filters by hostname" do
+      end
+
+      it "filters by hostname" do
+      end
+
+      it "filters by host_ip" do
+      end
+
+      it "filters by public_ip" do
+      end
+
+      it "filters by private_ip" do
+      end
+
+      it "filters by registered" do
+      end
+
+      it "filters by conda_enabled" do
+      end
+
+      it "should get only limit=x nodes" do
+      end
+
+      it "should get nodes with offset=y" do
+      end
+
+      it 'should get only limit=x acls with offset=y' do
+      end
+      
+      it 'should ignore if limit < 0' do
+      end
+
+      it 'should ignore if offset < 0' do
+      end
+
+      it 'should ignore if limit = 0' do
+      end
+
+      it 'should work if offset >= size' do
+      end
+
+
     end
   end
 end
