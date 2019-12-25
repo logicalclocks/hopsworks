@@ -304,14 +304,15 @@ describe "On #{ENV['OS']}" do
             config.base_url = ''
           end
 
-          index = get "#{ENV['ELASTIC_API']}/#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
+          response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
+          index = response.body
 
           Airborne.configure do |config|
             config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
           end
 
           parsed_index = JSON.parse(index)
-          expect(parsed_index['hits']['total']).to be > 0
+          expect(parsed_index['hits']['total']['value']).to be > 0
         end
 
         it "should fail to start a running instance" do
