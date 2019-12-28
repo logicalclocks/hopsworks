@@ -643,6 +643,9 @@ public class Settings implements Serializable {
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
+      zfsKeyRotationEnabled = setBoolVar(ZFS_KEY_ROTATION_ENABLED_KEY, zfsKeyRotationEnabled);
+      zfsKeyRotationInterval = setStrVar(ZFS_KEY_ROTATION_INTERVAL_KEY, zfsKeyRotationInterval);
+
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
@@ -3108,6 +3111,26 @@ public class Settings implements Serializable {
     return serviceKeyRotationInterval;
   }
 
+  // Zfs key rotation enabled
+  private static final String ZFS_KEY_ROTATION_ENABLED_KEY = "zfs_key_rotation_enabled";
+  private boolean zfsKeyRotationEnabled = false;
+
+  public synchronized boolean isZfsKeyRotationEnabled() {
+    checkCache();
+    return zfsKeyRotationEnabled;
+  }
+
+  // Zfs key rotation interval
+  private static final String ZFS_KEY_ROTATION_INTERVAL_KEY = "zfs_key_rotation_interval";
+  private String zfsKeyRotationInterval = "3d";
+
+  public synchronized String getZfsKeyRotationInterval() {
+    checkCache();
+    return zfsKeyRotationInterval;
+  }
+
+
+    
  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
   private int tensorBoardMaxLastAccessed = 1140000;

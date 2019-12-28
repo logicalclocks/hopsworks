@@ -268,7 +268,27 @@ public class CertificatesMgmService {
       systemCommandFacade.persist(rotateCommand);
     }
   }
-  
+
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void issueZfsKeyRotationCommand() {
+    List<Hosts> allHosts = hostsFacade.findAllHosts();
+    for (Hosts host : allHosts) {
+
+	// Generate new 8 character random password
+	// Save it in a new_key field in hosts
+
+      String passwd = "12345678";	  
+      SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
+      rotateCommand.setExecUser(passwd);
+
+      host.setZfsKeyRotated(passwd);
+      hostsFacade.storeHost(host);
+      
+      systemCommandFacade.persist(rotateCommand);
+    }
+  }
+    
   private void callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
     for (MasterPasswordHandler handler : handlers) {
       MasterPasswordChangeResult result = handler.perform(getMasterEncryptionPassword(), newDigest);

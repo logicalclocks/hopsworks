@@ -56,6 +56,7 @@ public class SystemCommandFacade {
   
   public enum OP {
     SERVICE_KEY_ROTATION,
+    ZFS_KEY_ROTATION,
     CONDA_GC
   }
   
