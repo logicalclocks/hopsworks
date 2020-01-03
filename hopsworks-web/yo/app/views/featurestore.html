@@ -702,7 +702,7 @@
                     tourtip="This is the feature store registry where you can list and search for
                     features/feature groups/training datasets in the feature store as well as edit their metadata."
                     tourtip-step="0"
-                    tourtip-element="#featuregroupsHeading"
+                    tourtip-element="#featuregroupsTab"
                     tourtip-placement="bottom"
                     tourtip-next-label="Next"
                     on-proceed=""
@@ -734,8 +734,7 @@
             <virtual-step
                     ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
                     class="ng-scope"
-                    tourtip="This tab allows you to search for individual features in feature groups and
-                    training datasets."
+                    tourtip="This tab allows you to search for individual features in feature groups"
                     tourtip-step="3"
                     tourtip-element="#featuresTab"
                     tourtip-placement="bottom"
