@@ -60,17 +60,18 @@ public class ProvenanceCleaner {
   // Run once every four hours
   @Schedule(persistent = false, hour = "*/4")
   public void execute(Timer timer) {
-    int cleanupSize = settings.getProvCleanupSize();
-    int archiveSize = settings.getProvArchiveSize();
-    if(archiveSize == 0) {
-      return;
-    }
+    LOGGER.log(Level.INFO, "Running ProvenanceCleaner.");
     try {
+      int cleanupSize = settings.getProvCleanupSize();
+      int archiveSize = settings.getProvArchiveSize();
+      if(archiveSize == 0) {
+        return;
+      }
       Pair<Integer, String> round = archiveRound(lastIndexChecked, cleanupSize);
       LOGGER.log(Level.INFO, "cleanup round - idx cleaned:{0} from:{1} to:{2}",
         new Object[]{round.getValue0(), lastIndexChecked, round.getValue1()});
       lastIndexChecked = round.getValue1();
-    } catch (ProvenanceException | ElasticException e) {
+    } catch (Exception e) {
       LOGGER.log(Level.INFO, "cleanup round was not successful - error", e);
     }
   }
@@ -117,7 +118,7 @@ public class ProvenanceCleaner {
     Project project = projectFacade.findByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName());
     return project;
   }
-  
+
   private String[] getAllIndices() throws ElasticException {
     String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
     GetIndexRequest request = new GetIndexRequest(indexRegex);

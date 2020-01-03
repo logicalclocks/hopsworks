@@ -375,49 +375,53 @@ public class AirflowManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorSecurityMaterial(Timer timer) {
-    LocalDateTime now = DateUtils.getNow();
-    // Clean unused token files and X.509 certificates
-    cleanStaleSecurityMaterial();
-  
-    // Renew them
-    Set<AirflowJWT> newTokens2Add = new HashSet<>();
-    Iterator<AirflowJWT> airflowJWTIt = airflowJWTs.iterator();
-    while (airflowJWTIt.hasNext()) {
-      AirflowJWT airflowJWT = airflowJWTIt.next();
-      // Set is sorted by expiration date
-      // If first does not need to be renewed, neither do the rest
-      if (airflowJWT.maybeRenew(now)) {
-        try {
-          LocalDateTime expirationDateTime = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-          Date expirationDate = DateUtils.localDateTime2Date(expirationDateTime);
-          String token = jwtController.renewToken(airflowJWT.token, expirationDate,
-              DateUtils.localDateTime2Date(DateUtils.getNow()), true, new HashMap<>(3));
-          
-          AirflowJWT renewedJWT = new AirflowJWT(airflowJWT.username, airflowJWT.projectId, airflowJWT.projectName,
-              expirationDateTime, airflowJWT.uid);
-          renewedJWT.tokenFile = airflowJWT.tokenFile;
-          renewedJWT.token = token;
-          
-          airflowJWTIt.remove();
-          writeTokenToFile(renewedJWT);
-          newTokens2Add.add(renewedJWT);
-        } catch (JWTException ex) {
-          LOG.log(Level.WARNING, "Could not renew Airflow JWT for " + airflowJWT, ex);
-        } catch (IOException ex) {
-          LOG.log(Level.WARNING, "Could not write renewed Airflow JWT for " + airflowJWT, ex);
+    try {
+      LocalDateTime now = DateUtils.getNow();
+      // Clean unused token files and X.509 certificates
+      cleanStaleSecurityMaterial();
+
+      // Renew them
+      Set<AirflowJWT> newTokens2Add = new HashSet<>();
+      Iterator<AirflowJWT> airflowJWTIt = airflowJWTs.iterator();
+      while (airflowJWTIt.hasNext()) {
+        AirflowJWT airflowJWT = airflowJWTIt.next();
+        // Set is sorted by expiration date
+        // If first does not need to be renewed, neither do the rest
+        if (airflowJWT.maybeRenew(now)) {
           try {
-            jwtController.invalidate(airflowJWT.token);
-          } catch (InvalidationException iex) {
-            LOG.log(Level.FINE, "Could not invalidate Airflow JWT. SKipping...");
+            LocalDateTime expirationDateTime = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+            Date expirationDate = DateUtils.localDateTime2Date(expirationDateTime);
+            String token = jwtController.renewToken(airflowJWT.token, expirationDate,
+                DateUtils.localDateTime2Date(DateUtils.getNow()), true, new HashMap<>(3));
+
+            AirflowJWT renewedJWT = new AirflowJWT(airflowJWT.username, airflowJWT.projectId, airflowJWT.projectName,
+                expirationDateTime, airflowJWT.uid);
+            renewedJWT.tokenFile = airflowJWT.tokenFile;
+            renewedJWT.token = token;
+
+            airflowJWTIt.remove();
+            writeTokenToFile(renewedJWT);
+            newTokens2Add.add(renewedJWT);
+          } catch (JWTException ex) {
+            LOG.log(Level.WARNING, "Could not renew Airflow JWT for " + airflowJWT, ex);
+          } catch (IOException ex) {
+            LOG.log(Level.WARNING, "Could not write renewed Airflow JWT for " + airflowJWT, ex);
+            try {
+              jwtController.invalidate(airflowJWT.token);
+            } catch (InvalidationException iex) {
+              LOG.log(Level.FINE, "Could not invalidate Airflow JWT. SKipping...");
+            }
+          } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Generic error while renewing Airflow JWTs", ex);
           }
-        } catch (Exception ex) {
-          LOG.log(Level.SEVERE, "Generic error while renewing Airflow JWTs", ex);
+        } else {
+          break;
         }
-      } else {
-        break;
       }
+      airflowJWTs.addAll(newTokens2Add);
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Got an exception while renewing/invalidating airflow jwt token", e);
     }
-    airflowJWTs.addAll(newTokens2Add);
   }
   
   public Path getProjectDagDirectory(Integer projectID) {

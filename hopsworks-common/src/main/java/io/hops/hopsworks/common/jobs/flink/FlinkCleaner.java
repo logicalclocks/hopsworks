@@ -78,7 +78,7 @@ public class FlinkCleaner {
         }
       }
     } catch (Exception ex) {
-      LOGGER.log(Level.SEVERE, "Could not access " + settings.getFlinkConfFile(), ex);
+      LOGGER.log(Level.SEVERE, "Could not access flink configuration file", ex);
     } finally {
       if (dfso != null) {
         dfs.closeDfsClient(dfso);

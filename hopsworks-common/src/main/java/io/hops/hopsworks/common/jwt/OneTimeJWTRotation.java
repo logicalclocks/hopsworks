@@ -68,12 +68,16 @@ public class OneTimeJWTRotation {
 
   @Timeout
   public void performTimeout(Timer timer) {
-    String name = (String) timer.getInfo();
-    if ("Mark".equals(name)) {
-      markAndSetTimer();
-    } else {
-      jWTController.removeMarkedKeys();
+    try {
+      String name = (String) timer.getInfo();
+      if ("Mark".equals(name)) {
+        markAndSetTimer();
+      } else {
+        jWTController.removeMarkedKeys();
+      }
+      LOGGER.log(Level.INFO, "{0} timer event: {1}.", new Object[]{timer.getInfo(), new Date()});
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Got an exception while rotating one-time jwt", e);
     }
-    LOGGER.log(Level.INFO, "{0} timer event: {1}.", new Object[]{timer.getInfo(), new Date()});
   }
 }

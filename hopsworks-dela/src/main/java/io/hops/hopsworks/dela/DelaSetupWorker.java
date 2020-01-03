@@ -130,29 +130,33 @@ public class DelaSetupWorker {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   private void timeout(Timer timer) {
-    LOGGER.log(Level.INFO, "{0} - state:{1} timeout:{2}",
-      new Object[]{DelaException.Source.HOPS_SITE, state, timer.getInfo().toString()});
-    switch (state) {
-      case SETUP:
-        setup(timer);
-        break;
-      case DELA_VERSION:
-        delaVersion(timer);
-        break;
-      case DELA_CONTACT:
-        delaContact(timer);
-        break;
-      case REGISTER:
-        hopsSiteRegister(timer);
-        break;
-      case HEAVY_PING:
-        heavyPing(timer);
-        break;
-      case PING:
-        ping(timer);
-        break;
-      default:
-        throw new IllegalStateException("unknown state");
+    try {
+      LOGGER.log(Level.INFO, "{0} - state:{1} timeout:{2}",
+          new Object[]{DelaException.Source.HOPS_SITE, state, timer.getInfo().toString()});
+      switch (state) {
+        case SETUP:
+          setup(timer);
+          break;
+        case DELA_VERSION:
+          delaVersion(timer);
+          break;
+        case DELA_CONTACT:
+          delaContact(timer);
+          break;
+        case REGISTER:
+          hopsSiteRegister(timer);
+          break;
+        case HEAVY_PING:
+          heavyPing(timer);
+          break;
+        case PING:
+          ping(timer);
+          break;
+        default:
+          throw new IllegalStateException("unknown state");
+      }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Got an exception during timeout");
     }
   }
 
