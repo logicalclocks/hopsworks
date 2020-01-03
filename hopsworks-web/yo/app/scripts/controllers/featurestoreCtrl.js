@@ -429,7 +429,7 @@ angular.module('hopsWorksApp')
                 if(self.projectName == null || self.featurestores.length < 1){
                     return
                 }
-                self.selectFeaturestore(`${self.projectName}_featurestore`);
+                self.selectFeaturestore(self.projectName + "_featurestore");
             };
 
             /**
@@ -604,7 +604,7 @@ angular.module('hopsWorksApp')
                         self.groupFeaturegroupsByVersion();
 
                         // Compute from-to dates for feature groups
-                        var dates = self.featuregroups.map(f => f.created);
+                        var dates = self.featuregroups.map(function(f) { return f.created});
                         dates.sort(function(a, b) {
                             return new Date(b) - new Date(a)
                         });
@@ -639,7 +639,7 @@ angular.module('hopsWorksApp')
                         self.groupTrainingDatasetsByVersion();
 
                         // Compute from-to dates for training datasets 
-                        var dates = self.trainingDatasets.map(f => f.created);
+                        var dates = self.trainingDatasets.map(function(f) { return f.created });
                         dates.sort(function(a, b) {
                             return new Date(b) - new Date(a)
                         });

@@ -37,7 +37,7 @@ angular.module('hopsWorksApp')
 
             self.init = function() { 
                 $scope.$watch('features', function(newValue, oldValue, scope) {
-                    var dates = newValue.map(f => f.date);
+                    var dates = newValue.map(function(f) { return f.date });
                     dates.sort(function(a, b) {
                         return new Date(b) - new Date(a)
                     });
