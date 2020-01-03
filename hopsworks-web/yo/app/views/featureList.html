@@ -78,18 +78,53 @@
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th style="width: 17%" class="fs-table">Name</th>
-                    <th style="width: 27%" class="fs-table">Description</th>
-                    <th style="width: 13%" class="fs-table">Created</th>
-                    <th style="width: 10%" class="fs-table">Type</th>
-                    <th style="width: 20%" class="fs-table">Feature Group</th>
-                    <th style="width: 5%"  class="fs-table">Version</th>
+                    <th style="width: 17%" class="fs-table" ng-click="featureListCtrl.sortByKey('name')">
+                        Name
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'name'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse,
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
+                    <th style="width: 27%" class="fs-table" ng-click="featureListCtrl.sortByKey('description')">Description
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'description'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
+                    <th style="width: 13%" class="fs-table" ng-click="featureListCtrl.sortByKey('date')">
+                        Created
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'date'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
+                    <th style="width: 10%" class="fs-table" ng-click="featureListCtrl.sortByKey('type')">
+                        Type
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'type'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
+                    <th style="width: 20%" class="fs-table" ng-click="featureListCtrl.sortByKey('fg')">
+                        Feature Group
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'fg'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
+                    <th style="width: 7%"  class="fs-table" ng-click="featureListCtrl.sortByKey('version')">
+                        Version
+                        <span class="glyphicon sort-icon"
+                              ng-show="featureListCtrl.sortKey === 'version'"
+                              ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
+                                         'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
+                    </th>
                     <th style="width: 10%" class="fs-table">Actions</th>
                 </tr>
                 </thead>
                 <tbody class="table-hover">
                 <tr
-                        dir-paginate="result in ((filteredResults = (features | orderBy:featureListCtrl.sortKey:featureListCtrl.reverse |  
+                        dir-paginate="result in ((filteredResults = (features | orderBy:featureListCtrl.sortFn:featureListCtrl.reverse |  
                         filterByFg:featureListCtrl.fgFilter:false |
                         dateRange:featureListCtrl.fromDate:featureListCtrl.toDate:false | 
                         filter:{name:featureListCtrl.filter}:false |

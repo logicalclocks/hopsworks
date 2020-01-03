@@ -80,6 +80,19 @@ angular.module('hopsWorksApp')
                     });
             };
 
+            self.sortByKey = function(key) {
+                self.sortKey = key;
+                self.reverse = !self.reverse;
+            };
+
+            self.sortFn = function(feature) {
+                if (self.sortKey === "fg") {
+                    return feature.featuregroup.name;
+                } else {
+                    return feature[self.sortKey];
+                }
+            };
+
             self.init();
         }])
     .filter('filterByFg', ['$filter', function() {
