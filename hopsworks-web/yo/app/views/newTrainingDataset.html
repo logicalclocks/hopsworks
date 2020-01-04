@@ -117,6 +117,7 @@
 
                                     <li class="clearfix">
                                         <button class="btn btn-danger fa fa-trash fa-xs"
+                                                style="padding: 3px 8px;"
                                                 uib-tooltip="Delete"
                                                 ng-click="newTrainingDatasetCtrl.removeFeatureFromBasket($index);"></button>
                                         <span class="item-name">{{basketFeature.name}}</span>
@@ -125,7 +126,7 @@
                                             .name}}</div>
                                     </li>
                                 </ul>
-                                <a class="btn btn-primary" 
+                                <a class="btn btn-success" 
                                    style="margin-top: 5px;"
                                    ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
                                    ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0">
