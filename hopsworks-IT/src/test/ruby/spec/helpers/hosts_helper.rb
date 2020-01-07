@@ -69,6 +69,6 @@ module HostsHelper
   end
 
   def add_test_host()
-    Host.create(:hostname=>"test",:host_ip=>"192.168.1.1",:public_ip=>"192.168.1.2",:private_ip=>"192.168.1.3",:registered=>true,:conda_enabled=>true)
+    Host.create(:hostname=>"test",:host_ip=>"192.168.1.1",:public_ip=>"192.168.1.2",:private_ip=>"192.168.1.3",:registered=>true,:conda_enabled=>true, :cores=>16)
   end
 end

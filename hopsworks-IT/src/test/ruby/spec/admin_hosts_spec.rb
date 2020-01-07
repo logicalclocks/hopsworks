@@ -130,6 +130,7 @@ describe "On #{ENV['OS']}" do
         with_admin_session()
         @init_hostnames = find_all_hostnames()
         add_test_hosts()
+        add_test_host()
       end
 
       after :all do
@@ -297,33 +298,81 @@ describe "On #{ENV['OS']}" do
       end
 
       it "filters by hostname" do
-        add_test_host()
         host = find_by_hostname("test")
+        puts host.inspect
         admin_get_all_cluster_nodes("?filter_by=hostname:test")
-        puts json_body
         res = json_body[:items][0]
         expect(res).to eq(host)
       end
 
       it "filters by host_ip" do
+        filter = "?filter_by=host_ip:" + find_by_hostname("test").host_ip
+        admin_get_all_cluster_nodes(filter)
+        res = json_body[:items][0]
+        admin_get_all_cluster_nodes()
+        expected = json_body[:items].select{|h| h[:hostname] == "test"}[0]
+        expect(res).to eq(expected)
       end
 
       it "filters by public_ip" do
+        filter = "?filter_by=public_ip:" + find_by_hostname("test").public_ip
+        admin_get_all_cluster_nodes(filter)
+        res = json_body[:items][0]
+        admin_get_all_cluster_nodes()
+        expected = json_body[:items].select{|h| h[:hostname] == "test"}[0]
+        expect(res).to eq(expected)
       end
 
       it "filters by private_ip" do
+        filter = "?filter_by=private_ip:" + find_by_hostname("test").private_ip
+        admin_get_all_cluster_nodes(filter)
+        res = json_body[:items][0]
+        admin_get_all_cluster_nodes()
+        expected = json_body[:items].select{|h| h[:hostname] == "test"}[0]
+        expect(res).to eq(expected)
       end
 
       it "filters by registered" do
+        filter = "?filter_by=registered:true"
+        admin_get_all_cluster_nodes(filter)
+        res = json_body[:items]
+        admin_get_all_cluster_nodes()
+        expected = json_body[:items].select{|h| h[:registered] == true}
+        expect(res).to eq(expected)
       end
 
       it "filters by conda_enabled" do
+        filter = "?filter_by=conda_enabled:true"
+        admin_get_all_cluster_nodes(filter)
+        res = json_body[:items]
+        admin_get_all_cluster_nodes()
+        expected = json_body[:items].select{|h| h[:condaEnabled] == true}
+        expect(res).to eq(expected)
       end
 
       it "should get only limit=x nodes" do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        admin_get_all_cluster_nodes("?limit=3")
+        expect(json_body[:items].count).to eq(3)
+        expect(count).to eq(json_body[:count]) 
+        admin_get_all_cluster_nodes("?limit=5")
+        expect(json_body[:items].count).to eq(5)
+        expect(count).to eq(json_body[:count])
       end
 
       it "should get nodes with offset=y" do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=3")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes.drop(3))
+        expect(count).to eq(json_body[:count])
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=5")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes.drop(5))
+        expect(count).to eq(json_body[:count])
       end
 
       it 'should get only limit=x acls with offset=y' do
