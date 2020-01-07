@@ -49,8 +49,7 @@ public class HeartbeatReplyDTO {
   private List<CondaCommands> condaCommands;
 
   private String zfsKey;
-  private String zfsKeyRotated;
-
+  
   public HeartbeatReplyDTO() {
   }
   
@@ -74,7 +73,4 @@ public class HeartbeatReplyDTO {
 
   public void setZfsKey(String zfsKey) { this.zfsKey = zfsKey; }
 
-  public String getZfsKeyRotated() { return zfsKeyRotated; }
-
-  public void setZfsKeyRotated(String zfsKeyRotated) { this.zfsKeyRotated = zfsKeyRotated; }
 }

@@ -34,6 +34,7 @@ import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -46,6 +47,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -85,19 +87,26 @@ public class AgentController {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private AgentLivenessMonitor agentLivenessMonitor;
-
+  @EJB
+  private CertificatesMgmService certificatesMgmService;  
 
   public String register(String hostId, String password, String zfsKey) {
     Hosts host = hostsFacade.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);
     host.setHostname(hostId);
-    host.setZfsKey(zfsKey);
-    // Jim: We set the hostname as hopsworks::default pre-populates with the hostname,
-    // but it's not the correct hostname for GCE.
+
+    try {
+      String encryptedKey = certificatesMgmService.encryptPassword(zfsKey);
+      host.setZfsKey(encryptedKey);
+    } catch (IOException ex) {
+      Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (GeneralSecurityException ex) {
+      Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
+    }
+    
     hostsFacade.storeHost(host);
-//    return settings.getHadoopVersionedDir();
-    return host.getZfsKey();
+    return settings.getHadoopVersionedDir();
   }
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
@@ -130,12 +139,11 @@ public class AgentController {
     if (heartbeat.zfsKey != null) {
       if (heartbeat.zfsKey.compareTo("request") == 0) {
         zfsKeyRequested = true;
-      } else  if (heartbeat.zfsKey.compareTo("request") == 0) {
-        host.setZfsKeyRotated(host.getZfsKey());
-        host.setZfsKey(heartbeat.zfsKey);
-        hostsFacade.storeHost(host);
-      } else {
-
+//      } else  if (heartbeat.zfsKey.compareTo("request") == 0) {
+//        host.setZfsKeyRotated(host.getZfsKey());
+//        host.setZfsKey(heartbeat.zfsKey);
+//        hostsFacade.storeHost(host);
+//      } else {
       }
     }
 
@@ -210,8 +218,14 @@ public class AgentController {
     response.setCondaCommands(newCondaCommands);
     response.setSystemCommands(newSystemCommands);
     if (zfsKeyRequested) {
-      response.setZfsKey(host.getZfsKey());
-      response.setZfsKeyRotated(host.getZfsKeyRotated());
+      try {
+        String zfsDecrypted = this.certificatesMgmService.decryptPassword(host.getZfsKey());
+        response.setZfsKey(zfsDecrypted);
+      } catch (IOException ex) {
+        Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (GeneralSecurityException ex) {
+        Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
   }
 

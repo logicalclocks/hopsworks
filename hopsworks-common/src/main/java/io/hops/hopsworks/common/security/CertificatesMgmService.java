@@ -40,10 +40,8 @@ package io.hops.hopsworks.common.security;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -70,11 +68,13 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,16 +93,20 @@ public class CertificatesMgmService {
   private Settings settings;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private CertsFacade certsFacade;
-  @EJB
-  private ClusterCertificateFacade clusterCertificateFacade;
+//  @EJB
+//  private CertsFacade certsFacade;
+//  @EJB
+//  private ClusterCertificateFacade clusterCertificateFacade;
   @EJB
   private MessageController messageController;
   @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private HostsFacade hostsFacade;
+  @EJB
+  private SymmetricEncryptionService symmetricEncryptionService;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;  
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
@@ -269,23 +273,82 @@ public class CertificatesMgmService {
     }
   }
 
+  
+  public String randomString() {
+    int leftLimit = 48; // numeral '0'
+    int rightLimit = 122; // letter 'z'
+    int targetStringLength = 10;
+    Random random = new Random();
+
+    String generatedString = random.ints(leftLimit, rightLimit + 1)
+        .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+        .limit(targetStringLength)
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
+    return generatedString;
+  }  
+  
+  
+  
+  public String encryptPassword(String secret) throws IOException, GeneralSecurityException {
+    String password = certificatesMgmService.getMasterEncryptionPassword();
+    SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
+        .setInput(secret.getBytes(Charset.defaultCharset()))
+        .setPassword(password)
+        .build();
+    descriptor = symmetricEncryptionService.encrypt(descriptor);
+    byte[] pwd = symmetricEncryptionService.mergePayloadWithCryptoPrimitives(descriptor.getSalt(), 
+        descriptor.getIv(), descriptor.getOutput());
+    return new String(pwd);
+  }  
+  
+  public String decryptPassword(String secret) throws IOException, GeneralSecurityException {
+    byte[] bytes = secret.getBytes();
+    
+    String password = certificatesMgmService.getMasterEncryptionPassword();
+  
+    // [salt(64),iv(12),payload)]
+    byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(bytes);
+    
+    SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
+        .setPassword(password)
+        .setSalt(split[0])
+        .setIV(split[1])
+        .setInput(split[2])
+        .build();
+    descriptor = symmetricEncryptionService.decrypt(descriptor);
+    
+    byte[] plaintext = descriptor.getOutput();
+    return new String(plaintext);
+  }
+  
+  
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void issueZfsKeyRotationCommand() {
     List<Hosts> allHosts = hostsFacade.findAllHosts();
     for (Hosts host : allHosts) {
 
-	// Generate new 8 character random password
-	// Save it in a new_key field in hosts
+      try {
+        // Generate new random password, bounded to 10 characters
+        String secret = randomString();
+        String passwd = encryptPassword(secret);
 
-      String passwd = "12345678";	  
-      SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
-      rotateCommand.setExecUser(passwd);
-
-      host.setZfsKeyRotated(passwd);
-      hostsFacade.storeHost(host);
-      
-      systemCommandFacade.persist(rotateCommand);
+        SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
+        rotateCommand.setExecUser(passwd);
+        
+        // Save it in a field in hosts
+        host.setZfsKey(passwd);
+        host.setZfsKeyRotated(host.getZfsKey());
+        hostsFacade.storeHost(host);
+        
+        // send it to kagent
+        systemCommandFacade.persist(rotateCommand);
+      } catch (IOException ex) {
+        Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (GeneralSecurityException ex) {
+        Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+      }
     }
   }
     
