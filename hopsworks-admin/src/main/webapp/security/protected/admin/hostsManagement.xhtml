@@ -106,6 +106,14 @@
                                      icon="ui-icon-arrowrefresh-1-w"
                                      update=":manageClusterNodes:growl">
                     </p:commandButton>
+
+                  <p:commandButton value="Rotate ZFS keys" rendered="#{nodesBean.isZfsDisabled()}"
+                                     style="float:right"
+                                     actionListener="#{nodesBean.rotateZfsKeys}"
+                                     icon="ui-icon-arrowrefresh-1-w"
+                                     update=":manageClusterNodes:growl">
+                  </p:commandButton>
+
                 </div>
 
                 <!--<div class="ui-g">
@@ -253,6 +261,18 @@
                       <div align="center">
                           <h:outputText value="#{node.numGpus}" rendered="#{not empty node.numGpus}" />
                       </div>
+                  </p:column>
+
+                  <p:column id="zfsKey" headerText="ZFS Key" rendered="#{nodesBean.isZfsDisabled()}">
+                    <div align="center">
+                      <h:outputText value="#{nodesBean.decrypt(node.zfsKey)}" />
+                    </div>
+                  </p:column>
+
+                  <p:column id="zfsKeyRotated" headerText="ZFS Key Rotated" rendered="#{nodesBean.isZfsDisabled()}">
+                    <div align="center">
+                      <h:outputText value="#{nodesBean.decrypt(ode.zfsKeyRotated)}" />
+                    </div>
                   </p:column>
 
                   <p:column style="width:32px">

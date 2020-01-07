@@ -356,7 +356,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
 
   // ZFS
-  private static final String VARIABLE_ZFS_POOL = "zpool";
+  private static final String VARIABLE_ZFS_POOL = "zpools";
 
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);

@@ -62,6 +62,7 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,6 +255,21 @@ public class NodesBean implements Serializable {
     return "condaSync";
   }
 
+  public boolean isZfsDisabled() {
+    return settings.getZfsPool().isEmpty();
+  }
+
+  public String decrypt(String secret) {
+    try {
+      return this.certificatesMgmService.decryptPassword(secret);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
+
   public void rsyncAnacondaLibs(String hostname) {
 
     CondaTask condaTask = new CondaTask(FacesContext.getCurrentInstance(), hostname);
@@ -314,6 +330,12 @@ public class NodesBean implements Serializable {
     certificatesMgmService.issueServiceKeyRotationCommand();
     MessagesController.addInfoMessage("Commands issued", "Issued command to rotate keys on hosts");
     logger.log(Level.INFO, "Issued key rotation command");
+  }
+
+  public void rotateZfsKeys() {
+    certificatesMgmService.issueZfsKeyRotationCommand();
+    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate ZFS keys");
+    logger.log(Level.INFO, "Issued ZFS key rotation command");
   }
 
   public void restartKagents(List<Hosts> hosts) {
