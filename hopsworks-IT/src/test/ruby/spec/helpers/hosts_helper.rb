@@ -23,8 +23,8 @@ module HostsHelper
     host
   end
 
-  def find_by_hostid(hostId)
-    Host.find_by(hostname: hostId)
+  def find_by_hostname(hostname)
+    Host.find_by(hostname: hostname)
   end
 
   def find_all_registered_hosts()
@@ -64,25 +64,11 @@ module HostsHelper
 
   def add_test_hosts()
     for i in 1..10
-      hostname = "#{short_random_id}"
-      ip = "#{short_random_id}"
-      json_data = {
-        "hostname": hostname,
-        "hostIp": ip
-      }
-      admin_create_update_cluster_node(hostname, json_data)
+      Host.create(:hostname => "#{short_random_id}", :host_ip=> "#{short_random_id}", :private_ip=> SecureRandom.hex(4), :public_ip=>SecureRandom.hex(4), :cores=>rand(32), :memory_capacity=>rand(4096), :num_gpus=>rand(64))
     end
   end
 
   def add_test_host()
-    json_data = {
-      "hostname": "test",
-      "hostIp": "192.168.1.1",
-      "publicIp": "192.168.1.2",
-      "privateIp": "192.168.1.3",
-      "registered": true,
-      "condaEnabled": true
-    }
-    admin_create_update_cluster_node("test", json_data)
+    Host.create(:hostname=>"test",:host_ip=>"192.168.1.1",:public_ip=>"192.168.1.2",:private_ip=>"192.168.1.3",:registered=>true,:conda_enabled=>true)
   end
 end

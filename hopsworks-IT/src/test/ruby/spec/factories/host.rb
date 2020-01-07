@@ -17,4 +17,5 @@ class Host < ActiveRecord::Base
   def self.table_name
     "hosts"
   end
+  attribute :num_gpus, ActiveRecord::Type::Integer.new
 end
