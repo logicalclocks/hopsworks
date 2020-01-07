@@ -158,16 +158,11 @@
                                 </span>
                             </td>
                             <td class="fs-table">
-                                <ui-select ng-model="featuregroup.activeVersion"
-                                           style="z-index: {{100-$index}}">
-                                    <ui-select-match
-                                            placeholder="Select a version">
-                                        <span>{{$select.selected}}</span>
-                                    </ui-select-match>
-                                    <ui-select-choices repeat="version in featuregroup.versions">
-                                        <span ng-bind="version"></span>
-                                    </ui-select-choices>
-                                </ui-select>
+                                <select class="form-control" 
+                                        ng-model="featuregroup.activeVersion" 
+                                        style="z-index: {{100-$index}}">
+                                    <option ng-repeat="version in featuregroup.versions">{{version}}</option>
+                                </select>
                             </td>
                             <td class="fs-table">
                                 <div class="btn-group fs-btn" role="group">
@@ -347,16 +342,11 @@
                             </td>
                             <td class="fs-table">{{td.versionToGroups[td.activeVersion].dataFormat}}</td>
                             <td class="fs-table">
-                                <ui-select ng-model="td.activeVersion"
-                                           style="z-index: {{100-$index}}">
-                                    <ui-select-match
-                                            placeholder="Select a version">
-                                        <span>{{$select.selected}}</span>
-                                    </ui-select-match>
-                                    <ui-select-choices repeat="version in td.versions">
-                                        <span ng-bind="version"></span>
-                                    </ui-select-choices>
-                                </ui-select>
+                                <select class="form-control" 
+                                        ng-model="td.activeVersion" 
+                                        style="z-index: {{100-$index}}">
+                                    <option ng-repeat="version in td.versions">{{version}}</option>
+                                </select>
                             </td>
                             <td class="fs-table">
                                 <div class="btn-group fs-btn" role="group">
