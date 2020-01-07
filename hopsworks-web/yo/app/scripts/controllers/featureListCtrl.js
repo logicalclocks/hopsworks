@@ -41,9 +41,9 @@ angular.module('hopsWorksApp')
                     dates.sort(function(a, b) {
                         return new Date(b) - new Date(a)
                     });
-                    self.fromDate = new Date(dates[0]);
+                    self.fromDate = new Date(dates[dates.length - 1]);
                     self.fromDate.setDate(self.fromDate.getDate() - 1);
-                    self.toDate = new Date(dates[dates.length - 1]);
+                    self.toDate = new Date(dates[0]);
                     self.toDate.setDate(self.toDate.getDate() + 1);
                 });
             };

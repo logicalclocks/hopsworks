@@ -608,9 +608,9 @@ angular.module('hopsWorksApp')
                         dates.sort(function(a, b) {
                             return new Date(b) - new Date(a)
                         });
-                        self.featuregroupsFromDate = new Date(dates[0]);
+                        self.featuregroupsFromDate = new Date(dates[dates.length -1]);
                         self.featuregroupsFromDate.setDate(self.featuregroupsFromDate.getDate() - 1);
-                        self.featuregroupsToDate = new Date(dates[dates.length - 1]);
+                        self.featuregroupsToDate = new Date(dates[0]);
                         self.featuregroupsToDate.setDate(self.featuregroupsToDate.getDate() + 1);
 
                         self.featuregroupsLoaded = true;
@@ -644,9 +644,9 @@ angular.module('hopsWorksApp')
                             return new Date(b) - new Date(a)
                         });
 
-                        self.trainingDatasetsFromDate = new Date(dates[0]);
+                        self.trainingDatasetsFromDate = new Date(dates[dates.length - 1]);
                         self.trainingDatasetsFromDate.setDate(self.trainingDatasetsFromDate.getDate() - 1);
-                        self.trainingDatasetsToDate = new Date(dates[dates.length - 1]);
+                        self.trainingDatasetsToDate = new Date(dates[0]);
                         self.trainingDatasetsToDate.setDate(self.trainingDatasetsToDate.getDate() + 1);
 
                         self.trainingDatasetsLoaded = true;
