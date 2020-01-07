@@ -16,6 +16,8 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
@@ -47,7 +49,9 @@ public class FlinkCleaner {
   private InodeController inodeController;
   @EJB
   private DistributedFsService dfs;
-  
+  @EJB
+  private HostServicesFacade hostServicesFacade;
+
   @Schedule(persistent = false,
     minute = "0",
     hour = "1")
@@ -56,6 +60,13 @@ public class FlinkCleaner {
     //Get all jobs from history server
     DistributedFileSystemOps dfso = null;
     try {
+      List<HostServices> hosts = hostServicesFacade.findServices("flinkhistoryserver");
+      if(hosts.isEmpty()) {
+        LOGGER.log(Level.INFO, "Could not find flinkhistoryserver service running on any server, " +
+            "shutting down timer.");
+        timer.cancel();
+      }
+
       //Read all completed jobs from "historyserver.archive.fs.dir"
       String archiveDir = flinkController.getArchiveDir();
       //Delete all without hdfs user
