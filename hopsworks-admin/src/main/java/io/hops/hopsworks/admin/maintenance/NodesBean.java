@@ -262,7 +262,7 @@ public class NodesBean implements Serializable {
       return "";
     }
 //    try {
-      return secret;
+    return secret;
 //      return this.certificatesMgmService.decryptPassword(secret);
 //    } catch (IOException e) {
 //      e.printStackTrace();
