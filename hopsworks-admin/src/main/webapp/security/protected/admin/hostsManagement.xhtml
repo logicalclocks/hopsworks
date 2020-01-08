@@ -107,7 +107,7 @@
                                      update=":manageClusterNodes:growl">
                     </p:commandButton>
 
-                  <p:commandButton value="Rotate ZFS keys" rendered="#{nodesBean.isZfsDisabled()}"
+                  <p:commandButton value="Rotate ZFS keys" rendered="#{nodesBean.isZfsEnabled()}"
                                      style="float:right"
                                      actionListener="#{nodesBean.rotateZfsKeys}"
                                      icon="ui-icon-arrowrefresh-1-w"
