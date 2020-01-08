@@ -152,7 +152,6 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
-import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -2566,36 +2565,8 @@ public class ProjectController {
       || projectServices.contains(ProjectServiceEnum.JUPYTER)
       || projectServices.contains(ProjectServiceEnum.SERVING)) {
       elasticController.deleteProjectIndices(project);
-    }
-
-    if (projectServices.contains(ProjectServiceEnum.JOBS) || projectServices.contains(ProjectServiceEnum.JUPYTER)) {
-      //1. Delete visualizations, saved searches, dashboards
       LOGGER.log(Level.FINE, "removeElasticsearch-1:{0}", projectName);
       elasticController.deleteProjectSavedObjects(projectName);
-
-      //2. Delete logs Kibana Index
-      JSONObject resp = elasticController.deleteIndexPattern(project, projectName + "_logs-*");
-      LOGGER.log(Level.FINE, resp.toString(4));
-      resp = elasticController.deleteIndexPattern(project,
-          projectName + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
-      LOGGER.log(Level.FINE, resp.toString(4));
-
-      LOGGER.log(Level.FINE, "removeElasticsearch-2:{0}", projectName);
-
-      //3. Delete beam job service and sdk worker Kibana indices
-      String beamjobserviceIndex = projectName + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN;
-      String beamsdkharnessIndex = projectName + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN;
-      resp = elasticController.deleteIndexPattern(project, beamjobserviceIndex);
-      LOGGER.log(Level.FINE, "Deleting beamjobserviceIndex resp:" + resp.toString(4));
-      resp = elasticController.deleteIndexPattern(project, beamsdkharnessIndex);
-      LOGGER.log(Level.FINE, "Deleting beamsdkharnessIndex resp:" + resp.toString(4));
-      LOGGER.log(Level.FINE, "removeElasticsearch-3:{0}", projectName);
-    }
-
-    if (projectServices.contains(ProjectServiceEnum.SERVING)) {
-      JSONObject resp = elasticController.deleteIndexPattern(project,
-        projectName + Settings.ELASTIC_SERVING_INDEX_PATTERN);
-      LOGGER.log(Level.FINE, resp.toString(4));
     }
   }
 
