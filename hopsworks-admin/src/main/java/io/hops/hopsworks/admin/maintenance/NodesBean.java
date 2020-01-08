@@ -65,7 +65,6 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import java.io.IOException;
 import java.io.Serializable;
-import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,14 +261,15 @@ public class NodesBean implements Serializable {
     if (secret == null || secret.length() < 10) {
       return "";
     }
-    try {
-      return this.certificatesMgmService.decryptPassword(secret);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (GeneralSecurityException e) {
-      e.printStackTrace();
-    }
-    return "";
+//    try {
+      return secret;
+//      return this.certificatesMgmService.decryptPassword(secret);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+//    return "";
   }
 
   public void rsyncAnacondaLibs(String hostname) {
