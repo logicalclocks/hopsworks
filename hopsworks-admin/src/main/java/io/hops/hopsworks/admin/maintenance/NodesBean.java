@@ -297,6 +297,13 @@ public class NodesBean implements Serializable {
     }
   }
 
+  public String getEncrypted() {
+    return encrypted;
+  }
+
+  public String getDecrypted() {
+    return decrypted;
+  }
 
   public void rsyncAnacondaLibs(String hostname) {
 
