@@ -23,7 +23,7 @@ import io.hops.hopsworks.common.security.MasterPasswordChangeResult;
 import io.hops.hopsworks.common.security.MasterPasswordHandler;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -53,7 +53,7 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
   
   @Override
   public MasterPasswordChangeResult perform(String oldPassword, String newPassword) {
-    Map<String, Pair<String, String>> zfsKeys2Rollback = new HashMap<>();
+    Map<String, ImmutablePair<String, String>> zfsKeys2Rollback = new HashMap<>();
     StringBuilder successLog = new StringBuilder();
     successLog.append("Performing change of master password for ZFS Keys\n");
 
@@ -71,7 +71,7 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
         zfsKey = (zfsKey == null) ? "" : zfsKey;
         String zfsKeyRotated = host.getZfsKeyRotated();
         zfsKeyRotated = (zfsKeyRotated == null) ? "" : zfsKeyRotated;
-        Pair<String, String> entries = new Pair<>(zfsKey, zfsKeyRotated);
+        ImmutablePair<String, String> entries = new ImmutablePair<>(zfsKey, zfsKeyRotated);
         zfsKeys2Rollback.put(host.getHostname(), entries);
 
         if (!zfsKey.isEmpty()) {
@@ -100,11 +100,12 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
   @Override
   @SuppressWarnings("unchecked")
   public void rollback(MasterPasswordChangeResult result) {
-    Map<String, Pair<String, String>> zfsKeys2Rollback = (Map<String, Pair<String, String>>)result.getRollbackItems();
+    Map<String, ImmutablePair<String, String>> zfsKeys2Rollback =
+            (Map<String, ImmutablePair<String, String>>)result.getRollbackItems();
     LOGGER.log(Level.INFO, "Rolling back ZFS keys");
 
     for (String hostname : zfsKeys2Rollback.keySet()) {
-      Pair<String,String> zfsKeys = zfsKeys2Rollback.get(hostname);
+      ImmutablePair<String, String> zfsKeys = zfsKeys2Rollback.get(hostname);
       Hosts host = hostsFacade.findByHostname(hostname);
       if (host == null) {
         continue;
