@@ -257,12 +257,8 @@ angular.module('hopsWorksApp')
                   ElasticService.getJwtToken(self.projectId).then(
                       function (success) {
                           var projectName = success.data.projectName.toLowerCase();
-                           var kibanaUrl = success.data.kibanaUrl;
-                          if (self.isExecution === null || self.isExecution === false){
-                              self.ui = kibanaUrl + "#/discover?_g=(filters:!())&_a=(columns:!(logdate,application,host,priority,logger_name,log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"+projectName+"_logs-*',key:jobname,negate:!f,params:(query:" + self.job.name + "),type:phrase,value:" + self.job.name + "),query:(match:(jobname:(query:"+self.job.name+",type:phrase))))),index:'"+projectName+"_logs-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
-                          } else {
-                              self.ui = kibanaUrl + "#/discover?_g=(filters:!())&_a=(columns:!(logdate,host,priority,logger_name,log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"+projectName+"_logs-*',key:application,negate:!f,params:(query:" + self.appId + "),type:phrase,value:" + self.appId + "),query:(match:(application:(query:"+self.appId+",type:phrase))))),index:'"+projectName+"_logs-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
-                          }
+                          var kibanaUrl = success.data.kibanaUrl;
+                          self.ui = kibanaUrl + "#/discover?_g=(filters:!())&_a=(columns:!(logdate,host,priority,logger_name,log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'"+projectName+"_logs-*',key:application,negate:!f,params:(query:" + self.appId + "),type:phrase,value:" + self.appId + "),query:(match:(application:(query:"+self.appId+",type:phrase))))),index:'"+projectName+"_logs-*',interval:auto,query:(language:kuery,query:''),sort:!(logdate,desc))";
                           //if not jupyter we should have a job
                           self.current = "kibanaUI";
                           var iframe = document.getElementById('ui_iframe');
