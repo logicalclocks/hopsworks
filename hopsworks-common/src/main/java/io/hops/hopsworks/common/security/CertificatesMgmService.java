@@ -107,6 +107,7 @@ public class CertificatesMgmService {
   private File masterPasswordFile;
   private Cache<Integer, UPDATE_STATUS> updateStatus;
   private Random rand;
+
   public CertificatesMgmService() {
 
   }

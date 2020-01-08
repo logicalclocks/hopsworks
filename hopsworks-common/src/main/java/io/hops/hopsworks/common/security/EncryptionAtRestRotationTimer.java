@@ -55,10 +55,9 @@ import java.util.logging.Logger;
 
 @Singleton
 @Startup
-@DependsOn("Settings")
+@DependsOn({"Settings","CertificatesMgmService"})
 public class EncryptionAtRestRotationTimer {
   private final static Logger LOG = Logger.getLogger(EncryptionAtRestRotationTimer.class.getName());
-
   
   @Resource
   private TimerService timerService;
@@ -66,7 +65,7 @@ public class EncryptionAtRestRotationTimer {
   private Settings settings;
   @EJB
   private CertificatesMgmService certificatesMgmService;
-  
+
   @PostConstruct
   public void init() {
     String rawInterval = settings.getServiceKeyRotationInterval();
