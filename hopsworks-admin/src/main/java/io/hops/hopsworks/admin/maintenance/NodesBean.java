@@ -259,6 +259,9 @@ public class NodesBean implements Serializable {
   }
 
   public String decrypt(String secret) {
+    if (secret == null || secret.length() < 10) {
+      return "";
+    }
     try {
       return this.certificatesMgmService.decryptPassword(secret);
     } catch (IOException e) {
