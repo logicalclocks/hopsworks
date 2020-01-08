@@ -535,7 +535,16 @@ angular.module('hopsWorksApp')
                               function (success) {
                                   for (var execId in success.data.items) {
                                       if (self.runningStates.includes(success.data.items[execId].state)) {
-                                          self.stopExecution(jobName, success.data.items[execId].id);
+                                          JobService.stopExecution(self.projectId, jobName, success.data.items[execId].id).then(
+                                              function (success) {
+                                                  growl.success("Stopping, please wait...", {title: 'Success', ttl: 5000});
+                                              }, function (error) {
+                                                  if (typeof error.data.usrMsg !== 'undefined') {
+                                                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                                  } else {
+                                                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                                  }
+                                              });
                                       }
                                   }
                               }, function (error) {
@@ -768,7 +777,7 @@ angular.module('hopsWorksApp')
                     self.jobsFromDate.setHours(0,0,0,0);
                     StorageService.store(self.projectId + "_" + type, self.jobsFromDate.getTime());
                 } else if (type === "jobsToDate") {
-                    self.jobsToDate.setHours(0,0,0,0);
+                    self.jobsToDate.setMinutes(self.jobsToDate.getMinutes() + 60*25);
                     StorageService.store(self.projectId + "_" + type, self.jobsToDate.getTime());
                 }
             };

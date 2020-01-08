@@ -568,20 +568,7 @@ a.fs_card.bg-inverse:focus, a.fs_card.bg-inverse:hover {
     margin-right: 7px;
     float: left;
 }
-.cart-button {
-    background: rgb(51, 122, 183);
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    border-radius: 3px;
-    font-size: 16px;
-    margin: 25px 0 15px 0;
-    font-size:20px;
-}
-.cart-button:hover {
-    background: #729ef9;
-}
+
 .clearfix:after {
     content: "";
     display: table;

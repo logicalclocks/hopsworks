@@ -286,8 +286,8 @@ public class JupyterController {
     String relativeNotebookPath = null;
     try {
       JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
-          .target(settings.getRestEndpoint() + "/hopsworks-api/jupyter/" + jp.getPort() + "/api/sessions?token="
-              + jp.getToken())
+          .target("http://" + settings.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
+              jp.getPort() + "/api/sessions?token=" + jp.getToken())
           .request()
           .method("GET")
           .readEntity(String.class));
@@ -311,8 +311,9 @@ public class JupyterController {
       //Get the content of the notebook should work in both spark and python kernels irregardless of contents manager
       if (!Strings.isNullOrEmpty(relativeNotebookPath)) {
         JSONObject notebookContents = new JSONObject(ClientBuilder.newClient()
-            .target(settings.getRestEndpoint() + "/hopsworks-api/jupyter/" + jp.getPort() +
-                "/api/contents/" + relativeNotebookPath + "?content=1&token=" + jp.getToken())
+            .target("http://" + settings.getJupyterHost() + ":" + jp.getPort() +
+                "/hopsworks-api/jupyter/" + jp.getPort() + "/api/contents/" + relativeNotebookPath
+                + "?content=1&token=" + jp.getToken())
             .request()
             .method("GET")
             .readEntity(String.class));
