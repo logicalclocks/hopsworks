@@ -40,49 +40,25 @@ package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.common.dao.project.Project;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.ArrayList;
-import java.util.List;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class ProjectUtils {
   
-  public boolean isReservedProjectName(String projName) {
-    boolean res = false;
-    for (String name : getReservedProjectNames()) {
-      if (name.compareToIgnoreCase(projName) == 0) {
-        res = true;
-        break;
+  @EJB
+  private Settings settings;
+  
+  public boolean isReservedProjectName(String projectName) {
+    for (String name : settings.getReservedProjectNames()) {
+      if (name.equalsIgnoreCase(projectName)) {
+        return true;
       }
     }
-    return res;
-  }
-  
-  public List<String> getReservedProjectNames() {
-    List<String> reservedNames = new ArrayList<>();
-    reservedNames.add("python27");
-    reservedNames.add("python36");
-    reservedNames.add("python37");
-    reservedNames.add("python38");
-    reservedNames.add("python39");
-    //Online Feature Store creates MySQL db with the same name as the projectname
-    reservedNames.add("hops-system");
-    reservedNames.add("hopsworks");
-    reservedNames.add("information_schema");
-    reservedNames.add("airflow");
-    reservedNames.add("glassfish_timers");
-    reservedNames.add("grafana");
-    reservedNames.add("hops");
-    reservedNames.add("metastore");
-    reservedNames.add("mysql");
-    reservedNames.add("ndbinfo");
-    reservedNames.add("performance_schema");
-    reservedNames.add("sqoop");
-    reservedNames.add("sys");
-    return reservedNames;
+    return false;
   }
   
   public String getCurrentCondaEnvironment(Project project) {
