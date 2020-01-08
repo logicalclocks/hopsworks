@@ -263,15 +263,15 @@
                       </div>
                   </p:column>
 
-                  <p:column id="zfsKey" headerText="ZFS Key" rendered="#{nodesBean.isZfsDisabled()}">
+                  <p:column headerText="ZFS Key" rendered="#{nodesBean.isZfsEnabled()}">
                     <div align="center">
                       <h:outputText value="#{nodesBean.decrypt(node.zfsKey)}" />
                     </div>
                   </p:column>
 
-                  <p:column id="zfsKeyRotated" headerText="ZFS Key Rotated" rendered="#{nodesBean.isZfsDisabled()}">
+                  <p:column headerText="ZFS Key Rotated" rendered="#{nodesBean.isZfsEnabled()}">
                     <div align="center">
-                      <h:outputText value="#{nodesBean.decrypt(ode.zfsKeyRotated)}" />
+                      <h:outputText value="#{nodesBean.decrypt(node.zfsKeyRotated)}" />
                     </div>
                   </p:column>
 

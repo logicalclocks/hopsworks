@@ -255,8 +255,8 @@ public class NodesBean implements Serializable {
     return "condaSync";
   }
 
-  public boolean isZfsDisabled() {
-    return settings.getZfsPool().isEmpty();
+  public boolean isZfsEnabled() {
+    return settings.getZfsPool().isEmpty() == false;
   }
 
   public String decrypt(String secret) {
