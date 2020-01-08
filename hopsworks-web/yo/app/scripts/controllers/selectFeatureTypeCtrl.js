@@ -18,70 +18,48 @@
  * Controller for the process of selecting a feature type for defining schemas of featuregroup/training datasets
  */
 angular.module('hopsWorksApp')
-    .controller('selectFeatureTypeCtrl', ['$uibModalInstance', 'FeaturestoreService',
-        'growl', 'ModalService', '$scope', 'settings',
-        function ($uibModalInstance, FeaturestoreService, growl, ModalService, $scope, settings) {
+    .controller('selectFeatureTypeCtrl', ['$uibModalInstance', 'online', 'settings',
+        function ($uibModalInstance, online, settings) {
             /**
              * Initialize state
              */
             var self = this;
 
-            //Controller Inputs
-            self.settings = settings
-
             //Constants
-            self.hiveDataTypes = self.settings.suggestedHiveFeatureTypes
-            self.mysqlDataTypes = self.settings.suggestedMysqlFeatureTypes
+            self.hiveDataTypes = settings.suggestedHiveFeatureTypes
+            self.mysqlDataTypes = settings.suggestedMysqlFeatureTypes
+
+            self.online = online;
 
             //State
+            self.duplicateTypeSelection = false;
+            self.noSelection = false;
+            self.predefinedHiveType = self.hiveDataTypes[0];
+            self.predefinedMysqlType = self.mysqlDataTypes[0];
             self.customType;
-            self.predefinedHiveType;
-            self.predefinedMysqlType;
-            self.duplicateTypeSelection = 1;
-            self.noSelection = 1;
-            self.wrong_values = 1;
-            self.predefinedHiveType = self.hiveDataTypes[0]
-            self.predefinedMysqlType = self.hiveDataTypes[0]
-
-
 
             /**
              * Function called when the "Save" button is pressed.
              * Validates parameters and then returns the selected feature type to the parent-modal
              */
-            self.selectFeatureType = function () {
-                self.duplicateTypeSelection = 1;
-                self.noSelection = 1;
-                self.wrong_values = 1;
-                if(self.customType && self.predefinedHiveType != "None") {
-                    self.duplicateTypeSelection = -1;
-                    self.wrong_values = -1;
-                }
-                if(self.customType && self.predefinedMysqlType != "None") {
-                    self.duplicateTypeSelection = -1;
-                    self.wrong_values = -1;
-                }
-                if(self.predefinedHiveType != "None" && self.predefinedMysqlType != "None") {
-                    self.duplicateTypeSelection = -1;
-                    self.wrong_values = -1;
-                }
-                if(!self.customType && (self.predefinedHiveType == "None" || !self.predefinedHiveType) &&
-                    (self.predefinedMysqlType == "None" || !self.predefinedMysqlType)) {
-                    self.noSelection = -1;
-                    self.wrong_values = -1;
-                }
-                if (self.wrong_values === -1) {
+            self.selectFeatureType = function() { 
+                // Reset
+                self.duplicateTypeSelection = false;
+                self.noSelection = false
+
+                var predefinedType = self.online ? self.predefinedMysqlType : self.predefinedHiveType;
+
+                if (self.customType && predefinedType != "None") {
+                    self.duplicateTypeSelection = true;
                     return;
-                }
-                if(self.customType){
+                } else if (self.customType) {
                     $uibModalInstance.close(self.customType);
-                }
-                if(self.predefinedHiveType != "None"){
-                    $uibModalInstance.close(self.predefinedHiveType);
-                }
-                if(self.predefinedMysqlType != "None") {
-                    $uibModalInstance.close(self.predefinedMysqlType);
-                }
+                } else if (predefinedType != "None") {
+                    $uibModalInstance.close(predefinedType);
+                } else {
+                    self.noSelection = true;
+                    return;
+                } 
             };
 
             /**

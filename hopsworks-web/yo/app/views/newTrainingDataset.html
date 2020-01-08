@@ -60,153 +60,13 @@
                 <div class="row">
                     <div class="col-sm-9">
                         <div>
-                            <div class="row form-inline">
-                                <div class="col-sm-9 form-group">
-                                    <label style="color:#555">
-                                        Search:
-                                        <input class="form-control"
-                                               style="margin-left: 10px;"
-                                               ng-model="newTrainingDatasetCtrl.fFilter"
-                                               placeholder="Search for a feature"
-                                        >
-                                        <md-datepicker ng-model="newTrainingDatasetCtrl.featuresFromDate"
-                                                       md-placeholder="From"></md-datepicker>
-                                        <md-datepicker ng-model="newTrainingDatasetCtrl.featuresToDate"
-                                                       md-placeholder="To"></md-datepicker>
-                                    </label>
-                                </div>
-                                <div class="col-sm-3 form-group">
-                                    <div class="pull-right btn-group">
-                                        <label>Features per page:
-                                            <input type="number" min="1"
-                                                   max="50"
-                                                   class="form-control"
-                                                   ng-model="newTrainingDatasetCtrl.featuresPageSize"
-                                                   style="width:80px">
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row" style="margin-left:15px; margin-top:10px">
-                                <div>
-                                    <label ng-click="newTrainingDatasetCtrl.setFeatureSearchFilterForm();"
-                                           style="color:#555">
-                                        <span class="glyphicon glyphicon-chevron-right"
-                                              ng-if="!newTrainingDatasetCtrl.featureSearchFilterForm"></span>
-                                        <span class="glyphicon glyphicon-chevron-down"
-                                              ng-if="newTrainingDatasetCtrl.featureSearchFilterForm"></span>
-                                        Search Settings</label>
-                                </div>
-                                <div ng-if="newTrainingDatasetCtrl.featureSearchFilterForm" class="animate-if">
-
-                                    <div class="form-group">
-                                        <form class="form-inline">
-                                            <div class="form-group">
-                                                Feature Group Filter:
-                                                <input class="form-control" style="margin-left: 10px"
-                                                       ng-model="newTrainingDatasetCtrl.featureSearchFgFilter">
-                                            </div>
-                                        </form>
-                                        <form class="form-inline">
-                                            <div class="form-group">
-                                                Version Filter:
-                                                <input class="form-control" style="margin-left: 50px"
-                                                       ng-model="newTrainingDatasetCtrl.featureSearchFgVersionFilter">
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
                             <div>
-                                <div class="row search-result-header">
-                                    <div class="col-md-11 pull-left">
-                                        <h3>{{filteredResults.length}} Results found
-                                             <span ng-if="newTrainingDatasetCtrl.fFilter != ''">
-                                                 for: {{newTrainingDatasetCtrl.fFilter | limitTo: 85 }}
-                                                 {{newTrainingDatasetCtrl.fFilter > 85 ? '...' : ''}}
-                                             </span>
-                                        </h3>
-                                    </div>
-                                </div>
-                                <table class="table table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th style="width: 15%"
-                                            class="fs-table">
-                                            Created
-                                        </th>
-                                        <th style="width: 15%"
-                                            class="fs-table">
-                                            Origin
-                                        </th>
-                                        <th style="width: 25%"
-                                            class="fs-table">
-                                            Name
-                                        </th>
-                                        <th style="width: 10%"
-                                            class="fs-table"> Type
-                                        </th>
-                                        <th style="width: 20%"
-                                            class="fs-table">
-                                            Feature Group
-                                        </th>
-                                        <th style="width: 5%"
-                                            class="fs-table">
-                                            Version
-                                        </th>
-                                        <th style="width: 10%"
-                                            class="fs-table">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                    <tbody class="table-hover">
-                                    <tr
-                                            dir-paginate="result in ((filteredResults = (newTrainingDatasetCtrl.features | dateRangeFilterFeatures : newTrainingDatasetCtrl.featuresFromDate : newTrainingDatasetCtrl.featuresToDate | filter:{name:newTrainingDatasetCtrl.fFilter}:false | featureSearchFilterByFg:newTrainingDatasetCtrl.featureSearchFgFilter:false | featureSearchFilterByFgVersion:newTrainingDatasetCtrl.featureSearchFgVersionFilter:false)) | itemsPerPage:newTrainingDatasetCtrl.featuresPageSize)"
-                                            class="fs-table">
-                                        <td class="fs-table">
-                                            {{newTrainingDatasetCtrl.createdOn(result.date)}}
-                                        </td>
-                                        <td class="fs-table">
-                                            <span ng-if="result.entity === 1">
-                                                <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px">Feature Group</span>
-                                            </span>
-                                            <span ng-if="result.entity === 0">
-                                                <i class="glyphicon glyphicon-tags"></i>
-                                                <span style="margin-left:5px">Training Dataset</span>
-                                            </span>
-                                        </td>
-                                        <td class="fs-table">{{result.name}}</td>
-                                        <td class="fs-table">{{result.type}}</td>
-                                        <td class="fs-table">
-                                        <span ng-if="result.entity === 1">
-                                                {{result.featuregroup.name}}
-                                        </span>
-                                            <span ng-if="result.entity === 0">
-                                                {{result.trainingDataset.name}}
-                                        </span>
-                                        </td>
-                                        <td class="fs-table">{{result.version}}</td>
-                                        <td class="fs-table">
-                                            <div class="btn-group fs-btn" role="group">
-                                                <button uib-tooltip="Feature Details"
-                                                        type="button"
-                                                        class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                                        ng-click="newTrainingDatasetCtrl.viewFeatureInfo(result)"
-                                                        style="background-color:rgb(51, 122, 183); border:rgb(51, 122, 183);">
-                                                </button>
-                                                <button uib-tooltip="Add feature to Training Dataset"
-                                                        type="button"
-                                                        class="btn btn-success btn-sm glyphicon glyphicon-plus"
-                                                        ng-disabled="newTrainingDatasetCtrl.featureInBasket(result)"
-                                                        ng-click="newTrainingDatasetCtrl.addFeatureToBasket(result)">
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
+                                <feature-list project-id="newTrainingDatasetCtrl.projectId" 
+                                              features="newTrainingDatasetCtrl.features"
+                                              settings="newTrainingDatasetCtrl.settings"
+                                              add-feature-to-basket="newTrainingDatasetCtrl.addFeatureToBasket"
+                                              feature-in-basket="newTrainingDatasetCtrl.featureInBasket">
+                                </feature-list>
                             </div>
                             <div class="row divider" style="margin-bottom: 0px;"></div>
                             <div class="row" style="margin-top: -20px">
@@ -249,34 +109,34 @@
                                         class="pull-right"
                                         max-size="5"
                                         direction-links="true"
-                                        boundary-links="true"
-                                >
-                                </dir-pagination-controls>
+                                        boundary-links="true"></dir-pagination-controls>
 
                                 <ul class="shopping-cart-items"
                                     dir-paginate="basketFeature in newTrainingDatasetCtrl.featureBasket | itemsPerPage:5 "
-                                    pagination-id="featuresbasket"
-                                >
-                                    <li
-                                            class="clearfix"
-                                    >
-                                        <button class="btn btn-xs btn-danger fa fa-trash fa-xs"
+                                    pagination-id="featuresbasket">
+
+                                    <li class="clearfix">
+                                        <button class="btn btn-danger fa fa-trash fa-xs"
+                                                style="padding: 3px 8px;"
                                                 uib-tooltip="Delete"
                                                 ng-click="newTrainingDatasetCtrl.removeFeatureFromBasket($index);"></button>
                                         <span class="item-name">{{basketFeature.name}}</span>
                                         <span class="item-price">Type: {{basketFeature.type}}</span>
-                                        <span class="item-quantity">Feature Group: {{basketFeature.featuregroup
-                                            .name}}</span>
+                                        <div class="item-quantity">Feature Group: {{basketFeature.featuregroup
+                                            .name}}</div>
                                     </li>
                                 </ul>
-                                <a class="cart-button" ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
-                                   ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0"
-                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'"
-                                >Create Training Dataset</a>
-                                <a class="cart-button" ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
-                                   ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0"
-                                   ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"
-                                >Update Training Dataset</a>
+                                <a class="btn btn-success" 
+                                   style="margin-top: 5px;"
+                                   ng-click="newTrainingDatasetCtrl.setupQueryPlan()"
+                                   ng-disabled="newTrainingDatasetCtrl.featureBasket.length === 0">
+                                    <span ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
+                                        Create training dataset
+                                    </span> 
+                                    <span ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"">
+                                        Update training dataset
+                                    </span> 
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -291,12 +151,10 @@
                                 New Training Dataset Definition
                             </h2>
                             <h2 ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'">
-                                Update Training Dataset: <span style="font-weight:700">{{newTrainingDatasetCtrl.trainingDataset
-                                .name}}</span>
+                                Update Training Dataset: <span style="font-weight:700">{{newTrainingDatasetCtrl.trainingDataset.name}}</span>
                             </h2>
                             <h2 ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
-                                Create New Version of Training Dataset: <span style="font-weight:700">{{newTrainingDatasetCtrl.trainingDataset
-                                .name}}</span>
+                                Create New Version of Training Dataset: <span style="font-weight:700">{{newTrainingDatasetCtrl.trainingDataset.name}}</span>
                             </h2>
                         </div>
                     </div>
@@ -739,7 +597,7 @@
                                         <div class="col-sm-3">
                                             <button type="button"
                                                     ng-click="newTrainingDatasetCtrl.addNewFeature()"
-                                                    class="col-sm-10 btn btn-sm btn-default btn-success control-label"
+                                                    class="btn btn-sm btn-default btn-success control-label"
                                                     style="margin-bottom:10px">
                                                 Add Feature<i style="margin-left: 10px"
                                                               class="glyphicon glyphicon-plus">

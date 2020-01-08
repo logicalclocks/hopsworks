@@ -17,7 +17,6 @@
 <div ng-controller="MainCtrl as mainCtrl">
     <div ng-include="'nav.html'"></div>
 
-
     <div id="wrapper" class="toggled" ng-controller="newFeaturegroupCtrl as newFeaturegroupCtrl">
         <div class="overlay"></div>
 
@@ -31,8 +30,7 @@
                 <uib-tab index="0" heading="{{newFeaturegroupCtrl.cachedFeaturegroupHeading}}"
                          uib-tooltip="A Feature Group stored and managed in Hopsworks."
                          class="fs-tab"
-                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.cachedFeaturegroupType"
-                >
+                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.cachedFeaturegroupType">
                     <div>
                         <div class="row">
                             <div class="panel-header col-md-12">
@@ -70,8 +68,7 @@
                                        ng-model="newFeaturegroupCtrl.cachedFeaturegroupName"
                                        ng-change="newFeaturegroupCtrl.cachedNameFilledIn()"
                                        autofocus
-                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'"
-                                >
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'UPDATE'">
                                 <input type="text" class="form-control"
                                        placeholder="Enter a Feature Group Name"
                                        value="newFeaturegroupCtrl.cachedFeaturegroupName"
@@ -79,8 +76,7 @@
                                        ng-change="newFeaturegroupCtrl.cachedNameFilledIn()"
                                        autofocus
                                        readonly
-                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
-                                >
+                                       ng-if="newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'">
                                 <div
                                         ng-if="newFeaturegroupCtrl.cachedFeaturegroupNameWrongValue === -1"
                                         style="color: red">
@@ -95,7 +91,6 @@
 
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.cached_fg_accordion2.isOpen"
-                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion2.visible"
                                  id="cachedFeaturegroupDocDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -113,8 +108,7 @@
                                        placeholder="Enter a Feature Group Description"
                                        value="newFeaturegroupCtrl.cachedFeaturegroupDoc"
                                        ng-model="newFeaturegroupCtrl.cachedFeaturegroupDoc"
-                                       ng-change="newFeaturegroupCtrl.cachedDescriptionFilledIn()"
-                                >
+                                       ng-change="newFeaturegroupCtrl.cachedDescriptionFilledIn()">
                                 <div
                                         ng-if="newFeaturegroupCtrl.cachedFeaturegroupDocWrongValue === -1"
                                         style="color: red">
@@ -127,7 +121,6 @@
 
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.cached_fg_accordion3.isOpen"
-                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion3.visible"
                                  id="featuregroupSchemaDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -303,7 +296,7 @@
                                                 <div class="col-sm-3">
                                                 </div>
                                                 <div class="col-sm-9">
-                                                    <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
+                                                    <button class="btn btn-sm btn-danger glyphicon glyphicon-trash"
                                                             uib-tooltip="delete"
                                                             ng-click="newFeaturegroupCtrl.removeNewCachedFeature($index)">
                                                     </button>
@@ -318,12 +311,10 @@
                                             <div class="col-sm-3">
                                                 <button type="button"
                                                         ng-click="newFeaturegroupCtrl.addNewCachedFeature()"
-                                                        class="col-sm-10 btn btn-sm btn-default btn-success control-label"
-                                                        style="margin-bottom:
-                            10px">
+                                                        class="btn btn-sm btn-default btn-success control-label"
+                                                        style="margin-bottom:10px">
                                                     Add Feature<i style="margin-left: 10px"
-                                                                  class="glyphicon glyphicon-plus">
-                                                </i>
+                                                                  class="glyphicon glyphicon-plus"></i>
                                                 </button>
                                             </div>
                                             <div class="col-sm-9">
@@ -349,7 +340,6 @@
                             </div>
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.cached_fg_accordion4.isOpen"
-                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion4.visible"
                                  id="cachedFeatureGroupSqlQueryDiv"
                                  ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroupOperation === 'NEW_VERSION'"
                             >
@@ -526,7 +516,6 @@
                             </div>
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.cached_fg_accordion5.isOpen"
-                                 ng-show="newFeaturegroupCtrl.cached_fg_accordion5.visible"
                             >
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -679,7 +668,6 @@
 
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion2.isOpen"
-                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion2.visible"
                                  id="onDemandFeaturegroupDocDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -711,7 +699,6 @@
 
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion3.isOpen"
-                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion3.visible"
                                  id="featuregroupSchemaDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -855,7 +842,7 @@
                                             <div class="col-sm-3">
                                                 <button type="button"
                                                         ng-click="newFeaturegroupCtrl.addNewOnDemandFeature()"
-                                                        class="col-sm-10 btn btn-sm btn-default btn-success control-label"
+                                                        class="btn btn-sm btn-default btn-success control-label"
                                                         style="margin-bottom:10px">
                                                     Add Feature<i style="margin-left: 10px"
                                                                   class="glyphicon glyphicon-plus">
@@ -880,7 +867,6 @@
                             </div>
                             <div uib-accordion-group class="panel-default"
                                  is-open="newFeaturegroupCtrl.on_demand_fg_accordion4.isOpen"
-                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion4.visible"
                                  id="onDemandSqlQueryDiv">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
@@ -981,9 +967,7 @@
                                 </div>
                             </div>
                             <div uib-accordion-group class="panel-default"
-                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion5.isOpen"
-                                 ng-show="newFeaturegroupCtrl.on_demand_fg_accordion5.visible"
-                            >
+                                 is-open="newFeaturegroupCtrl.on_demand_fg_accordion5.isOpen">
                                 <div uib-accordion-heading>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
                                        uib-tooltip='Creating an On-Demand Feature Group will store a SQL Query and a JBDC Connection.

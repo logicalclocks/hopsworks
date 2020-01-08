@@ -1284,7 +1284,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeatureInfo: function (size, projectId, feature, featurestore, settings) {
+            viewFeatureInfo: function (size, feature, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featureViewInfo.html',
                     controller: 'featureViewInfoCtrl as featureViewInfoCtrl',
@@ -1298,14 +1298,8 @@ angular.module('hopsWorksApp')
                                         return $q.reject(error)
                                     });
                             }],
-                        projectId: function () {
-                            return projectId;
-                        },
                         feature: function () {
                             return feature;
-                        },
-                        featurestore: function () {
-                            return featurestore;
                         },
                         settings: function () {
                             return settings;
@@ -1404,7 +1398,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectFeatureType: function (size, settings) {
+            selectFeatureType: function (size, online, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectFeatureType.html',
                     controller: 'selectFeatureTypeCtrl as selectFeatureTypeCtrl',
@@ -1418,6 +1412,9 @@ angular.module('hopsWorksApp')
                                         return $q.reject(error)
                                     });
                             }],
+                        online: function() {
+                            return online;
+                        },
                         settings: function () {
                             return settings;
                         },
