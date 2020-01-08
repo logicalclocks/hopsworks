@@ -83,8 +83,36 @@ public class HostsFacade extends AbstractFacade<Hosts> {
       filters, sorts, "");
     Query query = em.createQuery(queryStr, Hosts.class);
     Query queryCount = em.createQuery(queryCountStr, Hosts.class);
+    setFilter(filters, query);
+    setFilter(filters, queryCount);
     setOffsetAndLim(offset, limit, query);
     return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
+  }
+  
+  private void setFilter(Set<? extends AbstractFacade.FilterBy> filter, Query q) {
+    if (filter == null || filter.isEmpty()) {
+      return;
+    }
+    for (FilterBy aFilter : filter) {
+      setFilterQuery(aFilter, q);
+    }
+  }
+  
+  private void setFilterQuery(AbstractFacade.FilterBy filterBy, Query q) {
+    switch (Filters.valueOf(filterBy.getValue())) {
+      case HOSTNAME:
+      case HOST_IP:
+      case PUBLIC_IP:
+      case PRIVATE_IP:
+        q.setParameter(filterBy.getField(), filterBy.getParam());
+        break;
+      case REGISTERED:
+      case CONDA_ENABLED:
+        q.setParameter(filterBy.getField(), Boolean.valueOf(filterBy.getParam()));
+        break;
+      default:
+        break;
+    }
   }
   
   
@@ -171,8 +199,8 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     PUBLIC_IP("PUBLIC_IP", " LOWER(h.publicIp) ", "ASC"),
     PRIVATE_IP("PRIVATE_IP", " LOWER(h.privateIp) ", "ASC"),
     CORES("CORES", " h.cores ", "ASC"),
-    NUM_GPUS("NUM_GPUS", " h.num_gpus ", "ASC"),
-    MEMORY_CAPACITY("MEMORY_CAPACITY", " h.memory_capacity ", "ASC");
+    NUM_GPUS("NUM_GPUS", " h.numGpus ", "ASC"),
+    MEMORY_CAPACITY("MEMORY_CAPACITY", " h.memoryCapacity ", "ASC");
   
     private final String value;
     private final String sql;
@@ -207,12 +235,12 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   }
   
   public enum Filters {
-    HOSTNAME("HOSTNAME", " h.hostname = :hostname ", "hostname" , ""),
-    HOST_IP("HOST_IP", " h.hostIp = :hostIp ", "hostIp", ""),
-    PUBLIC_IP("PUBLIC_IP", " h.publicIp = :publicIp ", "publicIp", ""),
-    PRIVATE_IP("PRIVATE_IP", " h.privateIp = :privateIp ", "privateIp", ""),
-    REGISTERED("REGISTERED", " h.registered = :registered ", "registered", "false"),
-    CONDA_ENABLED("CONDA_ENABLED", " h.condaEnabled = :condaEnabled ", "condaEnabled", "false");
+    HOSTNAME("HOSTNAME", " h.hostname = :hostname", "hostname" , ""),
+    HOST_IP("HOST_IP", " h.hostIp = :hostIp", "hostIp", ""),
+    PUBLIC_IP("PUBLIC_IP", " h.publicIp = :publicIp", "publicIp", ""),
+    PRIVATE_IP("PRIVATE_IP", " h.privateIp = :privateIp", "privateIp", ""),
+    REGISTERED("REGISTERED", " h.registered = :registered", "registered", "false"),
+    CONDA_ENABLED("CONDA_ENABLED", " h.condaEnabled = :condaEnabled", "condaEnabled", "false");
   
     private final String value;
     private final String sql;
