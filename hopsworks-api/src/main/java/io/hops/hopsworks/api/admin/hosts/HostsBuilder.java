@@ -35,20 +35,16 @@ import java.net.URI;
 public class HostsBuilder {
   
   @EJB
-  private HostsFacade hostsFacades;
+  private HostsFacade hostsFacade;
   @EJB
   private HostsController hostsController;
-  
-  public HostsDTO buildBasic(UriInfo uriInfo, ResourceRequest resourceRequest) {
-    return null;
-  }
   
   public HostsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest) {
     HostsDTO dto = new HostsDTO();
     dto.setHref(uriBase(uriInfo).build());
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
-      AbstractFacade.CollectionInfo collectionInfo = hostsFacades.findHosts(
+      AbstractFacade.CollectionInfo collectionInfo = hostsFacade.findHosts(
         resourceRequest.getOffset(),
         resourceRequest.getLimit(),
         resourceRequest.getFilter(),

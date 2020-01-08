@@ -261,7 +261,7 @@ describe "On #{ENV['OS']}" do
         expect(res).to eq(hosts)
       end
 
-      it "sorts by id asc and hostame desc" do
+      it "sorts by id asc and hostname desc" do
         hosts = find_all_hosts().sort do |a,b|
           res = (a[:id] <=> b[:id])
           res = -(a[:hostname].downcase <=> b[:hostname].downcase) if res == 0
