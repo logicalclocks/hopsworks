@@ -114,6 +114,20 @@
                                      update=":manageClusterNodes:growl">
                   </p:commandButton>
 
+                  <p:commandButton value="Encrypt"
+                                   style="float:right"
+                                   actionListener="#{nodesBean.encrypt()}"
+                                   icon="ui-icon-arrowrefresh-1-w"
+                                   update=":manageClusterNodes:growl">
+                  </p:commandButton>
+                  <p:commandButton value="Decrypt"
+                                   style="float:right"
+                                   actionListener="#{nodesBean.decrypt()}"
+                                   icon="ui-icon-arrowrefresh-1-w"
+                                   update=":manageClusterNodes:growl">
+                  </p:commandButton>
+
+
                 </div>
 
                 <!--<div class="ui-g">
@@ -266,6 +280,18 @@
                   <p:column headerText="ZFS Key" rendered="#{nodesBean.isZfsEnabled()}">
                     <div align="center">
                       <h:outputText value="#{nodesBean.decrypt(node.zfsKey)}" />
+                    </div>
+                  </p:column>
+
+                  <p:column headerText="Encrypted">
+                    <div align="center">
+                      <h:outputText value="#{nodesBean.encrypted}" />
+                    </div>
+                  </p:column>
+
+                  <p:column headerText="Decrypted">
+                    <div align="center">
+                      <h:outputText value="#{nodesBean.decrypted}" />
                     </div>
                   </p:column>
 

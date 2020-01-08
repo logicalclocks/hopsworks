@@ -108,6 +108,10 @@ public class NodesBean implements Serializable {
   private String output;
   private Future<String> future;
 
+  public String decrypted="";
+  public String encrypted="";
+
+
   class CondaTask implements Callable<String> {
 
     private final Logger logger = Logger.getLogger(getClass().getSimpleName());
@@ -261,15 +265,38 @@ public class NodesBean implements Serializable {
     if (secret == null || secret.length() < 10) {
       return "";
     }
+    this.encrypted = secret;
+    return secret;
+
+//    try {
+//      return this.certificatesMgmService.decryptPassword(secret);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (java.security.GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+//    return "";
+  }
+
+  public void encrypt() {
     try {
-      return this.certificatesMgmService.decryptPassword(secret);
+      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (java.security.GeneralSecurityException e) {
       e.printStackTrace();
     }
-    return "";
   }
+  public void decrypt() {
+    try {
+      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (java.security.GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+  }
+
 
   public void rsyncAnacondaLibs(String hostname) {
 
