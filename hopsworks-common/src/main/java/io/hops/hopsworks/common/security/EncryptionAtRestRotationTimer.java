@@ -55,7 +55,7 @@ import java.util.logging.Logger;
 
 @Singleton
 @Startup
-@DependsOn({"Settings","CertificatesMgmService"})
+@DependsOn({"Settings"})
 public class EncryptionAtRestRotationTimer {
   private final static Logger LOG = Logger.getLogger(EncryptionAtRestRotationTimer.class.getName());
   
