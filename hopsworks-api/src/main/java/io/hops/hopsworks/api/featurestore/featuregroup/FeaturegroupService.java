@@ -522,8 +522,7 @@ public class FeaturegroupService {
     final String path = featuregroupDTO.getLocation();
     
     Response.Status status = Response.Status.OK;
-    if(xattrsController.addXAttr(project, user, path, xattrName,
-        metaObj)){
+    if(xattrsController.addXAttr(project, user, path, xattrName, metaObj)){
       status = Response.Status.CREATED;
     }
     
@@ -566,7 +565,7 @@ public class FeaturegroupService {
         path, xattrName);
     
     Response.Status status = result.isEmpty() ?
-        Response.Status.NOT_FOUND : Response.Status.ACCEPTED;
+        Response.Status.NOT_FOUND: Response.Status.ACCEPTED;
     ResourceRequest resourceRequest =
         new ResourceRequest(ResourceRequest.Name.XATTRS);
     XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project,
@@ -600,7 +599,7 @@ public class FeaturegroupService {
         path, null);
     
     Response.Status status = result.isEmpty() ?
-        Response.Status.NOT_FOUND : Response.Status.ACCEPTED;
+        Response.Status.NOT_FOUND: Response.Status.ACCEPTED;
     ResourceRequest resourceRequest =
         new ResourceRequest(ResourceRequest.Name.XATTRS);
     XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project,
