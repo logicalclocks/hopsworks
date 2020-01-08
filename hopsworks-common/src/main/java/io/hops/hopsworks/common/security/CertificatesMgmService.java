@@ -101,6 +101,9 @@ public class CertificatesMgmService {
   private HostsFacade hostsFacade;
   @EJB
   private SymmetricEncryptionService symmetricEncryptionService;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
+
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
