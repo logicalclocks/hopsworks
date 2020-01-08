@@ -298,8 +298,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "filters by hostname" do
-        host = find_by_hostname("test")
-        puts host.inspect
+        admin_get_all_cluster_nodes()
+        host = json_body[:items].select{|i| i[:hostname] == "test" }[0]
         admin_get_all_cluster_nodes("?filter_by=hostname:test")
         res = json_body[:items][0]
         expect(res).to eq(host)
@@ -335,18 +335,18 @@ describe "On #{ENV['OS']}" do
       it "filters by registered" do
         filter = "?filter_by=registered:true"
         admin_get_all_cluster_nodes(filter)
-        res = json_body[:items]
+        res = json_body[:items].map{|i| i[:id]}
         admin_get_all_cluster_nodes()
-        expected = json_body[:items].select{|h| h[:registered] == true}
+        expected = json_body[:items].select{|h| h[:registered] == true}.map {|h| h[:id]}
         expect(res).to eq(expected)
       end
 
       it "filters by conda_enabled" do
         filter = "?filter_by=conda_enabled:true"
         admin_get_all_cluster_nodes(filter)
-        res = json_body[:items]
+        res = json_body[:items].map {|h| h[:id]}
         admin_get_all_cluster_nodes()
-        expected = json_body[:items].select{|h| h[:condaEnabled] == true}
+        expected = json_body[:items].select{|h| h[:condaEnabled] == true}.map {|h| h[:id]}
         expect(res).to eq(expected)
       end
 
@@ -376,18 +376,61 @@ describe "On #{ENV['OS']}" do
       end
 
       it 'should get only limit=x acls with offset=y' do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=3&limit=2")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes.drop(3).take(2))
+        expect(count).to eq(json_body[:count])
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=5&limit=3")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes.drop(5).take(3))
+        expect(count).to eq(json_body[:count])
       end
 
       it 'should ignore if limit < 0' do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&limit=-2")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes)
+        expect(count).to eq(json_body[:count])
       end
 
       it 'should ignore if offset < 0' do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=-2")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes)
+        expect(count).to eq(json_body[:count])
       end
 
       it 'should ignore if limit = 0' do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&limit=0")
+        res = json_body[:items].map{|i| i[:id]}
+        expect(res).to eq(nodes)
+        expect(count).to eq(json_body[:count])
       end
 
       it 'should work if offset >= size' do
+        admin_get_all_cluster_nodes()
+        count = json_body[:count]
+        nodes = json_body[:items].map{|i| i[:id]}.sort
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=#{count}")
+        res = json_body[:items]
+        expect(res).to eq(nil)
+        expect(count).to eq(json_body[:count])
+        admin_get_all_cluster_nodes("?sort_by=id:asc&offset=#{count+1}")
+        res = json_body[:items]
+        expect(res).to eq(nil)
+        expect(count).to eq(json_body[:count])
       end
 
 
