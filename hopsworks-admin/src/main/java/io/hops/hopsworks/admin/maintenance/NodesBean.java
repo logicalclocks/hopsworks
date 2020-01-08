@@ -256,7 +256,7 @@ public class NodesBean implements Serializable {
   }
 
   public boolean isZfsEnabled() {
-    return settings.getZfsPool().isEmpty() == false;
+    return settings.isEncryptionAtRestEnabled();
   }
 
   public String decrypt(String secret) {

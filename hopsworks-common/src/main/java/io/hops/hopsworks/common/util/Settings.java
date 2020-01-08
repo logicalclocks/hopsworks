@@ -3713,6 +3713,9 @@ public class Settings implements Serializable {
     return ZFS_POOL;
   }
 
+  public synchronized boolean isEncryptionAtRestEnabled() {
+    return ZFS_POOL.isEmpty() == false;
+  }
 
   public static final int ELASTIC_KIBANA_NO_CONNECTIONS = 5;
 

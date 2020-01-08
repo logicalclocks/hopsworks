@@ -53,16 +53,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.PostConstruct;
-import javax.ejb.AccessTimeout;
-import javax.ejb.Asynchronous;
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.EJB;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.*;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -75,11 +66,7 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -93,10 +80,6 @@ public class CertificatesMgmService {
   private Settings settings;
   @EJB
   private UserFacade userFacade;
-//  @EJB
-//  private CertsFacade certsFacade;
-//  @EJB
-//  private ClusterCertificateFacade clusterCertificateFacade;
   @EJB
   private MessageController messageController;
   @EJB
@@ -105,8 +88,6 @@ public class CertificatesMgmService {
   private HostsFacade hostsFacade;
   @EJB
   private SymmetricEncryptionService symmetricEncryptionService;
-  @EJB
-  private CertificatesMgmService certificatesMgmService;  
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
@@ -286,15 +267,17 @@ public class CertificatesMgmService {
         .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
         .toString();
     return generatedString;
-  }  
-  
-  
-  
+  }
+
   public String encryptPassword(String secret) throws IOException, GeneralSecurityException {
-    String password = certificatesMgmService.getMasterEncryptionPassword();
+    String masterPassword = getMasterEncryptionPassword();
+    return encryptPasswordWithMasterPassword(secret, masterPassword);
+  }
+
+  public String encryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException, GeneralSecurityException {
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
         .setInput(secret.getBytes(Charset.defaultCharset()))
-        .setPassword(password)
+        .setPassword(masterPassword)
         .build();
     descriptor = symmetricEncryptionService.encrypt(descriptor);
     byte[] pwd = symmetricEncryptionService.mergePayloadWithCryptoPrimitives(descriptor.getSalt(), 
@@ -303,15 +286,19 @@ public class CertificatesMgmService {
   }  
   
   public String decryptPassword(String secret) throws IOException, GeneralSecurityException {
+    String masterPassword = getMasterEncryptionPassword();
+    return decryptPasswordWithMasterPassword(secret, masterPassword);
+
+  }
+
+  public String decryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException, GeneralSecurityException {
     byte[] bytes = secret.getBytes();
-    
-    String password = certificatesMgmService.getMasterEncryptionPassword();
-  
+
     // [salt(64),iv(12),payload)]
     byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(bytes);
     
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
-        .setPassword(password)
+        .setPassword(masterPassword)
         .setSalt(split[0])
         .setIV(split[1])
         .setInput(split[2])
