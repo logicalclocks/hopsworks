@@ -575,7 +575,10 @@ public class RESTCodes {
     OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST),
 
     GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST),
-    JUPYTER_NOTEBOOK_VERSIONING_FAILED(47, "Failed to version notebook", Response.Status.INTERNAL_SERVER_ERROR);
+    JUPYTER_NOTEBOOK_VERSIONING_FAILED(47, "Failed to version notebook", Response.Status.INTERNAL_SERVER_ERROR),
+    ENCRYPTION_AT_REST_KEY_REGISTRATION_FAILED(48, "Failed to register ZFS key with Hopsworks",
+            Response.Status.INTERNAL_SERVER_ERROR);
+    ;
 
 
     private Integer code;

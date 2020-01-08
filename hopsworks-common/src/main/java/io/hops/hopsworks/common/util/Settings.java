@@ -3111,6 +3111,9 @@ public class Settings implements Serializable {
     return serviceKeyRotationInterval;
   }
 
+
+  public static final int ZFS_KEY_LEN = 10;
+
   // Zfs key rotation enabled
   private static final String ZFS_KEY_ROTATION_ENABLED_KEY = "zfs_key_rotation_enabled";
   private boolean zfsKeyRotationEnabled = false;

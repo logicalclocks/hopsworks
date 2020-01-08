@@ -35,12 +35,12 @@ import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -90,21 +90,34 @@ public class AgentController {
   @EJB
   private CertificatesMgmService certificatesMgmService;  
 
-  public String register(String hostId, String password, String zfsKey) {
+
+  private io.hops.hopsworks.exceptions.ServiceException throwNewZfsException(String host)
+          throws io.hops.hopsworks.exceptions.ServiceException {
+    throw new ServiceException(
+            io.hops.hopsworks.restutils.RESTCodes.ServiceErrorCode.ENCRYPTION_AT_REST_KEY_REGISTRATION_FAILED,
+            Level.FINE, "ZFS key could not be registered with ", "Host " + host + " in Hopsworks");
+  }
+
+  public String register(String hostId, String password, String zfsKey) throws
+          io.hops.hopsworks.exceptions.ServiceException {
     Hosts host = hostsFacade.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);
     host.setHostname(hostId);
-
-    try {
-      String encryptedKey = certificatesMgmService.encryptPassword(zfsKey);
+    if (zfsKey != null && zfsKey.length() == Settings.ZFS_KEY_LEN) {
+      String encryptedKey = null;
+      try {
+        encryptedKey = certificatesMgmService.encryptPassword(zfsKey);
+      } catch (java.io.IOException e) {
+        e.printStackTrace();
+        throwNewZfsException(hostId);
+      } catch (java.security.GeneralSecurityException e) {
+        e.printStackTrace();
+        throwNewZfsException(hostId);
+      }
       host.setZfsKey(encryptedKey);
-    } catch (IOException ex) {
-      Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (GeneralSecurityException ex) {
-      Logger.getLogger(AgentController.class.getName()).log(Level.SEVERE, null, ex);
     }
-    
+
     hostsFacade.storeHost(host);
     return settings.getHadoopVersionedDir();
   }
@@ -139,11 +152,6 @@ public class AgentController {
     if (heartbeat.zfsKey != null) {
       if (heartbeat.zfsKey.compareTo("request") == 0) {
         zfsKeyRequested = true;
-//      } else  if (heartbeat.zfsKey.compareTo("request") == 0) {
-//        host.setZfsKeyRotated(host.getZfsKey());
-//        host.setZfsKey(heartbeat.zfsKey);
-//        hostsFacade.storeHost(host);
-//      } else {
       }
     }
 

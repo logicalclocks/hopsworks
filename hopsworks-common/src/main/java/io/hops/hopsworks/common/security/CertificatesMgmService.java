@@ -292,7 +292,6 @@ public class CertificatesMgmService {
   public String decryptPassword(String secret) throws IOException, GeneralSecurityException {
     String masterPassword = getMasterEncryptionPassword();
     return decryptPasswordWithMasterPassword(secret, masterPassword);
-
   }
   
   public String decryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException,
