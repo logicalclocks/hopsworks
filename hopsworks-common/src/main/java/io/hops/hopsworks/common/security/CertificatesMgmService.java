@@ -65,7 +65,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -84,7 +83,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Singleton
+@javax.ejb.Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class CertificatesMgmService {
   private final Logger LOG = Logger.getLogger(CertificatesMgmService.class.getName());
@@ -101,8 +100,6 @@ public class CertificatesMgmService {
   private HostsFacade hostsFacade;
   @EJB
   private SymmetricEncryptionService symmetricEncryptionService;
-  @EJB
-  private CertificatesMgmService certificatesMgmService;
 
   @Inject
   @Any
