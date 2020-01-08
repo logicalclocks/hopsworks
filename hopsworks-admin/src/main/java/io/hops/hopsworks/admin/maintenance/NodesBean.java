@@ -50,17 +50,20 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-
 import io.hops.hopsworks.exceptions.ServiceException;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.event.SelectEvent;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
@@ -72,10 +75,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.enterprise.concurrent.ManagedExecutorService;
 
 @ManagedBean(name = "nodesBean")
 @ViewScoped
@@ -255,8 +254,8 @@ public class NodesBean implements Serializable {
     return "condaSync";
   }
 
-  public boolean isZfsEnabled() {
-    return settings.isEncryptionAtRestEnabled();
+  public String isZfsEnabled() {
+    return settings.isEncryptionAtRestEnabled() == true ? "true" : "false";
   }
 
   public String decrypt(String secret) {
