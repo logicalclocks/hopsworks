@@ -499,6 +499,7 @@ angular.module('hopsWorksApp')
                                       JobService.runJob(self.projectId, job.name, success.args).then(
                                           function (success) {
                                               self.getAllJobsStatus();
+                                              self.getJobExecutions(job.name, true);
                                           }, function (error) {
                                               if (typeof error.data.usrMsg !== 'undefined') {
                                                   growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -514,9 +515,7 @@ angular.module('hopsWorksApp')
                                   growl.error("", {title: error.data.errorMsg, ttl: 8000});
                               }
                           });
-
                   }
-                   self.getJobExecutions(job.name, true);
               };
 
               self.showExecutionDetails = function (job, execution) {
