@@ -287,7 +287,7 @@ public class CertificatesMgmService {
     descriptor = symmetricEncryptionService.encrypt(descriptor);
     byte[] pwd = symmetricEncryptionService.mergePayloadWithCryptoPrimitives(descriptor.getSalt(),
         descriptor.getIv(), descriptor.getOutput());
-    return new String(pwd);
+    return new String(pwd, java.nio.charset.StandardCharsets.ISO_8859_1);
   }
 
   public String decryptPassword(String secret) throws IOException, GeneralSecurityException {

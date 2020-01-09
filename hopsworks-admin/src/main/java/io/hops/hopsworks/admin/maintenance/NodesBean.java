@@ -279,17 +279,19 @@ public class NodesBean implements Serializable {
 
   public void encrypt() {
     try {
+      logger.info("pre-encrypted password len is: " + this.decrypted.length());
       this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (java.security.GeneralSecurityException e) {
       e.printStackTrace();
     }
-    logger.info("encrypted password is: " + this.encrypted);
+    logger.info("encrypted password len is: " + this.encrypted.length());
   }
   public void decrypt() {
     try {
       this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
+      logger.info("decrypted password len is: " + this.decrypted.length());
     } catch (IOException e) {
       e.printStackTrace();
     } catch (java.security.GeneralSecurityException e) {
