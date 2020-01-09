@@ -50,6 +50,8 @@ angular.module('hopsWorksApp')
             self.onlineSample = []
             self.notFetchedSample = true;
 
+            self.customMetadata = null;
+
             //Constants
             self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
             self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
@@ -133,7 +135,7 @@ angular.module('hopsWorksApp')
              */
             self.getScalaCode = function (featuregroup) {
                 var codeStr = "import io.hops.util.Hops\n"
-                codeStr = codeStr + "Hops.getFeaturegroup('" + featuregroup.name + "').read()"
+                codeStr = codeStr + "Hops.getFeaturegroup(\"" + featuregroup.name + "\").read()"
                 return codeStr
             };
 
@@ -196,9 +198,19 @@ angular.module('hopsWorksApp')
             };
 
             /**
+             * Get custom metadata for feature groups
+             */
+            self.fetchCustomMetadata = function() {
+                FeaturestoreService.getFeaturegroupCustomMetadata(self.projectId, self.featurestore, self.featuregroup).then(
+                    function (success) {
+                        self.customMetadata = success.data.items;
+                    });
+            };
+
+            /**
              * Initialization function
              */
-            self.init= function () {
+            self.init = function () {
                 self.formatCreated = self.formatDate(self.featuregroup.created)
                 self.pythonCode = self.getPythonCode(self.featuregroup)
                 self.scalaCode = self.getScalaCode(self.featuregroup)
@@ -206,10 +218,11 @@ angular.module('hopsWorksApp')
                 if(self.featuregroup.featuregroupType === self.onDemandFeaturegroupType){
                     self.featuregroupType = "ON DEMAND"
                 } else {
-                    self.featuregroupType = "CACHED"
-                    self.fetchSchema()
-                    self.fetchSize()
-                    self.fetchSample()
+                    self.featuregroupType = "CACHED";
+                    self.fetchSchema();
+                    self.fetchSize();
+                    self.fetchSample();
+                    self.fetchCustomMetadata();
                 }
             };
 

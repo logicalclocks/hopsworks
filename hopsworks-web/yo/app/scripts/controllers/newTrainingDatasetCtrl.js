@@ -39,16 +39,6 @@ angular.module('hopsWorksApp')
             //State
             self.showCart = true
             self.configureJob = true;
-            self.fgFilter = "";
-            self.fFilter = "";
-            self.featureSearchFgFilter = ""
-            self.featureSearchFgVersionFilter = ""
-            self.featureSearchFilterForm = false;
-            self.featuresToDate = new Date();
-            self.featuresToDate.setMinutes(self.featuresToDate.getMinutes() + 60 * 24);
-            self.featuresFromDate = new Date();
-            self.featuresFromDate.setMinutes(self.featuresFromDate.getMinutes() - 60 * 24 * 30 * 4);
-            self.featuresPageSize = 20;
             self.selectFeatureStage = true;
             self.phase = 0
             self.working = false
@@ -330,25 +320,6 @@ angular.module('hopsWorksApp')
              */
             self.toggleCart = function () {
                 self.showCart = !self.showCart;
-            };
-
-            /**
-             * Opens the modal to view feature information
-             *
-             * @param feature
-             */
-            self.viewFeatureInfo = function (feature) {
-                ModalService.viewFeatureInfo('lg', self.projectId, feature, self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
-            /**
-             * Whether to show the filter search advanced filter form in the UI
-             */
-            self.setFeatureSearchFilterForm = function () {
-                self.featureSearchFilterForm = !self.featureSearchFilterForm;
             };
 
             /**
@@ -792,15 +763,6 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Returns a formatted date string
-             *
-             * @param dateStr the date string to format
-             */
-            self.createdOn = function (dateStr) {
-                return FeaturestoreService.formatDateAndTime(new Date(dateStr))
-            };
-
-            /**
              * Initialize controller
              */
             self.init = function () {
@@ -842,7 +804,7 @@ angular.module('hopsWorksApp')
              * @param feature the feature to define the type for
              */
             self.selectFeatureType = function (feature) {
-                ModalService.selectFeatureType('lg', self.settings).then(
+                ModalService.selectFeatureType('lg', false, self.settings).then(
                     function (success) {
                         feature.type = success
                     },
@@ -851,6 +813,6 @@ angular.module('hopsWorksApp')
                     });
             };
 
-            self.init()
+            self.init();
         }
     ]);

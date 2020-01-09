@@ -89,6 +89,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -185,7 +186,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
       = "max_num_proj_per_user";
-
+  private static final String VARIABLE_RESERVED_PROJECT_NAMES = "reserved_project_names";
+  
   // HIVE configuration variables
   private static final String VARIABLE_HIVE_SERVER_HOSTNAME = "hiveserver_ssl_hostname";
   private static final String VARIABLE_HIVE_SERVER_HOSTNAME_EXT
@@ -737,18 +739,22 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
-  
+      
       KIBANA_HTTPS_ENABLED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
               KIBANA_HTTPS_ENABLED);
-  
-      KIBANA_MULTI_TENANCY_ENABLED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
-              KIBANA_MULTI_TENANCY_ENABLED);
+      
+      KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
+          KIBANA_MULTI_TENANCY_ENABELED);
+      
+      String reservedProjectNamesRaw = setStrVar(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES);
+      StringTokenizer tokenizer = new StringTokenizer(reservedProjectNamesRaw, ",");
+      RESERVED_PROJECT_NAMES = new HashSet<>(tokenizer.countTokens());
+      while (tokenizer.hasMoreTokens()) {
+        RESERVED_PROJECT_NAMES.add(tokenizer.nextToken());
+      }
 
       ZFS_POOL = setStrVar(VARIABLE_ZFS_POOL, ZFS_POOL);
-
-      KIBANA_MULTI_TENANCY_ENABLED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
-          KIBANA_MULTI_TENANCY_ENABLED);
-
+      
       populateProvenanceCache();
       cached = true;
     }
@@ -1401,6 +1407,16 @@ public class Settings implements Serializable {
       + File.separator;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
+  private static String DEFAULT_RESERVED_PROJECT_NAMES = "python27,python36,python37,python38,python39,hops-system," +
+    "hopsworks,information_schema,airflow,glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema," +
+    "sqoop,sys";
+  private Set<String> RESERVED_PROJECT_NAMES;
+  
+  public synchronized Set<String> getReservedProjectNames() {
+    checkCache();
+    return RESERVED_PROJECT_NAMES != null ? RESERVED_PROJECT_NAMES : new HashSet<>();
+  }
+  
   // Elasticsearch
   ElasticSettings ELASTIC_SETTINGS;
   
