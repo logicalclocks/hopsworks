@@ -67,7 +67,6 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.attribute.PosixFileAttributeView;
@@ -280,8 +279,9 @@ public class CertificatesMgmService {
 
   public String encryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException,
           GeneralSecurityException {
+    // to map one byte to one char (with 8859-1) and no exception handling
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
-        .setInput(secret.getBytes(Charset.defaultCharset()))
+        .setInput(secret.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))
         .setPassword(masterPassword)
         .build();
     descriptor = symmetricEncryptionService.encrypt(descriptor);
@@ -297,7 +297,7 @@ public class CertificatesMgmService {
   
   public String decryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException,
           GeneralSecurityException {
-    byte[] bytes = secret.getBytes();
+    byte[] bytes = secret.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
 
     // [salt(64),iv(12),payload)]
     byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(bytes);
