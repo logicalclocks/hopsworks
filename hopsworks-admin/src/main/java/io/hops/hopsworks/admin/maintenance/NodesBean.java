@@ -286,6 +286,7 @@ public class NodesBean implements Serializable {
     } catch (java.security.GeneralSecurityException e) {
       e.printStackTrace();
     }
+    logger.info("encrypted password is: " + this.encrypted);
   }
   public void decrypt() {
     try {
