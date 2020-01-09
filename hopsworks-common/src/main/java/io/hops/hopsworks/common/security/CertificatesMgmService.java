@@ -273,7 +273,6 @@ public class CertificatesMgmService {
 
   public String encryptPassword(String secret) throws IOException, GeneralSecurityException {
     String masterPassword = getMasterEncryptionPassword();
-
     return encryptPasswordWithMasterPassword(secret, masterPassword);
   }
 

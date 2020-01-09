@@ -108,8 +108,8 @@ public class NodesBean implements Serializable {
   private String output;
   private Future<String> future;
 
-  public String decrypted="0123456789";
-  public String encrypted="";
+//  public String decrypted="0123456789";
+//  public String encrypted="";
 
 
   class CondaTask implements Callable<String> {
@@ -257,8 +257,9 @@ public class NodesBean implements Serializable {
     return "condaSync";
   }
 
-  public String isZfsEnabled() {
-    return settings.isEncryptionAtRestEnabled() == true ? "true" : "false";
+  public boolean isZfsEnabled() {
+    return settings.isEncryptionAtRestEnabled();
+//    == true ? "true" : "false";
   }
 
   public String decrypt(String secret) {
@@ -276,35 +277,35 @@ public class NodesBean implements Serializable {
     return "";
   }
 
-  public void encrypt() {
-    try {
-      logger.info("pre-encrypted password len is: " + this.decrypted.length());
-      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (java.security.GeneralSecurityException e) {
-      e.printStackTrace();
-    }
-    logger.info("encrypted password len is: " + this.encrypted.length());
-  }
-  public void decrypt() {
-    try {
-      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
-      logger.info("decrypted password len is: " + this.decrypted.length());
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (java.security.GeneralSecurityException e) {
-      e.printStackTrace();
-    }
-  }
+//  public void encrypt() {
+//    try {
+//      logger.info("pre-encrypted password len is: " + this.decrypted.length());
+//      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (java.security.GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+//    logger.info("encrypted password len is: " + this.encrypted.length());
+//  }
+//  public void decrypt() {
+//    try {
+//      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
+//      logger.info("decrypted password len is: " + this.decrypted.length());
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (java.security.GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+//  }
 
-  public String getEncrypted() {
-    return encrypted;
-  }
-
-  public String getDecrypted() {
-    return decrypted;
-  }
+//  public String getEncrypted() {
+//    return encrypted;
+//  }
+//
+//  public String getDecrypted() {
+//    return decrypted;
+//  }
 
   public void rsyncAnacondaLibs(String hostname) {
 
