@@ -265,7 +265,6 @@ public class NodesBean implements Serializable {
     if (secret == null || secret.length() < 10) {
       return "";
     }
-    this.encrypted = secret;
     return secret;
 
 //    try {
