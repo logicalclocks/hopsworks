@@ -265,16 +265,15 @@ public class NodesBean implements Serializable {
     if (secret == null || secret.length() < 10) {
       return "";
     }
-    return secret;
 
-//    try {
-//      return this.certificatesMgmService.decryptPassword(secret);
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    } catch (java.security.GeneralSecurityException e) {
-//      e.printStackTrace();
-//    }
-//    return "";
+    try {
+      return this.certificatesMgmService.decryptPassword(secret);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (java.security.GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+    return "";
   }
 
   public void encrypt() {
