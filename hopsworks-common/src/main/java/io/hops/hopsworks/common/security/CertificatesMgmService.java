@@ -322,7 +322,7 @@ public class CertificatesMgmService {
         // Generate new random password. Cannot use SecurityUtil Session bean for this, as
         // we are executing inside a transaction, so new random string generator here
         String secret = randomString();
-        secret = new String(secret.getBytes(), java.nio.charset.StandardCharsets.ISO_8859_1)
+        secret = new String(secret.getBytes(), java.nio.charset.StandardCharsets.ISO_8859_1);
         String passwd = encryptPassword(secret);
 
         SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
