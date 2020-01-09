@@ -301,12 +301,6 @@ public class ElasticController {
     }
   }
   
-  public JSONObject deleteIndexPattern(Project project, String pattern)
-      throws ElasticException {
-    return kibanaClient.deleteAsDataOwner(project,
-        KibanaClient.KibanaType.IndexPattern, pattern);
-  }
-  
   public JSONObject updateKibana(Project project, Users user,
       KibanaClient.KibanaType type, String id, String data)
       throws ElasticException {
@@ -328,7 +322,7 @@ public class ElasticController {
   }
 
   /**
-   * Deletes visualizations, saved searches and dashboards for a project.
+   * Deletes index patterns, visualizations, saved searches and dashboards for a project.
    *
    * @param project
    */
