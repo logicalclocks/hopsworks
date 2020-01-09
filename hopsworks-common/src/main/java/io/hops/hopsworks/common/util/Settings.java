@@ -743,8 +743,8 @@ public class Settings implements Serializable {
       KIBANA_HTTPS_ENABLED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
               KIBANA_HTTPS_ENABLED);
       
-      KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
-          KIBANA_MULTI_TENANCY_ENABELED);
+      KIBANA_MULTI_TENANCY_ENABLED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
+          KIBANA_MULTI_TENANCY_ENABLED);
       
       String reservedProjectNamesRaw = setStrVar(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES);
       StringTokenizer tokenizer = new StringTokenizer(reservedProjectNamesRaw, ",");
