@@ -309,8 +309,9 @@ public class CertificatesMgmService {
 
       try {
         // Generate new random password, bounded to 10 characters
-        byte[] secretBytes = securityUtils.generateSecureRandom(Settings.ZFS_KEY_LEN);
-        String secret = new String(secretBytes, java.nio.charset.StandardCharsets.ISO_8859_1);
+//        byte[] secretBytes = securityUtils.generateSecureRandom(Settings.ZFS_KEY_LEN);
+//        String secret = new String(secretBytes, java.nio.charset.StandardCharsets.ISO_8859_1);
+        String secret = securityUtils.generateRandomString(Settings.ZFS_KEY_LEN);
         String passwd = encryptPassword(secret);
 
         SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
