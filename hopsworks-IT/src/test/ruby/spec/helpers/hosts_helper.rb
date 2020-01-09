@@ -40,19 +40,19 @@ module HostsHelper
   end
 
   def admin_get_all_cluster_nodes(more = "")
-    get "#{ENV['HOPSWORKS_API']}/admin/hosts" + more
+    get "#{ENV['HOPSWORKS_API']}/hosts" + more
   end
 
   def admin_get_cluster_node_by_hostname(hostname)
-    get "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname
+    get "#{ENV['HOPSWORKS_API']}/hosts/" + hostname
   end
 
   def admin_create_update_cluster_node(hostname, node)
-    put "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname, node.to_json
+    put "#{ENV['HOPSWORKS_API']}/hosts/" + hostname, node.to_json
   end
 
   def admin_delete_cluster_node_by_hostname(hostname)
-    delete "#{ENV['HOPSWORKS_API']}/admin/hosts/" + hostname
+    delete "#{ENV['HOPSWORKS_API']}/hosts/" + hostname
   end
 
   def delete_all_cluster_nodes_except(except)

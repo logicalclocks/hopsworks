@@ -43,7 +43,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Logger;
 
-@Path("/admin")
+@Path("/hosts")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
 @Api(value = "Admin Hosts")
@@ -59,7 +59,6 @@ public class HostsAdminResource {
   
   @ApiParam(value = "Get all cluster nodes.")
   @GET
-  @Path("/hosts")
   public Response getAllClusterNodes(
     @Context UriInfo uriInfo,
     @BeanParam Pagination pagination,
@@ -76,7 +75,7 @@ public class HostsAdminResource {
   
   @ApiParam(value = "Get cluster node by hostname.")
   @GET
-  @Path("/hosts/{hostname}")
+  @Path("/{hostname}")
   public Response getClusterNode(@Context UriInfo uriInfo, @PathParam("hostname") String hostname)
     throws ServiceException {
     HostsDTO dto = hostsBuilder.buildByHostname(uriInfo, hostname);
@@ -85,7 +84,7 @@ public class HostsAdminResource {
   
   @ApiParam(value = "Delete cluster node by hostname.")
   @DELETE
-  @Path("/hosts/{hostname}")
+  @Path("/{hostname}")
   public Response deleteNodeByHostname(@PathParam("hostname") String hostname) {
     if (hostsController.removeByHostname(hostname)) {
       return Response.noContent().build();
@@ -98,7 +97,7 @@ public class HostsAdminResource {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("/hosts/{hostname}")
+  @Path("/{hostname}")
   public Response updateClusterNode(@Context UriInfo uriInfo,
     @PathParam("hostname") String hostname, HostDTO nodeToUpdate) {
     
