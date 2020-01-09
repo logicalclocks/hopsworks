@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.message.MessageController;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -99,6 +100,8 @@ public class CertificatesMgmService {
   private HostsFacade hostsFacade;
   @EJB
   private SymmetricEncryptionService symmetricEncryptionService;
+  @EJB
+  private SecurityUtils securityUtils;
 
   @Inject
   @Any
@@ -256,20 +259,6 @@ public class CertificatesMgmService {
       systemCommandFacade.persist(rotateCommand);
     }
   }
-  
-  public String randomString() {
-    int leftLimit = 48; // numeral '0'
-    int rightLimit = 122; // letter 'z'
-    int targetStringLength = 10;
-    Random random = new Random();
-
-    String generatedString = random.ints(leftLimit, rightLimit + 1)
-        .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-        .limit(targetStringLength)
-        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-        .toString();
-    return generatedString;
-  }
 
   public String encryptPassword(String secret) throws IOException, GeneralSecurityException {
     String masterPassword = getMasterEncryptionPassword();
@@ -320,7 +309,8 @@ public class CertificatesMgmService {
 
       try {
         // Generate new random password, bounded to 10 characters
-        String secret = randomString();
+        byte[] secretBytes = securityUtils.generateSecureRandom(Settings.ZFS_KEY_LEN);
+        String secret = new String(secretBytes, java.nio.charset.StandardCharsets.ISO_8859_1);
         String passwd = encryptPassword(secret);
 
         SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);

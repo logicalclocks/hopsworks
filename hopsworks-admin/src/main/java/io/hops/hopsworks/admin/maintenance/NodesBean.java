@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -94,6 +95,8 @@ public class NodesBean implements Serializable {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private CondaCommandFacade condaCommandsFacade;
+  @EJB
+  private SecurityUtils securityUtils;
 
 
   @Resource(lookup = "concurrent/kagentExecutorService")
@@ -108,8 +111,8 @@ public class NodesBean implements Serializable {
   private String output;
   private Future<String> future;
 
-//  public String decrypted="0123456789";
-//  public String encrypted="";
+  public String decrypted="";
+  public String encrypted="";
 
 
   class CondaTask implements Callable<String> {
@@ -187,6 +190,8 @@ public class NodesBean implements Serializable {
   @PostConstruct
   public void init() {
     allNodes = hostsFacade.findAll();
+    byte[] b = securityUtils.generateSecureRandom(Settings.ZFS_KEY_LEN);
+    this.decrypted = new String(b, java.nio.charset.StandardCharsets.ISO_8859_1);
   }
 
   public List<Hosts> getAllNodes() {
@@ -259,53 +264,52 @@ public class NodesBean implements Serializable {
 
   public boolean isZfsEnabled() {
     return settings.isEncryptionAtRestEnabled();
-//    == true ? "true" : "false";
   }
 
   public String decrypt(String secret) {
-    if (secret == null || secret.length() < 10) {
+    if (secret == null || secret.length() < Settings.ZFS_KEY_LEN) {
       return "";
     }
 
+//    try {
+//      return this.certificatesMgmService.decryptPassword(secret);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (java.security.GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+    return "";
+  }
+
+  public void encrypt() {
     try {
-      return this.certificatesMgmService.decryptPassword(secret);
+      logger.info("pre-encrypted password len is: " + this.decrypted.length());
+      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
     } catch (IOException e) {
       e.printStackTrace();
     } catch (java.security.GeneralSecurityException e) {
       e.printStackTrace();
     }
-    return "";
+    logger.info("encrypted password len is: " + this.encrypted.length());
+  }
+  public void decrypt() {
+    try {
+      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
+      logger.info("decrypted password len is: " + this.decrypted.length());
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (java.security.GeneralSecurityException e) {
+      e.printStackTrace();
+    }
   }
 
-//  public void encrypt() {
-//    try {
-//      logger.info("pre-encrypted password len is: " + this.decrypted.length());
-//      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    } catch (java.security.GeneralSecurityException e) {
-//      e.printStackTrace();
-//    }
-//    logger.info("encrypted password len is: " + this.encrypted.length());
-//  }
-//  public void decrypt() {
-//    try {
-//      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
-//      logger.info("decrypted password len is: " + this.decrypted.length());
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    } catch (java.security.GeneralSecurityException e) {
-//      e.printStackTrace();
-//    }
-//  }
+  public String getEncrypted() {
+    return encrypted;
+  }
 
-//  public String getEncrypted() {
-//    return encrypted;
-//  }
-//
-//  public String getDecrypted() {
-//    return decrypted;
-//  }
+  public String getDecrypted() {
+    return decrypted;
+  }
 
   public void rsyncAnacondaLibs(String hostname) {
 
