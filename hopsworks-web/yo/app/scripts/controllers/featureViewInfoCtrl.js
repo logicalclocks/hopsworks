@@ -18,18 +18,15 @@
  * Controller for the Feature-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('featureViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'growl', 'projectId',
-        'feature', 'featurestore', 'settings',
-        function ($uibModalInstance, $scope, FeaturestoreService, growl, projectId, feature, featurestore, settings) {
+    .controller('featureViewInfoCtrl', ['$uibModalInstance', 'feature', 'settings',
+        function ($uibModalInstance, feature, settings) {
 
             /**
              * Initialize controller state
              */
             //Controller Inputs
             var self = this;
-            self.projectId = projectId;
             self.feature = feature
-            self.featurestore = featurestore;
             self.settings = settings
             //State
             self.pythonCode = ""
@@ -53,14 +50,14 @@ angular.module('hopsWorksApp')
              */
             self.getScalaCode = function (feature) {
                 var codeStr = "import io.hops.util.Hops\n"
-                codeStr = codeStr + "Hops.getFeature('" + feature.name + "').read()"
+                codeStr = codeStr + "Hops.getFeature(\"" + feature.name + "\").read()"
                 return codeStr
             };
 
             /**
              * Initialization function
              */
-            self.init= function () {
+            self.init = function () {
                 self.pythonCode = self.getPythonCode(self.feature)
                 self.scalaCode = self.getScalaCode(self.feature)
             };

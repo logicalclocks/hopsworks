@@ -94,7 +94,7 @@ public class ElasticJWTController {
       claims.put(Constants.ELK_VALID_PROJECT_NAME,
           ElasticUtils.getProjectNameWithNoSpecialCharacters(project));
       if(projectInodeId.isPresent()) {
-        claims.put(Constants.ELK_PROJECT_INODE_ID, projectInodeId);
+        claims.put(Constants.ELK_PROJECT_INODE_ID, projectInodeId.get());
       }
       return jwtController.createTokenForELK(project, settings.getJWTIssuer()
           , claims, expiresAt, alg);

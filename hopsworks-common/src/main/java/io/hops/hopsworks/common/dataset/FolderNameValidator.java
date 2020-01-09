@@ -91,11 +91,10 @@ public class FolderNameValidator {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_TOO_LONG, Level.FINE);
     }
 
-    for (String reservedName : projectUtils.getReservedProjectNames()) {
-      if (name.compareToIgnoreCase(reservedName) == 0) {
-        throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
-      }
+    if (projectUtils.isReservedProjectName(name)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
     }
+    
     Matcher m = projectNameRegexValidator.matcher(name);
     if (!m.find()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);

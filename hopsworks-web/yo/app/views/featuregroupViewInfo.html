@@ -18,11 +18,11 @@
     <button class="close" ng-click="featuregroupViewInfoCtrl.close()" data-dismiss="modal" aria-hidden="true"
             type="button">&times;
     </button>
-    <h2 class="modal-title">Feature group details: {{featuregroupViewInfoCtrl.featuregroup.featuregroupName}}</h2>
+    <h2 class="modal-title">Feature group details: {{featuregroupViewInfoCtrl.featuregroup.name}}</h2>
 </div>
 <div class="modal-body" style="overflow: auto">
     <div uib-accordion close-others="false">
-        <div uib-accordion-group class="panel-default">
+        <div uib-accordion-group class="panel-default" is-open="true">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Feature Group Metadata'></i>
@@ -514,6 +514,36 @@
             <h3 style="margin-left: 10px" ng-if="!featuregroupViewInfoCtrl.featuregroup.onlineFeaturegroupEnabled">
                 Online feature serving has not been enabled for this feature group
             </h3>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Metadata for feature groups'></i>
+                <span style="margin-left: 20px">
+                    Metadata 
+                </span>
+            </div>
+
+            <div ng-if="featuregroupViewInfoCtrl.customMetadata !== null">
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                    <thead style="border:none;" class="fs-table">
+                        <th style="width: 10%;">Name</th>
+                        <th style="width: 90%;">Value</th>
+                    <tbody class="fs-table">
+                    <tr ng-repeat="item in featuregroupViewInfoCtrl.customMetadata" class="fs-table">
+                        <td>{{item['name']}}</td>
+                        <td>{{item['value']}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.customMetadata === null">
+                No custom metadata available for this feature group 
+            </h3>
+        </div>
+
         </div>
     </div>
 </div>
