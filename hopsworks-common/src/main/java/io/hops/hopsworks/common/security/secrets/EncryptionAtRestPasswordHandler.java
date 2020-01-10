@@ -76,7 +76,9 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
 
         if (!zfsKey.isEmpty()) {
           String secret = this.certificatesMgmService.decryptPasswordWithMasterPassword(zfsKey, oldPassword);
+          LOGGER.info(("For host: " + host.getHostIp() + " zfs secret was: " + secret));
           String encrypted = this.certificatesMgmService.encryptPasswordWithMasterPassword(secret, newPassword);
+          LOGGER.info(("For host: " + host.getHostIp() + " new zfs secret is: " + encrypted));
           host.setZfsKey(encrypted);
         }
         if (!zfsKeyRotated.isEmpty()) {

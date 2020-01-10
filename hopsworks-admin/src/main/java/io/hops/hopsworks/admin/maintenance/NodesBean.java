@@ -39,6 +39,8 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
+import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
@@ -97,6 +99,8 @@ public class NodesBean implements Serializable {
   private CondaCommandFacade condaCommandsFacade;
   @EJB
   private SecurityUtils securityUtils;
+  @EJB
+  private SystemCommandFacade systemCommandFacade;
 
 
   @Resource(lookup = "concurrent/kagentExecutorService")
@@ -278,7 +282,7 @@ public class NodesBean implements Serializable {
 //    } catch (java.security.GeneralSecurityException e) {
 //      e.printStackTrace();
 //    }
-    return "";
+    return secret;
   }
 
   public void encrypt() {
@@ -367,14 +371,44 @@ public class NodesBean implements Serializable {
     }
   }
 
+  private boolean isOngoingCommand(SystemCommandFacade.OP op) {
+    List<SystemCommand> outstandingCommands = systemCommandFacade.findAll();
+    for (SystemCommand command: outstandingCommands) {
+      if (command.getOp() == op) {
+        MessagesController.addErrorMessage("Command not issued",
+                "Ongoing key rotation command. Wait for them to finish.");
+        logger.log(Level.WARNING, "Cannot issue key rotation command - ongoing key rotation command");
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void rotateKeys() {
+    if (isOngoingCommand(SystemCommandFacade.OP.SERVICE_KEY_ROTATION)) {
+      return;
+    }
+
     certificatesMgmService.issueServiceKeyRotationCommand();
-    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate keys on hosts");
+    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate TLS certs on hosts");
     logger.log(Level.INFO, "Issued key rotation command");
   }
 
   public void rotateZfsKeys() {
-    certificatesMgmService.issueZfsKeyRotationCommand();
+    if (isOngoingCommand(SystemCommandFacade.OP.ZFS_KEY_ROTATION)) {
+      return;
+    }
+
+    int res = certificatesMgmService.issueZfsKeyRotationCommand();
+    if (res == 0) {
+      MessagesController.addInfoMessage("Commands issued", "Rotate ZFS Keys on all Hosts");
+    } else if (res == -1) {
+      MessagesController.addErrorMessage(" ZFS Key Rotation already in progress. " +
+              "Wait until finished before rotating keys again.");
+    } else {
+      MessagesController.addErrorMessage("Internal error during ZFS Key Rotation.");
+    }
+
     MessagesController.addInfoMessage("Commands issued", "Issued command to rotate ZFS keys");
     logger.log(Level.INFO, "Issued ZFS key rotation command");
   }

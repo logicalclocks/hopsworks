@@ -105,16 +105,16 @@ public class AgentController {
     host.setRegistered(true);
     host.setHostname(hostId);
     if (zfsKey != null && zfsKey.length() == Settings.ZFS_KEY_LEN) {
-      String encryptedKey = null;
-      try {
-        encryptedKey = certificatesMgmService.encryptPassword(zfsKey);
-      } catch (java.io.IOException e) {
-        e.printStackTrace();
-        throwNewZfsException(hostId);
-      } catch (java.security.GeneralSecurityException e) {
-        e.printStackTrace();
-        throwNewZfsException(hostId);
-      }
+      String encryptedKey = zfsKey;
+//      try {
+//        encryptedKey = certificatesMgmService.encryptPassword(zfsKey);
+//      } catch (java.io.IOException e) {
+//        e.printStackTrace();
+//        throwNewZfsException(hostId);
+//      } catch (java.security.GeneralSecurityException e) {
+//        e.printStackTrace();
+//        throwNewZfsException(hostId);
+//      }
       host.setZfsKey(encryptedKey);
     }
 

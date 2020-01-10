@@ -314,7 +314,7 @@ public class CertificatesMgmService {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void issueZfsKeyRotationCommand() {
+  public int issueZfsKeyRotationCommand() {
     List<Hosts> allHosts = hostsFacade.findAllHosts();
     for (Hosts host : allHosts) {
 
@@ -337,10 +337,13 @@ public class CertificatesMgmService {
         systemCommandFacade.persist(rotateCommand);
       } catch (IOException ex) {
         Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+        return -2;
       } catch (GeneralSecurityException ex) {
         Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+        return -3;
       }
     }
+    return 0;
   }
   
   private void callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
