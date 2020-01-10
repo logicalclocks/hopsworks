@@ -41,10 +41,10 @@
 
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
-          'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
+          'DataSetService', 'JupyterService', '$route', '$routeParams', 'ModalService', 'growl', '$location',
           'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
           'TourService', 'ProjectService',
-          function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
+          function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $route, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
                   $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
 
@@ -1349,7 +1349,12 @@ angular.module('hopsWorksApp')
               self.tgState = false;
             };
 
-            self.menustyle = {
+            self.refresh = function () {
+                $route.reload();
+            };
+
+
+              self.menustyle = {
               "opacity": 0.2
             };
 
