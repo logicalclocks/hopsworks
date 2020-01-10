@@ -249,12 +249,10 @@ public class FlinkController {
    * @throws IOException If the flink conf file could be read.
    */
   public String getArchiveDir() throws IOException {
-    //R
     Yaml yaml = new Yaml();
     try (InputStream in = new FileInputStream(new File(settings.getFlinkConfFile()))) {
       Map<String, Object> obj = (Map<String, Object>) yaml.load(in);
       return Utils.prepPath((String) obj.get("historyserver.archive.fs.dir"));
     }
   }
-  
 }
