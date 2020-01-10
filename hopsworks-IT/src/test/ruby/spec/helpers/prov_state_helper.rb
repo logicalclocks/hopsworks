@@ -14,8 +14,30 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module ProvStateHelper
+  def project_index_cleanup(session_email)
+    reset_session
+    with_admin_session
+
+    #pp "cleaning up indices"
+    tries = 0
+    loop do
+      query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=100"
+      pp "#{query}" if @debugOpt == true
+      result = post "#{query}"
+      expect_status(200)
+      parsed_result = JSON.parse(result)
+      tries = tries+1
+      break if parsed_result["result"]["value"] == 0
+      break if tries == 10
+    end
+    expect(tries).to be <= 10
+    reset_session
+    create_session(session_email, "Pass123")
+  end
+
   def setup_cluster_prov(provenance_type, prov_archive_size)
-    @cookies = with_admin_session
+    reset_session
+    with_admin_session
     old_provenance_type = getVar("provenance_type")["value"]
     old_provenance_archive_size = getVar("provenance_archive_size")["value"]
 
@@ -27,7 +49,7 @@ module ProvStateHelper
     new_provenance_archive_size = getVar("provenance_archive_size")["value"]
     expect(new_provenance_archive_size).to eq prov_archive_size
 
-    @cookies = nil
+    reset_session
     return old_provenance_type, old_provenance_archive_size
   end
 

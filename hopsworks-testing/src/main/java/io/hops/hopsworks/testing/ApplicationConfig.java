@@ -27,7 +27,8 @@ public class ApplicationConfig extends ResourceConfig {
    */
   public ApplicationConfig() {
     register(io.hops.hopsworks.testing.project.TestProjectService.class);
-    register(io.hops.hopsworks.testing.provenance.TestProvenanceResource.class);
+    register(io.hops.hopsworks.testing.provenance.TestProjectProvenanceResource.class);
+    register(io.hops.hopsworks.testing.provenance.TestProvenanceService.class);
     
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

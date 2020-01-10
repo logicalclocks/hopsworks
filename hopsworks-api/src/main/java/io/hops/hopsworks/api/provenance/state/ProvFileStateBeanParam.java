@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.provenance.state;
 
-import io.hops.hopsworks.api.provenance.ProvenanceResource;
+import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.DefaultValue;
@@ -79,7 +79,7 @@ public class ProvFileStateBeanParam {
   
   @QueryParam("return_type")
   @DefaultValue("LIST")
-  private ProvenanceResource.FileStructReturnType returnType;
+  private ProjectProvenanceResource.FileStructReturnType returnType;
   
   public ProvFileStateBeanParam(
     @QueryParam("filter_by") Set<String> fileStateParams,
@@ -90,7 +90,7 @@ public class ProvFileStateBeanParam {
     @QueryParam("xattr_sort_by") List<String> xattrSortBy,
     @QueryParam("expand") Set<String> expansions,
     @QueryParam("exp_filter_by") Set<String> appStateParams,
-    @QueryParam("return_type") @DefaultValue("LIST") ProvenanceResource.FileStructReturnType returnType) {
+    @QueryParam("return_type") @DefaultValue("LIST") ProjectProvenanceResource.FileStructReturnType returnType) {
     this.fileStateParams = fileStateParams;
     this.fileStateSortBy = fileStateSortBy;
     this.exactXAttrParams = xAttrParams;
@@ -166,11 +166,11 @@ public class ProvFileStateBeanParam {
     this.appStateParams = appStateParams;
   }
   
-  public ProvenanceResource.FileStructReturnType getReturnType() {
+  public ProjectProvenanceResource.FileStructReturnType getReturnType() {
     return returnType;
   }
   
-  public void setReturnType(ProvenanceResource.FileStructReturnType returnType) {
+  public void setReturnType(ProjectProvenanceResource.FileStructReturnType returnType) {
     this.returnType = returnType;
   }
   
