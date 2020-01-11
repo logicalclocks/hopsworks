@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -236,8 +237,8 @@ public class AgentLivenessMonitor {
       while (!Thread.currentThread().isInterrupted()) {
         try {
           String agentToRestart = agentsToRestart.take();
-          Hosts host = hostsFacade.findByHostname(agentToRestart);
-          if (host == null || !host.isRegistered()) {
+          Optional<Hosts> optionalHost = hostsFacade.findByHostname(agentToRestart);
+          if (!optionalHost.isPresent() || !optionalHost.get().isRegistered()) {
             // Agent might have been deleted
             agentsHeartbeat.remove(agentToRestart);
           } else if (agentsHeartbeat.containsKey(agentToRestart)) {

@@ -56,6 +56,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -340,19 +341,19 @@ public class EnvironmentController {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
 
-    String cpuHost = hostsFacade.findCPUHost();
+    Optional<String> cpuHost = hostsFacade.findCPUHost();
     Date date = new Date();
 
     ArrayList<String> ymlList = new ArrayList<>();
     long exportTime = date.getTime();
-    if (cpuHost != null) {
+    if (cpuHost.isPresent()) {
       String cpuYmlPath = projectRelativeExportPath + "/" + "environment_cpu_" + exportTime + ".yml";
       condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
           cpuYmlPath, LibraryFacade.MachineType.CPU, null, false, true);
       ymlList.add(cpuYmlPath);
     }
-    String gpuHost = hostsFacade.findGPUHost();
-    if (gpuHost != null) {
+    Optional<String> gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost.isPresent()) {
       String gpuYmlPath = projectRelativeExportPath + "/" + "environment_gpu_" + exportTime + ".yml";
       condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
           gpuYmlPath, LibraryFacade.MachineType.GPU, null, false, true);

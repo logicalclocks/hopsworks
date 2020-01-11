@@ -65,19 +65,15 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Table(name = "hopsworks.hosts")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Hosts.find",
-          query = "SELECT h FROM Hosts h"),
-  @NamedQuery(name = "Hosts.findBy-Id",
-          query = "SELECT h FROM Hosts h WHERE h.id = :id"),
-  @NamedQuery(name = "Hosts.findBy-conda-enabled",
+  @NamedQuery(name = "Hosts.findByCondaEnabled",
         query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true"),
-  @NamedQuery(name = "Hosts.findBy-conda-enabled-gpu",
+  @NamedQuery(name = "Hosts.findByCondaEnabledGpu",
           query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus > 0"),
-  @NamedQuery(name = "Hosts.findBy-conda-enabled-cpu",
+  @NamedQuery(name = "Hosts.findByCondaEnabledCpu",
         query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus = 0"),
-  @NamedQuery(name = "Hosts.findBy-Hostname",
+  @NamedQuery(name = "Hosts.findByHostname",
           query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
-  @NamedQuery(name = "Hosts.findBy-HostIp",
+  @NamedQuery(name = "Hosts.findByHostIp",
           query = "SELECT h FROM Hosts h WHERE h.hostIp = :hostIp"),
   @NamedQuery(name = "Host.Count", query = "SELECT count(h.id) FROM Hosts h"),
   @NamedQuery(name = "Host.TotalCores", query = "SELECT SUM(h.cores) FROM Hosts h"),
@@ -126,10 +122,10 @@ public class Hosts implements Serializable {
   private Long memoryCapacity;
 
   @Column(name = "num_gpus")
-  private Integer numGpus = 0;
+  private Integer numGpus;
 
   @Column(name = "registered")
-  private boolean registered;
+  private Boolean registered;
 
   @Column(name = "conda_enabled")
   private Boolean condaEnabled;
@@ -224,11 +220,11 @@ public class Hosts implements Serializable {
     this.numGpus = numGpus;
   }
   
-  public boolean isRegistered() {
+  public Boolean isRegistered() {
     return registered;
   }
   
-  public void setRegistered(boolean registered) {
+  public void setRegistered(Boolean registered) {
     this.registered = registered;
   }
   

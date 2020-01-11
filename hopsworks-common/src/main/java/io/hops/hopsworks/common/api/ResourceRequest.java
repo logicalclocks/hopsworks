@@ -168,7 +168,8 @@ public class ResourceRequest {
     EXPERIMENTS,
     TENSORBOARD,
     RESULTS,
-    MODELS;
+    MODELS,
+    HOSTS;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

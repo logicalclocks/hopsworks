@@ -67,6 +67,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Path("/kmon")
 @Stateless
@@ -132,7 +133,7 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHosts() {
-    List<Hosts> list = hostEjb.findAllHosts();
+    List<Hosts> list = hostEjb.findAll();
     GenericEntity<List<Hosts>> hosts = new GenericEntity<List<Hosts>>(list) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(hosts).build();
@@ -143,9 +144,9 @@ public class Monitor {
   @RolesAllowed({"HOPS_ADMIN"}) //return the password in the host object
   @Produces(MediaType.APPLICATION_JSON)
   public Response getHosts(@PathParam("hostId") String hostId) {
-    Hosts h = hostEjb.findByHostname(hostId);
-    if (h != null) {
-      GenericEntity<Hosts> host = new GenericEntity<Hosts>(h) {
+    Optional<Hosts> optional = hostEjb.findByHostname(hostId);
+    if (optional.isPresent()) {
+      GenericEntity<Hosts> host = new GenericEntity<Hosts>(optional.get()) {
       };
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(host).build();
     } else {

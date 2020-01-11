@@ -117,11 +117,8 @@ public class CommunicationController {
   }
 
   private Hosts findHostByName(String hostname) throws Exception {
-    try {
-      return hostEJB.findByHostname(hostname);
-    } catch (Exception ex) {
-      throw new RuntimeException("Hostname " + hostname + " not found.");
-    }
+    return hostEJB.findByHostname(hostname).orElseThrow(() ->
+      new RuntimeException("Hostname " + hostname + " not found."));
   }
 
   private void uiMsg(String res) {
