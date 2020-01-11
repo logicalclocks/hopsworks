@@ -49,10 +49,10 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Hosts;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.security.ServiceJWTKeepAlive;
@@ -83,11 +83,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -112,7 +110,7 @@ public class SystemAdminService {
   @EJB
   private Settings settings;
   @EJB
-  private HostsFacade hostsFacade;
+  private HostsController hostsController;
   @EJB
   private JWTHelper jWTHelper;
   @EJB
@@ -204,105 +202,6 @@ public class SystemAdminService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
   }
   
-  @GET
-  @Path("/hosts")
-  public Response getAllClusterNodes() {
-    List<Hosts> allNodes = hostsFacade.findAllHosts();
-    
-    List<Hosts> responseList = new ArrayList<>(allNodes.size());
-    // Send only hostID and hostname
-    for (Hosts host : allNodes) {
-      Hosts node = new Hosts();
-      node.setHostname(host.getHostname());
-      node.setHostIp(host.getHostIp());
-      node.setRegistered(host.isRegistered());
-      responseList.add(node);
-    }
-    
-    GenericEntity<List<Hosts>> response = new GenericEntity<List<Hosts>>(responseList){};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
-  }
-  
-  @PUT
-  @Consumes({MediaType.APPLICATION_JSON})
-  @Path("/hosts")
-  public Response updateClusterNode(Hosts nodeToUpdate) throws ServiceException {
-  
-    Hosts storedNode = hostsFacade.findByHostname(nodeToUpdate.getHostname());
-    if (storedNode == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING);
-    } else {
-      if (nodeToUpdate.getHostIp() != null && !nodeToUpdate.getHostIp().isEmpty()) {
-        storedNode.setHostIp(nodeToUpdate.getHostIp());
-      }
-    
-      if (nodeToUpdate.getPublicIp() != null && !nodeToUpdate.getPublicIp().isEmpty()) {
-        storedNode.setPublicIp(nodeToUpdate.getPublicIp());
-      }
-      
-      if (nodeToUpdate.getPrivateIp() != null && !nodeToUpdate.getPrivateIp().isEmpty()) {
-        storedNode.setPrivateIp(nodeToUpdate.getPrivateIp());
-      }
-      
-      if (nodeToUpdate.getAgentPassword() != null && !nodeToUpdate.getAgentPassword().isEmpty()) {
-        storedNode.setAgentPassword(nodeToUpdate.getAgentPassword());
-      }
-
-      if (nodeToUpdate.getCondaEnabled() != null) {
-        storedNode.setCondaEnabled(nodeToUpdate.getCondaEnabled());
-      }
-
-      hostsFacade.storeHost(storedNode);
-      RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Node updated");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NO_CONTENT).entity(response).build();
-    }
-  }
-  
-  @DELETE
-  @Path("/hosts/{hostid}")
-  public Response deleteNode(@PathParam("hostid") String hostId) {
-    if (hostId == null) {
-      throw new IllegalArgumentException("hostId was not provided.");
-    }
-    boolean deleted = hostsFacade.removeByHostname(hostId);
-    RESTApiJsonResponse response;
-    if (deleted) {
-      response = noCacheResponse.buildJsonResponse(Response.Status.OK, "Node with ID " + hostId + " deleted");
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
-    } else {
-      response = noCacheResponse.buildJsonResponse(Response.Status.NOT_FOUND, "Could not delete node " + hostId);
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).entity(response).build();
-    }
-  }
-  
-  
-  @POST
-  @Consumes({MediaType.APPLICATION_JSON})
-  @Path("/hosts")
-  public Response addNewClusterNode(Hosts newNode)
-    throws ServiceException {
-    
-    // Do some sanity check
-    if (Strings.isNullOrEmpty(newNode.getHostname())) {
-      throw new IllegalArgumentException("hostId or hostname of new node are empty");
-    }
-    
-    Hosts existingNode = hostsFacade.findByHostname(newNode.getHostname());
-    if (existingNode != null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_EXISTS,  Level.WARNING, "Host with the same ID " +
-        "already exist");
-    }
-    
-    // Make sure we store what we want in the DB and not what the user wants to
-    Hosts finalNode = new Hosts();
-    finalNode.setHostname(newNode.getHostname());
-    finalNode.setHostIp(newNode.getHostIp());
-    hostsFacade.storeHost(finalNode);
-  
-    GenericEntity<Hosts> response = new GenericEntity<Hosts>(finalNode){};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
-  }
-  
   @POST
   @Path("/rotate")
   public Response serviceKeyRotate() {
@@ -319,11 +218,7 @@ public class SystemAdminService {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
-    Hosts host = hostsFacade.findByHostname(hostname);
-    if (host == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
-          "not exist");
-    }
+    Hosts host = hostsController.findByHostname(hostname);
     RemoteCommandResult result = agentLivenessMonitor.start(host);
     
     if (result.getExitCode() == 0) {
@@ -340,11 +235,7 @@ public class SystemAdminService {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
-    Hosts host = hostsFacade.findByHostname(hostname);
-    if (host == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
-          "not exist");
-    }
+    Hosts host = hostsController.findByHostname(hostname);
     RemoteCommandResult result = agentLivenessMonitor.stop(host);
     
     if (result.getExitCode() == 0) {
@@ -361,11 +252,7 @@ public class SystemAdminService {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
-    Hosts host = hostsFacade.findByHostname(hostname);
-    if (host == null) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.FINE, "Host " + hostname + " does " +
-          "not exist");
-    }
+    Hosts host = hostsController.findByHostname(hostname);
     RemoteCommandResult result = agentLivenessMonitor.restart(host);
     if (result.getExitCode() == 0) {
       return Response.ok().build();

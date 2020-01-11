@@ -23,11 +23,52 @@ module HostsHelper
     host
   end
 
-  def find_by_hostid(hostId)
-    Host.find_by(hostname: hostId)
+  def find_by_hostname(hostname)
+    Host.find_by(hostname: hostname)
   end
 
   def find_all_registered_hosts()
     Host.where(registered: true)
+  end
+
+  def find_all_hosts()
+    Host.all
+  end
+
+  def find_all_hostnames()
+    Host.all.map(&:hostname)
+  end
+
+  def admin_get_all_cluster_nodes(more = "")
+    get "#{ENV['HOPSWORKS_API']}/hosts" + more
+  end
+
+  def admin_get_cluster_node_by_hostname(hostname)
+    get "#{ENV['HOPSWORKS_API']}/hosts/" + hostname
+  end
+
+  def admin_create_update_cluster_node(hostname, node)
+    put "#{ENV['HOPSWORKS_API']}/hosts/" + hostname, node.to_json
+  end
+
+  def admin_delete_cluster_node_by_hostname(hostname)
+    delete "#{ENV['HOPSWORKS_API']}/hosts/" + hostname
+  end
+
+  def delete_all_cluster_nodes_except(except)
+    admin_get_all_cluster_nodes()
+    items = json_body[:items]
+    items = items.reject {|i| except.include?(i[:hostname])}
+    items.each { |i| admin_delete_cluster_node_by_hostname(i[:hostname]) }
+  end
+
+  def add_test_hosts()
+    for i in 1..10
+      Host.create(:hostname => "#{short_random_id}", :host_ip=> "#{short_random_id}", :private_ip=> SecureRandom.hex(4), :public_ip=>SecureRandom.hex(4), :cores=>rand(32), :memory_capacity=>rand(4096), :num_gpus=>rand(64))
+    end
+  end
+
+  def add_test_host()
+    Host.create(:hostname=>"test",:host_ip=>"192.168.1.1",:public_ip=>"192.168.1.2",:private_ip=>"192.168.1.3",:registered=>true,:conda_enabled=>true, :cores=>16)
   end
 end

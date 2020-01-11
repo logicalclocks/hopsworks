@@ -99,6 +99,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.admin.SystemAdminService.class);
     register(io.hops.hopsworks.api.admin.ProjectsAdmin.class);
     register(io.hops.hopsworks.api.admin.llap.LlapAdmin.class);
+    register(io.hops.hopsworks.api.admin.hosts.HostsAdminResource.class);
     register(io.hops.hopsworks.api.admin.security.CertificateMaterializerAdmin.class);
     register(io.hops.hopsworks.api.admin.security.CredentialsResource.class);
     register(io.hops.hopsworks.api.admin.security.X509Resource.class);

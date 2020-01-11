@@ -43,6 +43,7 @@ import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
@@ -65,6 +66,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -95,6 +97,8 @@ public class NodesBean implements Serializable {
   private OSProcessExecutor osProcessExecutor;
   @EJB
   private CondaCommandFacade condaCommandsFacade;
+  @EJB
+  private HostsController hostsController;
 
 
   @Resource(lookup = "concurrent/kagentExecutorService")
@@ -221,15 +225,16 @@ public class NodesBean implements Serializable {
   public void onRowEdit(RowEditEvent event) {
     Hosts host = (Hosts) event.getObject();
 
-    Hosts storedHost = hostsFacade.findByHostname(host.getHostname());
-    if (storedHost != null) {
+    Optional<Hosts> optional = hostsFacade.findByHostname(host.getHostname());
+    if (optional.isPresent()) {
+      Hosts storedHost = optional.get();
       storedHost.setHostIp(host.getHostIp());
       storedHost.setPublicIp(host.getPublicIp());
       storedHost.setPrivateIp(host.getPrivateIp());
       storedHost.setAgentPassword(host.getAgentPassword());
       storedHost.setRegistered(host.isRegistered());
       storedHost.setCondaEnabled(host.getCondaEnabled());
-      hostsFacade.storeHost(storedHost);
+      hostsFacade.update(storedHost);
       MessagesController.addInfoMessage("Updated host");
       logger.log(Level.FINE, "Updated Host with ID: " + host.getHostname() + " Hostname: " + host.getHostIp()
           + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp()
@@ -242,8 +247,9 @@ public class NodesBean implements Serializable {
   }
 
   public String condaStyle(String hostname) {
-    Hosts h = hostsFacade.findByHostname(hostname);
-    if (h != null) {
+    Optional<Hosts> optional = hostsFacade.findByHostname(hostname);
+    if (optional.isPresent()) {
+      Hosts h = optional.get();
       List<CondaCommands> listCommands = condaCommandsFacade.findByHost(h);
       for (CondaCommands cc : listCommands) {
         if (cc.getStatus() == CondaCommandFacade.CondaStatus.FAILED) {
@@ -275,8 +281,7 @@ public class NodesBean implements Serializable {
         || newNodeHostIp == null || newNodeHostIp.isEmpty()) {
       MessagesController.addErrorMessage("Host not added", "All fields must be filled");
     } else {
-      Hosts existingNode = hostsFacade.findByHostname(newHostname);
-      if (existingNode != null) {
+      if (hostsFacade.findByHostname(newHostname).isPresent()) {
         logger.log(Level.WARNING, "Tried to add Host with ID " + newHostname + " but a host already exists with the "
             + "same ID");
         MessagesController.addErrorMessage("Host with the same ID already exists!");
@@ -286,7 +291,7 @@ public class NodesBean implements Serializable {
         newNode.setHostIp(newNodeHostIp);
         newNode.setCondaEnabled(false);
         allNodes.add(newNode);
-        hostsFacade.storeHost(newNode);
+        hostsFacade.update(newNode);
         logger.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostname());
         MessagesController.addInfoMessage("New node added", "Now click the button 'Zip Anaconda Libraries' before "
             + "installing the new node.");
@@ -297,7 +302,7 @@ public class NodesBean implements Serializable {
   public void deleteNode() {
     if (selectedHosts != null && !selectedHosts.isEmpty()) {
       for (Hosts host : selectedHosts) {
-        boolean deleted = hostsFacade.removeByHostname(host.getHostname());
+        boolean deleted = hostsController.removeByHostname(host.getHostname());
         if (deleted) {
           allNodes.remove(host);
           logger.log(Level.INFO, "Removed Host with ID " + host.getHostname() + " from the database");

@@ -17,4 +17,6 @@ class Host < ActiveRecord::Base
   def self.table_name
     "hosts"
   end
+  # Ruby reads MySQL's TINYINT as a boolean. the line below forces the correct type on num_gpus
+  attribute :num_gpus, ActiveRecord::Type::Integer.new
 end
