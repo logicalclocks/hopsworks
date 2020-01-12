@@ -53,8 +53,18 @@ public class Query {
   public Query() {
   }
 
-  public Query(String leftFgName, List<FeatureDTO> leftFeatures, String rightFgName, List<FeatureDTO> rightFeatures) {
+  // Constructor for testing
+  public Query(Featuregroup leftFg, Featuregroup rightFg) {
+    this.leftFg = leftFg;
+    this.rightFg = rightFg;
+  }
+
+  // Constructor for testing
+  public Query(Featuregroup leftFg, List<FeatureDTO> leftFeatures,
+               Featuregroup rightFg, List<FeatureDTO> rightFeatures) {
+    this.leftFg = leftFg;
     this.leftFeatures = leftFeatures;
+    this.rightFg = rightFg;
     this.rightFeatures = rightFeatures;
   }
 

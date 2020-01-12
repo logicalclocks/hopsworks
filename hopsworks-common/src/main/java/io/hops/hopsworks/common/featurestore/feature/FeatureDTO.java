@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.feature;
 
+import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -51,8 +53,19 @@ public class FeatureDTO {
     this.version = version;
   }
   
-  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
-    String onlineType) {
+  public FeatureDTO(String featuregroup, String name, String type, String description, Boolean primary,
+                    Boolean partition, String onlineType) {
+    this.featuregroup = featuregroup;
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+    this.partition = partition;
+    this.onlineType = onlineType;
+  }
+
+  public FeatureDTO(String name, String type, String description, Boolean primary,
+                    Boolean partition, String onlineType) {
     this.name = name;
     this.type = type;
     this.description = description;

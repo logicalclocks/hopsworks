@@ -32,6 +32,10 @@ import java.util.List;
 
 public class TestConstructorController {
 
+  private Featuregroup fg1;
+  private Featuregroup fg2;
+  private Featuregroup fg3;
+
   private List<FeatureDTO> fg1Features = new ArrayList<>();
   private List<FeatureDTO> fg2Features = new ArrayList<>();
   private List<FeatureDTO> fg3Features = new ArrayList<>();
@@ -41,17 +45,24 @@ public class TestConstructorController {
 
   @Before
   public void setup() {
+    fg1 = new Featuregroup(1);
+    fg1.setName("fg1");
+    fg2 = new Featuregroup(2);
+    fg2.setName("fg2");
+    fg3 = new Featuregroup(3);
+    fg3.setName("fg3");
+
     fg1Features = new ArrayList<>();
-    fg1Features.add(new FeatureDTO("fg1_ft1", "Integer", "", true, false, ""));
-    fg1Features.add(new FeatureDTO("fg1_ft2", "String", "", false, false, ""));
+    fg1Features.add(new FeatureDTO("fg1", "fg1_ft1", "Integer", "", true, false, ""));
+    fg1Features.add(new FeatureDTO("fg1", "fg1_ft2", "String", "", false, false, ""));
 
     fg2Features = new ArrayList<>();
-    fg2Features.add(new FeatureDTO("fg2_ft1", "Integer", "", true, false, ""));
-    fg2Features.add(new FeatureDTO("fg2_ft2", "String", "", false, false, ""));
+    fg2Features.add(new FeatureDTO("fg2", "fg2_ft1", "Integer", "", true, false, ""));
+    fg2Features.add(new FeatureDTO("fg2", "fg2_ft2", "String", "", false, false, ""));
 
     fg3Features = new ArrayList<>();
-    fg3Features.add(new FeatureDTO("fg3_ft1", "Integer", "", true, false, ""));
-    fg3Features.add(new FeatureDTO("fg3_ft2", "String", "", false, false, ""));
+    fg3Features.add(new FeatureDTO("fg3", "fg3_ft1", "Integer", "", true, false, ""));
+    fg3Features.add(new FeatureDTO("fg3", "fg3_ft2", "String", "", false, false, ""));
   }
 
   @Test
@@ -65,7 +76,7 @@ public class TestConstructorController {
     requestedFeatures.add(new FeatureDTO("fg1_ft1"));
 
     List<FeatureDTO> extractedFeatures =
-        constructorController.extractSelectedFeatures(new Featuregroup(), "fg1", requestedFeatures);
+        constructorController.extractSelectedFeatures(fg1, requestedFeatures);
     Assert.assertEquals(1, extractedFeatures.size());
     Assert.assertEquals("fg1_ft1", extractedFeatures.get(0).getName());
     // Make sure the object returned is the one for the DB with more infomation in (e.g. Type, Primary key)
@@ -84,7 +95,7 @@ public class TestConstructorController {
 
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Feature: fg1_ft3 not found in feature group: fg1");
-    constructorController.extractSelectedFeatures(new Featuregroup(), "fg1", requestedFeatures);
+    constructorController.extractSelectedFeatures(fg1, requestedFeatures);
   }
 
   @Test
@@ -98,7 +109,7 @@ public class TestConstructorController {
     requestedFeatures.add(new FeatureDTO("*"));
 
     List<FeatureDTO> extractedFeatures =
-        constructorController.extractSelectedFeatures(new Featuregroup(), "fg1", requestedFeatures);
+        constructorController.extractSelectedFeatures(fg1, requestedFeatures);
     // Make sure both features have been returned.
     Assert.assertEquals(2, extractedFeatures.size());
   }
@@ -112,7 +123,7 @@ public class TestConstructorController {
 
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
     requestedFeatures.add(new FeatureDTO("*"));
-    Query query = new Query("fg1", requestedFeatures, "fg2", requestedFeatures);
+    Query query = new Query(fg1, requestedFeatures, fg2, requestedFeatures);
 
     List<FeatureDTO> extractedFeatures = constructorController.extractSelectedFeatures(query);
     // Make sure both features have been returned.
@@ -131,7 +142,7 @@ public class TestConstructorController {
 
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
     requestedFeatures.add(new FeatureDTO("*"));
-    Query innerQuery = new Query("fg2", requestedFeatures, "fg3", requestedFeatures);
+    Query innerQuery = new Query(fg2, requestedFeatures, fg3, requestedFeatures);
 
     Query query = new Query();
     query.setQuery(innerQuery);
@@ -166,7 +177,7 @@ public class TestConstructorController {
     on.add(new FeatureDTO("ft1"));
     on.add(new FeatureDTO("ft2"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setOn(on);
@@ -189,7 +200,7 @@ public class TestConstructorController {
     List<FeatureDTO> on = new ArrayList<>();
     on.add(new FeatureDTO("ft1"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setOn(on);
@@ -211,7 +222,7 @@ public class TestConstructorController {
     List<FeatureDTO> on = new ArrayList<>();
     on.add(new FeatureDTO("ft1"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setOn(on);
@@ -233,8 +244,8 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query();
-    query.setLeftAvailableFeatures(availableLeft);
+    Query query = new Query(fg1, fg2);
+   query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setLeftOn(leftOn);
     query.setRightOn(rightOn);
@@ -257,7 +268,7 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"), new FeatureDTO("additional"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setLeftOn(leftOn);
@@ -280,7 +291,7 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setLeftOn(leftOn);
@@ -303,7 +314,7 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft1"));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setLeftOn(leftOn);
@@ -323,7 +334,7 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", true));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
 
@@ -343,7 +354,7 @@ public class TestConstructorController {
     availableRight.add(new FeatureDTO("ft1", "String", "", true));
     availableRight.add(new FeatureDTO("ft2", "Float", "", true));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
 
@@ -365,7 +376,7 @@ public class TestConstructorController {
     availableRight.add(new FeatureDTO("ft2", "Float", "", true));
     availableRight.add(new FeatureDTO("ft3", "Integer", "", true));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
 
@@ -383,7 +394,7 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", false));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
 
@@ -401,7 +412,7 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "Integer", "", true));
 
-    Query query = new Query();
+    Query query = new Query(fg1, fg2);
     query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
 
@@ -412,5 +423,12 @@ public class TestConstructorController {
   @Test
   public void testGenerateSQLRecursive() {
     // TODO(Fabio)
+  }
+
+  // Test simple get with no join
+  @Test
+  public void testSingleSide() {
+    ConstructorController constructorController = new ConstructorController();
+
   }
 }
