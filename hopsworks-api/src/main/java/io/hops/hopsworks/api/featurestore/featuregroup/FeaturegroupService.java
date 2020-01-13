@@ -399,25 +399,25 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Update featuregroup contents",
       response = FeaturegroupDTO.class)
-  public Response updateFeaturegroup(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
+  public Response updateFeaturegroup(@Context SecurityContext sc,
+      @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId,
-      @ApiParam(value = "updateMetadata", example = "true", defaultValue = "false")  @QueryParam("updateMetadata")
-          Boolean updateMetadata, @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
-      @QueryParam("updateStats") Boolean updateStats, @ApiParam(value = "enableOnline", example = "true",
-    defaultValue = "false") @QueryParam("enableOnline") Boolean enableOnline,
-    @ApiParam(value = "disableOnline", example = "true", defaultValue = "false") @QueryParam("disableOnline")
-      Boolean disableOnline, @ApiParam(value = "updateStatsSettings", example = "true", defaultValue =
-    "false") @DefaultValue("false") @QueryParam("updateStatsSettings") Boolean updateStatsSettings, FeaturegroupDTO
-    featuregroupDTO)
-    throws FeaturestoreException, SQLException {
+      @ApiParam(value = "updateMetadata", example = "true")
+      @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
+      @ApiParam(value = "updateStats", example = "true")
+      @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
+      @ApiParam(value = "enableOnline", example = "true")
+      @QueryParam("enableOnline") @DefaultValue("false") Boolean enableOnline,
+      @ApiParam(value = "disableOnline", example = "true")
+      @QueryParam("disableOnline") @DefaultValue("false") Boolean disableOnline,
+      @ApiParam(value = "updateStatsSettings", example = "true")
+      @QueryParam("updateStatsSettings") @DefaultValue("false") Boolean updateStatsSettings,
+      @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
+      FeaturegroupDTO featuregroupDTO) throws FeaturestoreException, SQLException {
+
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }
-    updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
-    updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
-    enableOnline = featurestoreUtil.enableOnlineGetOrDefault(enableOnline);
-    disableOnline = featurestoreUtil.disableOnlineGetOrDefault(disableOnline);
     verifyIdProvided(featuregroupId);
     featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -425,25 +425,26 @@ public class FeaturegroupService {
         featuregroupId);
     featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
-    if(updateMetadata || updateStats || enableOnline || disableOnline || updateStatsSettings){
-      if(updateMetadata) {
-        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
-      }
-      if(updateStats){
-        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
-      }
-      if(enableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+    if(updateMetadata) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
+    }
+    if(updateStats){
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
+    }
+    if(enableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         !((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-        featuregroupDTO.setDescription(oldFeaturegroupDTO.getDescription());
-        updatedFeaturegroupDTO = featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, user);
-      }
-      if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+      featuregroupDTO.setDescription(oldFeaturegroupDTO.getDescription());
+      updatedFeaturegroupDTO = featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+    }
+    if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-        updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
-      }
-      if(updateStatsSettings) {
-        updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
-      }
+      updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+    }
+    if(updateStatsSettings) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
+    }
+    if (updateJob) {
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(featurestore, featuregroupDTO);
     }
     if(updatedFeaturegroupDTO != null) {
       activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
