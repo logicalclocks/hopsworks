@@ -82,7 +82,7 @@ public class FeaturestoreJobController {
    * @return true if there is a match, otherwise false
    */
   private Boolean isJobExists(List<FeaturestoreJob> jobs, Jobs job) {
-    return jobs.stream().anyMatch(fsjob -> fsjob.getJob().getId() == job.getId());
+    return jobs.stream().anyMatch(fsjob -> fsjob.getJob().getId().equals(job.getId()));
   }
   
 }

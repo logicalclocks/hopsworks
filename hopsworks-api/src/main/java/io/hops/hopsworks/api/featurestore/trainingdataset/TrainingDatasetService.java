@@ -59,6 +59,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -307,21 +308,19 @@ public class TrainingDatasetService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Update a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
-  public Response updateTrainingDataset(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
-      @PathParam("trainingdatasetid") Integer trainingdatasetid,
-    @ApiParam(value = "updateMetadata", example = "true", defaultValue = "false")
-    @QueryParam("updateMetadata") Boolean updateMetadata,
-    @ApiParam(value = "updateStats", example = "true", defaultValue = "false")
-    @QueryParam("updateStats") Boolean updateStats,
+  public Response updateTrainingDataset(@Context SecurityContext sc,
+                                        @ApiParam(value = "Id of the training dataset", required = true)
+                                        @PathParam("trainingdatasetid") Integer trainingdatasetid,
+    @ApiParam(value = "updateMetadata", example = "true")
+    @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
+    @ApiParam(value = "updateStats", example = "true")
+    @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
     TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, DatasetException, ProjectException, HopsSecurityException,
       UnsupportedEncodingException, ProvenanceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
-    updateMetadata = featurestoreUtil.updateMetadataGetOrDefault(updateMetadata);
-    updateStats = featurestoreUtil.updateStatsGetOrDefault(updateStats);
     verifyIdProvided(trainingdatasetid);
     trainingDatasetDTO.setId(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
