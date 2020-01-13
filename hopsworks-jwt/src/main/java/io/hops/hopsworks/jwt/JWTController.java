@@ -756,7 +756,7 @@ public class JWTController {
       SigningKeyNotFoundException {
     
     return createToken(Constants.ELK_SIGNING_KEY_NAME,
-        false, issuer, null, expiresAt, null, subjectName,
+        false, issuer, null, expiresAt, null, subjectName.toLowerCase(),
         claims, alg);
   }
 }
