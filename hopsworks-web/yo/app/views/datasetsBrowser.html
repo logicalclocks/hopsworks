@@ -60,7 +60,7 @@
                 <span data-ng-repeat="path in datasetsCtrl.pathArray.slice(datasetsCtrl.pathArray.length - 1 - datasetsCtrl.breadcrumbLen()) track by $index">
                   <span> / </span><a ng-click="datasetsCtrl.goToFolder($index + 1)">{{path| limitTo: 16 }}{{path.length > 16 ? '..' : ' '}}</a>
                 </span>
-                <span> &nbsp; <a ng-click="datasetsCtrl.goToFolder(datasetsCtrl.pathArray.length)"> <span class="fa fa-refresh"></span></a></span>
+                <span> &nbsp; <a ng-click="datasetsCtrl.refresh()"> <span class="fa fa-refresh"></span></a></span>
               </div>               
               <div class="pull-right" style="margin-right:30px;  margin-top:-25px;">
                 <hamburger-toggle state="datasetsCtrl.tgState" class="hamburger-toggle" ng-click="datasetsCtrl.deselectAll()"></hamburger-toggle>
@@ -192,24 +192,25 @@
                             </md-checkbox>
                           </th>
                       <th ng-click="sort('attributes.dir'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
-                          style="width: 1%; min-width: 1%" class="text-center">Type
+                          style="width: 4%; min-width: 4%">Type
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.dir'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                              ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
                       <th ng-click="sort('attributes.name'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
                           style="width: 50%; min-width: 50%">Name
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.name'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                              ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
                       <th ng-click="sort('attributes.owner'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
                           style="width: 16%; min-width: 16%">Owner
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.owner'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('attributes.modificationTime'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()" style="width: 18%; min-width: 18%">Last modified
+                              ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                      <th ng-click="sort('attributes.modificationTime'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                          style="width: 18%; min-width: 18%">Last modified
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.modificationTime'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
-                      <th ng-click="sort('attributes.size'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()" style="width: 4%; min-width: 4%"
-                          align="center" class="text-center">File size
+                              ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
+                      <th ng-click="sort('attributes.size'); datasetsCtrl.resetSelected(); datasetsCtrl.doFilter()"
+                          style="width: 4%; min-width: 4%" align="center" class="text-center">File size
                         <span class="glyphicon sort-icon" ng-show="sortKey === 'attributes.size'"
-                              ng-class="{'glyphicon-chevron-up':reverse,'glyphicon-chevron-down':!reverse}"></span></th>
+                              ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span></th>
                       <th style="width: 2%; min-width: 2%"></th>
                       </tr>
                       </thead>

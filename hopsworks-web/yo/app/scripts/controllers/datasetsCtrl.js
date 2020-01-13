@@ -300,7 +300,7 @@ angular.module('hopsWorksApp')
             };
 
             var getSortOrder = function () {
-              return typeof $scope.reverse === "undefined" || $scope.reverse === true ?  ':asc' : ':desc';
+              return typeof $scope.reverse === "undefined" || $scope.reverse === true ?  ':desc' : ':asc';
             };
 
             var getSortBy = function () {
@@ -309,18 +309,24 @@ angular.module('hopsWorksApp')
                   switch($scope.sortKey) {
                       case 'dir':
                       case 'type':
+                      case 'attributes.dir':
+                      case 'attributes.type':
                           sortBy.push('TYPE' + getSortOrder());
                           break;
                       case 'name':
+                      case 'attributes.name':
                           sortBy.push('NAME' + getSortOrder());
                           break;
                       case 'owner':
+                      case 'attributes.owner':
                           //sortBy.push('OWNER' + getSortOrder());
                           break;
-                      case 'modification':
+                      case 'modificationTime':
+                      case 'attributes.modificationTime':
                           sortBy.push('MODIFICATION_TIME' + getSortOrder());
                           break;
                       case 'size':
+                      case 'attributes.size':
                           sortBy.push('SIZE' + getSortOrder());
                           break;
                       default:
@@ -1349,7 +1355,13 @@ angular.module('hopsWorksApp')
               self.tgState = false;
             };
 
-            self.menustyle = {
+            self.refresh = function () {
+                getDirContents();
+                self.tgState = false;
+            };
+
+
+              self.menustyle = {
               "opacity": 0.2
             };
 
