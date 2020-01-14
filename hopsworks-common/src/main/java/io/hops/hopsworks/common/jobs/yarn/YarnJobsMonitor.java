@@ -95,28 +95,28 @@ public class YarnJobsMonitor {
       minute = "*",
       hour = "*")
   public synchronized void monitor(Timer timer) {
-    Map<String, Execution> executions = new HashMap<>();
-    List<Execution> execs = executionFacade.findNotFinished();
-    if (execs != null && !execs.isEmpty()) {
-      for (Execution exec : execs) {
-        if (exec.getAppId() != null) {
-          executions.put(exec.getAppId(), exec);
+    try {
+      Map<String, Execution> executions = new HashMap<>();
+      List<Execution> execs = executionFacade.findNotFinished();
+      if (execs != null && !execs.isEmpty()) {
+        for (Execution exec : execs) {
+          if (exec.getAppId() != null) {
+            executions.put(exec.getAppId(), exec);
+          }
         }
-      }
-      //Remove (Close) all monitors of deleted jobs
-      Iterator<Map.Entry<String, YarnMonitor>> monitorsIter = monitors.entrySet().iterator();
-      while (monitorsIter.hasNext()) {
-        Map.Entry<String, YarnMonitor> entry = monitorsIter.next();
-        // Check if Value associated with Key is 10
-        if (!executions.keySet().contains(entry.getKey())) {
-          // Remove the element
-          entry.getValue().close();
-          monitorsIter.remove();
+        //Remove (Close) all monitors of deleted jobs
+        Iterator<Map.Entry<String, YarnMonitor>> monitorsIter = monitors.entrySet().iterator();
+        while (monitorsIter.hasNext()) {
+          Map.Entry<String, YarnMonitor> entry = monitorsIter.next();
+          // Check if Value associated with Key is 10
+          if (!executions.keySet().contains(entry.getKey())) {
+            // Remove the element
+            entry.getValue().close();
+            monitorsIter.remove();
+          }
         }
-      }
-      maxStatusPollRetry = settings.getMaxStatusPollRetry();
-      List<String> toRemove = new ArrayList<>();
-      try {
+        maxStatusPollRetry = settings.getMaxStatusPollRetry();
+        List<String> toRemove = new ArrayList<>();
         for (Map.Entry<String, Execution> entry : executions.entrySet()) {
           YarnMonitor monitor = monitors.get(entry.getKey());
           if (monitor == null) {
@@ -136,12 +136,11 @@ public class YarnJobsMonitor {
           failures.remove(appID);
           monitors.remove(appID);
         }
-
         // This is here to do bookkeeping. Remove from the map all the executions which have finished copying the logs
         copyLogsFutures.entrySet().removeIf(futureResult -> futureResult.getValue().isDone());
-      } catch (Exception ex) {
-        LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
       }
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "Error while monitoring jobs", ex);
     }
   }
   

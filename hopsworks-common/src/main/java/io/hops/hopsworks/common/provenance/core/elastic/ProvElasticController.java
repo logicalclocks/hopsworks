@@ -63,7 +63,8 @@ public class ProvElasticController {
   private Settings settings;
   @EJB
   private ElasticClient client;
-  
+
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public GetIndexResponse mngIndexGet(GetIndexRequest request) throws ElasticException {
     GetIndexResponse response;
     try {

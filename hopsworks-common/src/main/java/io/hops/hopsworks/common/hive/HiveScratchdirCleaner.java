@@ -159,7 +159,6 @@ public class HiveScratchdirCleaner {
       logger.log(Level.SEVERE, "Error while starting Hive scratchdir cleaning ", e);
     } finally {
       yarnService.closeYarnClient(yarnClientWrapper);
-
       if (dfso != null) {
         dfs.closeDfsClient(dfso);
       }

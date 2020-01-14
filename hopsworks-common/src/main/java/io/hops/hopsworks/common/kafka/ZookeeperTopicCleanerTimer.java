@@ -96,88 +96,93 @@ public class ZookeeperTopicCleanerTimer {
       hour = "*")
   public void execute(Timer timer) {
     LOGGER.log(Level.INFO, "Running ZookeeperTopicCleanerTimer.");
-    Set<String> zkTopics = new HashSet<>();
-    //30 seconds
-    int sessionTimeoutMs = 30 * 1000;
+
     try {
-      if (zk == null || !zk.getState().isConnected()) {
-        if (zk != null) {
-          zk.close();
-        }
-        zk = new ZooKeeper(settings.getZkConnectStr(),
-          sessionTimeoutMs, new ZookeeperWatcher());
-      }
-      List<String> topics = zk.getChildren("/brokers/topics", false);
-      zkTopics.addAll(topics);
-    } catch (IOException ex) {
-      LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
-    } catch (KeeperException | InterruptedException ex) {
-      LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex);
-    }
-
-    List<ProjectTopics> dbProjectTopics = em.createNamedQuery("ProjectTopics.findAll").getResultList();
-    Set<String> dbTopics = new HashSet<>();
-
-    for (ProjectTopics pt : dbProjectTopics) {
+      Set<String> zkTopics = new HashSet<>();
+      //30 seconds
+      int sessionTimeoutMs = 30 * 1000;
       try {
-        dbTopics.add(pt.getTopicName());
-      } catch (UnsupportedOperationException e) {
-        LOGGER.log(Level.SEVERE, e.toString());
-      }
-    }
-
-    /*
-     * To remove topics from zookeeper which do not exist in database. This
-     * situation
-     * happens when a hopsworks project is deleted, because all the topics in
-     * the project
-     * will be deleted (cascade delete) without deleting them from the Kafka
-     * cluster.
-     * 1. get all topics from zookeeper
-     * 2. get the topics which exist in zookeeper, but not in database
-     * zkTopics.removeAll(dbTopics);
-     * 3. remove those topics
-     */
-    try {
-      if (zkClient == null) {
-        // 30 seconds
-        int connectionTimeout = 90 * 1000;
-        zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
-          sessionTimeoutMs, connectionTimeout,
-            ZKStringSerializer$.MODULE$);
-      }
-      if (!zkTopics.isEmpty()) {
-        zkTopics.removeAll(dbTopics);
-        for (String topicName : zkTopics) {
-          if (zkConnection == null) {
-            zkConnection = new ZkConnection(settings.getZkConnectStr());
+        if (zk == null || !zk.getState().isConnected()) {
+          if (zk != null) {
+            zk.close();
           }
-          ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+          zk = new ZooKeeper(settings.getZkConnectStr(),
+              sessionTimeoutMs, new ZookeeperWatcher());
+        }
+        List<String> topics = zk.getChildren("/brokers/topics", false);
+        zkTopics.addAll(topics);
+      } catch (IOException ex) {
+        LOGGER.log(Level.SEVERE, "Unable to find the zookeeper server: ", ex.toString());
+      } catch (KeeperException | InterruptedException ex) {
+        LOGGER.log(Level.SEVERE, "Cannot retrieve topic list from Zookeeper", ex);
+      }
 
-          try {
-            AdminUtils.deleteTopic(zkUtils, topicName);
-            LOGGER.log(Level.INFO, "{0} is removed from Zookeeper",
-                new Object[]{topicName});
-          } catch (TopicAlreadyMarkedForDeletionException ex) {
-            LOGGER.log(Level.INFO, "{0} is already marked for deletion",
-                new Object[]{topicName});
-          }
+      List<ProjectTopics> dbProjectTopics = em.createNamedQuery("ProjectTopics.findAll").getResultList();
+      Set<String> dbTopics = new HashSet<>();
+
+      for (ProjectTopics pt : dbProjectTopics) {
+        try {
+          dbTopics.add(pt.getTopicName());
+        } catch (UnsupportedOperationException e) {
+          LOGGER.log(Level.SEVERE, e.toString());
         }
       }
 
-    } catch (ServiceException ex) {
-      LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex);
-    } finally {
-      if (zkClient != null) {
-        zkClient.close();
-      }
+      /*
+       * To remove topics from zookeeper which do not exist in database. This
+       * situation
+       * happens when a hopsworks project is deleted, because all the topics in
+       * the project
+       * will be deleted (cascade delete) without deleting them from the Kafka
+       * cluster.
+       * 1. get all topics from zookeeper
+       * 2. get the topics which exist in zookeeper, but not in database
+       * zkTopics.removeAll(dbTopics);
+       * 3. remove those topics
+       */
       try {
-        if (zkConnection != null) {
-          zkConnection.close();
+        if (zkClient == null) {
+          // 30 seconds
+          int connectionTimeout = 90 * 1000;
+          zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
+              sessionTimeoutMs, connectionTimeout,
+              ZKStringSerializer$.MODULE$);
         }
-      } catch (InterruptedException ex) {
-        LOGGER.log(Level.SEVERE, null, ex);
+        if (!zkTopics.isEmpty()) {
+          zkTopics.removeAll(dbTopics);
+          for (String topicName : zkTopics) {
+            if (zkConnection == null) {
+              zkConnection = new ZkConnection(settings.getZkConnectStr());
+            }
+            ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
+
+            try {
+              AdminUtils.deleteTopic(zkUtils, topicName);
+              LOGGER.log(Level.INFO, "{0} is removed from Zookeeper",
+                  new Object[]{topicName});
+            } catch (TopicAlreadyMarkedForDeletionException ex) {
+              LOGGER.log(Level.INFO, "{0} is already marked for deletion",
+                  new Object[]{topicName});
+            }
+          }
+        }
+
+      } catch (ServiceException ex) {
+        LOGGER.log(Level.SEVERE, "Unable to get zookeeper ip address ", ex);
+      } finally {
+        if (zkClient != null) {
+          zkClient.close();
+        }
+        try {
+          if (zkConnection != null) {
+            zkConnection.close();
+          }
+        } catch (InterruptedException ex) {
+          LOGGER.log(Level.SEVERE, null, ex);
+        }
       }
+    } catch(Exception e) {
+      LOGGER.log(Level.SEVERE, "Got an exception while cleaning up topics", e);
     }
   }
   
@@ -202,7 +207,7 @@ public class ZookeeperTopicCleanerTimer {
   public void getBrokers() {
     try {
       settings.setKafkaBrokers(settings.getBrokerEndpoints());
-    } catch (IOException | KeeperException | InterruptedException ex) {
+    } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }

@@ -244,6 +244,7 @@ public class ElasticController {
         Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean deleteIndex(String index)
       throws ElasticException {
     boolean acked =
@@ -341,6 +342,7 @@ public class ElasticController {
    * @param regex
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Map<String, Long> getIndices(String regex)
       throws ElasticException {
     
