@@ -45,7 +45,6 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ServiceException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -55,6 +54,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.Timeout;
 import javax.ejb.Timer;
+import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -92,33 +92,36 @@ public class JupyterNotebookCleaner {
     Long intervalValue = settings.getConfTimeValue(rawInterval);
     TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
     intervalValue = intervalTimeunit.toMillis(intervalValue);
-    timerService.createTimer(intervalValue, intervalValue, "Jupyter Notebook Cleaner");
+    timerService.createIntervalTimer(intervalValue, intervalValue, new TimerConfig("Jupyter Notebook Cleaner", false));
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void execute(Timer timer) throws ServiceException{
+  public void execute(Timer timer) {
+    try {
+      LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
+      // 1. Get all Running Jupyter Notebook Servers
+      List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
 
-    LOGGER.log(Level.INFO, "Running JupyterNotebookCleaner.");
-    // 1. Get all Running Jupyter Notebook Servers
-    List<JupyterProject> servers = jupyterFacade.getAllNotebookServers();
-
-    if (servers != null && !servers.isEmpty()) {
-      Date currentDate = Calendar.getInstance().getTime();
-      for (JupyterProject jp : servers) {
-        // If the notebook is expired
-        if (jp.getExpires().before(currentDate)) {
-          try {
-            HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
-            Users user = usersFacade.findByUsername(hdfsUser.getUsername());
-            LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
-            jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
-                jp.getSecret(), jp.getPid(), jp.getPort());
-          } catch(Exception e) {
-            LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
+      if (servers != null && !servers.isEmpty()) {
+        Date currentDate = Calendar.getInstance().getTime();
+        for (JupyterProject jp : servers) {
+          // If the notebook is expired
+          if (jp.getExpires().before(currentDate)) {
+            try {
+              HdfsUsers hdfsUser = hdfsUsersFacade.find(jp.getHdfsUserId());
+              Users user = usersFacade.findByUsername(hdfsUser.getUsername());
+              LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
+              jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
+                  jp.getSecret(), jp.getPid(), jp.getPort());
+            } catch (Exception e) {
+              LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
+            }
           }
         }
       }
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Got an exception while cleaning up jupyter notebooks");
     }
   }
 }

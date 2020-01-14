@@ -308,49 +308,54 @@ public class JupyterJWTManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
   public void monitorJupyterJWT() {
-    // Renew the rest of them
-    Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
-    Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
-    LocalDateTime now = DateUtils.getNow();
-    
-    while (jupyterJWTs.hasNext()) {
-      JupyterJWT element = jupyterJWTs.next();
-      // Elements are sorted by their expiration date.
-      // If element N does not need to be renewed neither does N+1
-      if (element.maybeRenew(now)) {
-        LocalDateTime newExpirationDate = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-        String newToken = null;
-        try {
-          newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
-              DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
-          
-          JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, element.pidAndPort, newExpirationDate);
-          renewedJWT.tokenFile = element.tokenFile;
-          renewedJWT.token = newToken;
-          jupyterJWTTokenWriter.writeToken(settings, renewedJWT);
-          renewedJWTs.add(renewedJWT);
-        } catch (JWTException ex) {
-          LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + element, ex);
-        } catch (IOException ex) {
-          LOG.log(Level.WARNING, "Could not write renewed Jupyter JWT to file for " + element, ex);
-          if (newToken != null) {
-            try {
-              jwtController.invalidate(newToken);
-            } catch (InvalidationException invEx) {
-              LOG.log(Level.FINE, "Could not invalidate failed token", invEx);
+    try {
+      // Renew the rest of them
+      Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
+      Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
+      LocalDateTime now = DateUtils.getNow();
+
+      while (jupyterJWTs.hasNext()) {
+        JupyterJWT element = jupyterJWTs.next();
+        // Elements are sorted by their expiration date.
+        // If element N does not need to be renewed neither does N+1
+        if (element.maybeRenew(now)) {
+          LocalDateTime newExpirationDate = now.plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
+          String newToken = null;
+          try {
+            newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
+                DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
+
+            JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user,
+                element.pidAndPort, newExpirationDate);
+            renewedJWT.tokenFile = element.tokenFile;
+            renewedJWT.token = newToken;
+            jupyterJWTTokenWriter.writeToken(settings, renewedJWT);
+            renewedJWTs.add(renewedJWT);
+          } catch (JWTException ex) {
+            LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + element, ex);
+          } catch (IOException ex) {
+            LOG.log(Level.WARNING, "Could not write renewed Jupyter JWT to file for " + element, ex);
+            if (newToken != null) {
+              try {
+                jwtController.invalidate(newToken);
+              } catch (InvalidationException invEx) {
+                LOG.log(Level.FINE, "Could not invalidate failed token", invEx);
+              }
             }
+          } catch (Exception ex) {
+            LOG.log(Level.SEVERE, "Generic error renewing Jupyter JWT for " + element, ex);
           }
-        } catch (Exception ex) {
-          LOG.log(Level.SEVERE, "Generic error renewing Jupyter JWT for " + element, ex);
+        } else {
+          break;
         }
-      } else {
-        break;
       }
+      renewedJWTs.forEach(t -> {
+        removeToken(t.pidAndPort);
+        addToken(t);
+      });
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Got an exception while renewing jupyter jwt token" , e);
     }
-    renewedJWTs.forEach(t -> {
-      removeToken(t.pidAndPort);
-      addToken(t);
-    });
   }
 
   @Lock(LockType.WRITE)
