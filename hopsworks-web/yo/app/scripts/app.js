@@ -175,13 +175,19 @@ angular.module('hopsWorksApp', [
                       resolve: {
                         auth: ['$q','AuthGuardService',
                           function ($q, AuthGuardService) {
-                            return AuthGuardService.noGuard($q);
+                            return AuthGuardService.guardRegister($q);
                           }]
                       }
                     })
                     .when('/recover', {
                       templateUrl: 'views/recover.html',
-                      controller: 'RecoverCtrl as recoverCtrl'
+                      controller: 'RecoverCtrl as recoverCtrl',
+                      resolve: {
+                        auth: ['$q','AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardRecovery($q);
+                            }]
+                      }
                     })
                     .when('/passwordRecovery', {
                         templateUrl: 'views/passwordRecovery.html',

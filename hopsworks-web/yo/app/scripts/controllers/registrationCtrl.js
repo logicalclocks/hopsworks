@@ -95,7 +95,7 @@ angular.module('hopsWorksApp')
                             //$location.path('/login');
                           }, function (error) {
                              self.working = false;
-                             self.errorMessage = error.data.errorMsg;
+                             self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
                   });
                 }else  if (self.newUser.authType === 'Mobile') {
                   AuthService.register(self.newUser).then(
@@ -109,7 +109,7 @@ angular.module('hopsWorksApp')
                             //$location.path('/login');
                           }, function (error) {
                     self.working = false;
-                    self.errorMessage = error.data.errorMsg;
+                    self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
                   });
                 }
               };

@@ -34,6 +34,8 @@ angular.module('hopsWorksApp')
                   $cookies.put("otp", success.data.twofactor);
                   $cookies.put("ldap", success.data.ldap);
                   $cookies.put("krb", success.data.krb);
+                  $cookies.put("loginDisabled", success.data.loginDisabled);
+                  $cookies.put("registerDisabled", success.data.registerDisabled);
                   $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
               }
             };
@@ -106,6 +108,34 @@ angular.module('hopsWorksApp')
                     goToHome();
                     return $q.reject(error);
                 });
+              },
+              guardRegister: function($q) {
+                var deferred = $q.defer();
+                VariablesService.getAuthStatus().then(
+                  function (success) {
+                      setAuth(success);
+                      if (success.data.registerDisabled) {
+                          goToLogin();
+                          return deferred.reject("Registration disabled.");
+                      }
+                      return deferred.resolve(success);
+                  }, function (error) {
+                      return deferred.resolve(error);
+                  });
+              },
+              guardRecovery: function($q) {
+                var deferred = $q.defer();
+                VariablesService.getAuthStatus().then(
+                    function (success) {
+                        setAuth(success);
+                        if (success.data.loginDisabled) {
+                            goToLogin();
+                            return deferred.reject("Recovery disabled.");
+                        }
+                        return deferred.resolve(success);
+                    }, function (error) {
+                        return deferred.resolve(error);
+                    });
               }
             };
             return service;

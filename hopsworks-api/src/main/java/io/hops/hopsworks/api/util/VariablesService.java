@@ -113,7 +113,7 @@ public class VariablesService {
         new OpenIdProvider(client.getProviderName(), client.getProviderDisplayName(), client.getProviderLogoURI()));
     }
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
-      getKRBAuthStatus(), providers);
+      getKRBAuthStatus(), settings.isPasswordLoginDisabled(), settings.isRegistrationDisabled(), providers);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
   
   }

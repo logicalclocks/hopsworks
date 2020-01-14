@@ -2880,6 +2880,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_OAUTH_REDIRECT_URI = "oauth_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
   private static final String VARIABLE_OAUTH_GROUP_MAPPING = "oauth_group_mapping";
+  
+  private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
+  private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
 
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2906,6 +2909,9 @@ public class Settings implements Serializable {
   private String OAUTH_GROUP_MAPPING = "";
   private String OAUTH_REDIRECT_URI = "hopsworks/callback";
   private int OAUTH_ACCOUNT_STATUS = 1;
+  
+  private boolean DISABLE_PASSWORD_LOGIN = false;
+  private boolean DISABLE_REGISTRATION = false;
 
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
@@ -2931,6 +2937,9 @@ public class Settings implements Serializable {
     OAUTH_REDIRECT_URI = setStrVar(VARIABLE_OAUTH_REDIRECT_URI, OAUTH_REDIRECT_URI);
     OAUTH_ACCOUNT_STATUS = setIntVar(VARIABLE_OAUTH_ACCOUNT_STATUS, OAUTH_ACCOUNT_STATUS);
     OAUTH_GROUP_MAPPING = setStrVar(VARIABLE_OAUTH_GROUP_MAPPING, OAUTH_GROUP_MAPPING);
+  
+    DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
+    DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -3103,6 +3112,17 @@ public class Settings implements Serializable {
   public synchronized String getVarLdapGroupDN() {
     return VARIABLE_LDAP_GROUPDN;
   }
+  
+  public synchronized  boolean isPasswordLoginDisabled() {
+    checkCache();
+    return DISABLE_PASSWORD_LOGIN;
+  }
+  
+  public synchronized  boolean isRegistrationDisabled() {
+    checkCache();
+    return DISABLE_REGISTRATION;
+  }
+  
   //----------------------------END remote user------------------------------------
 
   // Service key rotation enabled

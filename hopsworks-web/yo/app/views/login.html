@@ -55,7 +55,7 @@
                     <div class="panel-body">
                         <p class="text-center">SIGN IN TO CONTINUE.</p>
                         <form name="loginForm" ng-submit="loginCtrl.login()" role="form">
-                            <div class="form-group has-feedback">
+                            <div class="form-group has-feedback" ng-if="!loginCtrl.loginDisabled">
                                 <input id="login_inputEmail" class="form-control" required autofocus
                                        ng-model="loginCtrl.user.email"
                                        autocomplete="on"
@@ -63,7 +63,7 @@
                                        name="user_email">
                                 <span class="fa fa-envelope form-control-feedback text-muted"></span>
                             </div>
-                            <div class="form-group has-feedback">
+                            <div class="form-group has-feedback" ng-if="!loginCtrl.loginDisabled">
                                 <input id="login_inputPassword" class="form-control" required
                                        ng-model="loginCtrl.user.password"
                                        autocomplete="off"
@@ -77,10 +77,11 @@
                                         support?</a>
                                 </div>
                                 <div class="pull-right">
-                                    <a class="text-muted" href="#!/recover">Login help?</a>
+                                    <a class="text-muted" ng-if="!loginCtrl.loginDisabled" href="#!/recover">
+                                        Login help?</a>
                                 </div>
                             </div>
-                            <button class="btn btn-block btn-primary mt-lg" type="submit"
+                            <button class="btn btn-block btn-primary mt-lg" type="submit" ng-if="!loginCtrl.loginDisabled"
                                     data-ng-disabled="loginCtrl.working">Login
                             </button>
                         </form>
@@ -110,7 +111,9 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>{{oauthLoginErrorMsg}}
                         </div>
-                        <a class="btn btn-block btn-default" href="#!/register">Register</a>
+                        <a class="btn btn-block btn-default" ng-if="!loginCtrl.registerDisabled"
+                           href="#!/register">Register
+                        </a>
                     </div>
                 </div>
 

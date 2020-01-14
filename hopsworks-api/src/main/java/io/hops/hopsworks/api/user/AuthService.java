@@ -158,6 +158,9 @@ public class AuthService {
       @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
       NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException {
 
+    if (settings.isPasswordLoginDisabled()) {
+      throw new LoginException("Password login not allowed");
+    }
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
     }
@@ -311,6 +314,10 @@ public class AuthService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(UserDTO newUser, @Context HttpServletRequest req) throws NoSuchAlgorithmException,
       UserException {
+    if (settings.isRegistrationDisabled()) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.FINE, "Registration not " +
+        "allowed.");
+    }
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     qrCode = userController.registerUser(newUser, req);

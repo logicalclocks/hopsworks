@@ -56,6 +56,8 @@ angular.module('hopsWorksApp')
             self.otp = $cookies.get('otp');
             self.ldapEnabled = $cookies.get('ldap') === 'true';
             self.krbEnabled = $cookies.get("krb") === 'true';
+            self.registerDisabled = $cookies.get("registerDisabled") === 'true';
+            self.loginDisabled = $cookies.get("loginDisabled") === 'true';
             self.openIdProviders = [];
 
 
@@ -122,7 +124,7 @@ angular.module('hopsWorksApp')
                                 error.data !== null &&
                                 error.data.errorMsg !== undefined &&
                                 error.data.errorMsg !== null) {
-                          self.errorMessage = error.data.errorMsg;
+                          self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;;
                         }
               });
             };
@@ -176,10 +178,14 @@ angular.module('hopsWorksApp')
                   $cookies.put("otp", success.data.twofactor);
                   $cookies.put("ldap", success.data.ldap);
                   $cookies.put("krb", success.data.krb);
+                  $cookies.put("loginDisabled", success.data.loginDisabled);
+                  $cookies.put("registerDisabled", success.data.registerDisabled);
                   $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
                   self.otp = $cookies.get('otp');
                   self.ldapEnabled = $cookies.get('ldap') === 'true';
                   self.krbEnabled = $cookies.get("krb") === 'true';
+                  self.registerDisabled = $cookies.get("registerDisabled") === 'true';
+                  self.loginDisabled = $cookies.get("loginDisabled") === 'true';
                   self.openIdProviders = JSON.parse($cookies.get("openIdProviders"));
               }, function (error) {
               });
