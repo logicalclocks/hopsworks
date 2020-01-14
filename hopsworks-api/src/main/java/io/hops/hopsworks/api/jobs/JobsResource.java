@@ -338,7 +338,7 @@ public class JobsResource {
         urls.add(new YarnAppUrlsDTO("spark", trackingUrl));
       }
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "Exception while getting job ui " + e.getLocalizedMessage(), e);
     }
     
     GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
@@ -367,7 +367,7 @@ public class JobsResource {
     try {
       urls.addAll(executionController.getTensorBoardUrls(user, appId, project));
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints" + e.getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "Exception while getting TensorBoard endpoints " + e.getLocalizedMessage(), e);
     }
     
     GenericEntity<List<YarnAppUrlsDTO>> listUrls = new GenericEntity<List<YarnAppUrlsDTO>>(urls) { };
@@ -391,14 +391,12 @@ public class JobsResource {
     
     try {
       String yarnUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
-        + appId + "/prox/" + settings.getYarnWebUIAddress()
-        + "/cluster/app/"
-        + appId;
+        + appId + "/prox/" + settings.getYarnWebUIAddress() + "/cluster/app/" + appId;
       
       return Response.ok().entity(yarnUrl).build();
       
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "Exception while getting job ui " + e.getLocalizedMessage(), e);
     }
     return Response.ok().build();
   }
@@ -509,7 +507,7 @@ public class JobsResource {
       return Response.ok().entity(appInfo).build();
     
     } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "exception while geting job ui " + e.getLocalizedMessage(), e);
+      LOGGER.log(Level.SEVERE, "Exception while getting job ui " + e.getLocalizedMessage(), e);
     }
     return Response.ok().status(Response.Status.NOT_FOUND).build();
   }
