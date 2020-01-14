@@ -197,7 +197,7 @@ public class AuthResource {
     Users user = remoteUserState.isSaved() && remoteUserState.getRemoteUser() != null ? remoteUserState.getRemoteUser()
       .getUid() : null;
     if (user == null || user.getEmail().equals(Settings.AGENT_EMAIL) ||
-      user.getMode().equals(UserAccountType.REMOTE_ACCOUNT_TYPE)) {
+      !user.getMode().equals(UserAccountType.REMOTE_ACCOUNT_TYPE)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
     remoteUserAuthController.checkProjectMembership(user, id);
