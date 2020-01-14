@@ -50,6 +50,11 @@ angular.module('hopsWorksApp')
               },
               stopTensorBoard: function (projectId, id) {
                 return $http.delete('/api/project/' + projectId + '/experiments/' + id + '/tensorboard');
+              },
+              ping: function (tbUrl) {
+                return $http.head('/hopsworks-api/tensorboard/' + tbUrl);
               }
             };
           }]);
+
+

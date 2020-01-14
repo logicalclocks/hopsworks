@@ -96,16 +96,13 @@ public class TensorBoardKillTimer {
                 for (TensorBoard tb : TBs) {
                   if (tb.getPid().equals(pid)) {
                     tbExists = true;
-                    continue;
                   }
                 }
 
                 if (!tbExists) {
                   LOGGER.log(Level.WARNING, "Detected a stray TensorBoard with pid "
                           + pid.toString() + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
-                  if(tensorBoardProcessMgr.ping(pid) == 0) {
-                    tensorBoardProcessMgr.killTensorBoard(pid);
-                  }
+                  tensorBoardProcessMgr.killTensorBoard(pid);
                   tensorBoardProcessMgr.removeTensorBoardDirectory(currentTbDir.getAbsolutePath());
                 }
               }

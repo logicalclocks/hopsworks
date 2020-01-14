@@ -57,14 +57,12 @@ import org.apache.http.client.utils.URIUtils;
 
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -169,8 +167,9 @@ public class TensorBoardProxyServlet extends ProxyServlet {
       try {
         super.service(servletRequest, servletResponse);
       } catch (IOException ex) {
-        sendErrorResponse(servletResponse, "This TensorBoard is not ready to serve requests right now, " +
-            "try refreshing the page");
+        servletResponse.sendError(Response.Status.NOT_FOUND.getStatusCode(),
+            "This TensorBoard is not ready to serve requests right now, " +
+                "try refreshing the page");
         return;
       }
 
@@ -207,7 +206,8 @@ public class TensorBoardProxyServlet extends ProxyServlet {
       }
       if (appState.getAppsmstate() != null && (appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.FINISHED.
               toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
-        sendErrorResponse(servletResponse, "This TensorBoard has finished running");
+        servletResponse.sendError(Response.Status.NOT_FOUND.getStatusCode(),
+            "This TensorBoard has finished running.");
         return;
       }
       targetUri = uriToFinish;
@@ -218,6 +218,8 @@ public class TensorBoardProxyServlet extends ProxyServlet {
         targetUriObj = new URI(targetUri);
         targetUriHost = new URI(theHost);
       } catch (Exception e) {
+        servletResponse.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),
+            "An error occurred serving the request.");
         LOGGER.log(Level.FINE, "An error occurred serving the request", e);
         return;
       }
@@ -230,7 +232,8 @@ public class TensorBoardProxyServlet extends ProxyServlet {
       try {
         super.service(servletRequest, servletResponse);
       } catch (IOException ex) {
-        sendErrorResponse(servletResponse, "This TensorBoard is not running right now");
+        servletResponse.sendError(Response.Status.NOT_FOUND.getStatusCode(),
+            "This TensorBoard is not running right now.");
         return;
       }
 
@@ -240,20 +243,6 @@ public class TensorBoardProxyServlet extends ProxyServlet {
       return;
     }
 
-  }
-
-  private void sendErrorResponse(ServletResponse servletResponse, String message) throws IOException {
-    servletResponse.setContentType("text/html");
-    PrintWriter out = servletResponse.getWriter();
-    out.println("<html>");
-    out.println("<head>");
-    out.println("<title></title>");
-    out.println("</head>");
-    out.println("<body>");
-    out.println(message);
-    out.println("</body>");
-    out.println("</html>");
-    out.flush();
   }
 
   /**
