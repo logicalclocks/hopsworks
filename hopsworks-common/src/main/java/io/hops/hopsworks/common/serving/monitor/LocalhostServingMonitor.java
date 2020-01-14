@@ -89,8 +89,8 @@ public class LocalhostServingMonitor {
       intervalValue = intervalTimeunit.toMillis(intervalValue);
       timerService.createTimer(intervalValue, intervalValue, "Localhost Serving instances monitor");
 
-      tfScript = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
-      sklearnScript = settings.getHopsworksDomainDir() + "/bin/sklearn_serving.sh";
+      tfScript = settings.getSudoersDir() + "/tfserving.sh";
+      sklearnScript = settings.getSudoersDir() + "/sklearn_serving.sh";
     }
 
   }

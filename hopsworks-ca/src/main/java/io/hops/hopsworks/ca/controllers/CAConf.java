@@ -68,7 +68,8 @@ public class CAConf {
     HOPSWORKS_SSL_MASTER_PASSWORD("hopsworks_master_password", "adminpw"),
     KUBE_CA_PASSWORD("kube_ca_password", "adminpw"),
     HOPSWORKS_REST_LOGLEVEL("hopsworks_rest_log_level", "PROD"),
-    JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com");
+    JWT_ISSUER("jwt_issuer", "hopsworks@logicalclocks.com"),
+    SUDOERS_DIR("sudoers_dir", "/srv/hops/sbin");
 
     private String key;
     private String defaultValue;

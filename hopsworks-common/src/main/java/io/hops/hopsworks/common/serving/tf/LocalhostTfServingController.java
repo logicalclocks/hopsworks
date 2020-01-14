@@ -90,7 +90,7 @@ public class LocalhostTfServingController {
   public void updateModelVersion(Project project, Users user, Serving serving) throws ServingException {
     // TFServing polls for new version of the model in the directory
     // if a new version is downloaded it starts serving it
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
+    String script = settings.getSudoersDir() + "/tfserving.sh";
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS, serving.getLocalDir());
   
@@ -143,7 +143,7 @@ public class LocalhostTfServingController {
    */
   public void killServingInstance(Project project, Serving serving, boolean releaseLock)
       throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
+    String script = settings.getSudoersDir() + "/tfserving.sh";
     
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
@@ -188,7 +188,7 @@ public class LocalhostTfServingController {
    * @throws ServingException
    */
   public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/tfserving.sh";
+    String script = settings.getSudoersDir() + "/tfserving.sh";
 
     // TODO(Fabio) this is bad as we don't know if the port is used or not
     Integer grpcPort = ThreadLocalRandom.current().nextInt(40000, 59999);

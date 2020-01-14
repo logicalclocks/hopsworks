@@ -180,8 +180,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
+  private static final String VARIABLE_MYSQL_USER = "mysql_user";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
+  private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
@@ -541,10 +543,11 @@ public class Settings implements Serializable {
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       JUPYTER_WS_PING_INTERVAL_MS = setMillisecondVar(VARIABLE_JUPYTER_WS_PING_INTERVAL, JUPYTER_WS_PING_INTERVAL_MS);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
+      MYSQL_USER = setStrVar(VARIABLE_MYSQL_USER, MYSQL_USER);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
-      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
-          HOPSWORKS_INSTALL_DIR);
+      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
+      SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
@@ -983,19 +986,24 @@ public class Settings implements Serializable {
   public String getFlinkConfFile() {
     return getFlinkConfDir() + File.separator + FLINK_CONF_FILE;
   }
-  private String MYSQL_DIR = "/usr/local/mysql";
 
+  private String MYSQL_DIR = "/usr/local/mysql";
   public synchronized String getMySqlDir() {
     checkCache();
     return MYSQL_DIR;
   }
-  private String NDB_DIR = "/var/lib/mysql-cluster";
 
+  private String MYSQL_USER = "mysql";
+  public synchronized String getMysqlUser() {
+    checkCache();
+    return MYSQL_USER;
+  }
+
+  private String NDB_DIR = "/var/lib/mysql-cluster";
   public synchronized String getNdbDir() {
     checkCache();
     return NDB_DIR;
   }
-
 
   private String AIRFLOW_DIR = "/srv/hops/airflow";
   public synchronized String getAirflowDir() {
@@ -1008,7 +1016,6 @@ public class Settings implements Serializable {
     checkCache();
     return AIRFLOW_USER;
   }
-
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
@@ -1122,6 +1129,12 @@ public class Settings implements Serializable {
   public synchronized String getHopsworksDomainDir() {
     checkCache();
     return HOPSWORKS_INSTALL_DIR;
+  }
+
+  private String SUDOERS_DIR = "/srv/hops/sbin";
+  public synchronized String getSudoersDir() {
+    checkCache();
+    return SUDOERS_DIR;
   }
 
   //User under which yarn is run
@@ -2750,9 +2763,7 @@ public class Settings implements Serializable {
   }
 
   public synchronized String getHopsSiteCaScript() {
-    return getHopsworksDomainDir()
-        + File.separator + "bin"
-        + File.separator + "ca-keystore.sh";
+    return getSudoersDir() + File.separator + "ca-keystore.sh";
   }
 
   public synchronized String getHopsSiteCert() {
