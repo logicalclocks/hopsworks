@@ -302,6 +302,14 @@ public class ElasticController {
     }
   }
   
+  public void deleteIndexPattern(Project project, String pattern)
+      throws ElasticException {
+    JSONObject resp = kibanaClient.deleteAsDataOwner(project,
+        KibanaClient.KibanaType.IndexPattern, pattern);
+    LOG.log(Level.INFO, "Deletion of kibana index pattern:{0} Response {1}",
+        new Object[]{pattern, resp.toString()});
+  }
+  
   public JSONObject updateKibana(Project project, Users user,
       KibanaClient.KibanaType type, String id, String data)
       throws ElasticException {

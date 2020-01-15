@@ -183,12 +183,14 @@ public class EnvironmentController {
    *
    * @param proj
    */
-  public void removeEnvironment(Project proj, Users user) throws ServiceException {
+  public void removeEnvironment(Project proj, Users user)
+      throws ServiceException, ElasticException {
     commandsController.deleteCommandsForProject(proj);
     if (proj.getCondaEnv()) {
       condaEnvironmentRemove(proj, user);
       setCondaEnv(proj, false);
     }
+    deleteKibanaIndex(proj);
     removePythonForProject(proj);
   }
 
@@ -426,6 +428,13 @@ public class EnvironmentController {
             project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
   }
 
+  private void deleteKibanaIndex(Project project)
+      throws ElasticException {
+    String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN;
+    elasticController.deleteIndex(indexName);
+    elasticController.deleteIndexPattern(project, indexName);
+  }
+  
   public void uploadYmlInProject(Project project, Users user, String environmentYml, String relativePath)
       throws ServiceException {
     DistributedFileSystemOps udfso = null;
