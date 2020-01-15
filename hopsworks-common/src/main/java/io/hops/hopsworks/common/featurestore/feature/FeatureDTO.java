@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.feature;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
