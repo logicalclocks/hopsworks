@@ -722,9 +722,10 @@ angular.module('hopsWorksApp')
             var getDeleteWarnMsg = function (file) {
                 var type = typeof file !== "undefined" && file.attributes.dir? 'directory' : 'file';
                 var warnIcon = '<i class="fa fa-exclamation-triangle text-danger"></i>';
-                var warn = '<strong class="text-danger">Warning:</strong> deleting this '+ type +' can cause services to behave in unexpected ways.';
+                var warn = '<strong class="text-warning">Warning:</strong> Deleting this '+ type +' might affect' +
+                    ' existing jobs and notebooks.';
                 var warning = typeof file !== "undefined" && isSystemFile(file)? warnIcon + warn : '';
-                var multiple = typeof file === "undefined"? 'all <strong class="text-danger">' + Object.keys(self.selectedFiles).length + '</strong> selected files' : 'this ' + type;
+                var multiple = typeof file === "undefined"? 'all <strong class="text-danger">' + Object.keys(self.selectedFiles).length + '</strong> selected files/folders' : 'this ' + type;
                 var confirmMsg = 'Are you sure you want to delete ' + multiple + '?';
                 return warning + '<br>' + confirmMsg;
             };
@@ -1183,6 +1184,9 @@ angular.module('hopsWorksApp')
             var renameModal = function (file, name) {
               ModalService.enterName('sm', "Rename File or Directory", name).then(
                       function (success) {
+                        if (typeof file !== 'string' && !(file instanceof String)){
+                            file = file.attributes.path;
+                        }
                         var filePathArray = file.split('/');
                         filePathArray.pop();
                         filePathArray.push(success.newName);
