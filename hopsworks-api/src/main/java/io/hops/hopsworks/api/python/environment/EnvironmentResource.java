@@ -191,7 +191,8 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response delete(@PathParam("version") String version, @Context SecurityContext sc) throws ServiceException {
+  public Response delete(@PathParam("version") String version, @Context SecurityContext sc)
+      throws ServiceException, ElasticException {
     Users user = jWTHelper.getUserPrincipal(sc);
     environmentController.removeEnvironment(project, user);
     return Response.noContent().build();
