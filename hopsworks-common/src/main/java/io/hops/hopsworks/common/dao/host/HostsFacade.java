@@ -50,6 +50,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 @Stateless
@@ -137,22 +138,26 @@ public class HostsFacade extends AbstractFacade<Hosts> {
   }
 
   public Optional<String> findCPUHost() {
-    try {
-      return Optional.of(em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class)
-        .getSingleResult())
-        .map(Hosts::getHostname);
-    } catch (NoResultException ex) {
+    List<Hosts> list = em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class)
+      .getResultList();
+    if (list.isEmpty()) {
       return Optional.empty();
+    }
+    else {
+      return Optional.of(list.get(new Random().nextInt(list.size())))
+        .map(Hosts::getHostname);
     }
   }
 
   public Optional<String> findGPUHost() {
-    try {
-      return Optional.of(em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class)
-        .getSingleResult())
-        .map(Hosts::getHostname);
-    } catch (NoResultException ex) {
+    List<Hosts> list = em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class)
+      .getResultList();
+    if (list.isEmpty()) {
       return Optional.empty();
+    }
+    else {
+      return Optional.of(list.get(new Random().nextInt(list.size())))
+        .map(Hosts::getHostname);
     }
   }
 

@@ -65,8 +65,8 @@ public class HostsDTO extends RestDTO<HostsDTO> implements Serializable {
     if (host.getNumGpus() != null) {
       this.numGpus = host.getNumGpus();
     }
-    if (host.isRegistered() != null) {
-      this.registered = host.isRegistered();
+    if (host.getRegistered() != null) {
+      this.registered = host.getRegistered();
     }
     if (host.getCondaEnabled() != null) {
       this.condaEnabled = host.getCondaEnabled();
