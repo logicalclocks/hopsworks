@@ -232,7 +232,7 @@ public class NodesBean implements Serializable {
       storedHost.setPublicIp(host.getPublicIp());
       storedHost.setPrivateIp(host.getPrivateIp());
       storedHost.setAgentPassword(host.getAgentPassword());
-      storedHost.setRegistered(host.isRegistered());
+      storedHost.setRegistered(host.getRegistered());
       storedHost.setCondaEnabled(host.getCondaEnabled());
       hostsFacade.update(storedHost);
       MessagesController.addInfoMessage("Updated host");

@@ -220,7 +220,7 @@ public class Hosts implements Serializable {
     this.numGpus = numGpus;
   }
   
-  public Boolean isRegistered() {
+  public Boolean getRegistered() {
     return registered;
   }
   

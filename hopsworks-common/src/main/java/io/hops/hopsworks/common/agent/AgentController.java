@@ -104,7 +104,7 @@ public class AgentController {
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
     Hosts host = hostsController.findByHostname(heartbeat.hostId);
-    if (!host.isRegistered()) {
+    if (!host.getRegistered()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_REGISTERED, Level.WARNING,
           "hostId: " + heartbeat.hostId);
     }
