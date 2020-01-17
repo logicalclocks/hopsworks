@@ -161,21 +161,6 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
   }
 
   /**
-   * Gets the Hive Table Name for the featuregroup by querying the metastore with the tableId
-   *
-   * @param hiveTableId the id of the hive table in the metastore
-   * @return the hive table name
-   */
-  public String getHiveTableName(Long hiveTableId) {
-    try {
-      return (String) em.createNativeQuery("SELECT `TBL_NAME` FROM metastore.`TBLS` " +
-          "WHERE `TBL_ID` = ?1;").setParameter(1, hiveTableId).getSingleResult();
-    } catch (NoResultException e) {
-      return null;
-    }
-  }
-
-  /**
    * Gets the Hive Table Primary Keys by querying the metastore with the tableId
    *
    * @param hiveTableId the id of the hive table in the metastore

@@ -53,6 +53,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
 
   public TrainingDatasetDTO(TrainingDataset trainingDataset) {
     super(trainingDataset.getFeaturestore().getId(),
+        trainingDataset.getName(),
         trainingDataset.getCreated(),
         trainingDataset.getCreator(), trainingDataset.getVersion(),
         (List) trainingDataset.getStatistics(), (List) trainingDataset.getJobs(),

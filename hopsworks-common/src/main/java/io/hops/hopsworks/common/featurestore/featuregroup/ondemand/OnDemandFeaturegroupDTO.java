@@ -48,7 +48,6 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
       this.jdbcConnectorId = featurestoreJdbcConnector.getId();
       this.jdbcConnectorName = featurestoreJdbcConnector.getName();
     }
-    setName(featuregroup.getOnDemandFeaturegroup().getName());
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->

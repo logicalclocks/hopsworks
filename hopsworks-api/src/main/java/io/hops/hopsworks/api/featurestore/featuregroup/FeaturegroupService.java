@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -27,19 +28,19 @@ import io.hops.hopsworks.api.metadata.XAttrsBuilder;
 import io.hops.hopsworks.api.metadata.XAttrsController;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.common.featurestore.FeaturestoreController;
+import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -73,6 +74,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -196,23 +198,56 @@ public class FeaturegroupService {
    * @param featuregroupId id of the featuregroup
    * @return JSON representation of the featuregroup
    */
+  @Deprecated
   @GET
-  @Path("/{featuregroupId}")
+  @Path("/{featuregroupId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
-  public Response getFeatureGroupFromFeatureStore(@ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId")
-          Integer featuregroupId) {
+  public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
+                                  @PathParam("featuregroupId") Integer featuregroupId) {
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+  }
+
+  /**
+   * Retrieve a specific feature group based name. Allow filtering on version.
+   *
+   * @param name name of the featuregroup
+   * @param version queryParam with the desired version
+   * @return JSON representation of the featuregroup
+   */
+  @GET
+  // Anything else that is not just number should use this endpoint
+  @Path("/{name: [a-z0-9_]+}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get a list of feature groups with a specific name, filter by version",
+      response = FeaturegroupDTO.class)
+  public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
+                                  @PathParam("name") String name,
+                                  @ApiParam(value = "Filter by a specific version")
+                                  @QueryParam("version") Integer version) {
+    verifyNameProvided(name);
+    List<FeaturegroupDTO> featuregroupDTO;
+    if (version == null) {
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, name);
+    } else {
+      featuregroupDTO = Arrays.asList(featuregroupController
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version));
+    }
+    GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
+        new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
+    return Response.ok().entity(featuregroupGeneric).build();
   }
 
   /**
@@ -231,7 +266,7 @@ public class FeaturegroupService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
-  public Response deleteFeatureGroupFromFeatureStore(
+  public Response deleteFeatureGroup(
       @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
     verifyIdProvided(featuregroupId);
@@ -468,7 +503,29 @@ public class FeaturegroupService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ID_NOT_PROVIDED.getMessage());
     }
   }
-  
+
+  /**
+   * Verify that the name was provided as a path param
+   *
+   * @param featureGroupName the feature group name to verify
+   */
+  private void verifyNameProvided(String featureGroupName) {
+    if (Strings.isNullOrEmpty(featureGroupName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
+    }
+  }
+
+  /**
+   * Verify that the version was provided as a path param
+   *
+   * @param featureVersion the feature group version to verify
+   */
+  private void verifyVersionProvided(Integer featureVersion) {
+    if (featureVersion == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
+          FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
+    }
+  }
   
   /**
    * Endpoint for syncing a Hive Table with the Feature Store

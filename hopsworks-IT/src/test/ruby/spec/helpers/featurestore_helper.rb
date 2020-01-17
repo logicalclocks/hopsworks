@@ -25,7 +25,7 @@ module FeaturestoreHelper
   end
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
-                                 default_stats_settings: true)
+                                 default_stats_settings: true, version: 1)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     if features == nil
@@ -52,7 +52,7 @@ module FeaturestoreHelper
         jobs: [],
         features: features,
         description: "testfeaturegroupdescription",
-        version: 1,
+        version: version,
         type: type,
         onlineFeaturegroupDTO: nil,
         featuregroupType: featuregroupType
@@ -381,7 +381,7 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil)
+  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil, version: 1)
     type = "hopsfsTrainingDatasetDTO"
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
@@ -404,7 +404,7 @@ module FeaturestoreHelper
         name: training_dataset_name,
         jobs: [],
         description: "testtrainingdatasetdescription",
-        version: 1,
+        version: version,
         dataFormat: data_format,
         type: type,
         trainingDatasetType: trainingDatasetType,

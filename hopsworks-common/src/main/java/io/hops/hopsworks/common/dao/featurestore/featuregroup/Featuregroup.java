@@ -47,6 +47,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Entity class representing the feature_group table in Hopsworks database.
@@ -61,7 +62,11 @@ import java.util.Date;
     @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
         "WHERE fg.featurestore = :featurestore"),
     @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore AND fg.id = :id")})
+        "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
+    @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +
+        "WHERE fg.featurestore = :featurestore AND fg.name = :name AND fg.version = :version"),
+    @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
+    "WHERE fg.featurestore = :featurestore AND fg.name = :name")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -69,6 +74,10 @@ public class Featuregroup implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "name")
+  private String name;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Featurestore featurestore;
@@ -142,6 +151,14 @@ public class Featuregroup implements Serializable {
 
   public void setId(Integer id) {
     this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public Featurestore getFeaturestore() {
@@ -287,55 +304,60 @@ public class Featuregroup implements Serializable {
   public void setStatisticColumns(Collection<StatisticColumn> statisticColumns) {
     this.statisticColumns = statisticColumns;
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    
+
     Featuregroup that = (Featuregroup) o;
+
     if (descStatsEnabled != that.descStatsEnabled) return false;
     if (featCorrEnabled != that.featCorrEnabled) return false;
     if (featHistEnabled != that.featHistEnabled) return false;
     if (clusterAnalysisEnabled != that.clusterAnalysisEnabled) return false;
-    if (id != null ? !id.equals(that.id) : that.id != null) return false;
-    if (!featurestore.equals(that.featurestore)) return false;
-    if (!hdfsUserId.equals(that.hdfsUserId)) return false;
-    if (created != null ? !created.equals(that.created) : that.created != null) return false;
-    if (!creator.equals(that.creator)) return false;
-    if (!version.equals(that.version)) return false;
-    if (!numBins.equals(that.numBins)) return false;
-    if (!numClusters.equals(that.numClusters)) return false;
-    if (!corrMethod.equals(that.corrMethod)) return false;
-    if (!statistics.equals(that.statistics)) return false;
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(name, that.name)) return false;
+    if (!Objects.equals(featurestore, that.featurestore)) return false;
+    if (!Objects.equals(hdfsUserId, that.hdfsUserId)) return false;
+    if (!Objects.equals(created, that.created)) return false;
+    if (!Objects.equals(creator, that.creator)) return false;
+    if (!Objects.equals(version, that.version)) return false;
+    if (!Objects.equals(numBins, that.numBins)) return false;
+    if (!Objects.equals(numClusters, that.numClusters)) return false;
+    if (!Objects.equals(corrMethod, that.corrMethod)) return false;
+    if (!Objects.equals(statistics, that.statistics)) return false;
     if (featuregroupType != that.featuregroupType) return false;
-    if (!onDemandFeaturegroup.equals(that.onDemandFeaturegroup)) return false;
-    if (!cachedFeaturegroup.equals(that.cachedFeaturegroup)) return false;
-    if (!jobs.equals(that.jobs)) return false;
-    return statisticColumns.equals(that.statisticColumns);
+    if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup))
+      return false;
+    if (!Objects.equals(cachedFeaturegroup, that.cachedFeaturegroup))
+      return false;
+    if (!Objects.equals(jobs, that.jobs)) return false;
+    return Objects.equals(statisticColumns, that.statisticColumns);
   }
-  
+
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + featurestore.hashCode();
-    result = 31 * result + hdfsUserId.hashCode();
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (featurestore != null ? featurestore.hashCode() : 0);
+    result = 31 * result + (hdfsUserId != null ? hdfsUserId.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
-    result = 31 * result + creator.hashCode();
-    result = 31 * result + version.hashCode();
+    result = 31 * result + (creator != null ? creator.hashCode() : 0);
+    result = 31 * result + (version != null ? version.hashCode() : 0);
     result = 31 * result + (descStatsEnabled ? 1 : 0);
     result = 31 * result + (featCorrEnabled ? 1 : 0);
     result = 31 * result + (featHistEnabled ? 1 : 0);
     result = 31 * result + (clusterAnalysisEnabled ? 1 : 0);
-    result = 31 * result + numBins.hashCode();
-    result = 31 * result + numClusters.hashCode();
-    result = 31 * result + corrMethod.hashCode();
-    result = 31 * result + statistics.hashCode();
+    result = 31 * result + (numBins != null ? numBins.hashCode() : 0);
+    result = 31 * result + (numClusters != null ? numClusters.hashCode() : 0);
+    result = 31 * result + (corrMethod != null ? corrMethod.hashCode() : 0);
+    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
-    result = 31 * result + onDemandFeaturegroup.hashCode();
-    result = 31 * result + cachedFeaturegroup.hashCode();
-    result = 31 * result + jobs.hashCode();
-    result = 31 * result + statisticColumns.hashCode();
+    result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
+    result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);
+    result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
+    result = 31 * result + (statisticColumns != null ? statisticColumns.hashCode() : 0);
     return result;
   }
 }
