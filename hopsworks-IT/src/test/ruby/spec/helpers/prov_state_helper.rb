@@ -375,4 +375,15 @@ module ProvStateHelper
     result = post "#{target}#{param}"
     expect_status(200)
   end
+
+  def prov_with_retries(max_retries, wait_time, expected_code, &block)
+    response = nil
+    max_retries.times {
+      response = block.call
+      break if response.code == expected_code
+      sleep(wait_time)
+    }
+    expect(response.code).to eq expected_code
+    return response
+  end
 end

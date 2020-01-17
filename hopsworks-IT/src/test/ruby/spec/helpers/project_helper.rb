@@ -85,8 +85,12 @@ module ProjectHelper
     get_project_by_name(json_body[:name])
   end
 
-  def delete_project(project)
+  def raw_delete_project(project)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/delete"
+  end
+
+  def delete_project(project)
+    raw_delete_project(project)
     expect_status(200)
     expect_json(successMessage: "The project and all related files were removed successfully.")
   end
@@ -149,5 +153,29 @@ module ProjectHelper
     if !json_body.empty?
       json_body.map{|project| project[:id]}.each{|i| post "#{ENV['HOPSWORKS_API']}/project/#{i}/delete" }
     end
+  end
+
+  def clean_test_projects(name_pattern)
+    pp "cleaning projects with names like:#{name_pattern}"
+    Project.where("projectname LIKE ?", name_pattern).each do |project|
+      response = raw_create_session(project[:username], "Pass123")
+      next unless response.code == 200
+
+      response = raw_delete_project(project)
+      if response.code == 200
+        pp "deleted project:#{project[:projectname]} with user:#{project[:username]}"
+      else
+        pp "could not delete project:#{project[:projectname]} with user:#{project[:username]}"
+      end
+    end
+  end
+
+  def clean_all_test_projects
+    clean_test_projects('project\_%')
+    clean_test_projects('ProJect\_%')
+    clean_test_projects('demo\_%')
+    clean_test_projects('HOPSWORKS256%')
+    clean_test_projects('hopsworks256%')
+    clean_test_projects('prov\_proj\_%')
   end
 end
