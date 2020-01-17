@@ -29,11 +29,15 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Join {
   private Featuregroup leftFeatureGroup;
+  private String leftFgAs;
   private Featuregroup rightFeatureGroup;
+  private String rightFgAs;
 
   private List<FeatureDTO> on;
   private List<FeatureDTO> leftOn;
@@ -43,25 +47,31 @@ public class Join {
   // TODO(Fabio): this is not great, find a better solution
   private FeaturestoreFacade featurestoreFacade;
 
-  public Join(FeaturestoreFacade featurestoreFacade, Featuregroup leftFeatureGroup) {
+  public Join(FeaturestoreFacade featurestoreFacade, Featuregroup leftFeatureGroup, String leftFgAs) {
     this.featurestoreFacade = featurestoreFacade;
     this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFgAs = leftFgAs;
   }
 
-  public Join(FeaturestoreFacade featurestoreFacade, Featuregroup leftFeatureGroup, Featuregroup rightFeatureGroup,
-              List<FeatureDTO> on, JoinType joinType) {
+  public Join(FeaturestoreFacade featurestoreFacade, Featuregroup leftFeatureGroup, String leftFgAs,
+              Featuregroup rightFeatureGroup, String rightFgAs, List<FeatureDTO> on, JoinType joinType) {
     this.featurestoreFacade = featurestoreFacade;
     this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFgAs = leftFgAs;
     this.rightFeatureGroup = rightFeatureGroup;
+    this.rightFgAs = rightFgAs;
     this.on = on;
     this.joinType = joinType;
   }
 
-  public Join(FeaturestoreFacade featurestoreFacade,Featuregroup leftFeatureGroup, Featuregroup rightFeatureGroup,
-              List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType) {
+  public Join(FeaturestoreFacade featurestoreFacade, Featuregroup leftFeatureGroup, String leftFgAs,
+              Featuregroup rightFeatureGroup, String rightFgAs, List<FeatureDTO> leftOn, List<FeatureDTO> rightOn,
+              JoinType joinType) {
     this.featurestoreFacade = featurestoreFacade;
     this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFgAs = leftFgAs;
     this.rightFeatureGroup = rightFeatureGroup;
+    this.rightFgAs = rightFgAs;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
     this.joinType = joinType;
@@ -86,48 +96,49 @@ public class Join {
   public SqlNode getJoinNode() {
     if (rightFeatureGroup == null) {
       // Effectively no join
-      return generateTableNode(leftFeatureGroup);
+      return generateTableNode(leftFeatureGroup, leftFgAs);
     } else {
       SqlNode conditionNode = getCondition();
-      return new SqlJoin(SqlParserPos.ZERO, generateTableNode(leftFeatureGroup),
+      return new SqlJoin(SqlParserPos.ZERO, generateTableNode(leftFeatureGroup, leftFgAs),
           SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
           SqlLiteral.createSymbol(joinType, SqlParserPos.ZERO),
-          generateTableNode(rightFeatureGroup),
+          generateTableNode(rightFeatureGroup, rightFgAs),
           SqlLiteral.createSymbol(JoinConditionType.ON, SqlParserPos.ZERO),
           conditionNode);
     }
   }
 
-  private SqlNode generateTableNode(Featuregroup featuregroup) {
-    SqlNodeList tableNode = new SqlNodeList(SqlParserPos.ZERO);
-    tableNode.add(new SqlIdentifier(featurestoreFacade.getHiveDbName(leftFeatureGroup.getFeaturestore().getHiveDbId()),
-        SqlParserPos.ZERO));
-    tableNode.add(new SqlIdentifier(leftFeatureGroup.getName() + "_" + leftFeatureGroup.getVersion(),
-        SqlParserPos.ZERO));
-    return tableNode;
+  private SqlNode generateTableNode(Featuregroup featuregroup, String as) {
+    List<String> tableIdentifierStr = new ArrayList<>();
+    tableIdentifierStr.add(featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId()));
+    tableIdentifierStr.add(featuregroup.getName() + "_" + featuregroup.getVersion());
+
+    SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
+        new SqlIdentifier(as, SqlParserPos.ZERO)), SqlParserPos.ZERO);
+
+    return SqlStdOperatorTable.AS.createCall(asNodeList);
   }
 
   private SqlNode getCondition() {
     if (on.size() > 1) {
       SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
       for (FeatureDTO f : on) {
-        conditionList.add(generateEqualityCondition(leftFeatureGroup, rightFeatureGroup, f));
+        conditionList.add(generateEqualityCondition(leftFgAs, rightFgAs, f));
       }
       return  SqlStdOperatorTable.AND.createCall(conditionList);
     } else {
-      return generateEqualityCondition(leftFeatureGroup, rightFeatureGroup, on.get(0));
+      return generateEqualityCondition(leftFgAs, rightFgAs, on.get(0));
     }
   }
 
-  private SqlNode generateEqualityCondition(Featuregroup leftFeatureGroup, Featuregroup rightFeatureGroup,
-                                            FeatureDTO on) {
+  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO on) {
 
     SqlNodeList leftHandside = new SqlNodeList(SqlParserPos.ZERO);
-    leftHandside.add(generateTableNode(leftFeatureGroup));
+    leftHandside.add(new SqlIdentifier(leftFgAs, SqlParserPos.ZERO));
     leftHandside.add(new SqlIdentifier(on.getName(), SqlParserPos.ZERO));
 
     SqlNodeList rightHandside = new SqlNodeList(SqlParserPos.ZERO);
-    rightHandside.add(generateTableNode(rightFeatureGroup));
+    rightHandside.add(new SqlIdentifier(rightFgAs, SqlParserPos.ZERO));
     rightHandside.add(new SqlIdentifier(on.getName(), SqlParserPos.ZERO));
 
     SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);

@@ -62,7 +62,7 @@ public class ConstructorController {
 
   public String construct(QueryDTO queryDTO) throws FeaturestoreException {
     Query query = convertDTOtoInt(queryDTO);
-    validateQuery(query);
+    validateQuery(query, 0);
 
     List<FeatureDTO> selectedFeatures = extractSelectedFeatures(query);
     // TODO(Fabio) sort recursive
@@ -79,22 +79,24 @@ public class ConstructorController {
         queryDTO.getLeftOn(), queryDTO.getRightOn(), queryDTO.getType());
   }
 
-  private void validateQuery(Query query) {
+  private void validateQuery(Query query, int fgId) {
     // It should have a leftFeatureGroup set and leftFeatures
     query.setLeftFg(
         validateFeaturegroupDTO(query.getLeftFgDTO(), query.getLeftFeatures()));
     query.setLeftAvailableFeatures(featuregroupController.getFeatures(query.getLeftFg()));
+    query.setLeftFgAs("fg" + fgId++);
 
     if (query.getQuery() != null && query.getRightFgDTO() != null) {
       throw new IllegalArgumentException("Nested join and right feature group specified in the same request");
     }
 
     if (query.getQuery() != null) {
-      validateQuery(query.getQuery());
+      validateQuery(query.getQuery(), fgId);
     } else if (query.getRightFg() != null){
       query.setRightFg(
           validateFeaturegroupDTO(query.getRightFgDTO(), query.getRightFeatures()));
       query.setRightAvailableFeatures(featuregroupController.getFeatures(query.getRightFg()));
+      query.setRightFgAs("fg" + fgId);
     }
   }
 
@@ -114,23 +116,22 @@ public class ConstructorController {
 
   protected List<FeatureDTO> extractSelectedFeatures(Query query) {
     List<FeatureDTO> featureList =
-        extractSelectedFeatures(query.getLeftFg(), query.getLeftFeatures());
+        extractSelectedFeatures(query.getLeftFg(), query.getLeftFgAs(),query.getLeftFeatures());
 
     if (query.getQuery() != null) {
       featureList.addAll(extractSelectedFeatures(query.getQuery()));
     } else if (query.getRightFg() != null) {
-      featureList.addAll(
-          extractSelectedFeatures(query.getRightFg(), query.getRightFeatures()));
+      featureList.addAll(extractSelectedFeatures(query.getRightFg(), query.getRightFgAs(), query.getRightFeatures()));
     }
 
     return featureList;
   }
 
-  protected List<FeatureDTO> extractSelectedFeatures(Featuregroup fg, List<FeatureDTO> requestedFeatures) {
+  protected List<FeatureDTO> extractSelectedFeatures(Featuregroup fg, String as, List<FeatureDTO> requestedFeatures) {
     List<FeatureDTO> featureList = new ArrayList<>();
     List<FeatureDTO> availableFeatures = featuregroupController.getFeatures(fg);
 
-    availableFeatures.forEach(f -> f.setFeaturegroup(fg.getName()));
+    availableFeatures.forEach(f -> f.setFeaturegroup(as));
 
     if (requestedFeatures == null || requestedFeatures.isEmpty()) {
       throw new IllegalArgumentException("Invalid requested features");
@@ -160,7 +161,7 @@ public class ConstructorController {
       return extractPrimaryKeysJoin(query);
     } else {
       // Right side not present
-      return new Join(featurestoreFacade, query.getLeftFg());
+      return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs());
     }
   }
 
@@ -181,7 +182,8 @@ public class ConstructorController {
       }
     }
 
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getRightFg(), query.getOn(), query.getType());
+    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(),
+        query.getRightFg(), query.getRightFgAs(), query.getOn(), query.getType());
   }
 
   protected Join extractLeftRightOn(Query query) {
@@ -206,8 +208,8 @@ public class ConstructorController {
       }
       i++;
     }
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getRightFg(),
-        query.getLeftOn(), query.getRightOn(), query.getType());
+    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(), query.getRightFg(),
+        query.getRightFgAs(), query.getLeftOn(), query.getRightOn(), query.getType());
   }
 
   protected Join extractPrimaryKeysJoin(Query query) {
@@ -224,7 +226,8 @@ public class ConstructorController {
           + query.getLeftFg().getName() + " and: " + query.getRightFg().getName());
     }
 
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getRightFg(), joinFeatures, query.getType());
+    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(), query.getRightFg(),
+        query.getRightFgAs(), joinFeatures, query.getType());
   }
 
   public String generateSQL(List<FeatureDTO> selectedFeatures, List<Join> joins) {

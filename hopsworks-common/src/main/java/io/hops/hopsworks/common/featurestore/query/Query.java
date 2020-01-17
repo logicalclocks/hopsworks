@@ -32,6 +32,7 @@ public class Query {
   private FeaturegroupDTO leftFgDTO;
   private List<FeatureDTO> leftFeatures;
   private Featuregroup leftFg;
+  private String leftFgAs;
   private List<FeatureDTO> leftAvailableFeatures;
 
   // Recursively merge QueryDTOs
@@ -41,6 +42,7 @@ public class Query {
   private FeaturegroupDTO rightFgDTO;
   private List<FeatureDTO> rightFeatures;
   private Featuregroup rightFg;
+  private String rightFgAs;
   private List<FeatureDTO> rightAvailableFeatures;
 
   private List<FeatureDTO> on;
@@ -145,6 +147,22 @@ public class Query {
 
   public void setRightFg(Featuregroup rightFg) {
     this.rightFg = rightFg;
+  }
+
+  public String getLeftFgAs() {
+    return leftFgAs;
+  }
+
+  public void setLeftFgAs(String leftFgAs) {
+    this.leftFgAs = leftFgAs;
+  }
+
+  public String getRightFgAs() {
+    return rightFgAs;
+  }
+
+  public void setRightFgAs(String rightFgAs) {
+    this.rightFgAs = rightFgAs;
   }
 
   public List<FeatureDTO> getRightAvailableFeatures() {

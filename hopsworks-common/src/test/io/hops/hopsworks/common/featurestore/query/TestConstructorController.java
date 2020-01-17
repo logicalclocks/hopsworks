@@ -76,7 +76,7 @@ public class TestConstructorController {
     requestedFeatures.add(new FeatureDTO("fg1_ft1"));
 
     List<FeatureDTO> extractedFeatures =
-        constructorController.extractSelectedFeatures(fg1, requestedFeatures);
+        constructorController.extractSelectedFeatures(fg1, "fg1", requestedFeatures);
     Assert.assertEquals(1, extractedFeatures.size());
     Assert.assertEquals("fg1_ft1", extractedFeatures.get(0).getName());
     // Make sure the object returned is the one for the DB with more infomation in (e.g. Type, Primary key)
@@ -95,7 +95,7 @@ public class TestConstructorController {
 
     thrown.expect(IllegalArgumentException.class);
     thrown.expectMessage("Feature: fg1_ft3 not found in feature group: fg1");
-    constructorController.extractSelectedFeatures(fg1, requestedFeatures);
+    constructorController.extractSelectedFeatures(fg1, "fg1", requestedFeatures);
   }
 
   @Test
@@ -109,7 +109,7 @@ public class TestConstructorController {
     requestedFeatures.add(new FeatureDTO("*"));
 
     List<FeatureDTO> extractedFeatures =
-        constructorController.extractSelectedFeatures(fg1, requestedFeatures);
+        constructorController.extractSelectedFeatures(fg1, "fg1", requestedFeatures);
     // Make sure both features have been returned.
     Assert.assertEquals(2, extractedFeatures.size());
   }
@@ -245,7 +245,7 @@ public class TestConstructorController {
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
     Query query = new Query(fg1, fg2);
-   query.setLeftAvailableFeatures(availableLeft);
+    query.setLeftAvailableFeatures(availableLeft);
     query.setRightAvailableFeatures(availableRight);
     query.setLeftOn(leftOn);
     query.setRightOn(rightOn);
