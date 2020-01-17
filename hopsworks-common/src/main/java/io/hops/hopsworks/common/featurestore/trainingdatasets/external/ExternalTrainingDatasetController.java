@@ -54,7 +54,6 @@ public class ExternalTrainingDatasetController {
       verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
     
     ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
     externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
     externalTrainingDatasetFacade.persist(externalTrainingDataset);
     return externalTrainingDataset;
@@ -99,11 +98,10 @@ public class ExternalTrainingDatasetController {
    */
   public ExternalTrainingDatasetDTO convertExternalTrainingDatasetToDTO(TrainingDataset trainingDataset) {
     ExternalTrainingDatasetDTO externalTrainingDatasetDTO = new ExternalTrainingDatasetDTO(trainingDataset);
-    externalTrainingDatasetDTO.setName(trainingDataset.getExternalTrainingDataset().getName());
     externalTrainingDatasetDTO.setLocation(
       "s3a://" + trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket() + "/" +
         FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER + "/" +
-        trainingDataset.getExternalTrainingDataset().getName() + "_" + trainingDataset.getVersion());
+        trainingDataset.getName() + "_" + trainingDataset.getVersion());
     return externalTrainingDatasetDTO;
   }
   
@@ -117,13 +115,13 @@ public class ExternalTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateExternalTrainingDatasetMetadata(ExternalTrainingDataset externalTrainingDataset,
     ExternalTrainingDatasetDTO externalTrainingDatasetDTO) throws FeaturestoreException {
+
     // Verify User Input specific for external training datasets
     FeaturestoreS3Connector featurestoreS3Connector =
       verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
     
     externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
-    externalTrainingDataset.setName(externalTrainingDatasetDTO.getName());
-    
+
     externalTrainingDatasetFacade.updateExternalTrainingDatasetMetadata(externalTrainingDataset);
   }
 

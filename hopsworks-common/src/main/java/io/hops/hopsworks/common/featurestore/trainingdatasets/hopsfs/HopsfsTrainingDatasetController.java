@@ -106,13 +106,6 @@ public class HopsfsTrainingDatasetController {
    */
   public HopsfsTrainingDatasetDTO convertHopsfsTrainingDatasetToDTO(TrainingDataset trainingDataset) {
     HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = new HopsfsTrainingDatasetDTO(trainingDataset);
-    int versionLength = trainingDataset.getVersion().toString().length();
-    String trainingDatasetNameWithVersion =
-      trainingDataset.getHopsfsTrainingDataset().getInode().getInodePK().getName();
-    //Remove the _version suffix
-    String trainingDatasetName = trainingDatasetNameWithVersion.substring
-      (0, trainingDatasetNameWithVersion.length() - (1 + versionLength));
-    hopsfsTrainingDatasetDTO.setName(trainingDatasetName);
     hopsfsTrainingDatasetDTO.setHdfsStorePath(
       inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
     hopsfsTrainingDatasetDTO.setLocation(hopsfsTrainingDatasetDTO.getHdfsStorePath());

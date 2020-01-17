@@ -70,24 +70,21 @@ public abstract class FeaturestoreEntityDTO {
   private String name;
   private Integer id;
   private List<FeatureDTO> features;
-  private String location;
+  private String location = null;
   private List<FeaturestoreJobDTO> jobs;
   
   public FeaturestoreEntityDTO() {
   }
   
   public FeaturestoreEntityDTO(
-    Integer featurestoreId, Date created,
+    Integer featurestoreId, String name, Date created,
     Users creator, Integer version, List<FeaturestoreStatistic> featurestoreStatistics,
     List<FeaturestoreJob> featurestoreJobs, Integer id) {
     this.featurestoreId = featurestoreId;
-    this.featurestoreName = null;
-    this.description = null;
     this.created = created;
     this.creator = creator.getEmail();
     this.version = version;
-    this.name = null;
-    this.location = null;
+    this.name = name;
     this.id = id;
     this.jobs = featurestoreJobs.stream().map(fj -> new FeaturestoreJobDTO(fj)).collect(Collectors.toList());
     this.clusterAnalysis = parseClusterAnalysis(featurestoreStatistics);

@@ -30,6 +30,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity class representing the external_training_dataset table in Hopsworks database.
@@ -52,11 +53,7 @@ public class ExternalTrainingDataset implements Serializable {
   private Integer id;
   @JoinColumn(name = "s3_connector_id", referencedColumnName = "id")
   private FeaturestoreS3Connector featurestoreS3Connector;
-  @Basic(optional = false)
-  @Column(name = "name")
-  private String name;
-  
-  
+
   public Integer getId() {
     return id;
   }
@@ -73,40 +70,22 @@ public class ExternalTrainingDataset implements Serializable {
     FeaturestoreS3Connector featurestoreS3Connector) {
     this.featurestoreS3Connector = featurestoreS3Connector;
   }
-  
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
-  }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof ExternalTrainingDataset)) {
-      return false;
-    }
-    
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     ExternalTrainingDataset that = (ExternalTrainingDataset) o;
-    
-    if (!id.equals(that.id)) {
-      return false;
-    }
-    if (!featurestoreS3Connector.equals(that.featurestoreS3Connector)) {
-      return false;
-    }
-    return name.equals(that.name);
+
+    if (!Objects.equals(id, that.id)) return false;
+    return Objects.equals(featurestoreS3Connector, that.featurestoreS3Connector);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + featurestoreS3Connector.hashCode();
-    result = 31 * result + name.hashCode();
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (featurestoreS3Connector != null ? featurestoreS3Connector.hashCode() : 0);
     return result;
   }
 }

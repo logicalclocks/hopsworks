@@ -59,7 +59,6 @@ public class OnDemandFeaturegroupController {
     //Persist on-demand featuregroup
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-    onDemandFeaturegroup.setName(onDemandFeaturegroupDTO.getName());
     onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
     onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
     onDemandFeaturegroupFacade.persist(onDemandFeaturegroup);
@@ -81,17 +80,17 @@ public class OnDemandFeaturegroupController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
     OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
+
     // Verify User Input specific for on demand feature groups
     FeaturestoreJdbcConnector featurestoreJdbcConnector =
       verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
     verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
     
     // Update metadata in entity
-    onDemandFeaturegroup.setName(onDemandFeaturegroupDTO.getName());
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
     onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
     onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
-    
+
     // finally persist in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
     featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
