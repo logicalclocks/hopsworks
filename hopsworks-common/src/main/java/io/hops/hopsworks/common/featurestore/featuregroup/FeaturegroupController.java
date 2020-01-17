@@ -326,7 +326,7 @@ public class FeaturegroupController {
    * @param featuregroupDTO the updated featuregroup metadata
    */
   public FeaturegroupDTO updateFeaturegroupJob(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
-    Featuregroup featuregroup = verifyFeaturegroupId(featuregroupDTO.getId(), featurestore);
+    Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
     //Store jobs
