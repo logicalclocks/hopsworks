@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.elastic;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
+import io.hops.hopsworks.common.proxies.client.NotFoundClientProtocolException;
 import io.hops.hopsworks.common.proxies.client.NotRetryableClientProtocolException;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
@@ -272,7 +273,11 @@ public class KibanaClient {
               String response = EntityUtils.toString(httpResponse.getEntity());
               return Strings.isEmpty(response) ? new JSONObject() : new JSONObject(response);
             } else if (statusCode / 100 == 4) {
-              throw new NotRetryableClientProtocolException(httpResponse.toString());
+              if(statusCode == 404){
+                throw new NotFoundClientProtocolException(httpResponse.toString());
+              }else{
+                throw new NotRetryableClientProtocolException(httpResponse.toString());
+              }
             } else {
               // Retry
               throw new ClientProtocolException();
