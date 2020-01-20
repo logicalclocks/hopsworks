@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import org.apache.calcite.sql.JoinType;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -91,14 +92,14 @@ public class TestConstructorController {
   @Test
   public void testValidateFeatures() {
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureDTO("fg1_ft1"));
+    requestedFeatures.add(new FeatureDTO("fg1_ft2"));
 
     List<FeatureDTO> extractedFeatures =
         constructorController.validateFeatures(fg1, "fg1", requestedFeatures, fg1Features);
     Assert.assertEquals(1, extractedFeatures.size());
-    Assert.assertEquals("fg1_ft1", extractedFeatures.get(0).getName());
+    Assert.assertEquals("fg1_ft2", extractedFeatures.get(0).getName());
     // Make sure the object returned is the one for the DB with more infomation in (e.g. Type, Primary key)
-    Assert.assertTrue(extractedFeatures.get(0).getPrimary());
+    Assert.assertFalse(extractedFeatures.get(0).getPrimary());
   }
 
   @Test
@@ -169,16 +170,14 @@ public class TestConstructorController {
     on.add(new FeatureDTO("ft1"));
     on.add(new FeatureDTO("ft2"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setOn(on);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = constructorController.extractOn(query);
+    Join join = constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
     Assert.assertEquals(2, join.getOn().size());
   }
 
-  /* @Test
+  @Test
   public void testExtractJoinOnMissingFeature() {
     ConstructorController constructorController = new ConstructorController();
 
@@ -192,13 +191,11 @@ public class TestConstructorController {
     List<FeatureDTO> on = new ArrayList<>();
     on.add(new FeatureDTO("ft1"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setOn(on);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractOn(query);
+    constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
   }
 
   @Test
@@ -214,13 +211,11 @@ public class TestConstructorController {
     List<FeatureDTO> on = new ArrayList<>();
     on.add(new FeatureDTO("ft1"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setOn(on);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractOn(query);
+    constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
   }
 
   @Test
@@ -236,13 +231,10 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setLeftOn(leftOn);
-    query.setRightOn(rightOn);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = constructorController.extractLeftRightOn(query);
+    Join join = constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
     Assert.assertEquals(1, join.getLeftOn().size());
     Assert.assertEquals(1, join.getRightOn().size());
   }
@@ -260,14 +252,11 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"), new FeatureDTO("additional"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setLeftOn(leftOn);
-    query.setRightOn(rightOn);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractLeftRightOn(query);
+    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
@@ -283,14 +272,11 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setLeftOn(leftOn);
-    query.setRightOn(rightOn);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractLeftRightOn(query);
+    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
@@ -306,14 +292,11 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft1"));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
-    query.setLeftOn(leftOn);
-    query.setRightOn(rightOn);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractLeftRightOn(query);
+    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
@@ -326,11 +309,10 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", true));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = constructorController.extractPrimaryKeysJoin(query);
+    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
     Assert.assertEquals(1, join.getOn().size());
   }
 
@@ -346,11 +328,10 @@ public class TestConstructorController {
     availableRight.add(new FeatureDTO("ft1", "String", "", true));
     availableRight.add(new FeatureDTO("ft2", "Float", "", true));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = constructorController.extractPrimaryKeysJoin(query);
+    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
     Assert.assertEquals(1, join.getOn().size());
   }
 
@@ -368,11 +349,10 @@ public class TestConstructorController {
     availableRight.add(new FeatureDTO("ft2", "Float", "", true));
     availableRight.add(new FeatureDTO("ft3", "Integer", "", true));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    Join join = constructorController.extractPrimaryKeysJoin(query);
+    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
     Assert.assertEquals(2, join.getOn().size());
   }
 
@@ -386,12 +366,11 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", false));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractPrimaryKeysJoin(query);
+    constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
   }
 
   @Test
@@ -404,12 +383,11 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "Integer", "", true));
 
-    Query query = new Query(fg1, fg2);
-    query.setAvailableFeatures(availableLeft);
-    query.setRightAvailableFeatures(availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(IllegalArgumentException.class);
-    constructorController.extractPrimaryKeysJoin(query);
+    constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
   }
 
   @Test
@@ -420,7 +398,6 @@ public class TestConstructorController {
   // Test simple get with no join
   @Test
   public void testSingleSide() {
-    ConstructorController constructorController = new ConstructorController();
-
-  } */
+    // TODO (Fabio)
+  }
 }
