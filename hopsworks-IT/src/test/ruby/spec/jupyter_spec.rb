@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
     end
   end
 
-  python_versions = ['2.7', '3.6']
+  python_versions = ['3.6']
   python_versions.each do |version|
     describe "Jupyter basic operations - python " + version do
       before :each do

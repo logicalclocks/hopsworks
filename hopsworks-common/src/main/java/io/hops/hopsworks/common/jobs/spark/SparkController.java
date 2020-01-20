@@ -117,13 +117,20 @@ public class SparkController {
     SparkJobConfiguration sparkConfig = (SparkJobConfiguration)job.getJobConfig();
     String appPath = sparkConfig.getAppPath();
 
-    //If it is a notebook we need to convert it to a .py file every time the job is run
-    if(appPath.endsWith(".ipynb")) {
-      String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
-      String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
-      sparkConfig.setAppPath(pyAppPath);
-      jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
-          JupyterController.NotebookConversion.PY);
+    if(job.getJobType().equals(JobType.PYSPARK)) {
+      if (!job.getProject().getConda()) {
+        //Throw error in Hopsworks UI to notify user to enable Anaconda
+        throw new JobException(RESTCodes.JobErrorCode.JOB_START_FAILED, Level.SEVERE,
+            "PySpark job needs to have Python Anaconda environment enabled");
+      }
+      //If it is a notebook we need to convert it to a .py file every time the job is run
+      if (appPath.endsWith(".ipynb")) {
+        String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
+        String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
+        sparkConfig.setAppPath(pyAppPath);
+        jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
+            JupyterController.NotebookConversion.PY);
+      }
     }
 
     SparkJob sparkjob = null;

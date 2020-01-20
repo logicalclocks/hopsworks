@@ -77,21 +77,15 @@
                       <p class="lead">Jupyter requires an Anaconda installation. Select one of the two options below.</p>
                       <br />
                       <p class="lead"><b> Option 1 (Recommended for new users): </b> Create a default environment with
-                        pre-installed libraries.</p>
-                      <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
+                        pre-installed libraries and python 3.6.</p>
+                      <p>You can remove and recreate the Anaconda environment at a later stage.</p>
                       <p class="lead">
                       <div>
                         <div class="btn-group" uib-dropdown style="z-index: 0;">
-                          <button ng-disabled="pythonCtrl.enabling" id="single-button" type="button"
-                                  class="btn btn-success btn-lg"
-                                  uib-dropdown-toggle >
-                            Select version &nbsp;<span class="caret"></span>
+                          <button ng-disabled="pythonCtrl.enabling" class="btn btn-success btn-lg" type="button"
+                                  ng-click="pythonCtrl.enable('3.6')">
+                            Enable Environment
                           </button>
-                          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
-                            <li role="menuitem"><a ng-click="pythonCtrl.enable('2.7')">Python 2.7</a></li>
-                            <li class="divider"></li>
-                            <li role="menuitem"><a ng-click="pythonCtrl.enable('3.6')">Python 3.6</a></li>
-                          </ul>
                         </div>
                       </div>
                       </p>
@@ -303,21 +297,15 @@
                       <p class="lead">Jupyter requires an Anaconda installation. Select one of the two options below.</p>
                       <br />
                       <p class="lead"><b> Option 1 (Recommended for new users): </b> Create a default environment with
-                        pre-installed libraries.</p>
-                      <p>You can change the version of Python at a later stage by recreating the Anaconda environment.</p>
+                        pre-installed libraries and python 3.6.</p>
+                      <p>You can change remove and recreate the Anaconda environment at a later stage.</p>
                       <p class="lead">
                       <div>
                         <div class="btn-group" uib-dropdown style="z-index: 0;">
-                          <button ng-disabled="pythonCtrl.enabling" id="single-button" type="button"
-                                  class="btn btn-success btn-lg"
-                                  uib-dropdown-toggle >
-                            Select version &nbsp;<span class="caret"></span>
+                          <button ng-disabled="pythonCtrl.enabling" class="btn btn-success btn-lg" type="button"
+                                  ng-click="pythonCtrl.enable('3.6')">
+                            Enable Environment
                           </button>
-                          <ul class="dropdown-menu" uib-dropdown-menu role="menu" aria-labelledby="single-button">
-                            <li role="menuitem"><a ng-click="pythonCtrl.enable('2.7')">Python 2.7</a></li>
-                            <li class="divider"></li>
-                            <li role="menuitem"><a ng-click="pythonCtrl.enable('3.6')">Python 3.6</a></li>
-                          </ul>
                         </div>
                       </div>
                       </p>
@@ -514,10 +502,10 @@
                 </div>
 
               </uib-tab>
-              <uib-tab index="2" heading="Installed Python Libraries" ng-show="pythonCtrl.enabled && pythonCtrl.installed"
+              <uib-tab index="2" heading="Manage Environment" ng-show="pythonCtrl.enabled && pythonCtrl.installed"
                 ng-click="pythonCtrl.getInstalled()">
                 <div>
-                  <h2 style="margin-bottom: 30px;">Installed Python Libraries
+                  <h2 style="margin-bottom: 30px;">Manage Environment
                     <div style="float:right">
                       <button tooltip-placement="auto top" style="float:left; margin-right: 10px;"
                               uib-tooltip="Export the Anaconda environment of the project as a .yml file."
