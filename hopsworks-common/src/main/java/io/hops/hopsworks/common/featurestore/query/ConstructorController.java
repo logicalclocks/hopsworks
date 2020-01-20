@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -56,53 +57,42 @@ public class ConstructorController {
   public ConstructorController() { }
 
   // For testing
-  protected ConstructorController(FeaturegroupController featuregroupController) {
+  protected ConstructorController(FeaturegroupController featuregroupController,
+                                  FeaturestoreFacade featurestoreFacade,
+                                  FeaturegroupFacade featuregroupFacade) {
     this.featuregroupController = featuregroupController;
+    this.featurestoreFacade = featurestoreFacade;
+    this.featuregroupFacade = featuregroupFacade;
   }
 
   public String construct(QueryDTO queryDTO) throws FeaturestoreException {
-    Query query = convertDTOtoInt(queryDTO);
-    validateQuery(query, 0);
-
-    List<FeatureDTO> selectedFeatures = extractSelectedFeatures(query);
-    // TODO(Fabio) sort recursive
-    List<Join> joins = Arrays.asList(extractJoins(query));
-
+    Query query = convertQueryDTO(queryDTO, 0);
     // Generate SQL
-    return generateSQL(selectedFeatures, joins);
+    return generateSQL(query);
   }
 
-  private Query convertDTOtoInt(QueryDTO queryDTO) {
-    return new Query(queryDTO.getLeftFeatureGroup(), queryDTO.getLeftFeatures(),
-        queryDTO.getQueryDTO() != null ? convertDTOtoInt(queryDTO.getQueryDTO()) : null,
-        queryDTO.getRightFeatureGroup(), queryDTO.getRightFeatures(), queryDTO.getOn(),
-        queryDTO.getLeftOn(), queryDTO.getRightOn(), queryDTO.getType());
-  }
+  protected Query convertQueryDTO(QueryDTO queryDTO, int fgId) {
+    Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
+    String fgAs = generateAs(fgId++);
 
-  private void validateQuery(Query query, int fgId) {
-    // It should have a leftFeatureGroup set and leftFeatures
-    query.setLeftFg(
-        validateFeaturegroupDTO(query.getLeftFgDTO(), query.getLeftFeatures()));
-    query.setLeftAvailableFeatures(featuregroupController.getFeatures(query.getLeftFg()));
-    query.setLeftFgAs("fg" + fgId++);
+    String featureStore = featurestoreFacade.getHiveDbName(fg.getFeaturestore().getHiveDbId());
+    List<FeatureDTO> availableFeatures = featuregroupController.getFeatures(fg);
+    List<FeatureDTO> requestedFeatures = validateFeatures(fg, fgAs, queryDTO.getLeftFeatures(), availableFeatures);
 
-    if (query.getQuery() != null && query.getRightFgDTO() != null) {
-      throw new IllegalArgumentException("Nested join and right feature group specified in the same request");
+    Query query = new Query(featureStore, fg, fgAs, requestedFeatures, availableFeatures);
+    if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
+      query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId));
     }
 
-    if (query.getQuery() != null) {
-      validateQuery(query.getQuery(), fgId);
-    } else if (query.getRightFg() != null){
-      query.setRightFg(
-          validateFeaturegroupDTO(query.getRightFgDTO(), query.getRightFeatures()));
-      query.setRightAvailableFeatures(featuregroupController.getFeatures(query.getRightFg()));
-      query.setRightFgAs("fg" + fgId);
-    }
+    return query;
   }
 
-  private Featuregroup validateFeaturegroupDTO(FeaturegroupDTO featuregroupDTO, List<FeatureDTO> features) {
-    if (featuregroupDTO == null ||
-        features == null || features.isEmpty()) {
+  private String generateAs(int id) {
+    return "fg" + id;
+  }
+
+  private Featuregroup validateFeaturegroupDTO(FeaturegroupDTO featuregroupDTO) {
+    if (featuregroupDTO == null) {
       throw new IllegalArgumentException("Feature group not specified or the list of features is empty");
     } else {
       Featuregroup featuregroup = featuregroupFacade.findById(featuregroupDTO.getId());
@@ -114,23 +104,9 @@ public class ConstructorController {
     }
   }
 
-  protected List<FeatureDTO> extractSelectedFeatures(Query query) {
-    List<FeatureDTO> featureList =
-        extractSelectedFeatures(query.getLeftFg(), query.getLeftFgAs(),query.getLeftFeatures());
-
-    if (query.getQuery() != null) {
-      featureList.addAll(extractSelectedFeatures(query.getQuery()));
-    } else if (query.getRightFg() != null) {
-      featureList.addAll(extractSelectedFeatures(query.getRightFg(), query.getRightFgAs(), query.getRightFeatures()));
-    }
-
-    return featureList;
-  }
-
-  protected List<FeatureDTO> extractSelectedFeatures(Featuregroup fg, String as, List<FeatureDTO> requestedFeatures) {
+  protected List<FeatureDTO> validateFeatures(Featuregroup fg, String as,
+                                              List<FeatureDTO> requestedFeatures, List<FeatureDTO> availableFeatures) {
     List<FeatureDTO> featureList = new ArrayList<>();
-    List<FeatureDTO> availableFeatures = featuregroupController.getFeatures(fg);
-
     availableFeatures.forEach(f -> f.setFeaturegroup(as));
 
     if (requestedFeatures == null || requestedFeatures.isEmpty()) {
@@ -147,100 +123,114 @@ public class ConstructorController {
                     + " not found in feature group: " + fg.getName())));
       }
     }
-
     return featureList;
   }
 
-  private Join extractJoins(Query query) {
-    if (query.getOn() != null && !query.getOn().isEmpty()) {
-      return extractOn(query);
-    } else if (query.getLeftOn() != null && !query.getLeftOn().isEmpty()) {
-      return extractLeftRightOn(query);
-    } else if (query.getRightFg() != null) {
-      // Only if right feature group is present, extract the primary keys for the join
-      return extractPrimaryKeysJoin(query);
-    } else {
-      // Right side not present
-      return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs());
+  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId) {
+    List<Join> joins = new ArrayList<>();
+    for (JoinDTO joinDTO : joinDTOS) {
+      if (joinDTO.getQuery() == null) {
+        throw new IllegalArgumentException("Subquery not specified");
+      }
+      Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgId++);
+
+      if (joinDTO.getOn() != null && !joinDTO.getOn().isEmpty()) {
+        joins.add(extractOn(leftQuery, rightQuery, joinDTO.getOn(), joinDTO.getType()));
+      } else if (joinDTO.getLeftOn() != null && !joinDTO.getLeftOn().isEmpty()) {
+        joins.add(
+            extractLeftRightOn(leftQuery, rightQuery, joinDTO.getLeftOn(), joinDTO.getRightOn(), joinDTO.getType()));
+      } else {
+        // Only if right feature group is present, extract the primary keys for the join
+        joins.add(extractPrimaryKeysJoin(leftQuery, rightQuery, joinDTO.getType()));
+      }
     }
+
+    return joins;
   }
 
   // TODO(Fabio): investigate type compatibility
-  protected Join extractOn(Query query) {
+  protected Join extractOn(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType) {
     // Make sure that the joining features are available on both feature groups and have the same type on both
-    for (FeatureDTO joinFeature : query.getOn()) {
-      FeatureDTO leftFeature = query.getLeftAvailableFeatures().stream()
+    for (FeatureDTO joinFeature : on) {
+      FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(joinFeature.getName()))
           .findFirst()
           .orElseThrow(() -> new IllegalArgumentException("Could not find Join feature: " + joinFeature.getName() +
-              " in feature group: " + query.getLeftFg().getName()));
+              " in feature group: " + leftQuery.getFeaturegroup().getName()));
       // Make sure that the same feature (name and type) is available on the right side as well.
-      if (query.getRightAvailableFeatures().stream()
+      if (rightQuery.getAvailableFeatures().stream()
           .noneMatch(f -> (f.getName().equals(joinFeature.getName()) && f.getType().equals(leftFeature.getType())))) {
         throw new IllegalArgumentException("Could not find Join feature " + joinFeature.getName() +
-            " in feature group: " + query.getRightFg().getName() + ", or it doesn't have the expected type");
+            " in feature group: " + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
       }
     }
-
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(),
-        query.getRightFg(), query.getRightFgAs(), query.getOn(), query.getType());
+    return new Join(leftQuery, rightQuery, on, joinType);
   }
 
-  protected Join extractLeftRightOn(Query query) {
+  protected Join extractLeftRightOn(Query leftQuery, Query rightQuery,
+                                    List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType) {
     // Make sure that they 2 list have the same length, and that the respective features have the same type
-    if (query.getLeftOn().size() != query.getRightOn().size()) {
+    if (leftOn.size() != rightOn.size()) {
       throw new IllegalArgumentException("LeftOn and RightOn have different sizes");
     }
     int i = 0;
-    while (i < query.getLeftOn().size()) {
-      String leftFeatureName = query.getLeftOn().get(i).getName();
-      FeatureDTO leftFeature = query.getLeftAvailableFeatures().stream()
+    while (i < leftOn.size()) {
+      String leftFeatureName = leftOn.get(i).getName();
+      FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(leftFeatureName))
           .findFirst()
           .orElseThrow(() -> new IllegalArgumentException("Could not find Join feature: " + leftFeatureName +
-              " in feature group: " + query.getLeftFg().getName()));
+              " in feature group: " + leftQuery.getFeaturegroup().getName()));
 
-      String rightFeatureName = query.getRightOn().get(i).getName();
-      if (query.getRightAvailableFeatures().stream()
+      String rightFeatureName = rightOn.get(i).getName();
+      if (rightQuery.getAvailableFeatures().stream()
           .noneMatch(f -> (f.getName().equals(rightFeatureName) && f.getType().equals(leftFeature.getType())))) {
         throw new IllegalArgumentException("Could not find Join feature " + rightFeatureName +
-            " in feature group: " + query.getRightFg().getName() + ", or it doesn't have the expected type");
+            " in feature group: " + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
       }
       i++;
     }
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(), query.getRightFg(),
-        query.getRightFgAs(), query.getLeftOn(), query.getRightOn(), query.getType());
+    return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
   }
 
-  protected Join extractPrimaryKeysJoin(Query query) {
+  protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType) {
     // Find subset of matching primary keys (same name and type) to be used as join condition
     List<FeatureDTO> joinFeatures = new ArrayList<>();
-    query.getLeftAvailableFeatures().stream().filter(FeatureDTO::getPrimary).forEach(lf -> {
-      joinFeatures.addAll(query.getRightAvailableFeatures().stream()
+    leftQuery.getAvailableFeatures().stream().filter(FeatureDTO::getPrimary).forEach(lf -> {
+      joinFeatures.addAll(rightQuery.getAvailableFeatures().stream()
           .filter(rf -> rf.getName().equals(lf.getName()) && rf.getType().equals(lf.getType()) && rf.getPrimary())
           .collect(Collectors.toList()));
     });
 
     if (joinFeatures.isEmpty()) {
       throw new IllegalArgumentException("Could not find any matching feature to join: "
-          + query.getLeftFg().getName() + " and: " + query.getRightFg().getName());
+          + leftQuery.getFeaturegroup().getName() + " and: " + rightQuery.getFeaturegroup().getName());
     }
 
-    return new Join(featurestoreFacade, query.getLeftFg(), query.getLeftFgAs(), query.getRightFg(),
-        query.getRightFgAs(), joinFeatures, query.getType());
+    return new Join(leftQuery, rightQuery, joinFeatures, joinType);
   }
 
-  public String generateSQL(List<FeatureDTO> selectedFeatures, List<Join> joins) {
+  public String generateSQL(Query query) {
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-    for (FeatureDTO f : selectedFeatures) {
+    for (FeatureDTO f : collectFeatures(query)) {
       selectList.add(new SqlIdentifier(Arrays.asList(f.getFeaturegroup(), f.getName()), SqlParserPos.ZERO));
     }
 
     // TODO(Fabio): account for recursive
-    SqlNode joinNode = joins.get(0).getJoinNode();
+    SqlNode joinNode = query.getJoins().get(0).getJoinNode();
 
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
         null, null, null, null, null, null, null);
     return select.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+  }
+
+  protected List<FeatureDTO> collectFeatures(Query query) {
+    List<FeatureDTO> features = new ArrayList<>(query.getFeatures());
+    if (query.getJoins() != null) {
+      query.getJoins().forEach(join -> {
+        features.addAll(collectFeatures(join.getRightQuery()));
+      });
+    }
+    return features;
   }
 }

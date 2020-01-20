@@ -50,17 +50,6 @@ public class FeatureDTO {
     this.featuregroup = featuregroup;
     this.version = version;
   }
-  
-  public FeatureDTO(String featuregroup, String name, String type, String description, Boolean primary,
-                    Boolean partition, String onlineType) {
-    this.featuregroup = featuregroup;
-    this.name = name;
-    this.type = type;
-    this.description = description;
-    this.primary = primary;
-    this.partition = partition;
-    this.onlineType = onlineType;
-  }
 
   public FeatureDTO(String name, String type, String description, Boolean primary,
                     Boolean partition, String onlineType) {

@@ -18,8 +18,6 @@ package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import org.apache.calcite.sql.JoinType;
 
 import java.util.List;
 
@@ -29,179 +27,78 @@ import java.util.List;
  * This is to avoid hitting the db too many times.
  */
 public class Query {
-  private FeaturegroupDTO leftFgDTO;
-  private List<FeatureDTO> leftFeatures;
-  private Featuregroup leftFg;
-  private String leftFgAs;
-  private List<FeatureDTO> leftAvailableFeatures;
+  private List<FeatureDTO> features;
+  private String featureStore;
+  private Featuregroup featuregroup;
+  private String as;
+  private List<FeatureDTO> availableFeatures;
 
-  // Recursively merge QueryDTOs
-  private Query query;
-
-  // Join with another featuregroup
-  private FeaturegroupDTO rightFgDTO;
-  private List<FeatureDTO> rightFeatures;
-  private Featuregroup rightFg;
-  private String rightFgAs;
-  private List<FeatureDTO> rightAvailableFeatures;
-
-  private List<FeatureDTO> on;
-  private List<FeatureDTO> leftOn;
-  private List<FeatureDTO> rightOn;
-
-  private JoinType type = JoinType.INNER;
+  private List<Join> joins;
 
   // For testing
   public Query() {
   }
 
   // Constructor for testing
-  public Query(Featuregroup leftFg, Featuregroup rightFg) {
-    this.leftFg = leftFg;
-    this.rightFg = rightFg;
+  public Query(String featureStore, Featuregroup featuregroup) {
+    this.featureStore = featureStore;
+    this.featuregroup = featuregroup;
   }
 
-  // Constructor for testing
-  public Query(Featuregroup leftFg, List<FeatureDTO> leftFeatures,
-               Featuregroup rightFg, List<FeatureDTO> rightFeatures) {
-    this.leftFg = leftFg;
-    this.leftFeatures = leftFeatures;
-    this.rightFg = rightFg;
-    this.rightFeatures = rightFeatures;
+  public Query(String featureStore, Featuregroup featuregroup, String as,
+               List<FeatureDTO> features, List<FeatureDTO> availableFeatures) {
+    this.featureStore = featureStore;
+    this.featuregroup = featuregroup;
+    this.as = as;
+    this.features = features;
+    this.availableFeatures = availableFeatures;
   }
 
-  public Query(FeaturegroupDTO leftFgDTO, List<FeatureDTO> leftFeatures, Query query, FeaturegroupDTO rightFgDTO,
-               List<FeatureDTO> rightFeatures, List<FeatureDTO> on, List<FeatureDTO> leftOn,
-               List<FeatureDTO> rightOn, JoinType type) {
-
-    this.leftFgDTO = leftFgDTO;
-    this.leftFeatures = leftFeatures;
-    this.query = query;
-    this.rightFgDTO = rightFgDTO;
-    this.rightFeatures = rightFeatures;
-    this.on = on;
-    this.leftOn = leftOn;
-    this.rightOn = rightOn;
-    this.type = type;
+  public String getFeatureStore() {
+    return featureStore;
   }
 
-  public FeaturegroupDTO getLeftFgDTO() {
-    return leftFgDTO;
+  public void setFeatureStore(String featureStore) {
+    this.featureStore = featureStore;
   }
 
-  public void setLeftFgDTO(FeaturegroupDTO leftFgDTO) {
-    this.leftFgDTO = leftFgDTO;
+  public List<FeatureDTO> getFeatures() {
+    return features;
   }
 
-  public List<FeatureDTO> getLeftFeatures() {
-    return leftFeatures;
+  public void setFeatures(List<FeatureDTO> features) {
+    this.features = features;
   }
 
-  public void setLeftFeatures(List<FeatureDTO> leftFeatures) {
-    this.leftFeatures = leftFeatures;
+  public Featuregroup getFeaturegroup() {
+    return featuregroup;
   }
 
-  public Featuregroup getLeftFg() {
-    return leftFg;
+  public void setFeaturegroup(Featuregroup featuregroup) {
+    this.featuregroup = featuregroup;
   }
 
-  public void setLeftFg(Featuregroup leftFg) {
-    this.leftFg = leftFg;
+  public List<FeatureDTO> getAvailableFeatures() {
+    return availableFeatures;
   }
 
-  public List<FeatureDTO> getLeftAvailableFeatures() {
-    return leftAvailableFeatures;
+  public void setAvailableFeatures(List<FeatureDTO> availableFeatures) {
+    this.availableFeatures = availableFeatures;
   }
 
-  public void setLeftAvailableFeatures(List<FeatureDTO> leftAvailableFeatures) {
-    this.leftAvailableFeatures = leftAvailableFeatures;
+  public String getAs() {
+    return as;
   }
 
-  public Query getQuery() {
-    return query;
+  public void setAs(String as) {
+    this.as = as;
   }
 
-  public void setQuery(Query query) {
-    this.query = query;
+  public List<Join> getJoins() {
+    return joins;
   }
 
-  public FeaturegroupDTO getRightFgDTO() {
-    return rightFgDTO;
-  }
-
-  public void setRightFgDTO(FeaturegroupDTO rightFgDTO) {
-    this.rightFgDTO = rightFgDTO;
-  }
-
-  public List<FeatureDTO> getRightFeatures() {
-    return rightFeatures;
-  }
-
-  public void setRightFeatures(List<FeatureDTO> rightFeatures) {
-    this.rightFeatures = rightFeatures;
-  }
-
-  public Featuregroup getRightFg() {
-    return rightFg;
-  }
-
-  public void setRightFg(Featuregroup rightFg) {
-    this.rightFg = rightFg;
-  }
-
-  public String getLeftFgAs() {
-    return leftFgAs;
-  }
-
-  public void setLeftFgAs(String leftFgAs) {
-    this.leftFgAs = leftFgAs;
-  }
-
-  public String getRightFgAs() {
-    return rightFgAs;
-  }
-
-  public void setRightFgAs(String rightFgAs) {
-    this.rightFgAs = rightFgAs;
-  }
-
-  public List<FeatureDTO> getRightAvailableFeatures() {
-    return rightAvailableFeatures;
-  }
-
-  public void setRightAvailableFeatures(List<FeatureDTO> rightAvailableFeatures) {
-    this.rightAvailableFeatures = rightAvailableFeatures;
-  }
-
-  public List<FeatureDTO> getOn() {
-    return on;
-  }
-
-  public void setOn(List<FeatureDTO> on) {
-    this.on = on;
-  }
-
-  public List<FeatureDTO> getLeftOn() {
-    return leftOn;
-  }
-
-  public void setLeftOn(List<FeatureDTO> leftOn) {
-    this.leftOn = leftOn;
-  }
-
-  public List<FeatureDTO> getRightOn() {
-    return rightOn;
-  }
-
-  public void setRightOn(List<FeatureDTO> rightOn) {
-    this.rightOn = rightOn;
-  }
-
-  public JoinType getType() {
-    return type;
-  }
-
-  public void setType(JoinType type) {
-    this.type = type;
+  public void setJoins(List<Join> joins) {
+    this.joins = joins;
   }
 }
