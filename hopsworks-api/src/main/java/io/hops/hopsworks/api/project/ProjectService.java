@@ -777,6 +777,17 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
+  @GET
+  @Path("{projectId}/client")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException, DatasetException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
+  }
+
   @Path("{projectId}/kafka")
   public KafkaResource kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
