@@ -116,6 +116,9 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -138,6 +141,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -146,6 +151,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
 
 @Path("/project")
 @Stateless
@@ -213,6 +220,8 @@ public class ProjectService {
   private PiaFacade piaFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private Settings settings;
   @Inject
   private DelaProjectService delaService;
   @Inject
@@ -777,6 +786,43 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
+  @Path("{projectId}/client")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException, DatasetException, FileNotFoundException,
+      HopsSecurityException {
+    String clientPath = settings.getClientPath();
+    File clientFile = new File(clientPath);
+    InputStream stream = new FileInputStream(clientFile);
+    Response.ResponseBuilder response = Response.ok(buildOutputStream(stream));
+    response.header("Content-disposition", "attachment;");
+    return response.build();
+  }
+  
+  /**
+
+   * @param stream
+   * @return
+   */
+  private StreamingOutput buildOutputStream(final InputStream stream) {
+    StreamingOutput output = new StreamingOutput() {
+      @Override
+      public void write(OutputStream out) throws IOException, WebApplicationException {
+        int length;
+        byte[] buffer = new byte[1024];
+        while ((length = stream.read(buffer)) != -1) {
+          out.write(buffer, 0, length);
+        }
+        out.flush();
+        stream.close();
+      }
+    };
+
+    return output;
+  }
+  
   @Path("{projectId}/kafka")
   public KafkaResource kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);

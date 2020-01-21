@@ -358,6 +358,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
   private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
+
+  private static final String VARIABLE_CLIENT_PATH = "client_path";
   
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
@@ -754,6 +756,9 @@ public class Settings implements Serializable {
 
 
       populateProvenanceCache();
+      
+      CLIENT_PATH = setStrVar(VARIABLE_CLIENT_PATH, CLIENT_PATH);
+      
       cached = true;
     }
   }
@@ -3804,4 +3809,10 @@ public class Settings implements Serializable {
     return PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE;
   }
   //------------------------------ END PROVENANCE --------------------------------------------//
+  
+  private String CLIENT_PATH = "/srv/hops/client.tar.gz";
+  public synchronized String getClientPath() {
+    checkCache();
+    return CLIENT_PATH;
+  }
 }
