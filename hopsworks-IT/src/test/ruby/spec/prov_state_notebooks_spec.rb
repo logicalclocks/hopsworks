@@ -84,7 +84,7 @@ describe "On #{ENV['OS']}" do
     def prov_run_job(project, job_name, job_conf)
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
       expect_status(201)
-      start_execution(project[:id], job_name)
+      start_execution(project[:id], job_name, nil)
       execution_id = json_body[:id]
       prov_wait_for_job_success(project, job_name, execution_id)
     end
