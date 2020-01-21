@@ -333,20 +333,20 @@ describe "On #{ENV['OS']}" do
       end
 
       it "filters by registered" do
-        filter = "?filter_by=registered:true"
+        filter = "?sort_by=id:asc&filter_by=registered:true"
         admin_get_all_cluster_nodes(filter)
         res = json_body[:items].map{|i| i[:id]}
         admin_get_all_cluster_nodes()
-        expected = json_body[:items].select{|h| h[:registered] == true}.map {|h| h[:id]}
+        expected = json_body[:items].select{|h| h[:registered] == true}.map {|h| h[:id]}.sort
         expect(res).to eq(expected)
       end
 
       it "filters by conda_enabled" do
-        filter = "?filter_by=conda_enabled:true"
+        filter = "?sort_by=id:asc&filter_by=conda_enabled:true"
         admin_get_all_cluster_nodes(filter)
         res = json_body[:items].map {|h| h[:id]}
         admin_get_all_cluster_nodes()
-        expected = json_body[:items].select{|h| h[:condaEnabled] == true}.map {|h| h[:id]}
+        expected = json_body[:items].select{|h| h[:condaEnabled] == true}.map {|h| h[:id]}.sort
         expect(res).to eq(expected)
       end
 
@@ -432,8 +432,6 @@ describe "On #{ENV['OS']}" do
         expect(res).to eq(nil)
         expect(count).to eq(json_body[:count])
       end
-
-
     end
   end
 end
