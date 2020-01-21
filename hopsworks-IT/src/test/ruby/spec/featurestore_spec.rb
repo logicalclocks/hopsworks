@@ -51,6 +51,21 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         end
 
+        it "should be able to get a featurestore with a particular name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          featurestore_name = project.projectname.downcase + "_featurestore"
+          get_project_featurestore_with_name = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s +
+              "/featurestores/" + featurestore_name.to_s
+          get get_project_featurestore_with_name
+          parsed_json = JSON.parse(response.body)
+          expect_status(200)
+          expect(parsed_json.key?("projectName")).to be true
+          expect(parsed_json.key?("featurestoreId")).to be true
+          expect(parsed_json["projectName"] == project.projectname).to be true
+          expect(parsed_json["featurestoreId"] == featurestore_id).to be true
+        end
+
         it "should be able to get shared feature stores" do
           project = get_project
           projectname = "project_#{short_random_id}"
@@ -84,6 +99,16 @@ describe "On #{ENV['OS']}" do
           second_featurestore = json_body.select {
             |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
           expect(second_featurestore).to be_present
+
+          get_shared_featurestore_with_name = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s +
+              "/featurestores/" + "#{projectname}_featurestore"
+          get get_shared_featurestore_with_name
+          parsed_json = JSON.parse(response.body)
+          expect_status(200)
+          expect(parsed_json.key?("projectName")).to be true
+          expect(parsed_json.key?("featurestoreId")).to be true
+          expect(parsed_json["projectName"] == projectname).to be true
+          expect(parsed_json["featurestoreName"] == "#{projectname}_featurestore").to be true
         end
       end
     end

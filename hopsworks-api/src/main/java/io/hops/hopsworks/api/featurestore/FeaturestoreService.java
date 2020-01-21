@@ -164,7 +164,7 @@ public class FeaturestoreService {
    * @return JSON representation of the featurestore
    */
   @GET
-  @Path("/{featurestoreId}")
+  @Path("/{featurestoreId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -215,30 +215,29 @@ public class FeaturestoreService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
       .build();
   }
-
+  
   /**
-   * Endpoint for getting a featurestore by name. This method will be removed after HOPSWORKS-860.
+   * Endpoint for getting a featurestore by name.
    *
-   * @param featurestoreName the name of the featurestore
+   * @param name
+   *   the name of the featurestore
    * @return JSON representation of the featurestore
    */
   @GET
-  @Path("/getByName/{featurestoreName}")
+  // Anything else that is not just number should use this endpoint
+  @Path("/{name: [a-z0-9_]+(?=[a-z])[a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get featurestore with specific name",
+  @ApiKeyRequired(acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get featurestore with a specific name",
     response = FeaturestoreDTO.class)
   public Response getFeaturestoreByName(
     @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("featurestoreName")
-      String featurestoreName) throws FeaturestoreException {
-    if (Strings.isNullOrEmpty(featurestoreName)) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
-    }
+    @PathParam("name") String name) throws FeaturestoreException {
+    verifyNameProvided(name);
     FeaturestoreDTO featurestoreDTO =
-      featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
+      featurestoreController.getFeaturestoreForProjectWithName(project, name);
     GenericEntity<FeaturestoreDTO> featurestoreDTOGeneric =
       new GenericEntity<FeaturestoreDTO>(featurestoreDTO) {
       };
@@ -449,4 +448,16 @@ public class FeaturestoreService {
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
   }
+  
+  /**
+   * Verify that the name was provided as a path param
+   *
+   * @param featureStoreName the feature store name to verify
+   */
+  private void verifyNameProvided(String featureStoreName) {
+    if (com.google.common.base.Strings.isNullOrEmpty(featureStoreName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
+    }
+  }
+  
 }
