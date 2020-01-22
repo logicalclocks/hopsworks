@@ -94,10 +94,6 @@ public class AuditHelper {
           }
           accountAuditFacade.registerAccountChange(initiator, action.toString(), result.toString(), message, target,
             remoteHost, userAgent);
-          //TODO: Ermias register false login role change if target.getStatus.equal(UserAccountStatus.SPAM_ACCOUNT)
-          // UserErrorCode.AUTHENTICATION_FAILURE
-          // accountAuditFacade.registerRoleChange(user, UserAccountStatus.SPAM_ACCOUNT.name(), RolesAuditAction
-          // .SUCCESS.name(), "False login retries:" + Integer.toString(count), user, req);
           break;
         case ROLE_AUDIT:
           if (target == null) {
