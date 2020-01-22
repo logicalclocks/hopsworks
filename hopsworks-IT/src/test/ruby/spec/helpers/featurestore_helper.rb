@@ -220,12 +220,16 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
-  def update_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, featuregroup_id, featuregroup_version, query: nil, featuregroup_name: nil)
+  def update_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, featuregroup_id,
+                                    featuregroup_version, query: nil, featuregroup_name: nil, featuregroup_desc: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     update_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
     if featuregroup_name == nil
       featuregroup_name = "featuregroup_#{random_id}"
+    end
+    if featuregroup_desc == nil
+      featuregroup_desc = "description_#{random_id}"
     end
     if query == nil
       query = "SELECT * FROM test"
@@ -241,7 +245,7 @@ module FeaturestoreHelper
                 primary: true
             }
         ],
-        description: "testfeaturegroupdescription",
+        description: featuregroup_desc,
         version: featuregroup_version,
         type: type,
         jdbcConnectorId: jdbcconnectorId,
@@ -362,14 +366,15 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def update_external_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, name, s3_connector_id)
+  def update_external_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, name,
+                                                description, s3_connector_id)
     type = "externalTrainingDatasetDTO"
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: name,
         jobs: [],
-        description: "new_testtrainingdatasetdescription",
+        description: description,
         version: 1,
         dataFormat: "parquet",
         type: type,
