@@ -20,7 +20,7 @@ INFERENCE_SCHEMA_VERSION = 2
 TF_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/mnist/model/*"
 SKLEARN_MODEL_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/data/iris/iris_knn.pkl"
 SKLEARN_SCRIPT_FILE_NAME="iris_flower_classifier.py"
-SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/Serving/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
+SKLEARN_SCRIPT_TOUR_FILE_LOCATION = "/user/hdfs/tensorflow_demo/notebooks/End_To_End_Pipeline/sklearn/#{SKLEARN_SCRIPT_FILE_NAME}"
 
 module ServingHelper
 
