@@ -315,7 +315,7 @@ public class CertificatesMgmService {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public int issueZfsKeyRotationCommand() {
-    List<Hosts> allHosts = hostsFacade.findAllHosts();
+    List<Hosts> allHosts = hostsFacade.findAll();
     for (Hosts host : allHosts) {
 
       try {
@@ -331,7 +331,7 @@ public class CertificatesMgmService {
         // Save it in a field in hosts
         host.setZfsKey(passwd);
         host.setZfsKeyRotated(host.getZfsKey());
-        hostsFacade.storeHost(host);
+        hostsFacade.update(host);
 
         // send it to kagent
         systemCommandFacade.persist(rotateCommand);

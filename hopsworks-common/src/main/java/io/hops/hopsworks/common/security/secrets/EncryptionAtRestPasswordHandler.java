@@ -18,11 +18,13 @@ package io.hops.hopsworks.common.security.secrets;
 
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.MasterPasswordChangeResult;
 import io.hops.hopsworks.common.security.MasterPasswordHandler;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import javax.ejb.EJB;
@@ -45,6 +47,8 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
   @EJB
   private HostsFacade hostsFacade;
   @EJB
+  private HostsController hostsController;
+  @EJB
   private Settings settings;
 
   @Override
@@ -64,7 +68,7 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
 
     try {
       LOGGER.log(Level.INFO, "Updating ZFS Keys with new Hopsworks master encryption password");
-      List<Hosts> hosts = hostsFacade.findAllHosts();
+      List<Hosts> hosts = hostsFacade.findAll();
       
       for (Hosts host : hosts) {
         String zfsKey = host.getZfsKey();
@@ -87,7 +91,7 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
           host.setZfsKeyRotated(encrypted);
         }
 
-        hostsFacade.storeHost(host);
+        hostsFacade.update(host);
         successLog.append("Updated ZFS keys for <").append(host.getHostIp()).append(">\n");
       }
       
@@ -108,13 +112,18 @@ public class EncryptionAtRestPasswordHandler implements MasterPasswordHandler {
 
     for (String hostname : zfsKeys2Rollback.keySet()) {
       ImmutablePair<String, String> zfsKeys = zfsKeys2Rollback.get(hostname);
-      Hosts host = hostsFacade.findByHostname(hostname);
+      Hosts host = null;
+      try {
+        host = hostsController.findByHostname(hostname);
+      } catch (ServiceException e) {
+        continue;
+      }
       if (host == null) {
         continue;
       }
       host.setZfsKey(zfsKeys.getKey());
       host.setZfsKeyRotated(zfsKeys.getValue());
-      hostsFacade.storeHost(host);
+      hostsFacade.update(host);
     }
   }
   

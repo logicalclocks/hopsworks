@@ -90,8 +90,8 @@ public class AgentController {
   @EJB
   private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
-  private CertificatesMgmService certificatesMgmService;  
-
+  private CertificatesMgmService certificatesMgmService;
+  @EJB
   private HostsController hostsController;
 
   private io.hops.hopsworks.exceptions.ServiceException throwNewZfsException(String host)
