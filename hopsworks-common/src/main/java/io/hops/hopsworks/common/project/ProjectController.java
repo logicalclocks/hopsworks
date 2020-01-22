@@ -2596,8 +2596,9 @@ public class ProjectController {
       return new CertsDTO("jks", accessCredentials.getkStore(), accessCredentials.gettStore());
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
-          ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "Failed to " +
+        "download project-user certificates for project: " + project.getName() + " (projectId: " + projectId +
+        "), user: " + user.getUsername(), ex.getMessage(), ex);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
