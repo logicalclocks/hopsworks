@@ -38,7 +38,6 @@
  */
 package io.hops.hopsworks.common.elastic;
 
-import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.common.util.Settings;
 
 import javax.ejb.EJB;
@@ -64,9 +63,7 @@ public class ElasticCleaner {
    *
    * @param timer timer
    */
-  @Schedule(persistent = false,
-      minute = "0",
-      hour = "1")
+  @Schedule(persistent = false, minute = "0", hour = "1")
   public void deleteLogIndices(Timer timer) {
     LOGGER.log(Level.INFO, "Running ElasticCleaner.");
     //Get all log indices
@@ -88,10 +85,8 @@ public class ElasticCleaner {
           LOGGER.log(Level.INFO, "Deletedindex:{0}", index);
         }
       }
-    } catch (ElasticException ex) {
+    } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, "Index deletion failed", ex);
     }
-
   }
-
 }

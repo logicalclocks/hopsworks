@@ -56,6 +56,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -182,12 +183,14 @@ public class EnvironmentController {
    *
    * @param proj
    */
-  public void removeEnvironment(Project proj, Users user) throws ServiceException {
+  public void removeEnvironment(Project proj, Users user)
+      throws ServiceException, ElasticException {
     commandsController.deleteCommandsForProject(proj);
     if (proj.getCondaEnv()) {
       condaEnvironmentRemove(proj, user);
       setCondaEnv(proj, false);
     }
+    deleteKibanaIndex(proj);
     removePythonForProject(proj);
   }
 
@@ -340,19 +343,19 @@ public class EnvironmentController {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
 
-    String cpuHost = hostsFacade.findCPUHost();
+    Optional<String> cpuHost = hostsFacade.findCPUHost();
     Date date = new Date();
 
     ArrayList<String> ymlList = new ArrayList<>();
     long exportTime = date.getTime();
-    if (cpuHost != null) {
+    if (cpuHost.isPresent()) {
       String cpuYmlPath = projectRelativeExportPath + "/" + "environment_cpu_" + exportTime + ".yml";
       condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
           cpuYmlPath, LibraryFacade.MachineType.CPU, null, false, true);
       ymlList.add(cpuYmlPath);
     }
-    String gpuHost = hostsFacade.findGPUHost();
-    if (gpuHost != null) {
+    Optional<String> gpuHost = hostsFacade.findGPUHost();
+    if (gpuHost.isPresent()) {
       String gpuYmlPath = projectRelativeExportPath + "/" + "environment_gpu_" + exportTime + ".yml";
       condaEnvironmentOp(CondaCommandFacade.CondaOp.EXPORT, project.getPythonVersion(), project, user,
           gpuYmlPath, LibraryFacade.MachineType.GPU, null, false, true);
@@ -425,6 +428,13 @@ public class EnvironmentController {
             project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
   }
 
+  private void deleteKibanaIndex(Project project)
+      throws ElasticException {
+    String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN;
+    elasticController.deleteIndex(indexName);
+    elasticController.deleteIndexPattern(project, indexName);
+  }
+  
   public void uploadYmlInProject(Project project, Users user, String environmentYml, String relativePath)
       throws ServiceException {
     DistributedFileSystemOps udfso = null;

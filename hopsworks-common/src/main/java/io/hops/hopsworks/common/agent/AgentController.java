@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
@@ -53,6 +54,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -90,6 +92,7 @@ public class AgentController {
   @EJB
   private CertificatesMgmService certificatesMgmService;  
 
+  private HostsController hostsController;
 
   private io.hops.hopsworks.exceptions.ServiceException throwNewZfsException(String host)
           throws io.hops.hopsworks.exceptions.ServiceException {
@@ -100,7 +103,7 @@ public class AgentController {
 
   public String register(String hostId, String password, String zfsKey) throws
           io.hops.hopsworks.exceptions.ServiceException {
-    Hosts host = hostsFacade.findByHostname(hostId);
+    Hosts host = hostsController.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);
     host.setHostname(hostId);
@@ -118,18 +121,18 @@ public class AgentController {
       host.setZfsKey(encryptedKey);
     }
 
-    hostsFacade.storeHost(host);
+    hostsFacade.update(host);
     return settings.getHadoopVersionedDir();
   }
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {
-    Hosts host = hostsFacade.findByHostname(heartbeat.hostId);
+    Hosts host = hostsController.findByHostname(heartbeat.hostId);
 
     if (host == null) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_FOUND, Level.WARNING,
           "hostId: " + heartbeat.hostId);
     }
-    if (!host.isRegistered()) {
+    if (!host.getRegistered()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.HOST_NOT_REGISTERED, Level.WARNING,
           "hostId: " + heartbeat.hostId);
     }
@@ -243,7 +246,7 @@ public class AgentController {
     host.setPrivateIp(heartbeat.privateIp);
     host.setCores(heartbeat.cores);
     host.setMemoryCapacity(heartbeat.memoryCapacity);
-    hostsFacade.storeHost(host);
+    hostsFacade.update(host);
   }
 
   private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
@@ -390,8 +393,8 @@ public class AgentController {
 
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
 
-    String cpuHost = hostsFacade.findCPUHost();
-    String gpuHost = hostsFacade.findGPUHost();
+    Optional<String> cpuHost = hostsFacade.findCPUHost();
+    Optional<String> gpuHost = hostsFacade.findGPUHost();
 
     for (int i = 3; i < lines.length; i++) {
 
@@ -415,12 +418,12 @@ public class AgentController {
       if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu") || libraryName.equals("tensorflow" +
           "-rocm")) {
         AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
-        if(cpuHost != null) {
+        if(cpuHost.isPresent()) {
           PythonDep tensorflowCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
             CondaCommandFacade.CondaInstallType.PIP, "tensorflow", version, true, true);
           deps.add(tensorflowCPU);
         }
-        if(gpuHost != null) {
+        if(gpuHost.isPresent()) {
           PythonDep tensorflowCudaGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
             CondaCommandFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true);
           deps.add(tensorflowCudaGPU);

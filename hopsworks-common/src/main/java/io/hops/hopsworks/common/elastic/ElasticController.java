@@ -46,6 +46,7 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.proxies.client.NotFoundClientProtocolException;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -244,6 +245,7 @@ public class ElasticController {
         Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
 
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public boolean deleteIndex(String index)
       throws ElasticException {
     boolean acked =
@@ -301,6 +303,22 @@ public class ElasticController {
     }
   }
   
+  public void deleteIndexPattern(Project project, String pattern)
+      throws ElasticException {
+    try {
+      JSONObject resp = kibanaClient.deleteAsDataOwner(project,
+          KibanaClient.KibanaType.IndexPattern, pattern);
+      LOG.log(Level.INFO, "Deletion of kibana index pattern:{0} Response {1}",
+          new Object[]{pattern, resp.toString()});
+    }catch (ElasticException ex){
+      if(ex.getCause() instanceof NotFoundClientProtocolException){
+        LOG.log(Level.INFO, "Index pattern:{0} was already deleted", pattern);
+        return;
+      }
+      throw ex;
+    }
+  }
+  
   public JSONObject updateKibana(Project project, Users user,
       KibanaClient.KibanaType type, String id, String data)
       throws ElasticException {
@@ -341,6 +359,7 @@ public class ElasticController {
    * @param regex
    * @return
    */
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public Map<String, Long> getIndices(String regex)
       throws ElasticException {
     

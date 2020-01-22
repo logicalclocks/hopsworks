@@ -346,12 +346,7 @@ public class CachedFeaturegroupController {
       }
     }
     cachedFeaturegroupDTO.setFeatures(featureDTOs);
-    String featuregroupName = cachedFeaturegroupFacade.getHiveTableName(
-      featuregroup.getCachedFeaturegroup().getHiveTableId());
-    //Remove the _version suffix
-    int versionLength = cachedFeaturegroupDTO.getVersion().toString().length();
-    featuregroupName = featuregroupName.substring(0, featuregroupName.length() - (1 + versionLength));
-    cachedFeaturegroupDTO.setName(featuregroupName);
+    cachedFeaturegroupDTO.setName(featuregroup.getName());
     List<String> hdfsStorePaths = cachedFeaturegroupFacade.getHiveTableHdfsPaths(
       featuregroup.getCachedFeaturegroup().getHiveTableId());
     cachedFeaturegroupDTO.setHdfsStorePaths(hdfsStorePaths);

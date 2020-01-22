@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -124,7 +125,7 @@ public class AgentLivenessMonitor {
   }
   
   public RemoteCommandResult start(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Starting kagent@" + host);
       RemoteCommand command = constructRemoteCommand(host, startCommand);
       return remoteCommandExecutor.execute(command);
@@ -135,7 +136,7 @@ public class AgentLivenessMonitor {
   }
   
   public Future<RemoteCommandResult> startAsync(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Submitting start kagent@" + host);
       RemoteCommand command = constructRemoteCommand(host, startCommand);
       return remoteCommandExecutor.submit(command);
@@ -146,7 +147,7 @@ public class AgentLivenessMonitor {
   }
   
   public RemoteCommandResult stop(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Stopping kagent@" + host);
       agentsHeartbeat.remove(host.getHostname());
       agentsToRestart.remove(host.getHostname());
@@ -159,7 +160,7 @@ public class AgentLivenessMonitor {
   }
   
   public Future<RemoteCommandResult> stopAsync(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Submitting stop kagent@" + host);
       agentsHeartbeat.remove(host.getHostname());
       agentsToRestart.remove(host.getHostname());
@@ -172,7 +173,7 @@ public class AgentLivenessMonitor {
   }
   
   public RemoteCommandResult restart(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Restarting kagent@" + host);
       return restartAgentInternal(host.getHostname());
     }
@@ -182,7 +183,7 @@ public class AgentLivenessMonitor {
   }
   
   public Future<RemoteCommandResult> restartAsync(Hosts host) throws ServiceException {
-    if (host.isRegistered()) {
+    if (host.getRegistered()) {
       LOGGER.log(Level.FINE, "Submitting restart kagent@" + host);
       RemoteCommand command = constructRemoteCommand(host, restartCommand);
       return remoteCommandExecutor.submit(command);
@@ -236,8 +237,8 @@ public class AgentLivenessMonitor {
       while (!Thread.currentThread().isInterrupted()) {
         try {
           String agentToRestart = agentsToRestart.take();
-          Hosts host = hostsFacade.findByHostname(agentToRestart);
-          if (host == null || !host.isRegistered()) {
+          Optional<Hosts> optionalHost = hostsFacade.findByHostname(agentToRestart);
+          if (!optionalHost.isPresent() || !optionalHost.get().getRegistered()) {
             // Agent might have been deleted
             agentsHeartbeat.remove(agentToRestart);
           } else if (agentsHeartbeat.containsKey(agentToRestart)) {

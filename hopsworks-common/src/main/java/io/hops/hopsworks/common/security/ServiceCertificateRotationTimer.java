@@ -86,7 +86,11 @@ public class ServiceCertificateRotationTimer {
   @Timeout
   public void rotate(Timer timer) {
     LOG.log(Level.FINEST, "Rotating service certificates");
-    certificatesMgmService.issueServiceKeyRotationCommand();
+    try {
+      certificatesMgmService.issueServiceKeyRotationCommand();
+    } catch (Exception e) {
+      LOG.log(Level.SEVERE, "Got an exception while rotation certificates" , e);
+    }
   }
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)

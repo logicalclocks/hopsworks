@@ -54,8 +54,12 @@ public class InvalidatedJWTCleanup {
 
   @Timeout
   public void performTimeout(Timer timer) {
-    int count = jWTController.cleanupInvalidTokens();
-    LOGGER.
-        log(Level.INFO, "{0} timer event: {1}, removed {2} tokens.", new Object[]{timer.getInfo(), new Date(), count});
+    try {
+      int count = jWTController.cleanupInvalidTokens();
+      LOGGER.log(Level.INFO, "{0} timer event: {1}, removed {2} tokens.",
+          new Object[]{timer.getInfo(), new Date(), count});
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Got an exception while cleaning up invalidated jwts", e);
+    }
   }
 }

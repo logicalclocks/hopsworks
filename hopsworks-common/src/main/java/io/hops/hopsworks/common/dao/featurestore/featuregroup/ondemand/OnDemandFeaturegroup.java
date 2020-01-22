@@ -59,9 +59,6 @@ public class OnDemandFeaturegroup implements Serializable {
   private String query;
   @Column(name = "description")
   private String description;
-  @Basic(optional = false)
-  @Column(name = "name")
-  private String name;
   @JoinColumn(name = "jdbc_connector_id", referencedColumnName = "id")
   private FeaturestoreJdbcConnector featurestoreJdbcConnector;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
@@ -85,14 +82,6 @@ public class OnDemandFeaturegroup implements Serializable {
   
   public void setDescription(String description) {
     this.description = description;
-  }
-  
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
   }
   
   public FeaturestoreJdbcConnector getFeaturestoreJdbcConnector() {
@@ -137,9 +126,6 @@ public class OnDemandFeaturegroup implements Serializable {
     if (!description.equals(that.description)) {
       return false;
     }
-    if (!name.equals(that.name)) {
-      return false;
-    }
     if (features != null && !features.equals(that.features)) return false;
     return featurestoreJdbcConnector.equals(that.featurestoreJdbcConnector);
   }
@@ -149,7 +135,6 @@ public class OnDemandFeaturegroup implements Serializable {
     int result = id.hashCode();
     result = 31 * result + query.hashCode();
     result = 31 * result + description.hashCode();
-    result = 31 * result + name.hashCode();
     result = 31 * result + featurestoreJdbcConnector.hashCode();
     result = 31 * result + (features != null ? features.hashCode() : 0);
     return result;

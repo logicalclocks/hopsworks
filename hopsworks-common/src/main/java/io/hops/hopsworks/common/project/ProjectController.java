@@ -2520,7 +2520,8 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeAnacondaEnv(Project project) throws ServiceException {
+  public void removeAnacondaEnv(Project project)
+      throws ServiceException, ElasticException {
     environmentController.removeEnvironment(project, project.getOwner());
   }
 
