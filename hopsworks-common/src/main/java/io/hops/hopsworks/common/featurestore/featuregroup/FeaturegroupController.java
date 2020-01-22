@@ -789,7 +789,13 @@ public class FeaturegroupController {
   public List<FeatureDTO> getFeatures(Featuregroup featuregroup) {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupFacade.getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
+        List<FeatureDTO> features = cachedFeaturegroupFacade
+            .getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
+        List<String> primaryKeys = cachedFeaturegroupFacade
+            .getHiveTablePrimaryKey(featuregroup.getCachedFeaturegroup().getHiveTableId());
+        features.stream().filter(f -> primaryKeys.contains(f.getName()))
+            .forEach(f -> f.setPrimary(true));
+        return features;
       case ON_DEMAND_FEATURE_GROUP:
         return new ArrayList<>();
     }

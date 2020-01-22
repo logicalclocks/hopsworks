@@ -198,7 +198,6 @@ public class FeaturegroupService {
    * @param featuregroupId id of the featuregroup
    * @return JSON representation of the featuregroup
    */
-  @Deprecated
   @GET
   @Path("/{featuregroupId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -223,10 +222,9 @@ public class FeaturegroupService {
    * @param name name of the featuregroup
    * @param version queryParam with the desired version
    * @return JSON representation of the featuregroup
-   */
+  */
   @GET
-  // Anything else that is not just number should use this endpoint
-  @Path("/{name: [a-z0-9_]+}")
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})

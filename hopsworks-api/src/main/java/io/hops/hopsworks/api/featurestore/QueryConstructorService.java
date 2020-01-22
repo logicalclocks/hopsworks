@@ -57,6 +57,9 @@ public class QueryConstructorService {
   @ApiOperation(value = "Construct the SQL query to join the requested features",
       response = String.class)
   public Response constructQuery(@Context SecurityContext sc, QueryDTO queryDto) throws FeaturestoreException {
+    if (queryDto == null) {
+      throw new IllegalArgumentException("Please submit a query to compile");
+    }
     return Response.ok(constructorController.construct(queryDto)).build();
   }
 }

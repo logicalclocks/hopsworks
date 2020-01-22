@@ -135,26 +135,41 @@ public class Join {
   }
 
   private SqlNode getCondition() {
-    if (on.size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (FeatureDTO f : on) {
-        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), f));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
+    if (on != null) {
+      return getOnCondition();
     } else {
-      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), on.get(0));
+      return getLeftRightCondition();
     }
   }
 
-  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO on) {
+  private SqlNode getOnCondition() {
+    if (on.size() > 1) {
+      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+      for (FeatureDTO f : on) {
+        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), f, f));
+      }
+      return  SqlStdOperatorTable.AND.createCall(conditionList);
+    } else {
+      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), on.get(0), on.get(0));
+    }
+  }
 
-    SqlNodeList leftHandside = new SqlNodeList(SqlParserPos.ZERO);
-    leftHandside.add(new SqlIdentifier(leftFgAs, SqlParserPos.ZERO));
-    leftHandside.add(new SqlIdentifier(on.getName(), SqlParserPos.ZERO));
+  private SqlNode getLeftRightCondition()  {
+    if (leftOn.size() > 1) {
+      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+      for (int i = 0; i < leftOn.size(); i++) {
+        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(),
+            leftOn.get(i), rightOn.get(i)));
+      }
+      return  SqlStdOperatorTable.AND.createCall(conditionList);
+    } else {
+      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), leftOn.get(0), rightOn.get(0));
+    }
+  }
 
-    SqlNodeList rightHandside = new SqlNodeList(SqlParserPos.ZERO);
-    rightHandside.add(new SqlIdentifier(rightFgAs, SqlParserPos.ZERO));
-    rightHandside.add(new SqlIdentifier(on.getName(), SqlParserPos.ZERO));
+  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO leftOn, FeatureDTO rightOn) {
+    SqlIdentifier leftHandside = new SqlIdentifier(Arrays.asList(leftFgAs, leftOn.getName()), SqlParserPos.ZERO);
+    SqlIdentifier rightHandside = new SqlIdentifier(Arrays.asList(rightFgAs, rightOn.getName()), SqlParserPos.ZERO);
 
     SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);
     equalityList.add(leftHandside);
