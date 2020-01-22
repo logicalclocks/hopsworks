@@ -297,7 +297,7 @@ public class TrainingDatasetService {
    * @throws ProjectException
    */
   @DELETE
-  @Path("/{trainingdatasetid}")
+  @Path("/{trainingdatasetid: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -340,7 +340,7 @@ public class TrainingDatasetService {
    * @throws ProjectException
    */
   @PUT
-  @Path("/{trainingdatasetid}")
+  @Path("/{trainingdatasetid: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

@@ -259,7 +259,7 @@ public class FeaturegroupService {
    * @throws HopsSecurityException
    */
   @DELETE
-  @Path("/{featuregroupId}")
+  @Path("/{featuregroupId: [0-9]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -426,7 +426,7 @@ public class FeaturegroupService {
    * @throws FeaturestoreException
    */
   @PUT
-  @Path("/{featuregroupId}")
+  @Path("/{featuregroupId: [0-9]+}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
