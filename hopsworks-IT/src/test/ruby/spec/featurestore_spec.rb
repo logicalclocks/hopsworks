@@ -773,7 +773,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["id"] == featuregroup_id).to be true
         end
 
-        it "should be able to update the metadata of an on-demand featuregroup from the featurestore" do
+        it "should be able to update the metadata (description) of an on-demand featuregroup from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector_id = get_jdbc_connector_id
@@ -782,11 +782,15 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           featuregroup_id = parsed_json["id"]
           featuregroup_version = parsed_json["version"]
-          json_result2, featuregroup_name2  = update_on_demand_featuregroup(project.id, featurestore_id, connector_id, featuregroup_id, featuregroup_version, query: nil, featuregroup_name: "testname")
+          json_result2, featuregroup_name2  = update_on_demand_featuregroup(project.id, featurestore_id,
+                                                                            connector_id, featuregroup_id,
+                                                                            featuregroup_version, query: nil,
+                                                                            featuregroup_name: featuregroup_name,
+                                                                            featuregroup_desc: "new description")
           parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
           expect(parsed_json2["version"] == featuregroup_version).to be true
-          expect(parsed_json2["name"] == "testname").to be true
+          expect(parsed_json2["description"] == "new description").to be true
         end
 
       end
@@ -1251,7 +1255,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["s3ConnectorId"] == connector_id).to be true
         end
 
-        it "should be able to update the metadata of an external training dataset from the featurestore" do
+        it "should be able to update the metadata (description) of an external training dataset from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector_id = get_s3_connector_id
@@ -1259,7 +1263,9 @@ describe "On #{ENV['OS']}" do
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           training_dataset_id = parsed_json1["id"]
-          json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id, training_dataset_id, "newname1", connector_id)
+          json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id, training_dataset_id,
+                                                                   training_dataset_name, "new description",
+                                                                   connector_id)
           parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
           expect(parsed_json2.key?("id")).to be true
@@ -1274,7 +1280,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("s3ConnectorId")).to be true
           expect(parsed_json2.key?("s3ConnectorName")).to be true
           expect(parsed_json2["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
-          expect(parsed_json2["name"] == "newname1").to be true
+          expect(parsed_json2["description"] == "new description").to be true
           expect(parsed_json2["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
         end
 
