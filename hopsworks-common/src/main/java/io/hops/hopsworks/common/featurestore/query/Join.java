@@ -17,17 +17,13 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
-import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlJoin;
-import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -108,33 +104,7 @@ public class Join {
     return rightOn;
   }
 
-  public SqlNode getJoinNode() {
-    if (rightQuery == null) {
-      // Effectively no join
-      return generateTableNode(leftQuery);
-    } else {
-      SqlNode conditionNode = getCondition();
-      return new SqlJoin(SqlParserPos.ZERO, generateTableNode(leftQuery),
-          SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
-          SqlLiteral.createSymbol(joinType, SqlParserPos.ZERO),
-          generateTableNode(rightQuery),
-          SqlLiteral.createSymbol(JoinConditionType.ON, SqlParserPos.ZERO),
-          conditionNode);
-    }
-  }
-
-  private SqlNode generateTableNode(Query query) {
-    List<String> tableIdentifierStr = new ArrayList<>();
-    tableIdentifierStr.add(query.getFeatureStore());
-    tableIdentifierStr.add(query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion());
-
-    SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
-        new SqlIdentifier(query.getAs(), SqlParserPos.ZERO)), SqlParserPos.ZERO);
-
-    return SqlStdOperatorTable.AS.createCall(asNodeList);
-  }
-
-  private SqlNode getCondition() {
+  public SqlNode getCondition() {
     if (on != null) {
       return getOnCondition();
     } else {

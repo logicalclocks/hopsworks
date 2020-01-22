@@ -23,13 +23,17 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import javax.ejb.EJB;
@@ -216,12 +220,31 @@ public class ConstructorController {
       selectList.add(new SqlIdentifier(Arrays.asList(f.getFeaturegroup(), f.getName()), SqlParserPos.ZERO));
     }
 
-    // TODO(Fabio): account for recursive
-    SqlNode joinNode = query.getJoins().get(0).getJoinNode();
+    SqlNode joinNode = null;
+    if (query.getJoins() == null || query.getJoins().isEmpty()) {
+      joinNode = generateTableNode(query);
+    } else {
+      joinNode = buildJoinNode(query, query.getJoins().size() - 1);
+    }
 
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
         null, null, null, null, null, null, null);
     return select.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+  }
+
+  private SqlNode buildJoinNode(Query query, int i) {
+    if (i < 0) {
+      // No more joins to read build the node for the query itself.
+      return generateTableNode(query);
+    } else {
+      return new SqlJoin(SqlParserPos.ZERO, buildJoinNode(query, i-1),
+          SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
+          SqlLiteral.createSymbol(query.getJoins().get(i).getJoinType(), SqlParserPos.ZERO),
+          generateTableNode(query.getJoins().get(i).getRightQuery()),
+          SqlLiteral.createSymbol(JoinConditionType.ON, SqlParserPos.ZERO),
+          query.getJoins().get(i).getCondition());
+    }
+
   }
 
   protected List<FeatureDTO> collectFeatures(Query query) {
@@ -232,5 +255,16 @@ public class ConstructorController {
       });
     }
     return features;
+  }
+
+  private SqlNode generateTableNode(Query query) {
+    List<String> tableIdentifierStr = new ArrayList<>();
+    tableIdentifierStr.add(query.getFeatureStore());
+    tableIdentifierStr.add(query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion());
+
+    SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
+        new SqlIdentifier(query.getAs(), SqlParserPos.ZERO)), SqlParserPos.ZERO);
+
+    return SqlStdOperatorTable.AS.createCall(asNodeList);
   }
 }
