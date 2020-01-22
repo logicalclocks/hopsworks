@@ -95,17 +95,6 @@ public class AnnotationHelper {
     return null;
   }
   
-//  public Users getCaller(Method method, Object[] parameters) {
-//    Parameter[] methodParameters = method.getParameters();
-//    int len = parameters != null? parameters.length : 0;
-//    for (int i=0; i < len; i++) {
-//      if (methodParameters[i].isAnnotationPresent(Caller.class)) {
-//        return getCaller(methodParameters[i], parameters[i]);
-//      }
-//    }
-//    return null;
-//  }
-  
   public Users getCaller(Method method, Object[] parameters) {
     Parameter[] methodParameters = method.getParameters();
     if (parameters != null && parameters.length > 0) {

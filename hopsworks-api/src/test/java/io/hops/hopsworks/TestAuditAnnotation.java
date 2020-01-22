@@ -147,6 +147,10 @@ public class TestAuditAnnotation {
     }
   }
   
+  //Add test for logging off if response is not of type Response
+  
+  //Add test for audit
+  
   private boolean isSensitiveParam(Annotation annotation) {
     String formParamValue = annotation instanceof FormParam ? ((FormParam) annotation).value() : null;
     String queryParamValue = annotation instanceof QueryParam ? ((QueryParam) annotation).value() : null;

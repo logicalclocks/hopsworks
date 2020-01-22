@@ -23,6 +23,7 @@
        bean-discovery-mode="all">
   <interceptors>
     <class>io.hops.hopsworks.audit.logger.LogInterceptor</class>
+    <class>io.hops.hopsworks.audit.auditor.AuditedInterceptor</class>
     <class>io.hops.hopsworks.audit.auditor.AuditedListInterceptor</class>
   </interceptors>
 </beans>
