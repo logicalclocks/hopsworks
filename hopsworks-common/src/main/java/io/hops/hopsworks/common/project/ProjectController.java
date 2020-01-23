@@ -1917,6 +1917,10 @@ public class ProjectController {
               throw new EJBException("Could not create certificates for user");
             }
 
+            String message = "You have been added to project " + project.getName() + " with a role "
+              + projectTeam.getTeamRole() + ".";
+            messageController.send(newMember, owner, "You have been added to a project.",
+              message, message, "");
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
               new Object[]{newMember.getEmail(),
                 project.getName()});
