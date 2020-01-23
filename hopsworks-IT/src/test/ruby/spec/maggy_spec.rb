@@ -14,6 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   before(:all) do
     with_valid_session
   end

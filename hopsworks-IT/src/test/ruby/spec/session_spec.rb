@@ -37,12 +37,10 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe "session" do
     before(:each) do
       reset_session
-    end
-    after :all do
-      clean_projects
     end
     describe 'login' do
       it 'should work with valid params' do

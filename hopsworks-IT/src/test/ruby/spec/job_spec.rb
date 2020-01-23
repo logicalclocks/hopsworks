@@ -14,6 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   job_spark_1 = "demo_job_1"
   job_spark_2 = "demo_job_2"
   job_spark_3 = "demo_job_3"

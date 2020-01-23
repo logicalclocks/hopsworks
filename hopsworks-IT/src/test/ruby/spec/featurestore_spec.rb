@@ -15,11 +15,9 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'featurestore' do
-    after (:all) {clean_projects}
-
     describe "list featurestores for project, get featurestore by id" do
-
       context 'with valid project and featurestore service enabled' do
         before :all do
           with_valid_project

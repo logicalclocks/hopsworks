@@ -15,17 +15,16 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after (:all) do
+    clean_all_test_projects
+    purge_all_tf_serving_instances
+  end
   describe 'inference' do
     before (:all) do
       if ENV['OS'] == "centos"
         skip "These tests do not run on centos"
       end
     end
-
-    after (:all) do
-      purge_all_tf_serving_instances
-    end
-
     let(:test_data) {[[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,

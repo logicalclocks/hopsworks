@@ -40,16 +40,15 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
+  after (:all) do
+    clean_all_test_projects
+    purge_all_tf_serving_instances
+  end
   describe 'tfserving' do
     before (:all) do
       if ENV['OS'] == "centos"
         skip "These tests do not run on centos"
       end
-    end
-
-    after (:all) do
-      clean_projects
-      purge_all_tf_serving_instances
     end
 
     describe "#create" do

@@ -17,13 +17,12 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
+  after (:all) do
+    clean_all_test_projects
+    purge_all_sklearn_serving_instances
+  end
   describe 'sklearn_serving' do
     before (:all) do
-    end
-
-    after (:all) do
-      clean_projects
-      purge_all_sklearn_serving_instances
     end
 
     describe "#create" do

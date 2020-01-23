@@ -49,12 +49,14 @@ module SessionHelper
     if response.code != 200
       reset_and_create_session
     end
+    pp "session:#{@user[:email]}" if defined?(@debugOpt) && @debugOpt == true
   end
   
   def with_admin_session
-    @user = create_user_without_role({})
-    create_admin_role(@user)
-    create_session(@user.email, "Pass123")
+    user = create_user_without_role({})
+    create_admin_role(user)
+    create_session(user.email, "Pass123")
+    @user = user
   end
 
   def with_admin_session_return_user
@@ -135,13 +137,19 @@ module SessionHelper
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
   end
 
+  def login_user(email, password)
+    reset_session
+    response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
+    return response, headers
+  end
+
   def raw_create_session(email, password)
     reset_session
     response = post "#{ENV['HOPSWORKS_API']}/auth/login", URI.encode_www_form({ email: email, password: password}), {content_type: 'application/x-www-form-urlencoded'}
     if !headers["set_cookie"].nil? && !headers["set_cookie"][1].nil?
       cookie = headers["set_cookie"][1].split(';')[0].split('=')
       @cookies = {"SESSIONID"=> json_body[:sessionID], cookie[0] => cookie[1]}
-    else 
+    else
       @cookies = {"SESSIONID"=> json_body[:sessionID]}
     end
     @token = ''

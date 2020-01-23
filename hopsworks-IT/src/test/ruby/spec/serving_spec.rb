@@ -17,15 +17,12 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
+  after (:all) do
+    clean_all_test_projects
+    purge_all_tf_serving_instances
+  end
   describe 'serving' do
-
-    after (:all) do
-      clean_projects
-      purge_all_tf_serving_instances
-    end
-
     describe "#create" do
-
       context 'without authentication' do
         before :all do
           with_valid_project

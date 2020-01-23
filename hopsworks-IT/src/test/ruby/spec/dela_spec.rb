@@ -15,6 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'Dela' do
 
     before :all do

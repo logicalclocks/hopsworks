@@ -39,9 +39,13 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  before :all do
+    @debugOpt = false
+  end
+
+  after(:all) {clean_all_test_projects}
   describe 'dataset' do
     before(:all) { setVar("download_allowed", "true") }
-    after(:all) { clean_projects }
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -844,7 +848,9 @@ describe "On #{ENV['OS']}" do
           expect_status(401)
         end
         it 'should fail to download a file if variable download_allowed is false' do
+          user = @user[:email]
           setVar("download_allowed", 'false')
+          create_session(user, "Pass123")
           get_download_token(@project, "Logs/README.md", "?type=DATASET")
           expect_status(403)
           #set var back to true
