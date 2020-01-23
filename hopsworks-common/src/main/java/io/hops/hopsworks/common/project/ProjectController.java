@@ -1917,6 +1917,10 @@ public class ProjectController {
               throw new EJBException("Could not create certificates for user");
             }
 
+            String message = "You have been added to project " + project.getName() + " with a role "
+              + projectTeam.getTeamRole() + ".";
+            messageController.send(newMember, owner, "You have been added to a project.",
+              message, message, "");
             LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
               new Object[]{newMember.getEmail(),
                 project.getName()});
@@ -2596,8 +2600,9 @@ public class ProjectController {
       return new CertsDTO("jks", accessCredentials.getkStore(), accessCredentials.gettStore());
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "projectId: " + projectId,
-          ex.getMessage(), ex);
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "Failed to " +
+        "download project-user certificates for project: " + project.getName() + " (projectId: " + projectId +
+        "), user: " + user.getUsername(), ex.getMessage(), ex);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
