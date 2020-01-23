@@ -165,21 +165,6 @@
     </properties>
   </persistence-unit>
 
-  <persistence-unit name="airflowPU" transaction-type="JTA">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <jta-data-source>jdbc/airflow</jta-data-source>
-
-    <class>io.hops.hopsworks.common.dao.airflow.AirflowDag</class>
-
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
-    <shared-cache-mode>NONE</shared-cache-mode>
-    <validation-mode>NONE</validation-mode>
-    <properties>
-      <property name="eclipselink.target-database" value="MYSQL"/>
-      <property name="eclipselink.read-only" value="true"/>
-    </properties>
-  </persistence-unit>
-
   <persistence-unit name="featurestorePU" transaction-type="JTA">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <jta-data-source>jdbc/featurestore</jta-data-source>
