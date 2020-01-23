@@ -633,11 +633,31 @@ describe "On #{ENV['OS']}" do
           create_dir(@project, ds3name, "")
           expect_status(201)
 
+          ds4name = ds1name + "/test%20Dir"
+          create_dir(@project, ds4name, "")
+          expect_status(201)
+
+          ds5name = ds4name + "/sub%20Dir"
+          create_dir(@project, ds5name, "")
+          expect_status(201)
+
           get_dataset_stat(@project, ds1name, "&type=DATASET")
           ds = json_body
           expect(ds).to be_present
 
           get_dataset_stat(@project, ds2name, "&type=DATASET")
+          ds = json_body
+          expect(ds).to be_present
+
+          get_dataset_stat(@project, ds3name, "&type=DATASET")
+          ds = json_body
+          expect(ds).to be_present
+
+          get_dataset_stat(@project, ds4name, "&type=DATASET")
+          ds = json_body
+          expect(ds).to be_present
+
+          get_dataset_stat(@project, ds5name, "&type=DATASET")
           ds = json_body
           expect(ds).to be_present
         end
@@ -663,6 +683,32 @@ describe "On #{ENV['OS']}" do
           wait_for do
             get_datasets_in_path(@project, @dataset[:inode_name], "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "testDir" }
+            !ds.nil?
+          end
+        end
+
+        it 'zip directory with spaces' do
+          zip_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir", "&type=DATASET")
+          expect_status(204)
+
+          wait_for do
+            get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir.zip" }
+            !ds.nil?
+          end
+        end
+
+        it 'unzip directory with spaces' do
+
+          delete_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir", "?type=DATASET")
+          expect_status(204)
+
+          unzip_dataset(@project, "#{@dataset[:inode_name]}/test%20Dir/sub%20Dir.zip", "&type=DATASET")
+          expect_status(204)
+
+          wait_for do
+            get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir" }
             !ds.nil?
           end
         end

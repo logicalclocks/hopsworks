@@ -130,7 +130,7 @@
                           <button type="button" class="btn btn-default fa fa-camera" title="Preview"
                                   id="toolbar-preview"
                                   ng-click="datasetsCtrl.filePreview(datasetsCtrl.selectedFiles[datasetsCtrl.selected], true, false)"></button>
-                          <button type="button" class="btn btn-default fa fa-file-archive-o" title="Unzip"
+                          <button type="button" class="btn btn-default fa fa-file-archive-o" title="Extract"
                                   ng-hide="datasetsCtrl.isZippedfile() === false" id="toolbar-unzip"
                                   ng-click="datasetsCtrl.unzip(datasetsCtrl.selectedFiles[datasetsCtrl.selected]);
                                   datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
@@ -141,8 +141,8 @@
                           </button>
                         </div>
                         <div class="btn-group" role="group" aria-label="Fourth group"
-                             ng-show="datasetsCtrl.isSelectedFiles() === 1 && datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.dir">
-                          <button type="button" class="btn btn-default fa fa-file-archive-o" title="Zip"
+                             ng-show="datasetsCtrl.isSelectedFiles() === 1 && datasetsCtrl.isZippedfile() === false">
+                          <button type="button" class="btn btn-default fa fa-file-archive-o" title="Compress"
                                   id="toolbar-zip"
                                   ng-click="datasetsCtrl.zip(datasetsCtrl.selectedFiles[datasetsCtrl.selected]);
                                   datasetsCtrl.select(-1, datasetsCtrl.selectedFiles[datasetsCtrl.selected], undefined);"></button>
@@ -283,10 +283,10 @@
                                data-toggle="uib-tooltip" title="Decompress this archive file using the staging directory
                                on the scratch disk of the webserver.">
                               <span><i class="fa fa-file-archive-o" ></i>
-                                Unzip archive here</span>
+                                Extract</span>
                             </a>
                           </li>
-                          <li ng-show="datasetsCtrl.isSelectedFiles() <= 1 && file.attributes.dir">
+                          <li ng-show="datasetsCtrl.isSelectedFiles() <= 1 && datasetsCtrl.isZippedfile() === false">
                             <a class="pointer"
                                role="menuitem"
                                tabindex="10"
@@ -294,7 +294,7 @@
                                data-toggle="uib-tooltip"
                                title="Compress this directory using the staging directory on the scratch disk of the webserver.">
                               <span><i class="fa fa-file-archive-o" ></i>
-                                Zip directory here</span>
+                                Compress</span>
                             </a>
                           </li>
                           <li ng-show="datasetsCtrl.isSelectedFiles() <= 1" ng-hide="file.attributes.dir">
@@ -468,7 +468,7 @@
                           </tr>
                           <tr style="background-color: #fafafa"
                               ng-if="(datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState !== 'NONE') || (datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.underConstruction && !datasetsCtrl.working) || (datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected))">
-                            <td style="color:grey;">Zip/Unzip state</td>
+                            <td style="color:grey;">Compress/Extract state</td>
                             <td>
                               <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'SUCCESS'"
                                  title="File has been successfully unzipped/decompressed."
@@ -480,29 +480,23 @@
                               </i>
                               <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'ZIPPING'"
                                  title="Directory is being zipped."
-                                 style="color: darkgreen; margin-top:3px;"> Zipping
+                                 style="color: darkgreen; margin-top:3px;"> Compressing
                               </i>
                               <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'UNZIPPING'"
                                  title="File is being unzipped."
-                                 style="color: darkgreen; margin-top:3px;"> Unzipping
+                                 style="color: darkgreen; margin-top:3px;"> Extracting
                               </i>
                               <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'UPLOADING'"
                                  title="Zipped file or unzipped directory being uploaded to HDFS."
                                  style="color: darkgreen; margin-top:3px;"> Uploading
                               </i>
+                              <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'CHOWNING'"
+                                 title="Zipped file or unzipped directory on HDFS is being set to correct user and group."
+                                 style="color: darkgreen; margin-top:3px;"> Chowning
+                              </i>
                               <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].zipState === 'FAILED'"
                                  title="Error when zipping/unzipping."
                                  style="color: darkred; margin-top:3px;"> Failed
-                              </i>
-                              <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.underConstruction && !datasetsCtrl.working"
-                                 title="File under construction"
-                                 style="color: lightgrey; margin-top:3px;"
-                                 class="glyphicon glyphicon-transfer">
-                              </i>
-                              <i ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.dir && datasetsCtrl.working && ($index === datasetsCtrl.selected)"
-                                 title="Fetching files in this dir"
-                                 style="color: lightgrey; margin-top:3px;"
-                                 class="fa fa-spinner fa-spin pull-right">
                               </i>
                             </td>
                           </tr>
