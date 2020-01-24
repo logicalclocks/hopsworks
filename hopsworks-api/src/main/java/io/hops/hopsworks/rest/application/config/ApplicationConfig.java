@@ -119,7 +119,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.maggy.MaggyService.class);
 
     //provenance
-    register(io.hops.hopsworks.api.provenance.ProvenanceResource.class);
+    register(io.hops.hopsworks.api.provenance.ProjectProvenanceResource.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

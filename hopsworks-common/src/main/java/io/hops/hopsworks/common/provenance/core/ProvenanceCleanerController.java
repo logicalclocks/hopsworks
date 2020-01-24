@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.provenance;
+package io.hops.hopsworks.common.provenance.core;
 
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -33,21 +33,17 @@ import org.elasticsearch.rest.RestStatus;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.Timer;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Singleton
+@Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class ProvenanceCleaner {
-  private final static Logger LOGGER = Logger.getLogger(ProvenanceCleaner.class.getName());
+public class ProvenanceCleanerController {
+  private final static Logger LOGGER = Logger.getLogger(ProvenanceCleanerController.class.getName());
   
-  @EJB
-  private Settings settings;
   @EJB
   private ProvElasticController client;
   @EJB
@@ -55,35 +51,14 @@ public class ProvenanceCleaner {
   @EJB
   private InodeFacade inodeFacade;
   
-  private String lastIndexChecked = "";
-  
-  // Run once every four hours
-  @Schedule(persistent = false, hour = "*/4")
-  public void execute(Timer timer) {
-    LOGGER.log(Level.INFO, "Running ProvenanceCleaner.");
-    try {
-      int cleanupSize = settings.getProvCleanupSize();
-      int archiveSize = settings.getProvArchiveSize();
-      if(archiveSize == 0) {
-        return;
-      }
-      Pair<Integer, String> round = archiveRound(lastIndexChecked, cleanupSize);
-      LOGGER.log(Level.INFO, "cleanup round - idx cleaned:{0} from:{1} to:{2}",
-        new Object[]{round.getValue0(), lastIndexChecked, round.getValue1()});
-      lastIndexChecked = round.getValue1();
-    } catch (Exception e) {
-      LOGGER.log(Level.INFO, "cleanup round was not successful - error", e);
-    }
-  }
-  
-  private Pair<Integer, String> archiveRound(String nextToCheck, Integer limitIdx)
-    throws ProvenanceException, ElasticException {
+  public Pair<Integer, String> indexCleanupRound(String nextToCheck, Integer limit)
+    throws ProvenanceException {
     String[] indices = getAllIndices();
     
     int cleaned = 0;
     String nextToCheckAux = "";
     for(String indexName : indices) {
-      if(cleaned > limitIdx) {
+      if(cleaned > limit) {
         nextToCheckAux = indexName;
         break;
       }
@@ -92,7 +67,7 @@ public class ProvenanceCleaner {
       }
       Project project = getProject(indexName);
       if(project == null) {
-        LOGGER.log(Level.INFO, "deleting prov index:{0} with no corresponding project", indexName);
+        LOGGER.log(Level.FINE, "deleting prov index:{0} with no corresponding project", indexName);
         deleteProvIndex(indexName);
         cleaned++;
         continue;
@@ -118,15 +93,20 @@ public class ProvenanceCleaner {
     Project project = projectFacade.findByInodeId(inode.getInodePK().getParentId(), inode.getInodePK().getName());
     return project;
   }
-
-  private String[] getAllIndices() throws ElasticException {
-    String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
-    GetIndexRequest request = new GetIndexRequest(indexRegex);
-    GetIndexResponse response = client.mngIndexGet(request);
-    return response.getIndices();
+  
+  private String[] getAllIndices() throws ProvenanceException {
+    try {
+      String indexRegex = "*" + Settings.PROV_FILE_INDEX_SUFFIX;
+      GetIndexRequest request = new GetIndexRequest(indexRegex);
+      GetIndexResponse response = client.mngIndexGet(request);
+      return response.getIndices();
+    } catch(ElasticException e) {
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
+        "error querying elastic", e.getMessage(), e);
+    }
   }
   
-  private void deleteProvIndex(String indexName) throws ElasticException {
+  private void deleteProvIndex(String indexName) {
     DeleteIndexRequest request = new DeleteIndexRequest(indexName);
     try {
       AcknowledgedResponse response = client.mngIndexDelete(request);

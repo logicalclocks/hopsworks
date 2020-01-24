@@ -55,7 +55,7 @@ import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
-import io.hops.hopsworks.api.provenance.ProvenanceResource;
+import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.models.ModelsResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
@@ -232,7 +232,7 @@ public class ProjectService {
   @Inject
   private XAttrsResource xattrs;
   @Inject
-  private ProvenanceResource provenance;
+  private ProjectProvenanceResource provenance;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
 
@@ -920,7 +920,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/provenance")
-  public ProvenanceResource provenance(@PathParam("projectId") Integer id) {
+  public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);
     return provenance;
   }
