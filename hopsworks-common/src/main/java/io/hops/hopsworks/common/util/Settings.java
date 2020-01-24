@@ -3714,15 +3714,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PROVENANCE_ARCHIVE_SIZE = "provenance_archive_size";
   private static final String VARIABLE_PROVENANCE_ARCHIVE_DELAY = "provenance_archive_delay";
   private static final String VARIABLE_PROVENANCE_CLEANUP_SIZE = "provenance_cleanup_size";
+  private static final String VARIABLE_PROVENANCE_CLEANER_PERIOD = "provenance_cleaner_period";
   
   public static final String PROV_FILE_INDEX_SUFFIX = "__file_prov";
   private Provenance.Type PROVENANCE_TYPE = Provenance.Type.MIN;
   private String PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
   private Integer PROVENANCE_CLEANUP_SIZE = 5;
   private Integer PROVENANCE_ARCHIVE_SIZE = 100;
+  private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
   private Integer PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE = 50;
-  
   
   public String getProvFileIndex(Long projectIId) {
     return projectIId.toString() + Settings.PROV_FILE_INDEX_SUFFIX;
@@ -3740,6 +3741,7 @@ public class Settings implements Serializable {
     PROVENANCE_ARCHIVE_SIZE = setIntVar(VARIABLE_PROVENANCE_ARCHIVE_SIZE, PROVENANCE_ARCHIVE_SIZE);
     PROVENANCE_ARCHIVE_DELAY = setLongVar(VARIABLE_PROVENANCE_ARCHIVE_DELAY, PROVENANCE_ARCHIVE_DELAY);
     PROVENANCE_CLEANUP_SIZE = setIntVar(VARIABLE_PROVENANCE_CLEANUP_SIZE, PROVENANCE_CLEANUP_SIZE);
+    PROVENANCE_CLEANER_PERIOD = setLongVar(VARIABLE_PROVENANCE_CLEANER_PERIOD, PROVENANCE_CLEANER_PERIOD);
   }
   
   public synchronized Provenance.Type getProvType() {
@@ -3779,6 +3781,18 @@ public class Settings implements Serializable {
   public synchronized Integer getProvElasticArchivalPageSize() {
     checkCache();
     return PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE;
+  }
+  
+  public synchronized Long getProvCleanerPeriod() {
+    checkCache();
+    return PROVENANCE_CLEANER_PERIOD;
+  }
+  
+  public synchronized void setProvCleanerPeriod(Long period) {
+    if(!PROVENANCE_CLEANER_PERIOD.equals(period)) {
+      em.merge(new Variables(VARIABLE_PROVENANCE_CLEANER_PERIOD, period.toString()));
+      PROVENANCE_CLEANER_PERIOD = period;
+    }
   }
   //------------------------------ END PROVENANCE --------------------------------------------//
 }

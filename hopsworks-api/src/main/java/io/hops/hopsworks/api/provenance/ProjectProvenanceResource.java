@@ -56,9 +56,9 @@ import javax.ws.rs.core.SecurityContext;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@Api(value = "Provenance Service", description = "Provenance Service")
-public class ProvenanceResource {
-  private static final Logger logger = Logger.getLogger(ProvenanceResource.class.getName());
+@Api(value = "Project Provenance Service", description = "Project Provenance Service")
+public class ProjectProvenanceResource {
+  private static final Logger logger = Logger.getLogger(ProjectProvenanceResource.class.getName());
   
   @EJB
   private ProjectFacade projectFacade;

@@ -18,11 +18,11 @@ require 'pp'
 
 describe "On #{ENV['OS']}" do
   before :all do
-    prov_wait_for_epipe
     @old_provenance_type, @old_provenance_archive_size = setup_cluster_prov("MIN", "0")
     $stdout.sync = true
     with_valid_session
-    pp "user email: #{@user["email"]}"
+    @email = @user["email"]
+    pp "user email: #{@email}"
     @debugOpt = false
     @project1_name = "prov_proj_#{short_random_id}"
     @project2_name = "prov_proj_#{short_random_id}"
@@ -63,6 +63,8 @@ describe "On #{ENV['OS']}" do
   end
 
   after :all do
+    prov_wait_for_epipe
+    project_index_cleanup(@email)
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)
   end
 
@@ -73,8 +75,17 @@ describe "On #{ENV['OS']}" do
     json4 = JSON.parse(json3)
   end
 
+  describe 'test provenance auxiliary mechanisms' do
+    it 'index cleaning' do
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
+    end
+  end
+
   describe 'provenance state - 2 projects' do
     before :all do
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
       # pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
       # pp "create project: #{@project2_name}"
@@ -87,6 +98,9 @@ describe "On #{ENV['OS']}" do
       @project1 = nil
       delete_project(@project2)
       @project2 = nil
+
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
     end
 
     describe 'experiments' do
@@ -402,6 +416,8 @@ describe "On #{ENV['OS']}" do
 
   describe 'provenance state - 1 project' do
     before :all do
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
     #pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
     end
@@ -410,6 +426,8 @@ describe "On #{ENV['OS']}" do
     #pp "delete projects"
       delete_project(@project1)
       @project1 = nil
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
     end
 
     describe 'experiments' do
@@ -1139,6 +1157,8 @@ describe "On #{ENV['OS']}" do
 
   describe 'provenance state - new project for each test' do
     before :all do
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
     #pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
     end
@@ -1147,6 +1167,8 @@ describe "On #{ENV['OS']}" do
     #pp "delete projects"
       delete_project(@project1)
       @project1 = nil
+      prov_wait_for_epipe
+      project_index_cleanup(@email)
     end
 
     describe 'group' do
@@ -1238,6 +1260,33 @@ describe "On #{ENV['OS']}" do
         result = get "#{query}"
         expect_status(200)
       end
+    end
+  end
+
+  describe 'provenance state - cleanup' do
+    it 'one project cleanup' do
+      prov_wait_for_epipe
+      project1 = create_project_by_name(@project1_name)
+      project2 = create_project_by_name(@project2_name)
+      delete_project(project1)
+      delete_project(project2)
+      reset_session
+      with_admin_session
+      query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=2"
+      #pp "#{query}"
+      result = post "#{query}"
+      expect_status(200)
+      parsed_result = JSON.parse(result)
+      expect(parsed_result["result"]["value"]).to eq 2
+
+      query = "#{ENV['HOPSWORKS_TESTING']}/test/provenance/cleanup?size=2"
+      #pp "#{query}"
+      result = post "#{query}"
+      expect_status(200)
+      parsed_result = JSON.parse(result)
+      expect(parsed_result["result"]["value"]).to eq 0
+      reset_session
+      create_session(@email, "Pass123")
     end
   end
 end
