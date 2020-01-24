@@ -148,7 +148,7 @@ public class TensorBoardResource {
       WebTarget target = client.target(tbUrl);
       try {
         Thread.currentThread().sleep(1500);
-        response = target.request().get();
+        response = target.request().head();
         if(response.getStatus() == Response.Status.OK.getStatusCode()) {
           currentConsecutiveOK += 1;
           if(currentConsecutiveOK == maxConsecutiveOK) {

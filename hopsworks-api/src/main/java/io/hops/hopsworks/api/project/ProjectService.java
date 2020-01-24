@@ -55,12 +55,11 @@ import io.hops.hopsworks.api.kafka.KafkaResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.XAttrsResource;
-import io.hops.hopsworks.api.provenance.ProvenanceResource;
+import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
 import io.hops.hopsworks.api.models.ModelsResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
-import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
@@ -182,8 +181,6 @@ public class ProjectService {
   @Inject
   private ModelsResource models;
   @Inject
-  private LocalFsService localFs;
-  @Inject
   private JobsResource jobs;
   @Inject
   private PythonResource pythonResource;
@@ -226,7 +223,7 @@ public class ProjectService {
   @Inject
   private XAttrsResource xattrs;
   @Inject
-  private ProvenanceResource provenance;
+  private ProjectProvenanceResource provenance;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
 
@@ -667,12 +664,6 @@ public class ProjectService {
     return this.datasetResource;
   }
 
-  @Path("{projectId}/localfs")
-  public LocalFsService localFs(@PathParam("projectId") Integer id) {
-    this.localFs.setProjectId(id);
-    return this.localFs;
-  }
-
   @Path("{projectId}/jobs")
   public JobsResource jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
@@ -775,6 +766,17 @@ public class ProjectService {
     Users user = jWTHelper.getUserPrincipal(sc);
     AccessCredentialsDTO certsDTO = projectController.credentials(id, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
+  }
+
+  @GET
+  @Path("{projectId}/client")
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
+      @Context SecurityContext sc) throws ProjectException, DatasetException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
   }
 
   @Path("{projectId}/kafka")
@@ -883,7 +885,7 @@ public class ProjectService {
   }
 
   @Path("{projectId}/provenance")
-  public ProvenanceResource provenance(@PathParam("projectId") Integer id) {
+  public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);
     return provenance;
   }

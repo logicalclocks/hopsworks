@@ -180,8 +180,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FLINK_USER = "flink_user";
   private static final String VARIABLE_NDB_DIR = "ndb_dir";
   private static final String VARIABLE_MYSQL_DIR = "mysql_dir";
+  private static final String VARIABLE_MYSQL_USER = "mysql_user";
   private static final String VARIABLE_HADOOP_DIR = "hadoop_dir";
   private static final String VARIABLE_HOPSWORKS_DIR = "hopsworks_dir";
+  private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
@@ -544,10 +546,11 @@ public class Settings implements Serializable {
       JUPYTER_DIR = setDirVar(VARIABLE_JUPYTER_DIR, JUPYTER_DIR);
       JUPYTER_WS_PING_INTERVAL_MS = setMillisecondVar(VARIABLE_JUPYTER_WS_PING_INTERVAL, JUPYTER_WS_PING_INTERVAL_MS);
       MYSQL_DIR = setDirVar(VARIABLE_MYSQL_DIR, MYSQL_DIR);
+      MYSQL_USER = setStrVar(VARIABLE_MYSQL_USER, MYSQL_USER);
       HADOOP_DIR = setDirVar(VARIABLE_HADOOP_DIR, HADOOP_DIR);
-      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR,
-          HOPSWORKS_INSTALL_DIR);
+      HOPSWORKS_INSTALL_DIR = setDirVar(VARIABLE_HOPSWORKS_DIR, HOPSWORKS_INSTALL_DIR);
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
+      SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
@@ -990,19 +993,24 @@ public class Settings implements Serializable {
   public String getFlinkConfFile() {
     return getFlinkConfDir() + File.separator + FLINK_CONF_FILE;
   }
-  private String MYSQL_DIR = "/usr/local/mysql";
 
+  private String MYSQL_DIR = "/usr/local/mysql";
   public synchronized String getMySqlDir() {
     checkCache();
     return MYSQL_DIR;
   }
-  private String NDB_DIR = "/var/lib/mysql-cluster";
 
+  private String MYSQL_USER = "mysql";
+  public synchronized String getMysqlUser() {
+    checkCache();
+    return MYSQL_USER;
+  }
+
+  private String NDB_DIR = "/var/lib/mysql-cluster";
   public synchronized String getNdbDir() {
     checkCache();
     return NDB_DIR;
   }
-
 
   private String AIRFLOW_DIR = "/srv/hops/airflow";
   public synchronized String getAirflowDir() {
@@ -1015,7 +1023,6 @@ public class Settings implements Serializable {
     checkCache();
     return AIRFLOW_USER;
   }
-
 
   private String HADOOP_DIR = "/srv/hops/hadoop";
 
@@ -1129,6 +1136,12 @@ public class Settings implements Serializable {
   public synchronized String getHopsworksDomainDir() {
     checkCache();
     return HOPSWORKS_INSTALL_DIR;
+  }
+
+  private String SUDOERS_DIR = "/srv/hops/sbin";
+  public synchronized String getSudoersDir() {
+    checkCache();
+    return SUDOERS_DIR;
   }
 
   //User under which yarn is run
@@ -1403,8 +1416,8 @@ public class Settings implements Serializable {
    */
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
-  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
-      + File.separator;
+  public static final String DIR_META_TEMPLATES = Path.SEPARATOR + "user" + Path.SEPARATOR + "metadata"
+    + Path.SEPARATOR + "uploads" + Path.SEPARATOR;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
   private static String DEFAULT_RESERVED_PROJECT_NAMES = "python27,python36,python37,python38,python39,hops-system," +
@@ -2757,9 +2770,7 @@ public class Settings implements Serializable {
   }
 
   public synchronized String getHopsSiteCaScript() {
-    return getHopsworksDomainDir()
-        + File.separator + "bin"
-        + File.separator + "ca-keystore.sh";
+    return getSudoersDir() + File.separator + "ca-keystore.sh";
   }
 
   public synchronized String getHopsSiteCert() {
@@ -3743,15 +3754,16 @@ public class Settings implements Serializable {
   private static final String VARIABLE_PROVENANCE_ARCHIVE_SIZE = "provenance_archive_size";
   private static final String VARIABLE_PROVENANCE_ARCHIVE_DELAY = "provenance_archive_delay";
   private static final String VARIABLE_PROVENANCE_CLEANUP_SIZE = "provenance_cleanup_size";
+  private static final String VARIABLE_PROVENANCE_CLEANER_PERIOD = "provenance_cleaner_period";
   
   public static final String PROV_FILE_INDEX_SUFFIX = "__file_prov";
   private Provenance.Type PROVENANCE_TYPE = Provenance.Type.MIN;
   private String PROVENANCE_TYPE_S = PROVENANCE_TYPE.name();
   private Integer PROVENANCE_CLEANUP_SIZE = 5;
   private Integer PROVENANCE_ARCHIVE_SIZE = 100;
+  private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
   private Integer PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE = 50;
-  
   
   public String getProvFileIndex(Long projectIId) {
     return projectIId.toString() + Settings.PROV_FILE_INDEX_SUFFIX;
@@ -3769,6 +3781,7 @@ public class Settings implements Serializable {
     PROVENANCE_ARCHIVE_SIZE = setIntVar(VARIABLE_PROVENANCE_ARCHIVE_SIZE, PROVENANCE_ARCHIVE_SIZE);
     PROVENANCE_ARCHIVE_DELAY = setLongVar(VARIABLE_PROVENANCE_ARCHIVE_DELAY, PROVENANCE_ARCHIVE_DELAY);
     PROVENANCE_CLEANUP_SIZE = setIntVar(VARIABLE_PROVENANCE_CLEANUP_SIZE, PROVENANCE_CLEANUP_SIZE);
+    PROVENANCE_CLEANER_PERIOD = setLongVar(VARIABLE_PROVENANCE_CLEANER_PERIOD, PROVENANCE_CLEANER_PERIOD);
   }
   
   public synchronized Provenance.Type getProvType() {
@@ -3808,6 +3821,18 @@ public class Settings implements Serializable {
   public synchronized Integer getProvElasticArchivalPageSize() {
     checkCache();
     return PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE;
+  }
+  
+  public synchronized Long getProvCleanerPeriod() {
+    checkCache();
+    return PROVENANCE_CLEANER_PERIOD;
+  }
+  
+  public synchronized void setProvCleanerPeriod(Long period) {
+    if(!PROVENANCE_CLEANER_PERIOD.equals(period)) {
+      em.merge(new Variables(VARIABLE_PROVENANCE_CLEANER_PERIOD, period.toString()));
+      PROVENANCE_CLEANER_PERIOD = period;
+    }
   }
   //------------------------------ END PROVENANCE --------------------------------------------//
 }

@@ -101,6 +101,7 @@ public class AgentController {
             Level.FINE, "ZFS key could not be registered with ", "Host " + host + " in Hopsworks");
   }
 
+
   public String register(String hostId, String password, String zfsKey) throws
           io.hops.hopsworks.exceptions.ServiceException {
     Hosts host = hostsController.findByHostname(hostId);
@@ -122,7 +123,6 @@ public class AgentController {
     }
 
     hostsFacade.update(host);
-    return settings.getHadoopVersionedDir();
   }
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {

@@ -44,9 +44,9 @@
 angular.module('hopsWorksApp')
         .controller('JobUICtrl', ['$scope', '$timeout', 'growl',
         'ProjectService', 'JobService', '$interval', 'StorageService',
-        'ElasticService', '$routeParams', '$route', '$sce', '$window',
+        'ElasticService', 'TensorBoardService', '$routeParams', '$route', '$sce', '$window',
           function ($scope, $timeout, growl, ProjectService, JobService, $interval, StorageService,
-                  ElasticService, $routeParams, $route, $sce, $window) {
+                  ElasticService, TensorBoardService, $routeParams, $route, $sce, $window) {
 
             var self = this;
             self.job;
@@ -352,6 +352,25 @@ angular.module('hopsWorksApp')
             self.openUiInNewWindow = function () {
               $window.open(self.ui, '_blank');
             };
+
+            self.getTensorBoardUrls = function () {
+                JobService.getTensorBoardUrls(self.projectId, self.appId).then(
+                        function (success) {
+                          self.tbUrls = success.data.slice(0,19);
+                          var activeTensorBoards = [];
+                          for (var i = 0; i < self.tbUrls.length; i++) {
+                            TensorBoardService.ping(self.appId + "/" + self.tbUrls[i].url + "/").then(
+                                    function (success) {
+                                      activeTensorBoards.push(self.tbUrls[i]);
+                                    }, function (error) {
+                            });
+                          }
+                          self.tbUrls = activeTensorBoards;
+                        }, function (error) {
+                });
+            }
+
+            self.getTensorBoardUrls();
             
             self.backToHome = function () {
               if (self.jobName !== undefined && self.jobName !== null && self.jobName !== "") {
@@ -374,22 +393,8 @@ angular.module('hopsWorksApp')
               } else if (ifram !== null) {
                 ifram.contentWindow.location.reload();
               }
-              getTensorBoardUrls();
+              self.getTensorBoardUrls();
             };
-
-            var getTensorBoardUrls = function () {
-              if (self.appId) {
-              JobService.getTensorBoardUrls(self.projectId, self.appId).then(
-                      function (success) {
-                        self.tbUrls = success.data;
-                      }, function (error) {
-              });
-              }
-            };
-
-            if(self.isLivy) {
-              getTensorBoardUrls();
-            }
 
             angular.module('hopsWorksApp').directive('bindHtmlUnsafe', function ($parse, $compile) {
               return function ($scope, $element, $attrs) {
@@ -406,4 +411,14 @@ angular.module('hopsWorksApp')
               };
             });
 
+            var startTensorBoardPoller = function() {
+                self.tensorboardPoller = $interval(function() {
+                    self.getTensorBoardUrls();
+                }, 20000);
+            };
+            startTensorBoardPoller();
+
+            $scope.$on('$destroy', function () {
+              $interval.cancel(self.tensorboardPoller);
+            });
           }]);

@@ -181,8 +181,7 @@ public class OpensslOperations {
     String opensslConfFile = pki.getCAConfPath(caType).toString();
     String effectiveExtension = pki.getEffectiveExtensions(caType);
 
-    String signScript = Paths.get(CAConf.getString(CAConfKeys.HOPSWORKS_INSTALL_DIR),
-        "bin", "global-ca-sign-csr.sh").toString();
+    String signScript = Paths.get(CAConf.getString(CAConfKeys.SUDOERS_DIR), "global-ca-sign-csr.sh").toString();
     String fileName;
     try {
       String subjectStr = getSubjectFromCSR(csrStr);

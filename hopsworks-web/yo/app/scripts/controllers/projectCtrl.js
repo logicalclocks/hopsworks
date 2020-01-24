@@ -482,10 +482,6 @@ angular.module('hopsWorksApp')
               return showService("Ssh");
             };
 
-            self.showCharon = function () {
-              return showService("Charon");
-            };
-
             self.showKafka = function () {
               return showService("Kafka");
             };

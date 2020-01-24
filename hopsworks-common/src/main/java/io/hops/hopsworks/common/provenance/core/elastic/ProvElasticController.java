@@ -55,7 +55,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class ProvElasticController {
   private static final Logger LOG = Logger.getLogger(ProvElasticController.class.getName());
   
@@ -64,7 +64,6 @@ public class ProvElasticController {
   @EJB
   private ElasticClient client;
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public GetIndexResponse mngIndexGet(GetIndexRequest request) throws ElasticException {
     GetIndexResponse response;
     try {

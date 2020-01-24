@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Stateless
@@ -99,37 +98,34 @@ public class TensorBoardController {
       cleanup(tb);
     }
 
-    try {
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
-      String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
-      String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
+    String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
+    String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
 
-      tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, tensorBoardLogdir,
-          tfLdLibraryPath,
-              tensorBoardDirectory);
-      Date lastAccessed = new Date();
-      tensorBoardDTO.setMlId(mlId);
-      tensorBoardDTO.setLastAccessed(lastAccessed);
-      tensorBoardDTO.setHdfsLogdir(tensorBoardLogdir);
+    tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, tensorBoardLogdir,
+        tfLdLibraryPath,
+            tensorBoardDirectory);
+    Date lastAccessed = new Date();
+    tensorBoardDTO.setMlId(mlId);
+    tensorBoardDTO.setLastAccessed(lastAccessed);
+    tensorBoardDTO.setHdfsLogdir(tensorBoardLogdir);
 
-      TensorBoard newTensorBoard = new TensorBoard();
-      TensorBoardPK tensorBoardPK = new TensorBoardPK();
-      tensorBoardPK.setProjectId(project.getId());
-      tensorBoardPK.setUserId(user.getUid());
-      newTensorBoard.setTensorBoardPK(tensorBoardPK);
-      newTensorBoard.setPid(tensorBoardDTO.getPid());
-      newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
-      newTensorBoard.setHdfsUserId(hdfsUser.getId());
-      newTensorBoard.setMlId(mlId);
-      newTensorBoard.setLastAccessed(lastAccessed);
-      newTensorBoard.setHdfsLogdir(tensorBoardLogdir);
-      newTensorBoard.setSecret(tensorBoardDirectory);
-      tensorBoardFacade.persist(newTensorBoard);
-    } catch(IOException e) {
-      LOGGER.log(Level.SEVERE, "Could not start TensorBoard", e);
-    }
+    TensorBoard newTensorBoard = new TensorBoard();
+    TensorBoardPK tensorBoardPK = new TensorBoardPK();
+    tensorBoardPK.setProjectId(project.getId());
+    tensorBoardPK.setUserId(user.getUid());
+    newTensorBoard.setTensorBoardPK(tensorBoardPK);
+    newTensorBoard.setPid(tensorBoardDTO.getPid());
+    newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
+    newTensorBoard.setHdfsUserId(hdfsUser.getId());
+    newTensorBoard.setMlId(mlId);
+    newTensorBoard.setLastAccessed(lastAccessed);
+    newTensorBoard.setHdfsLogdir(tensorBoardLogdir);
+    newTensorBoard.setSecret(tensorBoardDirectory);
+    tensorBoardFacade.persist(newTensorBoard);
+
     return tensorBoardDTO;
   }
 
@@ -151,7 +147,7 @@ public class TensorBoardController {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void cleanup(TensorBoard tb) throws TensorBoardException {
     if (tb != null) {
-      if(tensorBoardProcessMgr.ping(tb.getPid()) == 0) {
+      if(tensorBoardProcessMgr.ping(tb)) {
         tensorBoardProcessMgr.killTensorBoard(tb);
       }
       tensorBoardFacade.remove(tb);

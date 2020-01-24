@@ -86,7 +86,7 @@ import java.util.logging.Logger;
 /**
  * *
  * This class wraps a bash script with sudo rights that can be executed by the node['hopsworks']['user'].
- * /srv/hops/domains/domain1/bin/jupyter.sh
+ * /srv/hops/sbin/jupyter.sh
  * The bash script has several commands with parameters that can be exceuted.
  * This class provides a Java interface for executing the commands.
  */
@@ -130,7 +130,7 @@ public class JupyterProcessMgr implements JupyterManager {
   public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
     JupyterSettings js, String allowOrigin) throws ServiceException {
     
-    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+    String prog = settings.getSudoersDir() + "/jupyter.sh";
     
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     JupyterPaths jp = jupyterConfigFilesGenerator.generateConfiguration(project, secretConfig, hdfsUser,
@@ -218,7 +218,7 @@ public class JupyterProcessMgr implements JupyterManager {
     }
 
     // 2. Then kill the jupyter notebook server. If this step isn't 
-    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+    String prog = settings.getSudoersDir() + "/jupyter.sh";
     if (jupyterHomePath.isEmpty()) {
       jupyterHomePath = "''";
     }
@@ -336,7 +336,7 @@ public class JupyterProcessMgr implements JupyterManager {
     }
     int exitValue;
     Integer id = 1;
-    String prog = this.settings.getHopsworksDomainDir() + "/bin/jupyter.sh";
+    String prog = settings.getSudoersDir() + "/jupyter.sh";
     
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
