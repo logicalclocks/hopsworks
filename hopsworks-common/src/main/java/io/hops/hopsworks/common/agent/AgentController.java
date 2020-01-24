@@ -91,7 +91,7 @@ public class AgentController {
   private HostsController hostsController;
 
 
-  public String register(String hostId, String password) throws ServiceException {
+  public void register(String hostId, String password) throws ServiceException {
     Hosts host = hostsController.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);
@@ -99,7 +99,6 @@ public class AgentController {
     // Jim: We set the hostname as hopsworks::default pre-populates with the hostname,
     // but it's not the correct hostname for GCE.
     hostsFacade.update(host);
-    return settings.getHadoopVersionedDir();
   }
 
   public HeartbeatReplyDTO heartbeat(AgentHeartbeatDTO heartbeat) throws ServiceException {

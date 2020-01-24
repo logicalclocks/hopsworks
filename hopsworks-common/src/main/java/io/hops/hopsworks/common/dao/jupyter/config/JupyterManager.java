@@ -54,7 +54,7 @@ public interface JupyterManager {
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default void projectCleanup(Settings settings, Logger logger, OSProcessExecutor osProcessExecutor, Project project) {
-    String prog = settings.getHopsworksDomainDir() + "/bin/jupyter-project-cleanup.sh";
+    String prog = settings.getSudoersDir() + "/jupyter-project-cleanup.sh";
     int exitValue;
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
