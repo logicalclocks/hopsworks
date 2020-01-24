@@ -1409,8 +1409,8 @@ public class Settings implements Serializable {
    */
   //Directory names in HDFS
   public static final String DIR_ROOT = "Projects";
-  public static final String DIR_META_TEMPLATES = File.separator + DIR_ROOT + File.separator + "Uploads"
-      + File.separator;
+  public static final String DIR_META_TEMPLATES = Path.SEPARATOR + "user" + Path.SEPARATOR + "metadata"
+    + Path.SEPARATOR + "uploads" + Path.SEPARATOR;
   public static final String PROJECT_STAGING_DIR = "Resources";
 
   private static String DEFAULT_RESERVED_PROJECT_NAMES = "python27,python36,python37,python38,python39,hops-system," +
