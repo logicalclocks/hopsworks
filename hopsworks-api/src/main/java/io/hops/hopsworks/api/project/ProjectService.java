@@ -60,7 +60,6 @@ import io.hops.hopsworks.api.models.ModelsResource;
 import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
-import io.hops.hopsworks.api.util.LocalFsService;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
@@ -181,8 +180,6 @@ public class ProjectService {
   private ExperimentsResource experiments;
   @Inject
   private ModelsResource models;
-  @Inject
-  private LocalFsService localFs;
   @Inject
   private JobsResource jobs;
   @Inject
@@ -665,12 +662,6 @@ public class ProjectService {
   public DatasetResource datasetResource(@PathParam("projectId") Integer id) {
     this.datasetResource.setProjectId(id);
     return this.datasetResource;
-  }
-
-  @Path("{projectId}/localfs")
-  public LocalFsService localFs(@PathParam("projectId") Integer id) {
-    this.localFs.setProjectId(id);
-    return this.localFs;
   }
 
   @Path("{projectId}/jobs")
