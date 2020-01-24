@@ -742,7 +742,8 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     SECURITY_EXCEPTION(8, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
     ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
-        Response.Status.SERVICE_UNAVAILABLE);
+        Response.Status.SERVICE_UNAVAILABLE),
+    ENTERPRISE_FEATURE(10, "This feature is only availlable in the enterprise edition", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -803,7 +804,7 @@ public class RESTCodes {
     CERTIFICATE_NOT_FOUND(17, "Could not find the certificate", Response.Status.BAD_REQUEST),
     CERTIFICATE_REVOKATION_USER_ERR(18, "Error revoking the certificate", Response.Status.BAD_REQUEST),
     CERTIFICATE_SIGN_USER_ERR(19, "Error signing the certificate", Response.Status.BAD_REQUEST);
-
+    
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
