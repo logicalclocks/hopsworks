@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -61,14 +60,13 @@ import java.util.logging.Logger;
 @Stateless
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 @DependsOn("Settings")
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class TensorBoardProcessMgr {
 
   private static final Logger LOGGER = Logger.getLogger(TensorBoardProcessMgr.class.getName());
 
   @EJB
   private Settings settings;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private DistributedFsService dfsService;
   @EJB
@@ -85,7 +83,6 @@ public class TensorBoardProcessMgr {
    * @return
    * @throws IOException
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir,
                                          String tfLdLibraryPath, String tensorBoardDirectory)
           throws IOException, TensorBoardException {
@@ -150,7 +147,6 @@ public class TensorBoardProcessMgr {
         port = ThreadLocalRandom.current().nextInt(40000, 59999);
   
         ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-          .addCommand("/usr/bin/sudo")
           .addCommand(prog)
           .addCommand("start")
           .addCommand(hdfsUser.getName())
@@ -233,14 +229,12 @@ public class TensorBoardProcessMgr {
    * @param pid
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int killTensorBoard(BigInteger pid) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     int exitValue;
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("kill")
         .addCommand(pid.toString())
@@ -266,14 +260,12 @@ public class TensorBoardProcessMgr {
    * @param tb
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int killTensorBoard(TensorBoard tb) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     int exitValue;
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("kill")
         .addCommand(tb.getPid().toString())
@@ -298,7 +290,6 @@ public class TensorBoardProcessMgr {
    * @param tb
    * @throws IOException
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void cleanup(TensorBoard tb) throws TensorBoardException {
 
     String tbBasePath = settings.getStagingDir() + Settings.TENSORBOARD_DIRS;
@@ -324,14 +315,12 @@ public class TensorBoardProcessMgr {
    * @param tensorBoardDirectoryPath
    * @throws IOException
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void removeTensorBoardDirectory(String tensorBoardDirectoryPath) throws TensorBoardException {
 
     // Remove directory
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-            .addCommand("/usr/bin/sudo")
             .addCommand(prog)
             .addCommand("cleanup")
             .addCommand(tensorBoardDirectoryPath)
@@ -360,14 +349,12 @@ public class TensorBoardProcessMgr {
    * @param pid
    * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public int ping(BigInteger pid) {
 
     String prog = settings.getHopsworksDomainDir() + "/bin/tensorboard.sh";
     int exitValue = 1;
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("ping")
         .addCommand(pid.toString())

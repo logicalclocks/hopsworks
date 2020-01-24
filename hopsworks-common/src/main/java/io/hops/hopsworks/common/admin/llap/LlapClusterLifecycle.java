@@ -122,7 +122,7 @@ public class LlapClusterLifecycle {
         nIOThreads);
 
     // Script path
-    String startScript = settings.getHopsworksDomainDir() + "/bin/start-llap.sh";
+    String startScript = settings.getSudoersDir() + "/start-llap.sh";
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")

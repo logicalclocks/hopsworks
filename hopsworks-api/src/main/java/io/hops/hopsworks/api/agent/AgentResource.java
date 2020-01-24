@@ -117,11 +117,8 @@ public class AgentResource {
             .entity(agentHBReply).build();
       case REGISTER:
         logger.log(Level.FINE, "AgentResource: Register");
-        final String hadoopHome = handleRegister(request);
-        final AgentView agentRegReply = new AgentView();
-        agentRegReply.setHadoopHome(hadoopHome);
-        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-            .entity(agentRegReply).build();
+        handleRegister(request);
+        return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
       case NONE:
         throw new IllegalArgumentException("Action on AgentResource not specified");
       default:
@@ -179,7 +176,7 @@ public class AgentResource {
     return agentController.heartbeat(request.toAgentHeartbeatDTO());
   }
   
-  private String handleRegister(AgentView request) throws ServiceException {
+  private void handleRegister(AgentView request) throws ServiceException {
     logger.log(Level.FINE, "Handling register");
     if (request == null) {
       throw new IllegalArgumentException("Registration request is null");
@@ -188,6 +185,6 @@ public class AgentResource {
       throw new IllegalArgumentException("Invalid registration request");
     }
     
-    return agentController.register(request.getHostId(), request.getPassword());
+    agentController.register(request.getHostId(), request.getPassword());
   }
 }

@@ -85,7 +85,7 @@ public class LocalhostSkLearnServingController {
    */
   public void killServingInstance(Project project, Serving serving, boolean releaseLock)
       throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/sklearn_serving.sh";
+    String script = settings.getSudoersDir() + "/sklearn_serving.sh";
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
@@ -129,7 +129,7 @@ public class LocalhostSkLearnServingController {
    * @throws ServingException
    */
   public void startServingInstance(Project project, Users user, Serving serving) throws ServingException {
-    String script = settings.getHopsworksDomainDir() + "/bin/sklearn_serving.sh";
+    String script = settings.getSudoersDir() + "/sklearn_serving.sh";
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
