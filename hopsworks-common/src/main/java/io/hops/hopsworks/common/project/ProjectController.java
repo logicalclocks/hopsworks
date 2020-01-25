@@ -430,18 +430,7 @@ public class ProjectController {
           "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 8 (logs): {0}", System.currentTimeMillis() - startTime);
-      
-      //Delete old project indices and kibana saved objects to avoid
-      // inconsistencies
-      try {
-        elasticController.deleteProjectIndices(project);
-        elasticController.deleteProjectSavedObjects(projectName);
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (elastic cleanup): {0}",
-            System.currentTimeMillis() - startTime);
-      }catch (ElasticException ex){
-        LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
-      }
-  
+
       if (environmentController.condaEnabledHosts()) {
         try {
           environmentController.createEnv(project, project.getOwner(), "3.6");//TODO: use variables for version
@@ -1606,11 +1595,7 @@ public class ProjectController {
         // try and close all the jupyter jobs
         removeJupyter(project);
 
-        try {
-          removeAnacondaEnv(project);
-        }catch (ElasticException ex){
-          LOGGER.log(Level.WARNING, "Failure while removing conda enviroment ", ex);
-        }
+        removeAnacondaEnv(project);
 
         //kill jobs
         killYarnJobs(project);
@@ -1724,12 +1709,8 @@ public class ProjectController {
       //Delete Hive database - will automatically cleanup all the Hive's metadata
       hiveController.dropDatabases(project, dfso, false);
 
-      try {
-        //Delete elasticsearch template for this project
-        removeElasticsearch(project);
-      }catch (ElasticException ex){
-        LOGGER.log(Level.WARNING, "Failure while removing elasticsearch indices", ex);
-      }
+      //Delete elasticsearch template for this project
+      removeElasticsearch(project);
 
       //delete project group and users
       removeGroupAndUsers(groupsToClean, usersToClean);
