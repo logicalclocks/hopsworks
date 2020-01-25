@@ -46,7 +46,6 @@ import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.proxies.client.NotFoundClientProtocolException;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -338,12 +337,6 @@ public class ElasticController {
         LOG.log(Level.SEVERE, "Could not delete project index:{0}", index);
       }
     }
-  
-    // delete file provenance index for the project
-    String provenanceIndex = Provenance.getProjectIndex(project);
-    if(indexExists(provenanceIndex)){
-      deleteIndex(provenanceIndex);
-    }
   }
 
   /**
@@ -358,7 +351,7 @@ public class ElasticController {
           "supported.");
     }
     
-    deleteIndex(ElasticUtils.getAllKibanaTenantIndex(project.toLowerCase()));
+    deleteIndex(ElasticUtils.getAllKibanaTenantIndex(project));
   }
   
   /**
