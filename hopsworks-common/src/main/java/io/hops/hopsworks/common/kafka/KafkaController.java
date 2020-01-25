@@ -139,7 +139,7 @@ public class KafkaController {
     
     String topicName = topicDto.getName();
     
-    if (projectTopicsFacade.findTopicByName(topicDto.getName()).isPresent()) {
+    if (projectTopicsFacade.findTopicByNameAndProject(project, topicDto.getName()).isPresent()) {
       throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS, Level.FINE, "topic name: " + topicName);
     }
     
