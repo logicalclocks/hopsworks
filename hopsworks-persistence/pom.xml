@@ -22,14 +22,14 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-persistence</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Hopsworks persistence</description>
   <name>hopsworks-persistence</name>

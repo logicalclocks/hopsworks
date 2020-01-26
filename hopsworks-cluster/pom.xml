@@ -43,13 +43,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-cluster</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <description>Hopsworks cluster registration api</description>
   <name>hopsworks-cluster</name>

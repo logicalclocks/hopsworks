@@ -44,13 +44,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-api</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <description>Hopsworks rest api</description>
   <name>hopsworks-api</name>
@@ -106,7 +106,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>1.2.0-SNAPSHOT</version>
+      <version>1.3.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
       <exclusions>
@@ -135,14 +135,14 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-dela</artifactId>
-      <version>1.2.0-SNAPSHOT</version>
+      <version>1.3.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
-      <version>1.2.0-SNAPSHOT</version>
+      <version>1.3.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
     </dependency>

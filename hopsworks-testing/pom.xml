@@ -21,14 +21,14 @@
   <parent>
     <artifactId>hopsworks</artifactId>
     <groupId>io.hops</groupId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-testing</artifactId>
   <description>Hopsworks testing</description>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <name>hopsworks-testing</name>
   <packaging>war</packaging>
 
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>1.2.0-SNAPSHOT</version>
+      <version>1.3.0-SNAPSHOT</version>
       <type>ejb</type>
       <scope>provided</scope>
       <exclusions>

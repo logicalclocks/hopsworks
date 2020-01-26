@@ -43,13 +43,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.3.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-IT</artifactId>
   <packaging>jar</packaging>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <name>Hopsworks: Integration Test</name>
   <properties>
     <!-- deploy lib versions -->
