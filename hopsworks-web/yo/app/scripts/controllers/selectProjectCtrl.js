@@ -84,12 +84,7 @@ angular.module('hopsWorksApp')
                 return;
               }
 
-              ProjectService.getProjectInfo({projectName: self.selectedProject.name}).$promise.then(
-                      function (success) {
-                        $uibModalInstance.close(success);
-                      }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-              });
+              $uibModalInstance.close(self.selectedProject.name);
             };
 
             self.close = function () {
