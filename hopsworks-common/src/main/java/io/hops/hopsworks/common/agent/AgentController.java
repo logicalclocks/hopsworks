@@ -102,8 +102,7 @@ public class AgentController {
   }
 
 
-  public String register(String hostId, String password, String zfsKey) throws
-          io.hops.hopsworks.exceptions.ServiceException {
+  public void register(String hostId, String password, String zfsKey) throws ServiceException {
     Hosts host = hostsController.findByHostname(hostId);
     host.setAgentPassword(password);
     host.setRegistered(true);

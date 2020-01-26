@@ -195,6 +195,6 @@ public class AgentResource {
     }
     
 
-    return agentController.register(request.getHostId(), request.getPassword(), request.getZfskey());
+    agentController.register(request.getHostId(), request.getPassword(), request.getZfskey());
   }
 }
