@@ -70,4 +70,15 @@ public enum UserAccountType {
     }
     throw new IllegalArgumentException("" + v);
   }
+  
+  public String getAccountType() {
+    switch (this) {
+      case M_ACCOUNT_TYPE:
+        return "Mobile Account";
+      case REMOTE_ACCOUNT_TYPE:
+        return "Remote Account";
+      default:
+        return "Unknown Account type";
+    }
+  }
 }

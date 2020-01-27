@@ -117,11 +117,11 @@ public class UserValidator {
     isValidEmail(newUser.getEmail());
     isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
     isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
-    if (newUser.getToS()) {
-      throw new UserException(RESTCodes.UserErrorCode.TOS_NOT_AGREED, Level.FINE);
-    }
     if (userBean.findByEmail(newUser.getEmail()) != null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
+    }
+    if (!newUser.getTos()) {
+      throw new UserException(RESTCodes.UserErrorCode.TOS_NOT_AGREED, Level.FINE);
     }
     return true;
   }

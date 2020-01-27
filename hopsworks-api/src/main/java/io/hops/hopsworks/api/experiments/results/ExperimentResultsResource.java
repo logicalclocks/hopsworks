@@ -35,6 +35,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 
@@ -47,16 +48,13 @@ public class ExperimentResultsResource {
 
   @EJB
   private ExperimentResultsBuilder experimentResultsBuilder;
-
-  public ExperimentResultsResource() {
-  }
-
+  
   public ExperimentResultsResource setProject(Project project, String experimentId) {
     this.project = project;
     this.experimentId = experimentId;
     return this;
   }
-
+  
   public Project getProject() {
     return project;
   }
@@ -68,8 +66,8 @@ public class ExperimentResultsResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getResults(@Context UriInfo uriInfo,
                              @BeanParam Pagination pagination,
-                             @BeanParam ExperimentResultsBeanParam experimentResultsBeanParam)
-      throws ExperimentsException {
+                             @BeanParam ExperimentResultsBeanParam experimentResultsBeanParam,
+    @Context SecurityContext sc) throws ExperimentsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.RESULTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

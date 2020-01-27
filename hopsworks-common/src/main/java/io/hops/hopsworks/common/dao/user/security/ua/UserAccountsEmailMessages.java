@@ -107,7 +107,7 @@ public class UserAccountsEmailMessages {
    */
   public final static String ACCOUNT_REJECT
           = "Your Hopsworks account request has been rejected";
-
+  public final static String ACCOUNT_STATUS_CHANGED = "Your Hopsworks account status was changed";
   /*
    * Default accpount acitvation period
    */
@@ -390,6 +390,18 @@ public class UserAccountsEmailMessages {
             + HOPSWORKS_SUPPORT_EMAIL;
     message = l1 + l2;
 
+    return message;
+  }
+  
+  public static String accountStatusChangeMessage(String status) {
+    String message;
+    
+    String l1 = GREETINGS_HEADER + ",\n\n"
+      + "Your Hopsworks account status was changed to " + status + ".\n\n";
+    String l2 = "If you have any questions please contact "
+      + HOPSWORKS_SUPPORT_EMAIL;
+    message = l1 + l2;
+    
     return message;
   }
 

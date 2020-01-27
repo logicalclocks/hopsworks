@@ -41,6 +41,7 @@ package io.hops.hopsworks.admin.user.profile;
 
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
+import io.hops.hopsworks.admin.user.administration.AuditedUserAdministration;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import java.io.Serializable;
 import java.util.List;
@@ -55,9 +56,7 @@ import javax.servlet.http.HttpServletRequest;
 import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
 import io.hops.hopsworks.common.user.UsersController;
 
@@ -72,9 +71,10 @@ public class ProfileManager implements Serializable {
   private UserFacade userFacade;
   @EJB
   protected UsersController usersController;
-
   @EJB
   private AccountAuditFacade auditManager;
+  @EJB
+  private AuditedUserAdministration auditedUserAdministration;
 
   @ManagedProperty(value = "#{clientSessionState}")
   private ClientSessionState sessionState;
@@ -146,15 +146,11 @@ public class ProfileManager implements Serializable {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.
         getCurrentInstance().getExternalContext().getRequest();
     try {
-      userFacade.update(user);
+      auditedUserAdministration.updateProfile(user, httpServletRequest);
       MessagesController.addInfoMessage("Success", "Profile updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.SUCCESS.name(), "", getUser(), httpServletRequest);
     } catch (RuntimeException ex) {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-              UserAuditActions.FAILED.name(), "", getUser(), httpServletRequest);
       return;
     }
   }
@@ -167,15 +163,11 @@ public class ProfileManager implements Serializable {
         getCurrentInstance().getExternalContext().getRequest();
     try {
       user.setOrganization(organization);
-      userFacade.update(user);
+      auditedUserAdministration.updateProfile(user, httpServletRequest);
       MessagesController.addInfoMessage("Success", "Profile updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-          UserAuditActions.SUCCESS.name(), "Update Organization", getUser(), httpServletRequest);
     } catch (RuntimeException ex) {
       FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Failed to update", null);
       FacesContext.getCurrentInstance().addMessage(null, msg);
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-          UserAuditActions.FAILED.name(), "Update Organization", getUser(), httpServletRequest);
     }
   }
 
@@ -187,14 +179,10 @@ public class ProfileManager implements Serializable {
         getCurrentInstance().getExternalContext().getRequest();
     try {
       user.setAddress(address);
-      userFacade.update(user);
+      auditedUserAdministration.updateProfile(user, httpServletRequest);
       MessagesController.addInfoMessage("Success", "Address updated successfully.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-          UserAuditActions.SUCCESS.name(), "Update Address", getUser(), httpServletRequest);
     } catch (RuntimeException ex) {
       MessagesController.addSecurityErrorMessage("Update failed.");
-      auditManager.registerAccountChange(sessionState.getLoggedInUser(), AccountsAuditActions.PROFILEUPDATE.name(),
-          UserAuditActions.FAILED.name(), "Update Address", getUser(), httpServletRequest);
     }
   }
 

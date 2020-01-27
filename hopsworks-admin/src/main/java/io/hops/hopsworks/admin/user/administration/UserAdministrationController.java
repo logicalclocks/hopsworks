@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
-import com.google.common.base.Strings;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
@@ -23,10 +22,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.EmailBean;
+import io.hops.hopsworks.exceptions.UserException;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -34,7 +30,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -49,49 +44,25 @@ import java.util.logging.Logger;
 public class UserAdministrationController {
   
   private static final Logger LOGGER = Logger.getLogger(UserAdministrationController.class.getName());
+  
   @EJB
-  protected UsersController usersController;
-  @EJB
-  private AuthController authController;
-  @EJB
-  private EmailBean emailBean;
+  private AuditedUserAdministration auditedUserAdministration;
   @EJB
   private UserFacade userFacade;
   @EJB
   private BbcGroupFacade bbcGroupFacade;
   
   public String getAccountType(UserAccountType type) {
-    switch (type) {
-      case M_ACCOUNT_TYPE:
-        return "Mobile Account";
-      case REMOTE_ACCOUNT_TYPE:
-        return "Remote Account";
-      default:
-        return "Unknown Account type";
-    }
+    return type.getAccountType();
   }
   
   public String getUserStatus(UserAccountStatus status) {
-    switch (status) {
-      case SPAM_ACCOUNT:
-        return "Spam account";
-      case DEACTIVATED_ACCOUNT:
-        return "Deactivated account";
-      case VERIFIED_ACCOUNT:
-        return "Verified account";
-      case ACTIVATED_ACCOUNT:
-        return "Activated account";
-      case NEW_MOBILE_ACCOUNT:
-        return "New account";
-      case BLOCKED_ACCOUNT:
-        return "Blocked account";
-      case LOST_MOBILE:
-        return "Lost mobile account";
-      case TEMP_PASSWORD:
-        return "Temporary password";
-      default:
-        return "Unknown account type";
-    }
+    return status.getUserStatus();
+  }
+  
+  private HttpServletRequest getHttpServletRequest() {
+    FacesContext context = FacesContext.getCurrentInstance();
+    return (HttpServletRequest) context.getExternalContext().getRequest();
   }
   
   public void rejectUser(Users user) {
@@ -99,25 +70,17 @@ public class UserAdministrationController {
       MessagesController.addErrorMessage("Error", "No user found!");
       return;
     }
+    HttpServletRequest httpServletRequest = getHttpServletRequest();
     try {
-      usersController.changeAccountStatus(user.getUid(), UserAccountStatus.SPAM_ACCOUNT.toString(),
-        UserAccountStatus.SPAM_ACCOUNT);
+      auditedUserAdministration.changeStatus(user, UserAccountStatus.SPAM_ACCOUNT, httpServletRequest);
       MessagesController.addInfoMessage(user.getEmail() + " was rejected.");
-    } catch (RuntimeException ex) {
+    } catch (UserException ex) {
       MessagesController.addSecurityErrorMessage("Rejection failed. " + ex.getMessage());
       LOGGER.log(Level.SEVERE, "Could not reject user.", ex);
     }
-    try {
-      // Send rejection email
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REJECT,
-        UserAccountsEmailMessages.accountRejectedMessage());
-    } catch (MessagingException e) {
-      MessagesController.addSecurityErrorMessage("Could not send email to " + user.getEmail());
-      LOGGER.log(Level.SEVERE, "Could not send email to {0}. {1}", new Object[]{user.getEmail(), e});
-    }
   }
   
-  public void activateUser(Users user, Users initiator) {
+  public void activateUser(Users user) {
     if (user == null) {
       MessagesController.addSecurityErrorMessage("User is null.");
       return;
@@ -125,24 +88,12 @@ public class UserAdministrationController {
     if (user.getGroupName() == null || user.getGroupName().isEmpty()) {
       user.setGroupName("HOPS_USER");
     }
-    
-    HttpServletRequest httpServletRequest =
-      (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-    String message = usersController.activateUser(user.getGroupName(), user, initiator, httpServletRequest);
-    if (Strings.isNullOrEmpty(message)) {
-      MessagesController.addInfoMessage("User " + user.getEmail() + " activated successfully", message);
-    } else {
-      MessagesController.addSecurityErrorMessage(message);
-    }
+    HttpServletRequest httpServletRequest = getHttpServletRequest();
     try {
-      //send confirmation email
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-        UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-        UserAccountsEmailMessages.
-          accountActivatedMessage(user.getEmail()));
-    } catch (MessagingException e) {
-      MessagesController.addSecurityErrorMessage("Could not send email to " + user.getEmail() + ". " + e.getMessage());
-      LOGGER.log(Level.SEVERE, "Could not send email to {0}. {1}", new Object[]{user.getEmail(), e});
+      auditedUserAdministration.activateUser(user, httpServletRequest);
+      MessagesController.addInfoMessage("User " + user.getEmail() + " activated successfully");
+    } catch (UserException ue) {
+      MessagesController.addSecurityErrorMessage(ue.getMessage());
     }
   }
   
@@ -155,10 +106,9 @@ public class UserAdministrationController {
   }
   
   public void resendAccountVerificationEmail(Users user) {
-    FacesContext context = FacesContext.getCurrentInstance();
-    HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
+    HttpServletRequest request = getHttpServletRequest();
     try {
-      authController.sendNewValidationKey(user, request);
+      auditedUserAdministration.resendAccountVerificationEmail(user, request);
       MessagesController.addInfoMessage("Account verification Email Successfully Resent");
     } catch (MessagingException e) {
       MessagesController.addSecurityErrorMessage("Could not send email to " + user.getEmail() + ". " + e.getMessage());
@@ -174,15 +124,16 @@ public class UserAdministrationController {
     return groups;
   }
   
-  public void deleteUser(Users user) {
+  public void deleteSpamUser(Users user) {
     if (user == null) {
       MessagesController.addErrorMessage("Error", "No user found!");
       return;
     }
+    HttpServletRequest request = getHttpServletRequest();
     try {
-      usersController.deleteUser(user);
+      auditedUserAdministration.deleteSpamUser(user, request);
       MessagesController.addInfoMessage(user.getEmail() + " was removed.");
-    } catch (RuntimeException ex) {
+    } catch (RuntimeException | UserException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.getMessage());
       LOGGER.log(Level.SEVERE, "Could not remove user.", ex);
     }
@@ -198,10 +149,11 @@ public class UserAdministrationController {
       MessagesController.addErrorMessage("Error", "No user found!");
       return;
     }
+    HttpServletRequest httpServletRequest = getHttpServletRequest();
     try {
-      usersController.changeAccountStatus(user.getUid(), "", UserAccountStatus.NEW_MOBILE_ACCOUNT);
+      auditedUserAdministration.changeStatus(user, UserAccountStatus.NEW_MOBILE_ACCOUNT, httpServletRequest);
       MessagesController.addInfoMessage(user.getEmail() + " was removed from spam list.");
-    } catch (RuntimeException ex) {
+    } catch (UserException ex) {
       MessagesController.addSecurityErrorMessage("Remove failed. " + ex.getMessage());
       LOGGER.log(Level.SEVERE, "Could not remove user from spam list.", ex);
     }
@@ -216,8 +168,7 @@ public class UserAdministrationController {
         return principal.getName();
       }
     } catch (Exception ex) {
-      ExternalContext extContext = FacesContext.getCurrentInstance().
-        getExternalContext();
+      ExternalContext extContext = FacesContext.getCurrentInstance().getExternalContext();
       extContext.redirect(extContext.getRequestContextPath());
       return null;
     }

@@ -61,6 +61,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @Path("/banner")
 @Stateless
@@ -85,7 +86,7 @@ public class BannerService {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findBanner() {
+  public Response findBanner(@Context SecurityContext sc) {
     Maintenance maintenance = maintenanceController.getMaintenance();
     maintenance.setOtp(settings.getTwoFactorAuth());
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(maintenance).build();
@@ -101,7 +102,7 @@ public class BannerService {
     if (user != null && (user.getSalt() == null || user.getSalt().isEmpty())) {
       json.setSuccessMessage("For security purposes, we highly recommend you change your password.");
     } else if (user != null && UserAccountStatus.TEMP_PASSWORD.equals(user.getStatus())) {
-      AccountAudit accountAudit = accountAuditFacade.findByTargetLatest(user);
+      AccountAudit accountAudit = accountAuditFacade.findByTargetLatestPwdReset(user);
       String fullName = "";
       if (accountAudit != null) {
         fullName = " (" +accountAudit.getInitiator().getFname() + " " + accountAudit.getInitiator().getLname() + ")";

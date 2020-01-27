@@ -71,6 +71,8 @@ public class RoleEnforcementPoint implements Serializable {
   private UserFacade userFacade;
   @EJB
   protected UserAdministrationController userAdministrationController;
+  @EJB
+  private AuditedUserAuth auditedUserAuth;
 
   private int tabIndex;
   private Users user;
@@ -157,11 +159,7 @@ public class RoleEnforcementPoint implements Serializable {
     try {
       this.user = getUserFromSession();
       HttpServletRequest req = getRequest();
-      req.getSession().invalidate();
-      req.logout(); 
-      if (user != null) {
-        authController.registerLogout(user, req);
-      }
+      auditedUserAuth.logout(this.user, req);
       FacesContext.getCurrentInstance().getExternalContext().redirect("/hopsworks/#!/home");
     } catch (IOException | ServletException ex) {
       Logger.getLogger(RoleEnforcementPoint.class.getName()).log(Level.SEVERE, null, ex);

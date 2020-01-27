@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
@@ -48,14 +47,14 @@ public class RecoverQRCode implements Serializable {
   private String key;
   
   @EJB
-  protected UsersController usersController;
+  protected AuditedUserAccountAction auditedUserAccountAction;
   
   @PostConstruct
   public void init() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      byte[] code = usersController.recoverQRCodeByte(key, req);
+      byte[] code = auditedUserAccountAction.recoverQRCodeByte(key, req);
       qrCode = new DefaultStreamedContent(new ByteArrayInputStream(code));
       keyError = false;
     } catch (EJBException | IllegalArgumentException | MessagingException e) {

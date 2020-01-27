@@ -99,4 +99,27 @@ public enum UserAccountStatus {
     }
     throw new IllegalArgumentException("" + v);
   }
+  
+  public String getUserStatus() {
+    switch (this) {
+      case SPAM_ACCOUNT:
+        return "Spam account";
+      case DEACTIVATED_ACCOUNT:
+        return "Deactivated account";
+      case VERIFIED_ACCOUNT:
+        return "Verified account";
+      case ACTIVATED_ACCOUNT:
+        return "Activated account";
+      case NEW_MOBILE_ACCOUNT:
+        return "New account";
+      case BLOCKED_ACCOUNT:
+        return "Blocked account";
+      case LOST_MOBILE:
+        return "Lost mobile account";
+      case TEMP_PASSWORD:
+        return "Temporary password";
+      default:
+        return "Unknown account type";
+    }
+  }
 }

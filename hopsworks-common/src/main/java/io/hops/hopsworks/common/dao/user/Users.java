@@ -725,13 +725,13 @@ public class Users implements Serializable {
     return true;
   }
 
-  @Override
-  public String toString() {
-    return "Users[ uid=" + uid + " ]";
-  }
-
   public Users asUser() {
     return new Users(uid, username, password, activated, falseLogin, status,
         isonline, maxNumProjects, numCreatedProjects, numActiveProjects);
+  }
+  
+  @Override
+  public String toString() {
+    return "Users{uid=" + uid + '}';
   }
 }
