@@ -44,21 +44,16 @@ angular.module('hopsWorksApp')
         .factory('DelaClusterProjectService', ['$http', function ($http) {
             return function (id) {
               var service = {
-                shareWithClusterByInodeId: function (inodeId) {
-                  var payload = {"id": inodeId};
+                shareWithCluster: function (datasetId) {
                   return $http({
                     method: 'POST',
-                    url: '/api/project/' + id + '/delacluster',
-                    headers: {
-                      'Content-Type': 'application/json'
-                    },
-                    data: payload
+                    url: '/api/project/' + id + '/delacluster/' + datasetId + '/share'
                   });
                 },
-                unshareFromCluster: function (inodeId) {
+                unshareFromCluster: function (datasetId) {
                   return $http({
-                    method: 'DELETE',
-                    url: '/api/project/' + id + '/delacluster/' + inodeId
+                    method: 'POST',
+                    url: '/api/project/' + id + '/delacluster/' + datasetId + '/unshare'
                   });
                 }
               };

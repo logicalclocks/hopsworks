@@ -50,12 +50,39 @@ describe "On #{ENV['OS']}" do
           # create the target project
           target_project = create_project
           topic = get_topic
-	  share_topic(org_project, topic, target_project)
+	  			share_topic(org_project, topic, target_project)
           expect_status(201)
 
           # Check that the topic has been shared correctly
-	  get_shared_topics(target_project.id) 
+	  			get_shared_topics(target_project.id)
           expect(json_body[:items].count).to eq 1
+        end
+
+				it "should be able to share the topic with another project and then unshare" do
+					org_project = @project
+					with_kafka_topic(@project[:id])
+
+					# create the target project
+					target_project = create_project
+					topic = get_topic
+					share_topic(org_project, topic, target_project)
+					expect_status(201)
+
+					# Check that the topic has been shared correctly
+					get_shared_topics(target_project.id)
+					expect(json_body[:items].count).to eq 1
+
+          # Unshare topic with request issued from org(owner) project
+          unshare_topic_within_owner_project(org_project, topic, target_project)
+          expect_status(204)
+
+          share_topic(org_project, topic, target_project)
+          expect_status(201)
+
+          # Unshare topic with request issued from org(owner) project
+          unshare_topic_within_dest_project(target_project, topic)
+          expect_status(204)
+
         end
 
         it "should not be able to delete a kafka schema with a reserved name" do

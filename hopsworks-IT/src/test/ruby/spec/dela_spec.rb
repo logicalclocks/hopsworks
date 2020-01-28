@@ -16,62 +16,106 @@
 
 describe "On #{ENV['OS']}" do
   describe 'Dela' do
-
     before :all do
-      @certs_dir = Variables.find_by(id: "certs_dir").value
-      @subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test/emailAddress=agent@hops.io"
+      @debugOpt = false
+    end
+    describe 'cluster sharing' do
+      before :all do
+        with_valid_session
+        pp "user email:#{@user[:email]}"
+        with_valid_project
+        pp "project:#{@project[:projectname]}"
+      end
 
-      with_cluster_agent_session
+      after :all do
+        clean_projects
+      end
 
-      # Remove entries from previous executions
-      ClusterCert.destroy_all
+      it 'share-unshare-share' do
+        with_valid_dataset
+        ds = get_dataset(@project, @dataset[:inode_name])
+        expect(ds[:public_ds]).to eq false
+
+        query = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delacluster/#{@dataset[:id]}/share"
+        pp "#{query}" if @debugOpt
+        post "#{query}"
+        expect_status(200)
+        ds = get_dataset(@project, @dataset[:inode_name])
+        expect(ds[:public_ds]).to eq true
+
+        query = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delacluster/#{@dataset[:id]}/unshare"
+        pp "#{query}" if @debugOpt
+        post "#{query}"
+        expect_status(200)
+        ds = get_dataset(@project, @dataset[:inode_name])
+        expect(ds[:public_ds]).to eq false
+
+        query = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/delacluster/#{@dataset[:id]}/share"
+        pp "#{query}" if @debugOpt
+        post "#{query}"
+        expect_status(200)
+        ds = get_dataset(@project, @dataset[:inode_name])
+        expect(ds[:public_ds]).to eq true
+      end
     end
 
-    it 'should fail to sign the certificate with empty csr' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {}
-      expect_status(422)
-    end
-
-    it 'should fail to sign the certificate with no db entry in the db' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-      expect_status(400)
-    end
-
-    it 'should sign the dela certificate with entry in the db', vm: true do
-      # Add entry in the database
-      #   `id` int(11) NOT NULL AUTO_INCREMENT,
-      #   `agent_id` int(11) NOT NULL,
-      #   `common_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-      #   `organization_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-      #   `organizational_unit_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
-      #   `serial_number` varchar(45) COLLATE latin1_general_cs DEFAULT NULL,
-      #   `registration_status` varchar(45) COLLATE latin1_general_cs NOT NULL,
-      #   `validation_key` varchar(128) COLLATE latin1_general_cs DEFAULT NULL,
-      #   `validation_key_date` timestamp NULL DEFAULT NULL,
-      #   `registration_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      #
-      # "/C=SE/ST=Stockholm/L=SE/OU=1/O=SE/CN=test/emailAddress=agent@hops.io"
-      ClusterCert.create(agent_id: 10001,
-                         common_name: "test",
-                         organization_name: "SE",
-                         organizational_unit_name: "1",
-                         registration_status: "Registered")
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-      expect_status(200)
-
-      # Check that the certificate is on the local fs. this assumes you are running the
-      # tests on a proper vm
-      check_certificate_exists(@certs_dir + "/intermediate/", "test", @subject)
-    end
-
-    it 'should fail to sign twice a certificate for the same cluster' do
-      post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
-      expect_status(400)
-    end
-
-    it 'should revoke the certificate' do
-      delete "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate?certId=test"
-      expect_status(200)
-    end
-  end
+  #   describe 'tracker certs' do
+  #     before :all do
+  #       @certs_dir = Variables.find_by(id: "certs_dir").value
+  #       @subject = "/C=SE/ST=Stockholm/L=SE/O=SE/OU=1/CN=test/emailAddress=agent@hops.io"
+  #       reset_session
+  #       with_cluster_agent_session
+  #
+  #       # Remove entries from previous executions
+  #       ClusterCert.destroy_all
+  #     end
+  #
+  #     it 'should fail to sign the certificate with empty csr' do
+  #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {}
+  #       expect_status(422)
+  #     end
+  #
+  #     it 'should fail to sign the certificate with no db entry in the db' do
+  #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
+  #       expect_status(400)
+  #     end
+  #
+  #     it 'should sign the dela certificate with entry in the db', vm: true do
+  #       # Add entry in the database
+  #       #   `id` int(11) NOT NULL AUTO_INCREMENT,
+  #       #   `agent_id` int(11) NOT NULL,
+  #       #   `common_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
+  #       #   `organization_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
+  #       #   `organizational_unit_name` varchar(64) COLLATE latin1_general_cs NOT NULL,
+  #       #   `serial_number` varchar(45) COLLATE latin1_general_cs DEFAULT NULL,
+  #       #   `registration_status` varchar(45) COLLATE latin1_general_cs NOT NULL,
+  #       #   `validation_key` varchar(128) COLLATE latin1_general_cs DEFAULT NULL,
+  #       #   `validation_key_date` timestamp NULL DEFAULT NULL,
+  #       #   `registration_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  #       #
+  #       # "/C=SE/ST=Stockholm/L=SE/OU=1/O=SE/CN=test/emailAddress=agent@hops.io"
+  #       ClusterCert.create(agent_id: 10001,
+  #                          common_name: "test",
+  #                          organization_name: "SE",
+  #                          organizational_unit_name: "1",
+  #                          registration_status: "Registered")
+  #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
+  #       expect_status(200)
+  #
+  #       # Check that the certificate is on the local fs. this assumes you are running the
+  #       # tests on a proper vm
+  #       check_certificate_exists(@certs_dir + "/intermediate/", "test", @subject)
+  #     end
+  #
+  #     it 'should fail to sign twice a certificate for the same cluster' do
+  #       post "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate", {csr: generate_csr(@subject)}
+  #       expect_status(400)
+  #     end
+  #
+  #     it 'should revoke the certificate' do
+  #       delete "#{ENV['HOPSWORKS_DELA_TRACKER']}/cluster/certificate?certId=test"
+  #       expect_status(200)
+  #     end
+  #   end
+  # end
 end

@@ -805,20 +805,20 @@ angular.module('hopsWorksApp')
 
             /**
              * Makes the dataset public for anybody within the local cluster
-             * @param id inodeId
+             * @param datasetId
              */
-            self.shareWithCluster = function (id) {
+            self.shareWithCluster = function (datasetId) {
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
                   This will make all its files available for any cluster user to share and process.').then(
                   function (success) {
-                    self.sharingDataset[id] = true;
-                    delaClusterService.shareWithClusterByInodeId(id).then(
+                    self.sharingDataset[datasetId] = true;
+                    delaClusterService.shareWithCluster(datasetId).then(
                       function (success) {
-                        self.sharingDataset[id] = false;
+                        self.sharingDataset[datasetId] = false;
                         self.showSuccess(success, 'The DataSet is now Public(Cluster).', 4);
                         getDirContents();
                       }, function (error) {
-                        self.sharingDataset[id] = false;
+                        self.sharingDataset[datasetId] = false;
                         self.showError(error, '', 4);
                     });
                   }
@@ -849,10 +849,10 @@ angular.module('hopsWorksApp')
               );
             };
 
-            self.unshareFromCluster = function (inodeId) {
+            self.unshareFromCluster = function (datasetId) {
               ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? ').then(
                       function (success) {
-                        delaClusterService.unshareFromCluster(inodeId).then(
+                        delaClusterService.unshareFromCluster(datasetId).then(
                                 function (success) {
                                   self.showSuccess(success, 'The DataSet is not Public(cluster) anymore.', 4);
                                   getDirContents();

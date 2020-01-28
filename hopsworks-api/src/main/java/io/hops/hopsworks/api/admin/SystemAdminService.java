@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.admin;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
@@ -271,7 +270,6 @@ public class SystemAdminService {
   @ApiOperation(value = "Get kafka system settings")
   @GET
   @Path("/kafka/settings")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
   public Response getKafkaSettings() throws KafkaException {
