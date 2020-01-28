@@ -185,7 +185,7 @@ public class LoginBean implements Serializable {
   }
 
   public void gotoSupport() throws IOException {
-    String link = "https://groups.google.com/forum/#!forum/hopshadoop";
+    String link = "https://community.hopsworks.ai";
     ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
     externalContext.redirect(link.trim());
   }
