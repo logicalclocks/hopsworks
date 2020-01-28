@@ -489,6 +489,37 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
       end
+      context 'delete' do
+        before :each do
+          check_project_limit
+          with_valid_project
+        end
+        it "should delete dataset shared with other project" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(200)
+          delete_dataset(@project, "#{dsname}", "?type=DATASET")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(404)
+        end
+        it "should unshare a dataset and not delete the original" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          delete_dataset(project, "#{@project[:projectname]}::#{dsname}", "?type=DATASET")
+          get_dataset_stat(@project, "#{dsname}", "&type=DATASET")
+          expect_status(200)
+        end
+      end
     end
 
     describe "#permissions" do
