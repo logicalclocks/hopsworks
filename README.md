@@ -1,7 +1,6 @@
 # Hopsworks
 
-[![Join the chat at https://gitter.im/hopshadoop/hopsworks](https://badges.gitter.im/hopshadoop/services.png)](https://gitter.im/hopshadoop/hopsworks)
-[![Google Group](https://img.shields.io/badge/google-group-blue.svg)](https://groups.google.com/forum/#!forum/hopshadoop)
+[![Support forum](https://img.shields.io/badge/hopsworks-support-informational)](https://community.hopsworks.ai)
 
 ## Overview
 
@@ -51,7 +50,7 @@ HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "sma
 
 <ul>
 <li><a href="https://twitter.com/hopshadoop">Follow our Twitter account.</a></li>
-<li><a href="https://groups.google.com/forum/#!forum/hopshadoop">Join our developer mailing list.</a></li>
+<li><a href="https://community.hopsworks.ai">Join our support forum.</a></li>
 <li><a href="https://bbc1.sics.se/jenkins/job/Hopsworks-build/">Checkout the current build status.</a></li>
 </ul>
 
