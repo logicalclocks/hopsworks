@@ -505,7 +505,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           delete_dataset(@project, "#{dsname}", "?type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
-          expect_status(404)
+          expect_status(400)
         end
         it "should unshare a dataset and not delete the original" do
           projectname = "project_#{short_random_id}"
@@ -516,7 +516,30 @@ describe "On #{ENV['OS']}" do
           share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
           delete_dataset(project, "#{@project[:projectname]}::#{dsname}", "?type=DATASET")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(400)
           get_dataset_stat(@project, "#{dsname}", "&type=DATASET")
+          expect_status(200)
+        end
+        it "should unshare from one project" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          projectname1 = "project_#{short_random_id}"
+          project1 = create_project_by_name(projectname1)
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          request_access(@project, ds, project)
+          request_access(@project, ds, project1)
+          share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
+          share_dataset(@project, dsname, project1[:projectname], "")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(200)
+          get_dataset_stat(project1, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(200)
+          unshare_dataset(@project, "#{dsname}", "&type=DATASET&target_project=#{project[:projectname]}")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
+          expect_status(400)
+          get_dataset_stat(project1, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
           expect_status(200)
         end
       end
