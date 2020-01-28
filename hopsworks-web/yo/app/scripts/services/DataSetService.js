@@ -142,6 +142,19 @@ angular.module('hopsWorksApp')
                 download: function (path, token, type) {
                   var datasetType = getQuery(type, 'type');
                   location.href=getPathname() + baseUrl + 'download/' + path + '?token=' + token + datasetType;
+                },
+                publish: function (path) {
+                  return $http.post(baseUrl + path + '?action=publish');
+                },
+                unpublish: function (path) {
+                  return $http.post(baseUrl + path + '?action=unpublish');
+                },
+                import: function (path, targetProject) {
+                  var targetProject = getQuery(targetProject, 'target_project');
+                  return $http.post(baseUrl + path + '?action=import' + targetProject);
+                },
+                unshareAll: function (datasetName) {
+                  return $http.post(baseUrl + datasetName + '?action=unshare_all');
                 }
               };
               return services;

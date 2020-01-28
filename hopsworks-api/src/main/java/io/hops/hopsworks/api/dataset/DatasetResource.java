@@ -18,8 +18,8 @@ package io.hops.hopsworks.api.dataset;
 import io.hops.hopsworks.api.dataset.inode.InodeBeanParam;
 import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
-import io.hops.hopsworks.api.dataset.util.DatasetHelper;
-import io.hops.hopsworks.api.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -42,7 +42,6 @@ import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
-import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -220,32 +219,33 @@ public class DatasetResource {
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
     Project project = this.getProject();
-    ProvTypeDTO metaStatus;
-    if(searchable != null && searchable) {
-      ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
-      if(Inode.MetaStatus.DISABLED.equals(projectMetaStatus.getMetaStatus())) {
-        metaStatus = Provenance.Type.META.dto;
-      } else {
-        metaStatus = projectMetaStatus;
-      }
-    } else {
-      metaStatus = Provenance.Type.DISABLED.dto;
-    }
     switch (action == null? DatasetActions.Post.CREATE : action) {
       case CREATE:
-        datasetPath = datasetHelper.getNewDatasetPath(project, path, DatasetType.DATASET);//can only create dataset
+        if(datasetType != null && !datasetType.equals(DatasetType.DATASET)) {
+          //can only create dataset
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_INVALID, Level.FINE);
+        }
+        datasetPath = datasetHelper.getNewDatasetPath(project, path, DatasetType.DATASET);
         if (datasetPath.isTopLevelDataset()) {
           checkIfDataOwner(project, user);
         }
-        datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-          datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
+        if(datasetPath.isTopLevelDataset() && !datasetHelper.isBasicDatasetProjectParent(project, datasetPath)) {
+          //fake shared dataset with :: in dataset name at dataset creation
+          throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
+        }
+        ProvTypeDTO metaStatus = fsProvenanceController.getMetaStatus(user, project, searchable);
         ResourceRequest resourceRequest;
         if (datasetPath.isTopLevelDataset()) {
+          datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
+              datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
           DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, project, ds, null, null, false);
           return Response.created(dto.getHref()).entity(dto).build();
         } else {
+          datasetHelper.checkIfDatasetExists(project, datasetPath);
+          datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
+              datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
           InodeDTO dto = inodeBuilder.buildStat(uriInfo, resourceRequest, inode);
@@ -286,6 +286,27 @@ public class DatasetResource {
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
         datasetController.rejectShared(datasetPath.getDatasetSharedWith());
         break;
+      case PUBLISH: {
+        checkIfDataOwner(project, user);
+        datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+        datasetController.shareWithCluster(project, datasetPath.getDataset(), user, datasetType);
+      } break;
+      case UNPUBLISH: {
+        checkIfDataOwner(project, user);
+        datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+        datasetController.unshareFromCluster(project, datasetPath.getDataset(), user);
+      } break;
+      case IMPORT: {
+        checkIfDataOwner(project, user);
+        Project srcProject = projectController.findProjectByName(targetProjectName);
+        datasetPath = datasetHelper.getDatasetPathIfFileExist(srcProject, path, datasetType);
+        datasetController.share(project.getName(), datasetPath.getFullPath().toString(), srcProject, user);
+      } break;
+      case UNSHARE_ALL: {
+        checkIfDataOwner(project, user);
+        datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+        datasetController.unshareAll(datasetPath.getDataset(), user);
+      } break;
       default:
         throw new WebApplicationException("Action not valid.", Response.Status.NOT_FOUND);
     }

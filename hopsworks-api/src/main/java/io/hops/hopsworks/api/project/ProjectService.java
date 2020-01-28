@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.project;
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dataset.DatasetResource;
-import io.hops.hopsworks.api.dela.DelaClusterProjectService;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.experiments.ExperimentsResource;
 import io.hops.hopsworks.api.experiments.tensorboard.TensorBoardResource;
@@ -65,7 +64,6 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
@@ -79,7 +77,6 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
@@ -189,8 +186,6 @@ public class ProjectService {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
-  private DatasetSharedWithFacade datasetSharedWithFacade;
-  @EJB
   private DatasetController datasetController;
   @EJB
   private InodeFacade inodes;
@@ -212,8 +207,6 @@ public class ProjectService {
   private JWTHelper jWTHelper;
   @Inject
   private DelaProjectService delaService;
-  @Inject
-  private DelaClusterProjectService delaclusterService;
   @Inject
   private InferenceResource inference;
   @Inject
@@ -701,47 +694,6 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(multiplicators).build();
   }
 
-  @GET
-  @Path("{projectId}/importPublicDataset/{projectName}/{inodeId}")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response quotasByProjectID(
-      @PathParam("projectId") Integer id,
-      @PathParam("projectName") String projectName,
-      @PathParam("inodeId") Long dsId,
-      @Context SecurityContext sc) throws ProjectException, DatasetException {
-
-    Project destProj = projectController.findProjectById(id);
-    Project dsProject = projectFacade.findByName(projectName);
-
-    Inode inode = inodes.findById(dsId);
-    Dataset ds = datasetFacade.findByProjectAndInode(dsProject, inode);
-    if (ds == null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "project: " + projectName
-          + ", inodeId:" + dsId);
-    }
-
-    if (!ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_PUBLIC, Level.FINE, "datasetId: " + ds.getId());
-    }
-  
-    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(destProj, ds);
-    if (datasetSharedWith != null) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
-        "Dataset already in " + destProj.getName());
-    }
-    // Create the new Dataset entry
-    datasetSharedWith = new DatasetSharedWith(destProj, ds, true);
-    datasetSharedWithFacade.save(datasetSharedWith);
-    Users user = jWTHelper.getUserPrincipal(sc);
-    activityFacade.
-        persistActivity(ActivityFacade.SHARED_DATA + ds.getName() + " with project " + destProj.getName(),
-             destProj, user, ActivityFlag.DATASET);
-
-    hdfsUsersBean.shareDataset(destProj, ds);
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
-  }
-
   @POST
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
@@ -825,12 +777,6 @@ public class ProjectService {
   public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
-  }
-  
-  @Path("{projectId}/delacluster")
-  public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
-    this.delaclusterService.setProjectId(id);
-    return this.delaclusterService;
   }
   
   @Path("{projectId}/activities")

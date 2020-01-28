@@ -39,9 +39,9 @@
 
 module DatasetHelper
   def with_valid_dataset
-    @dataset ||= create_dataset
+    @dataset ||= create_dataset_checked
     if @dataset[:projectId] != @project[:id]
-      @dataset = create_dataset
+      @dataset = create_dataset_checked
     end
   end
 
@@ -68,31 +68,35 @@ module DatasetHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/upload/#{dsname}?#{file}", {content_type: "multipart/form-data"}
   end
   
-  def create_dataset
+  def create_dataset_checked
     with_valid_project
     dsname = "dataset_#{short_random_id}"
-    query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
-    post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/#{dsname}?action=create&#{query}"
-    expect_status(201)
-    get_dataset_by_name(dsname) 
+    create_dataset_by_name_checked(@project, dsname)
+    expect_status_details(201)
+    get_dataset_by_name(dsname)
   end
-  
+
+  def create_dataset_by_name_checked(project, dsname)
+    create_dataset_by_name(project, dsname)
+    expect_status_details(201)
+    get_dataset(project, dsname) 
+  end
+
   def create_dataset_by_name(project, dsname)
     query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}?action=create&#{query}"
-    expect_status(201)
-    get_dataset(project, dsname) 
   end
   
   def get_all_datasets(project)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset?action=listing&expand=inodes"
     json_body
   end
-  
+
   def get_dataset_by_name(name)
     Dataset.where(projectId: "#{@project[:id]}", inode_name: name).first # not a primary key lookup
   end
   def get_dataset(project, name)
+    pp "dataset get - project_id:#{project[:id]} name:#{name}" if defined?(@debugOpt) && @debugOpt == true
     Dataset.where(projectId: "#{project[:id]}", inode_name: name).first
   end
   
@@ -210,6 +214,11 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=create#{query}"
   end
 
+  def create_dir_checked(project, path, query)
+    create_dir(project, path, query)
+    expect_status_details(201)
+  end
+
   def create_random_dataset(project, searchable, generate_readme)
     dsname = "dataset_#{short_random_id}"
     query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: generate_readme})
@@ -228,6 +237,78 @@ module DatasetHelper
 
   def share_dataset(project, path, target_project, datasetType)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}#{datasetType}"
+  end
+
+  def get_dataset_inode(dataset)
+    inode = INode.where(partition_id: dataset[:partition_id], parent_id: dataset[:inode_pid], name: dataset[:inode_name])
+    expect(inode.length).to eq(1), "inode not found for dataset: #{dataset[:inode_name]}"
+    inode.first
+  end
+
+  def publish_dataset(project, dataset_name, dataset_type)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=publish"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+  end
+
+  def publish_dataset_checked(project, dataset_name, dataset_type)
+    publish_dataset(project, dataset_name, dataset_type)
+    expect_status_details(204)
+    dataset = get_dataset(project, dataset_name)
+    expect(dataset).not_to be_nil, "main dataset is nil"
+    expect(dataset[:public_ds]).to be(true), "main dataset - attribute public - not set to true"
+  end
+
+  def unpublish_dataset(project, dataset_name, dataset_type)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=unpublish"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+  end
+
+  def unpublish_dataset_checked(project, dataset_name, dataset_type)
+    unpublish_dataset(project, dataset_name, dataset_type)
+    expect_status_details(204)
+    dataset = get_dataset(project, dataset_name)
+    expect(dataset).not_to be_nil, "main dataset is nil"
+    expect(dataset[:public_ds]).to be(false), "main dataset - attribute public - not reset to false"
+  end
+
+  def import_dataset(target_project, dataset_name, dataset_type, dataset_project)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{target_project[:id]}/dataset/#{dataset_name}"\
+      "?type=#{dataset_type}&action=import&target_project=#{dataset_project[:projectname]}"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+  end
+
+  def import_dataset_checked(target_project, dataset_name, dataset_type, dataset_project)
+    import_dataset(target_project, dataset_name, dataset_type, dataset_project)
+    expect_status_details(204)
+    check_shared_dataset(target_project, dataset_name, dataset_project)
+  end
+
+  def unshare_all_dataset(project, dataset_name, dataset_type)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=unshare_all"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+  end
+
+  def unshare_all_dataset_checked(project, dataset_name, dataset_type)
+    unshare_all_dataset(project, dataset_name, dataset_type)
+    expect_status_details(204)
+  end
+
+  def check_shared_dataset(target_project, dataset_name, dataset_project)
+    get_all_datasets(target_project)
+    dataset_full_name = "#{dataset_project[:projectname]}::#{dataset_name}"
+    dataset = json_body[:items].select do | d | d[:name] == "#{dataset_full_name}" end
+    expect(dataset.length).to eq(1), "dataset:#{dataset_name} not available in project:#{target_project} body:#{JSON.pretty_generate(json_body)}"
+  end
+
+  def check_not_shared_dataset(target_project, dataset_name, dataset_project)
+    get_all_datasets(target_project)
+    dataset_full_name = "#{dataset_project[:projectname]}::#{dataset_name}"
+    dataset = json_body[:items].select do | d | d[:name] == "#{dataset_full_name}" end
+    expect(dataset.length).to eq(0), "dataset:#{dataset_name} should not be available in project:#{target_project} body:#{JSON.pretty_generate(json_body)}"
   end
 
   def accept_dataset(project, path, datasetType)
@@ -279,6 +360,12 @@ module DatasetHelper
 
   def get_dataset_stat(project, path, datasetType)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}"
+  end
+
+  def get_dataset_stat_checked(project, path, datasetType)
+    get_dataset_stat(project, path, datasetType)
+    expect_status_details(200)
+    json_body
   end
 
   def get_dataset_blob(project, path, datasetType)

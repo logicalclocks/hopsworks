@@ -32,7 +32,7 @@
            <span><i class="fa fa-trash"></i>Remove DataSet</span>
         </a>
     </li>
-    <li class="dropdown-submenu" ng-if="!dataset.shared && role === 'Data owner'" id="permissions">
+    <li class="dropdown-submenu" ng-if="role === 'Data owner' && !dataset.shared && dataset.publicDataset === 0" id="permissions">
         <a tabindex="-1" ng-click="$event.stopPropagation();">
             <span><i class="fa fa-edit"></i>Permissions</span>
         </a>
@@ -90,17 +90,17 @@
         ng-if="!dataset.shared && role === 'Data owner' && (dataset.publicDataset === 0)" id="share_with">
         <a tabindex="-1" ng-click="$event.stopPropagation();"><span><i class="fa fa-share-alt"></i>Share with</span></a>
         <ul class="dropdown-menu">
-            <li ng-if="dataset.publicDataset === 0">
+            <li>
                 <a tabindex="-1" ng-click="share({'dataset': dataset}); $event.stopPropagation();">
                     <span><i class="fa fa-book"></i>Project</span>
                 </a>
             </li>
-            <li ng-if="dataset.publicDataset === 0">
+            <li>
                 <a tabindex="-1" ng-click="shareWithCluster({'id': dataset.id}); $event.stopPropagation();">
                     <span><i class="fa fa-server"></i>Cluster</span>
                 </a>
             </li>
-            <li ng-if="dataset.publicDataset === 0 && isDelaEnabled && hopsUploadEnabled()">
+            <li ng-if=isDelaEnabled && hopsUploadEnabled()">
                 <a tabindex="-1" ng-click="shareWithHops({'id': dataset.id}); $event.stopPropagation();">
                     <span><i class="fa fa-globe"></i>Hops</span>
                 </a>
@@ -114,9 +114,14 @@
         id="unshare_from">
         <a tabindex="-1" ng-click="$event.stopPropagation();"><span><i class="fa fa-undo"></i>UnShare from</span></a>
         <ul class="dropdown-menu">
-            <li ng-if="dataset.sharedWith > 0">
+            <li ng-if="dataset.publicDataset === 0 && dataset.sharedWith > 0">
                 <a tabindex="-1" ng-click="unshare({'dataset': dataset}); $event.stopPropagation();">
                     <span><i class="fa fa-book"></i>Project</span>
+                </a>
+            </li>
+            <li ng-if="dataset.publicDataset === 0 && dataset.sharedWith > 0">
+                <a tabindex="-1" ng-click="unshareAll({'dataset': dataset}); $event.stopPropagation();">
+                    <span><i class="fa fa-book"></i>All Projects</span>
                 </a>
             </li>
             <li ng-if="dataset.publicDataset === 1">

@@ -80,7 +80,7 @@ angular.module('hopsWorksApp')
 
             var createDataSetDir = function (dataSet) {
               self.working = true;
-              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, self.datasetType)
+              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable,  dataSet.generateReadme, self.datasetType)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);

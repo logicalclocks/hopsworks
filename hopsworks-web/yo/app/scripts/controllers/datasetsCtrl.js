@@ -42,11 +42,11 @@
 angular.module('hopsWorksApp')
         .controller('DatasetsCtrl', ['$scope', '$window', '$mdSidenav', '$mdUtil',
           'DataSetService', 'JupyterService', '$routeParams', 'ModalService', 'growl', '$location',
-          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'DelaClusterProjectService', 'UtilsService', 'UserService', '$mdToast',
+          'MetadataHelperService', '$rootScope', 'DelaProjectService', 'UtilsService', 'UserService', '$mdToast',
           'TourService', 'ProjectService',
           function ($scope, $window, $mdSidenav, $mdUtil, DataSetService, JupyterService, $routeParams,
                   ModalService, growl, $location, MetadataHelperService,
-                  $rootScope, DelaProjectService, DelaClusterProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
+                  $rootScope, DelaProjectService, UtilsService, UserService, $mdToast, TourService, ProjectService) {
 
             var self = this;
             var SHARED_DATASET_SEPARATOR = '::';
@@ -84,7 +84,6 @@ angular.module('hopsWorksApp')
             $scope.readme = null;
             var dataSetService = DataSetService(self.projectId); //The datasetservice for the current project.
             var delaHopsService = DelaProjectService(self.projectId);
-            var delaClusterService = DelaClusterProjectService(self.projectId);
 
             $scope.all_selected = false;
             self.selectedFiles = {}; //Selected files
@@ -805,23 +804,48 @@ angular.module('hopsWorksApp')
 
             /**
              * Makes the dataset public for anybody within the local cluster
-             * @param id inodeId
+             * @param datasetId
              */
-            self.shareWithCluster = function (id) {
-              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet public? \n\
-                  This will make all its files available for any cluster user to share and process.').then(
-                  function (success) {
-                    self.sharingDataset[id] = true;
-                    delaClusterService.shareWithClusterByInodeId(id).then(
-                      function (success) {
-                        self.sharingDataset[id] = false;
-                        self.showSuccess(success, 'The DataSet is now Public(Cluster).', 4);
-                        getDirContents();
-                      }, function (error) {
-                        self.sharingDataset[id] = false;
-                        self.showError(error, '', 4);
+            self.publish = function(dataset) {
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet Public(Cluster)? \n\
+                This will make all its files available to all users of this cluster.').then(
+                function (success) {
+                  dataSetService.publish(dataset.name).then(
+                    function (success) {
+                      self.showSuccess(success, 'The DataSet is now Public(Cluster).', 4);
+                      getDirContents();
+                    }, function (error) {
+                      self.showError(error, '', 4);
                     });
-                  }
+                }
+              );
+            };
+
+            self.unpublish = function (dataset) {
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet Private? Datasets that have already imported are allowed to keep it as shared with project. You can then unshare all to remove their access').then(
+                function (success) {
+                  dataSetService.unpublish(dataset.name).then(
+                    function (success) {
+                      self.showSuccess(success, 'The DataSet is not Public(cluster) anymore.', 4);
+                      getDirContents();
+                    }, function (error) {
+                      self.showError(error, '', 4);
+                    });
+                }
+              );
+            };
+
+            self.unshareAll = function(dataset) {
+              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to unshare this DataSet from all other projects? ').then(
+                function (success) {
+                  dataSetService.unshareAll(dataset.name).then(
+                    function (success) {
+                      self.showSuccess(success, 'The DataSet is not shared with any project anymore.', 4);
+                      getDirContents();
+                    }, function (error) {
+                      self.showError(error, '', 4);
+                    });
+                }
               );
             };
 
@@ -840,21 +864,6 @@ angular.module('hopsWorksApp')
                         delaHopsService.unshareFromHops(publicDSId, false).then(
                                 function (success) {
                                   self.showSuccess(success, 'The DataSet is not Public(internet) anymore.', 4);
-                                  getDirContents();
-                                }, function (error) {
-                                  self.showError(error, '', 4);
-                        });
-
-                      }
-              );
-            };
-
-            self.unshareFromCluster = function (inodeId) {
-              ModalService.confirm('sm', 'Confirm', 'Are you sure you want to make this DataSet private? ').then(
-                      function (success) {
-                        delaClusterService.unshareFromCluster(inodeId).then(
-                                function (success) {
-                                  self.showSuccess(success, 'The DataSet is not Public(cluster) anymore.', 4);
                                   getDirContents();
                                 }, function (error) {
                                   self.showError(error, '', 4);
