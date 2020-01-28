@@ -117,10 +117,6 @@ angular.module('hopsWorksApp')
                 headers: {'Content-Type': 'application/json; charset=UTF-8'},
                  url: '/api/project/:id/pia'
               },
-              "importPublicDataset": {
-                url: '/api/project/:id/importPublicDataset/:projectName/:inodeId',
-                'method': 'GET'                  
-              },
               "getProjectProvenanceStatus": {
                 url: '/api/project/:id/provenance?type=PROJECT',
                 method: 'GET'

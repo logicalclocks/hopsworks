@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.provenance.core;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -260,6 +261,19 @@ public class HopsFSProvenanceController {
       if(udfso != null) {
         dfs.closeDfsClient(udfso);
       }
+    }
+  }
+  
+  public ProvTypeDTO getMetaStatus(Users user, Project project, Boolean searchable) throws ProvenanceException {
+    if(searchable != null && searchable) {
+      ProvTypeDTO projectMetaStatus = getProjectProvType(user, project);
+      if(Inode.MetaStatus.DISABLED.equals(projectMetaStatus.getMetaStatus())) {
+        return Provenance.Type.META.dto;
+      } else {
+        return projectMetaStatus;
+      }
+    } else {
+      return Provenance.Type.DISABLED.dto;
     }
   }
   

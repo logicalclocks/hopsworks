@@ -200,10 +200,11 @@
                                       detach_template="metadataCtrl.detachTemplate(attributes)"
                                       show_manifest="datasetsCtrl.showManifest(publicId)"
                                       share="datasetsCtrl.share(dataset)"
-                                      share_with_cluster="datasetsCtrl.shareWithCluster(id)"
+                                      share_with_cluster="datasetsCtrl.publish(dataset)"
                                       share_with_hops="datasetsCtrl.shareWithHops(id)"
                                       unshare="datasetsCtrl.unshare(dataset)"
-                                      unshare_from_cluster="datasetsCtrl.unshareFromCluster(id)"
+                                      unshare_all="datasetsCtrl.unshareAll(dataset)"
+                                      unshare_from_cluster="datasetsCtrl.unpublish(dataset)"
                                       unshare_from_hops="datasetsCtrl.unshareFromHops(publicId)">
                         </dataset-menu>
                       </td>
@@ -317,10 +318,11 @@
                                         detach_template="metadataCtrl.detachTemplate(attributes)"
                                         show_manifest="datasetsCtrl.showManifest(publicId)"
                                         share="datasetsCtrl.share(dataset)"
-                                        share_with_cluster="datasetsCtrl.shareWithCluster(id)"
+                                        share_with_cluster="datasetsCtrl.publish(dataset)"
                                         share_with_hops="datasetsCtrl.shareWithHops(id)"
                                         unshare="datasetsCtrl.unshare(dataset)"
-                                        unshare_from_cluster="datasetsCtrl.unshareFromCluster(id)"
+                                        unshare_all="datasetsCtrl.unshareAll(dataset)"
+                                        unshare_from_cluster="datasetsCtrl.unpublish(dataset)"
                                         unshare_from_hops="datasetsCtrl.unshareFromHops(publicId)">
                           </dataset-menu>
                         </div> <!-- end repeat -->

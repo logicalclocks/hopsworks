@@ -42,9 +42,6 @@ package io.hops.hopsworks.dela.cluster;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.SharedState;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
@@ -59,29 +56,7 @@ public class ClusterDatasetController {
   private Logger logger = Logger.getLogger(ClusterDatasetController.class.getName());
 
   @EJB
-  private DatasetController datasetCtrl;
-  @EJB
   private DatasetFacade datasetFacade;
-
-  public Dataset shareWithCluster(Project project, Dataset dataset) {
-    if (dataset.isPublicDs()) {
-      return dataset;
-    }
-    dataset.setPublicDsState(SharedState.CLUSTER);
-    datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(project, dataset, OperationType.Update);
-    return dataset;
-  }
-  
-  public Dataset unshareFromCluster(Project project, Dataset dataset) {
-    if (!dataset.isPublicDs()) {
-      return dataset;
-    }
-    dataset.setPublicDsState(SharedState.PRIVATE);
-    datasetFacade.merge(dataset);
-    datasetCtrl.logDataset(project, dataset, OperationType.Update);
-    return dataset;
-  }
 
   public List<Dataset> getPublicDatasets() {
     return datasetFacade.findPublicDatasetsByState(SharedState.CLUSTER.state);

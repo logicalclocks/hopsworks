@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.dataset.util;
+package io.hops.hopsworks.common.dataset.util;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
@@ -38,8 +38,8 @@ public class DatasetPath {
   
   public DatasetPath(Project project, String path, String root) throws UnsupportedEncodingException {
     String p = Utils.prepPath(path);
-    String pathStr = stripSlash(p);
-    String pathRoot = stripSlash(root); // Projects or /apps/hive/warehouse
+    String pathStr = Utils.pathStripSlash(p);
+    String pathRoot = Utils.pathStripSlash(root); // Projects or /apps/hive/warehouse
     boolean isProject = root.equals(Settings.DIR_ROOT);
     boolean isFullPath = pathStr.startsWith(pathRoot + File.separator);
     isShared = pathStr.contains(Settings.SHARED_FILE_SEPARATOR);
@@ -113,7 +113,7 @@ public class DatasetPath {
   }
   
   public String getDatasetRelativePath() {
-    return stripSlash(fullPath.toString().replace(datasetFullPath.toString(), ""));
+    return Utils.pathStripSlash(fullPath.toString().replace(datasetFullPath.toString(), ""));
   }
   
   public String getDatasetName() {
@@ -145,15 +145,4 @@ public class DatasetPath {
     String dsPath = String.join(File.separator, Arrays.copyOfRange(parts, 0, root.depth() + 1));
     return new Path(File.separator + dsPath);
   }
-  
-  private String stripSlash(String path) {
-    while (path.startsWith(File.separator)) {
-      path = path.substring(1);
-    }
-    while (path.endsWith(File.separator)) {
-      path = path.substring(0, path.length() - 1);
-    }
-    return path;
-  }
-  
 }

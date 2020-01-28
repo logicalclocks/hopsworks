@@ -41,12 +41,8 @@ package io.hops.hopsworks.api.dela;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
-import io.hops.hopsworks.api.hopssite.dto.LocalDatasetHelper;
+import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.dela.cluster.ClusterDatasetController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -64,6 +60,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -83,23 +80,15 @@ public class DelaClusterService {
   @EJB
   private ClusterDatasetController clusterDatasetCtrl;
 
-  @EJB
-  private DatasetController datasetCtrl;
-  @EJB
-  private DistributedFsService dfs;
-
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public Response getPublicDatasets(@Context SecurityContext sc) {
     List<Dataset> clusterDatasets = clusterDatasetCtrl.getPublicDatasets();
-    DistributedFileSystemOps dfso = dfs.getDfsOps();
-    List<LocalDatasetDTO> localDS;
-    try {
-      localDS = LocalDatasetHelper.parse(datasetCtrl, dfso, clusterDatasets);
-    } finally {
-      dfs.closeDfsClient(dfso);
+    List<DataSetDTO> localDS = new LinkedList<>();
+    for(Dataset ds : clusterDatasets) {
+      localDS.add(new DataSetDTO(ds));
     }
-    GenericEntity<List<LocalDatasetDTO>> datasets = new GenericEntity<List<LocalDatasetDTO>>(localDS) {
+    GenericEntity<List<DataSetDTO>> datasets = new GenericEntity<List<DataSetDTO>>(localDS) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(datasets).build();
   }

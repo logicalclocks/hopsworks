@@ -25,4 +25,12 @@ module Helper
       x = yield
     end
   end
+
+  def expect_status_details(expected_status)
+    if response.code == resolve_status(204, response.code)
+      expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code}"
+    else
+      expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and body:#{json_body}"
+    end
+  end
 end

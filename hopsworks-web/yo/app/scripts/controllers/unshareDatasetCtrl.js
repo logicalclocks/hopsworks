@@ -74,7 +74,7 @@ angular.module('hopsWorksApp')
                 if ($scope.dataSetForm.$valid) {
                     var i;
                     for (i = 0; i < self.selectedProjects.length; i++) {
-                        dataSetService.unshare(self.datasetPath, self.selectedProjects[i])
+                        dataSetService.unshare(self.datasetPath, self.selectedProjects[i], dsType)
                             .then(function (success) {
                                 $uibModalInstance.close(success);
                             },

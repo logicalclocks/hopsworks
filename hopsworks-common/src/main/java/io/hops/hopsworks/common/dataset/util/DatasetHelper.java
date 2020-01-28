@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.dataset.util;
+package io.hops.hopsworks.common.dataset.util;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -50,7 +51,7 @@ public class DatasetHelper {
   private InodeController inodeController;
   @EJB
   private Settings settings;
-  
+
   public DatasetPath getNewDatasetPath(Project project, String path, DatasetType datasetType) throws DatasetException {
     String rootDir;
     if (datasetType == null) {
@@ -66,7 +67,18 @@ public class DatasetHelper {
     }
     return datasetPath;
   }
-  
+
+  /**
+   *
+   * @param project
+   * @param path the path should be a absolute path within projects and hive warehouse
+   * @return
+   * @throws DatasetException
+   */
+  public DatasetPath getDatasetPathFromAbsolute(Project project, String path) throws DatasetException {
+    return getDatasetPath(project, path, null);
+  }
+
   public DatasetPath getDatasetPath(Project project, String path, DatasetType datasetType) throws DatasetException {
     DatasetPath datasetPath = getNewDatasetPath(project, path, datasetType);
     Dataset dataset = datasetController.getByProjectAndFullPath(project, datasetPath.getDatasetFullPath().toString());
@@ -103,5 +115,15 @@ public class DatasetHelper {
       //maybe notify user
       resourceRequest.setLimit(limit);
     }
+  }
+
+  public void checkIfDatasetExists(Project project, DatasetPath datasetPath) throws DatasetException {
+    datasetController.getByProjectAndFullPath(project, datasetPath.getDatasetFullPath().toString());
+  }
+
+  public boolean isBasicDatasetProjectParent(Project project, DatasetPath datasetPath) {
+    String basicDataset = Path.SEPARATOR + Settings.DIR_ROOT + Path.SEPARATOR + project.getName();
+    String datasetFullPath = datasetPath.getFullPath().toString();
+    return datasetFullPath.startsWith(basicDataset);
   }
 }

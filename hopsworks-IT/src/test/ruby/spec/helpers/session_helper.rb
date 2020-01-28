@@ -135,6 +135,7 @@ module SessionHelper
     raw_create_session(email, password)
     expect_status(200)
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
+    @user = get_user_by_mail(email)
   end
 
   def login_user(email, password)
@@ -161,6 +162,7 @@ module SessionHelper
       config.headers["Authorization"] = @token
     end
     @cookies
+    pp "session with user:#{email}" if defined?(@debugOpt) && @debugOpt == true
     return response
   end
   
@@ -222,7 +224,11 @@ module SessionHelper
       BbcGroup.create(group_name: role_type, gid: Random.rand(1000))
     end
   end
-  
+
+  def get_user_by_mail(email)
+    User.find_by(email: email)
+  end
+
   def create_user(params={})
     params[:email] = "#{random_id}@email.com" unless params[:email]
     create_validated_user(params)
