@@ -214,8 +214,8 @@ angular.module('hopsWorksApp')
                * @param {type} destProjectId
                * @returns {unresolved}
                */
-              shareTopic: function (projectId, topicName, destProjectId) {
-                return $http.put('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectId);
+              shareTopic: function (projectId, topicName, destProjectName) {
+                return $http.put('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectName);
               },
               
               /**
@@ -225,8 +225,8 @@ angular.module('hopsWorksApp')
                * @param {type} destProjectId
                * @returns {unresolved}
                */
-              unshareTopic: function (projectId, topicName, destProjectId) {
-                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectId);
+              unshareTopic: function (projectId, topicName, destProjectName) {
+                return $http.delete('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared/' + destProjectName);
               },
               
               topicIsSharedTo: function (projectId, topicName){

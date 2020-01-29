@@ -634,7 +634,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectProject: function (size, global, projectId, msg) {
+            selectProject: function (size, global, projectId, msg, fetchProjectInfo) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/selectProject.html',
                     controller: 'SelectProjectCtrl as selectProjectCtrl',
@@ -656,6 +656,9 @@ angular.module('hopsWorksApp')
                         },
                         msg: function () {
                             return msg;
+                        },
+                        fetchProjectInfo: function(){
+                            return fetchProjectInfo;
                         }
                     }
                 });
