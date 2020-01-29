@@ -68,6 +68,7 @@ import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.GeneralSecurityException;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -155,10 +156,12 @@ public class AirflowManager {
           LOG.log(Level.WARNING, "AirflowManager failed to recover, some already running workloads might be " +
               "disrupted");
         }
+        // This is a dummy query to initialize airflowPool metrics for Prometheus
+        airflowDagFacade.getAllWithLimit(1);
         long interval = Math.max(1000L, settings.getJWTExpLeewaySec() * 1000 / 2);
         timerService.createIntervalTimer(10L, interval, new TimerConfig("Airflow JWT renewal", false));
         initialized = true;
-      } catch (IOException ex) {
+      } catch (IOException | SQLException ex) {
         LOG.log(Level.SEVERE, "Failed to initialize AirflowManager", ex);
       }
     }
