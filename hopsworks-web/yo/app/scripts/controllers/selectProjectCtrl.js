@@ -38,13 +38,14 @@
  */
 
 angular.module('hopsWorksApp')
-        .controller('SelectProjectCtrl', ['$uibModalInstance', 'ProjectService', 'growl', 'global', 'projectId', 'msg',
-          function ($uibModalInstance, ProjectService, growl, global, projectId, msg) {
+        .controller('SelectProjectCtrl', ['$uibModalInstance', 'ProjectService', 'growl', 'global', 'projectId', 'msg', 'fetchProjectInfo',
+          function ($uibModalInstance, ProjectService, growl, global, projectId, msg, fetchProjectInfo) {
 
             var self = this;
             self.global = global;
             self.projectId = parseInt(projectId);
             self.msg = msg;
+            self.fetchProjectInfo = fetchProjectInfo;
             self.selectedProject;
             self.projects = [];
 
@@ -79,17 +80,21 @@ angular.module('hopsWorksApp')
             self.init();
 
             self.selectProject = function () {
-              if (self.selectedProject === undefined || self.selectedProject === "") {
+              if (self.selectedProject === undefined || self.selectedProject === '') {
                 growl.error("Could not select a project", {title: 'Error', ttl: 5000, referenceId: 21});
                 return;
               }
 
-              ProjectService.getProjectInfo({projectName: self.selectedProject.name}).$promise.then(
+              if(self.fetchProjectInfo === true) {
+                  ProjectService.getProjectInfo({projectName: self.selectedProject.name}).$promise.then(
                       function (success) {
-                        $uibModalInstance.close(success);
+                          $uibModalInstance.close(success);
                       }, function (error) {
-                growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
-              });
+                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                      });
+              } else {
+                  $uibModalInstance.close(self.selectedProject.name);
+              }
             };
 
             self.close = function () {

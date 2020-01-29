@@ -378,7 +378,7 @@ angular.module('hopsWorksApp')
             });
 
             self.downloadPublicDataset = function (result) {
-              ModalService.selectProject('md', true, "/[^]*/", "Select a Project as download destination.").then(function (success) {
+              ModalService.selectProject('md', true, "/[^]*/", "Select a Project as download destination.", true).then(function (success) {
                 var destProj = success.projectId;
                 ModalService.setupDownload('md', destProj, result).then(function (success) {
                 }, function (error) {
