@@ -39,12 +39,15 @@
 
 package io.hops.hopsworks.api.dela;
 
+import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -57,6 +60,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -80,6 +84,8 @@ public class DelaClusterProjectService {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
+  private InodeFacade inodeFacade;
+  @EJB
   private DatasetFacade datasetFacade;
   @EJB
   private ClusterDatasetController clusterCtrl;
@@ -88,37 +94,50 @@ public class DelaClusterProjectService {
   private Integer projectId;
   
   @POST
-  @Path("/{datasetId}/share")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response share(@PathParam("datasetId") Integer datasetId) throws DelaException {
-    Dataset dataset = datasetFacade.find(datasetId);
-    if(dataset == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
-        "dataset not found");
-    }
-    clusterCtrl.shareWithCluster(project, dataset);
+  public Response share(InodeIdDTO inodeId) throws DelaException {
+    Inode inode = getInode(inodeId.getId());
+    Dataset dataset = getDatasetByInode(inode);
+    clusterCtrl.shareWithCluster(this.project, dataset);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage("Dataset is now cluster public");
-    return Response.ok().entity(json).build();
+    json.setSuccessMessage("Dataset transfer is started - published");
+    return successResponse(json);
   }
   
-  @POST
-  @Path("/{datasetId}/unshare")
+  @DELETE
+  @Path("/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response unshare(@PathParam("datasetId") Integer datasetId) throws DelaException {
-    Dataset dataset = datasetFacade.find(datasetId);
-    if(dataset == null) {
-      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
-        "dataset not found");
-    }
-    clusterCtrl.unshareFromCluster(project, dataset);
+  public Response removePublic(@PathParam("inodeId") Long inodeId) throws DelaException {
+    Inode inode = getInode(inodeId);
+    Dataset dataset = getDatasetByInode(inode);
+    clusterCtrl.unshareFromCluster(this.project, dataset);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("Dataset is now private");
-    return Response.ok().entity(json).build();
+    return successResponse(json);
+  }
+  
+  private Inode getInode(Long inodeId) throws DelaException {
+    if (inodeId == null) {
+      throw new DelaException(RESTCodes.DelaErrorCode.ILLEGAL_ARGUMENT, Level.FINE, DelaException.Source.LOCAL,
+        "inodeId was not provided.");
+    }
+    return inodeFacade.findById(inodeId);
+  }
+  
+  private Dataset getDatasetByInode(Inode inode) throws DelaException {
+    Dataset dataset = datasetFacade.findByProjectAndInode(this.project, inode);
+    if (dataset == null) {
+      throw new DelaException(RESTCodes.DelaErrorCode.DATASET_DOES_NOT_EXIST, Level.FINE, DelaException.Source.LOCAL);
+    }
+    return dataset;
+  }
+  
+  private Response successResponse(Object content) {
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(content).build();
   }
   
   public void setProjectId(Integer projectId) {
