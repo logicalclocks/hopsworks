@@ -402,9 +402,9 @@ angular.module('hopsWorksApp')
             
             self.shareTopic = function(topicName) {
               ModalService.selectProject('lg', true, self.projectId,
-                      "Select a Project to share the topic with.").then(
+                      "Select a Project to share the topic with.", false).then(
                       function (success) {
-                        KafkaService.shareTopic(self.projectId, topicName, success.projectId).then(
+                        KafkaService.shareTopic(self.projectId, topicName, success).then(
                                 function (success) {
                                   self.topicIsSharedTo(topicName);
                                   growl.success("", {
@@ -424,7 +424,7 @@ angular.module('hopsWorksApp')
 
               //operation done from topic
               self.unshareTopic = function (topicName, project) {
-                  KafkaService.unshareTopic(self.projectId, topicName, project.id).then(
+                  KafkaService.unshareTopic(self.projectId, topicName, project.name).then(
                       function (success) {
                           self.topicIsSharedTo(topicName);
                           growl.success("", {
@@ -442,7 +442,7 @@ angular.module('hopsWorksApp')
             
             //operation done from project
             self.unshareTopicFromProject = function (ownerProjectId, topicName){
-                KafkaService.unshareTopic(ownerProjectId, topicName, self.projectId).then(
+                KafkaService.unshareTopic(self.projectId, topicName, '').then(
                         function (success) {
                                   self.getAllSharedTopics();
                                   growl.success("", {title: 'Topic share removed (unshared) from project:.', ttl: 2000});

@@ -197,13 +197,14 @@ public class KafkaResource {
   
   @ApiOperation(value = "Share a Kafka topic with a project.")
   @PUT
-  @Path("/topics/{topic}/shared/{destProjectId}")
+  @Path("/topics/{topic}/shared/{destProjectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectId") Integer destProjectId,
+  public Response shareTopic(@PathParam("topic") String topicName, @PathParam("destProjectName") String destProjectName,
     @Context UriInfo uriInfo) throws KafkaException, ProjectException, UserException {
     URI uri = topicsBuilder.sharedProjectUri(uriInfo, project, topicName).build();
+    Integer destProjectId = projectFacade.findByName(destProjectName).getId();
     Optional<SharedTopics> st = sharedTopicsFacade.findSharedTopicByProjectAndTopic(destProjectId, topicName);
     SharedTopicsDTO dto;
     if (st.isPresent()) {
@@ -217,7 +218,8 @@ public class KafkaResource {
     }
   }
   
-  @ApiOperation(value = "Unshare Kafka topic from all projects.")
+  @ApiOperation(value = "Unshare Kafka topic from all projects if request is issued from the project owning the topic" +
+    ". Other unshare it from the requester project.")
   @DELETE
   @Path("/topics/{topic}/shared")
   @Produces(MediaType.APPLICATION_JSON)
@@ -226,20 +228,21 @@ public class KafkaResource {
   public Response unshareTopicFromProjects(@PathParam("topic") String topicName)
     throws KafkaException, ProjectException {
     
-    kafkaController.unshareTopicFromAllProjects(project, topicName);
+    kafkaController.unshareTopic(project, topicName, null);
     return Response.noContent().build();
   }
   
-  @ApiOperation(value = "Unshare Kafka topic from a project (specified as destProjectId).")
+  @ApiOperation(value = "Unshare Kafka topic from shared-with project (specified as destProjectId). Request must be " +
+    "issued from the owning project.")
   @DELETE
-  @Path("/topics/{topic}/shared/{destProjectId}")
+  @Path("/topics/{topic}/shared/{destProjectName}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response unshareTopicFromProject(@PathParam("topic") String topicName,
-    @PathParam("destProjectId") Integer destProjectId) throws KafkaException, ProjectException {
+    @PathParam("destProjectName") String destProjectName) throws KafkaException, ProjectException {
     
-    kafkaController.unshareTopic(project, topicName, destProjectId);
+    kafkaController.unshareTopic(project, topicName, destProjectName);
     return Response.noContent().build();
   }
   
