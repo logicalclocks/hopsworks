@@ -999,8 +999,7 @@ public class DatasetController {
     if (isDataset && dataset.isShared(project)) {
       // The user is trying to delete a dataset. Drop it from the table
       // But leave it in hopsfs because the user doesn't have the right to delete it
-      hdfsUsersController.unShareDataset(project, dataset);
-      datasetFacade.removeDataset(dataset);
+      unshare(project, user, dataset, project.getName());
     } else {
       try {
         //If a Data Scientist requested it, do it as project user to avoid deleting Data Owner files
