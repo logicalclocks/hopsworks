@@ -164,6 +164,7 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     TypedQuery<AccountAudit> query =
       em.createNamedQuery("AccountAudit.findByTargetActionAndMsgLatest", AccountAudit.class);
     query.setParameter("target", user);
+    query.setParameter("outcome", "SUCCESS");
     query.setParameter("action", "PASSWORD CHANGE");
     query.setParameter("message", "Admin reset password");
     query.setMaxResults(1);

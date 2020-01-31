@@ -46,12 +46,14 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
@@ -66,6 +68,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -97,6 +100,8 @@ public class AuthController {
   private CertificatesMgmService certificatesMgmService;
   @EJB
   private SecurityUtils securityUtils;
+  @EJB
+  private AccountAuditFacade accountAuditFacade;
 
   private void validateUser(Users user) {
     if (user == null) {
@@ -575,6 +580,14 @@ public class AuthController {
     resetFalseLogin(user);
     setUserOnlineStatus(user, Settings.IS_ONLINE);
     LOGGER.log(Level.FINEST, "Logged in user: {0}. ", user.getEmail());
+  }
+  
+  public void registerLogin(Users user, HttpServletRequest req) {
+    Users initiator = userFacade.findByEmail(req.getRemoteUser());
+    String remoteHost = HttpUtil.extractRemoteHostIp(req);
+    String userAgent = HttpUtil.extractUserAgent(req);
+    registerLogin(user);
+    accountAuditFacade.registerLoginInfo(initiator, "LOGIN", "SUCCESS", remoteHost, userAgent);
   }
 
   /**

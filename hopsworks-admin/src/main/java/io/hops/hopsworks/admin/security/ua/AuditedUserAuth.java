@@ -39,7 +39,7 @@ public class AuditedUserAuth {
     ServletException {
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp);
     req.login(user.getEmail(), passwordWithSaltPlusOtp);
-    authController.registerLogin(user);
+    authController.registerLogin(user, req);
   }
   
   public void logout(Users user, HttpServletRequest req) throws ServletException {

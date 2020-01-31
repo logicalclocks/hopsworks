@@ -411,11 +411,11 @@ public class AuthService {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE,
         null, RESTCodes.UserErrorCode.NO_ROLE_FOUND.getMessage());
     }
-
+    
     statusValidator.checkStatus(user.getStatus());
     try {
       req.login(user.getEmail(), password);
-      authController.registerLogin(user);
+      authController.registerLogin(user, req);
     } catch (ServletException e) {
       authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.FINE, null, e.getMessage(), e);

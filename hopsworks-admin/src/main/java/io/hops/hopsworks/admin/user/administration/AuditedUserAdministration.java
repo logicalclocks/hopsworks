@@ -17,10 +17,12 @@ package io.hops.hopsworks.admin.user.administration;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.FormatUtils;
+import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -45,6 +47,8 @@ public class AuditedUserAdministration {
   private AuthController authController;
   @EJB
   private Settings settings;
+  @EJB
+  private AccountAuditFacade accountAuditFacade;
   
   public void activateUser(Users user, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
@@ -74,7 +78,20 @@ public class AuditedUserAdministration {
   
   public String resetPassword(Users user, HttpServletRequest request)
     throws MessagingException, UserException {//httpServletRequest needed for logging
-    return usersController.resetPassword(user, request.getRemoteUser());
+    Users init = userFacade.findByEmail(request.getRemoteUser());
+    String remoteHost = HttpUtil.extractRemoteHostIp(request);
+    String userAgent = HttpUtil.extractUserAgent(request);
+    String pwd;
+    try {
+      pwd = usersController.resetPassword(user, request.getRemoteUser());
+      accountAuditFacade.registerAccountChange(init, "PASSWORD CHANGE", "SUCCESS", "Admin reset password", user,
+        remoteHost, userAgent);
+    } catch (UserException ue) {
+      accountAuditFacade.registerAccountChange(init, "PASSWORD CHANGE", "FAILED", "Admin reset password", user,
+        remoteHost, userAgent);
+      throw ue;
+    }
+    return pwd;
   }
   
   public void setMaxProject(Users user, int num, HttpServletRequest request) {
