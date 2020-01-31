@@ -20,6 +20,8 @@ package io.hops.hopsworks.api.featurestore;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
@@ -33,33 +35,47 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Query constructor service")
-public class QueryConstructorService {
+public class FsQueryConstructorResource {
 
   @EJB
   private ConstructorController constructorController;
+  @EJB
+  private FsQueryBuilder fsQueryBuilder;
+  @EJB
+  private ProjectFacade projectFacade;
 
-  @POST
+  private Project project;
+  public FsQueryConstructorResource setProject(Project project) {
+    this.project = project;
+    return this;
+  }
+
+  @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Construct the SQL query to join the requested features",
-      response = String.class)
-  public Response constructQuery(@Context SecurityContext sc, QueryDTO queryDto) throws FeaturestoreException {
+      response = FsQueryDTO.class)
+  public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
+                                 QueryDTO queryDto) throws FeaturestoreException {
     if (queryDto == null) {
       throw new IllegalArgumentException("Please submit a query to compile");
     }
-    return Response.ok(constructorController.construct(queryDto)).build();
+    String query = constructorController.construct(queryDto);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, query);
+    return Response.ok().entity(fsQueryDTO).build();
   }
 }

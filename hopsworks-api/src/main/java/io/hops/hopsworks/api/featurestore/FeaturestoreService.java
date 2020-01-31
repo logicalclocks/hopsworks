@@ -125,7 +125,7 @@ public class FeaturestoreService {
   @EJB
   private JobsBuilder jobsBuilder;
   @Inject
-  private QueryConstructorService queryConstructorService;
+  private FsQueryConstructorResource fsQueryConstructorResource;
 
   private Project project;
 
@@ -451,8 +451,8 @@ public class FeaturestoreService {
   }
 
   @Path("/query")
-  public QueryConstructorService constructQuery() {
-    return queryConstructorService;
+  public FsQueryConstructorResource constructQuery() {
+    return fsQueryConstructorResource.setProject(project);
   }
 
   /**
