@@ -16,31 +16,12 @@
 package io.hops.hopsworks;
 
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.restutils.RESTCodes.ActivitiesErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.CAErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.DatasetErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.DelaErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.FeaturestoreErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.GenericErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.JobErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.KafkaErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.MetadataErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.ProjectErrorCode;
 import io.hops.hopsworks.restutils.RESTCodes.RESTErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.RequestErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.ResourceErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.SecurityErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.ServiceErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.ServingErrorCode;
-import io.hops.hopsworks.restutils.RESTCodes.UserErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

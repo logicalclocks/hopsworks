@@ -126,12 +126,12 @@ public class DelaProjectService {
 
   private Project project;
   private Integer projectId;
-
+  
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = projectFacade.find(projectId);
   }
-
+  
   public Integer getProjectId() {
     return projectId;
   }
@@ -145,7 +145,7 @@ public class DelaProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getProjectContents() throws DelaException {
+  public Response getProjectContents(@Context SecurityContext sc) throws DelaException {
 
     List<Integer> projectIds = new LinkedList<>();
     projectIds.add(projectId);
@@ -179,7 +179,8 @@ public class DelaProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getExtendedDetails(@PathParam("publicDSId") String publicDSId) throws DelaException {
+  public Response getExtendedDetails(@PathParam("publicDSId") String publicDSId, @Context SecurityContext sc)
+    throws DelaException {
     TorrentId torrentId = new TorrentId(publicDSId);
     TorrentExtendedStatusJSON resp = delaTransferCtrl.details(torrentId);
     return successResponse(resp);

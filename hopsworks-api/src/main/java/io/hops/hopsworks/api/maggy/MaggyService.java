@@ -40,6 +40,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,7 +97,7 @@ public class MaggyService {
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response register(MaggyDriver driver) throws ServiceException {
+  public Response register(MaggyDriver driver, @Context SecurityContext sc) throws ServiceException {
     
     logger.log(Level.FINE, "REST call from maggy to register the driver: " + driver);
     

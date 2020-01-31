@@ -149,7 +149,7 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
-  public Response getFeaturestores() {
+  public Response getFeaturestores(@Context SecurityContext sc) {
     List<FeaturestoreDTO> featurestores = featurestoreController.getFeaturestoresForProject(project);
     GenericEntity<List<FeaturestoreDTO>> featurestoresGeneric =
       new GenericEntity<List<FeaturestoreDTO>>(featurestores) {
@@ -173,8 +173,7 @@ public class FeaturestoreService {
     response = FeaturestoreDTO.class)
   public Response getFeaturestore(
     @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("featurestoreId")
-      Integer featurestoreId) throws FeaturestoreException {
+    @PathParam("featurestoreId") Integer featurestoreId, @Context SecurityContext sc) throws FeaturestoreException {
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());
     }
@@ -198,7 +197,7 @@ public class FeaturestoreService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get featurestore settings",
     response = FeaturestoreClientSettingsDTO.class)
-  public Response getFeaturestoreSettings() {
+  public Response getFeaturestoreSettings(@Context SecurityContext sc) {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setFeaturestoreUtil4jExecutable("hdfs:///user" + org.apache.hadoop.fs.Path.SEPARATOR
       + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
@@ -234,7 +233,7 @@ public class FeaturestoreService {
     response = FeaturestoreDTO.class)
   public Response getFeaturestoreByName(
     @ApiParam(value = "Id of the featurestore", required = true)
-    @PathParam("name") String name) throws FeaturestoreException {
+    @PathParam("name") String name, @Context SecurityContext sc) throws FeaturestoreException {
     verifyNameProvided(name);
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, name);
@@ -303,8 +302,8 @@ public class FeaturestoreService {
         .entity(featurestoreMetadataGeneric)
         .build();
   }
-
-
+  
+  
   @Path("{featureStoreId}/datavalidation")
   public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
     return this.dataValidationService.setFeatureStore(featureStoreId);
@@ -318,8 +317,8 @@ public class FeaturestoreService {
    * @throws FeaturestoreException
    */
   @Path("/{featurestoreId}/featuregroups")
-  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId)
-      throws FeaturestoreException {
+  public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId,
+    @Context SecurityContext sc) throws FeaturestoreException {
     featuregroupService.setProject(project);
     if (featurestoreId == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ID_NOT_PROVIDED.getMessage());

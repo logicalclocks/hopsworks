@@ -99,7 +99,7 @@ public class ServingService {
   private Project project;
 
   public ServingService(){ }
-
+  
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -111,7 +111,8 @@ public class ServingService {
   @ApiOperation(value = "Get the list of serving instances for the project",
       response = ServingView.class,
       responseContainer = "List")
-  public Response getServings() throws ServingException, KafkaException, CryptoPasswordNotFoundException {
+  public Response getServings(@Context SecurityContext sc) throws ServingException, KafkaException,
+    CryptoPasswordNotFoundException {
     List<ServingWrapper> servingDAOList = servingController.getServings(project);
     
     ArrayList<ServingView> servingViewList = new ArrayList<>();
@@ -133,7 +134,7 @@ public class ServingService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get info about a serving instance for the project", response = ServingView.class)
-  public Response getServing(
+  public Response getServing(@Context SecurityContext sc,
       @ApiParam(value = "Id of the Serving instance", required = true) @PathParam("servingId") Integer servingId)
       throws ServingException, KafkaException, CryptoPasswordNotFoundException {
     if (servingId == null) {
@@ -154,7 +155,7 @@ public class ServingService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete a serving instance")
-  public Response deleteServing(
+  public Response deleteServing(@Context SecurityContext sc,
       @ApiParam(value = "Id of the serving instance", required = true) @PathParam("servingId") Integer servingId)
       throws ServingException {
     if (servingId == null) {

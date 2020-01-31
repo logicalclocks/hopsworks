@@ -39,7 +39,6 @@
 
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -58,7 +57,7 @@ import javax.servlet.http.HttpServletRequest;
 public class AccountVerification {
 
   @EJB
-  protected UsersController usersController;
+  protected AuditedUserAccountAction auditedUserAccountAction;
 
   @ManagedProperty("#{param.key}")
   private String key;
@@ -79,7 +78,7 @@ public class AccountVerification {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      usersController.validateKey(key, req);
+      auditedUserAccountAction.validateKey(key, req);
       return true;
     } catch (PersistenceException ex) {
       dbDown = true;

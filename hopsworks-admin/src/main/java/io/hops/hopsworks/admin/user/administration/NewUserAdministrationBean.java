@@ -87,7 +87,7 @@ public class NewUserAdministrationBean implements Serializable {
   }
   
   public void activateUser(Users user) {
-    userAdministrationController.activateUser(user, sessionState.getLoggedInUser());
+    userAdministrationController.activateUser(user);
     LOGGER.log(Level.FINE, "Activated user: {0} with role: {1}", new Object[]{user.getEmail(), user.getGroupName()});
   }
   

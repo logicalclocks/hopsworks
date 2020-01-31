@@ -64,7 +64,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ModelsResource {
@@ -97,7 +96,7 @@ public class ModelsResource {
   public Response getAll(
       @BeanParam Pagination pagination,
       @BeanParam ModelsBeanParam modelsBeanParam,
-      @Context UriInfo uriInfo) throws ModelsException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ModelsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -116,7 +115,7 @@ public class ModelsResource {
   public Response get (
       @PathParam("id") String id,
       @Context UriInfo uriInfo,
-      @BeanParam ModelsBeanParam modelsBeanParam)
+      @BeanParam ModelsBeanParam modelsBeanParam, @Context SecurityContext sc)
       throws ProvenanceException, ModelsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MODELS);
     ProvStateElastic fileState = modelsController.getModel(project, id);

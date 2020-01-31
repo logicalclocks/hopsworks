@@ -65,8 +65,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -97,7 +99,7 @@ public class DelaClusterProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response share(InodeIdDTO inodeId) throws DelaException {
+  public Response share(InodeIdDTO inodeId, @Context SecurityContext sc) throws DelaException {
     Inode inode = getInode(inodeId.getId());
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.shareWithCluster(this.project, dataset);
@@ -111,7 +113,7 @@ public class DelaClusterProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response removePublic(@PathParam("inodeId") Long inodeId) throws DelaException {
+  public Response removePublic(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc) throws DelaException {
     Inode inode = getInode(inodeId);
     Dataset dataset = getDatasetByInode(inode);
     clusterCtrl.unshareFromCluster(this.project, dataset);
@@ -144,7 +146,7 @@ public class DelaClusterProjectService {
     this.projectId = projectId;
     this.project = projectFacade.find(projectId);
   }
-
+  
   public Integer getProjectId() {
     return projectId;
   }

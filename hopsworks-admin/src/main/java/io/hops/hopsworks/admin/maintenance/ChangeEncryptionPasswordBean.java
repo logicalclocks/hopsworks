@@ -39,7 +39,6 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
 
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -56,7 +55,7 @@ public class ChangeEncryptionPasswordBean implements Serializable {
   private static final Logger LOG = Logger.getLogger(ChangeEncryptionPasswordBean.class.getName());
   
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private LoggedMaintenanceHelper loggedMaintenanceHelper;
   
   private String currentPassword;
   private String newPassword;
@@ -93,10 +92,7 @@ public class ChangeEncryptionPasswordBean implements Serializable {
     try {
       FacesContext context = FacesContext.getCurrentInstance();
       HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
-      String userEmail = request.getUserPrincipal().getName();
-      certificatesMgmService.checkPassword(currentPassword, userEmail);
-      Integer opId = certificatesMgmService.initUpdateOperation();
-      certificatesMgmService.resetMasterEncryptionPassword(opId, newPassword, userEmail);
+      loggedMaintenanceHelper.changeMasterEncryptionPassword(currentPassword, newPassword, request);
       MessagesController.addInfoMessage("Changing password...", "Check your Inbox for completion status");
     } catch (EncryptionMasterPasswordException ex) {
       MessagesController.addErrorMessage(ex.getMessage());

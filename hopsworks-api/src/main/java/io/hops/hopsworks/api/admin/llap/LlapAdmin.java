@@ -58,9 +58,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 
 @Path("/admin/llap")
@@ -84,7 +86,7 @@ public class LlapAdmin {
    */
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response clusterStatus() {
+  public Response clusterStatus(@Context SecurityContext sc) {
     LlapClusterStatus status = llapClusterFacade.getClusterStatus();
     GenericEntity<LlapClusterStatus> statusEntity =
         new GenericEntity<LlapClusterStatus>(status) {};
@@ -99,7 +101,8 @@ public class LlapAdmin {
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
-  public Response changeClusterStatus(LlapClusterStatus llapClusterRequest) throws ServiceException {
+  public Response changeClusterStatus(LlapClusterStatus llapClusterRequest, @Context SecurityContext sc)
+    throws ServiceException {
     LlapClusterStatus oldClusterStatus = llapClusterFacade.getClusterStatus();
     LlapClusterStatus.Status desiredStatus = llapClusterRequest.getClusterStatus();
 

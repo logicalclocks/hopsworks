@@ -58,9 +58,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +97,7 @@ public class CertificateMaterializerAdmin {
    * @return
    */
   @GET
-  public Response getMaterializerState() {
+  public Response getMaterializerState(@Context SecurityContext sc) {
   
     CertificateMaterializer.MaterializerState<Map<String, Map<String, Integer>>, Map<String, Map<String, Integer>>,
         Map<String, Set<String>>, Map<String, Boolean>> materializerState = certificateMaterializer.getState();
@@ -147,7 +149,7 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/local/{name}/{directory}")
   public Response removeLocalMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory) {
+      @PathParam("directory") String directory, @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }
@@ -191,7 +193,7 @@ public class CertificateMaterializerAdmin {
   @DELETE
   @Path("/remote/{name}/{directory}")
   public Response removeRemoteMaterializedCrypto(@PathParam("name") String materialName,
-      @PathParam("directory") String directory) {
+      @PathParam("directory") String directory, @Context SecurityContext sc) {
     if (Strings.isNullOrEmpty(materialName)) {
       throw new IllegalArgumentException("materialName was not provided or was empty");
     }

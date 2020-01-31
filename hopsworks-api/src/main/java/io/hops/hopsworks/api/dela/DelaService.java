@@ -135,14 +135,14 @@ public class DelaService {
   @GET
   @Path("/client")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getClientType() {
+  public Response getClientType(@Context SecurityContext sc) {
     DelaClientDTO clientType = new DelaClientDTO(settings.getDelaClientType().type);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(clientType).build();
   }
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getPublicDatasets() {
+  public Response getPublicDatasets(@Context SecurityContext sc) {
     List<Dataset> clusterDatasets = delaDatasetCtrl.getLocalPublicDatasets();
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     List<LocalDatasetDTO> localDS;
@@ -158,7 +158,7 @@ public class DelaService {
   @GET
   @Path("/search")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response publicSearch(@ApiParam(required=true) @QueryParam("query") String query)
+  public Response publicSearch(@ApiParam(required=true) @QueryParam("query") String query, @Context SecurityContext sc)
     throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "dela:search");
     if (Strings.isNullOrEmpty(query)) {
@@ -184,7 +184,7 @@ public class DelaService {
   @GET
   @Path("/transfers/{publicDSId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response details(@PathParam("publicDSId")String publicDSId) throws DelaException {
+  public Response details(@PathParam("publicDSId")String publicDSId, @Context SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "dela:dataset:details {0}", publicDSId);
     SearchServiceDTO.ItemDetails result = hopsSite.details(publicDSId);
     String auxResult = new Gson().toJson(result);
@@ -229,8 +229,8 @@ public class DelaService {
   @Path("/datasets/{publicDSId}/readme")
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Gets readme file from a provided list of peers")
-  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON)
-    throws DelaException {
+  public Response readme(@PathParam("publicDSId") String publicDSId, BootstrapDTO peersJSON,
+    @Context SecurityContext sc) throws DelaException {
     Optional<FilePreviewDTO> readme = tryReadmeLocally(publicDSId);
     if (!readme.isPresent()) {
       readme = tryReadmeRemotely(publicDSId, peersJSON);
