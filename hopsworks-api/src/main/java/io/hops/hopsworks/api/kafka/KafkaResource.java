@@ -216,6 +216,18 @@ public class KafkaResource {
     }
   }
   
+  @ApiOperation(value = "Accept shared Kafka topic.")
+  @PUT
+  @Path("/topics/{topic}/shared")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response acceptSharedTopic(@PathParam("topic") String topicName, @Context UriInfo uriInfo)
+    throws KafkaException, ProjectException, UserException {
+    
+    kafkaController.acceptSharedTopic(project, topicName);
+    return Response.ok().build();
+  }
+
   @ApiOperation(value = "Unshare Kafka topic from all projects if request is issued from the project owning the topic" +
     ". Other unshare it from the requester project.")
   @DELETE

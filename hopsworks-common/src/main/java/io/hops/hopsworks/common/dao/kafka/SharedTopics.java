@@ -86,18 +86,18 @@ public class SharedTopics implements Serializable {
           max = 1000)
   @Column(name = "owner_id")
   private Integer projectId;
+  
+  @NotNull
+  @Column(name = "accepted")
+  private Boolean accepted;
 
   public SharedTopics() {
-  }
-
-  public SharedTopics(SharedTopicsPK sharedTopicsPK, Integer projectId) {
-    this.sharedTopicsPK = sharedTopicsPK;
-    this.projectId = projectId;
   }
 
   public SharedTopics(String topicName, int owningId, Integer projectId) {
     this.sharedTopicsPK = new SharedTopicsPK(topicName, projectId);
     this.projectId = owningId;
+    this.accepted = false;
   }
 
   public SharedTopicsPK getSharedTopicsPK() {
@@ -115,7 +115,15 @@ public class SharedTopics implements Serializable {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-
+  
+  public Boolean getAccepted() {
+    return accepted;
+  }
+  
+  public void setAccepted(Boolean accepted) {
+    this.accepted = accepted;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

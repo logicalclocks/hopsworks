@@ -519,6 +519,30 @@ angular.module('hopsWorksApp')
                 }
               )
             };
+
+            self.acceptSharedTopic = function(topic) {
+              if (topic.accepted === false) {
+                ModalService.confirmShare('sm', 'Accept Shared Topic?', 'Do you want to accept this topic and add it' +
+                  ' to this project?').then(function (success) {
+                    KafkaService.acceptSharedTopic(self.projectId, topic.name).then(function(success) {
+                      growl.success("", {title: 'Topic accepted.', ttl: 5000});
+                      $location.path($location.path() + '/');
+                    }, function (error) {
+                      growl.error("", {title: 'Error accepting topic.', ttl: 5000});
+                    })
+                }, function (error) {
+                    if (error === 'reject') {
+                      KafkaService.unshareTopic(self.projectId, topic.name, '').then(
+                        function (success) {
+                          $location.path($location.path() + '/');
+                          self.showSuccess(success, '', 4);
+                        }, function (error) {
+                          self.showError(error, 'The Dataset has been removed.', 4);
+                        });
+                    }
+                });
+              }
+            };
               
           }]);
 
