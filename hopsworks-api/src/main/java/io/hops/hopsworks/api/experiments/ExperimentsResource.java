@@ -65,7 +65,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExperimentsResource {
@@ -103,7 +102,7 @@ public class ExperimentsResource {
   public Response getAll(
       @BeanParam Pagination pagination,
       @BeanParam ExperimentsBeanParam experimentsBeanParam,
-      @Context UriInfo uriInfo) throws ExperimentsException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ExperimentsException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -123,7 +122,7 @@ public class ExperimentsResource {
   public Response get (
       @PathParam("id") String id,
       @Context UriInfo uriInfo,
-      @BeanParam ExperimentsBeanParam experimentsBeanParam)
+      @BeanParam ExperimentsBeanParam experimentsBeanParam, @Context SecurityContext sc)
       throws ExperimentsException, DatasetException, ProvenanceException, ElasticException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setExpansions(experimentsBeanParam.getExpansions().getResources());

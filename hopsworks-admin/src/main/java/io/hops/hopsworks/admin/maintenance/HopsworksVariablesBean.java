@@ -47,6 +47,8 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.List;
 import java.util.logging.Logger;
@@ -58,6 +60,8 @@ public class HopsworksVariablesBean implements Serializable {
   
   @EJB
   private Settings settings;
+  @EJB
+  private LoggedMaintenanceHelper loggedMaintenanceHelper;
   
   private List<Variables> allVariables;
   
@@ -80,7 +84,9 @@ public class HopsworksVariablesBean implements Serializable {
   public void onRowEdit(RowEditEvent event) {
     String varName = ((Variables) event.getObject()).getId();
     String varValue = ((Variables) event.getObject()).getValue();
-    settings.updateVariable(varName, varValue);
+    HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
+      .getRequest();
+    loggedMaintenanceHelper.updateVariable(varName, varValue, httpServletRequest);
     MessagesController.addInfoMessage("Updated variable : " + varName + " to: " + varValue);
   }
   

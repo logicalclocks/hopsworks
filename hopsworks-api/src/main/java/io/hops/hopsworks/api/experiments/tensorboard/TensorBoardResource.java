@@ -67,16 +67,13 @@ public class TensorBoardResource {
 
   private Project project;
   private String experimentId;
-
-  public TensorBoardResource(){
-  }
-
+  
   public TensorBoardResource setProject(Project project, String experimentId) {
     this.project = project;
     this.experimentId = experimentId;
     return this;
   }
-
+  
   public Project getProject() {
     return project;
   }

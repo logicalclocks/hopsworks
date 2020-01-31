@@ -59,8 +59,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -100,7 +102,7 @@ public class AgentResource {
       @ApiParam(value = "Agent request", required = true) AgentView request,
       @ApiParam(value = "Action to be performed on agent resource", required = true)
       @QueryParam("action")
-      @DefaultValue("NONE") AgentAction action) throws ServiceException {
+      @DefaultValue("NONE") AgentAction action, @Context SecurityContext sc) throws ServiceException {
 
     switch (action) {
       case PING:

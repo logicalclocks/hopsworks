@@ -19,9 +19,6 @@ import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
-import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -32,7 +29,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
@@ -46,11 +42,8 @@ public class UserProfileBuilder {
   private UserFacade userFacade;
   @EJB
   private BbcGroupFacade bbcGroupFacade;
-  @EJB
-  private AccountAuditFacade auditManager;
-  
-  public UserProfileDTO acceptUser(HttpServletRequest req, Users initiator, Integer userId, Users newUser)
-    throws UserException, ServiceException {
+
+  public UserProfileDTO acceptUser(Integer userId, Users newUser) throws UserException, ServiceException {
     Users u = usersController.getUserById(userId);
     if (u.getStatus().equals(UserAccountStatus.VERIFIED_ACCOUNT)) {
       Collection<BbcGroup> groups = null;
@@ -65,15 +58,6 @@ public class UserProfileBuilder {
       u.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
       u.setBbcGroupCollection(groups);
       u = userFacade.update(u);
-      StringBuilder sb = new StringBuilder();
-      for (BbcGroup group : u.getBbcGroupCollection()) {
-        sb.append(group.getGroupName()).append(", ");
-      }
-      auditManager.registerRoleChange(initiator,
-        RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
-          name(), sb.toString(), u, req);
-      auditManager.registerRoleChange(initiator, UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-        AccountsAuditActions.SUCCESS.name(), "", u, req);
       usersController.sendConfirmationMail(u);
     } else {
       throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
@@ -82,15 +66,11 @@ public class UserProfileBuilder {
     return new UserProfileDTO(u);
   }
   
-  public UserProfileDTO rejectUser(HttpServletRequest req, Users initiator, Integer userId)
-    throws UserException, ServiceException {
+  public UserProfileDTO rejectUser(Integer userId) throws UserException, ServiceException {
     Users u = userFacade.find(userId);
     if (u != null) {
       u.setStatus(UserAccountStatus.SPAM_ACCOUNT);
       u = userFacade.update(u);
-      
-      auditManager.registerRoleChange(initiator, UserAccountStatus.SPAM_ACCOUNT.name(),
-        AccountsAuditActions.SUCCESS.name(), "", u, req);
       usersController.sendRejectionEmail(u);
     } else {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -98,11 +78,11 @@ public class UserProfileBuilder {
     return new UserProfileDTO(u);
   }
   
-  public UserProfileDTO pendUser(HttpServletRequest req, Integer userId) throws UserException, ServiceException {
+  public UserProfileDTO pendUser(String linkUrl, Integer userId) throws UserException, ServiceException {
     Users u = userFacade.find(userId);
     if (u != null) {
       if (u.getStatus().equals(UserAccountStatus.NEW_MOBILE_ACCOUNT)) {
-        u = usersController.resendAccountVerificationEmail(u, req);
+        u = usersController.resendAccountVerificationEmail(u, linkUrl);
       } else {
         throw new UserException(RESTCodes.UserErrorCode.TRANSITION_STATUS_ERROR, Level.WARNING,
           "status: "+ u.getStatus().name() + ", to pending status");
@@ -114,8 +94,7 @@ public class UserProfileBuilder {
     return new UserProfileDTO(u);
   }
   
-  public UserProfileDTO updateUser(Integer userIdToUpdate, HttpServletRequest req, Users newUser,
-    Users initiator) throws UserException {
+  public UserProfileDTO updateUser(Integer userIdToUpdate, Users newUser) throws UserException {
     Users u = userFacade.find(userIdToUpdate);
     if (u == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -123,17 +102,9 @@ public class UserProfileBuilder {
     
     if (newUser.getStatus() != null) {
       u.setStatus(newUser.getStatus());
-      auditManager.registerRoleChange(initiator, AccountsAuditActions.CHANGEDSTATUS.name(),
-        AccountsAuditActions.SUCCESS.name(), u.getStatusName(), u, req);
     }
     if (newUser.getBbcGroupCollection() != null) {
       u.setBbcGroupCollection(newUser.getBbcGroupCollection());
-      StringBuilder sb = new StringBuilder();
-      for (BbcGroup group : u.getBbcGroupCollection()) {
-        sb.append(group.getGroupName()).append(", ");
-      }
-      auditManager.registerRoleChange(initiator, RolesAuditAction.ROLE_UPDATED.name(), RolesAuditAction.SUCCESS.
-        name(), sb.toString(), u, req);
     }
     if (newUser.getMaxNumProjects() != null) {
       u.setMaxNumProjects(newUser.getMaxNumProjects());

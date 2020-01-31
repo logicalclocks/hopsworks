@@ -40,11 +40,9 @@
 package io.hops.hopsworks.common.dao.user.security.audit;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.util.Settings;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -52,12 +50,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import javax.servlet.http.HttpServletRequest;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.util.Settings;
-import org.apache.commons.lang3.StringUtils;
-
 import javax.persistence.TypedQuery;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Stateless
 public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
@@ -98,36 +96,53 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     }
     return null;
   }
-
-  public void registerLoginInfo(Users user, String action, String outcome, HttpServletRequest req) {
+  
+  /**
+   *
+   * @param user
+   * @param action
+   * @param outcome
+   * @param remoteHost
+   * @param userAgent
+   */
+  public void registerLoginInfo(Users user, String action, String outcome, String remoteHost, String userAgent) {
     if (!whitelistUserLogins.contains(user.getEmail())) {
-      Userlogins userlogin = new Userlogins(req.getRemoteHost(), extractUserAgent(req), user,
-          action, outcome, new Date());
-      em.persist(userlogin);
+      Userlogins userLogin = new Userlogins(remoteHost, userAgent, user, action, outcome, new Date());
+      em.persist(userLogin);
     }
   }
-
-  public void registerRoleChange(Users user, String action, String outcome,
-          String message, Users targetUser, HttpServletRequest req) {
-    RolesAudit rolesAudit = new RolesAudit(action, new Date(), message, extractUserAgent(req),
-        req.getRemoteHost(), outcome, targetUser, user);
+  
+  /**
+   *
+   * @param user
+   * @param action
+   * @param outcome
+   * @param message
+   * @param targetUser
+   * @param remoteHost
+   * @param userAgent
+   */
+  public void registerRoleChange(Users user, String action, String outcome, String message, Users targetUser,
+    String remoteHost, String userAgent) {
+    RolesAudit rolesAudit =
+      new RolesAudit(action, new Date(), message, userAgent, remoteHost, outcome, targetUser, user);
     em.persist(rolesAudit);
   }
-
+  
   /**
-   * Register account related changes.
    *
    * @param init
    * @param action
    * @param outcome
    * @param message
    * @param target
-   * @param req
+   * @param remoteHost
+   * @param userAgent
    */
-  public void registerAccountChange(Users init, String action, String outcome,
-          String message, Users target, HttpServletRequest req) {
-    AccountAudit accountAudit = new AccountAudit(action, new Date(), message, outcome, req.getRemoteHost(),
-        extractUserAgent(req), target, init);
+  public void registerAccountChange(Users init, String action, String outcome, String message, Users target,
+    String remoteHost, String userAgent) {
+    AccountAudit accountAudit =
+      new AccountAudit(action, new Date(), message, outcome, remoteHost, userAgent, target, init);
     em.persist(accountAudit);
   }
 
@@ -145,23 +160,18 @@ public class AccountAuditFacade extends AbstractFacade<AccountAudit> {
     return query.getResultList();
   }
   
-  public AccountAudit findByTargetLatest(Users user) {
-    TypedQuery<AccountAudit> query = em.createNamedQuery("AccountAudit.findByTargetLatest", AccountAudit.class);
+  public AccountAudit findByTargetLatestPwdReset(Users user) {
+    TypedQuery<AccountAudit> query =
+      em.createNamedQuery("AccountAudit.findByTargetActionAndMsgLatest", AccountAudit.class);
     query.setParameter("target", user);
+    query.setParameter("outcome", "SUCCESS");
+    query.setParameter("action", "PASSWORD CHANGE");
+    query.setParameter("message", "Admin reset password");
     query.setMaxResults(1);
     try {
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
     }
-  }
-
-  private String extractUserAgent(HttpServletRequest httpServletRequest) {
-    String userAgent = httpServletRequest.getHeader("User-Agent");
-    if (userAgent == null || userAgent.isEmpty()) {
-      return "Unknown User-Agent";
-    }
-
-    return StringUtils.left(userAgent, 255);
   }
 }

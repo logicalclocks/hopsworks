@@ -127,7 +127,7 @@ public class FeaturestoreStorageConnectorService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors() {
+  public Response getStorageConnectors(@Context SecurityContext sc) {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
@@ -153,8 +153,7 @@ public class FeaturestoreStorageConnectorService {
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
   public Response getStorageConnectorsOfType(
     @ApiParam(value = "storage connector type", example = "JDBC")
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType) {
+    @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType, @Context SecurityContext sc) {
     verifyStorageConnectorType(connectorType);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestoreWithType(featurestore,
@@ -188,9 +187,7 @@ public class FeaturestoreStorageConnectorService {
     @PathParam("connectorType")
       FeaturestoreStorageConnectorType connectorType,
     @ApiParam(value = "Id of the storage connector", required = true)
-    @PathParam("connectorId")
-      Integer connectorId)
-    throws FeaturestoreException {
+    @PathParam("connectorId") Integer connectorId, @Context SecurityContext sc) throws FeaturestoreException {
     verifyStorageConnectorTypeAndId(connectorType, connectorId);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
       featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
@@ -219,8 +216,7 @@ public class FeaturestoreStorageConnectorService {
   @ApiOperation(value = "Create a new storage connector for the feature store",
     response = FeaturestoreStorageConnectorDTO.class)
   public Response createNewStorageConnectorWithType(
-    @Context
-      SecurityContext sc,
+    @Context SecurityContext sc,
     @ApiParam(value = "storage connector type", example = "JDBC", required = true)
     @PathParam("connectorType")
       FeaturestoreStorageConnectorType connectorType,
@@ -312,7 +308,7 @@ public class FeaturestoreStorageConnectorService {
     @ApiParam(value = "Id of the storage connector", required = true)
     @PathParam("connectorId")
       Integer connectorId,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO)
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorInputDTO, @Context SecurityContext sc)
     throws FeaturestoreException {
     if (featurestoreStorageConnectorInputDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating a Feature Store Storage Connector Cannot be " +

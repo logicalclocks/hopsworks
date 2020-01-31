@@ -94,14 +94,14 @@ public class CommentService {
 
   public CommentService() {
   }
-
+  
   public void setPublicDSId(String publicDSId) {
     this.publicDSId = publicDSId;
   }
 
   @GET
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllComments() throws DelaException {
+  public Response getAllComments(@Context SecurityContext sc) throws DelaException {
     LOG.log(Settings.DELA_DEBUG, "hops-site:comment:get:all {0}", publicDSId);
     List<CommentDTO.RetrieveComment> comments = hopsSite.getDatasetAllComments(publicDSId);
     GenericEntity<List<CommentDTO.RetrieveComment>> commentsJson

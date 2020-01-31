@@ -143,7 +143,7 @@ public class TrainingDatasetService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
-  public Response getTrainingDatasetsForFeaturestore() {
+  public Response getTrainingDatasetsForFeaturestore(@Context SecurityContext sc) {
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetsGeneric =
@@ -243,7 +243,8 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Get a training datasets with a specific id from a featurestore",
       response = TrainingDatasetDTO.class)
   public Response getTrainingDatasetById(@ApiParam(value = "Id of the training dataset", required = true)
-      @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
+      @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
+    throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     TrainingDatasetDTO trainingDatasetDTO =
         trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
@@ -270,7 +271,7 @@ public class TrainingDatasetService {
   public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training dataset", required = true)
                                            @PathParam("name") String name,
                                            @ApiParam(value = "Filter by a specific version")
-                                           @QueryParam("version") Integer version)
+                                           @QueryParam("version") Integer version, @Context SecurityContext sc)
       throws FeaturestoreException {
     verifyNameProvided(name);
     List<TrainingDatasetDTO> trainingDatasetDTO;

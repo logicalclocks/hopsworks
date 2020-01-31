@@ -164,12 +164,12 @@ public class JupyterService {
 
   public JupyterService() {
   }
-
+  
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
   }
-
+  
   public Integer getProjectId() {
     return projectId;
   }
@@ -184,7 +184,7 @@ public class JupyterService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAllNotebookServersInProject() throws ServiceException {
+  public Response getAllNotebookServersInProject(@Context SecurityContext sc) throws ServiceException {
 
     Collection<JupyterProject> servers = project.getJupyterProjectCollection();
 
