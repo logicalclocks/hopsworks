@@ -83,4 +83,12 @@ public class SharedTopicsFacade extends AbstractFacade<SharedTopics> {
       return Optional.empty();
     }
   }
+  
+  public void acceptSharedTopic(Integer ownerProjectId, String topicName, Integer destProjectId) {
+    findSharedTopicByTopicAndProjectIds(topicName, ownerProjectId, destProjectId)
+      .ifPresent(st -> {
+        st.setAccepted(true);
+        update(st);
+      });
+  }
 }

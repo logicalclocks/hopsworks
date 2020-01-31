@@ -106,6 +106,10 @@ module KafkaHelper
 	  put "#{ENV['HOPSWORKS_API']}/project/#{owner_project[:id]}/kafka/topics/#{topic_name}/shared/#{dest_project[:inode_name]}"
   end
 
+  def accept_shared_topic(dest_project, topic_name)
+    put "#{ENV['HOPSWORKS_API']}/project/#{dest_project[:id]}/kafka/topics/#{topic_name}/shared"
+  end
+
   def unshare_topic_within_owner_project(owner_project, topic_name, dest_project)
     delete "#{ENV['HOPSWORKS_API']}/project/#{owner_project[:id]}/kafka/topics/#{topic_name}/shared/#{dest_project[:inode_name]}"
   end
