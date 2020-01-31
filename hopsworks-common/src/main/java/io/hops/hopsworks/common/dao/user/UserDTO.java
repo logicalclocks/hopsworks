@@ -55,7 +55,7 @@ public class UserDTO {
   private String secret;
   private String chosenPassword;
   private String repeatedPassword;
-  private boolean ToS;
+  private boolean tos;
   private boolean twoFactor;
   private int toursState;
   private String orgName;
@@ -183,12 +183,12 @@ public class UserDTO {
     this.repeatedPassword = repeatedPassword;
   }
 
-  public boolean getToS() {
-    return ToS;
+  public boolean getTos() {
+    return tos;
   }
 
-  public void setToS(boolean ToS) {
-    this.ToS = ToS;
+  public void setTos(boolean tos) {
+    this.tos = tos;
   }
 
   public boolean isTwoFactor() {
@@ -304,18 +304,31 @@ public class UserDTO {
   public void setUserAccountType(String userAccountType) {
     this.userAccountType = userAccountType;
   }
-
+  
   @Override
   public String toString() {
-    return "UserDTO{username=" + username + ", email=" + email + ", telephoneNum=" + telephoneNum
-            + ", firstName=" + firstName + ", lastName=" + lastName
-            + ", status=" + status + ", securityQuestion=" + securityQuestion
-            + ", securityAnswer=" + securityAnswer + ", secret=" + secret
-            + ", chosenPassword=" + chosenPassword + ", repeatedPassword="
-            + repeatedPassword + ", ToS=" + ToS + ", orgName=" + orgName
-            + ", dep=" + dep + ", street=" + street + ", city=" + city
-            + ", postCode= " + postCode + ", country=" + country
-            + ", maxNumProjects= " + maxNumProjects + '}';
+    return "UserDTO{" +
+      "username='" + username + '\'' +
+      ", email='" + email + '\'' +
+      ", telephoneNum='" + telephoneNum + '\'' +
+      ", firstName='" + firstName + '\'' +
+      ", lastName='" + lastName + '\'' +
+      ", status=" + status +
+      ", tos=" + tos +
+      ", twoFactor=" + twoFactor +
+      ", toursState=" + toursState +
+      ", orgName='" + orgName + '\'' +
+      ", dep='" + dep + '\'' +
+      ", street='" + street + '\'' +
+      ", city='" + city + '\'' +
+      ", postCode='" + postCode + '\'' +
+      ", country='" + country + '\'' +
+      ", maxNumProjects=" + maxNumProjects +
+      ", numCreatedProjects=" + numCreatedProjects +
+      ", testUser=" + testUser +
+      ", userAccountType='" + userAccountType + '\'' +
+      ", numActiveProjects=" + numActiveProjects +
+      ", numRemainingProjects=" + numRemainingProjects +
+      '}';
   }
-
 }

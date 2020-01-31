@@ -6,8 +6,6 @@ package io.hops.hopsworks.remote.user.auth.api;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUser;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -66,8 +64,6 @@ public class AuthResource {
   private UserFacade userFacade;
   @EJB
   private UserStatusValidator statusValidator;
-  @EJB
-  private AccountAuditFacade accountAuditFacade;
   @EJB
   private AuthController authController;
   @EJB
@@ -224,10 +220,9 @@ public class AuthResource {
       req.getSession().invalidate();
       req.logout();
       if (user != null) {
-        authController.registerLogout(user, req);
+        authController.registerLogout(user);
       }
     } catch (ServletException e) {
-      accountAuditFacade.registerLoginInfo(user, UserAuditActions.LOGOUT.name(), UserAuditActions.FAILED.name(), req);
       throw new UserException(RESTCodes.UserErrorCode.LOGOUT_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
   }
@@ -246,7 +241,7 @@ public class AuthResource {
       authController.registerLogin(user, req);
     } catch (ServletException e) {
       LOGGER.log(Level.WARNING, e.getMessage());
-      authController.registerAuthenticationFailure(user, req);
+      authController.registerAuthenticationFailure(user);
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.SEVERE, null, e.getMessage(), e);
     }
 

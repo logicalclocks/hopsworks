@@ -40,6 +40,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,7 +61,7 @@ public class ProjectActivitiesResource {
 
   public ProjectActivitiesResource() {
   }
-
+  
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
@@ -99,7 +100,7 @@ public class ProjectActivitiesResource {
   public Response findAllByProject(
       @BeanParam Pagination pagination,
       @BeanParam ActivitiesBeanParam activitiesBeanParam,
-      @Context UriInfo uriInfo) throws ProjectException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
     Project project = getProject(); //test if project exist
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
     resourceRequest.setOffset(pagination.getOffset());
@@ -124,7 +125,7 @@ public class ProjectActivitiesResource {
   public Response findAllById(
       @PathParam("activityId") Integer activityId,
       @BeanParam ExpansionBeanParam expansions,
-      @Context UriInfo uriInfo) throws ProjectException, ActivitiesException {
+      @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException, ActivitiesException {
     Project project = getProject(); //test if project exist
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ACTIVITIES);
     resourceRequest.setExpansions(expansions.getResources());

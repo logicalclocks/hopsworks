@@ -70,8 +70,9 @@ import io.hops.hopsworks.common.dao.user.Users;
           query = "SELECT a FROM AccountAudit a WHERE a.initiator = :initiator"),
   @NamedQuery(name = "AccountAudit.findByTarget",
           query = "SELECT a FROM AccountAudit a WHERE a.target = :target"),
-  @NamedQuery(name = "AccountAudit.findByTargetLatest",
-          query = "SELECT a FROM AccountAudit a WHERE a.target = :target ORDER BY a.actionTimestamp desc"),
+  @NamedQuery(name = "AccountAudit.findByTargetActionAndMsgLatest",
+          query = "SELECT a FROM AccountAudit a WHERE a.target = :target AND a.action = :action " +
+            "AND a.message = :message AND a.outcome = :outcome ORDER BY a.actionTimestamp desc"),
   @NamedQuery(name = "AccountAudit.findByAction",
           query = "SELECT a FROM AccountAudit a WHERE a.action = :action"),
   @NamedQuery(name = "AccountAudit.findByTime",

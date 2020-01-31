@@ -160,7 +160,7 @@ public class MetadataService {
    */
   @Path("upload")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public UploadService upload() {
+  public UploadService upload(@Context SecurityContext sc) {
     this.uploader.setParams(null, null, -1, true);
     return this.uploader;
   }
@@ -175,7 +175,7 @@ public class MetadataService {
   @Path("{projectId}/{inodepid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchMetadataCompact(@PathParam("inodepid") Long inodePid) {
+  public Response fetchMetadataCompact(@PathParam("inodepid") Long inodePid, @Context SecurityContext sc) {
   
     if (inodePid == null) {
       throw new IllegalArgumentException("inodepid was not provided.");
@@ -231,7 +231,7 @@ public class MetadataService {
   public Response fetchMetadata(
           @PathParam("inodepid") Long inodePid,
           @PathParam("inodename") String inodeName,
-          @PathParam("tableid") Integer tableid) {
+          @PathParam("tableid") Integer tableid, @Context SecurityContext sc) {
 
     if (inodePid == null || inodeName == null || tableid == null) {
       throw new IllegalArgumentException("Incomplete request.");
@@ -296,7 +296,7 @@ public class MetadataService {
   @Path("{projectId}/fetchtemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchTemplatesforInode(@PathParam("inodeid") Long inodeid) {
+  public Response fetchTemplatesforInode(@PathParam("inodeid") Long inodeid, @Context SecurityContext sc) {
 
     if (inodeid == null) {
       throw new IllegalArgumentException("inodeid was not provided.");
@@ -327,7 +327,7 @@ public class MetadataService {
   @Path("{projectId}/fetchavailabletemplatesforinode/{inodeid}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
-  public Response fetchAvailableTemplatesForInode(@PathParam("inodeid") Long inodeid) {
+  public Response fetchAvailableTemplatesForInode(@PathParam("inodeid") Long inodeid, @Context SecurityContext sc) {
   
     if (inodeid == null) {
       throw new IllegalArgumentException("inodeid was not provided.");
@@ -371,7 +371,7 @@ public class MetadataService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response detachTemplateFromInode(@PathParam("inodeid") Long inodeid,
-          @PathParam("templateid") Integer templateid) throws MetadataException {
+          @PathParam("templateid") Integer templateid, @Context SecurityContext sc) throws MetadataException {
 
     if (inodeid == null || templateid == null) {
       throw new IllegalArgumentException("Either inodeid or templateId were not provided");
@@ -434,7 +434,7 @@ public class MetadataService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response attachTemplate(FileTemplateDTO filetemplateData) {
+  public Response attachTemplate(FileTemplateDTO filetemplateData, @Context SecurityContext sc) {
     
     if (filetemplateData == null || filetemplateData.getInodePath() == null
       || filetemplateData.getInodePath().equals("")) {
@@ -468,7 +468,7 @@ public class MetadataService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response fetchTemplate(@PathParam("templateid") Integer templateid,
-          @PathParam("sender") String sender) throws GenericException, MetadataException {
+          @PathParam("sender") String sender, @Context SecurityContext sc) throws GenericException, MetadataException {
 
     if (templateid == null || sender == null) {
       throw new IllegalArgumentException("templateId or sender were not provided");

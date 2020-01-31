@@ -116,6 +116,7 @@
         <configuration>
           <failOnMissingWebXml>true</failOnMissingWebXml>
           <useCache>true</useCache>
+          <attachClasses>true</attachClasses>
           <webResources>
             <resource>
               <filtering>true</filtering>

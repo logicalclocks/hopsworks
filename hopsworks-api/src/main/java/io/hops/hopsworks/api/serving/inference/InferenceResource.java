@@ -39,8 +39,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Logger;
 
 /**
@@ -60,7 +62,7 @@ public class InferenceResource {
   private Project project;
 
   private final static Logger logger = Logger.getLogger(InferenceResource.class.getName());
-
+  
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -76,7 +78,7 @@ public class InferenceResource {
   public Response infer(
       @ApiParam(value = "Name of the model to query", required = true) @PathParam("modelName") String modelName,
       @ApiParam(value = "Version of the model to query") @PathParam("version") String modelVersion,
-      @ApiParam(value = "Type of query") @PathParam("verb") String verb,
+      @ApiParam(value = "Type of query") @PathParam("verb") String verb, @Context SecurityContext sc,
       String inferenceRequestJson) throws InferenceException {
     Integer version = null;
     if (!Strings.isNullOrEmpty(modelVersion)) {

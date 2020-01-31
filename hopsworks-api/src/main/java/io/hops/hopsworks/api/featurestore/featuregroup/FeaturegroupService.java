@@ -144,7 +144,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore() {
+  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc) {
     List<FeaturegroupDTO> featuregroups = featuregroupController.
         getFeaturegroupsForFeaturestore(featurestore);
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
@@ -208,7 +208,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
-                                  @PathParam("featuregroupId") Integer featuregroupId) {
+                                  @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc) {
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
@@ -236,7 +236,7 @@ public class FeaturegroupService {
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
-                                  @QueryParam("version") Integer version) {
+                                  @QueryParam("version") Integer version, @Context SecurityContext sc) {
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
@@ -349,8 +349,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the SQL schema of a featuregroup",
       response = RowValueQueryResult.class)
   public Response getFeatureGroupSchema(
-      @Context
-          SecurityContext sc,
+      @Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true)
       @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
     verifyIdProvided(featuregroupId);

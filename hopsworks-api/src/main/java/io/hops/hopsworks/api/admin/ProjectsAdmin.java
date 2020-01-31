@@ -178,7 +178,7 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response getProjectsAdminInfo() {
+  public Response getProjectsAdminInfo(@Context SecurityContext sc) {
 
     List<Project> projects = projectFacade.findAll();
     List<ProjectAdminInfoDTO> projectAdminInfoDTOList = new ArrayList<>();
@@ -203,7 +203,8 @@ public class ProjectsAdmin {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("/projects/{id}")
-  public Response getProjectAdminInfo(@PathParam("id") Integer projectId) throws ProjectException {
+  public Response getProjectAdminInfo(@PathParam("id") Integer projectId, @Context SecurityContext sc)
+    throws ProjectException {
     Project project = projectFacade.find(projectId);
     if (project == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
@@ -220,7 +221,8 @@ public class ProjectsAdmin {
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("/projects")
-  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO) throws ProjectException {
+  public Response setProjectAdminInfo(ProjectAdminInfoDTO projectAdminInfoDTO, @Context SecurityContext sc)
+    throws ProjectException {
     // for changes in space quotas we need to check that both space and ns options are not null
     QuotasDTO quotasDTO = projectAdminInfoDTO.getProjectQuotas();
     if (quotasDTO != null && (((quotasDTO.getHdfsQuotaInBytes() == null) != (quotasDTO.getHdfsNsQuota() == null))

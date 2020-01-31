@@ -41,8 +41,8 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.common.util.Settings;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;

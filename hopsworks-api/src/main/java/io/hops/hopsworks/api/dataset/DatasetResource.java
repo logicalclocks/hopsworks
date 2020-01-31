@@ -34,7 +34,6 @@ import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
 import io.hops.hopsworks.common.dao.dataset.DatasetType;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
@@ -89,8 +88,6 @@ public class DatasetResource {
   @EJB
   private DatasetBuilder datasetBuilder;
   @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
   private ProjectController projectController;
@@ -111,11 +108,11 @@ public class DatasetResource {
 
   private Integer projectId;
   private String projectName;
-  
+
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-  
+
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
@@ -142,7 +139,7 @@ public class DatasetResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination, @BeanParam DatasetBeanParam datasetBeanParam,
-    @Context UriInfo uriInfo) throws ProjectException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws ProjectException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());

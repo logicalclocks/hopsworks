@@ -55,7 +55,7 @@ angular.module('hopsWorksApp')
               repeatedPassword: '',
               securityQuestion: '',
               securityAnswer: '',
-              ToS: '',
+              tos: '',
               authType: 'Mobile',
               twoFactor: false,
               toursEnabled: true,

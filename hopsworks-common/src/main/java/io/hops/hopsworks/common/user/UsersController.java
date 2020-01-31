@@ -49,11 +49,8 @@ import io.hops.hopsworks.common.dao.user.security.Address;
 import io.hops.hopsworks.common.dao.user.security.Organization;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAudit;
-import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditAction;
 import io.hops.hopsworks.common.dao.user.security.audit.RolesAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.UserAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
@@ -68,7 +65,6 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.util.EmailBean;
-import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.QRCodeGenerator;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.codec.binary.Base64;
@@ -80,7 +76,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.GenericEntity;
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -118,14 +114,12 @@ public class UsersController {
   @EJB
   private AuthController authController;
   @EJB
-  private AccountAuditFacade auditManager;
-  @EJB
   private SecurityUtils securityUtils;
 
   // To send the user the QR code image
   private byte[] qrCode;
 
-  public byte[] registerUser(UserDTO newUser, HttpServletRequest req) throws UserException {
+  public byte[] registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
     userValidator.isValidNewUser(newUser);
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
@@ -134,57 +128,48 @@ public class UsersController {
     try {
       if (!newUser.isTestUser()) {
         // Notify user about the request if not test user.
-        authController.sendEmailValidationKey(user, user.getValidationKey(), req);
+        authController.sendEmailValidationKey(user, user.getValidationKey(), validationKeyUrl);
       }
       // Only register the user if i can send the email. To prevent fake emails
       userFacade.persist(user);
       qrCode = QRCodeGenerator.getQRCodeBytes(newUser.getEmail(), Settings.ISSUER, user.getSecret());
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-        AccountsAuditActions.SUCCESS.name(), "New validation key", user, req);
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-        AccountsAuditActions.SUCCESS.name(), "", user, req);
     } catch (WriterException | MessagingException | IOException ex) {
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.REGISTRATION.name(),
-          AccountsAuditActions.FAILED.name(), "", user, req);
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-          AccountsAuditActions.FAILED.name(), "", user, req);
       throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_REGISTRATION_ERROR, Level.SEVERE,
         "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
     return qrCode;
   }
   
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public String activateUser(String role, Users user1, Users loggedInUser, HttpServletRequest httpServletRequest) {
+  public void activateUser(Users user) throws UserException {
+    try {
+      updateStatus(user, UserAccountStatus.ACTIVATED_ACCOUNT);
+      //send confirmation email
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
+        UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
+        UserAccountsEmailMessages.accountActivatedMessage(user.getEmail()));
+    } catch (IllegalArgumentException | MessagingException ex) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ACTIVATION_FAILED, Level.FINE,
+        "User could not be activated.");
+    }
+  }
+  
+  public void addRole(String role, Users user) throws UserException {
     BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
     if (bbcGroup != null) {
-      registerGroup(user1, bbcGroup.getGid());
-      auditManager.registerRoleChange(loggedInUser,
-          RolesAuditAction.ROLE_ADDED.name(),
-          RolesAuditAction.SUCCESS.name(), bbcGroup.getGroupName(),
-          user1, httpServletRequest);
+      registerGroup(user, bbcGroup.getGid());
     } else {
-      auditManager.registerAccountChange(loggedInUser,
-          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-          RolesAuditAction.FAILED.name(), "Role could not be granted.",
-          user1, httpServletRequest);
-      return "Role could not be granted.";
+      throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
-    
-    try {
-      updateStatus(user1, UserAccountStatus.ACTIVATED_ACCOUNT);
-      auditManager.registerAccountChange(loggedInUser,
-          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-          UserAuditActions.SUCCESS.name(), "", user1, httpServletRequest);
-    } catch (IllegalArgumentException ex) {
-      auditManager.registerAccountChange(loggedInUser,
-          UserAccountStatus.ACTIVATED_ACCOUNT.name(),
-          RolesAuditAction.FAILED.name(), "User could not be activated.",
-          user1, httpServletRequest);
-      return "User could not be activated.";
+  }
+  
+  public void removeRole(String role, Users user) throws UserException {
+    BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
+    if (bbcGroup != null && user.getBbcGroupCollection().contains(bbcGroup)) {
+      userFacade.removeGroup(user.getEmail(), bbcGroup.getGid());// remove from table only
+      user.getBbcGroupCollection().remove(bbcGroup);// remove from the user entity
+    } else if (bbcGroup != null) {
+      throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
-    
-    return null;
   }
   
   public void sendConfirmationMail(Users user) throws ServiceException {
@@ -192,8 +177,7 @@ public class UsersController {
       //send confirmation email
       emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
         UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-        UserAccountsEmailMessages.
-          accountActivatedMessage(user.getEmail()));
+        UserAccountsEmailMessages.accountActivatedMessage(user.getEmail()));
     } catch (MessagingException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
         e);
@@ -202,8 +186,7 @@ public class UsersController {
   
   public void sendRejectionEmail(Users user) throws ServiceException {
     try {
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-        UserAccountsEmailMessages.ACCOUNT_REJECT,
+      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_REJECT,
         UserAccountsEmailMessages.accountRejectedMessage());
     } catch (MessagingException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
@@ -211,9 +194,9 @@ public class UsersController {
     }
   }
   
-  public Users resendAccountVerificationEmail(Users user, HttpServletRequest req) throws ServiceException {
+  public Users resendAccountVerificationEmail(Users user, String linkUrl) throws ServiceException {
     try {
-      authController.sendNewValidationKey(user, req);
+      authController.sendNewValidationKey(user, linkUrl);
       return user;
     } catch (MessagingException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.EMAIL_SENDING_FAILURE, Level.SEVERE, null, e.getMessage(),
@@ -316,36 +299,34 @@ public class UsersController {
     user.setOrganization(org);
   }
   
-  public void sendQRRecoveryEmail(String email, String password, HttpServletRequest req)
+  public void sendQRRecoveryEmail(String email, String password, String reqUrl)
     throws UserException, MessagingException {
     Users user = userFacade.findByEmail(email);
-    String path = FormatUtils.getUserURL(req);
-    if (!authController.checkUserPasswordAndStatus(user, password, req)) {
+    if (!authController.checkUserPasswordAndStatus(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.INCORRECT_CREDENTIALS, Level.FINE);
     }
     if (!user.getTwoFactor()) {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
-    authController.sendNewRecoveryValidationKey(user, path, false, req);
+    authController.sendNewRecoveryValidationKey(user, reqUrl, false);
   }
   
   public void sendPasswordRecoveryEmail(String email, String securityQuestion, String securityAnswer,
-    HttpServletRequest req) throws UserException, MessagingException {
+    String reqUrl) throws UserException, MessagingException {
     Users user = userFacade.findByEmail(email);
-    String path = FormatUtils.getUserURL(req);
-    if (!authController.validateSecurityQAndStatus(user, securityQuestion, securityAnswer, req)) {
+    if (!authController.validateSecurityQAndStatus(user, securityQuestion, securityAnswer)) {
       throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
     }
-    authController.sendNewRecoveryValidationKey(user, path, true, req);
+    authController.sendNewRecoveryValidationKey(user, reqUrl, true);
   }
   
-  public String recoverQRCode(String key, HttpServletRequest req) throws UserException, MessagingException {
-    return new String(recoverQRCodeByte(key, req));
+  public String recoverQRCode(String key) throws UserException, MessagingException {
+    return new String(recoverQRCodeByte(key));
   }
   
-  public byte[] recoverQRCodeByte(String key, HttpServletRequest req) throws UserException, MessagingException {
-    Users user = authController.validateRecoveryKey(key, ValidationKeyType.QR_RESET, req);
-    byte[] qrCode = recoverQRCode(user, req);
+  public byte[] recoverQRCodeByte(String key) throws UserException, MessagingException {
+    Users user = authController.validateRecoveryKey(key, ValidationKeyType.QR_RESET);
+    byte[] qrCode = recoverQRCode(user);
     if (qrCode == null) {
       throw new UserException(RESTCodes.UserErrorCode.TWO_FA_DISABLED, Level.FINE);
     }
@@ -357,11 +338,9 @@ public class UsersController {
     return Base64.encodeBase64(qrCode);
   }
   
-  private byte[] recoverQRCode(Users user, HttpServletRequest req) {
+  private byte[] recoverQRCode(Users user) {
     String random = securityUtils.calculateSecretKey();
     updateSecret(user, random);
-    auditManager.registerAccountChange(user, AccountsAuditActions.RECOVERY.name(), AccountsAuditActions.SUCCESS.name(),
-      "Reset QR code.", user, req);
     return getQrCode(user);
   }
   
@@ -371,42 +350,40 @@ public class UsersController {
    * @param oldPassword
    * @param newPassword
    * @param confirmedPassword
-   * @param req
    * @throws UserException
    */
-  public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword,
-      HttpServletRequest req) throws UserException {
-    if (!authController.validatePassword(user, oldPassword, req)) {
+  public void changePassword(Users user, String oldPassword, String newPassword, String confirmedPassword)
+    throws UserException {
+    if (!authController.validatePassword(user, oldPassword)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     if (UserAccountStatus.TEMP_PASSWORD.equals(user.getStatus())){
       user.setStatus(UserAccountStatus.ACTIVATED_ACCOUNT);
     }
-    changePassword(user, newPassword, confirmedPassword, req);
+    changePassword(user, newPassword, confirmedPassword);
   }
   
-  public void checkRecoveryKey(String key, HttpServletRequest req) throws UserException {
-    authController.checkRecoveryKey(key, req);
+  public void checkRecoveryKey(String key) throws UserException {
+    authController.checkRecoveryKey(key);
   }
   
-  public void validateKey(String key, HttpServletRequest req) throws UserException {
-    authController.validateEmail(key, req);
+  public void validateKey(String key) throws UserException {
+    authController.validateEmail(key);
   }
   
   /**
    * Use to reset password to a temporary random password
    * @param user
-   * @param req
    * @return
    * @throws UserException
    * @throws MessagingException
    */
-  public String resetPassword(Users user, HttpServletRequest req) throws UserException, MessagingException {
+  public String resetPassword(Users user, String initiator) throws UserException, MessagingException {
     String randomPwd = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
     user.setStatus(UserAccountStatus.TEMP_PASSWORD);
-    changePasswordAsAdmin(user, randomPwd, req);
+    changePasswordAsAdmin(user, randomPwd);
     String subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET;
-    String msg = UserAccountsEmailMessages.buildResetByAdminMessage(req.getRemoteUser());
+    String msg = UserAccountsEmailMessages.buildResetByAdminMessage(initiator);
     emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
     return randomPwd;
   }
@@ -416,15 +393,14 @@ public class UsersController {
    * @param key
    * @param newPassword
    * @param confirmedPassword
-   * @param req
    * @throws UserException
    * @throws MessagingException
    */
-  public void changePassword(String key, String newPassword, String confirmedPassword, HttpServletRequest req)
+  public void changePassword(String key, String newPassword, String confirmedPassword)
     throws UserException, MessagingException {
     userValidator.isValidPassword(newPassword, confirmedPassword);
-    Users user = authController.validateRecoveryKey(key, ValidationKeyType.PASSWORD_RESET, req);
-    changePassword(user, newPassword, confirmedPassword, req);
+    Users user = authController.validateRecoveryKey(key, ValidationKeyType.PASSWORD_RESET);
+    changePassword(user, newPassword, confirmedPassword);
     authController.resetValidationKey(user);
     //Send verification
     String subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RESET;
@@ -432,12 +408,11 @@ public class UsersController {
     emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
   }
   
-  private void changePassword(Users user, String newPassword, String confirmedPassword, HttpServletRequest req)
-    throws UserException {
+  private void changePassword(Users user, String newPassword, String confirmedPassword) throws UserException {
     if (userValidator.isValidPassword(newPassword, confirmedPassword)) {
       try {
         Secret secret = securityUtils.generateSecret(newPassword);
-        authController.changePassword(user, secret, req);
+        authController.changePassword(user, secret);
       } catch (Exception ex) {
         throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
@@ -445,29 +420,29 @@ public class UsersController {
     }
   }
   
-  private void changePasswordAsAdmin(Users user, String newPassword, HttpServletRequest req) throws UserException {
+  private void changePasswordAsAdmin(Users user, String newPassword) throws UserException {
     try {
       Secret secret = securityUtils.generateSecret(newPassword);
-      authController.changeUserPasswordAsAdmin(user, secret, req);
+      authController.changeUserPasswordAsAdmin(user, secret);
     } catch (Exception ex) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
         ex.getMessage(), ex);
     }
   }
 
-  public void changeSecQA(Users user, String oldPassword, String securityQuestion, String securityAnswer,
-      HttpServletRequest req) throws UserException {
-    if (!authController.validatePassword(user, oldPassword, req)) {
+  public void changeSecQA(Users user, String oldPassword, String securityQuestion, String securityAnswer)
+    throws UserException {
+    if (!authController.validatePassword(user, oldPassword)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
 
     if (userValidator.isValidsecurityQA(securityQuestion, securityAnswer)) {
-      authController.changeSecQA(user, securityQuestion, securityAnswer, req);
+      authController.changeSecQA(user, securityQuestion, securityAnswer);
     }
   }
 
-  public Users updateProfile(Users user, String firstName, String lastName, String telephoneNum, Integer toursState,
-      HttpServletRequest req) throws UserException {
+  public Users updateProfile(Users user, String firstName, String lastName, String telephoneNum, Integer toursState)
+    throws UserException {
 
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -485,8 +460,6 @@ public class UsersController {
     if (toursState != null) {
       user.setToursState(toursState);
     }
-    accountAuditFacade.registerAccountChange(user, AccountsAuditActions.PROFILE.name(),
-      AccountsAuditActions.SUCCESS.name(), "Update Profile Info", user, req);
     userFacade.update(user);
     return user;
   }
@@ -557,46 +530,26 @@ public class UsersController {
    *
    * @param user
    * @param password
-   * @param req
    * @return qrCode if tow factor is enabled null if disabled.
    */
-  public byte[] changeTwoFactor(Users user, String password, HttpServletRequest req) throws UserException {
+  public byte[] changeTwoFactor(Users user, String password) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided.");
     }
-    if (!authController.validatePassword(user, password, req)) {
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-          AccountsAuditActions.FAILED.name(), "Incorrect password", user,
-          req);
+    if (!authController.validatePassword(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     byte[] qr_code = null;
     if (user.getTwoFactor()) {
       user.setTwoFactor(false);
       userFacade.update(user);
-      accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-          AccountsAuditActions.SUCCESS.name(), "Disabled 2-factor", user,
-          req);
     } else {
       try {
         user.setTwoFactor(true);
         userFacade.update(user);
-        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(),
-            Settings.ISSUER, user.getSecret());
-        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-            AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
-            req);
-        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-            AccountsAuditActions.SUCCESS.name(), "Enabled 2-factor", user,
-            req);
+        qr_code = QRCodeGenerator.getQRCodeBytes(user.getEmail(), Settings.ISSUER, user.getSecret());
       } catch (IOException | WriterException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
-        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.TWO_FACTOR.name(),
-            AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
-            req);
-        accountAuditFacade.registerAccountChange(user, AccountsAuditActions.QRCODE.name(),
-            AccountsAuditActions.FAILED.name(), "Enabled 2-factor", user,
-            req);
         throw new UserException(RESTCodes.UserErrorCode.TWO_FA_ENABLE_ERROR, Level.SEVERE,
           "user: " + user.getUsername(), ex.getMessage(), ex);
       }
@@ -609,14 +562,13 @@ public class UsersController {
    *
    * @param user
    * @param password
-   * @param req
    * @return null if two factor is disabled.
    */
-  public byte[] getQRCode(Users user, String password, HttpServletRequest req) throws UserException {
+  public byte[] getQRCode(Users user, String password) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User was not provided");
     }
-    if (!authController.validatePassword(user, password, req)) {
+    if (!authController.validatePassword(user, password)) {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_INCORRECT, Level.FINE);
     }
     
@@ -681,12 +633,23 @@ public class UsersController {
 
   }
 
-  public void changeAccountStatus(int id, String note, UserAccountStatus status) {
+  public void changeAccountStatus(int id, String note, UserAccountStatus status) throws UserException {
     Users p = userFacade.find(id);
     if (p != null) {
+      if (UserAccountStatus.ACTIVATED_ACCOUNT.equals(status)) {
+        p.setFalseLogin(0);
+      }
       p.setNotes(note);
       p.setStatus(status);
       userFacade.update(p);
+      try {
+        emailBean.sendEmail(p.getEmail(), Message.RecipientType.TO, UserAccountsEmailMessages.ACCOUNT_STATUS_CHANGED,
+          UserAccountsEmailMessages.accountStatusChangeMessage(status.getUserStatus()));
+      } catch (MessagingException e) {
+      
+      }
+    } else {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
 
   }
@@ -754,26 +717,35 @@ public class UsersController {
     id.setMaxNumProjects(maxNumProjs);
     userFacade.update(id);
   }
-
-  public void deleteUser(Users u) {
+  
+  /**
+   * Delete users. Will fail if the user is an initiator of an audit log.
+   * @param u
+   * @throws UserException
+   */
+  public void deleteUser(Users u) throws UserException {
     if (u != null) {
-      List<RolesAudit> results1 = rolesAuditFacade.findByInitiator(u);
-      List<RolesAudit> results2 = rolesAuditFacade.findByTarget(u);
-      results1.addAll(results2);
-      for (Iterator<RolesAudit> iterator = results1.iterator(); iterator.hasNext();) {
+      //Should not delete user that is an Initiator in a RolesAudit
+      List<RolesAudit> results = rolesAuditFacade.findByTarget(u);
+      
+      for (Iterator<RolesAudit> iterator = results.iterator(); iterator.hasNext();) {
         RolesAudit next = iterator.next();
         rolesAuditFacade.remove(next);
       }
+  
+      //Should not delete user that is an Initiator in an AccountAudit
+      List<AccountAudit> resultsAA = accountAuditFacade.findByTarget(u);
 
-      List<AccountAudit> resultsAA1 = accountAuditFacade.findByInitiator(u);
-      List<AccountAudit> resultsAA2 = accountAuditFacade.findByTarget(u);
-      resultsAA1.addAll(resultsAA2);
-
-      for (Iterator<AccountAudit> iterator = resultsAA1.iterator(); iterator.hasNext();) {
+      for (Iterator<AccountAudit> iterator = resultsAA.iterator(); iterator.hasNext();) {
         AccountAudit next = iterator.next();
         accountAuditFacade.remove(next);
       }
-      userFacade.removeByEmail(u.getEmail());
+      try {
+        userFacade.removeByEmail(u.getEmail());
+      } catch (ConstraintViolationException cve) {
+        throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_DELETION_ERROR, Level.FINE, "User that initiated " +
+          "audit log on another account can not be deleted.", cve.getMessage());
+      }
     }
   }
   

@@ -119,7 +119,6 @@ public class DownloadService {
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-  
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
@@ -169,8 +168,8 @@ public class DownloadService {
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
   public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token,
-    @QueryParam("type") DatasetType datasetType) throws DatasetException, SigningKeyNotFoundException,
-    VerificationException, ProjectException {
+    @QueryParam("type") DatasetType datasetType, @Context SecurityContext sc) throws DatasetException,
+    SigningKeyNotFoundException, VerificationException, ProjectException {
     if(!settings.isDownloadAllowed()){
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
     }
