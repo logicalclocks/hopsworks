@@ -166,7 +166,10 @@ describe "On #{ENV['OS']}" do
         first_name = "name"
         last_name = "last"
         password = "Pass123"
-        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", twoFactor: false, testUser: true}
+        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword:
+            password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?",
+                                                       securityAnswer: "example_answer", tos: true, authType:
+                                                           "Mobile", twoFactor: false, testUser: true}
         expect_json(errorMsg: ->(value) {expect(value).to be_nil})
         expect_json(successMessage: ->(value) {expect(value).to include("We registered your account request")})
         expect_status(200)
@@ -178,7 +181,10 @@ describe "On #{ENV['OS']}" do
         last_name = "last"
         password = "Pass123"
         register_user(email: email)
-        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword: password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?", securityAnswer: "example_answer", ToS: true, authType: "Mobile", testUser: true}
+        post "#{ENV['HOPSWORKS_API']}/auth/register", {email: email, chosenPassword: password, repeatedPassword:
+            password, firstName: first_name, lastName: last_name, securityQuestion: "Name of your first pet?",
+                                                       securityAnswer: "example_answer", tos: true, authType:
+                                                           "Mobile", testUser: true}
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160003)
         expect_status(409)
