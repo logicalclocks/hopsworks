@@ -45,12 +45,13 @@
   left:100%;
   margin-top:-6px;
   margin-left:-1px;
-  -webkit-border-radius:0 6px 6px 6px;
-  -moz-border-radius:0 6px 6px 6px;
-  border-radius:0 6px 6px 6px;
+  -webkit-border-radius:0 6px 6px 0;
+  -moz-border-radius:0 6px 6px 0;
+  border-radius:0 6px 6px 0;
 }
 .dropdown-submenu:hover>.dropdown-menu {
   display:block;
+  transform: translate(0, -55%);
 }
 .dropdown-submenu>a:after{
   display:block;
@@ -66,7 +67,7 @@
   margin-right:-10px;
 }
 .dropdown-submenu:hover>a:after{
-  border-left-color:#ffffff;
+  border-left-color:#000;
 }
 .dropdown-submenu.pull-left{
   float:none;
