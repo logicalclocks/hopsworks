@@ -46,6 +46,8 @@ import io.hops.hopsworks.api.hopssite.dto.DatasetIssueReqDTO;
 import io.hops.hopsworks.api.hopssite.dto.HopsSiteServiceInfoDTO;
 import io.hops.hopsworks.api.hopssite.dto.LocalDatasetDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
@@ -84,6 +86,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @Path("/hopssite/")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -224,12 +227,14 @@ public class HopssiteService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_MODIFIED).build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("datasets/{publicDSId}/comments")
   public CommentService getComments(@PathParam("publicDSId") String publicDSId) {
     this.commentService.setPublicDSId(publicDSId);
     return this.commentService;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("datasets/{publicDSId}/rating")
   public RatingService getRating(@PathParam("publicDSId") String publicDSId) {
     this.ratingService.setPublicDSId(publicDSId);

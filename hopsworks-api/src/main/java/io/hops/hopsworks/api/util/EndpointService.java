@@ -40,6 +40,8 @@
 package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.swagger.annotations.Api;
 
@@ -53,6 +55,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Logged(logLevel = LogLevel.OFF)
 @Path("/endpoint")
 @RequestScoped
 @Api(value = "Endpoint service",

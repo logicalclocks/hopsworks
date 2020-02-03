@@ -23,6 +23,8 @@ import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
 import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResource;
 import io.hops.hopsworks.api.python.library.LibraryResource;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.dao.project.Project;
@@ -61,6 +63,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 
+@Logged
 @Api(value = "Python Environments Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -85,11 +88,13 @@ public class EnvironmentResource {
   
   private Project project;
   
+  @Logged(logLevel = LogLevel.OFF)
   public EnvironmentResource setProject(Project project) {
     this.project = project;
     return this;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }
@@ -208,6 +213,7 @@ public class EnvironmentResource {
     return fullPath.toString();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python library sub-resource", tags = {"PythonLibraryResource"})
   @Path("{version}/libraries")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
@@ -215,6 +221,7 @@ public class EnvironmentResource {
     return this.libraryResource.setProjectAndVersion(project, version);
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Python opStatus sub-resource", tags = {"EnvironmentCommandsResource"})
   @Path("{version}/commands")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

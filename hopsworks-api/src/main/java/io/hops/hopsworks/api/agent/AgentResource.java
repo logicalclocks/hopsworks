@@ -39,6 +39,8 @@
 package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
@@ -68,6 +70,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/agentresource")
 @Stateless
 @RolesAllowed({"HOPS_ADMIN", "AGENT"})
@@ -93,6 +96,7 @@ public class AgentResource {
     }
   }
   
+  @Logged(logLevel = LogLevel.FINE)
   @ApiOperation(value = "Handle kagent operations such as register, heartbeat, ping",
       response = AgentView.class)
   @POST

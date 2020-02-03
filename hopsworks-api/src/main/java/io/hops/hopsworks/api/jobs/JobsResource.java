@@ -23,6 +23,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.executions.ExecutionsResource;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.jobhistory.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
@@ -85,6 +87,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class JobsResource {
@@ -113,6 +116,7 @@ public class JobsResource {
   private JobsBuilder jobsBuilder;
   
   private Project project;
+  @Logged(logLevel = LogLevel.OFF)
   public JobsResource setProject(Integer projectId) {
     this.project = projectFacade.find(projectId);
     return this;
@@ -120,6 +124,7 @@ public class JobsResource {
   
   @ApiOperation(value = "Get a list of all jobs for this project", response = JobDTO.class)
   @GET
+  @Logged(logLevel = LogLevel.FINE)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
@@ -295,6 +300,7 @@ public class JobsResource {
     return Response.ok().entity(config).build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{name}/executions")
   public ExecutionsResource executions(@PathParam("name") String name) throws JobException {
     Jobs job = jobFacade.findByProjectAndName(project, name);

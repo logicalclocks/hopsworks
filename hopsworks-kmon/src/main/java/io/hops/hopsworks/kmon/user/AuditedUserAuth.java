@@ -15,6 +15,14 @@
  */
 package io.hops.hopsworks.kmon.user;
 
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.annotation.Caller;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.exceptions.UserException;
@@ -28,21 +36,25 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.logging.Logger;
 
 @Stateless
+@Logged
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuditedUserAuth {
   
   private static final Logger LOGGER = Logger.getLogger(AuditedUserAuth.class.getName());
   @EJB
   private AuthController authController;
-
-  public void login(Users user, String password, String otp, HttpServletRequest req) throws UserException,
-    ServletException {
+  
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
+  public void login(@Caller(UserIdentifier.USERS) @AuditTarget(UserIdentifier.USERS) Users user,
+    @Secret String password, @Secret String otp, HttpServletRequest req) throws UserException, ServletException {
     String passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, password, otp);
     req.login(user.getEmail(), passwordWithSaltPlusOtp);
-    authController.registerLogin(user, req);
+    authController.registerLogin(user);
   }
   
-  public void logout(Users user, HttpServletRequest req) throws ServletException {
+  @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
+  public void logout(@Caller(UserIdentifier.USERS) @AuditTarget(UserIdentifier.USERS) Users user,
+    HttpServletRequest req) throws ServletException {
     req.getSession().invalidate();
     req.logout();
     if (user != null) {

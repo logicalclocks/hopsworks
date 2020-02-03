@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
@@ -28,6 +30,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 @Stateless
+@Logged(logLevel = LogLevel.WARNING)
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class LoggedMaintenanceHelper {
   private final Logger LOGGER = Logger.getLogger(HopsworksVariablesBean.class.getName());

@@ -15,6 +15,14 @@
  */
 package io.hops.hopsworks.admin.user.account;
 
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.annotation.Caller;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.user.UsersController;
@@ -30,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.logging.Logger;
 
 @Stateless
+@Logged
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuditedUserAccountAction {
   
@@ -37,37 +46,50 @@ public class AuditedUserAccountAction {
   @EJB
   protected UsersController usersController;
   
-  public void validateKey(String key, HttpServletRequest req) throws UserException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.VERIFIED_ACCOUNT, message = "Account email " +
+    "verification")
+  public void validateKey(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) String key,
+    HttpServletRequest req) throws UserException {
     usersController.validateKey(key);
   }
-
-  public void sendPasswordRecoveryEmail(String username, SecurityQuestion question, String answer,
-    HttpServletRequest req) throws MessagingException, UserException {
+  
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD, message = "User requested password recovery")
+  public void sendPasswordRecoveryEmail(@Caller(UserIdentifier.USERNAME) @AuditTarget(UserIdentifier.USERNAME)
+    String username, @Secret SecurityQuestion question, @Secret String answer, HttpServletRequest req)
+    throws MessagingException, UserException {
     String reqUrl = FormatUtils.getUserURL(req);
     usersController.sendPasswordRecoveryEmail(username, question.getValue(), answer, reqUrl);
   }
   
-  public void checkRecoveryKey(String key, HttpServletRequest req) throws UserException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD, message = "User verified password recovery " +
+    "key")
+  public void checkRecoveryKey(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) String key,
+    HttpServletRequest req) throws UserException {
     usersController.checkRecoveryKey(key);
   }
   
-  public void changePassword(String key, String passwd1, String passwd2, HttpServletRequest req)
-    throws MessagingException, UserException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD_CHANGE, message = "User recovered password")
+  public void changePassword(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) String key,
+    @Secret String passwd1, @Secret String passwd2, HttpServletRequest req) throws MessagingException, UserException {
     usersController.changePassword(key, passwd1, passwd2);
   }
   
-  public void changePassword(Users user,
-    String current, String passwd1, String passwd2, HttpServletRequest req)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD_CHANGE, message = "User changed password")
+  public void changePassword(@Caller(UserIdentifier.USERS) @AuditTarget(UserIdentifier.USERS) Users user,
+    @Secret String current, @Secret String passwd1, @Secret  String passwd2, HttpServletRequest req)
     throws UserException {
     usersController.changePassword(user, current, passwd1, passwd2);
   }
   
-  public byte[] recoverQRCodeByte(String key, HttpServletRequest req) throws UserException, MessagingException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "User recovered QR code")
+  public byte[] recoverQRCodeByte(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) String key,
+    HttpServletRequest req) throws UserException, MessagingException {
     return usersController.recoverQRCodeByte(key);
   }
   
-  public void sendQRRecoveryEmail(String uname, String passwd, HttpServletRequest req)
-    throws MessagingException, UserException {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "User requested QR code recovery")
+  public void sendQRRecoveryEmail(@Caller(UserIdentifier.USERNAME) @AuditTarget(UserIdentifier.USERNAME) String uname,
+    @Secret String passwd, HttpServletRequest req) throws MessagingException, UserException {
     String reqUrl = FormatUtils.getUserURL(req);
     usersController.sendQRRecoveryEmail(uname, passwd, reqUrl);
   }

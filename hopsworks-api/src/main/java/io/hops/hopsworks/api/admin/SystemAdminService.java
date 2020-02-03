@@ -46,6 +46,8 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
@@ -92,6 +94,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
@@ -131,7 +134,7 @@ public class SystemAdminService {
   @PUT
   @Path("/encryptionPass")
   public Response changeMasterEncryptionPassword(@Context SecurityContext sc,
-    @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword)
+    @Secret @FormParam("oldPassword") String oldPassword, @Secret @FormParam("newPassword") String newPassword)
     throws HopsSecurityException {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {

@@ -24,6 +24,8 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsUpdateOperations;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -81,6 +83,7 @@ import java.util.logging.Level;
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
  * Base URL: project/projectId/featurestores/featurestoreId/trainingdatasets/
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "TrainingDataset service", description = "A service that manages a feature store's training datasets")
@@ -115,6 +118,7 @@ public class TrainingDatasetService {
    *
    * @param project the project where the featurestore resides
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
@@ -125,6 +129,7 @@ public class TrainingDatasetService {
    * @param featurestoreId id of the featurestore
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);

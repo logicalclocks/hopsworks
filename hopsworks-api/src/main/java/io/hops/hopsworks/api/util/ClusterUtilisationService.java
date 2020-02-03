@@ -41,6 +41,8 @@ package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -59,6 +61,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@Logged
 @Stateless
 @Path("/clusterUtilisation")
 @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -75,6 +78,7 @@ public class ClusterUtilisationService {
   
   @GET
   @Path("/metrics")
+  @Logged(logLevel = LogLevel.OFF)
   @Produces(MediaType.APPLICATION_JSON)
   public Response getGpus() {
     Response response = null;

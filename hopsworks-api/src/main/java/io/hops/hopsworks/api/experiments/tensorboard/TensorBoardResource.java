@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.user.Users;
@@ -54,6 +56,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TensorBoardResource {
@@ -67,13 +70,15 @@ public class TensorBoardResource {
 
   private Project project;
   private String experimentId;
-  
+
+  @Logged(logLevel = LogLevel.OFF)
   public TensorBoardResource setProject(Project project, String experimentId) {
     this.project = project;
     this.experimentId = experimentId;
     return this;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }

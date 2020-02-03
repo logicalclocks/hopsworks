@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.host.machine;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+@Logged
 @Path("/machines")
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API},

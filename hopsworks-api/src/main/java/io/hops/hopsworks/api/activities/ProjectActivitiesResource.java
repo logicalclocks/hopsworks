@@ -18,6 +18,8 @@ package io.hops.hopsworks.api.activities;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -45,6 +47,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "Project Activities Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -62,10 +65,11 @@ public class ProjectActivitiesResource {
   public ProjectActivitiesResource() {
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }

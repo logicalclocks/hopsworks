@@ -16,12 +16,16 @@
 
 package io.hops.hopsworks.api.admin.security;
 
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 
+@Logged
 @RequestScoped
 @Path("/admin/credentials")
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -30,6 +34,7 @@ public class CredentialsResource {
   @Inject
   private X509Resource x509Resource;
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/x509")
   public X509Resource getX509Credentials() {
     return x509Resource;

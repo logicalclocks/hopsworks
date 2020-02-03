@@ -27,6 +27,8 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.DownloadService;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.api.util.UploadService;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -76,6 +78,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "Dataset Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -109,10 +112,11 @@ public class DatasetResource {
   private Integer projectId;
   private String projectName;
 
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }
@@ -363,12 +367,14 @@ public class DatasetResource {
     return Response.noContent().build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/download")
   public DownloadService download() {
     this.downloadService.setProjectId(this.projectId);
     return this.downloadService;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("upload/{path: .+}")
   public UploadService upload(@PathParam("path") String path, @QueryParam("templateId") int templateId,
     @QueryParam("type") DatasetType datasetType) {

@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.admin.security;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -45,6 +46,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 
+@Logged
 @RequestScoped
 @Api(value = "API for platform admins or agents to access x509 credentials of users")
 public class X509Resource {

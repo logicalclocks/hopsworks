@@ -42,6 +42,8 @@ package io.hops.hopsworks.api.hopssite;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.RatingValueDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
@@ -66,6 +68,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RatingService {
@@ -82,6 +85,7 @@ public class RatingService {
 
   private String publicDSId;
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setPublicDSId(String publicDSId) {
     this.publicDSId = publicDSId;
   }

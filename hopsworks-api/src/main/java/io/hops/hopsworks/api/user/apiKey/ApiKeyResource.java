@@ -20,6 +20,12 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey;
@@ -58,6 +64,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "ApiKey Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -116,11 +123,12 @@ public class ApiKeyResource {
   
   @PUT
   @Produces(MediaType.APPLICATION_JSON)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User updated an api key")
   @ApiOperation(value = "Update an api key.", response = ApiKeyDTO.class)
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@QueryParam("name") String name, @QueryParam("action") ApiKeyUpdateAction action,
     @QueryParam("scope") Set<ApiScope> scopes, @Context UriInfo uriInfo, @Context HttpServletRequest req,
-    @Context SecurityContext sc) throws ApiKeyException {
+    @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc) throws ApiKeyException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ApiKey apikey;
     switch (action == null ? ApiKeyUpdateAction.ADD : action) {
@@ -145,9 +153,10 @@ public class ApiKeyResource {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Create an api key.", response = ApiKeyDTO.class)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User created an api key")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response create(@QueryParam("name") String name, @QueryParam("scope") Set<ApiScope> scopes,
-    @Context UriInfo uriInfo, @Context SecurityContext sc,
+    @Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
     @Context HttpServletRequest req) throws ApiKeyException, UserException {
     Users user = jwtHelper.getUserPrincipal(sc);
     String apiKey = apikeyController.createNewKey(user, name, validateScopes(scopes));
@@ -160,10 +169,11 @@ public class ApiKeyResource {
   @DELETE
   @Path("{name}")
   @ApiOperation(value = "Delete api key by name.")
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User deleted an api key")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response deleteByName(@PathParam("name") String name, @Context UriInfo uriInfo,
-    @Context HttpServletRequest req, @Context SecurityContext sc) {
+    @Context HttpServletRequest req, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc) {
     Users user = jwtHelper.getUserPrincipal(sc);
     apikeyController.deleteKey(user, name);
     return Response.noContent().build();
@@ -171,9 +181,10 @@ public class ApiKeyResource {
   
   @DELETE
   @ApiOperation(value = "Delete all api keys.")
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User deleted all api keys")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response deleteAll(@Context UriInfo uriInfo, @Context SecurityContext sc,
+  public Response deleteAll(@Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
     @Context HttpServletRequest req) {
     Users user = jwtHelper.getUserPrincipal(sc);
     apikeyController.deleteAll(user);

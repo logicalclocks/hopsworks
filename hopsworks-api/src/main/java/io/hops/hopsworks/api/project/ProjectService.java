@@ -61,6 +61,9 @@ import io.hops.hopsworks.api.python.PythonResource;
 import io.hops.hopsworks.api.serving.ServingService;
 import io.hops.hopsworks.api.serving.inference.InferenceResource;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.dataset.DataSetDTO;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
@@ -153,6 +156,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+@Logged
 @Path("/project")
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API},
@@ -294,8 +298,7 @@ public class ProjectService {
   @GET
   @Path("/getMoreInfo/{type: (ds|inode)}/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMoreInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc)
-    throws DatasetException {
+  public Response getMoreInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc) throws DatasetException {
     MoreInfoDTO info = null;
 
     if (inodeId != null) {
@@ -662,18 +665,21 @@ public class ProjectService {
 
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/projectMembers")
   public ProjectMembersService projectMembers(@PathParam("projectId") Integer id) {
     this.projectMembers.setProjectId(id);
     return this.projectMembers;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/dataset")
   public DatasetResource datasetResource(@PathParam("projectId") Integer id) {
     this.datasetResource.setProjectId(id);
     return this.datasetResource;
   }
-  
+
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/jobs")
   public JobsResource jobs(@PathParam("projectId") Integer projectId) {
     return this.jobs.setProject(projectId);
@@ -681,6 +687,7 @@ public class ProjectService {
 
   @GET
   @Path("{projectId}/quotas")
+  @Logged(logLevel = LogLevel.OFF)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response quotasByProjectID(@PathParam("projectId") Integer id) throws ProjectException {
@@ -698,6 +705,7 @@ public class ProjectService {
 
   @GET
   @Path("{projectId}/multiplicators")
+  @Logged(logLevel = LogLevel.OFF)
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response getCurrentMultiplicator(@PathParam("projectId") Integer id) {
@@ -755,7 +763,7 @@ public class ProjectService {
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
+  public Response downloadCerts(@PathParam("projectId") Integer id, @Secret @FormParam("password") String password,
     @Context SecurityContext sc) throws ProjectException, HopsSecurityException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password)) {
@@ -771,7 +779,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response credentials(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
-        @Context SecurityContext sc) throws ProjectException, DatasetException {
+    @Context SecurityContext sc) throws ProjectException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     AccessCredentialsDTO certsDTO = projectController.credentials(id, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
@@ -782,8 +790,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response client(@PathParam("projectId") Integer id, @Context HttpServletRequest req,
-      @Context SecurityContext sc) throws ProjectException, DatasetException, FileNotFoundException,
-      HopsSecurityException {
+      @Context SecurityContext sc) throws FileNotFoundException {
     String clientPath = settings.getClientPath();
     File clientFile = new File(clientPath);
     InputStream stream = new FileInputStream(clientFile);
@@ -814,60 +821,70 @@ public class ProjectService {
     return output;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/kafka")
   public KafkaResource kafka(@PathParam("projectId") Integer id) {
     this.kafka.setProjectId(id);
     return this.kafka;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/jupyter")
   public JupyterService jupyter(@PathParam("projectId") Integer id) {
     this.jupyter.setProjectId(id);
     return this.jupyter;
   }
-  
+
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/experiments")
   public ExperimentsResource experiments(@PathParam("projectId") Integer id) {
     this.experiments.setProjectId(id);
     return this.experiments;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/models")
   public ModelsResource models(@PathParam("projectId") Integer id) {
     this.models.setProjectId(id);
     return this.models;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/airflow")
   public AirflowService airflow(@PathParam("projectId") Integer id) {
     this.airflow.setProjectId(id);
     return this.airflow;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/serving")
   public ServingService servingService(@PathParam("projectId") Integer id) {
     this.servingService.setProjectId(id);
     return this.servingService;
   }
-
+  
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/python")
   public PythonResource python(@PathParam("projectId") Integer id) {
     this.pythonResource.setProjectId(id);
     return this.pythonResource;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/dela")
   public DelaProjectService dela(@PathParam("projectId") Integer id) {
     this.delaService.setProjectId(id);
     return this.delaService;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/delacluster")
   public DelaClusterProjectService delacluster(@PathParam("projectId") Integer id) {
     this.delaclusterService.setProjectId(id);
     return this.delaclusterService;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/activities")
   public ProjectActivitiesResource activities(@PathParam("projectId") Integer id) {
     this.activitiesResource.setProjectId(id);
@@ -900,6 +917,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(genericPia).build();
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @ApiOperation(value = "Model inference sub-resource",
       tags = {"Inference"})
   @Path("/{projectId}/inference")
@@ -908,18 +926,21 @@ public class ProjectService {
     return inference;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/featurestores")
   public FeaturestoreService featurestoreService(@PathParam("projectId") Integer projectId) {
     featurestoreService.setProjectId(projectId);
     return featurestoreService;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/xattrs")
   public XAttrsResource xattrs(@PathParam("projectId") Integer projectId) {
     this.xattrs.setProject(projectId);
     return xattrs;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/provenance")
   public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);

@@ -26,6 +26,8 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.metadata.XAttrDTO;
 import io.hops.hopsworks.api.metadata.XAttrsBuilder;
 import io.hops.hopsworks.api.metadata.XAttrsController;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
@@ -84,6 +86,7 @@ import java.util.logging.Logger;
  * A Stateless RESTful service for the featuregroups in a featurestore on Hopsworks.
  * Base URL: project/projectId/featurestores/featurestoreId/featuregroups/
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featuregroup service", description = "A service that manages a feature store's feature groups")
@@ -115,6 +118,7 @@ public class FeaturegroupService {
    *
    * @param project the project where the featurestore resides
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
@@ -125,6 +129,7 @@ public class FeaturegroupService {
    * @param featurestoreId id of the featurestore
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestoreId(Integer featurestoreId) throws FeaturestoreException {
     //This call verifies that the project have access to the featurestoreId provided
     FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithId(project, featurestoreId);

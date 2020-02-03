@@ -26,6 +26,8 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jobs.JobDTO;
 import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.featurestore.Featurestore;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
@@ -87,6 +89,7 @@ import java.util.List;
  * A Stateless RESTful service for the featurestore service on Hopsworks.
  * Base URL: project/id/featurestores/
  */
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Featurestore service", description = "A service that manages project's feature stores")
@@ -132,6 +135,7 @@ public class FeaturestoreService {
    *
    * @param projectId the id of the project
    */
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
@@ -304,6 +308,7 @@ public class FeaturestoreService {
   }
   
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{featureStoreId}/datavalidation")
   public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
     return this.dataValidationService.setFeatureStore(featureStoreId);
@@ -316,6 +321,7 @@ public class FeaturestoreService {
    * @return the feature groups service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/featuregroups")
   public FeaturegroupService featuregroupService(@PathParam("featurestoreId") Integer featurestoreId,
     @Context SecurityContext sc) throws FeaturestoreException {
@@ -334,6 +340,7 @@ public class FeaturestoreService {
    * @return the training dataset service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/trainingdatasets")
   public TrainingDatasetService trainingDatasetService(@PathParam("featurestoreId") Integer featurestoreId)
       throws FeaturestoreException {
@@ -352,6 +359,7 @@ public class FeaturestoreService {
    * @return the storage connector service
    * @throws FeaturestoreException
    */
+  @Logged(logLevel = LogLevel.OFF)
   @Path("/{featurestoreId}/storageconnectors")
   public FeaturestoreStorageConnectorService storageConnectorService(
       @PathParam("featurestoreId") Integer featurestoreId) throws FeaturestoreException {

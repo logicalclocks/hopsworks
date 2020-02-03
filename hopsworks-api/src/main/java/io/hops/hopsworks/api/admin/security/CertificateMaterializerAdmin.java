@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.admin.dto.MaterializerStateResponse;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -74,6 +75,7 @@ import java.util.regex.Pattern;
 /**
  * REST API to monitor and control CertificateMaterializer service
  */
+@Logged
 @Path("/admin/materializer")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})

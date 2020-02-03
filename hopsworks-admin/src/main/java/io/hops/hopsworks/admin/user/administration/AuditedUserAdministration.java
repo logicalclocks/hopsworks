@@ -15,14 +15,20 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
+import io.hops.hopsworks.audit.auditor.AuditType;
+import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
+import io.hops.hopsworks.audit.auditor.annotation.Audited;
+import io.hops.hopsworks.audit.auditor.annotation.AuditedList;
+import io.hops.hopsworks.audit.helper.AuditAction;
+import io.hops.hopsworks.audit.helper.UserIdentifier;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.FormatUtils;
-import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -36,6 +42,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.logging.Level;
 
 @Stateless
+@Logged(logLevel = LogLevel.WARNING)
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class AuditedUserAdministration {
   
@@ -47,59 +54,56 @@ public class AuditedUserAdministration {
   private AuthController authController;
   @EJB
   private Settings settings;
-  @EJB
-  private AccountAuditFacade accountAuditFacade;
   
-  public void activateUser(Users user, HttpServletRequest httpServletRequest)
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ACTIVATED_ACCOUNT, message = "Activated" +
+    " account"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Added role")})
+  public void activateUser(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
     usersController.activateUser(user);
   }
   
-  public void addRole(Users user, String role, HttpServletRequest httpServletRequest)
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ROLE_ADDED, message = "Add role"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Add role")})
+  public void addRole(@AuditTarget(UserIdentifier.USERS) Users user, String role, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
     usersController.addRole(role, user);
   }
   
-  public void removeRole(Users user, String role,
+  @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ROLE_REMOVED, message = "Removed role"),
+    @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_REMOVED, message = "Removed role")})
+  public void removeRole(@AuditTarget(UserIdentifier.USERS) Users user, String role,
     HttpServletRequest httpServletRequest) throws UserException {//httpServletRequest needed for logging
     usersController.removeRole(role, user);
   }
   
-  public void changeStatus(Users user, UserAccountStatus accountStatus,
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Status change")
+  public void changeStatus(@AuditTarget(UserIdentifier.USERS) Users user, UserAccountStatus accountStatus,
     HttpServletRequest httpServletRequest) throws UserException {//httpServletRequest needed for logging
     usersController.changeAccountStatus(user.getUid(), accountStatus.getUserStatus(), accountStatus);
   }
   
-  public void resendAccountVerificationEmail(Users user, HttpServletRequest request)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "New validation key")
+  public void resendAccountVerificationEmail(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest request)
     throws MessagingException {
     String linkUrl = FormatUtils.getUserURL(request) + settings.getEmailVerificationEndpoint();
     authController.sendNewValidationKey(user, linkUrl);
   }
   
-  public String resetPassword(Users user, HttpServletRequest request)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD_CHANGE, message = "Admin reset password")
+  public String resetPassword(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest request)
     throws MessagingException, UserException {//httpServletRequest needed for logging
-    Users init = userFacade.findByEmail(request.getRemoteUser());
-    String remoteHost = HttpUtil.extractRemoteHostIp(request);
-    String userAgent = HttpUtil.extractUserAgent(request);
-    String pwd;
-    try {
-      pwd = usersController.resetPassword(user, request.getRemoteUser());
-      accountAuditFacade.registerAccountChange(init, "PASSWORD CHANGE", "SUCCESS", "Admin reset password", user,
-        remoteHost, userAgent);
-    } catch (UserException ue) {
-      accountAuditFacade.registerAccountChange(init, "PASSWORD CHANGE", "FAILED", "Admin reset password", user,
-        remoteHost, userAgent);
-      throw ue;
-    }
-    return pwd;
+    return usersController.resetPassword(user, request.getRemoteUser());
   }
   
-  public void setMaxProject(Users user, int num, HttpServletRequest request) {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "Set max project")
+  public void setMaxProject(@AuditTarget(UserIdentifier.USERS) Users user, int num, HttpServletRequest request) {
     //httpServletRequest needed for logging
     usersController.updateMaxNumProjs(user, num);
   }
   
-  public void updateProfile(Users user, HttpServletRequest request) {
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User updated profile")
+  public void updateProfile(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest request) {
     //httpServletRequest needed for logging
     userFacade.update(user);
   }

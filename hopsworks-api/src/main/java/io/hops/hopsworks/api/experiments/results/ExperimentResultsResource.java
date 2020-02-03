@@ -19,6 +19,8 @@ import io.hops.hopsworks.api.experiments.dto.results.ExperimentResultSummaryDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.exceptions.ExperimentsException;
@@ -39,6 +41,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Level;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExperimentResultsResource {
@@ -49,12 +52,14 @@ public class ExperimentResultsResource {
   @EJB
   private ExperimentResultsBuilder experimentResultsBuilder;
   
+  @Logged(logLevel = LogLevel.OFF)
   public ExperimentResultsResource setProject(Project project, String experimentId) {
     this.project = project;
     this.experimentId = experimentId;
     return this;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }

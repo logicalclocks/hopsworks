@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.admin.hosts;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.hosts.HostsController;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.logging.Logger;
 
+@Logged
 @Path("/hosts")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})

@@ -46,6 +46,8 @@ import io.hops.hopsworks.api.kafka.acls.AclsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBeanParam;
 import io.hops.hopsworks.api.kafka.topics.TopicsBuilder;
 import io.hops.hopsworks.api.util.Pagination;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
@@ -100,6 +102,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
+@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class KafkaResource {
@@ -127,9 +130,12 @@ public class KafkaResource {
 
   public KafkaResource() {
   }
+  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = this.projectFacade.find(projectId);
   }
+  @Logged(logLevel = LogLevel.OFF)
   public Project getProject() {
     return project;
   }

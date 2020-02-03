@@ -62,6 +62,7 @@
     <module>hopsworks-IT</module>
     <module>hopsworks-rest-utils</module>
     <module>featurestore-ee</module>
+    <module>hopsworks-audit</module>
     <module>hopsworks-UT</module>
   </modules>
 
