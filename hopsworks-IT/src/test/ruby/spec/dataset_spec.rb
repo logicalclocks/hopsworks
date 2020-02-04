@@ -245,6 +245,70 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
+    describe "#upload" do
+      context 'without authentication' do
+        before :all do
+          with_valid_project
+          reset_session
+        end
+        it "should fail to upload" do
+          project = get_project
+          uploadFile(project, "Logs", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+      end
+      context 'with authentication but insufficient privilege' do
+        before :all do
+          with_valid_project
+        end
+        it "should fail to upload to a dataset with permission owner only" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          member = create_user
+          add_member_to_project(@project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_json(errorCode: 110016)
+          expect_status(400)
+          reset_session
+        end
+        it "should fail to upload to a shared dataset with permission owner only" do
+          with_valid_project
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], "")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_json(errorCode: 110016)
+          expect_status(400)
+        end
+      end
+      context 'with authentication and sufficient privilege' do
+        before :all do
+          with_valid_project
+        end
+        it "should upload file" do
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_status(204)
+        end
+        it "should upload to a shared dataset with permission group writable." do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          ds = create_dataset_by_name(@project, dsname)
+          request_access(@project, ds, project)
+          share_dataset(@project, dsname, project[:projectname], "")
+          update_dataset_permissions(@project, dsname, "GROUP_WRITABLE_SB", "&type=DATASET")
+          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_status(204)
+        end
+      end
+    end
     describe "#delete" do
       context 'without authentication' do
         before :all do
