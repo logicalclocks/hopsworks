@@ -701,7 +701,7 @@ public class DistributedFileSystemOps {
   }
   
   /**
-   * Set Meta Status
+   * Set Meta ServiceStatus
    * <p/>
    * @throws IOException
    */

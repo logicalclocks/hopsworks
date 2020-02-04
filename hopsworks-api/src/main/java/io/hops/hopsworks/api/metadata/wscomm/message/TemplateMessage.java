@@ -110,7 +110,7 @@ public class TemplateMessage extends ContentMessage {
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build() //build the actual json structure
+            .build() //buildItems the actual json structure
             .toString();
 
     return value;

@@ -575,7 +575,9 @@ public class RESTCodes {
     OPERATION_NOT_SUPPORTED(45, "Supplied operation is not supported", Response.Status.BAD_REQUEST),
 
     GIT_COMMAND_FAILURE(46, "Git command failed to execute", Response.Status.BAD_REQUEST),
-    JUPYTER_NOTEBOOK_VERSIONING_FAILED(47, "Failed to version notebook", Response.Status.INTERNAL_SERVER_ERROR);
+    JUPYTER_NOTEBOOK_VERSIONING_FAILED(47, "Failed to version notebook", Response.Status.INTERNAL_SERVER_ERROR),
+    SERVICE_NOT_FOUND(48, "Service not found", Response.Status.NOT_FOUND),
+    ACTION_FORBIDDEN(49, "Action forbidden", Response.Status.BAD_REQUEST);
 
 
     private Integer code;

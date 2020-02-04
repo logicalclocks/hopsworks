@@ -39,12 +39,11 @@
 
 package io.hops.hopsworks.common.dao.host;
 
-public enum Status {
-
+public enum ServiceStatus {
+  
   Started,
   Stopped,
   Failed,
   TimedOut,
   None
 }
-  

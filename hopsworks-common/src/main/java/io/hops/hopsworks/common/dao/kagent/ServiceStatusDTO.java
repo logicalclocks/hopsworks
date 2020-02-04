@@ -40,7 +40,8 @@
 package io.hops.hopsworks.common.dao.kagent;
 
 import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.host.ServiceStatus;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
@@ -49,12 +50,12 @@ public class ServiceStatusDTO {
   private static final long serialVersionUID = 1L;
   private String group;
   private String service;
-  private Status status;
+  private ServiceStatus status;
 
   public ServiceStatusDTO() {
   }
 
-  public ServiceStatusDTO(String group, String service, Status status) {
+  public ServiceStatusDTO(String group, String service, ServiceStatus status) {
     this.service = service;
     this.group = group;
     this.status = status;
@@ -76,16 +77,16 @@ public class ServiceStatusDTO {
     this.group = group;
   }
 
-  public Status getStatus() {
+  public ServiceStatus getStatus() {
     return status;
   }
 
-  public void setStatus(Status status) {
+  public void setStatus(ServiceStatus status) {
     this.status = status;
   }
 
   public Health getHealth() {
-    if (status == Status.Failed || status == Status.Stopped) {
+    if (status == ServiceStatus.Failed || status == ServiceStatus.Stopped) {
       return Health.Bad;
     }
     return Health.Good;

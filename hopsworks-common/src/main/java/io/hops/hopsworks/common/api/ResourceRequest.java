@@ -169,6 +169,7 @@ public class ResourceRequest {
     TENSORBOARD,
     RESULTS,
     MODELS,
+    SERVICES,
     HOSTS;
     
     public static Name fromString(String name) {

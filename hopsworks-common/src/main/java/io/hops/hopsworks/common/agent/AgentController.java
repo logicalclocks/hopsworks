@@ -17,12 +17,13 @@
 package io.hops.hopsworks.common.agent;
 
 import com.google.gson.Gson;
+import io.hops.hopsworks.common.admin.services.HostServicesController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.host.ServiceStatus;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -89,6 +90,8 @@ public class AgentController {
   private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
   private HostsController hostsController;
+  @EJB
+  private HostServicesController hostServicesController;
 
 
   public void register(String hostId, String password) throws ServiceException {
@@ -203,7 +206,7 @@ public class AgentController {
   }
 
   private void updateServices(AgentHeartbeatDTO heartbeat) throws ServiceException {
-    hostServicesFacade.updateHostServices(heartbeat);
+    hostServicesController.updateHostServices(heartbeat);
   }
 
   private void processCondaCommands(AgentHeartbeatDTO heartbeatDTO) throws ServiceException {
@@ -527,21 +530,21 @@ public class AgentController {
   }
 
   public static class AgentServiceDTO {
-    private final String service;
+    private final String name;
     private final String group;
     private final Integer pid;
-    private final Status status;
+    private final ServiceStatus status;
 
-    public AgentServiceDTO(final String service, final String group,
-                           final Integer pid, final Status status) {
-      this.service = service;
+    public AgentServiceDTO(final String name, final String group,
+                           final Integer pid, final ServiceStatus status) {
+      this.name = name;
       this.group = group;
       this.pid = pid;
       this.status = status;
     }
 
-    public String getService() {
-      return service;
+    public String getName() {
+      return name;
     }
 
     public String getGroup() {
@@ -552,7 +555,7 @@ public class AgentController {
       return pid;
     }
 
-    public Status getStatus() {
+    public ServiceStatus getStatus() {
       return status;
     }
   }

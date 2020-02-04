@@ -134,7 +134,7 @@ public class AgentView {
     this.services = services;
   }
   
-  @ApiModelProperty(value = "Status report of running system commands")
+  @ApiModelProperty(value = "ServiceStatus report of running system commands")
   public List<SystemCommandView> getSystemCommands() {
     return systemCommands;
   }
@@ -143,7 +143,7 @@ public class AgentView {
     this.systemCommands = systemCommands;
   }
   
-  @ApiModelProperty(value = "Status report of running conda commands")
+  @ApiModelProperty(value = "ServiceStatus report of running conda commands")
   public List<CondaCommandView> getCondaCommands() {
     return condaCommands;
   }
