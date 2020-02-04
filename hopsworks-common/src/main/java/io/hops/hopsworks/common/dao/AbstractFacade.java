@@ -120,7 +120,7 @@ public abstract class AbstractFacade<T> {
   }
   
   public String OrderBy(SortBy sortBy) {
-    return sortBy.getSql() + sortBy.getParam().getSql();
+    return sortBy.getSql() + " " +  sortBy.getParam().getSql();
   }
   
   public String buildQuery(String query, Set<? extends AbstractFacade.FilterBy> filters,
@@ -202,6 +202,14 @@ public abstract class AbstractFacade<T> {
       throw new InvalidQueryException("Filter value for " + field + " needs to set an Integer, but found: " + value);
     }
     return val;
+  }
+  
+  public Long getLongValue(String field, String value) {
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException e) {
+      throw new InvalidQueryException("Filter value for " + field + " needs to set a Long, but found: " + value);
+    }
   }
   
   public List<Integer> getIntValues(FilterBy filterBy) {

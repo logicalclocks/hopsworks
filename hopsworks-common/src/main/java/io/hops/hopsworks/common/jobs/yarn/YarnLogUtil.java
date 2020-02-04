@@ -103,7 +103,7 @@ public class YarnLogUtil {
     LogAggregationStatus logAggregationStatus = waitForLogAggregation(monitor.getYarnClient(),
         monitor.getApplicationId());
     if (logAggregationStatus == null) {
-      // Status might be null if there were issues starting the application
+      // ServiceStatus might be null if there were issues starting the application
       // most likely on the yarn side.
       return;
     }
@@ -172,7 +172,7 @@ public class YarnLogUtil {
 
   private static boolean isFinal(LogAggregationStatus status){
     if (status == null) {
-      // Status might be null if there were issues starting the application
+      // ServiceStatus might be null if there were issues starting the application
       // most likely on the yarn side.
       return true;
     }
