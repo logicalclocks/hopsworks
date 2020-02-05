@@ -189,6 +189,7 @@ module ProvStateHelper
     until FileProv.all.count == 0 || sleep_counter1 == 5 do
       sleep(10)
       sleep_counter1 += 1
+
     end
     until AppProv.all.count == 0 || sleep_counter2 == 5 do
       sleep(10)
@@ -385,5 +386,17 @@ module ProvStateHelper
     }
     expect(response.code).to eq expected_code
     return response
+  end
+
+  def check_epipe_is_active()
+    output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
+    expect(output.strip).to eq("active")
+  end
+
+  def wait_for_project_prov(project)
+    check_epipe_is_active
+    wait_for do
+      FileProv.where("project_name": project["inode_name"]).empty?
+    end
   end
 end

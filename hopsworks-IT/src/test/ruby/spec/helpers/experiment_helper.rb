@@ -95,14 +95,12 @@ module ExperimentHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/experiments/#{ml_id}/#{query}"
   end
 
-  def run_experiment_blocking(job_name)
-    start_execution(@project[:id], job_name, nil)
+  def run_experiment_blocking(project, job_name)
+    start_execution(project[:id], job_name, nil)
     execution_id = json_body[:id]
     expect_status(201)
-    wait_for_execution do
-      get_execution(@project[:id], job_name, execution_id)
-      (json_body[:state].eql? "FINISHED") && (FileProv.where("project_name": @project["inode_name"]).empty?)
-    end
+    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+    wait_for_project_prov(project)
   end
 
   def get_experiments(project_id, query)

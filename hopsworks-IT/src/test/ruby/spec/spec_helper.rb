@@ -71,6 +71,7 @@ Dir[File.join(File.dirname(__FILE__), 'factories', '**', '*.rb')].each { |f| req
 Dir[File.join(File.dirname(__FILE__), 'helpers', '**', '*.rb')].each { |f| require f }
 
 RSpec.configure do |config|
+  config.include Helper
   config.include SessionHelper
   config.include ProjectHelper
   config.include FactoryHelper
