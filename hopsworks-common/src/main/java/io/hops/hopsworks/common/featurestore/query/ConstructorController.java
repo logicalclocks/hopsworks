@@ -75,6 +75,12 @@ public class ConstructorController {
     return generateSQL(query);
   }
 
+  /**
+   * Recursively convert the QueryDTO into the internal query representation
+   * @param queryDTO
+   * @param fgId each feature group will be aliased as fg[Integer] where [integer] is going to be an incremental id
+   * @return
+   */
   protected Query convertQueryDTO(QueryDTO queryDTO, int fgId) {
     Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
     String fgAs = generateAs(fgId++);
@@ -84,6 +90,7 @@ public class ConstructorController {
     List<FeatureDTO> requestedFeatures = validateFeatures(fg, fgAs, queryDTO.getLeftFeatures(), availableFeatures);
 
     Query query = new Query(featureStore, fg, fgAs, requestedFeatures, availableFeatures);
+    // If there are any join, recursively conver the Join's QueryDTO into the internal Query representation
     if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
       query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId));
     }
@@ -95,6 +102,12 @@ public class ConstructorController {
     return "fg" + id;
   }
 
+  /**
+   * Validate FeatureGroupDTO to make sure it exists. Authorization is done at the storage layer by HopsFS when
+   * actually executing the query.
+   * @param featuregroupDTO
+   * @return
+   */
   private Featuregroup validateFeaturegroupDTO(FeaturegroupDTO featuregroupDTO) {
     if (featuregroupDTO == null) {
       throw new IllegalArgumentException("Feature group not specified or the list of features is empty");
@@ -108,9 +121,22 @@ public class ConstructorController {
     }
   }
 
+  /**
+   * Given the list of features available in the feature group check that all the features the user
+   * requests actually exists.
+   *
+   * Users are allowed to pass a list with a single feature named * to select all the features.
+   * @param fg
+   * @param as
+   * @param requestedFeatures
+   * @param availableFeatures
+   * @return The list of feature objects that it's going to be used to generate the SQL string.
+   */
   protected List<FeatureDTO> validateFeatures(Featuregroup fg, String as,
                                               List<FeatureDTO> requestedFeatures, List<FeatureDTO> availableFeatures) {
     List<FeatureDTO> featureList = new ArrayList<>();
+    // This list will be used when generating the SQL string.
+    // Set the feature group alias here so that it can be used later
     availableFeatures.forEach(f -> f.setFeaturegroup(as));
 
     if (requestedFeatures == null || requestedFeatures.isEmpty()) {
@@ -130,12 +156,21 @@ public class ConstructorController {
     return featureList;
   }
 
+  /**
+   * Convert the JoinDTOs into the internal representation of the Join object.
+   * The returned list will already contain the correct set of joining keys
+   * @param leftQuery
+   * @param joinDTOS
+   * @param fgId
+   * @return
+   */
   private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId) {
     List<Join> joins = new ArrayList<>();
     for (JoinDTO joinDTO : joinDTOS) {
       if (joinDTO.getQuery() == null) {
         throw new IllegalArgumentException("Subquery not specified");
       }
+      // Recursively convert the QueryDTO. Currently we don't support Joins of Joins
       Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgId++);
 
       if (joinDTO.getOn() != null && !joinDTO.getOn().isEmpty()) {
@@ -152,9 +187,17 @@ public class ConstructorController {
     return joins;
   }
 
+  /**
+   * If the user has specified the `on` field in the JoinDTO check that the features in it are present on both feature
+   * groups (name check) and they have the same types on both of them.
+   * @param leftQuery
+   * @param rightQuery
+   * @param on
+   * @param joinType
+   * @return
+   */
   // TODO(Fabio): investigate type compatibility
   protected Join extractOn(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType) {
-    // Make sure that the joining features are available on both feature groups and have the same type on both
     for (FeatureDTO joinFeature : on) {
       FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(joinFeature.getName()))
@@ -171,6 +214,18 @@ public class ConstructorController {
     return new Join(leftQuery, rightQuery, on, joinType);
   }
 
+  /**
+   * If th euser has specified the `leftOn` and `rightOn` make sure that both list have the same length, that the leftOn
+   * features are present in the left feature group, the rightOn features in the right feature group. Finally make sure
+   * that their type match - first feature in the leftOn should have the same type as the first one on the
+   * rightOn and so on.
+   * @param leftQuery
+   * @param rightQuery
+   * @param leftOn
+   * @param rightOn
+   * @param joinType
+   * @return
+   */
   protected Join extractLeftRightOn(Query leftQuery, Query rightQuery,
                                     List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType) {
     // Make sure that they 2 list have the same length, and that the respective features have the same type
@@ -180,6 +235,7 @@ public class ConstructorController {
     int i = 0;
     while (i < leftOn.size()) {
       String leftFeatureName = leftOn.get(i).getName();
+      // Find the left feature in the left FeatureGroup.
       FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(leftFeatureName))
           .findFirst()
@@ -187,6 +243,7 @@ public class ConstructorController {
               " in feature group: " + leftQuery.getFeaturegroup().getName()));
 
       String rightFeatureName = rightOn.get(i).getName();
+      // Make sure that the rightOn feature at the same position (i) exists and it has the same type of the left one.
       if (rightQuery.getAvailableFeatures().stream()
           .noneMatch(f -> (f.getName().equals(rightFeatureName) && f.getType().equals(leftFeature.getType())))) {
         throw new IllegalArgumentException("Could not find Join feature " + rightFeatureName +
@@ -197,6 +254,14 @@ public class ConstructorController {
     return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
   }
 
+  /**
+   * In case the user has not specified any joining key, the largest subset of matching primary key will be used
+   * for the join. Both name and type should match for a feature to be added to the subset.
+   * @param leftQuery
+   * @param rightQuery
+   * @param joinType
+   * @return
+   */
   protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType) {
     // Find subset of matching primary keys (same name and type) to be used as join condition
     List<FeatureDTO> joinFeatures = new ArrayList<>();
@@ -214,24 +279,39 @@ public class ConstructorController {
     return new Join(leftQuery, rightQuery, joinFeatures, joinType);
   }
 
+  /**
+   * Generate the SQL string. The backend will return a string to the client which is the SQL query to execute.
+   * @param query
+   * @return
+   */
   public String generateSQL(Query query) {
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
     for (FeatureDTO f : collectFeatures(query)) {
+      // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       selectList.add(new SqlIdentifier(Arrays.asList(f.getFeaturegroup(), f.getName()), SqlParserPos.ZERO));
     }
 
     SqlNode joinNode = null;
     if (query.getJoins() == null || query.getJoins().isEmpty()) {
+      // If there are no joins just set `from featuregroup`
       joinNode = generateTableNode(query);
     } else {
+      // If there are joins generate the join list with the respective conditions
       joinNode = buildJoinNode(query, query.getJoins().size() - 1);
     }
 
+    // Assemble the query
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
         null, null, null, null, null, null, null);
     return select.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
 
+  /**
+   * Recursively generate
+   * @param query
+   * @param i
+   * @return
+   */
   private SqlNode buildJoinNode(Query query, int i) {
     if (i < 0) {
       // No more joins to read build the node for the query itself.
@@ -257,6 +337,12 @@ public class ConstructorController {
     return features;
   }
 
+  /**
+   * Generate the table node. The object will contain the fully qualified name of a feature group:
+   * featurestore_name.feature_group_name as feature_group alias
+   * @param query
+   * @return
+   */
   private SqlNode generateTableNode(Query query) {
     List<String> tableIdentifierStr = new ArrayList<>();
     tableIdentifierStr.add(query.getFeatureStore());

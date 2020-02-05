@@ -104,6 +104,10 @@ public class Join {
     return rightOn;
   }
 
+  /**
+   * Generate the condition node for the join node. At this stage, primary keys joins are treated as `on` joins.
+   * @return
+   */
   public SqlNode getCondition() {
     if (on != null) {
       return getOnCondition();
@@ -112,6 +116,10 @@ public class Join {
     }
   }
 
+  /**
+   * Iterate over the on list to generate the on condition node
+   * @return
+   */
   private SqlNode getOnCondition() {
     if (on.size() > 1) {
       SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
@@ -124,6 +132,10 @@ public class Join {
     }
   }
 
+  /**
+   * Iterate over the leftOn and rightOn to generate the on condition node
+   * @return
+   */
   private SqlNode getLeftRightCondition()  {
     if (leftOn.size() > 1) {
       SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
@@ -137,6 +149,15 @@ public class Join {
     }
   }
 
+  /**
+   * Generate equality node between 2 single feature. The feature name will have the fully qualified domain name.
+   * fg_alias.ft_name
+   * @param leftFgAs
+   * @param rightFgAs
+   * @param leftOn
+   * @param rightOn
+   * @return
+   */
   private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO leftOn, FeatureDTO rightOn) {
     SqlIdentifier leftHandside = new SqlIdentifier(Arrays.asList(leftFgAs, leftOn.getName()), SqlParserPos.ZERO);
     SqlIdentifier rightHandside = new SqlIdentifier(Arrays.asList(rightFgAs, rightOn.getName()), SqlParserPos.ZERO);
