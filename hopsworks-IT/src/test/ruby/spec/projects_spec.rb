@@ -195,8 +195,8 @@ describe "On #{ENV['OS']}" do
 
       context "project creation failure" do
         before :all do
-          @failed_service = "elasticsearch"
-          @service_host = ENV['ELASTIC_API'].split(":").map(&:strip)[0]
+          @failed_service = "kibana"
+          @service_host = ENV['KIBANA_API'].split(":").map(&:strip)[0]
           with_valid_session
         end
         
