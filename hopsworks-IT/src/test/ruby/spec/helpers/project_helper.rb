@@ -183,13 +183,13 @@ module ProjectHelper
   def on_complete(request)
     request.on_complete do |response|
       if response.success?
-        pp "Successful request: " + response.code.to_s
+        pp "Delete project response: " + response.code.to_s
       elsif response.timed_out?
-        pp "Timed out sending request"
+        pp "Timed out deleting project"
       elsif response.code == 0
         pp response.return_message
       else
-        pp "HTTP request failed: " + response.code.to_s
+        pp "delete project - HTTP request failed: " + response.code.to_s
       end
     end
   end
