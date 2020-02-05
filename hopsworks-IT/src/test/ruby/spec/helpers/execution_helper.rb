@@ -45,7 +45,7 @@ module ExecutionHelper
       if Time.now - start > timeout
         raise "Timed out waiting for Job to finish. Timeout #{timeout} sec"
       end
-      sleep(5)
+      sleep(1)
       x = yield
     end
   end
