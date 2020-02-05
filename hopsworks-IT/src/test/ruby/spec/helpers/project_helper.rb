@@ -189,7 +189,7 @@ module ProjectHelper
       elsif response.code == 0
         pp response.return_message
       else
-        pp "delete project - HTTP request failed: " + response.code.to_s
+        pp "Delete project - HTTP request failed: " + response.code.to_s
       end
     end
   end
