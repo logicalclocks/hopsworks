@@ -583,10 +583,11 @@ public class AuthController {
   }
   
   public void registerLogin(Users user, HttpServletRequest req) {
+    Users initiator = userFacade.findByEmail(req.getRemoteUser());
     String remoteHost = HttpUtil.extractRemoteHostIp(req);
     String userAgent = HttpUtil.extractUserAgent(req);
     registerLogin(user);
-    accountAuditFacade.registerLoginInfo(user, "LOGIN", "SUCCESS", remoteHost, userAgent);
+    accountAuditFacade.registerLoginInfo(initiator, "LOGIN", "SUCCESS", remoteHost, userAgent);
   }
 
   /**
