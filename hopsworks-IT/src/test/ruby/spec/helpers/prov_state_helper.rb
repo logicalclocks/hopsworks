@@ -390,7 +390,7 @@ module ProvStateHelper
 
   def check_epipe_is_active()
     output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
-    expect(output.strip).to eq("active")
+    expect(output.strip).to eq("active"), "epipe is down"
   end
 
   def wait_for_project_prov(project)
