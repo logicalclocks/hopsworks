@@ -89,7 +89,7 @@ public class EnvironmentResource {
     this.project = project;
     return this;
   }
-
+  
   public Project getProject() {
     return project;
   }
@@ -116,8 +116,8 @@ public class EnvironmentResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAll(@BeanParam EnvironmentExpansionBeanParam expansions, @Context UriInfo uriInfo)
-    throws PythonException {
+  public Response getAll(@BeanParam EnvironmentExpansionBeanParam expansions, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws PythonException {
     ResourceRequest resourceRequest = getResourceRequest(expansions);
     EnvironmentDTO dto = environmentBuilder.buildItems(uriInfo, resourceRequest, project);
     return Response.ok().entity(dto).build();
@@ -130,7 +130,7 @@ public class EnvironmentResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@PathParam("version") String version, @BeanParam EnvironmentExpansionBeanParam expansions,
-      @Context UriInfo uriInfo) throws PythonException {
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     if (!version.equals(this.project.getPythonVersion())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     } 
@@ -207,14 +207,14 @@ public class EnvironmentResource {
     org.apache.hadoop.fs.Path fullPath = ymlPath.getFullPath();
     return fullPath.toString();
   }
-
+  
   @ApiOperation(value = "Python library sub-resource", tags = {"PythonLibraryResource"})
   @Path("{version}/libraries")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   public LibraryResource libraries(@PathParam("version") String version) {
     return this.libraryResource.setProjectAndVersion(project, version);
   }
-
+  
   @ApiOperation(value = "Python opStatus sub-resource", tags = {"EnvironmentCommandsResource"})
   @Path("{version}/commands")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})

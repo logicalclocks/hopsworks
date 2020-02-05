@@ -81,10 +81,7 @@ public class RatingService {
   private JWTHelper jWTHelper;
 
   private String publicDSId;
-
-  public RatingService() {
-  }
-
+  
   public void setPublicDSId(String publicDSId) {
     this.publicDSId = publicDSId;
   }
@@ -109,14 +106,14 @@ public class RatingService {
     }
   }
 
-  public Response getDatasetAllRating() throws DelaException {
+  private Response getDatasetAllRating() throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:all {0}", publicDSId);
     RatingDTO rating = hopsSite.getDatasetAllRating(publicDSId);
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:all - done {0}", publicDSId);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(rating).build();
   }
 
-  public Response getDatasetUserRating(SecurityContext sc) throws DelaException {
+  private Response getDatasetUserRating(SecurityContext sc) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:get:user {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);
     Users user = jWTHelper.getUserPrincipal(sc);

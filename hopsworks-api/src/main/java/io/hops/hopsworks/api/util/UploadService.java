@@ -187,7 +187,7 @@ public class UploadService {
     this.templateId = templateId;
     this.isTemplate = isTemplate;
   }
-
+  
   public void setParams(Integer projectId, String path, DatasetType datasetType, int templateId, boolean isTemplate) {
     this.projectId = projectId;
     this.path = path;

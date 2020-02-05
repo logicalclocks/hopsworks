@@ -40,7 +40,6 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 
 import javax.ejb.EJB;
@@ -64,7 +63,7 @@ public class RecoverySelector implements Serializable {
   
   
   @EJB
-  protected UsersController usersController;
+  protected AuditedUserAccountAction auditedUserAccountAction;
 
   private String console;
 
@@ -118,7 +117,7 @@ public class RecoverySelector implements Serializable {
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
       .getRequest();
     try {
-      usersController.sendQRRecoveryEmail(this.uname, passwd, httpServletRequest);
+      auditedUserAccountAction.sendQRRecoveryEmail(this.uname, passwd, httpServletRequest);
     } catch (MessagingException ex) {
       String detail = ex.getCause() != null? ex.getCause().getMessage() : "Failed to send recovery email.";
       MessagesController.addSecurityErrorMessage(detail);

@@ -43,7 +43,7 @@
 
   <groupId>io.hops</groupId>
   <artifactId>hopsworks</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>hopsworks</name>
   <description>Hopsworks parent project</description>
@@ -61,6 +61,7 @@
     <module>hopsworks-persistence</module>
     <module>hopsworks-IT</module>
     <module>hopsworks-rest-utils</module>
+    <module>hopsworks-UT</module>
   </modules>
 
   <profiles>

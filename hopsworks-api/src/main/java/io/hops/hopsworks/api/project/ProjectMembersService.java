@@ -114,11 +114,9 @@ public class ProjectMembersService {
 
   public ProjectMembersService() {
   }
-
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-
   public Integer getProjectId() {
     return projectId;
   }
@@ -132,7 +130,7 @@ public class ProjectMembersService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API},
       allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response findMembersByProjectID() {
+  public Response findMembersByProjectID(@Context SecurityContext sc) {
     List<ProjectTeam> list = projectController.findProjectTeamById(this.projectId);
     GenericEntity<List<ProjectTeam>> projects = new GenericEntity<List<ProjectTeam>>(list) {
     };

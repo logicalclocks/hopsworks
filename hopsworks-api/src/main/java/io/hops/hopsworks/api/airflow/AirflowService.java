@@ -104,12 +104,12 @@ public class AirflowService {
   
   public AirflowService() {
   }
-
+  
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
     this.project = this.projectFacade.find(projectId);
   }
-
+  
   public Integer getProjectId() {
     return projectId;
   }
@@ -132,7 +132,7 @@ public class AirflowService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Create project secret directory in Airflow home")
-  public Response secretDir() throws AirflowException {
+  public Response secretDir(@Context SecurityContext sc) throws AirflowException {
     String secret = DigestUtils.sha256Hex(Integer.toString(this.projectId));
 
     java.nio.file.Path dagsDir = airflowJWTManager.getProjectDagDirectory(project.getId());

@@ -53,7 +53,6 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 
-
 @Api(value = "Python")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -66,7 +65,7 @@ public class PythonResource {
   private ProjectFacade projectFacade;
 
   private Project project;
-
+  
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }

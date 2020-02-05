@@ -21,8 +21,6 @@ import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScope;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScopeFacade;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountsAuditActions;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
@@ -37,7 +35,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -62,8 +59,6 @@ public class ApiKeyController {
   private SecurityUtils securityUtils;
   @EJB
   private EmailBean emailBean;
-  @EJB
-  private AccountAuditFacade accountAuditFacade;
   
   /**
    * Create new key for the give user with the given key name and scopes.
@@ -74,7 +69,7 @@ public class ApiKeyController {
    * @throws ApiKeyException
    * @return
    */
-  public String createNewKey(Users user, String keyName, Set<ApiScope> scopes, HttpServletRequest req)
+  public String createNewKey(Users user, String keyName, Set<ApiScope> scopes)
     throws UserException, ApiKeyException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
@@ -98,7 +93,7 @@ public class ApiKeyController {
     List<ApiKeyScope> keyScopes = getKeyScopes(scopes, apiKey);
     apiKey.setApiKeyScopeCollection(keyScopes);
     apiKeyFacade.save(apiKey);
-    sendCreatedEmail(user, keyName, date, scopes, req);
+    sendCreatedEmail(user, keyName, date, scopes);
     return secret.getPrefixPlusSecret();
   }
   
@@ -173,25 +168,25 @@ public class ApiKeyController {
    * @param user
    * @param keyName
    */
-  public void deleteKey(Users user, String keyName, HttpServletRequest req) {
+  public void deleteKey(Users user, String keyName) {
     ApiKey apiKey = apiKeyFacade.findByUserAndName(user, keyName);
     if (apiKey == null) {
       return;
     }
     apiKeyFacade.remove(apiKey);
-    sendDeletedEmail(user, keyName, req);
+    sendDeletedEmail(user, keyName);
   }
   
   /**
    *
    * @param user
    */
-  public void deleteAll(Users user, HttpServletRequest req) {
+  public void deleteAll(Users user) {
     List<ApiKey> keys = apiKeyFacade.findByUser(user);
     for (ApiKey key : keys) {
       apiKeyFacade.remove(key);
     }
-    sendDeletedAllEmail(user, req);
+    sendDeletedAllEmail(user);
   }
   
   /**
@@ -319,28 +314,27 @@ public class ApiKeyController {
     return apiKey;
   }
   
-  private void sendCreatedEmail(Users user, String keyName, Date createdOn, Set<ApiScope> scopes,
-    HttpServletRequest req) {
+  private void sendCreatedEmail(Users user, String keyName, Date createdOn, Set<ApiScope> scopes) {
     String subject = UserAccountsEmailMessages.API_KEY_CREATED_SUBJECT;
     String msg = UserAccountsEmailMessages.buildApiKeyCreatedMessage(keyName, createdOn, user.getEmail(), scopes);
-    sendEmail(user, subject, msg, req);
+    sendEmail(user, subject, msg);
   }
   
-  private void sendDeletedEmail(Users user, String keyName, HttpServletRequest req) {
+  private void sendDeletedEmail(Users user, String keyName) {
     String subject = UserAccountsEmailMessages.API_KEY_DELETED_SUBJECT;
     Date deletedOn = new Date();
     String msg = UserAccountsEmailMessages.buildApiKeyDeletedMessage(keyName, deletedOn, user.getEmail());
-    sendEmail(user, subject, msg, req);
+    sendEmail(user, subject, msg);
   }
   
-  private void sendDeletedAllEmail(Users user, HttpServletRequest req) {
+  private void sendDeletedAllEmail(Users user) {
     String subject = UserAccountsEmailMessages.API_KEY_DELETED_SUBJECT;
     Date deletedOn = new Date();
     String msg = UserAccountsEmailMessages.buildApiKeyDeletedAllMessage(deletedOn, user.getEmail());
-    sendEmail(user, subject, msg, req);
+    sendEmail(user, subject, msg);
   }
   
-  private void sendEmail(Users user, String subject, String msg, HttpServletRequest req) {
+  private void sendEmail(Users user, String subject, String msg) {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
@@ -349,7 +343,6 @@ public class ApiKeyController {
     } catch (MessagingException e) {
       LOGGER.log(Level.WARNING, "Failed to send api key creation verification email. {0}", e.getMessage());
     }
-    accountAuditFacade.registerAccountChange(user, subject, AccountsAuditActions.SUCCESS.name(), subject, user, req);
   }
   
 }

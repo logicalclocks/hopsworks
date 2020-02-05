@@ -71,6 +71,8 @@ public class LoginBean implements Serializable {
   private AuthController authController;
   @Inject
   private Credentials credentials;
+  @EJB
+  private AuditedUserAuth auditedUserAuth;
 
   private Users user;
   private boolean twoFactor;
@@ -129,10 +131,8 @@ public class LoginBean implements Serializable {
       context.addMessage(null, new FacesMessage("Login failed. User " + this.credentials.getUsername()));
       return "";
     }
-    String passwordWithSaltPlusOtp;
     try {
-      passwordWithSaltPlusOtp = authController.preCustomRealmLoginCheck(user, this.credentials.getPassword(),
-          this.credentials.getOtp(), request);
+      auditedUserAuth.login(user, this.credentials.getPassword(), this.credentials.getOtp(), request);
     } catch (UserException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
       context.addMessage(null, new FacesMessage("Login failed."));
@@ -144,12 +144,8 @@ public class LoginBean implements Serializable {
       }
       context.addMessage(null, new FacesMessage(msg));
       return "login";
-    }
-    try {
-      request.login(this.credentials.getUsername(), passwordWithSaltPlusOtp);
-      authController.registerLogin(user, request);
     } catch (ServletException e) {
-      authController.registerAuthenticationFailure(user, request);
+      authController.registerAuthenticationFailure(user);
       context.addMessage(null, new FacesMessage("Login failed."));
       return "";
     }
@@ -160,11 +156,7 @@ public class LoginBean implements Serializable {
     try {
       this.user = getUserFromSession();
       HttpServletRequest req = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-      req.getSession().invalidate();
-      req.logout();
-      if (user != null) {
-        authController.registerLogout(user, req);
-      }
+      auditedUserAuth.logout(this.user, req);
       FacesContext.getCurrentInstance().getExternalContext().redirect("/hopsworks/#!/home");
     } catch (IOException | ServletException ex) {
       LOGGER.log(Level.SEVERE, null, ex);
@@ -185,7 +177,7 @@ public class LoginBean implements Serializable {
   }
 
   public void gotoSupport() throws IOException {
-    String link = "https://groups.google.com/forum/#!forum/hopshadoop";
+    String link = "https://community.hopsworks.ai";
     ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
     externalContext.redirect(link.trim());
   }

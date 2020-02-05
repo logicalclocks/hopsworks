@@ -41,7 +41,6 @@ package io.hops.hopsworks.api.admin;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.admin.dto.VariablesRequest;
-import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
@@ -132,8 +131,8 @@ public class SystemAdminService {
   @PUT
   @Path("/encryptionPass")
   public Response changeMasterEncryptionPassword(@Context SecurityContext sc,
-      @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword) throws
-      HopsSecurityException {
+    @FormParam("oldPassword") String oldPassword, @FormParam("newPassword") String newPassword)
+    throws HopsSecurityException {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
@@ -156,7 +155,7 @@ public class SystemAdminService {
   
   @GET
   @Path("/encryptionPass/{opId}")
-  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId) {
+  public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId, @Context SecurityContext sc) {
     CertificatesMgmService.UPDATE_STATUS status = certificatesMgmService.getOperationStatus(operationId);
     switch (status) {
       case OK:
@@ -172,7 +171,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/variables/refresh")
-  public Response refreshVariables() {
+  public Response refreshVariables(@Context SecurityContext sc) {
     LOGGER.log(Level.FINE, "Requested refreshing variables");
     settings.refreshCache();
     
@@ -183,7 +182,7 @@ public class SystemAdminService {
   @POST
   @Consumes({MediaType.APPLICATION_JSON})
   @Path("/variables")
-  public Response updateVariables(VariablesRequest variablesRequest) {
+  public Response updateVariables(VariablesRequest variablesRequest, @Context SecurityContext sc) {
   
     List<Variables> variables = variablesRequest.getVariables();
     
@@ -204,7 +203,7 @@ public class SystemAdminService {
   
   @POST
   @Path("/rotate")
-  public Response serviceKeyRotate() {
+  public Response serviceKeyRotate(@Context SecurityContext sc) {
     certificatesMgmService.issueServiceKeyRotationCommand();
     RESTApiJsonResponse
       response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Key rotation commands " +
@@ -214,7 +213,8 @@ public class SystemAdminService {
   
   @POST
   @Path("/kagent/{hostname}")
-  public Response startAgent(@PathParam("hostname") String hostname) throws ServiceException {
+  public Response startAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+    throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
@@ -231,7 +231,8 @@ public class SystemAdminService {
   
   @DELETE
   @Path("/kagent/{hostname}")
-  public Response stopAgent(@PathParam("hostname") String hostname) throws ServiceException {
+  public Response stopAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+    throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
@@ -248,7 +249,8 @@ public class SystemAdminService {
   
   @PUT
   @Path("/kagent/{hostname}")
-  public Response restartAgent(@PathParam("hostname") String hostname) throws ServiceException {
+  public Response restartAgent(@PathParam("hostname") String hostname, @Context SecurityContext sc)
+    throws ServiceException {
     if (Strings.isNullOrEmpty(hostname)) {
       throw new IllegalArgumentException("Hostname should not be null or empty");
     }
@@ -263,7 +265,7 @@ public class SystemAdminService {
   
   @PUT
   @Path("/servicetoken")
-  public Response renewServiceJWT() throws JWTException {
+  public Response renewServiceJWT(@Context SecurityContext sc) throws JWTException {
     serviceJWTKeepAlive.forceRenewServiceToken();
     return Response.noContent().build();
   }
@@ -271,10 +273,9 @@ public class SystemAdminService {
   @ApiOperation(value = "Get kafka system settings")
   @GET
   @Path("/kafka/settings")
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getKafkaSettings() throws KafkaException {
+  public Response getKafkaSettings(@Context SecurityContext sc) throws KafkaException {
     TopicDefaultValueDTO values = kafkaController.topicDefaultValues();
     
     return Response.ok().entity(values).build();
@@ -282,7 +283,7 @@ public class SystemAdminService {
   
   @GET
   @Path("/elastic/admintoken")
-  public Response getElasticAdminToken() throws ElasticException {
+  public Response getElasticAdminToken(@Context SecurityContext sc) throws ElasticException {
     ElasticJWTResponseDTO responseDTO = jWTHelper.createTokenForELKAsAdmin();
     return Response.ok().entity(responseDTO).build();
   }

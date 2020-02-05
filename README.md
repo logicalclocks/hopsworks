@@ -1,7 +1,6 @@
 # Hopsworks
 
-[![Join the chat at https://gitter.im/hopshadoop/hopsworks](https://badges.gitter.im/hopshadoop/services.png)](https://gitter.im/hopshadoop/hopsworks)
-[![Google Group](https://img.shields.io/badge/google-group-blue.svg)](https://groups.google.com/forum/#!forum/hopshadoop)
+[![Support forum](https://img.shields.io/badge/hopsworks-support-informational)](https://community.hopsworks.ai)
 
 ## Overview
 
@@ -29,7 +28,7 @@ Jupyter notebooks can be used to write all parts of the pipeline, and TensorBoar
 
 <a href=""><img src="hopsworks-web/yo/app/images/hopsworks-featurestore.png" align="center" hspace="10" vspace="30"></a>
 
-The feature store is as a central place to store curated features for machine learning pipelines in Hopsworks. A feature is a measurable property of some data-sample. It could be for example an image-pixel, a word from a piece of text, the age of a person, a coordinate emitted from a sensor, or an aggregate value like the average number of purchases within the last hour. Features can come directly from tables or files or can be derived values, computed from one or more data sources. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/user_guide/hopsworks/featurestore.html).
+The feature store is as a central place to store curated features for machine learning pipelines in Hopsworks. A feature is a measurable property of some data-sample. It could be for example an image-pixel, a word from a piece of text, the age of a person, a coordinate emitted from a sensor, or an aggregate value like the average number of purchases within the last hour. Features can come directly from tables or files or can be derived values, computed from one or more data sources. For more information see the [docs](https://hopsworks.readthedocs.io/en/latest/featurestore/featurestore.html).
 
 ## TLS security
 
@@ -50,16 +49,26 @@ HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "sma
 ## Information
 
 <ul>
-<li><a href="https://twitter.com/hopshadoop">Follow our Twitter account.</a></li>
-<li><a href="https://groups.google.com/forum/#!forum/hopshadoop">Join our developer mailing list.</a></li>
+<li><a href="https://twitter.com/hopsworks">Follow our Twitter account.</a></li>
+<li><a href="https://community.hopsworks.ai">Join our support forum.</a></li>
 <li><a href="https://bbc1.sics.se/jenkins/job/Hopsworks-build/">Checkout the current build status.</a></li>
 </ul>
 
+## Documentation
+
+Hopsworks documentation, includung user-guide, development guide, feature store, hops, HopsML, is available at 
+[https://hopsworks.readthedocs.io](https://hopsworks.readthedocs.io).
+
+Hopsworks REST API is documented with Swagger and hosted by SwaggerHub.
+- **hopsworks-api** - [https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-api](https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-api)
+- **hopsworks-ca** - [https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-ca](https://app.swaggerhub.com/apis-docs/logicalclocks/hopsworks-ca)
+
+To build and deploy swagger on your own Hopsworks instance you can follow the instructions found in 
+[this](https://hopsworks.readthedocs.io/en/latest/developer_guide/guide/microservices.html#swagger-ui) guide.
 ## Installing Hopsworks
 
 Installation of Hopsworks and all its services is automated with the Karamel software. Instructions on
- how to install the entire platform are available
- [here](http://hopsworks.readthedocs.io).
+ how to install the entire platform are available [here](http://hopsworks.readthedocs.io).
 
 For a local single-node installation, to access Hopsworks just point your browser at:
 ```

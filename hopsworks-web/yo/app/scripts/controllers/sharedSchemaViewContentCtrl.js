@@ -22,7 +22,13 @@ angular.module('hopsWorksApp')
             
             self.projectId = projectId;
             self.schemaContents =[];
-            $scope.jsonObj = schemaContent;
+            $scope.jsonObj = "";
+
+            self.init = function() {
+              $scope.jsonObj = JSON.parse(schemaContent);
+            };
+
+            self.init();
 
             self.close = function () {
               $uibModalInstance.dismiss('cancel');

@@ -16,7 +16,6 @@
 package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.exceptions.UserException;
 
 import javax.annotation.PostConstruct;
@@ -47,14 +46,14 @@ public class RecoverPassword implements Serializable {
   private String key;
   
   @EJB
-  protected UsersController usersController;
+  protected AuditedUserAccountAction auditedUserAccountAction;
   
   @PostConstruct
   public void init() {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      usersController.checkRecoveryKey(key, req);
+      auditedUserAccountAction.checkRecoveryKey(key, req);
       keyError = false;
     } catch (EJBException | IllegalArgumentException e) {
       keyError = true;
@@ -110,7 +109,7 @@ public class RecoverPassword implements Serializable {
     FacesContext ctx = FacesContext.getCurrentInstance();
     HttpServletRequest req = (HttpServletRequest) ctx.getExternalContext().getRequest();
     try {
-      usersController.changePassword(key, passwd1, passwd2, req);
+      auditedUserAccountAction.changePassword(key, passwd1, passwd2, req);
     } catch (MessagingException ex) {
       String detail = ex.getCause() != null? ex.getCause().getMessage() : "Failed to send verification email.";
       MessagesController.addSecurityErrorMessage(detail);

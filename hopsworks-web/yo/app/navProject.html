@@ -54,20 +54,17 @@
         <a>
           Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"
                        id="jupyterTab"/>
-          <i class="pull-left fa"  
-             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now." 
+          <i uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."
              tooltip-placement="auto right"
-             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>          
+             ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.YarnBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
-        <a>
-          Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
-          <i class=" pull-left fa " 
-             uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."              
+        <a>Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
+          <i uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."
              tooltip-placement="auto right"
-             ng-class="{'fa-ban text-danger': clusterUtilCtrl.YarnBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
+             ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.YarnBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
 
@@ -75,10 +72,9 @@
           ng-show="projectCtrl.showKafka()">
         <a>
           Kafka <img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
-          <i class=" pull-left fa " 
-             uib-tooltip="Orange triangle: Kafka is encountering problems. Red means Kafka is down."             
+          <i uib-tooltip="Orange triangle: Kafka is encountering problems. Red means Kafka is down."
              tooltip-placement="auto right"
-             ng-class="{'fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>                    
+             ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
       <li ng-click="projectCtrl.goToService('DELA')" ng-show="projectCtrl.showDela()">
@@ -138,10 +134,9 @@
       <li ng-click="projectCtrl.goToDatasets()" style="margin-top:20px; margin-bottom:20px;" ng-show="projectCtrl.cloak" id="datasetsTab">
         <a>
           Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
-          <i class=" pull-left fa " 
-             uib-tooltip="Orange triangle: the filesystem is encountering problems. Red means the filesystem is down."                          
+          <i uib-tooltip="Orange triangle: the filesystem is encountering problems. Red means the filesystem is down."
              tooltip-placement="auto right"
-           ng-class="{'fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>                              
+           ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
 
