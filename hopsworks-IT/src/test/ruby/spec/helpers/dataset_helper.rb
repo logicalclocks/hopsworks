@@ -36,6 +36,7 @@
  DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
+
 module DatasetHelper
   def with_valid_dataset
     @dataset ||= create_dataset
@@ -55,6 +56,16 @@ module DatasetHelper
       sleep(1)
       x = yield
     end
+  end
+
+  def uploadFile(project, dsname, filePath)
+    file_size = File.size(filePath)
+    file_name = File.basename(filePath)
+    file = URI.encode_www_form({templateId: -1, flowChunkNumber: 1, flowChunkSize: 1048576,
+                                flowCurrentChunkSize: file_size, flowTotalSize: file_size,
+                                flowIdentifier: "#{file_size}-#{file_name}", flowFilename: "#{file_name}",
+                                flowRelativePath: "#{file_name}", flowTotalChunks: 1})
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/upload/#{dsname}?#{file}", {content_type: "multipart/form-data"}
   end
   
   def create_dataset
