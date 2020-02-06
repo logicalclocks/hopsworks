@@ -215,7 +215,7 @@ public class UploadService {
     if (datasetPath.getRelativePath() != null) {
       // We need to validate that each component of the path, either it exists
       // or it is a valid directory name
-      String[] dsPathComponents = datasetPath.getRelativePath().toString().split(File.separator);
+      String[] dsPathComponents = datasetPath.getDatasetRelativePath().split(File.separator);
 
       // Used to compute the partition id. Start from the depth of the Ds dir
       int depth = datasetController.getDatasetPath(datasetPath.getDataset()).depth() + 1;

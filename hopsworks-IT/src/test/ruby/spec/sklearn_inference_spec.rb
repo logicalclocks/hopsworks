@@ -15,12 +15,11 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after (:all) do
+    clean_all_test_projects
+    purge_all_sklearn_serving_instances
+  end
   describe 'inference' do
-
-    after (:all) do
-      clean_projects
-      purge_all_sklearn_serving_instances
-    end
 
     let(:test_data) {
       [

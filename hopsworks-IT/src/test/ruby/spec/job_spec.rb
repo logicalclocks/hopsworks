@@ -14,6 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   job_spark_1 = "demo_job_1"
   job_spark_2 = "demo_job_2"
   job_spark_3 = "demo_job_3"
@@ -136,12 +137,7 @@ describe "On #{ENV['OS']}" do
       it "start a flink session cluster, test proxy servlet" do
         start_execution(@project[:id], job_flink_beam, nil)
         execution_id = json_body[:id]
-        app_id = ''
-        wait_for_execution do
-          get_execution(@project[:id], job_flink_beam, execution_id)
-          json_body[:state].eql? 'RUNNING'
-          app_id = json_body[:appId]
-        end
+        app_id = wait_for_execution_active(@project[:id], job_flink_beam, execution_id, 'RUNNING')
         #Get flink master
         get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
         expect_status(200)
@@ -169,20 +165,13 @@ describe "On #{ENV['OS']}" do
         start_execution(@project[:id], job_spark_1, nil)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
-        appId = ''
-        wait_for_execution do
-          get_execution(@project[:id], job_spark_1, execution_id)
-          json_body[:state].eql? 'ACCEPTED'
-          appId = json_body[:appId]
-        end
+        appId = wait_for_execution_active(@project[:id], job_spark_1, execution_id, 'ACCEPTED')
         #kill job
         stop_execution(@project[:id], job_spark_1, execution_id)
         start_execution(@project[:id], job_spark_2, nil)
         execution_id = json_body[:id]
-        wait_for_execution do
-          get_execution(@project[:id], job_spark_2, execution_id)
-          json_body[:state].eql? 'FINISHED'
-        end
+        wait_for_execution_completed(@project[:id], job_spark_2, execution_id, 'FINISHED')
+
         #check for cleanup files under /user/hdfs/kafkacerts
         hdfs_super_user = Variables.find_by(id: "hdfs_user").value
         kafka_certs_dir = "/user/#{hdfs_super_user}/kafkacerts/#{hdfsUser}/#{appId}"
@@ -193,19 +182,11 @@ describe "On #{ENV['OS']}" do
         start_execution(@project[:id], job_flink, nil)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
-        appId = ''
-        wait_for_execution do
-          get_execution(@project[:id], job_flink, execution_id)
-          json_body[:state].eql? 'RUNNING'
-          appId = json_body[:appId]
-        end
+        appId = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING')
         #kill job
         stop_execution(@project[:id], job_flink, execution_id)
         execution_id = json_body[:id]
-        wait_for_execution do
-          get_execution(@project[:id], job_flink, execution_id)
-          json_body[:state].eql? 'KILLED'
-        end
+        wait_for_execution_completed(@project[:id], job_flink, execution_id, 'KILLED')
         #check for cleanup files under /user/hdfs/kafkacerts
         hdfs_super_user = Variables.find_by(id: "hdfs_user").value
         kafka_certs_dir = "/user/#{hdfs_super_user}/kafkacerts/#{hdfsUser}/#{appId}"
@@ -445,16 +426,10 @@ describe "On #{ENV['OS']}" do
           it "should execute two jobs and search based on finalStatus" do
             start_execution(@project[:id], job_spark_1, nil)
             execution_id = json_body[:id]
-            wait_for_execution do
-              get_execution(@project[:id], job_spark_1, execution_id)
-              json_body[:state].eql? "FINISHED"
-            end
+            wait_for_execution_completed(@project[:id], job_spark_1, execution_id, 'FINISHED')
             start_execution(@project[:id], job_spark_2, nil)
             execution_id = json_body[:id]
-            wait_for_execution do
-              get_execution(@project[:id], job_spark_2, execution_id)
-              json_body[:state].eql? "FINISHED"
-            end
+            wait_for_execution_completed(@project[:id], job_spark_2, execution_id, 'FINISHED')
             get_jobs(@project[:id], "?filter_by=latest_execution:finished")
             expect_status(200)
             expect(json_body[:items].count).to eq 2

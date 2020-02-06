@@ -115,7 +115,15 @@ public class CommunicationController {
     }
     this.hostname = hostname;
   }
-
+  
+  public ServiceInstancesController getServiceInstancesController() {
+    return serviceInstancesController;
+  }
+  
+  public void setServiceInstancesController(ServiceInstancesController serviceInstancesController) {
+    this.serviceInstancesController = serviceInstancesController;
+  }
+  
   private Hosts findHostByName(String hostname) throws Exception {
     return hostEJB.findByHostname(hostname).orElseThrow(() ->
       new RuntimeException("Hostname " + hostname + " not found."));

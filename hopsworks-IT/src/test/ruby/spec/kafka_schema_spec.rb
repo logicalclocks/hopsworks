@@ -17,6 +17,7 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'schemas' do
     context 'with valid project, test subject' do
       let(:project) { get_project }

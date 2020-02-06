@@ -66,6 +66,7 @@ describe "On #{ENV['OS']}" do
     prov_wait_for_epipe
     project_index_cleanup(@email)
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)
+    clean_all_test_projects
   end
 
   def fix_json(json)

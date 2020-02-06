@@ -37,12 +37,10 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe "session" do
     before(:each) do
       reset_session
-    end
-    after :all do
-      clean_projects
     end
     describe 'login' do
       it 'should work with valid params' do
@@ -58,7 +56,6 @@ describe "On #{ENV['OS']}" do
         set_two_factor("true")
         set_two_factor_exclud("AGENT")
         create_session(email, "Pass123")
-        expect_status(200)
       end
 
       it 'should fail with invalid params' do
@@ -102,7 +99,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to login with blocked account (status 4)" do
         email = "#{random_id}@email.com"
         create_blocked_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160007)
         expect_status(401)
@@ -111,7 +108,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to login with spam account (status 6)" do
         email = "#{random_id}@email.com"
         create_spam_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160007)
         expect_status(401)
@@ -120,7 +117,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to login with deactivated account (status 3)" do
         email = "#{random_id}@email.com"
         create_deactivated_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160005)
         expect_status(401)
@@ -129,7 +126,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to login with lost device (status 5)" do
         email = "#{random_id}@email.com"
         create_lostdevice_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorMsg: "This account has registered a lost device.")
         expect_status(401)
@@ -139,7 +136,7 @@ describe "On #{ENV['OS']}" do
         set_two_factor("true")
         email = "#{random_id}@email.com"
         create_2factor_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 120002)
         expect_status(400)
@@ -151,7 +148,7 @@ describe "On #{ENV['OS']}" do
         email = "#{random_id}@email.com"
         user = create_2factor_user(email: email)
         set_status(user, 4)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160007)
         expect_status(401)
@@ -267,7 +264,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to sign in if not confirmed and no role" do
         email = "#{random_id}@email.com"
         create_unapproved_user(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160036)
         expect_status(401)
@@ -277,7 +274,7 @@ describe "On #{ENV['OS']}" do
         email = "#{random_id}@email.com"
         register_user(email: email)
         create_role(User.find_by(email: email))
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160034)
         expect_status(401)
@@ -286,7 +283,7 @@ describe "On #{ENV['OS']}" do
       it "should fail with status 4 and no role" do
         email = "#{random_id}@email.com"
         create_user_without_role(email: email)
-        create_session(email, "Pass123")
+        raw_create_session(email, "Pass123")
         expect_json(successMessage: ->(value) {expect(value).to be_nil})
         expect_json(errorCode: 160000)
         expect_status(401)

@@ -351,7 +351,7 @@ public class ElasticController {
           "supported.");
     }
     
-    deleteIndex(ElasticUtils.getAllKibanaTenantIndex(project));
+    deleteIndex(ElasticUtils.getAllKibanaTenantIndex(project.toLowerCase()));
   }
   
   /**

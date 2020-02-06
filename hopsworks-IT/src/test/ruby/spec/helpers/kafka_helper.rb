@@ -107,11 +107,11 @@ module KafkaHelper
   end
 
   def unshare_topic_within_owner_project(owner_project, topic_name, dest_project)
-    del "#{ENV['HOPSWORKS_API']}/project/#{owner_project[:id]}/kafka/topics/#{topic_name}/shared/#{dest_project[:inode_name]}"
+    delete "#{ENV['HOPSWORKS_API']}/project/#{owner_project[:id]}/kafka/topics/#{topic_name}/shared/#{dest_project[:inode_name]}"
   end
 
   def unshare_topic_within_dest_project(dest_project, topic_name)
-    del "#{ENV['HOPSWORKS_API']}/project/#{dest_project[:id]}/kafka/topics/#{topic_name}/shared"
+    delete "#{ENV['HOPSWORKS_API']}/project/#{dest_project[:id]}/kafka/topics/#{topic_name}/shared"
   end
 
   def get_shared_topics(project_id)

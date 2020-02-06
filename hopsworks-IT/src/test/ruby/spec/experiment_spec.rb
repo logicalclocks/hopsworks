@@ -14,7 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_projects}
+  after(:all) {clean_all_test_projects}
   experiment_1 = "experiment_1"
   experiment_2 = "experiment_2"
   describe 'experiment' do
@@ -47,7 +47,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should run three experiments and check items, count and href" do
         create_experiment_job(@project, experiment_1)
-        run_experiment_blocking(experiment_1)
+        run_experiment_blocking(@project, experiment_1)
         get_experiments(@project[:id], nil)
         expect_status(200)
         expect(json_body[:items].count).to eq 3
@@ -83,28 +83,25 @@ describe "On #{ENV['OS']}" do
         ml_id = json_body[:items][0][:id]
         delete_experiment(@project[:id], ml_id)
         expect_status(204)
-        wait_for_execution do
-          get_experiments(@project[:id], nil)
-          json_body[:count].eql? 2
-        end
+        wait_for_project_prov(@project)
+        get_experiments(@project[:id], nil)
+        expect(json_body[:count]).to eq(2)
       end
       it "should delete single experiment by deleting ml_id folder" do
         get_experiments(@project[:id], nil)
         ml_id = json_body[:items][0][:id]
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments/#{ml_id}"
         expect_status(204)
-        wait_for_execution do
-          get_experiments(@project[:id], nil)
-          json_body[:count].eql? 1
-        end
+        wait_for_project_prov(@project)
+        get_experiments(@project[:id], nil)
+        expect(json_body[:count]).to eq(1)
       end
       it "should delete experiment by deleting Experiments dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments"
         expect_status(204)
-        wait_for_execution do
-          get_experiments(@project[:id], nil)
-          json_body[:count].eql? 0
-        end
+        wait_for_project_prov(@project)
+        get_experiments(@project[:id], nil)
+        expect(json_body[:count]).to eq(0)
       end
     end
   end
@@ -114,10 +111,10 @@ describe "On #{ENV['OS']}" do
         with_valid_project
 
         create_experiment_job(@project, experiment_1)
-        run_experiment_blocking(experiment_1)
+        run_experiment_blocking(@project, experiment_1)
 
         create_experiment_opt_job(@project, experiment_2)
-        run_experiment_blocking(experiment_2)
+        run_experiment_blocking(@project, experiment_2)
       end
       describe "Experiment sort" do
         it "should get all experiments sorted by name ascending" do
