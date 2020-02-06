@@ -117,7 +117,7 @@ angular.module('hopsWorksApp')
             };
 
             self.guidePopulateTopic = function () {
-              self.topicName = self.tourService.kafkaTopicName;
+              self.topicName = self.tourService.kafkaTopicName + "-" + self.projectId;
               self.num_partitions = 2;
               self.num_replicas = 1;
 
