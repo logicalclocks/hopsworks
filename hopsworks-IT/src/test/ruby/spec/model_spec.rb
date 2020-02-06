@@ -14,6 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   experiment_1 = "experiment_1"
   describe 'model' do
     after(:all) {clean_projects}
@@ -45,7 +46,7 @@ describe "On #{ENV['OS']}" do
       end
       it "should produce 4 models and check items, count and href" do
         create_model_job(@project, experiment_1)
-        run_experiment_blocking(experiment_1)
+        run_experiment_blocking(@project, experiment_1)
         get_models(@project[:id], nil)
         expect_status(200)
         expect(json_body[:items].count).to eq 4
@@ -61,10 +62,9 @@ describe "On #{ENV['OS']}" do
       it "should delete models by deleting Models dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Models"
         expect_status(204)
-        wait_for_execution do
-          get_models(@project[:id], nil)
-          json_body[:count].eql? 0
-        end
+        wait_for_project_prov(@project)
+        get_models(@project[:id], nil)
+        expect(json_body[:count]).to eq(0)
       end
     end
   end
@@ -73,7 +73,7 @@ describe "On #{ENV['OS']}" do
       before :all do
         with_valid_tour_project("deep_learning")
         create_model_job(@project, experiment_1)
-        run_experiment_blocking(experiment_1)
+        run_experiment_blocking(@project, experiment_1)
       end
       describe "Models sort" do
         it "should get all models sorted by name ascending" do

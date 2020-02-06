@@ -45,8 +45,29 @@ module ExecutionHelper
       if Time.now - start > timeout
         raise "Timed out waiting for Job to finish. Timeout #{timeout} sec"
       end
-      sleep(5)
+      sleep(1)
       x = yield
+    end
+  end
+
+  def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state)
+    app_id = ''
+    wait_for_execution do
+      get_execution(project_id, job_name, execution_id)
+      app_id = json_body[:appId]
+      (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
+    end
+    expect(app_id).not_to be_nil
+    app_id
+  end
+
+  def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state)
+    wait_for_execution do
+      get_execution(project_id, job_name, execution_id)
+      unless is_execution_active(json_body)
+        expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
+      end
+      json_body[:state].eql? expected_end_state
     end
   end
 
@@ -60,11 +81,7 @@ module ExecutionHelper
 
   def is_execution_active(execution_dto)
     state = execution_dto["state"]
-    if state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED"
-      return false
-    else
-      return true
-    end
+    !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
   end
 end
 

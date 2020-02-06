@@ -26,6 +26,7 @@ describe "On #{ENV['OS']}" do
   end
   after :all do
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)
+    clean_all_test_projects
   end
   describe 'provenance state notebook - 1 project' do
     before :all do

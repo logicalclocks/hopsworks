@@ -14,6 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   before(:all) do
     @registered_hosts = find_all_registered_hosts
   end
