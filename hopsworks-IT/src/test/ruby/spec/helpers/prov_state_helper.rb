@@ -189,6 +189,7 @@ module ProvStateHelper
     until FileProv.all.count == 0 || sleep_counter1 == 5 do
       sleep(10)
       sleep_counter1 += 1
+
     end
     until AppProv.all.count == 0 || sleep_counter2 == 5 do
       sleep(10)
@@ -374,5 +375,28 @@ module ProvStateHelper
     # pp "#{target}#{param}"
     result = post "#{target}#{param}"
     expect_status(200)
+  end
+
+  def prov_with_retries(max_retries, wait_time, expected_code, &block)
+    response = nil
+    max_retries.times {
+      response = block.call
+      break if response.code == expected_code
+      sleep(wait_time)
+    }
+    expect(response.code).to eq expected_code
+    return response
+  end
+
+  def check_epipe_is_active()
+    output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
+    expect(output.strip).to eq("active"), "epipe is down"
+  end
+
+  def wait_for_project_prov(project)
+    check_epipe_is_active
+    wait_for do
+      FileProv.where("project_name": project["inode_name"]).empty?
+    end
   end
 end

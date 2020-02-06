@@ -41,6 +41,7 @@ module VariablesHelper
   def refresh_variables
     with_admin_session
     post "#{ENV['HOPSWORKS_API']}/admin/variables/refresh"
+    reset_session
   end
   
   def set_two_factor(value)

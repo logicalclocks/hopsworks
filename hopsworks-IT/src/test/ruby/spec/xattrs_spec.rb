@@ -14,11 +14,11 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe "xattrs" do
     before(:all) do
       with_valid_session
     end
-    after(:all){clean_projects}
 
     context "with authentication" do
       before :all do

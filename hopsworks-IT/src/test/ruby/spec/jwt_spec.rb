@@ -16,6 +16,7 @@
 require 'jwt'
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe "Renew service JWT" do
     before :all do
       reset_session

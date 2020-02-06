@@ -17,6 +17,7 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'kafka' do
     after (:all) {clean_projects}
 

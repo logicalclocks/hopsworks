@@ -15,8 +15,8 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'execution' do
-    after(:all) {clean_projects}
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -54,10 +54,7 @@ describe "On #{ENV['OS']}" do
               expect_status(200)
               expect(json_body[:id]).to eq(execution_id)
               #wait till it's finished and start second execution
-              wait_for_execution do
-                get_execution(@project[:id], $job_name_1, json_body[:id])
-                json_body[:state].eql? "FINISHED"
-              end
+              wait_for_execution_completed(@project[:id], $job_name_1, json_body[:id], "FINISHED")
               #start execution
               start_execution(@project[:id], $job_name_1, nil)
               execution_id = json_body[:id]
@@ -71,10 +68,7 @@ describe "On #{ENV['OS']}" do
               num_executions = count_executions(job_id)
               expect(num_executions).to eq 2
 
-              wait_for_execution do
-                get_execution(@project[:id], $job_name_1, execution_id)
-                json_body[:state].eql? "FINISHED"
-              end
+              wait_for_execution_completed(@project[:id], $job_name_1, execution_id, "FINISHED")
             end
             it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
@@ -85,16 +79,10 @@ describe "On #{ENV['OS']}" do
               start_execution(@project[:id], $job_name_2, nil)
               execution_id = json_body[:id]
               expect_status(201)
-              wait_for_execution do
-                get_execution(@project[:id], $job_name_2, execution_id)
-                json_body[:state].eql? "ACCEPTED"
-              end
+              wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED")
               stop_execution(@project[:id], $job_name_2, execution_id)
               expect_status(202)
-              wait_for_execution do
-                get_execution(@project[:id], $job_name_2, execution_id)
-                json_body[:state].eql? "KILLED"
-              end
+              wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
             end
             it "should fail to start a spark job with missing spark.yarn.dist.files" do
               $job_name_2 = "demo_job_2_" + type
@@ -163,10 +151,7 @@ describe "On #{ENV['OS']}" do
               execution_id = json_body[:id]
               expect_status(201)
 
-              wait_for_execution do
-                get_execution(@project[:id], $job_name_4, execution_id)
-                json_body[:state].eql? "FINISHED"
-              end
+              wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
               #wait for log aggregation
               wait_for_execution do
@@ -205,10 +190,7 @@ describe "On #{ENV['OS']}" do
               start_execution(@project[:id], $job_spark_1, nil)
               $execution_ids.push(json_body[:id])
               #wait till it's finished and start second execution
-              wait_for_execution do
-                get_execution(@project[:id], $job_spark_1, json_body[:id])
-                json_body[:state].eql? "FINISHED"
-              end
+              wait_for_execution_completed(@project[:id], $job_spark_1, json_body[:id], "FINISHED")
             end
           end
           after :all do
@@ -504,10 +486,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         execution_id = json_body[:id]
 
-        wait_for_execution do
-          get_execution(@project[:id], "quota3", execution_id)
-          json_body[:state].eql? "FINISHED"
-        end
+        wait_for_execution_completed(@project[:id], "quota3", execution_id, "FINISHED")
       end
 
       it 'should be able to run jobs with 0 quota and payment type NOLIMIT' do
