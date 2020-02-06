@@ -49,7 +49,25 @@ public class AlgorithmFactory {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(algorithm);
     return getAlgorithm(alg, keyId);
   }
-
+  
+  public Algorithm getAlgorithm(String algorithm, byte[] key) {
+    SignatureAlgorithm alg = SignatureAlgorithm.valueOf(algorithm);
+    return getHSAlgorithm(alg, key);
+  }
+  
+  public Algorithm getHSAlgorithm(SignatureAlgorithm algorithm, byte[] key) {
+    switch (algorithm) {
+      case HS256:
+        return Algorithm.HMAC256(key);
+      case HS384:
+        return Algorithm.HMAC384(key);
+      case HS512:
+        return Algorithm.HMAC512(key);
+      default:
+        throw new NotSupportedException("Algorithm not supported.");
+    }
+  }
+  
   public Algorithm getAlgorithm(SignatureAlgorithm algorithm, String keyId) throws SigningKeyNotFoundException {
     switch (algorithm) {
       case ES256:

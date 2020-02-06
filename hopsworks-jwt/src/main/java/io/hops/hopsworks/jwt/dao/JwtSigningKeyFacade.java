@@ -94,12 +94,12 @@ public class JwtSigningKeyFacade {
     return newSigningKey;
   }
 
-  public void persist(JwtSigningKey invalidJwt) {
-    em.persist(invalidJwt);
+  public void persist(JwtSigningKey jwtSigningKey) {
+    em.persist(jwtSigningKey);
   }
 
-  public JwtSigningKey merge(JwtSigningKey invalidJwt) {
-    return em.merge(invalidJwt);
+  public JwtSigningKey merge(JwtSigningKey jwtSigningKey) {
+    return em.merge(jwtSigningKey);
   }
 
   public void remove(JwtSigningKey jwtSigningKey) {
