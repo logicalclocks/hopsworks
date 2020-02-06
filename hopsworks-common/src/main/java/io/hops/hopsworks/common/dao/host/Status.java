@@ -41,6 +41,7 @@ package io.hops.hopsworks.common.dao.host;
 
 public enum Status {
 
+  INIT,
   Started,
   Stopped,
   Failed,
