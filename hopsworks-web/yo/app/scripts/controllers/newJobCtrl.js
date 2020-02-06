@@ -321,9 +321,9 @@ angular.module('hopsWorksApp')
                 if(self.jobname === "SparkPi") {
                   StorageService.store("tour_args_" + self.jobname, "10");
                 } else if(self.jobname === "KafkaDemoProducer") {
-                  StorageService.store("tour_args_" + self.jobname, "producer " + self.tourService.kafkaTopicName);
+                  StorageService.store("tour_args_" + self.jobname, "producer " + self.tourService.kafkaTopicName + "-" + self.projectId);
                 } else if(self.jobname === "KafkaDemoConsumer") {
-                  StorageService.store("tour_args_" + self.jobname, "consumer " + self.tourService.kafkaTopicName);
+                  StorageService.store("tour_args_" + self.jobname, "consumer " + self.tourService.kafkaTopicName + "-" + self.projectId);
                 } else if(self.jobname === "featurestore_tour_job") {
                   StorageService.store("tour_args_" + self.jobname, "--input TestJob/data");
                 }
