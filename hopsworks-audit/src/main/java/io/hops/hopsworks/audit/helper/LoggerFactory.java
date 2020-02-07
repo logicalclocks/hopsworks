@@ -58,7 +58,7 @@ public class LoggerFactory {
       logDir.mkdirs();
     }
     try {
-      fileHandler = new FileHandler(logDir + logFileFormat, logFileSize, logFileCount, true);
+      fileHandler = new FileHandler( logDirPath + logFileFormat, logFileSize, logFileCount, true);
       if ("Html".equalsIgnoreCase(logFileType)) {
         HtmlLogFormatter formatter = new HtmlLogFormatter();
         fileHandler.setFormatter(formatter);
