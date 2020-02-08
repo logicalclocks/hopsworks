@@ -62,12 +62,15 @@ public class TestConstructorController {
     fs.setHiveDbId(1l);
     fg1 = new Featuregroup(1);
     fg1.setName("fg1");
+    fg1.setVersion(1);
     fg1.setFeaturestore(fs);
     fg2 = new Featuregroup(2);
     fg2.setName("fg2");
+    fg2.setVersion(1);
     fg2.setFeaturestore(fs);
     fg3 = new Featuregroup(3);
     fg3.setName("fg3");
+    fg3.setVersion(1);
     fg3.setFeaturestore(fs);
 
     fg1Features = new ArrayList<>();
@@ -391,13 +394,61 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testGenerateSQLRecursive() {
-    // TODO(Fabio)
+  public void testSingleSideSQLQuery() {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<FeatureDTO> availableLeft = new ArrayList<>();
+    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+
+    Query singleSideQuery = new Query("fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery).replace("\n", " ");
+    Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg0", query);
   }
 
-  // Test simple get with no join
   @Test
-  public void testSingleSide() {
-    // TODO (Fabio)
+  public void testSingleJoinSQLQuery() {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<FeatureDTO> availableLeft = new ArrayList<>();
+    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+
+    List<FeatureDTO> availableRight = new ArrayList<>();
+    availableRight.add(new FeatureDTO("ft1", "Integer", "", "fg1", true));
+
+    Query rightQuery = new Query("fs1", fg2, "fg0", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    String query = constructorController.generateSQL(leftQuery).replace("\n", " ");
+    Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg1 INNER JOIN " +
+        "fs1.fg2_1 fg0 ON fg1.ft1 = fg0.ft1", query);
+  }
+
+  @Test
+  public void testTreeWayJoinSQLNode() {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<FeatureDTO> availableLeft = new ArrayList<>();
+    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+
+    List<FeatureDTO> availableSecond = new ArrayList<>();
+    availableSecond.add(new FeatureDTO("ft2", "Integer", "", "fg1", true));
+
+    List<FeatureDTO> availableThird = new ArrayList<>();
+    availableThird.add(new FeatureDTO("ft1", "Integer", "", "fg2", true));
+
+    Query thirdQuery = new Query("fs1", fg3,"fg2", availableThird, availableThird);
+    Query secondQuery = new Query("fs1", fg2, "fg1", availableSecond , availableSecond);
+    Query leftQuery = new Query("fs1", fg1, "fg0", availableLeft, availableLeft);
+    Join join = new Join(leftQuery, secondQuery, availableLeft, availableSecond, JoinType.INNER);
+    Join secondJoin = new Join(leftQuery, thirdQuery, availableLeft, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join, secondJoin));
+
+    String query = constructorController.generateSQL(leftQuery).replace("\n", " ");
+    Assert.assertEquals("SELECT fg0.ft1, fg1.ft2 " +
+        "FROM fs1.fg1_1 fg0 " +
+        "INNER JOIN fs1.fg2_1 fg1 ON fg0.ft1 = fg1.ft2 " +
+        "INNER JOIN fs1.fg3_1 fg2 ON fg0.ft1 = fg2.ft1", query);
   }
 }

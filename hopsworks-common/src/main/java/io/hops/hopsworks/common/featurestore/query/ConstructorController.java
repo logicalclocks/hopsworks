@@ -280,11 +280,42 @@ public class ConstructorController {
   }
 
   /**
+   * For Join on primary keys or On condition we should remove duplicated (same name) columns.
+   * Spark refuses to write dataframes with duplicated column names.
+   * @param query
+   */
+  public void removeDuplicateColumns(Query query) {
+    for (Join join : query.getJoins()) {
+      if (join.getRightOn() != null && !join.getRightOn().isEmpty()) {
+        // No need to process leftOn/rightOn type of query. Those are expected to have different column names
+        // on each side.
+        continue;
+      }
+
+      List<FeatureDTO> rightFeatureList = join.getRightQuery().getFeatures();
+
+      // Extract join feature names
+      List<String> joinFeatureNames = join.getOn().stream().map(FeatureDTO::getName).collect(Collectors.toList());
+
+      // Remove all features which are on the join condition. This means that they are also on the other side of the
+      // query
+      List<FeatureDTO> filteredRightFeatures =
+          rightFeatureList.stream().filter(f -> !joinFeatureNames.contains(f.getName())).collect(Collectors.toList());
+
+      // replace the features for the right query
+      join.getRightQuery().setFeatures(filteredRightFeatures);
+    }
+  }
+
+  /**
    * Generate the SQL string. The backend will return a string to the client which is the SQL query to execute.
    * @param query
    * @return
    */
   public String generateSQL(Query query) {
+    // remove duplicated join columns
+    removeDuplicateColumns(query);
+
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
     for (FeatureDTO f : collectFeatures(query)) {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
@@ -339,7 +370,7 @@ public class ConstructorController {
 
   /**
    * Generate the table node. The object will contain the fully qualified name of a feature group:
-   * featurestore_name.feature_group_name as feature_group alias
+   * featurestore_name.feature_group_name_feature_group_version [as] feature_group alias
    * @param query
    * @return
    */

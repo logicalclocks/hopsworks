@@ -68,6 +68,14 @@ public class FeatureDTO {
     this.primary = primary;
   }
 
+  public FeatureDTO(String name, String type, String description, String featuregroup, Boolean primary) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.featuregroup = featuregroup;
+    this.primary = primary;
+  }
+
   public FeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
