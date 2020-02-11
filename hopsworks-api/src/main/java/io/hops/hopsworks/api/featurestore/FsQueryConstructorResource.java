@@ -16,12 +16,10 @@
 
 package io.hops.hopsworks.api.featurestore;
 
-
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
@@ -52,8 +50,6 @@ public class FsQueryConstructorResource {
   private ConstructorController constructorController;
   @EJB
   private FsQueryBuilder fsQueryBuilder;
-  @EJB
-  private ProjectFacade projectFacade;
 
   private Project project;
   public FsQueryConstructorResource setProject(Project project) {
@@ -72,7 +68,7 @@ public class FsQueryConstructorResource {
   public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
                                  QueryDTO queryDto) throws FeaturestoreException {
     if (queryDto == null) {
-      throw new IllegalArgumentException("Please submit a query to compile");
+      throw new IllegalArgumentException("Please submit a query to construct");
     }
     String query = constructorController.construct(queryDto);
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, query);
