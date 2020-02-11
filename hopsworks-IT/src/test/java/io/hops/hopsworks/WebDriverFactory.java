@@ -84,7 +84,10 @@ public class WebDriverFactory {
           chromeOptions.addArguments("--headless");
           chromeOptions.addArguments("--no-sandbox");
           chromeOptions.addArguments("--disable-dev-shm-usage");
+          chromeOptions.addArguments("--disable-extensions");
+          chromeOptions.addArguments("--disable-gpu");
         }
+        chromeOptions.setAcceptInsecureCerts(true);
         driver = new ChromeDriver(chromeOptions);
       }
     }
