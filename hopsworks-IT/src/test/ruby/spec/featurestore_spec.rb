@@ -15,11 +15,9 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after(:all) {clean_all_test_projects}
   describe 'featurestore' do
-    after (:all) {clean_projects}
-
     describe "list featurestores for project, get featurestore by id" do
-
       context 'with valid project and featurestore service enabled' do
         before :all do
           with_valid_project
@@ -1164,7 +1162,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint 
-          expect_status(422)
+          expect_status(400)
         end
 
       end
