@@ -261,7 +261,7 @@ public class TrainingDatasetService {
    * @throws FeaturestoreException
    */
   @GET
-  @Path("/{name: [a-z0-9_]+}")
+  @Path("/{name: [a-z0-9_]*(?=[a-z])[a-z0-9_]+}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
@@ -271,7 +271,7 @@ public class TrainingDatasetService {
   public Response getTrainingDatasetByName(@ApiParam(value = "Name of the training dataset", required = true)
                                            @PathParam("name") String name,
                                            @ApiParam(value = "Filter by a specific version")
-                                           @QueryParam("version") Integer version)
+                                           @QueryParam("version") Integer version, @Context SecurityContext sc)
       throws FeaturestoreException {
     verifyNameProvided(name);
     List<TrainingDatasetDTO> trainingDatasetDTO;
