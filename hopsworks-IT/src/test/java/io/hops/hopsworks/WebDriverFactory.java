@@ -41,16 +41,15 @@ import org.openqa.selenium.chrome.ChromeDriverService;
 public class WebDriverFactory {
 
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
-  private static final String GECKODRIVER_VERSION = "0.23.0";
-  private static final String CHROMEDRIVER_VERSION = "78.0.3904.70";
+  private static final String GECKODRIVER_VERSION = "0.26.0";
+  private static final String CHROMEDRIVER_VERSION_PLACEHOLDER = "%%v%%";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
       + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
-  private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
-      + "/chromedriver_";
-  private static final int SUPPORTED_CHROME_VERSION = 78;
-  private static final int SUPPORTED_FIREFOX_VERSION = 57;
+  private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" +
+      CHROMEDRIVER_VERSION_PLACEHOLDER + "/chromedriver_";
+  private static final int SUPPORTED_FIREFOX_VERSION = 60;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
   private static final String HOPSWORKS_URL_ENV = "HOPSWORKS_URL";
@@ -91,8 +90,7 @@ public class WebDriverFactory {
 
     if (driver == null) {
       throw new IllegalStateException("No web driver found. Check your browser versions. Supported versions are:"
-          + " Firefox >= " + SUPPORTED_FIREFOX_VERSION + ","
-          + " Chrome >= " + SUPPORTED_CHROME_VERSION);
+        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION);
     }
 
     String url;
@@ -124,12 +122,10 @@ public class WebDriverFactory {
     }
     int firefoxVersion = getVersion(firefoxVersionCmd);
     int chromeVersion = getVersion(chromeVersionCmd);
-
-    if (chromeVersion >= SUPPORTED_CHROME_VERSION) {
-      File chromeDriver = new File(downloadPath + CHROMEDRIVER);
-      File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
-      downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
-    }
+    chromeDriverUrl = chromeDriverUrl.replace(CHROMEDRIVER_VERSION_PLACEHOLDER, chromeVersion + "");
+    File chromeDriver = new File(downloadPath + CHROMEDRIVER);
+    File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
+    downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
     if (firefoxVersion >= SUPPORTED_FIREFOX_VERSION) {
       File geekoDriver = new File(downloadPath + GECKODRIVER);
       File geekoDriverZip = new File(downloadPath + GECKODRIVER + ".tar");
