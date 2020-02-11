@@ -19,33 +19,33 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.ECDSAKeyProvider;
 import com.auth0.jwt.interfaces.RSAKeyProvider;
-import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
-import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ws.rs.NotSupportedException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Base64;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ws.rs.NotSupportedException;
 
 @Stateless
 public class AlgorithmFactory {
-
+  
   @EJB
-  private JwtSigningKeyFacade jwtSigningKeyFacade;
+  private SigningKeyEncryptionService signingKeyEncryptionService;
 
-  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return getAlgorithm(jwt.getAlgorithm(), jwt.getKeyId());
   }
 
-  public Algorithm getAlgorithm(JsonWebToken jwt) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(JsonWebToken jwt) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return getAlgorithm(jwt.getAlgorithm(), jwt.getKeyId());
   }
 
-  public Algorithm getAlgorithm(String algorithm, String keyId) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(String algorithm, String keyId) throws SigningKeyNotFoundException,
+    SigningKeyEncryptionException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(algorithm);
     return getAlgorithm(alg, keyId);
   }
@@ -68,7 +68,8 @@ public class AlgorithmFactory {
     }
   }
   
-  public Algorithm getAlgorithm(SignatureAlgorithm algorithm, String keyId) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(SignatureAlgorithm algorithm, String keyId) throws SigningKeyNotFoundException,
+    SigningKeyEncryptionException {
     switch (algorithm) {
       case ES256:
         return getES256Algorithm(keyId);
@@ -108,29 +109,29 @@ public class AlgorithmFactory {
     return Algorithm.ECDSA512(keyProvider);
   }
 
-  private byte[] getSigningKey(String keyId) throws SigningKeyNotFoundException {
+  private byte[] getSigningKey(String keyId) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     Integer id;
     try {
       id = Integer.parseInt(keyId);
     } catch (NumberFormatException e) {
       throw new SigningKeyNotFoundException("Signing key not found. The key id should be integer.");
     }
-    JwtSigningKey signingKey = jwtSigningKeyFacade.find(id);
+    DecryptedSigningKey signingKey = signingKeyEncryptionService.getSigningKey(id);
     if (signingKey == null) {
       throw new SigningKeyNotFoundException("Signing key not found.");
     }
-    return Base64.getDecoder().decode(signingKey.getSecret());
+    return signingKey.getDecryptedSecret();
   }
 
-  private Algorithm getHS256Algorithm(String keyId) throws SigningKeyNotFoundException {
+  private Algorithm getHS256Algorithm(String keyId) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return Algorithm.HMAC256(getSigningKey(keyId));
   }
 
-  private Algorithm getHS384Algorithm(String keyId) throws SigningKeyNotFoundException {
+  private Algorithm getHS384Algorithm(String keyId) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return Algorithm.HMAC384(getSigningKey(keyId));
   }
 
-  private Algorithm getHS512Algorithm(String keyId) throws SigningKeyNotFoundException {
+  private Algorithm getHS512Algorithm(String keyId) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return Algorithm.HMAC512(getSigningKey(keyId));
   }
 

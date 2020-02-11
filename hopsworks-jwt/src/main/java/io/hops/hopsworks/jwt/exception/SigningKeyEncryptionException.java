@@ -13,32 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.jwt;
+package io.hops.hopsworks.jwt.exception;
 
-import io.hops.hopsworks.jwt.dao.JwtSigningKey;
-
-public class DecodedSigningKey {
-  private JwtSigningKey jwtSigningKey;
-  private String decodedSecret;
-  
-  public DecodedSigningKey(JwtSigningKey jwtSigningKey, String decodedSecret) {
-    this.jwtSigningKey = jwtSigningKey;
-    this.decodedSecret = decodedSecret;
+public class SigningKeyEncryptionException extends JWTException {
+  public SigningKeyEncryptionException() {
   }
   
-  public JwtSigningKey getJwtSigningKey() {
-    return jwtSigningKey;
+  public SigningKeyEncryptionException(String message) {
+    super(message);
   }
   
-  public void setJwtSigningKey(JwtSigningKey jwtSigningKey) {
-    this.jwtSigningKey = jwtSigningKey;
+  public SigningKeyEncryptionException(String message, Throwable cause) {
+    super(message, cause);
   }
   
-  public String getDecodedSecret() {
-    return decodedSecret;
+  public SigningKeyEncryptionException(Throwable cause) {
+    super(cause);
   }
   
-  public void setDecodedSecret(String decodedSecret) {
-    this.decodedSecret = decodedSecret;
+  public SigningKeyEncryptionException(String message, Throwable cause, boolean enableSuppression,
+    boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 }
