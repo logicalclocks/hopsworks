@@ -785,6 +785,7 @@ public class ProjectService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
+  @GET
   @Path("{projectId}/client")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
