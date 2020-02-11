@@ -39,16 +39,17 @@ import org.apache.commons.io.FilenameUtils;
 import org.openqa.selenium.chrome.ChromeDriverService;
 
 public class WebDriverFactory {
-
+  
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
   private static final String GECKODRIVER_VERSION = "0.26.0";
-  private static final String CHROMEDRIVER_VERSION_PLACEHOLDER = "%%v%%";
+  private static final String CHROMEDRIVER_VERSION = "80.0.3987.16";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
-      + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
-  private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" +
-      CHROMEDRIVER_VERSION_PLACEHOLDER + "/chromedriver_";
+    + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
+  private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
+    + "/chromedriver_";
+  private static final int SUPPORTED_CHROME_VERSION = 80;
   private static final int SUPPORTED_FIREFOX_VERSION = 60;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
@@ -123,10 +124,12 @@ public class WebDriverFactory {
     String firefoxVersionStr = getVersionString(firefoxVersionCmd);
     String chromeVersionStr = getVersionString(chromeVersionCmd);
     int firefoxVersion = getVersion(firefoxVersionStr);
-    chromeDriverUrl = chromeDriverUrl.replace(CHROMEDRIVER_VERSION_PLACEHOLDER, chromeVersionStr + "");
-    File chromeDriver = new File(downloadPath + CHROMEDRIVER);
-    File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
-    downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
+    int chromeVersion = getVersion(chromeVersionStr);
+    if (chromeVersion >= SUPPORTED_CHROME_VERSION) {
+      File chromeDriver = new File(downloadPath + CHROMEDRIVER);
+      File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
+      downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
+    }
     if (firefoxVersion >= SUPPORTED_FIREFOX_VERSION) {
       File geekoDriver = new File(downloadPath + GECKODRIVER);
       File geekoDriverZip = new File(downloadPath + GECKODRIVER + ".tar");
