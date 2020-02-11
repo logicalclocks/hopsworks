@@ -120,9 +120,10 @@ public class WebDriverFactory {
       firefoxVersionCmd = "/Applications/Firefox.app/Contents/MacOS/" + firefoxVersionCmd;
       chromeVersionCmd = "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version";
     }
-    int firefoxVersion = getVersion(firefoxVersionCmd);
-    int chromeVersion = getVersion(chromeVersionCmd);
-    chromeDriverUrl = chromeDriverUrl.replace(CHROMEDRIVER_VERSION_PLACEHOLDER, chromeVersion + "");
+    String firefoxVersionStr = getVersionString(firefoxVersionCmd);
+    String chromeVersionStr = getVersionString(chromeVersionCmd);
+    int firefoxVersion = getVersion(firefoxVersionStr);
+    chromeDriverUrl = chromeDriverUrl.replace(CHROMEDRIVER_VERSION_PLACEHOLDER, chromeVersionStr + "");
     File chromeDriver = new File(downloadPath + CHROMEDRIVER);
     File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
     downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
@@ -151,10 +152,10 @@ public class WebDriverFactory {
       }
     }
   }
-
-  public static int getVersion(String versionCmd) {
+  
+  public static String getVersionString(String versionCmd) {
     StringBuilder builder = new StringBuilder();
-    String[] cmd = new String[]{"bash", "-c", versionCmd};
+    String[] cmd = new String[]{"bash", "-c", versionCmd + " | awk '{print $(NF-0)}'"};
     ProcessBuilder processBuilder = new ProcessBuilder(cmd);
     try {
       Process p = processBuilder.start();
@@ -163,14 +164,22 @@ public class WebDriverFactory {
       while ((line = reader.readLine()) != null) {
         builder.append(line).append("\n");
       }
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Failed to get browser version with command: {0}. {1}", new Object[]{processBuilder.
+        command(), e});
+    }
+    return builder.toString();
+  }
+
+  public static int getVersion(String version) {
+    try {
       Pattern pattern = Pattern.compile("[0-9]{1,4}\\.[0-9]{1,4}");
-      Matcher matcher = pattern.matcher(builder.toString());
+      Matcher matcher = pattern.matcher(version);
       if (matcher.find()) {
         return Double.valueOf(matcher.group(0)).intValue();
       }
-    } catch (IOException | NumberFormatException e) {
-      LOGGER.log(Level.SEVERE, "Failed to get browser version with command: {0}. {1}", new Object[]{processBuilder.
-        command(), e});
+    } catch (NumberFormatException e) {
+      LOGGER.log(Level.SEVERE, "Failed to convert browser version to int: {0}. {1}", new Object[]{version, e});
       return -1;
     }
     return -1;
