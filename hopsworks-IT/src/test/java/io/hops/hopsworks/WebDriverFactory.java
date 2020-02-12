@@ -39,18 +39,18 @@ import org.apache.commons.io.FilenameUtils;
 import org.openqa.selenium.chrome.ChromeDriverService;
 
 public class WebDriverFactory {
-
+  
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
-  private static final String GECKODRIVER_VERSION = "0.23.0";
-  private static final String CHROMEDRIVER_VERSION = "78.0.3904.70";
+  private static final String GECKODRIVER_VERSION = "0.26.0";
+  private static final String CHROMEDRIVER_VERSION = "80.0.3987.16";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
-      + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
+    + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
   private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
-      + "/chromedriver_";
-  private static final int SUPPORTED_CHROME_VERSION = 78;
-  private static final int SUPPORTED_FIREFOX_VERSION = 57;
+    + "/chromedriver_";
+  private static final int SUPPORTED_CHROME_VERSION = 80;
+  private static final int SUPPORTED_FIREFOX_VERSION = 60;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
   private static final String HOPSWORKS_URL_ENV = "HOPSWORKS_URL";
@@ -84,15 +84,17 @@ public class WebDriverFactory {
           chromeOptions.addArguments("--headless");
           chromeOptions.addArguments("--no-sandbox");
           chromeOptions.addArguments("--disable-dev-shm-usage");
+          chromeOptions.addArguments("--disable-extensions");
+          chromeOptions.addArguments("--disable-gpu");
         }
+        chromeOptions.setAcceptInsecureCerts(true);
         driver = new ChromeDriver(chromeOptions);
       }
     }
 
     if (driver == null) {
       throw new IllegalStateException("No web driver found. Check your browser versions. Supported versions are:"
-          + " Firefox >= " + SUPPORTED_FIREFOX_VERSION + ","
-          + " Chrome >= " + SUPPORTED_CHROME_VERSION);
+        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION);
     }
 
     String url;
@@ -122,9 +124,10 @@ public class WebDriverFactory {
       firefoxVersionCmd = "/Applications/Firefox.app/Contents/MacOS/" + firefoxVersionCmd;
       chromeVersionCmd = "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --version";
     }
-    int firefoxVersion = getVersion(firefoxVersionCmd);
-    int chromeVersion = getVersion(chromeVersionCmd);
-
+    String firefoxVersionStr = getVersionString(firefoxVersionCmd);
+    String chromeVersionStr = getVersionString(chromeVersionCmd);
+    int firefoxVersion = getVersion(firefoxVersionStr);
+    int chromeVersion = getVersion(chromeVersionStr);
     if (chromeVersion >= SUPPORTED_CHROME_VERSION) {
       File chromeDriver = new File(downloadPath + CHROMEDRIVER);
       File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
@@ -155,10 +158,10 @@ public class WebDriverFactory {
       }
     }
   }
-
-  public static int getVersion(String versionCmd) {
+  
+  public static String getVersionString(String versionCmd) {
     StringBuilder builder = new StringBuilder();
-    String[] cmd = new String[]{"bash", "-c", versionCmd};
+    String[] cmd = new String[]{"bash", "-c", versionCmd + " | awk '{print $(NF-0)}'"};
     ProcessBuilder processBuilder = new ProcessBuilder(cmd);
     try {
       Process p = processBuilder.start();
@@ -167,14 +170,22 @@ public class WebDriverFactory {
       while ((line = reader.readLine()) != null) {
         builder.append(line).append("\n");
       }
+    } catch (IOException e) {
+      LOGGER.log(Level.SEVERE, "Failed to get browser version with command: {0}. {1}", new Object[]{processBuilder.
+        command(), e});
+    }
+    return builder.toString();
+  }
+
+  public static int getVersion(String version) {
+    try {
       Pattern pattern = Pattern.compile("[0-9]{1,4}\\.[0-9]{1,4}");
-      Matcher matcher = pattern.matcher(builder.toString());
+      Matcher matcher = pattern.matcher(version);
       if (matcher.find()) {
         return Double.valueOf(matcher.group(0)).intValue();
       }
-    } catch (IOException | NumberFormatException e) {
-      LOGGER.log(Level.SEVERE, "Failed to get browser version with command: {0}. {1}", new Object[]{processBuilder.
-        command(), e});
+    } catch (NumberFormatException e) {
+      LOGGER.log(Level.SEVERE, "Failed to convert browser version to int: {0}. {1}", new Object[]{version, e});
       return -1;
     }
     return -1;

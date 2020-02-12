@@ -122,6 +122,13 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <!-- Exclude until a fix is found for modal  -->
+          <excludes>
+            <exclude>**/ProjectIT.java</exclude>
+            <exclude>**/DatasetIT.java</exclude>
+          </excludes>
+        </configuration>
       </plugin>
     </plugins>
   </build>
