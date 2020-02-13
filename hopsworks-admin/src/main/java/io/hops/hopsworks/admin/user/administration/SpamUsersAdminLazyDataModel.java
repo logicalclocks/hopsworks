@@ -17,7 +17,7 @@ package io.hops.hopsworks.admin.user.administration;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
 import java.util.HashSet;
 import java.util.Set;

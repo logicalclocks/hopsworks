@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
 import javax.xml.bind.annotation.XmlElement;

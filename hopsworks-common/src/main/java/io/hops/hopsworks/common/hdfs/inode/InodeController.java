@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.hdfs.inode;
 
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.NavigationPath;
 import io.hops.hopsworks.common.hdfs.Utils;

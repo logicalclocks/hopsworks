@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.common.security;
 
-import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
+import io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;

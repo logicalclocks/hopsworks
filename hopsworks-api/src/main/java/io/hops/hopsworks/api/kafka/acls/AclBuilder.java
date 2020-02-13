@@ -22,11 +22,11 @@ import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUser;
 import io.hops.hopsworks.common.dao.kafka.AclUserDTO;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.dao.kafka.TopicAcls;
 import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

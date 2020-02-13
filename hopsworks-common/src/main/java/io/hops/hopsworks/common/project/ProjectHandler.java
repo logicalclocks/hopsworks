@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.project;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 public interface ProjectHandler {
   void preCreate(Project project) throws Exception;

@@ -40,10 +40,10 @@
 package io.hops.hopsworks.common.jobs;
 
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO;
-import io.hops.hopsworks.common.jobs.configuration.ScheduleDTO.TimeUnit;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.ScheduleDTO;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.ScheduleDTO.TimeUnit;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 
 import javax.annotation.Resource;

@@ -40,13 +40,17 @@
 package io.hops.hopsworks.util;
 
 import com.google.common.io.ByteStreams;
-import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.LocalhostServices;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate;
+import org.apache.commons.io.FileUtils;
+import org.javatuples.Triplet;
+
+import javax.security.auth.x500.X500Principal;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,9 +65,6 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.security.auth.x500.X500Principal;
-import org.apache.commons.io.FileUtils;
-import org.javatuples.Triplet;
 
 public class CertificateHelper {
 

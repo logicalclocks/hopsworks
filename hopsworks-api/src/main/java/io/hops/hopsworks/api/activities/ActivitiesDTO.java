@@ -17,7 +17,8 @@ package io.hops.hopsworks.api.activities;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.activity.Activity;
+import io.hops.hopsworks.persistence.entity.user.activity.Activity;
+
 import java.util.Date;
 import javax.xml.bind.annotation.XmlRootElement;
 

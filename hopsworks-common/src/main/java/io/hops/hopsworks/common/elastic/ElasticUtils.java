@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.elastic;
 
 
-import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;

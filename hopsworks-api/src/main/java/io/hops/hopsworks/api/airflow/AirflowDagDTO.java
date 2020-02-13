@@ -16,13 +16,13 @@
 
 package io.hops.hopsworks.api.airflow;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowDAG;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowFeatureValidationResultOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobLaunchOperator;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowJobSuccessSensor;
 import io.hops.hopsworks.common.util.templates.airflow.AirflowOperator;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;

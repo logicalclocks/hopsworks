@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
 import io.hops.hopsworks.common.util.Settings;

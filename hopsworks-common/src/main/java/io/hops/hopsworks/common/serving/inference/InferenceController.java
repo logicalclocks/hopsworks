@@ -18,10 +18,10 @@ package io.hops.hopsworks.common.serving.inference;
 
 import com.google.common.base.Strings;
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.dao.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.common.serving.inference.logger.InferenceLogger;
 import io.hops.hopsworks.exceptions.InferenceException;
 import io.hops.hopsworks.restutils.RESTCodes;

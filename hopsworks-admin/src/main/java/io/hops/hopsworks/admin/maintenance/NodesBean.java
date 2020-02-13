@@ -39,29 +39,33 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
-import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
-import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.python.CondaStatus;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.event.SelectEvent;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -73,10 +77,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.enterprise.concurrent.ManagedExecutorService;
 
 @ManagedBean(name = "nodesBean")
 @ViewScoped
@@ -252,7 +252,7 @@ public class NodesBean implements Serializable {
       Hosts h = optional.get();
       List<CondaCommands> listCommands = condaCommandsFacade.findByHost(h);
       for (CondaCommands cc : listCommands) {
-        if (cc.getStatus() == CondaCommandFacade.CondaStatus.FAILED) {
+        if (cc.getStatus() == CondaStatus.FAILED) {
           return "condaOutOfSync";
         }
       }

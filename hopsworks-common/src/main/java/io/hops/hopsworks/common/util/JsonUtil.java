@@ -50,10 +50,10 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
-import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.dao.metadata.RawData;
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
+import io.hops.hopsworks.persistence.entity.metadata.RawData;
 
 public class JsonUtil {
 

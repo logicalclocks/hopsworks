@@ -39,9 +39,9 @@
 
 package io.hops.hopsworks.kmon.struct;
 
-import io.hops.hopsworks.common.dao.host.Status;
-import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.kagent.HostServices;
+import io.hops.hopsworks.persistence.entity.host.Health;
+import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 
 import java.util.HashMap;
 import java.util.HashSet;

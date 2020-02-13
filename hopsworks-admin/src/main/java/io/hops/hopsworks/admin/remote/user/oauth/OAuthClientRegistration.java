@@ -16,11 +16,11 @@
 package io.hops.hopsworks.admin.remote.user.oauth;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.remote.OAuthHelper;
 import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 

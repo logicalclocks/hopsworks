@@ -39,7 +39,7 @@
 package io.hops.hopsworks.cluster;
 
 import io.hops.hopsworks.cluster.controller.ClusterController;
-import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
+import io.hops.hopsworks.persistence.entity.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.security.CSR;
 import io.hops.hopsworks.cluster.controller.DelaTrackerCertController;
 import io.hops.hopsworks.common.security.CertificatesController;

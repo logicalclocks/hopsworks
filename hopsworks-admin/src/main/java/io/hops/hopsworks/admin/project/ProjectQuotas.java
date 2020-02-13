@@ -38,10 +38,10 @@
  */
 package io.hops.hopsworks.admin.project;
 
-import io.hops.hopsworks.common.dao.project.PaymentType;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.project.QuotasDTO;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.persistence.entity.project.PaymentType;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import java.util.Date;
 

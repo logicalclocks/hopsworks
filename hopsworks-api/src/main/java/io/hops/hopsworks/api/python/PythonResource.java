@@ -38,11 +38,9 @@
  */
 package io.hops.hopsworks.api.python;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-
 import io.hops.hopsworks.api.python.environment.EnvironmentResource;
-
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

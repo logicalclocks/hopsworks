@@ -45,13 +45,13 @@ import io.hops.hopsworks.api.metadata.wscomm.message.RemoveMetadataMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.StoreMetadataMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.TextMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.UpdateMetadataMessage;
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Field;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.Metadata;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

@@ -17,20 +17,19 @@
 package io.hops.hopsworks.common.tensorflow;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommands;
-import io.hops.hopsworks.common.dao.tensorflow.TfLibMapping;
 import io.hops.hopsworks.common.dao.tensorflow.TfLibMappingFacade;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.python.CondaOp;
+import io.hops.hopsworks.persistence.entity.tensorflow.TfLibMapping;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -109,9 +108,9 @@ public class TfLibMappingUtil {
               .findAny()
               .map(tfDep -> tfLibMappingFacade.findByTfVersion(tfDep.getVersion()))
               .orElse(null);
-    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.CREATE) == 0) {
+    } else if(command.getOp().compareTo(CondaOp.CREATE) == 0) {
       return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
-    } else if(command.getOp().compareTo(CondaCommandFacade.CondaOp.YML) == 0) {
+    } else if(command.getOp().compareTo(CondaOp.YML) == 0) {
       String envYml = command.getEnvironmentYml();
 
       Pattern tfCPUPattern = Pattern.compile("(tensorflow==\\d*.\\d*.\\d*)");

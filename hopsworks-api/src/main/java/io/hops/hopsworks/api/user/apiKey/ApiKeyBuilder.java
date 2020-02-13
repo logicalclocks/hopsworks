@@ -17,10 +17,10 @@ package io.hops.hopsworks.api.user.apiKey;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyFacade;
 import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;

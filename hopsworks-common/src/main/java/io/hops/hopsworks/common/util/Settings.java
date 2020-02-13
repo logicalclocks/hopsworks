@@ -40,11 +40,11 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
-import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
 import io.hops.hopsworks.common.hdfs.Utils;

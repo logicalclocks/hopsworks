@@ -16,8 +16,9 @@
 
 package io.hops.hopsworks.api.agent;
 
-import io.hops.hopsworks.common.dao.command.SystemCommand;
-import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
+import io.hops.hopsworks.persistence.entity.command.CommandStatus;
+import io.hops.hopsworks.persistence.entity.command.Operation;
+import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -26,8 +27,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @ApiModel(value = "System commands for kagent to execute or report")
 @XmlRootElement
 public class SystemCommandView {
-  private SystemCommandFacade.OP op;
-  private SystemCommandFacade.STATUS status;
+  private Operation op;
+  private CommandStatus status;
   private Integer id;
   private String arguments;
   private Integer priority;
@@ -46,20 +47,20 @@ public class SystemCommandView {
   }
   
   @ApiModelProperty(value = "Operation to be performed", required = true)
-  public SystemCommandFacade.OP getOp() {
+  public Operation getOp() {
     return op;
   }
   
-  public void setOp(SystemCommandFacade.OP op) {
+  public void setOp(Operation op) {
     this.op = op;
   }
   
   @ApiModelProperty(value = "Status of command", required = true)
-  public SystemCommandFacade.STATUS getStatus() {
+  public CommandStatus getStatus() {
     return status;
   }
   
-  public void setStatus(SystemCommandFacade.STATUS status) {
+  public void setStatus(CommandStatus status) {
     this.status = status;
   }
   
@@ -102,7 +103,7 @@ public class SystemCommandView {
   public SystemCommand toSystemCommand() {
     final SystemCommand sc = new SystemCommand();
     sc.setOp(op);
-    sc.setStatus(status);
+    sc.setCommandStatus(status);
     sc.setId(id);
     sc.setCommandArgumentsAsString(arguments);
     sc.setPriority(priority);
@@ -112,8 +113,8 @@ public class SystemCommandView {
   }
   
   public static class Builder {
-    private SystemCommandFacade.OP op;
-    private SystemCommandFacade.STATUS status;
+    private Operation op;
+    private CommandStatus status;
     private Integer id;
     private String arguments;
     private Integer priority;
@@ -121,12 +122,12 @@ public class SystemCommandView {
     
     public Builder() {}
     
-    public Builder setOp(SystemCommandFacade.OP op) {
+    public Builder setOp(Operation op) {
       this.op = op;
       return this;
     }
     
-    public Builder setStatus(SystemCommandFacade.STATUS status) {
+    public Builder setStatus(CommandStatus status) {
       this.status = status;
       return this;
     }

@@ -39,14 +39,15 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
 import io.hops.hopsworks.common.util.JsonUtil;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.JsonObject;
 
 /**
  * Represents a generic metadata message. It may be about fetching table

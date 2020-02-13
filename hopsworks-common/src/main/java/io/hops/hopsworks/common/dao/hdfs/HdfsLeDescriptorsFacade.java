@@ -45,6 +45,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.hdfs.HdfsLeDescriptors;
+
 import java.util.Random;
 
 @Stateless

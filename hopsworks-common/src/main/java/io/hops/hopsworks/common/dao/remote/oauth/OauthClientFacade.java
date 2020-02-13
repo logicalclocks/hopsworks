@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.dao.remote.oauth;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

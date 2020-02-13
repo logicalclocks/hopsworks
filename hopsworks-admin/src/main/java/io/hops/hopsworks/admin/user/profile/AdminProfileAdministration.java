@@ -40,9 +40,21 @@ package io.hops.hopsworks.admin.user.profile;
 
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import io.hops.hopsworks.admin.user.administration.AuditedUserAdministration;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.Address;
+import io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import org.primefaces.context.RequestContext;
+import org.primefaces.extensions.event.ClipboardErrorEvent;
+import org.primefaces.extensions.event.ClipboardSuccessEvent;
+
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
@@ -51,22 +63,9 @@ import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
-
-import io.hops.hopsworks.admin.user.administration.AuditedUserAdministration;
-import io.hops.hopsworks.common.dao.user.security.Address;
-import io.hops.hopsworks.common.dao.user.BbcGroup;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.exceptions.UserException;
-import org.primefaces.context.RequestContext;
-import org.primefaces.extensions.event.ClipboardErrorEvent;
-import org.primefaces.extensions.event.ClipboardSuccessEvent;
-
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
