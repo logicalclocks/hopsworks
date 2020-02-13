@@ -46,6 +46,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 
 @Stateless

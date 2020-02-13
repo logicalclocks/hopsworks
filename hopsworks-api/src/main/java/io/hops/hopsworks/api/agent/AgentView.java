@@ -18,8 +18,8 @@
 package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.common.agent.AgentController;
-import io.hops.hopsworks.common.dao.command.SystemCommand;
-import io.hops.hopsworks.common.dao.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

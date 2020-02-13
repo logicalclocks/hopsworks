@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.api;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import java.util.List;
 import java.util.Set;

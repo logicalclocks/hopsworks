@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

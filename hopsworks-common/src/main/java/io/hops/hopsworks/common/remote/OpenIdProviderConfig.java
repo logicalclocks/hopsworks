@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.remote;
 
-import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;

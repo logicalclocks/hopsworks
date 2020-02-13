@@ -16,7 +16,9 @@
 package io.hops.hopsworks.common.dao.kafka;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.kafka.SharedTopics;
+import io.hops.hopsworks.persistence.entity.kafka.SharedTopicsPK;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

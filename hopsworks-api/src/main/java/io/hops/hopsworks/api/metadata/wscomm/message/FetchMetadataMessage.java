@@ -39,16 +39,17 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Field;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.dao.metadata.RawData;
-import java.util.List;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
+import io.hops.hopsworks.persistence.entity.metadata.RawData;
+
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import java.util.List;
 
 /**
  * Represents a message request for stored metadata filtered by table id and

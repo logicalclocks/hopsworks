@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.serving.monitor;
 
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.dao.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.common.serving.LocalhostServingController;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.exceptions.ServingException;

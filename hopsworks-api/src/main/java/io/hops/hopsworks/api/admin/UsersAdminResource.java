@@ -17,19 +17,19 @@
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
+import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.UserProfileDTO;
 import io.hops.hopsworks.api.user.UsersBeanParam;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

@@ -40,7 +40,7 @@
 package io.hops.hopsworks.common.dao.metadata.db;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
+import io.hops.hopsworks.persistence.entity.metadata.FieldPredefinedValue;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

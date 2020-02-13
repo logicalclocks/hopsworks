@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.filter.apiKey;
 
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 
 import javax.ws.rs.NameBinding;
 import java.lang.annotation.ElementType;

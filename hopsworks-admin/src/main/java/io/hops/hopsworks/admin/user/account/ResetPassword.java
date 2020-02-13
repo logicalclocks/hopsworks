@@ -41,9 +41,9 @@ package io.hops.hopsworks.admin.user.account;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;

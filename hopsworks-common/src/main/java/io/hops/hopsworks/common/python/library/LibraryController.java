@@ -15,12 +15,8 @@
  */
 package io.hops.hopsworks.common.python.library;
 
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.python.PythonDep;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -29,9 +25,15 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
+import io.hops.hopsworks.persistence.entity.python.CondaOp;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.json.JSONObject;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -43,11 +45,11 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -103,17 +105,15 @@ public class LibraryController {
     projectFacade.update(proj);
   }
   
-  public PythonDep addLibrary(Project proj, Users user, CondaCommandFacade.CondaInstallType installType,
-                   LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version)
-      throws ServiceException, GenericException {
-    return commandsController.condaOp(CondaCommandFacade.CondaOp.INSTALL, user, installType, machineType, proj,
+  public PythonDep addLibrary(Project proj, Users user, CondaInstallType installType, MachineType machineType,
+    String channelUrl, String dependency, String version) throws ServiceException, GenericException {
+    return commandsController.condaOp(CondaOp.INSTALL, user, installType, machineType, proj,
       channelUrl, dependency, version);
   }
   
-  public void uninstallLibrary(Project proj, Users user, CondaCommandFacade.CondaInstallType installType,
-    LibraryFacade.MachineType machineType, String channelUrl, String dependency, String version)
-    throws ServiceException, GenericException {
-    commandsController.condaOp(CondaCommandFacade.CondaOp.UNINSTALL, user, installType, machineType, proj, channelUrl,
+  public void uninstallLibrary(Project proj, Users user, CondaInstallType installType, MachineType machineType,
+    String channelUrl, String dependency, String version) throws ServiceException, GenericException {
+    commandsController.condaOp(CondaOp.UNINSTALL, user, installType, machineType, proj, channelUrl,
       dependency, version);
   }
   

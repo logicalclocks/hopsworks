@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.statistics.columns;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.common.dao.featurestore.statistics.columns.StatisticColumn;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

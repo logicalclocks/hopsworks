@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.hdfs;
 
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;

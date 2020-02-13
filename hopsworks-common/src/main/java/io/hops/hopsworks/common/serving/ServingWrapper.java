@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.serving;
 
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 
 public class ServingWrapper {
   private Serving serving;

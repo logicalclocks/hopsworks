@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.user.sshkey;
 
+import io.hops.hopsworks.persistence.entity.user.sshkey.SshKeys;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement

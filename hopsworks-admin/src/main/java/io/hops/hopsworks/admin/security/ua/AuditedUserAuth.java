@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.admin.security.ua;
 
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

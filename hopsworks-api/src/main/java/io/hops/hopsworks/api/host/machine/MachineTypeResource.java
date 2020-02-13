@@ -17,8 +17,8 @@ package io.hops.hopsworks.api.host.machine;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -60,7 +60,7 @@ public class MachineTypeResource {
   @GET
   @Path("/{type}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMachineType(@PathParam("type") LibraryFacade.MachineType type, @Context UriInfo uriInfo,
+  public Response getMachineType(@PathParam("type") MachineType type, @Context UriInfo uriInfo,
     @Context SecurityContext sc) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.MACHINETYPES);
     MachineTypeDTO machineTypeDTO = machineTypeBuilder.buildItem(uriInfo, resourceRequest, type);

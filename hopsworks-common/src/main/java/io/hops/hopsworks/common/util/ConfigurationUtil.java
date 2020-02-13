@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 
 import java.io.IOException;
 import java.util.Map;

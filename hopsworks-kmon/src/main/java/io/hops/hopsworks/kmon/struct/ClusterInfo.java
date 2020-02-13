@@ -39,16 +39,16 @@
 
 package io.hops.hopsworks.kmon.struct;
 
-import io.hops.hopsworks.common.dao.host.Status;
-import io.hops.hopsworks.common.dao.host.Health;
+import io.hops.hopsworks.persistence.entity.host.Health;
+import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.kagent.HostServices;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-
-import io.hops.hopsworks.common.dao.kagent.HostServices;
-import io.hops.hopsworks.common.util.FormatUtils;
 
 public class ClusterInfo {
 

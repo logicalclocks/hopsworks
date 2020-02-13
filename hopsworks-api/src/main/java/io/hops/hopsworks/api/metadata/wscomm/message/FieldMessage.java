@@ -39,19 +39,20 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Field;
-import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
-import io.hops.hopsworks.common.dao.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.FieldPredefinedValue;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 public class FieldMessage extends ContentMessage {
 

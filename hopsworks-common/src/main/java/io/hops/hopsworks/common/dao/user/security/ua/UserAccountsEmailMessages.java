@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.user.security.ua;
 
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 
 import java.util.Date;
 import java.util.Set;

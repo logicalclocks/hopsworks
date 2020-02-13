@@ -41,16 +41,13 @@ package io.hops.hopsworks.api.metadata.wscomm;
 
 import io.hops.hopsworks.api.metadata.wscomm.message.Message;
 import io.hops.hopsworks.api.metadata.wscomm.message.TextMessage;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.servlet.http.HttpSession;
 import javax.websocket.CloseReason;
@@ -63,6 +60,9 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @ServerEndpoint(value = "/wspoint/{projectID}",
         encoders = MessageEncoder.class,

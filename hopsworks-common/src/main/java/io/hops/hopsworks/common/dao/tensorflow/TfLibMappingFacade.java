@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.dao.tensorflow;
 
+import io.hops.hopsworks.persistence.entity.tensorflow.TfLibMapping;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;

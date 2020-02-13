@@ -47,14 +47,7 @@ import io.hops.hopsworks.api.metadata.wscomm.message.Message;
 import io.hops.hopsworks.api.metadata.wscomm.message.TemplateMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.TextMessage;
 import io.hops.hopsworks.api.metadata.wscomm.message.UploadedTemplateMessage;
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Field;
-import io.hops.hopsworks.common.dao.metadata.FieldType;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.RawData;
-import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.dao.metadata.TupleToFile;
 import io.hops.hopsworks.common.dao.metadata.db.FieldFacade;
 import io.hops.hopsworks.common.dao.metadata.db.FieldTypeFacade;
 import io.hops.hopsworks.common.dao.metadata.db.MTableFacade;
@@ -62,7 +55,16 @@ import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.FieldType;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.RawData;
+import io.hops.hopsworks.persistence.entity.metadata.Template;
+import io.hops.hopsworks.persistence.entity.metadata.TupleToFile;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -70,8 +72,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 
 /**
  * Helper class to assist Protocol in constructing responses. Keeps Protocol

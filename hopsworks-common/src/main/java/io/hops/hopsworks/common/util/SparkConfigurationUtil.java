@@ -17,12 +17,12 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.spark.DistributionStrategy;
-import io.hops.hopsworks.common.jobs.spark.ExperimentType;
-import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.DistributionStrategy;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
 

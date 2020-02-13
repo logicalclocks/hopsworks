@@ -16,9 +16,9 @@
 package io.hops.hopsworks.api.user.apiKey;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKeyScope;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKeyScope;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;

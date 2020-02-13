@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.state;
 
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import org.javatuples.Pair;
 

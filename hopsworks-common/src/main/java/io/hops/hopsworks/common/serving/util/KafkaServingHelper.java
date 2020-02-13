@@ -17,12 +17,12 @@
 package io.hops.hopsworks.common.serving.util;
 
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.serving.ServingWrapper;

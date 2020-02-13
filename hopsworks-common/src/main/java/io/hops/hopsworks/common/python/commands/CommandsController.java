@@ -15,22 +15,26 @@
  */
 package io.hops.hopsworks.common.python.commands;
 
-import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.python.AnacondaRepo;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.python.PythonDep;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
+import io.hops.hopsworks.persistence.entity.python.CondaOp;
+import io.hops.hopsworks.persistence.entity.python.CondaStatus;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.annotation.Resource;
@@ -84,7 +88,7 @@ public class CommandsController {
   public List<CondaCommands> retryFailedCondaOps(Project project) {
     List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProject(project);
     for (CondaCommands cc : commands) {
-      cc.setStatus(CondaCommandFacade.CondaStatus.NEW);
+      cc.setStatus(CondaStatus.NEW);
       condaCommandFacade.update(cc);
     }
     return commands;
@@ -93,7 +97,7 @@ public class CommandsController {
   public List<CondaCommands> retryFailedCondaOps(Project project, String library) {
     List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
     for (CondaCommands cc : commands) {
-      cc.setStatus(CondaCommandFacade.CondaStatus.NEW);
+      cc.setStatus(CondaStatus.NEW);
       condaCommandFacade.update(cc);
     }
     return commands;
@@ -120,7 +124,7 @@ public class CommandsController {
    * @param arg
    * @param hosts
    */
-  public void blockingCondaEnvironmentOp(CondaCommandFacade.CondaOp op, String proj, String arg, List<Hosts> hosts) {
+  public void blockingCondaEnvironmentOp(CondaOp op, String proj, String arg, List<Hosts> hosts) {
     List<Future> waiters = new ArrayList<>();
     for (Hosts h : hosts) {
       LOGGER.log(Level.INFO, "Create anaconda enviornment for {0} on {1}", new Object[]{proj, h.getHostIp()});
@@ -137,8 +141,8 @@ public class CommandsController {
   }
 
 
-  public PythonDep condaOp(CondaCommandFacade.CondaOp op, Users user, CondaCommandFacade.CondaInstallType installType,
-                   LibraryFacade.MachineType machineType, Project proj, String channelUrl, String lib, String version)
+  public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType,
+                   MachineType machineType, Project proj, String channelUrl, String lib, String version)
     throws ServiceException, GenericException {
     
     List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
@@ -155,11 +159,11 @@ public class CommandsController {
       
       // 3. Add the python library to the join table for the project
       Collection<PythonDep> depsInProj = proj.getPythonDepCollection();
-      if (depsInProj.contains(dep) && op == CondaCommandFacade.CondaOp.INSTALL) {
+      if (depsInProj.contains(dep) && op == CondaOp.INSTALL) {
         throw new ProjectException(RESTCodes.ProjectErrorCode.PYTHON_LIB_ALREADY_INSTALLED, Level.FINE,
           "dep: " + dep.getDependency());
       }
-      if (op == CondaCommandFacade.CondaOp.INSTALL || op == CondaCommandFacade.CondaOp.UPGRADE) {
+      if (op == CondaOp.INSTALL || op == CondaOp.UPGRADE) {
         depsInProj.remove(dep);// if upgrade
         depsInProj.add(dep);
       }
@@ -168,7 +172,7 @@ public class CommandsController {
   
       for (Hosts h : hosts) {
         CondaCommands cc = new CondaCommands(h, settings.getAnacondaUser(), user, op,
-            CondaCommandFacade.CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
+            CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
             new Date(), "", null, false, projectUtils.getCurrentCondaEnvironment(proj));
         condaCommandFacade.save(cc);
       }
@@ -179,25 +183,25 @@ public class CommandsController {
     return dep;
   }
   
-  public void updateCondaCommandStatus(Integer commandID, CondaCommandFacade.CondaStatus status, String arguments)
+  public void updateCondaCommandStatus(Integer commandID, CondaStatus status, String arguments)
     throws ServiceException {
     updateCondaCommandStatus(commandID, status, null, null, arguments, null,
         null, null, null, null,  null);
   }
   
-  public void updateCondaCommandStatus(int commandId, CondaCommandFacade.CondaStatus condaStatus,
-    CondaCommandFacade.CondaInstallType installType, LibraryFacade.MachineType machineType, String arg, String proj,
-    Users user, CondaCommandFacade.CondaOp opType, String lib, String version, String channel) throws ServiceException {
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
+    CondaInstallType installType, MachineType machineType, String arg, String proj,
+    Users user, CondaOp opType, String lib, String version, String channel) throws ServiceException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
-      if (condaStatus == CondaCommandFacade.CondaStatus.SUCCESS) {
+      if (condaStatus == CondaStatus.SUCCESS) {
         // remove completed commands
         condaCommandFacade.remove(cc);
         // Check if this is the last operation for this project. If yes, set
         // the PythonDep to be installed or
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
-        if (!CondaCommandFacade.CondaOp.isEnvOp(opType)) {
+        if (!CondaOp.isEnvOp(opType)) {
           Project p = projectFacade.findByName(proj);
           Collection<CondaCommands> ongoingCommands = p.getCondaCommandsCollection();
           boolean finished = true;
@@ -218,10 +222,10 @@ public class CommandsController {
               cc.getMachineType(), cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
             Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
 
-            if (opType.equals(CondaCommandFacade.CondaOp.INSTALL)) {
+            if (opType.equals(CondaOp.INSTALL)) {
               deps.remove(dep);
               deps.add(dep);
-            } else if (opType.equals(CondaCommandFacade.CondaOp.UNINSTALL)) {
+            } else if (opType.equals(CondaOp.UNINSTALL)) {
               deps.remove(dep);
             }
             cc.getProjectId().setPythonDepCollection(deps);
@@ -243,11 +247,11 @@ public class CommandsController {
     private final WebCommunication web;
     private final String proj;
     private final Hosts host;
-    private final CondaCommandFacade.CondaOp op;
+    private final CondaOp op;
     private final String arg;
     private Object entity;
     
-    public AnacondaTask(WebCommunication web, String proj, Hosts host, CondaCommandFacade.CondaOp op, String arg) {
+    public AnacondaTask(WebCommunication web, String proj, Hosts host, CondaOp op, String arg) {
       this.web = web;
       this.proj = proj;
       this.host = host;
@@ -277,11 +281,11 @@ public class CommandsController {
     private final WebCommunication web;
     private final Project proj;
     private final Hosts host;
-    private final CondaCommandFacade.CondaOp op;
+    private final CondaOp op;
     private final PythonDep dep;
     private Object entity;
     
-    public CondaTask(WebCommunication web, Project proj, Hosts host, CondaCommandFacade.CondaOp op,
+    public CondaTask(WebCommunication web, Project proj, Hosts host, CondaOp op,
       PythonDep dep) {
       this.web = web;
       this.proj = proj;

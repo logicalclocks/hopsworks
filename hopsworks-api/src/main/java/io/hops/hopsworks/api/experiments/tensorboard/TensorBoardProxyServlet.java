@@ -41,17 +41,17 @@ package io.hops.hopsworks.api.experiments.tensorboard;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.http.client.utils.URIUtils;
 

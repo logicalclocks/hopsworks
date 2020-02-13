@@ -16,13 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.statistics;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatistic;
-import io.hops.hopsworks.common.dao.featurestore.statistics.cluster_analysis.ClusterAnalysisDTO;
-import io.hops.hopsworks.common.dao.featurestore.statistics.descriptive.DescriptiveStatsDTO;
-import io.hops.hopsworks.common.dao.featurestore.statistics.correlation.FeatureCorrelationMatrixDTO;
-import io.hops.hopsworks.common.dao.featurestore.statistics.distribution.FeatureDistributionsDTO;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.cluster_analysis.ClusterAnalysisDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.correlation.FeatureCorrelationMatrixDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.descriptive.DescriptiveStatsDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.distribution.FeatureDistributionsDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

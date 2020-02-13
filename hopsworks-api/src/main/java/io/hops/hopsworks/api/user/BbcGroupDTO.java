@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.net.URI;

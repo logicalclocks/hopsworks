@@ -18,6 +18,8 @@ package io.hops.hopsworks.jwt.dao;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.SigningKeyGenerator;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
+
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import javax.ejb.EJB;

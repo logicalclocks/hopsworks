@@ -46,23 +46,23 @@ import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.util.DateUtils;
-import io.hops.hopsworks.common.util.FormatUtils;
-import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.jwt.JWTController;
-import io.hops.hopsworks.jwt.JsonWebToken;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.Constants;
+import io.hops.hopsworks.jwt.JWTController;
+import io.hops.hopsworks.jwt.JsonWebToken;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import org.apache.commons.codec.binary.Base64;
 
@@ -85,6 +85,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -95,8 +96,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import javax.ws.rs.core.SecurityContext;
 
 @Path("/auth")
 @Stateless

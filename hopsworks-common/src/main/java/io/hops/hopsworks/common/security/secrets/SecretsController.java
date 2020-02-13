@@ -17,16 +17,16 @@
 package io.hops.hopsworks.common.security.secrets;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.secrets.Secret;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretId;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
-import io.hops.hopsworks.common.dao.user.security.secrets.VisibilityType;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.SymmetricEncryptionDescriptor;

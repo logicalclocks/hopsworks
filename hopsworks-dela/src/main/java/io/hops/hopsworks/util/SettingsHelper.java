@@ -40,11 +40,11 @@
 package io.hops.hopsworks.util;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dela.AddressJSON;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DelaException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.util.logging.Level;
 

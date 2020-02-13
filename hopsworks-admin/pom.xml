@@ -62,6 +62,11 @@
   <dependencies>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-persistence</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>

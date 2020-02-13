@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.dao.host;
 
-import io.hops.hopsworks.common.util.FormatUtils;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import java.io.Serializable;
 
 public class MemoryInfo implements Serializable {

@@ -39,7 +39,8 @@
 
 package io.hops.hopsworks.common.jobs.erasureCode;
 
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.erasureCode.ErasureCodeJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,7 +48,7 @@ import javax.ws.rs.NotFoundException;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 

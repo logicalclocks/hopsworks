@@ -16,10 +16,10 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;

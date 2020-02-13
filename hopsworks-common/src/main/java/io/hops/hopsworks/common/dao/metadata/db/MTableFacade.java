@@ -45,7 +45,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
 
 @Stateless
 public class MTableFacade extends AbstractFacade<MTable> {

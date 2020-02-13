@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.jupyter;
 
-import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype;
 import io.hops.hopsworks.exceptions.ServiceException;
 

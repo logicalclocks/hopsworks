@@ -45,7 +45,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
+import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless

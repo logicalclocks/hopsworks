@@ -39,11 +39,13 @@
 package io.hops.hopsworks.common.dao.user;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.user.security.UserGroup;
-import io.hops.hopsworks.common.dao.user.security.UserGroupPK;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountType;
+import io.hops.hopsworks.persistence.entity.user.security.UserGroup;
+import io.hops.hopsworks.persistence.entity.user.security.UserGroupPK;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.exceptions.InvalidQueryException;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

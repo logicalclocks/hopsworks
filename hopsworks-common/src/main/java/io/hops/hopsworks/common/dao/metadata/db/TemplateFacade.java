@@ -40,8 +40,8 @@
 package io.hops.hopsworks.common.dao.metadata.db;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.Template;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.Template;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

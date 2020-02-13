@@ -40,6 +40,8 @@
 package io.hops.hopsworks.common.dao.project.pia;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.project.pia.Pia;
+
 import java.util.ArrayList;
 import java.util.List;
 import javax.ejb.Stateless;

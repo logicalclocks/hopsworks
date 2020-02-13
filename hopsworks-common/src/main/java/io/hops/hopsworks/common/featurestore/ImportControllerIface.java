@@ -17,9 +17,9 @@
 package io.hops.hopsworks.common.featurestore;
 
 import io.hops.hopsworks.common.featurestore.importjob.FeaturegroupImportJobDTO;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 
 import javax.ejb.TransactionAttribute;

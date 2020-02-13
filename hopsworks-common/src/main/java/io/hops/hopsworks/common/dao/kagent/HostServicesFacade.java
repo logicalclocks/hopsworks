@@ -40,10 +40,12 @@
 package io.hops.hopsworks.common.dao.kagent;
 
 import io.hops.hopsworks.common.agent.AgentController;
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.persistence.entity.host.Status;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.persistence.entity.kagent.Action;
+import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.WebCommunication;
 

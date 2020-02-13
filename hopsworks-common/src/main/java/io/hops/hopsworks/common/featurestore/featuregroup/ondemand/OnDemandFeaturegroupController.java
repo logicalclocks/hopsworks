@@ -17,8 +17,8 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
