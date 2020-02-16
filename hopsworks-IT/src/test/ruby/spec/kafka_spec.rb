@@ -86,7 +86,7 @@ describe "On #{ENV['OS']}" do
 
         end
 
-        it "accepts a shared topic and adds ACLs" do
+        it "accepts a shared topic" do
           org_project = @project
           with_kafka_topic(@project[:id])
 
@@ -107,9 +107,12 @@ describe "On #{ENV['OS']}" do
           expect(json_body[:count]).to eq 0
 
           # accept the topic and check the ACLs
-          accept_shared_topic(target_project, topic)
-          get_kafka_acls(org_project, topic, filter)
-          expect(json_body[:count]).to be > 0
+					accept_shared_topic(target_project, topic)
+
+					# Check that the topic has been shared correctly
+					get_shared_topics(target_project.id)
+					expect(json_body[:items].count).to eq 1
+					expect(json_body[:items].first[:accepted]).to eq true
         end
 
         it "should not be able to delete a kafka schema with a reserved name" do
