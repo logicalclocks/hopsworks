@@ -67,7 +67,7 @@ public class FeaturestoreFeature implements Serializable {
   private String type;
   @Basic(optional = false)
   @Column(name = "primary_column")
-  private int primary = 0;
+  private boolean primary = false;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -113,11 +113,11 @@ public class FeaturestoreFeature implements Serializable {
     this.type = type;
   }
 
-  public int getPrimary() {
+  public boolean getPrimary() {
     return primary;
   }
 
-  public void setPrimary(int primary) {
+  public void setPrimary(boolean primary) {
     this.primary = primary;
   }
 
@@ -147,11 +147,13 @@ public class FeaturestoreFeature implements Serializable {
 
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + description.hashCode();
-    result = 31 * result + name.hashCode();
-    result = 31 * result + type.hashCode();
-    result = 31 * result + primary;
+    int result = id != null ? id.hashCode() : 0;
+    result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
+    result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    result = 31 * result + (name != null ? name.hashCode() : 0);
+    result = 31 * result + (type != null ? type.hashCode() : 0);
+    result = 31 * result + (primary ? 1 : 0);
     return result;
   }
 }

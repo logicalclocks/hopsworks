@@ -785,7 +785,6 @@ public class FeaturegroupController {
     return featuregroupDTO;
   }
 
-  // TODO(Fabio): I don't like this part - I'll refactor later.
   public List<FeatureDTO> getFeatures(Featuregroup featuregroup) {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
@@ -797,7 +796,9 @@ public class FeaturegroupController {
             .forEach(f -> f.setPrimary(true));
         return features;
       case ON_DEMAND_FEATURE_GROUP:
-        return new ArrayList<>();
+        return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
+            .map(f -> new FeatureDTO(f.getName(), f.getType(), f.getPrimary()))
+            .collect(Collectors.toList());
     }
     return new ArrayList<>();
   }

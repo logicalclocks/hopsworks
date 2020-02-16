@@ -52,7 +52,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->
         new FeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
-            fgFeature.getPrimary() == 1, false, null)).collect(Collectors.toList()));
+            fgFeature.getPrimary(), false, null)).collect(Collectors.toList()));
   }
   
   @XmlElement
