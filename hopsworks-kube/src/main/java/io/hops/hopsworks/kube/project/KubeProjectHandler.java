@@ -10,20 +10,32 @@ import io.hops.hopsworks.common.project.ProjectHandler;
 import io.hops.hopsworks.kube.common.KubeClientService;
 
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class KubeProjectHandler implements ProjectHandler {
 
   @EJB
   private KubeClientService kubeClientService;
 
   @Override
-  public void preCreate(Project project) throws Exception {
+  public void preCreate(Project project) throws EJBException {
     try {
       kubeClientService.createProjectNamespace(project);
-    } catch (KubernetesClientException e) {
-      throw new Exception(e);
+    } catch (Exception e) {
+      String usrMsg = "";
+      if (e instanceof EJBException && ((EJBException) e).getCausedByException() instanceof KubernetesClientException) {
+        if (((KubernetesClientException) ((EJBException) e).getCausedByException()).getCode() == 409) {
+          usrMsg = "Environment is not cleaned up yet. Please retry in a few seconds. If error persists, contact an " +
+            "administrator. Reason: " +
+            ((KubernetesClientException) ((EJBException) e).getCausedByException()).getStatus().getMessage();
+        }
+      }
+      throw new EJBException(usrMsg, e);
     }
   }
 

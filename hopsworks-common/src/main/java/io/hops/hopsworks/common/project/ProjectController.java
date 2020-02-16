@@ -361,7 +361,7 @@ public class ProjectController {
         } catch (Exception e) {
           cleanup(project, sessionId, null, true, owner);
           throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HANDLER_PRECREATE_ERROR, Level.SEVERE,
-            "project: " + project.getName() + ", handler: " + projectHandler.getClassName(), e.getMessage(), e);
+            e.getMessage() + ", handler: " + projectHandler.getClassName(), null, e);
         }
       }
 
