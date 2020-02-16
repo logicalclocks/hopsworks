@@ -1414,7 +1414,7 @@ public class RESTCodes {
     TRAININGDATASETJOB_FAILURE(80, "Could not write featurestore cloud args to HDFS",
       Response.Status.INTERNAL_SERVER_ERROR),
     TRAININGDATASETJOB_DUPLICATE_FEATURE(81, "Feature list contains duplicate", Response.Status.BAD_REQUEST),
-    TRAININGDATASETJOB_FEATURE_NOT_EXISTING(82, "Feature does not exist", Response.Status.BAD_REQUEST),
+    FEATURE_NOT_EXISTING(82, "Feature does not exist", Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_FEATUREGROUP_DUPLICATE(83, "Multiple featuregroups contain feature",
       Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS(84, "Illegal training dataset name - version combination",
@@ -1437,7 +1437,9 @@ public class RESTCodes {
     ERROR_UPDATING_METADATA(93, "An error occurred when trying to update feature store metadata",
       Response.Status.BAD_REQUEST),
     FEATUREGROUP_NAME_NOT_PROVIDED(94, "Feature group name was not provided", Response.Status.BAD_REQUEST),
-    TRAINING_DATASET_NAME_NOT_PROVIDED(95, "Training dataset name was not provided", Response.Status.BAD_REQUEST);
+    TRAINING_DATASET_NAME_NOT_PROVIDED(95, "Training dataset name was not provided", Response.Status.BAD_REQUEST),
+    NO_PK_JOINING_KEYS(96, "Could not find any matching feature to join", Response.Status.BAD_REQUEST),
+    LEFT_RIGHT_ON_DIFF_SIZES(97, "LeftOn and RightOn have different sizes", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

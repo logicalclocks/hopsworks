@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import org.apache.calcite.sql.JoinType;
 import org.junit.Assert;
 import org.junit.Before;
@@ -93,7 +94,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testValidateFeatures() {
+  public void testValidateFeatures() throws Exception {
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
     requestedFeatures.add(new FeatureDTO("fg1_ft2"));
 
@@ -106,17 +107,16 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testMissingFeature() {
+  public void testMissingFeature() throws Exception {
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
     requestedFeatures.add(new FeatureDTO("fg1_ft3"));
 
-    thrown.expect(IllegalArgumentException.class);
-    thrown.expectMessage("Feature: fg1_ft3 not found in feature group: fg1");
+    thrown.expect(FeaturestoreException.class);
     constructorController.validateFeatures(fg1, "fg1", requestedFeatures, fg1Features);
   }
 
   @Test
-  public void testExtractAllFeatures() {
+  public void testExtractAllFeatures() throws Exception {
     List<FeatureDTO> requestedFeatures = new ArrayList<>();
     requestedFeatures.add(new FeatureDTO("*"));
 
@@ -127,7 +127,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractFeaturesBothSides() {
+  public void testExtractFeaturesBothSides() throws Exception {
     Mockito.when(featuregroupController.getFeatures(Mockito.any())).thenReturn(fg1Features, fg2Features);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(fg1, fg2);
     Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
@@ -156,7 +156,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractJoinOn() {
+  public void testExtractJoinOn() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -181,7 +181,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractJoinOnMissingFeature() {
+  public void testExtractJoinOnMissingFeature() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -197,12 +197,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
   }
 
   @Test
-  public void testExtractJoinOnWrongTypes() {
+  public void testExtractJoinOnWrongTypes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -217,12 +217,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
   }
 
   @Test
-  public void testExtractJoinLeftRight() {
+  public void testExtractJoinLeftRight() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -243,7 +243,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractJoinLeftRightWrongSizes() {
+  public void testExtractJoinLeftRightWrongSizes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -258,12 +258,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
-  public void testExtractJoinLeftRightWrongTypes() {
+  public void testExtractJoinLeftRightWrongTypes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -278,12 +278,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
-  public void testExtractJoinLeftRightMissingFeature() {
+  public void testExtractJoinLeftRightMissingFeature() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -298,12 +298,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
-  public void testNoJoiningKeySingle() {
+  public void testNoJoiningKeySingle() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -320,7 +320,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testNoJoiningKeyMultipleDifferentTypes() {
+  public void testNoJoiningKeyMultipleDifferentTypes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -339,7 +339,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testNoJoiningKeyMultipleDifferentSizes() {
+  public void testNoJoiningKeyMultipleDifferentSizes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -360,7 +360,7 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testNoPrimaryKeys() {
+  public void testNoPrimaryKeys() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -372,12 +372,12 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
   }
 
   @Test
-  public void testNoJoiningKeyWrongTypes() {
+  public void testNoJoiningKeyWrongTypes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
     List<FeatureDTO> availableLeft = new ArrayList<>();
@@ -389,7 +389,7 @@ public class TestConstructorController {
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
 
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(FeaturestoreException.class);
     constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
   }
 

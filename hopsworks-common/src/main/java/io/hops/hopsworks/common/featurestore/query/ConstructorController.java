@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlDialect;
@@ -43,6 +44,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Stateless
@@ -81,7 +83,7 @@ public class ConstructorController {
    * @param fgId each feature group will be aliased as fg[Integer] where [integer] is going to be an incremental id
    * @return
    */
-  protected Query convertQueryDTO(QueryDTO queryDTO, int fgId) {
+  protected Query convertQueryDTO(QueryDTO queryDTO, int fgId) throws FeaturestoreException {
     Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
     String fgAs = generateAs(fgId++);
 
@@ -108,14 +110,14 @@ public class ConstructorController {
    * @param featuregroupDTO
    * @return
    */
-  private Featuregroup validateFeaturegroupDTO(FeaturegroupDTO featuregroupDTO) {
+  private Featuregroup validateFeaturegroupDTO(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
     if (featuregroupDTO == null) {
-      throw new IllegalArgumentException("Feature group not specified or the list of features is empty");
+      throw new IllegalArgumentException("Feature group not specified");
     } else {
       Featuregroup featuregroup = featuregroupFacade.findById(featuregroupDTO.getId());
       if (featuregroup == null) {
-        throw new IllegalArgumentException("Could not find feature group with ID"
-            + featuregroupDTO.getId());
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
+            "Could not find feature group with ID" + featuregroupDTO.getId());
       }
       return featuregroup;
     }
@@ -133,7 +135,8 @@ public class ConstructorController {
    * @return The list of feature objects that it's going to be used to generate the SQL string.
    */
   protected List<FeatureDTO> validateFeatures(Featuregroup fg, String as,
-                                              List<FeatureDTO> requestedFeatures, List<FeatureDTO> availableFeatures) {
+                                              List<FeatureDTO> requestedFeatures, List<FeatureDTO> availableFeatures)
+      throws FeaturestoreException {
     List<FeatureDTO> featureList = new ArrayList<>();
     // This list will be used when generating the SQL string.
     // Set the feature group alias here so that it can be used later
@@ -149,8 +152,9 @@ public class ConstructorController {
       for (FeatureDTO requestedFeature : requestedFeatures) {
         featureList.add(availableFeatures.stream().filter(af -> af.getName().equals(requestedFeature.getName()))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Feature: " + requestedFeature.getName()
-                    + " not found in feature group: " + fg.getName())));
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
+                Level.FINE,
+                "Feature: " + requestedFeature.getName() + " not found in feature group: " + fg.getName())));
       }
     }
     return featureList;
@@ -164,7 +168,7 @@ public class ConstructorController {
    * @param fgId
    * @return
    */
-  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId) {
+  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId) throws FeaturestoreException {
     List<Join> joins = new ArrayList<>();
     for (JoinDTO joinDTO : joinDTOS) {
       if (joinDTO.getQuery() == null) {
@@ -197,25 +201,29 @@ public class ConstructorController {
    * @return
    */
   // TODO(Fabio): investigate type compatibility
-  protected Join extractOn(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType) {
+  protected Join extractOn(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType)
+      throws FeaturestoreException {
     for (FeatureDTO joinFeature : on) {
       FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(joinFeature.getName()))
           .findFirst()
-          .orElseThrow(() -> new IllegalArgumentException("Could not find Join feature: " + joinFeature.getName() +
-              " in feature group: " + leftQuery.getFeaturegroup().getName()));
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
+              Level.FINE,
+              "Could not find Join feature: " + joinFeature.getName() + " in feature group: "
+                  + leftQuery.getFeaturegroup().getName()));
       // Make sure that the same feature (name and type) is available on the right side as well.
       if (rightQuery.getAvailableFeatures().stream()
           .noneMatch(f -> (f.getName().equals(joinFeature.getName()) && f.getType().equals(leftFeature.getType())))) {
-        throw new IllegalArgumentException("Could not find Join feature " + joinFeature.getName() +
-            " in feature group: " + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
+            "Could not find Join feature " + joinFeature.getName() + " in feature group: "
+                + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
       }
     }
     return new Join(leftQuery, rightQuery, on, joinType);
   }
 
   /**
-   * If th euser has specified the `leftOn` and `rightOn` make sure that both list have the same length, that the leftOn
+   * If the user has specified the `leftOn` and `rightOn` make sure that both list have the same length, that the leftOn
    * features are present in the left feature group, the rightOn features in the right feature group. Finally make sure
    * that their type match - first feature in the leftOn should have the same type as the first one on the
    * rightOn and so on.
@@ -227,10 +235,11 @@ public class ConstructorController {
    * @return
    */
   protected Join extractLeftRightOn(Query leftQuery, Query rightQuery,
-                                    List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType) {
+                                    List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType)
+      throws FeaturestoreException {
     // Make sure that they 2 list have the same length, and that the respective features have the same type
     if (leftOn.size() != rightOn.size()) {
-      throw new IllegalArgumentException("LeftOn and RightOn have different sizes");
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LEFT_RIGHT_ON_DIFF_SIZES, Level.FINE);
     }
     int i = 0;
     while (i < leftOn.size()) {
@@ -239,15 +248,18 @@ public class ConstructorController {
       FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
           .filter(f -> f.getName().equals(leftFeatureName))
           .findFirst()
-          .orElseThrow(() -> new IllegalArgumentException("Could not find Join feature: " + leftFeatureName +
-              " in feature group: " + leftQuery.getFeaturegroup().getName()));
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
+              Level.FINE,
+              "Could not find Join feature: " + leftFeatureName + " in feature group: "
+                  + leftQuery.getFeaturegroup().getName()));
 
       String rightFeatureName = rightOn.get(i).getName();
       // Make sure that the rightOn feature at the same position (i) exists and it has the same type of the left one.
       if (rightQuery.getAvailableFeatures().stream()
           .noneMatch(f -> (f.getName().equals(rightFeatureName) && f.getType().equals(leftFeature.getType())))) {
-        throw new IllegalArgumentException("Could not find Join feature " + rightFeatureName +
-            " in feature group: " + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
+            "Could not find Join feature " + rightFeatureName + " in feature group: "
+                + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
       }
       i++;
     }
@@ -262,7 +274,8 @@ public class ConstructorController {
    * @param joinType
    * @return
    */
-  protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType) {
+  protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType)
+      throws FeaturestoreException {
     // Find subset of matching primary keys (same name and type) to be used as join condition
     List<FeatureDTO> joinFeatures = new ArrayList<>();
     leftQuery.getAvailableFeatures().stream().filter(FeatureDTO::getPrimary).forEach(lf -> {
@@ -272,8 +285,8 @@ public class ConstructorController {
     });
 
     if (joinFeatures.isEmpty()) {
-      throw new IllegalArgumentException("Could not find any matching feature to join: "
-          + leftQuery.getFeaturegroup().getName() + " and: " + rightQuery.getFeaturegroup().getName());
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PK_JOINING_KEYS, Level.FINE,
+          leftQuery.getFeaturegroup().getName() + " and: " + rightQuery.getFeaturegroup().getName());
     }
 
     return new Join(leftQuery, rightQuery, joinFeatures, joinType);
@@ -314,7 +327,9 @@ public class ConstructorController {
    */
   public String generateSQL(Query query) {
     // remove duplicated join columns
-    removeDuplicateColumns(query);
+    if (query.getJoins() != null) {
+      removeDuplicateColumns(query);
+    }
 
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
     for (FeatureDTO f : collectFeatures(query)) {
@@ -361,9 +376,7 @@ public class ConstructorController {
   protected List<FeatureDTO> collectFeatures(Query query) {
     List<FeatureDTO> features = new ArrayList<>(query.getFeatures());
     if (query.getJoins() != null) {
-      query.getJoins().forEach(join -> {
-        features.addAll(collectFeatures(join.getRightQuery()));
-      });
+      query.getJoins().forEach(join -> features.addAll(collectFeatures(join.getRightQuery())));
     }
     return features;
   }
