@@ -792,6 +792,14 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(@project, ds5name, "&type=DATASET")
           ds = json_body
           expect(ds).to be_present
+
+          get_dataset_stat(@project, ds6name, "&type=DATASET")
+          ds = json_body
+          expect(ds).to be_present
+
+          get_dataset_stat(@project, ds7name, "&type=DATASET")
+          ds = json_body
+          expect(ds).to be_present
         end
 
         it 'zip directory' do
@@ -841,6 +849,40 @@ describe "On #{ENV['OS']}" do
           wait_for do
             get_datasets_in_path(@project, "#{@dataset[:inode_name]}/test%20Dir", "&type=DATASET")
             ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub Dir" }
+            !ds.nil?
+          end
+        end
+
+        it 'zip directory with url encoded char' do
+          topDataset = "#{@dataset[:inode_name]}/top%253ADir"
+          create_dir(@project, topDataset, "")
+          expect_status(201)
+
+          subDataset = "#{topDataset}/sub%2520Dir"
+          create_dir(@project, subDataset, "")
+          expect_status(201)
+          zip_dataset(@project, subDataset, "&type=DATASET")
+          expect_status(204)
+
+          wait_for do
+            get_datasets_in_path(@project, topDataset, "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir.zip" }
+            !ds.nil?
+          end
+        end
+
+        it 'unzip directory with url encoded char' do
+          topDataset = "#{@dataset[:inode_name]}/top%253ADir"
+          subDataset = "#{topDataset}/sub%2520Dir"
+          delete_dataset(@project, subDataset, "?type=DATASET")
+          expect_status(204)
+
+          unzip_dataset(@project, "#{subDataset}.zip", "&type=DATASET")
+          expect_status(204)
+
+          wait_for do
+            get_datasets_in_path(@project, topDataset, "&type=DATASET")
+            ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir" }
             !ds.nil?
           end
         end
