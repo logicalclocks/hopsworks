@@ -63,6 +63,8 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   private Integer ownerProjectId;
   
   private Boolean isShared;
+  
+  private Boolean accepted;
 
   public TopicDTO() {
   }
@@ -76,13 +78,14 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   }
   
   public TopicDTO(String name, Integer ownerProjectId, String schemaName, Integer schemaVersion, String
-    schemaContent, Boolean isShared) {
+    schemaContent, Boolean isShared, Boolean accepted) {
     this.name = name;
     this.ownerProjectId = ownerProjectId;
     this.schemaName = schemaName;
     this.schemaVersion = schemaVersion;
     this.schemaContent = schemaContent;
     this.isShared = isShared;
+    this.accepted = accepted;
   }
 
   public TopicDTO(String name, Integer numOfReplicas, Integer numOfPartitions) {
@@ -191,5 +194,13 @@ public class TopicDTO extends RestDTO<TopicDTO> implements Serializable {
   
   public Boolean getShared() {
     return isShared;
+  }
+  
+  public Boolean getAccepted() {
+    return accepted;
+  }
+  
+  public void setAccepted(Boolean accepted) {
+    this.accepted = accepted;
   }
 }

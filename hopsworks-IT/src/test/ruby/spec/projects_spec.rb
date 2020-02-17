@@ -203,7 +203,7 @@ describe "On #{ENV['OS']}" do
         after :all do
           # Make sure we bring back the service
           execute_remotely @service_host, "sudo systemctl start #{@failed_service}"
-          sleep 40
+          sleep 60
         end
         
         it "Should be able to create a Project after a failed attempt" do
@@ -216,7 +216,7 @@ describe "On #{ENV['OS']}" do
           # Now bring back service and try again
           execute_remotely @service_host, "sudo systemctl start #{@failed_service}"
           # Give it some time to become ready
-          sleep 40
+          sleep 60
           post "#{ENV['HOPSWORKS_API']}/project", {projectName: project_name,
                                                    services: ["JOBS","JUPYTER"]}
           expect_status(201)

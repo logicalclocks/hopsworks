@@ -77,6 +77,7 @@ describe "On #{ENV['OS']}" do
           second_project = create_project
             post "#{ENV['HOPSWORKS_API']}/project/#{second_project.id}/projectMembers", {projectTeam: [{projectTeamPK: {projectId: second_project.id,teamMember: new_member},teamRole: "Data scientist"}]}
           share_topic(project, topic, second_project)
+          accept_shared_topic(second_project, topic)
           get_kafka_acls(project, topic)
             emails = json_body[:items].select {|a| a[:userEmail] == new_member && a[:projectName] == second_project[:projectname]}
           expect(emails.count).to be > 0
@@ -159,6 +160,7 @@ describe "On #{ENV['OS']}" do
           get_kafka_acls(project, topic_name)
           acls_before = json_body[:items].count
           share_topic(project, topic_name, second_project)
+          accept_shared_topic(second_project, topic_name)
           get_kafka_acls(project, topic_name)
           acls_after = json_body[:items].count
           second_project_users = get_project_members_emails(second_project).count

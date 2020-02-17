@@ -213,7 +213,7 @@ public class KibanaClient {
             ((HttpPost) httpRequest).setEntity(new StringEntity(data));
           } catch (UnsupportedEncodingException e) {
             throw new ElasticException(RESTCodes.ElasticErrorCode.KIBANA_REQ_ERROR,
-                Level.INFO, "Failed execute a Kibana request on " + url,
+                Level.INFO, "Failed to execute a Kibana request on " + url,
                 e.getMessage(), e);
           }
         }
@@ -288,8 +288,7 @@ public class KibanaClient {
       return retryableAction.tryAction();
     } catch (IOException e) {
       throw new ElasticException(RESTCodes.ElasticErrorCode.KIBANA_REQ_ERROR,
-          Level.INFO, "Failed execute a Kibana request on " + url,
-          e.getMessage(), e);
+          Level.INFO, "Failed to execute a Kibana request. Reason: " + e.getMessage(), "url:" + url, e);
     }
   }
   

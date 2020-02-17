@@ -2565,17 +2565,22 @@ public class ProjectController {
    * @param user user
    * @throws ProjectException ProjectException
    */
-  public void addKibana(Project project, Users user) throws ProjectException,
-      ServiceException, ElasticException {
+  public void addKibana(Project project, Users user) throws ProjectException {
 
     String projectName = project.getName().toLowerCase();
-
-    elasticController.createIndexPattern(project, user,
-        projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
-    elasticController.createIndexPattern(project, user,
-      project.getName().toLowerCase() + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN);
-    elasticController.createIndexPattern(project, user,
-      project.getName().toLowerCase() + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN);
+  
+    try {
+      elasticController.createIndexPattern(project, user,
+          projectName + Settings.ELASTIC_LOGS_INDEX_PATTERN);
+      elasticController.createIndexPattern(project, user,
+        project.getName().toLowerCase() + Settings.ELASTIC_BEAMJOBSERVER_INDEX_PATTERN);
+      elasticController.createIndexPattern(project, user,
+        project.getName().toLowerCase() + Settings.ELASTIC_BEAMSDKWORKER_INDEX_PATTERN);
+    } catch (ElasticException e) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_KIBANA_CREATE_INDEX_ERROR, Level.SEVERE, "Could " +
+        "provision project on Kibana. Contact an administrator if problem persists. Reason: " + e.getUsrMsg(),
+        e.getDevMsg(), e );
+    }
   }
 
   public void removeElasticsearch(Project project)

@@ -331,8 +331,13 @@
               <tbody>
               <thead>
                 <tr st-select-row="row" st-select-mode="single" ng-repeat="row in kafkaCtrl.sharedTopics">
-
-                  <td><b>{{row.name}}</b></td>
+                  <td ng-if="row.accepted === true"> <b>{{row.name}}</b></td>
+                  <td ng-if="row.accepted === false" data-toggle="tooltip"
+                      title="Shared topic. Click on this topic to accept/reject it."
+                      ng-click="kafkaCtrl.acceptSharedTopic(row)">
+                    <i class="fa fa-eye-slash"></i>&emsp;
+                    <b>{{row.name}}</b>
+                  </td>
                   <td class="col-sm-2">
                     <button type="button"
                             ng-click="kafkaCtrl.viewSharedSchemaContent(row.name, row.schemaContent)"
@@ -340,7 +345,7 @@
                       View<i style="margin-left: 10px"></i>
                     </button>
                   </td>
-                  <td>
+                  <td ng-if="row.accepted === true">
                     <button type="button" ng-click="kafkaCtrl.unshareTopicFromProject(row.ownerProjectId, row.name)"
                             class="btn btn-sm btn-danger">
                       <i class="glyphicon glyphicon-remove">
