@@ -99,12 +99,12 @@ angular.module('hopsWorksApp')
                   return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + template + description + searchable + generateReadme + datasetType);
                 },
                 copy: function (path, destinationPath) {
-                  var destinationPath = getQuery(destinationPath, 'destination_path');
-                  return $http.post(baseUrl + getEncodedPath(path) + '?action=copy' + getEncodedPath(destinationPath));
+                  var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=copy' + destinationPath);
                 },
                 move: function (path, destinationPath) {
-                  var destinationPath = getQuery(destinationPath, 'destination_path');
-                  return $http.post(baseUrl + getEncodedPath(path) + '?action=move' + getEncodedPath(destinationPath));
+                  var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=move' + destinationPath);
                 },
                 share: function (path, targetProject, type) {
                   var targetProject = getQuery(targetProject, 'target_project');
