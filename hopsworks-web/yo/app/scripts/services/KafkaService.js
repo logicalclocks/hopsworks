@@ -239,6 +239,10 @@ angular.module('hopsWorksApp')
                   url: '/api/project/' + projectId + '/kafka/topics/' + topicName + '/subjects/' + subject + '/versions/' + version
                 };
                 return $http(req);
+              },
+
+              acceptSharedTopic: function (projectId, topicName) {
+                return $http.put('/api/project/' + projectId + '/kafka/topics/' + topicName + '/shared');
               }
               
             };
