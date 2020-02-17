@@ -885,7 +885,7 @@ describe "On #{ENV['OS']}" do
           end
           it 'zip directory with url encoded char' do
             topDataset = "#{@dataset[:inode_name]}/top%253ADir"
-            subDataset = "#{topDatasetEncoded}/sub%2520Dir"
+            subDataset = "#{topDataset}/sub%2520Dir"
             get_datasets_in_path(@project, topDataset, "&type=DATASET")
 
             zip_dataset(@project, subDataset, "&type=DATASET")
