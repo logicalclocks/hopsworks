@@ -76,23 +76,6 @@
     </dependency>
 
     <dependency>
-      <groupId>io.hops</groupId>
-      <artifactId>hadoop-common</artifactId>
-      <version>${hops.version}</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>io.netty</groupId>
-          <artifactId>netty-all</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
       <version>${project.version}</version>
