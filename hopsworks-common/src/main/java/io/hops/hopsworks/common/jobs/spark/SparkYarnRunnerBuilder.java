@@ -186,11 +186,6 @@ public class SparkYarnRunnerBuilder {
 
     if (jobType == JobType.PYSPARK) {
       amargs.append(" --primary-py-file ").append(appExecName);
-      //Add libs to PYTHONPATH
-      if (!serviceProps.isAnacondaEnabled()) {
-        //Throw error in Hopswors UI to notify user to enable Anaconda
-        throw new IOException("PySpark job needs to have Python Anaconda environment enabled");
-      }
     }
 
     String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);

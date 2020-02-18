@@ -45,7 +45,6 @@ package io.hops.hopsworks.common.jobs.yarn;
  */
 public class ServiceProperties {
 
-  private AnacondaProperties anaconda;
   private ElasticProperties elastic;
 
   private Integer projectId;
@@ -63,22 +62,6 @@ public class ServiceProperties {
     this.restEndpoint = restEndPoint;
     this.jobName = jobName;
     this.elastic = elastic;
-  }
-
-  public boolean isAnacondaEnabled() {
-    return anaconda != null;
-  }
-
-  public AnacondaProperties getAnaconda() {
-    return anaconda;
-  }
-
-  public void setAnaconda(AnacondaProperties anaconda) {
-    this.anaconda = anaconda;
-  }
-
-  public void initAnaconda(String envPath) {
-    anaconda = new AnacondaProperties(envPath);
   }
 
   public ElasticProperties getElastic() {

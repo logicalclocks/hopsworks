@@ -52,7 +52,6 @@ import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -170,11 +169,6 @@ public abstract class YarnJob extends HopsJob {
     serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
         services.getSettings().getRestEndpoint(), jobs.getName(), new ElasticProperties(
         services.getSettings().getElasticRESTEndpoint()));
-
-    if (jobs.getProject().getConda()) {
-      serviceProps.initAnaconda(services.getSettings().getAnacondaProjectDir(jobs.getProject())
-          + File.separator + "bin" + File.separator + "python");
-    }
     return true;
   }
 
