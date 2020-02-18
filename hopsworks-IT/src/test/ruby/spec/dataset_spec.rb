@@ -793,13 +793,6 @@ describe "On #{ENV['OS']}" do
           ds = json_body
           expect(ds).to be_present
 
-          get_dataset_stat(@project, ds6name, "&type=DATASET")
-          ds = json_body
-          expect(ds).to be_present
-
-          get_dataset_stat(@project, ds7name, "&type=DATASET")
-          ds = json_body
-          expect(ds).to be_present
         end
 
         it 'zip directory' do
