@@ -296,7 +296,6 @@ public class YarnRunner {
         logger.log(Level.FINE, "Deploying Flink cluster.");
         clusterClient = yarnClusterDescriptor.deploySessionCluster(clusterSpecification);
         clusterClient.setDetached(true);
-        clusterClient.waitForClusterToBeReady();
     
         appId = clusterClient.getClusterId();
         logger.log(Level.FINE, "Deployed Flink cluster with ID {0}",appId.toString());
