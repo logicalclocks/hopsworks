@@ -61,6 +61,11 @@ public class FsQueryConstructorResource {
    * TODO(Fabio): here probably a GET request is better as we are not changing any entity in the backend system.
    * For the moment as we are in a rush I'll let the PUT method, but I'll try to fix it before the final release
    * is done.
+   * When implementing the GET we need to investigate:
+   * - What's the maximum length supported by Glassfish when it comes to URL, and make sure we can send a
+   * reasonable size query.
+   * - Make sure that the clients send the feature name URL encoded.
+   * - Make sure Hive does not automatically URL encode column names (as it already does for partitions)
    */
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
