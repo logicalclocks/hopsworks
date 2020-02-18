@@ -57,6 +57,11 @@ public class FsQueryConstructorResource {
     return this;
   }
 
+  /**
+   * TODO(Fabio): here probably a GET request is better as we are not changing any entity in the backend system.
+   * For the moment as we are in a rush I'll let the PUT method, but I'll try to fix it before the final release
+   * is done.
+   */
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
