@@ -202,26 +202,6 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testExtractJoinOnWrongTypes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "Integer", ""));
-
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "Float", ""));
-
-    List<FeatureDTO> on = new ArrayList<>();
-    on.add(new FeatureDTO("ft1"));
-
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
-  }
-
-  @Test
   public void testExtractJoinLeftRight() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
@@ -262,25 +242,6 @@ public class TestConstructorController {
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
-  @Test
-  public void testExtractJoinLeftRightWrongTypes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("fg1_ft3", "Integer", ""));
-
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("fg2_ft3", "String", ""));
-
-    List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
-    List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
-
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
-  }
 
   @Test
   public void testExtractJoinLeftRightMissingFeature() throws Exception {
@@ -320,25 +281,6 @@ public class TestConstructorController {
   }
 
   @Test
-  public void testNoJoiningKeyMultipleDifferentTypes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", true));
-    availableLeft.add(new FeatureDTO("ft2", "Integer", "", true));
-
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "String", "", true));
-    availableRight.add(new FeatureDTO("ft2", "Float", "", true));
-
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
-
-    Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
-    Assert.assertEquals(1, join.getOn().size());
-  }
-
-  @Test
   public void testNoJoiningKeyMultipleDifferentSizes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
@@ -368,23 +310,6 @@ public class TestConstructorController {
 
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", false));
-
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
-
-    thrown.expect(FeaturestoreException.class);
-    constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
-  }
-
-  @Test
-  public void testNoJoiningKeyWrongTypes() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", true));
-
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "Integer", "", true));
 
     Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);

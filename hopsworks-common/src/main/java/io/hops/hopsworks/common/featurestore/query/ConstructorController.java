@@ -193,40 +193,26 @@ public class ConstructorController {
 
   /**
    * If the user has specified the `on` field in the JoinDTO check that the features in it are present on both feature
-   * groups (name check) and they have the same types on both of them.
+   * groups (name check)
    * @param leftQuery
    * @param rightQuery
    * @param on
    * @param joinType
    * @return
    */
-  // TODO(Fabio): investigate type compatibility
   protected Join extractOn(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType)
       throws FeaturestoreException {
     for (FeatureDTO joinFeature : on) {
-      FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
-          .filter(f -> f.getName().equals(joinFeature.getName()))
-          .findFirst()
-          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
-              Level.FINE,
-              "Could not find Join feature: " + joinFeature.getName() + " in feature group: "
-                  + leftQuery.getFeaturegroup().getName()));
-      // Make sure that the same feature (name and type) is available on the right side as well.
-      if (rightQuery.getAvailableFeatures().stream()
-          .noneMatch(f -> (f.getName().equals(joinFeature.getName()) && f.getType().equals(leftFeature.getType())))) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
-            "Could not find Join feature " + joinFeature.getName() + " in feature group: "
-                + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
-      }
+      checkFeatureExists(leftQuery, joinFeature);
+      checkFeatureExists(rightQuery, joinFeature);
     }
     return new Join(leftQuery, rightQuery, on, joinType);
   }
 
   /**
    * If the user has specified the `leftOn` and `rightOn` make sure that both list have the same length, that the leftOn
-   * features are present in the left feature group, the rightOn features in the right feature group. Finally make sure
-   * that their type match - first feature in the leftOn should have the same type as the first one on the
-   * rightOn and so on.
+   * features are present in the left feature group, the rightOn features in the right feature group.
+   *
    * @param leftQuery
    * @param rightQuery
    * @param leftOn
@@ -237,38 +223,27 @@ public class ConstructorController {
   protected Join extractLeftRightOn(Query leftQuery, Query rightQuery,
                                     List<FeatureDTO> leftOn, List<FeatureDTO> rightOn, JoinType joinType)
       throws FeaturestoreException {
-    // Make sure that they 2 list have the same length, and that the respective features have the same type
+    // Make sure that they 2 list have the same length
     if (leftOn.size() != rightOn.size()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LEFT_RIGHT_ON_DIFF_SIZES, Level.FINE);
     }
-    int i = 0;
-    while (i < leftOn.size()) {
-      String leftFeatureName = leftOn.get(i).getName();
-      // Find the left feature in the left FeatureGroup.
-      FeatureDTO leftFeature = leftQuery.getAvailableFeatures().stream()
-          .filter(f -> f.getName().equals(leftFeatureName))
-          .findFirst()
-          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
-              Level.FINE,
-              "Could not find Join feature: " + leftFeatureName + " in feature group: "
-                  + leftQuery.getFeaturegroup().getName()));
 
-      String rightFeatureName = rightOn.get(i).getName();
-      // Make sure that the rightOn feature at the same position (i) exists and it has the same type of the left one.
-      if (rightQuery.getAvailableFeatures().stream()
-          .noneMatch(f -> (f.getName().equals(rightFeatureName) && f.getType().equals(leftFeature.getType())))) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
-            "Could not find Join feature " + rightFeatureName + " in feature group: "
-                + rightQuery.getFeaturegroup().getName() + ", or it doesn't have the expected type");
-      }
-      i++;
+    // Check that all the left features exist in the left query
+    for (FeatureDTO feature : leftOn) {
+      checkFeatureExists(leftQuery, feature);
     }
+
+    // Check that all the right features exist in the right query
+    for (FeatureDTO feature : rightOn) {
+      checkFeatureExists(rightQuery, feature);
+    }
+
     return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
   }
 
   /**
    * In case the user has not specified any joining key, the largest subset of matching primary key will be used
-   * for the join. Both name and type should match for a feature to be added to the subset.
+   * for the join. The name should match for the feature to be added in the subset
    * @param leftQuery
    * @param rightQuery
    * @param joinType
@@ -276,11 +251,11 @@ public class ConstructorController {
    */
   protected Join extractPrimaryKeysJoin(Query leftQuery, Query rightQuery, JoinType joinType)
       throws FeaturestoreException {
-    // Find subset of matching primary keys (same name and type) to be used as join condition
+    // Find subset of matching primary keys (same name) to be used as join condition
     List<FeatureDTO> joinFeatures = new ArrayList<>();
     leftQuery.getAvailableFeatures().stream().filter(FeatureDTO::getPrimary).forEach(lf -> {
       joinFeatures.addAll(rightQuery.getAvailableFeatures().stream()
-          .filter(rf -> rf.getName().equals(lf.getName()) && rf.getType().equals(lf.getType()) && rf.getPrimary())
+          .filter(rf -> rf.getName().equals(lf.getName()) && rf.getPrimary())
           .collect(Collectors.toList()));
     });
 
@@ -290,6 +265,14 @@ public class ConstructorController {
     }
 
     return new Join(leftQuery, rightQuery, joinFeatures, joinType);
+  }
+
+  private void checkFeatureExists(Query query, FeatureDTO feature) throws FeaturestoreException {
+    if (query.getAvailableFeatures().stream().noneMatch(f -> (f.getName().equals(feature.getName())))) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
+          "Could not find Join feature " + feature.getName() + " in feature group: "
+              + query.getFeaturegroup().getName());
+    }
   }
 
   /**
