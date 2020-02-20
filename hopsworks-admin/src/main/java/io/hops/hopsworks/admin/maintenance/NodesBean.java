@@ -39,29 +39,35 @@
 package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
+import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
 import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-
 import io.hops.hopsworks.exceptions.ServiceException;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.event.SelectEvent;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import javax.ejb.EJB;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
+import javax.faces.context.FacesContext;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -73,10 +79,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.faces.application.FacesMessage;
-import javax.faces.context.FacesContext;
-import javax.enterprise.concurrent.ManagedExecutorService;
 
 @ManagedBean(name = "nodesBean")
 @ViewScoped
@@ -98,7 +100,13 @@ public class NodesBean implements Serializable {
   @EJB
   private CondaCommandFacade condaCommandsFacade;
   @EJB
+
+  private SecurityUtils securityUtils;
+  @EJB
+  private SystemCommandFacade systemCommandFacade;
+
   private HostsController hostsController;
+
 
 
   @Resource(lookup = "concurrent/kagentExecutorService")
@@ -112,6 +120,10 @@ public class NodesBean implements Serializable {
 
   private String output;
   private Future<String> future;
+
+  public String decrypted="";
+  public String encrypted="";
+
 
   class CondaTask implements Callable<String> {
 
@@ -188,6 +200,8 @@ public class NodesBean implements Serializable {
   @PostConstruct
   public void init() {
     allNodes = hostsFacade.findAll();
+    byte[] b = securityUtils.generateSecureRandom(Settings.ZFS_KEY_LEN);
+    this.decrypted = new String(b, java.nio.charset.StandardCharsets.ISO_8859_1);
   }
 
   public List<Hosts> getAllNodes() {
@@ -260,6 +274,55 @@ public class NodesBean implements Serializable {
     return "condaSync";
   }
 
+  public boolean isZfsEnabled() {
+    return settings.isEncryptionAtRestEnabled();
+  }
+
+  public String decrypt(String secret) {
+    if (secret == null || secret.length() < Settings.ZFS_KEY_LEN) {
+      return "";
+    }
+
+//    try {
+//      return this.certificatesMgmService.decryptPassword(secret);
+//    } catch (IOException e) {
+//      e.printStackTrace();
+//    } catch (java.security.GeneralSecurityException e) {
+//      e.printStackTrace();
+//    }
+    return secret;
+  }
+
+  public void encrypt() {
+    try {
+      logger.info("pre-encrypted password len is: " + this.decrypted.length());
+      this.encrypted = this.certificatesMgmService.encryptPassword(this.decrypted);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (java.security.GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+    logger.info("encrypted password len is: " + this.encrypted.length());
+  }
+  public void decrypt() {
+    try {
+      this.decrypted = this.certificatesMgmService.decryptPassword(this.encrypted);
+      logger.info("decrypted password len is: " + this.decrypted.length());
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (java.security.GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public String getEncrypted() {
+    return encrypted;
+  }
+
+  public String getDecrypted() {
+    return decrypted;
+  }
+
   public void rsyncAnacondaLibs(String hostname) {
 
     CondaTask condaTask = new CondaTask(FacesContext.getCurrentInstance(), hostname);
@@ -315,10 +378,46 @@ public class NodesBean implements Serializable {
     }
   }
 
+  private boolean isOngoingCommand(SystemCommandFacade.OP op) {
+    List<SystemCommand> outstandingCommands = systemCommandFacade.findAll();
+    for (SystemCommand command: outstandingCommands) {
+      if (command.getOp() == op) {
+        MessagesController.addErrorMessage("Command not issued",
+                "Ongoing key rotation command. Wait for them to finish.");
+        logger.log(Level.WARNING, "Cannot issue key rotation command - ongoing key rotation command");
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void rotateKeys() {
+    if (isOngoingCommand(SystemCommandFacade.OP.SERVICE_KEY_ROTATION)) {
+      return;
+    }
+
     certificatesMgmService.issueServiceKeyRotationCommand();
-    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate keys on hosts");
+    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate TLS certs on hosts");
     logger.log(Level.INFO, "Issued key rotation command");
+  }
+
+  public void rotateZfsKeys() {
+    if (isOngoingCommand(SystemCommandFacade.OP.ZFS_KEY_ROTATION)) {
+      return;
+    }
+
+    int res = certificatesMgmService.issueZfsKeyRotationCommand();
+    if (res == 0) {
+      MessagesController.addInfoMessage("Commands issued", "Rotate ZFS Keys on all Hosts");
+    } else if (res == -1) {
+      MessagesController.addErrorMessage(" ZFS Key Rotation already in progress. " +
+              "Wait until finished before rotating keys again.");
+    } else {
+      MessagesController.addErrorMessage("Internal error during ZFS Key Rotation.");
+    }
+
+    MessagesController.addInfoMessage("Commands issued", "Issued command to rotate ZFS keys");
+    logger.log(Level.INFO, "Issued ZFS key rotation command");
   }
 
   public void restartKagents(List<Hosts> hosts) {

@@ -36,75 +36,54 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package io.hops.hopsworks.common.security;
 
-package io.hops.hopsworks.common.dao.command;
+import io.hops.hopsworks.common.util.Settings;
 
-import io.hops.hopsworks.common.dao.host.Hosts;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import java.util.List;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.ejb.DependsOn;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.Timeout;
+import javax.ejb.Timer;
+import javax.ejb.TimerService;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Stateless
-public class SystemCommandFacade {
-  private static final Logger LOGGER = Logger.getLogger(SystemCommandFacade.class.getName());
+@Singleton
+@Startup
+@DependsOn({"Settings"})
+public class EncryptionAtRestRotationTimer {
+  private final static Logger LOG = Logger.getLogger(EncryptionAtRestRotationTimer.class.getName());
   
-  public enum OP {
-    SERVICE_KEY_ROTATION,
-    ZFS_KEY_ROTATION,
-    CONDA_GC
-  }
-  
-  public enum STATUS {
-   NEW,
-   ONGOING,
-   FINISHED,
-   FAILED
-  }
-  
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager entityManager;
-  
-  public SystemCommand findById(Integer id) {
-    return entityManager.find(SystemCommand.class, id);
-  }
-  
-  public List<SystemCommand> findAll() {
-    TypedQuery<SystemCommand> query = entityManager.createNamedQuery("SystemCommand.findAll", SystemCommand.class);
-    return query.getResultList();
-  }
-  
-  public List<SystemCommand> findByHost(Hosts host) {
-    TypedQuery<SystemCommand> query = entityManager.createNamedQuery("SystemCommand.findByHost", SystemCommand.class);
-    query.setParameter("host", host);
-    return query.getResultList();
-  }
-  
-  public List<SystemCommand> findUnfinishedByHost(Hosts host) {
-    TypedQuery<SystemCommand> query = entityManager.createNamedQuery("SystemCommand.findNotFinishedByHost",
-        SystemCommand.class);
-    query.setParameter("host", host);
-    return query.getResultList();
-  }
-  
-  public void persist(SystemCommand command) {
-    entityManager.persist(command);
-  }
-  
-  public void update(SystemCommand command) {
-    entityManager.merge(command);
-  }
-  
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void delete(SystemCommand command) {
-    SystemCommand deleteCommand = entityManager.find(SystemCommand.class, command.getId());
-    if (deleteCommand != null) {
-      entityManager.remove(deleteCommand);
+  @Resource
+  private TimerService timerService;
+  @EJB
+  private Settings settings;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
+
+  @PostConstruct
+  public void init() {
+    String rawInterval = settings.getServiceKeyRotationInterval();
+    Long intervalValue = settings.getConfTimeValue(rawInterval);
+    TimeUnit intervalTimeunit = settings.getConfTimeTimeUnit(rawInterval);
+    LOG.log(Level.INFO, "Zfs key rotation is configured to run every " + intervalValue + " " +
+        intervalTimeunit.name());
+    
+    intervalValue = intervalTimeunit.toMillis(intervalValue);
+    if (settings.isZfsKeyRotationEnabled()) {
+      timerService.createTimer(intervalValue, intervalValue, "Zfs key rotation");
     }
   }
+  
+  @Timeout
+  public void rotate(Timer timer) {
+    LOG.log(Level.FINEST, "Rotating zfs keys");
+    certificatesMgmService.issueZfsKeyRotationCommand();
+  }
+  
 }

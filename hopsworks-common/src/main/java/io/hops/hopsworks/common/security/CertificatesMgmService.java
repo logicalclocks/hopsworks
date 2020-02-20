@@ -40,10 +40,8 @@ package io.hops.hopsworks.common.security;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import io.hops.hopsworks.common.dao.certificates.CertsFacade;
 import io.hops.hopsworks.common.dao.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
-import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -62,7 +60,6 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
-import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
@@ -75,6 +72,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,52 +82,42 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Singleton
+@javax.ejb.Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class CertificatesMgmService {
   private final Logger LOG = Logger.getLogger(CertificatesMgmService.class.getName());
-  
+  private final Map<Class, MasterPasswordChangeResult> handlersResult = new HashMap<>();
   @EJB
   private Settings settings;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private CertsFacade certsFacade;
-  @EJB
-  private ClusterCertificateFacade clusterCertificateFacade;
   @EJB
   private MessageController messageController;
   @EJB
   private SystemCommandFacade systemCommandFacade;
   @EJB
   private HostsFacade hostsFacade;
+  @EJB
+  private SymmetricEncryptionService symmetricEncryptionService;
+
   @Inject
   @Any
   private Instance<MasterPasswordHandler> handlers;
-  
-  public enum UPDATE_STATUS {
-    OK,
-    WORKING,
-    FAILED,
-    NOT_FOUND
-  }
-  
   private File masterPasswordFile;
-  private final Map<Class, MasterPasswordChangeResult> handlersResult = new HashMap<>();
   private Cache<Integer, UPDATE_STATUS> updateStatus;
   private Random rand;
 
   public CertificatesMgmService() {
-  
+
   }
-  
+
   @PostConstruct
   public void init() {
     masterPasswordFile = new File(settings.getHopsworksMasterEncPasswordFile());
     if (!masterPasswordFile.exists()) {
       throw new IllegalStateException("Master encryption file does not exist");
     }
-    
+
     try {
       PosixFileAttributeView fileView = Files.getFileAttributeView(masterPasswordFile.toPath(),
           PosixFileAttributeView.class, LinkOption.NOFOLLOW_LINKS);
@@ -139,20 +127,20 @@ public class CertificatesMgmService {
           .OWNER_WRITE);
       boolean ownerExecute = filePermissions.contains(PosixFilePermission
           .OWNER_EXECUTE);
-      
+
       boolean groupRead = filePermissions.contains(PosixFilePermission.GROUP_READ);
       boolean groupWrite = filePermissions.contains(PosixFilePermission
           .GROUP_WRITE);
       boolean groupExecute = filePermissions.contains(PosixFilePermission
           .GROUP_EXECUTE);
-      
+
       boolean othersRead = filePermissions.contains(PosixFilePermission
           .OTHERS_READ);
       boolean othersWrite = filePermissions.contains(PosixFilePermission
           .OTHERS_WRITE);
       boolean othersExecute = filePermissions.contains(PosixFilePermission
           .OTHERS_EXECUTE);
-      
+
       // Permissions should be 700
       if ((ownerRead && ownerWrite && ownerExecute)
           && (!groupRead && !groupWrite && !groupExecute)
@@ -166,7 +154,7 @@ public class CertificatesMgmService {
         throw new IllegalStateException("Wrong permissions for file " + masterPasswordFile.getAbsolutePath()
             + ", it should be 700");
       }
-      
+
       updateStatus = CacheBuilder.newBuilder()
           .maximumSize(100)
           .expireAfterWrite(12L, TimeUnit.HOURS)
@@ -181,13 +169,13 @@ public class CertificatesMgmService {
           .getAbsolutePath());
     }
   }
-
+  
   @Lock(LockType.READ)
   @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
   public String getMasterEncryptionPassword() throws IOException {
     return FileUtils.readFileToString(masterPasswordFile).trim();
   }
-  
+
   /**
    * Validates the provided password against the configured one
    * @param providedPassword Password to validate
@@ -268,6 +256,95 @@ public class CertificatesMgmService {
       systemCommandFacade.persist(rotateCommand);
     }
   }
+
+  public String randomString() {
+    int leftLimit = 48; // numeral '0'
+    int rightLimit = 122; // letter 'z'
+    int targetStringLength = 10;
+    Random random = new Random();
+
+    String generatedString = random.ints(leftLimit, rightLimit + 1)
+        .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+        .limit(targetStringLength)
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
+    return generatedString;
+  }
+
+  public String encryptPassword(String secret) throws IOException, GeneralSecurityException {
+    String masterPassword = getMasterEncryptionPassword();
+    return encryptPasswordWithMasterPassword(secret, masterPassword);
+  }
+
+  public String encryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException,
+          GeneralSecurityException {
+    // to map one byte to one char (with 8859-1) and no exception handling
+    SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
+        .setInput(secret.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))
+        .setPassword(masterPassword)
+        .build();
+    descriptor = symmetricEncryptionService.encrypt(descriptor);
+    byte[] pwd = symmetricEncryptionService.mergePayloadWithCryptoPrimitives(descriptor.getSalt(),
+        descriptor.getIv(), descriptor.getOutput());
+    return new String(pwd, java.nio.charset.StandardCharsets.ISO_8859_1);
+  }
+
+  public String decryptPassword(String secret) throws IOException, GeneralSecurityException {
+    String masterPassword = getMasterEncryptionPassword();
+    return decryptPasswordWithMasterPassword(secret, masterPassword);
+  }
+  
+  public String decryptPasswordWithMasterPassword(String secret, String masterPassword) throws IOException,
+          GeneralSecurityException {
+    byte[] bytes = secret.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+
+    // [salt(64),iv(12),payload)]
+    byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(bytes);
+
+    SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
+        .setPassword(masterPassword)
+        .setSalt(split[0])
+        .setIV(split[1])
+        .setInput(split[2])
+        .build();
+    descriptor = symmetricEncryptionService.decrypt(descriptor);
+
+    byte[] plaintext = descriptor.getOutput();
+    return new String(plaintext);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public int issueZfsKeyRotationCommand() {
+    List<Hosts> allHosts = hostsFacade.findAll();
+    for (Hosts host : allHosts) {
+
+      try {
+        // Generate new random password. Cannot use SecurityUtil Session bean for this, as
+        // we are executing inside a transaction, so new random string generator here
+        String secret = randomString();
+        secret = new String(secret.getBytes(), java.nio.charset.StandardCharsets.ISO_8859_1);
+        String passwd = encryptPassword(secret);
+
+        SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.ZFS_KEY_ROTATION);
+        rotateCommand.setExecUser(passwd);
+
+        // Save it in a field in hosts
+        host.setZfsKey(passwd);
+        host.setZfsKeyRotated(host.getZfsKey());
+        hostsFacade.update(host);
+
+        // send it to kagent
+        systemCommandFacade.persist(rotateCommand);
+      } catch (IOException ex) {
+        Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+        return -2;
+      } catch (GeneralSecurityException ex) {
+        Logger.getLogger(CertificatesMgmService.class.getName()).log(Level.SEVERE, null, ex);
+        return -3;
+      }
+    }
+    return 0;
+  }
   
   private void callUpdateHandlers(String newDigest) throws EncryptionMasterPasswordException, IOException {
     for (MasterPasswordHandler handler : handlers) {
@@ -278,7 +355,7 @@ public class CertificatesMgmService {
       }
     }
   }
-  
+    
   private void callRollbackHandlers() {
     for (MasterPasswordHandler handler : handlers) {
       MasterPasswordChangeResult result = handlersResult.get(handler.getClass());
@@ -315,5 +392,12 @@ public class CertificatesMgmService {
     Users to = userFacade.findByEmail(userRequested);
     Users from = userFacade.findByEmail(settings.getAdminEmail());
     messageController.send(to, from, "Master encryption password changed", preview, message, "");
+  }
+  
+  public enum UPDATE_STATUS {
+    OK,
+    WORKING,
+    FAILED,
+    NOT_FOUND
   }
 }

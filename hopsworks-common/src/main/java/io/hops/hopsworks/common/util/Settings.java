@@ -358,7 +358,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_JWT_URL_PARAMETER = "elastic_jwt_url_parameter";
   private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
-  
+
+  // ZFS
+  private static final String VARIABLE_ZFS_POOL = "zpools";
+
   private String setVar(String varName, String defaultValue) {
     Variables userName = findById(varName);
     if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
@@ -645,6 +648,9 @@ public class Settings implements Serializable {
       VERIFICATION_PATH = setStrVar(VARIABLE_VERIFICATION_PATH, VERIFICATION_PATH);
       serviceKeyRotationEnabled = setBoolVar(SERVICE_KEY_ROTATION_ENABLED_KEY, serviceKeyRotationEnabled);
       serviceKeyRotationInterval = setStrVar(SERVICE_KEY_ROTATION_INTERVAL_KEY, serviceKeyRotationInterval);
+      zfsKeyRotationEnabled = setBoolVar(ZFS_KEY_ROTATION_ENABLED_KEY, zfsKeyRotationEnabled);
+      zfsKeyRotationInterval = setStrVar(ZFS_KEY_ROTATION_INTERVAL_KEY, zfsKeyRotationInterval);
+
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
@@ -736,12 +742,12 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
-  
-      KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
-          KIBANA_HTTPS_ENABELED);
-  
-      KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
-          KIBANA_MULTI_TENANCY_ENABELED);
+      
+      KIBANA_HTTPS_ENABLED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
+              KIBANA_HTTPS_ENABLED);
+      
+      KIBANA_MULTI_TENANCY_ENABLED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
+          KIBANA_MULTI_TENANCY_ENABLED);
       
       String reservedProjectNamesRaw = setStrVar(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES);
       StringTokenizer tokenizer = new StringTokenizer(reservedProjectNamesRaw, ",");
@@ -750,7 +756,8 @@ public class Settings implements Serializable {
         RESERVED_PROJECT_NAMES.add(tokenizer.nextToken());
       }
 
-
+      ZFS_POOL = setStrVar(VARIABLE_ZFS_POOL, ZFS_POOL);
+      
       populateProvenanceCache();
       cached = true;
     }
@@ -1646,7 +1653,7 @@ public class Settings implements Serializable {
 
   public synchronized String getKibanaUri() {
     checkCache();
-    return (KIBANA_HTTPS_ENABELED ? "https" : "http") + "://" + KIBANA_IP +
+    return (KIBANA_HTTPS_ENABLED ? "https" : "http") + "://" + KIBANA_IP +
         ":" + KIBANA_PORT;
   }
   
@@ -3131,6 +3138,29 @@ public class Settings implements Serializable {
     return serviceKeyRotationInterval;
   }
 
+
+  public static final int ZFS_KEY_LEN = 16;
+
+  // Zfs key rotation enabled
+  private static final String ZFS_KEY_ROTATION_ENABLED_KEY = "zfs_key_rotation_enabled";
+  private boolean zfsKeyRotationEnabled = false;
+
+  public synchronized boolean isZfsKeyRotationEnabled() {
+    checkCache();
+    return zfsKeyRotationEnabled;
+  }
+
+  // Zfs key rotation interval
+  private static final String ZFS_KEY_ROTATION_INTERVAL_KEY = "zfs_key_rotation_interval";
+  private String zfsKeyRotationInterval = "3d";
+
+  public synchronized String getZfsKeyRotationInterval() {
+    checkCache();
+    return zfsKeyRotationInterval;
+  }
+
+
+    
  // TensorBoard kill rotation interval in milliseconds (should be lower than the TensorBoardKillTimer)
   private static final String TENSORBOARD_MAX_LAST_ACCESSED = "tensorboard_max_last_accessed";
   private int tensorBoardMaxLastAccessed = 1140000;
@@ -3695,18 +3725,28 @@ public class Settings implements Serializable {
     return REQUESTS_VERIFY;
   }
   
-  private  Boolean KIBANA_HTTPS_ENABELED = false;
+  private  Boolean KIBANA_HTTPS_ENABLED = false;
   public synchronized Boolean isKibanaHTTPSEnabled() {
     checkCache();
-    return KIBANA_HTTPS_ENABELED;
+    return KIBANA_HTTPS_ENABLED;
   }
   
-  private  Boolean KIBANA_MULTI_TENANCY_ENABELED = false;
+  private  Boolean KIBANA_MULTI_TENANCY_ENABLED = false;
   public synchronized Boolean isKibanaMultiTenancyEnabled() {
     checkCache();
-    return KIBANA_MULTI_TENANCY_ENABELED;
+    return KIBANA_MULTI_TENANCY_ENABLED;
   }
-  
+
+  private  String  ZFS_POOL= "";
+  public synchronized String getZfsPool() {
+    checkCache();
+    return ZFS_POOL;
+  }
+
+  public synchronized boolean isEncryptionAtRestEnabled() {
+    return ZFS_POOL.isEmpty() == false;
+  }
+
   public static final int ELASTIC_KIBANA_NO_CONNECTIONS = 5;
 
   //-------------------------------- PROVENANCE ----------------------------------------------//

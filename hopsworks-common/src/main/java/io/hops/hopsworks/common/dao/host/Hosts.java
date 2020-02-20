@@ -130,6 +130,16 @@ public class Hosts implements Serializable {
   @Column(name = "conda_enabled")
   private Boolean condaEnabled;
 
+  @Column(name = "zfs_key",
+          nullable = true,
+          length = 255)
+  private String zfsKey;
+
+  @Column(name = "zfs_key_rotated",
+          nullable = true,
+          length = 255)
+  private String zfsKeyRotated;
+
   @OneToMany(cascade = CascadeType.ALL,
           mappedBy = "hostId")
   private Collection<CondaCommands> condaCommands;
@@ -235,7 +245,15 @@ public class Hosts implements Serializable {
   public void setCondaEnabled(Boolean condaEnabled) {
     this.condaEnabled = condaEnabled;
   }
-  
+
+  public String getZfsKey() { return zfsKey; }
+
+  public void setZfsKey(String zfsKey) { this.zfsKey = zfsKey; }
+
+  public String getZfsKeyRotated() { return zfsKeyRotated; }
+
+  public void setZfsKeyRotated(String zfsKeyRotated) { this.zfsKeyRotated = zfsKeyRotated; }
+
   @JsonIgnore
   @XmlTransient
   public Collection<CondaCommands> getCondaCommands() {
