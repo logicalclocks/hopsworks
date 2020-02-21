@@ -19,8 +19,11 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -28,33 +31,32 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 
 /**
  * Class controlling the interaction with the external_training_dataset table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExternalTrainingDatasetController {
   @EJB
   private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
   @EJB
   private FeaturestoreS3ConnectorFacade featurestoreS3ConnectorFacade;
-  
+
+
   /**
-   * Persists an external training dataset
-   *
-   * @param externalTrainingDatasetDTO the user input data to use when creating the external training dataset
-   * @return the created training dataset
+   * Create and persist an external training dataset
+   * @param connector
+   * @param path
+   * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public ExternalTrainingDataset createExternalTrainingDataset(ExternalTrainingDatasetDTO externalTrainingDatasetDTO)
-      throws FeaturestoreException {
-    // Verify external training datasset specifc input
-    FeaturestoreS3Connector featurestoreS3Connector =
-      verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
-    
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreS3Connector connector, String path) {
     ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
+    externalTrainingDataset.setFeaturestoreS3Connector(connector);
+    externalTrainingDataset.setPath(path);
     externalTrainingDatasetFacade.persist(externalTrainingDataset);
     return externalTrainingDataset;
   }
@@ -93,36 +95,35 @@ public class ExternalTrainingDatasetController {
   /**
    * Converts a External Training Dataset entity into a DTO representation
    *
+   * @param trainingDatasetDTO the DTO to populate
    * @param trainingDataset the entity to convert
    * @return the converted DTO representation
    */
-  public ExternalTrainingDatasetDTO convertExternalTrainingDatasetToDTO(TrainingDataset trainingDataset) {
-    ExternalTrainingDatasetDTO externalTrainingDatasetDTO = new ExternalTrainingDatasetDTO(trainingDataset);
-    externalTrainingDatasetDTO.setLocation(
-      "s3a://" + trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket() + "/" +
-        FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER + "/" +
-        trainingDataset.getName() + "_" + trainingDataset.getVersion());
-    return externalTrainingDatasetDTO;
+  public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(TrainingDatasetDTO trainingDatasetDTO,
+                                                                TrainingDataset trainingDataset) {
+    ExternalTrainingDataset externalTrainingDataset = trainingDataset.getExternalTrainingDataset();
+
+    trainingDatasetDTO.setStorageConnectorId(externalTrainingDataset.getFeaturestoreS3Connector().getId());
+    trainingDatasetDTO.setStorageConnectorName(externalTrainingDataset.getFeaturestoreS3Connector().getName());
+    trainingDatasetDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.S3);
+    trainingDatasetDTO.setLocation(buildDatasetPath(trainingDataset));
+
+    return trainingDatasetDTO;
   }
-  
+
   /**
-   * Updates metadata of an external training dataset in the feature store
-   *
-   * @param externalTrainingDataset the external training dataset to update
-   * @param externalTrainingDatasetDTO the metadata DTO
-   * @throws FeaturestoreException
+   * This method return the s3 path for external training datasets stored on S3.
+   * @param trainingDataset
+   * @return
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void updateExternalTrainingDatasetMetadata(ExternalTrainingDataset externalTrainingDataset,
-    ExternalTrainingDatasetDTO externalTrainingDatasetDTO) throws FeaturestoreException {
+  private String buildDatasetPath(TrainingDataset trainingDataset) {
+    String bucketFolder = FeaturestoreConstants.S3_BUCKET_TRAINING_DATASETS_FOLDER;
+    if (!Strings.isNullOrEmpty(trainingDataset.getExternalTrainingDataset().getPath())) {
+      bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
+    }
 
-    // Verify User Input specific for external training datasets
-    FeaturestoreS3Connector featurestoreS3Connector =
-      verifyExternalTrainingDatasetS3ConnectorId(externalTrainingDatasetDTO.getS3ConnectorId());
-    
-    externalTrainingDataset.setFeaturestoreS3Connector(featurestoreS3Connector);
-
-    externalTrainingDatasetFacade.updateExternalTrainingDatasetMetadata(externalTrainingDataset);
+    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket(),
+        bucketFolder,
+        trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
   }
-
 }

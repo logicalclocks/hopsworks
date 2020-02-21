@@ -102,46 +102,39 @@ angular.module('hopsWorksApp')
             //front-end variables
             self.td_accordion0 = {
                 "isOpen": false,
-                "visible": true,
                 "value": "",
                 "title": "Query Plan"
             };
 
             self.td_accordion1 = {
                 "isOpen": true,
-                "visible": true,
                 "value": "",
                 "title": "Training Dataset Name"
             };
             self.td_accordion2 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Training Dataset Description"
             };
             self.td_accordion3 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Training Dataset Format"
             };
             self.td_accordion4 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Create"
             };
 
             self.td_accordion5 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Output Location"
             };
 
             self.td_accordion6 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Schema"
             };
@@ -511,11 +504,7 @@ angular.module('hopsWorksApp')
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "featuresHistogram": null,
                     "features": self.trainingDataset.features,
-                    "updateMetadata": true,
                     "updateStats": false,
                     "trainingDatasetType": self.hopsfsTrainingDatasetType,
                     "type": self.hopsfsTrainingDatasetTypeDTO,
@@ -551,19 +540,14 @@ angular.module('hopsWorksApp')
                 var jobName = "create_training_dataset_" + self.trainingDatasetName + "_" + new Date().getTime()
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
-                    "jobName": jobName,
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "featuresHistogram": null,
                     "features": self.featureBasket,
-                    "trainingDatasetType": self.hopsfsTrainingDatasetType,
-                    "type": self.hopsfsTrainingDatasetTypeDTO,
-                    "hopsfsConnectorId": self.selectedHopsfsConnector.id,
-                    "hopsfsConnectorName": self.selectedHopsfsConnector.name,
-                    "jobs": []
+                    "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
+                    "storageConnectorId": self.selectedHopsfsConnector != null ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
+                    "storageConnectorName": self.selectedHopsfsConnector != null ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
+                    "path": self.path,
                 }
                 if(self.configureJob){
                     var utilArgs = self.setupJobArgs(jobName + "_args.json");

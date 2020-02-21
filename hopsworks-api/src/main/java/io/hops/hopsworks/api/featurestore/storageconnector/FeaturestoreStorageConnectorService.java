@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.api.featurestore.storageconnector;
 
-import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -29,6 +28,7 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -80,7 +80,7 @@ public class FeaturestoreStorageConnectorService {
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @EJB
-  private FeaturestoreUtil featurestoreUtil;
+  private FeaturestoreUtils featurestoreUtils;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -271,7 +271,7 @@ public class FeaturestoreStorageConnectorService {
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
       featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(featurestore,
         connectorType, connectorId);
-    featurestoreUtil.verifyUserRole(featurestore, user, project, featurestoreStorageConnectorDTO);
+    featurestoreUtils.verifyUserRole(featurestore, user, project, featurestoreStorageConnectorDTO);
     featurestoreStorageConnectorDTO =
       featurestoreStorageConnectorController.deleteStorageConnectorWithTypeAndId(connectorType, connectorId);
     activityFacade.persistActivity(ActivityFacade.REMOVED_FEATURESTORE_STORAGE_CONNECTOR +

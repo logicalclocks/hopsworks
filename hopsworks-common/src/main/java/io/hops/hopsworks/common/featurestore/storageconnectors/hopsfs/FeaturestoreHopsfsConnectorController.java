@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -80,8 +81,9 @@ public class FeaturestoreHopsfsConnectorController {
   public FeaturestoreHopsfsConnectorDTO updateFeaturestoreHopsfsConnector(
       Featurestore featurestore, FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO,
       Integer storageConnectorId) throws FeaturestoreException {
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(storageConnectorId,
-        featurestore);
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(featurestore,
+        storageConnectorId);
+
     if(!Strings.isNullOrEmpty(featurestoreHopsfsConnectorDTO.getDatasetName())){
       verifyHopsfsConnectorDatasetName(featurestoreHopsfsConnectorDTO.getDatasetName(), featurestore);
       Dataset dataset = datasetController.getByProjectAndDsName(featurestore.getProject(),
@@ -140,19 +142,17 @@ public class FeaturestoreHopsfsConnectorController {
   /**
    * Verifies that the id exists in the database
    *
+   * @param featurestore the featurestore the connector belongs to
    * @param storageConnectorId the id to verfiy
    * @return the storage connector with the given id
    * @throws FeaturestoreException
    */
-  private FeaturestoreHopsfsConnector verifyHopsfStorageConnectorId(
-      Integer storageConnectorId, Featurestore featurestore) throws FeaturestoreException {
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
-        featurestoreHopsfsConnectorFacade.findByIdAndFeaturestore(storageConnectorId, featurestore);
-    if (featurestoreHopsfsConnector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-          Level.FINE, "HopsFsConnectorId: " + storageConnectorId);
-    }
-    return featurestoreHopsfsConnector;
+  private FeaturestoreHopsfsConnector verifyHopsfStorageConnectorId(Featurestore featurestore,
+                                                                    Integer storageConnectorId)
+      throws FeaturestoreException {
+    return featurestoreHopsfsConnectorFacade.findByIdAndFeaturestore(storageConnectorId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+            Level.FINE, "HopsFsConnectorId: " + storageConnectorId));
   }
 
   /**
@@ -273,9 +273,24 @@ public class FeaturestoreHopsfsConnectorController {
    */
   public FeaturestoreHopsfsConnectorDTO getHopsFsConnectorWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(id,
-        featurestore);
+    FeaturestoreHopsfsConnector featurestoreHopsfsConnector = verifyHopsfStorageConnectorId(featurestore, id);
     return convertHopsfsConnectorToDTO(featurestoreHopsfsConnector);
+  }
+
+  /**
+   * Get the default storage connector for the feature store. The default storage connector is the HopsFS one that
+   * points to the TRAINING_DATASET dataset.
+   * @param featurestore
+   * @return
+   * @throws FeaturestoreException
+   */
+  public FeaturestoreHopsfsConnector getDefaultStorageConnector(Featurestore featurestore)
+      throws FeaturestoreException {
+    String connectorName = featurestore.getProject().getName() + "_" +
+        Settings.ServiceDataset.TRAININGDATASETS.getName();
+    return featurestoreHopsfsConnectorFacade.findByNameAndFeaturestore(connectorName, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+            Level.FINE, "Could not find default storage connector: " + connectorName));
   }
 
   /**

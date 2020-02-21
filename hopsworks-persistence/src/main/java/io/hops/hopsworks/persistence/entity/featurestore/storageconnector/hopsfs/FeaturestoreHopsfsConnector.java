@@ -48,6 +48,9 @@ import java.io.Serializable;
         query = "SELECT fshopsfs FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.id = :id"),
     @NamedQuery(name = "FeaturestoreHopsfsConnector.findByFeaturestore", query = "SELECT fshopsfs " +
         "FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.featurestore = :featurestore"),
+    @NamedQuery(name = "FeaturestoreHopsfsConnector.findByNameAndFeaturestore", query = "SELECT fshopsfs " +
+        "FROM FeaturestoreHopsfsConnector fshopsfs " +
+        "WHERE fshopsfs.featurestore = :featurestore AND fshopsfs.name = :name"),
     @NamedQuery(name = "FeaturestoreHopsfsConnector.findByFeaturestoreAndId", query = "SELECT fshopsfs " +
         "FROM FeaturestoreHopsfsConnector fshopsfs WHERE fshopsfs.featurestore = :featurestore AND fshopsfs.id = :id")})
 public class FeaturestoreHopsfsConnector implements Serializable {

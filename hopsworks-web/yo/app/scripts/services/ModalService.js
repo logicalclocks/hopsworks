@@ -56,7 +56,7 @@ angular.module('hopsWorksApp')
                         },
                         projectId: function () {
                             return projectId;
-                        }
+}
                     }
                 });
                 return modalInstance.result;

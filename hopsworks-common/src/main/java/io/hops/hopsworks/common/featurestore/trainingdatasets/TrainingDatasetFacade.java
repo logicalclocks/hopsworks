@@ -69,14 +69,14 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
    * @param featurestore featurestore of the trainingDataset
    * @return a single TrainingDataset entity
    */
-  public TrainingDataset findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<TrainingDataset> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("TrainingDataset.findByFeaturestoreAndId", TrainingDataset.class)
+      return Optional.of(em.createNamedQuery("TrainingDataset.findByFeaturestoreAndId", TrainingDataset.class)
           .setParameter("featurestore", featurestore)
           .setParameter("id", id)
-          .getSingleResult();
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 

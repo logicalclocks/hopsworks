@@ -51,15 +51,23 @@ public class ExternalTrainingDataset implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
+  @Column(name = "path")
+  private String path;
   @JoinColumn(name = "s3_connector_id", referencedColumnName = "id")
   private FeaturestoreS3Connector featurestoreS3Connector;
 
   public Integer getId() {
     return id;
   }
-  
+
   public void setId(Integer id) {
     this.id = id;
+  }
+
+  public String getPath() { return path; }
+
+  public void setPath(String path) {
+    this.path = path;
   }
   
   public FeaturestoreS3Connector getFeaturestoreS3Connector() {

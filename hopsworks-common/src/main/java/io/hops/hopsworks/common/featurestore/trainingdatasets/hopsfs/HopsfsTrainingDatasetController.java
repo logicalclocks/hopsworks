@@ -20,7 +20,8 @@ import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -36,48 +37,31 @@ import java.util.logging.Level;
  * Class controlling the interaction with the hopsfs_training_dataset table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopsfsTrainingDatasetController {
   @EJB
   private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
   @EJB
   private FeaturestoreHopsfsConnectorFacade featurestoreHopsfsConnectorFacade;
   @EJB
-  private InodeFacade inodeFacade;
-  @EJB
   private InodeController inodeController;
-  
+
   /**
-   * Persists a hopsfs training dataset
-   *
-   * @param hopsfsTrainingDatasetDTO the user input data to use when creating the training dataset
+   * Create and persiste a HopsFS training dataset
+   * @param connector
+   * @param inode
    * @return
+   * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public HopsfsTrainingDataset createHopsfsTrainingDataset(HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO)
-      throws FeaturestoreException {
-    //Verify hopsfs training datasset specifc input
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
-      verifyHopsfsTrainingDatasetConnectorId(hopsfsTrainingDatasetDTO.getHopsfsConnectorId());
-    //Get Inode
-    Inode inode = inodeFacade.findById(hopsfsTrainingDatasetDTO.getInodeId());
-    
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public HopsfsTrainingDataset createHopsfsTrainingDataset(FeaturestoreHopsfsConnector connector, Inode inode) {
     HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
     hopsfsTrainingDataset.setInode(inode);
-    hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(featurestoreHopsfsConnector);
+    hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(connector);
     hopsfsTrainingDatasetFacade.persist(hopsfsTrainingDataset);
     return hopsfsTrainingDataset;
   }
-  
-  /**
-   * Removes a hopsfs training dataset from the database
-   *
-   * @param hopsfsTrainingDataset the entity to remove
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeHopsfsTrainingDataset(HopsfsTrainingDataset hopsfsTrainingDataset) {
-    hopsfsTrainingDatasetFacade.remove(hopsfsTrainingDataset);
-  }
-  
+
   /**
    * Verify hopsfsconnectorid
    *
@@ -104,22 +88,14 @@ public class HopsfsTrainingDatasetController {
    * @param trainingDataset the entity to convert
    * @return the converted DTO representation
    */
-  public HopsfsTrainingDatasetDTO convertHopsfsTrainingDatasetToDTO(TrainingDataset trainingDataset) {
-    HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO = new HopsfsTrainingDatasetDTO(trainingDataset);
-    hopsfsTrainingDatasetDTO.setHdfsStorePath(
-      inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode()));
-    hopsfsTrainingDatasetDTO.setLocation(hopsfsTrainingDatasetDTO.getHdfsStorePath());
-    return hopsfsTrainingDatasetDTO;
+  public TrainingDatasetDTO convertHopsfsTrainingDatasetToDTO(TrainingDatasetDTO trainingDatasetDTO,
+                                                              TrainingDataset trainingDataset) {
+    HopsfsTrainingDataset hopsfsTrainingDataset = trainingDataset.getHopsfsTrainingDataset();
+    trainingDatasetDTO.setLocation(inodeController.getPath(hopsfsTrainingDataset.getInode()));
+    trainingDatasetDTO.setInodeId(hopsfsTrainingDataset.getInode().getId());
+    trainingDatasetDTO.setStorageConnectorId(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getId());
+    trainingDatasetDTO.setStorageConnectorName(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getName());
+    trainingDatasetDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.HOPSFS);
+    return trainingDatasetDTO;
   }
-  
-  /**
-   * No extra metadata to update for HOPSFS training dataset, the added metadata is linked to the inode, and to update
-   * the inode the trainingdataset should be deleted and re-created.
-   *
-   * @param hopsfsTrainingDatasetDTO metadata DTO
-   */
-  public void updateHopsfsTrainingDatasetMetadata(HopsfsTrainingDataset hopsfsTrainingDataset,
-    HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO) {
-  }
-
 }
