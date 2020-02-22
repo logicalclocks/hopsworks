@@ -17,12 +17,14 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
+import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -82,6 +84,8 @@ public class CachedFeaturegroupController {
   private HopsFSProvenanceController fsController;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
+  @EJB
+  private HiveController hiveController;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
@@ -107,6 +111,8 @@ public class CachedFeaturegroupController {
    */
   private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     try {
+      // Create connection url
+      String hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
       //Materialize certs
       certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
 
@@ -114,8 +120,6 @@ public class CachedFeaturegroupController {
       String password = String.copyValueOf(
           certificateMaterializer.getUserMaterial(user.getUsername(), project.getName()).getPassword());
 
-      // Create connection url
-      String hiveEndpoint = settings.getHiveServerHostName(false);
       String jdbcString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
           "auth=noSasl;ssl=true;twoWay=true;" +
           "sslTrustStore=" + certificateMaterializer.getUserTransientTruststorePath(project, user) + ";" +
@@ -124,7 +128,7 @@ public class CachedFeaturegroupController {
           "keyStorePassword=" + password;
   
       return DriverManager.getConnection(jdbcString);
-    } catch (FileNotFoundException | CryptoPasswordNotFoundException e) {
+    } catch (FileNotFoundException | CryptoPasswordNotFoundException | ServiceDiscoveryException e) {
       LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
           e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CERTIFICATES_NOT_FOUND, Level.SEVERE,

@@ -39,8 +39,10 @@
 
 package io.hops.hopsworks.api.util;
 
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.swagger.annotations.Api;
@@ -72,16 +74,20 @@ public class ClusterUtilisationService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   @GET
   @Path("/metrics")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getGpus() {
     Response response = null;
-    String rmUrl = "http://" + settings.getRmIp() + ":" + settings.getRmPort() + "/ws/v1/cluster/metrics";
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(rmUrl);
     try {
+      Service rm = serviceDiscoveryController
+          .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HTTP_RESOURCEMANAGER);
+      String rmUrl = "http://" + rm.getAddress() + ":" + rm.getPort() + "/ws/v1/cluster/metrics";
+      WebTarget target = client.target(rmUrl);
       response = target.request().get();
     } catch (Exception ex) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.SERVICE_UNAVAILABLE).build();

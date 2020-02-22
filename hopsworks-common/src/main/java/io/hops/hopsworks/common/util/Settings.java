@@ -39,7 +39,7 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
-import io.hops.hopsworks.common.dao.kafka.KafkaConst;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -57,12 +57,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooKeeper;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
@@ -85,7 +80,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -110,6 +104,8 @@ public class Settings implements Serializable {
   private ProjectUtils projectUtils;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -126,15 +122,6 @@ public class Settings implements Serializable {
   }
   private static final Pattern TIME_CONF_PATTERN = Pattern.compile("([0-9]+)([a-z]+)?");
 
-  @PostConstruct
-  private void init() {
-    try {
-      setKafkaBrokers(getBrokerEndpoints());
-    } catch (IOException | KeeperException | InterruptedException ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-    }
-  }
-
   public static final String AGENT_EMAIL = "kagent@hops.io";
   /**
    * Global Variables taken from the DB
@@ -146,10 +133,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_JAVA_HOME = "JAVA_HOME";
   private static final String VARIABLE_HOPSWORKS_IP = "hopsworks_ip";
   private static final String VARIABLE_KIBANA_IP = "kibana_ip";
-  private static final String VARIABLE_LIVY_IP = "livy_ip";
   private static final String VARIABLE_JHS_IP = "jhs_ip";
-  private static final String VARIABLE_RM_IP = "rm_ip";
-  private static final String VARIABLE_RM_PORT = "rm_port";
   private static final String VARIABLE_LOCALHOST = "localhost";
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
@@ -194,9 +178,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_RESERVED_PROJECT_NAMES = "reserved_project_names";
   
   // HIVE configuration variables
-  private static final String VARIABLE_HIVE_SERVER_HOSTNAME = "hiveserver_ssl_hostname";
-  private static final String VARIABLE_HIVE_SERVER_HOSTNAME_EXT
-      = "hiveserver_ext_hostname";
   private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
   private static final String VARIABLE_HIVE_WAREHOUSE = "hive_warehouse";
   private static final String VARIABLE_HIVE_SCRATCHDIR = "hive_scratchdir";
@@ -215,7 +196,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAFKA_MAX_NUM_TOPICS = "kafka_max_num_topics";
   private static final String VARIABLE_ZK_DIR = "zk_dir";
   private static final String VARIABLE_ZK_USER = "zk_user";
-  private static final String VARIABLE_ZK_IP = "zk_ip";
   private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
@@ -260,6 +240,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ALERT_EMAIL_ADDRS = "alert_email_addrs";
   private static final String VARIABLE_FIRST_TIME_LOGIN = "first_time_login";
   private static final String VARIABLE_CERTIFICATE_USER_VALID_DAYS = "certificate_user_valid_days";
+  private static final String VARIABLE_SERVICE_DISCOVERY_DOMAIN = "service_discovery_domain";
 
   private static final String VARIABLE_ZOOKEEPER_VERSION = "zookeeper_version";
   private static final String VARIABLE_INFLUXDB_VERSION = "influxdb_version";
@@ -528,10 +509,6 @@ public class Settings implements Serializable {
       FLINK_DIR = setDirVar(VARIABLE_FLINK_DIR, FLINK_DIR);
       STAGING_DIR = setDirVar(VARIABLE_STAGING_DIR, STAGING_DIR);
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
-      HIVE_SERVER_HOSTNAME = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME,
-          HIVE_SERVER_HOSTNAME);
-      HIVE_SERVER_HOSTNAME_EXT = setStrVar(VARIABLE_HIVE_SERVER_HOSTNAME_EXT,
-          HIVE_SERVER_HOSTNAME_EXT);
       HIVE_SUPERUSER = setStrVar(VARIABLE_HIVE_SUPERUSER, HIVE_SUPERUSER);
       HIVE_WAREHOUSE = setStrVar(VARIABLE_HIVE_WAREHOUSE, HIVE_WAREHOUSE);
       HIVE_LLAP_SLIDER_DIR = setStrVar(VARIABLE_HIVE_LLAP_SLIDER_DIR, HIVE_LLAP_SLIDER_DIR);
@@ -552,6 +529,7 @@ public class Settings implements Serializable {
       CERTS_DIR = setDirVar(VARIABLE_CERTS_DIRS, CERTS_DIR);
       SUDOERS_DIR = setDirVar(VARIABLE_SUDOERS_DIR, SUDOERS_DIR);
       CERTIFICATE_USER_VALID_DAYS = setStrVar(VARIABLE_CERTIFICATE_USER_VALID_DAYS, CERTIFICATE_USER_VALID_DAYS);
+      SERVICE_DISCOVERY_DOMAIN = setStrVar(VARIABLE_SERVICE_DISCOVERY_DOMAIN, SERVICE_DISCOVERY_DOMAIN);
       NDB_DIR = setDirVar(VARIABLE_NDB_DIR, NDB_DIR);
       AIRFLOW_DIR = setDirVar(VARIABLE_AIRFLOW_DIR, AIRFLOW_DIR);
       String elasticIps = setStrVar(VARIABLE_ELASTIC_IP,
@@ -580,18 +558,12 @@ public class Settings implements Serializable {
           elasticJWTUrlParameter, elasticJWTEXPMS);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
-      RM_IP = setIpVar(VARIABLE_RM_IP, RM_IP);
-      RM_PORT = setIntVar(VARIABLE_RM_PORT, RM_PORT);
       LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
       LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
       LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
-      LIVY_IP = setIpVar(VARIABLE_LIVY_IP, LIVY_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
-      SPARK_HISTORY_SERVER_IP = setIpVar(VARIABLE_SPARK_HISTORY_SERVER_IP,
-          SPARK_HISTORY_SERVER_IP);
-      ZK_IP = setIpVar(VARIABLE_ZK_IP, ZK_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
@@ -1036,17 +1008,6 @@ public class Settings implements Serializable {
     return HADOOP_DIR + "-" + getHadoopVersion();
   }
 
-  private String HIVE_SERVER_HOSTNAME = "127.0.0.1:9085";
-  private String HIVE_SERVER_HOSTNAME_EXT = "127.0.0.1:9084";
-
-  public synchronized String getHiveServerHostName(boolean ext) {
-    checkCache();
-    if (ext) {
-      return HIVE_SERVER_HOSTNAME_EXT;
-    }
-    return HIVE_SERVER_HOSTNAME;
-  }
-
   private String HIVE_SUPERUSER = "hive";
 
   public synchronized String getHiveSuperUser() {
@@ -1203,7 +1164,7 @@ public class Settings implements Serializable {
     checkCache();
     return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
   }
-  
+
   // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
   private DistributedFileSystemOps.StoragePolicy HDFS_BASE_STORAGE_POLICY
     = DistributedFileSystemOps.StoragePolicy.SMALL_FILES;
@@ -1230,7 +1191,7 @@ public class Settings implements Serializable {
     checkCache();
     return HDFS_BASE_STORAGE_POLICY;
   }
-  
+
   public synchronized DistributedFileSystemOps.StoragePolicy getHdfsLogStoragePolicy() {
     checkCache();
     return HDFS_LOG_STORAGE_POLICY;
@@ -1586,12 +1547,11 @@ public class Settings implements Serializable {
     return CERTIFICATE_USER_VALID_DAYS;
   }
 
-  // Spark
-  private String SPARK_HISTORY_SERVER_IP = "127.0.0.1";
-
-  public synchronized String getSparkHistoryServerIp() {
+  
+  private String SERVICE_DISCOVERY_DOMAIN = "consul";
+  public synchronized String getServiceDiscoveryDomain() {
     checkCache();
-    return SPARK_HISTORY_SERVER_IP + ":18080";
+    return SERVICE_DISCOVERY_DOMAIN;
   }
 
   // Oozie
@@ -1608,22 +1568,6 @@ public class Settings implements Serializable {
   public synchronized String getJhsIp() {
     checkCache();
     return JHS_IP;
-  }
-
-  // Resource Manager for YARN
-  private String RM_IP = "127.0.0.1";
-
-  public synchronized String getRmIp() {
-    checkCache();
-    return RM_IP;
-  }
-
-  // Resource Manager Port
-  private int RM_PORT = 8088;
-
-  public synchronized Integer getRmPort() {
-    checkCache();
-    return RM_PORT;
   }
 
   private String LOGSTASH_IP = "127.0.0.1";
@@ -1656,24 +1600,12 @@ public class Settings implements Serializable {
   }
 
   // Livy Server`
-  private String LIVY_IP = "127.0.0.1";
   private final String LIVY_YARN_MODE = "yarn";
-
-  public synchronized String getLivyIp() {
-    checkCache();
-    return LIVY_IP;
-  }
-
-  public synchronized String getLivyUrl() {
-    return "http://" + getLivyIp() + ":8998";
-  }
 
   public synchronized String getLivyYarnMode() {
     checkCache();
     return LIVY_YARN_MODE;
   }
-
-  private static final int ZK_PORT = 2181;
 
   // Kibana
   public static final String KIBANA_INDEX_PREFIX = ".kibana";
@@ -1696,14 +1628,6 @@ public class Settings implements Serializable {
     checkCache();
     return  getKibanaAppUri() + ELASTIC_SETTINGS.getElasticJWTURLParameter()
         + "=" + jwtToken + "&";
-  }
-  
-  // Zookeeper
-  private String ZK_IP = "10.0.2.15";
-
-  public synchronized String getZkConnectStr() {
-    checkCache();
-    return ZK_IP + ":" + ZK_PORT;
   }
 
   private String ZK_USER = "zk";
@@ -2830,78 +2754,9 @@ public class Settings implements Serializable {
   //Zookeeper END
 
   //************************************************KAFKA********************************************************
+
   public static final String KAFKA_ACL_WILDCARD = "*";
-  public static final String KAFKA_DEFAULT_CONSUMER_GROUP = "default";
-  private static final String KAFKA_BROKER_PROTOCOL = "INTERNAL";
-  //These brokers are updated periodically by ZookeeperTimerThread
-  private Set<String> kafkaBrokers = new HashSet<>();
 
-  public synchronized Set<String> getKafkaBrokers() {
-    return kafkaBrokers;
-  }
-
-  /**
-   * Used when the application does not want all the brokers but mearly one to connect.
-   *
-   * @return broker
-   */
-  public synchronized String getRandomKafkaBroker() {
-    Iterator<String> it = this.kafkaBrokers.iterator();
-    if (it.hasNext()) {
-      return it.next();
-    }
-    return null;
-  }
-
-  /**
-   *
-   * @return brokers
-   */
-  public synchronized String getKafkaBrokersStr() {
-    if (!kafkaBrokers.isEmpty()) {
-      StringBuilder sb = new StringBuilder();
-      for (String addr : kafkaBrokers) {
-        sb.append(addr).append(",");
-      }
-      return sb.substring(0, sb.length() - 1);
-    }
-    return null;
-  }
-
-  public synchronized void setKafkaBrokers(Set<String> kafkaBrokers) {
-    this.kafkaBrokers.clear();
-    this.kafkaBrokers.addAll(kafkaBrokers);
-  }
-
-  public Set<String> getBrokerEndpoints() throws IOException, KeeperException, InterruptedException {
-    Set<String> brokerList = new HashSet<>();
-    ZooKeeper zk;
-    zk = new ZooKeeper(getZkConnectStr(),
-        Settings.ZOOKEEPER_SESSION_TIMEOUT_MS, new ZookeeperWatcher());
-    try {
-      List<String> ids = zk.getChildren("/brokers/ids", false);
-      for (String id : ids) {
-        String brokerInfo = new String(zk.getData("/brokers/ids/" + id,
-            false, null));
-        String[] tokens = brokerInfo.split(KafkaConst.DLIMITER);
-        for (String str : tokens) {
-          if (str.contains(KafkaConst.SLASH_SEPARATOR) && str.startsWith(KAFKA_BROKER_PROTOCOL)) {
-            brokerList.add(str);
-          }
-        }
-      }
-    } finally {
-      zk.close();
-    }
-    return brokerList;
-  }
-
-  public class ZookeeperWatcher implements Watcher {
-
-    @Override
-    public void process(WatchedEvent we) {
-    }
-  }
   //Kafka END
 
   //-------------------------Remote auth [OAuth2, KRB, LDAP]----------------------------

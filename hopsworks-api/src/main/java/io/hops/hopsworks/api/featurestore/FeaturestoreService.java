@@ -151,7 +151,7 @@ public class FeaturestoreService {
   @ApiOperation(value = "Get the list of feature stores for the project",
     response = FeaturestoreDTO.class,
     responseContainer = "List")
-  public Response getFeaturestores(@Context SecurityContext sc) {
+  public Response getFeaturestores(@Context SecurityContext sc) throws FeaturestoreException {
     List<FeaturestoreDTO> featurestores = featurestoreController.getFeaturestoresForProject(project);
     GenericEntity<List<FeaturestoreDTO>> featurestoresGeneric =
       new GenericEntity<List<FeaturestoreDTO>>(featurestores) {

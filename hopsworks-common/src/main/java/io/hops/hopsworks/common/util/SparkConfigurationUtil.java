@@ -36,7 +36,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                             Settings settings, String hdfsUser,
                                                             String tfLdLibraryPath, Map<String,
-                                                            String> extraJavaOptions) throws IOException {
+                                                            String> extraJavaOptions,
+                                                            String kafkaBrokersString) throws IOException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
@@ -139,8 +140,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       addToSparkEnvironment(sparkProps, "HOPSWORKS_JOB_NAME", sparkJobConfiguration.getAppName(),
               HopsUtils.IGNORE);
     }
-    if(!Strings.isNullOrEmpty(settings.getKafkaBrokersStr())) {
-      addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", settings.getKafkaBrokersStr(), HopsUtils.IGNORE);
+    if(!Strings.isNullOrEmpty(kafkaBrokersString)) {
+      addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", kafkaBrokersString, HopsUtils.IGNORE);
     }
     addToSparkEnvironment(sparkProps, "REST_ENDPOINT", settings.getRestEndpoint(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,
@@ -154,6 +155,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE_PEM",
       settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM, HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
+        HopsUtils.IGNORE);
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
   
     //If DynamicExecutors are not enabled, set the user defined number
@@ -482,7 +485,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, project.getName());
     extraJavaOptions.put(Settings.SPARK_JAVA_LIBRARY_PROP, settings.getHadoopSymbolicLinkDir() + "/lib/native/");
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
-    extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, settings.getKafkaBrokersStr());
+    extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, kafkaBrokersString);
     extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, JobType.SPARK.name());
     extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY,
         settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE);

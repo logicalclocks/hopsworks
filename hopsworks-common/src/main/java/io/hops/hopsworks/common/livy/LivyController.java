@@ -39,6 +39,9 @@
 
 package io.hops.hopsworks.common.livy;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -80,6 +83,8 @@ public class LivyController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private YarnApplicationstateFacade appStateBean;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   /**
    * Get Livy sessions for project, depending on service type.
@@ -162,13 +167,14 @@ public class LivyController {
    * @return
    */
   public LivyMsg.Session getLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
     LivyMsg.Session session = null;
     try {
+      String livyUrl = getLivyURL();
+      WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
+
       session = target.request().get(LivyMsg.Session.class);
-    } catch (NotFoundException e) {
+    } catch (NotFoundException | ServiceDiscoveryException e) {
       LOGGER.log(Level.WARNING, null, e);
       return null;
     } finally {
@@ -183,12 +189,14 @@ public class LivyController {
    * @return
    */
   public LivyMsg getLivySessions() {
-    String livyUrl = settings.getLivyUrl();
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions");
     LivyMsg livySession = null;
+    Client client = ClientBuilder.newClient();
     try {
+      WebTarget target = client.target(getLivyURL()).path("/sessions");
       livySession = target.request().get(LivyMsg.class);
+    } catch (ServiceDiscoveryException ex) {
+      LOGGER.log(Level.WARNING, null, ex);
+      return null;
     } finally {
       client.close();
     }
@@ -202,12 +210,14 @@ public class LivyController {
    * @return
    */
   public int deleteLivySession(int sessionId) {
-    String livyUrl = settings.getLivyUrl();
     Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(livyUrl).path("/sessions/" + sessionId);
     Response res;
     try {
+      WebTarget target = client.target(getLivyURL()).path("/sessions/" + sessionId);
       res = target.request().delete();
+    } catch (ServiceDiscoveryException ex) {
+      LOGGER.log(Level.SEVERE, null, ex);
+      return Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
     } catch (NotFoundException e) {
       return Response.Status.NOT_FOUND.getStatusCode();
     } finally {
@@ -242,5 +252,11 @@ public class LivyController {
   public boolean isLivySessionAlive(int sessionId) {
     LivyMsg.Session session = getLivySession(sessionId);
     return session != null;
+  }
+
+  private String getLivyURL() throws ServiceDiscoveryException {
+    Service livy = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.LIVY);
+    return "http://" + livy.getAddress() + ":" + livy.getPort();
   }
 }
