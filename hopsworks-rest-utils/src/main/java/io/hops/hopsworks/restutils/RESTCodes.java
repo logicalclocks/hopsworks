@@ -1414,7 +1414,7 @@ public class RESTCodes {
     TRAININGDATASETJOB_FAILURE(80, "Could not write featurestore cloud args to HDFS",
       Response.Status.INTERNAL_SERVER_ERROR),
     TRAININGDATASETJOB_DUPLICATE_FEATURE(81, "Feature list contains duplicate", Response.Status.BAD_REQUEST),
-    FEATURE_NOT_EXISTING(82, "Feature does not exist", Response.Status.BAD_REQUEST),
+    FEATURE_DOES_NOT_EXIST(82, "Feature does not exist", Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_FEATUREGROUP_DUPLICATE(83, "Multiple featuregroups contain feature",
       Response.Status.BAD_REQUEST),
     TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS(84, "Illegal training dataset name - version combination",

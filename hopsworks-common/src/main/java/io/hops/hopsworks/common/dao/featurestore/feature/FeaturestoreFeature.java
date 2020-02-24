@@ -67,7 +67,7 @@ public class FeaturestoreFeature implements Serializable {
   private String type;
   @Basic(optional = false)
   @Column(name = "primary_column")
-  private boolean primary = false;
+  private Boolean primary = false;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -113,11 +113,11 @@ public class FeaturestoreFeature implements Serializable {
     this.type = type;
   }
 
-  public boolean getPrimary() {
+  public Boolean getPrimary() {
     return primary;
   }
 
-  public void setPrimary(boolean primary) {
+  public void setPrimary(Boolean primary) {
     this.primary = primary;
   }
 

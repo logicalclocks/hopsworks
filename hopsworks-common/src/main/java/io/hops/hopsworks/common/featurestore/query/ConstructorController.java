@@ -152,7 +152,7 @@ public class ConstructorController {
       for (FeatureDTO requestedFeature : requestedFeatures) {
         featureList.add(availableFeatures.stream().filter(af -> af.getName().equals(requestedFeature.getName()))
             .findFirst()
-            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING,
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
                 Level.FINE,
                 "Feature: " + requestedFeature.getName() + " not found in feature group: " + fg.getName())));
       }
@@ -269,7 +269,7 @@ public class ConstructorController {
 
   private void checkFeatureExists(Query query, FeatureDTO feature) throws FeaturestoreException {
     if (query.getAvailableFeatures().stream().noneMatch(f -> (f.getName().equals(feature.getName())))) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_NOT_EXISTING, Level.FINE,
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
           "Could not find Join feature " + feature.getName() + " in feature group: "
               + query.getFeaturegroup().getName());
     }
