@@ -870,6 +870,8 @@ describe "On #{ENV['OS']}" do
         end
         context 'zip/unzip dir with url encoded chars' do
           before :all do
+            with_valid_project
+            with_valid_dataset
             hdfs_user="#{@project[:inode_name]}__#{@user[:username]}"
             topDataset = "#{@dataset[:inode_name]}/top%3ADir"
             mkdir("/Projects/#{@project[:inode_name]}/#{topDataset}", hdfs_user, hdfs_user, 755)
@@ -880,6 +882,7 @@ describe "On #{ENV['OS']}" do
             topDataset = "#{@dataset[:inode_name]}/top%253ADir"
             subDataset = "#{topDataset}/sub%2520Dir"
             get_datasets_in_path(@project, topDataset, "&type=DATASET")
+            expect_status(200)
 
             zip_dataset(@project, subDataset, "&type=DATASET")
             expect_status(204)
