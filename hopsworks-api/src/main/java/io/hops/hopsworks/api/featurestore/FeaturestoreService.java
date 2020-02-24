@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.featurestore;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.featuregroup.FeaturegroupService;
 import io.hops.hopsworks.api.featurestore.storageconnector.FeaturestoreStorageConnectorService;
 import io.hops.hopsworks.api.featurestore.trainingdataset.TrainingDatasetService;
@@ -59,7 +60,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.apache.parquet.Strings;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -124,6 +124,8 @@ public class FeaturestoreService {
   private TrainingDatasetJobControllerIface trainingDatasetJobControllerIface;
   @EJB
   private JobsBuilder jobsBuilder;
+  @Inject
+  private FsQueryConstructorResource fsQueryConstructorResource;
 
   private Project project;
 
@@ -447,16 +449,20 @@ public class FeaturestoreService {
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
     return Response.created(builder.build()).entity(dto).build();
   }
-  
+
+  @Path("/query")
+  public FsQueryConstructorResource constructQuery() {
+    return fsQueryConstructorResource.setProject(project);
+  }
+
   /**
    * Verify that the name was provided as a path param
    *
    * @param featureStoreName the feature store name to verify
    */
   private void verifyNameProvided(String featureStoreName) {
-    if (com.google.common.base.Strings.isNullOrEmpty(featureStoreName)) {
+    if (Strings.isNullOrEmpty(featureStoreName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
     }
   }
-  
 }

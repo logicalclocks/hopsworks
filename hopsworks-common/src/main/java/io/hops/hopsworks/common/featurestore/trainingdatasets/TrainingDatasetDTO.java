@@ -60,7 +60,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
         trainingDataset.getId());
     setDescription(trainingDataset.getDescription());
     setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
-        tdf.getType(), tdf.getDescription(), tdf.getPrimary() == 1, false, null)).collect(Collectors.toList()));
+        tdf.getType(), tdf.getDescription(), tdf.getPrimary(), false, null)).collect(Collectors.toList()));
     this.dataFormat = trainingDataset.getDataFormat();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
   }

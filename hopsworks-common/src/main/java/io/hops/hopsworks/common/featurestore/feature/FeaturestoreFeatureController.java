@@ -89,7 +89,7 @@ public class FeaturestoreFeatureController {
       featurestoreFeature.setName(f.getName());
       featurestoreFeature.setTrainingDataset(trainingDataset);
       featurestoreFeature.setDescription(f.getDescription());
-      featurestoreFeature.setPrimary(f.getPrimary()? 1 : 0);
+      featurestoreFeature.setPrimary(f.getPrimary());
       featurestoreFeature.setType(f.getType());
       return featurestoreFeature;
     }).collect(Collectors.toList());
@@ -139,7 +139,7 @@ public class FeaturestoreFeatureController {
       featurestoreFeature.setName(f.getName());
       featurestoreFeature.setOnDemandFeaturegroup(onDemandFeaturegroup);
       featurestoreFeature.setDescription(f.getDescription());
-      featurestoreFeature.setPrimary(f.getPrimary()? 1 : 0);
+      featurestoreFeature.setPrimary(f.getPrimary());
       featurestoreFeature.setType(f.getType());
       return featurestoreFeature;
     }).collect(Collectors.toList());

@@ -21,8 +21,10 @@ import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
@@ -90,6 +92,8 @@ public class FeaturegroupController {
   private StatisticColumnFacade statisticColumnFacade;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
+  @EJB
+  private CachedFeaturegroupFacade cachedFeaturegroupFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -388,7 +392,6 @@ public class FeaturegroupController {
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-
   public FeaturegroupDTO updateFeaturegroupStats(
       Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
     Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
@@ -407,7 +410,6 @@ public class FeaturegroupController {
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  
   public FeaturegroupDTO updateFeaturegroupStatsSettings(
     Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
     Featuregroup featuregroup = verifyFeaturegroupId(featurestore, featuregroupDTO.getId());
@@ -770,16 +772,34 @@ public class FeaturegroupController {
     featuregroupFacade.persist(featuregroup);
     return featuregroup;
   }
-  
+
   public FeaturegroupDTO getCachedFeaturegroupDTO(Featurestore featurestore,
       Integer featuregroupId) throws FeaturestoreException {
     FeaturegroupDTO featuregroupDTO = getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-  
-    if(featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP)
+
+    if (featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP)
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS,
           Level.FINE);
-    
+
     return featuregroupDTO;
+  }
+
+  public List<FeatureDTO> getFeatures(Featuregroup featuregroup) {
+    switch (featuregroup.getFeaturegroupType()) {
+      case CACHED_FEATURE_GROUP:
+        List<FeatureDTO> features = cachedFeaturegroupFacade
+            .getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
+        List<String> primaryKeys = cachedFeaturegroupFacade
+            .getHiveTablePrimaryKey(featuregroup.getCachedFeaturegroup().getHiveTableId());
+        features.stream().filter(f -> primaryKeys.contains(f.getName()))
+            .forEach(f -> f.setPrimary(true));
+        return features;
+      case ON_DEMAND_FEATURE_GROUP:
+        return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
+            .map(f -> new FeatureDTO(f.getName(), f.getType(), f.getPrimary()))
+            .collect(Collectors.toList());
+    }
+    return new ArrayList<>();
   }
 }

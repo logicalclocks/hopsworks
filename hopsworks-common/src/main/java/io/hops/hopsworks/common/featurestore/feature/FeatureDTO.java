@@ -50,9 +50,9 @@ public class FeatureDTO {
     this.featuregroup = featuregroup;
     this.version = version;
   }
-  
-  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
-    String onlineType) {
+
+  public FeatureDTO(String name, String type, String description, Boolean primary,
+                    Boolean partition, String onlineType) {
     this.name = name;
     this.type = type;
     this.description = description;
@@ -61,10 +61,35 @@ public class FeatureDTO {
     this.onlineType = onlineType;
   }
 
+  public FeatureDTO(String name, String type, String description, Boolean primary) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+  }
+
+  public FeatureDTO(String name, String type, String description, String featuregroup, Boolean primary) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.featuregroup = featuregroup;
+    this.primary = primary;
+  }
+
   public FeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
     this.description = description;
+  }
+
+  public FeatureDTO(String name, String type, Boolean primary) {
+    this.name = name;
+    this.type = type;
+    this.primary = primary;
+  }
+
+  public FeatureDTO(String name) {
+    this.name = name;
   }
 
   @XmlElement
