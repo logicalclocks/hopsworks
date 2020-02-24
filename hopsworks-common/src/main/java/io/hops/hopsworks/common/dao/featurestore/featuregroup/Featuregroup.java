@@ -141,6 +141,12 @@ public class Featuregroup implements Serializable {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
   private Collection<StatisticColumn> statisticColumns;
 
+  public Featuregroup() { }
+
+  public Featuregroup(Integer id) {
+    this.id = id;
+  }
+
   public static long getSerialVersionUID() {
     return serialVersionUID;
   }
