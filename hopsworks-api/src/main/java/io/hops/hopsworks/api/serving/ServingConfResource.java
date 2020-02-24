@@ -25,7 +25,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,7 +38,8 @@ import javax.ws.rs.core.Response;
 
 @Logged(logLevel = LogLevel.OFF)
 @Path("/servingconf")
-@Stateless
+@RequestScoped
+@TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "UI serving configuration", description = "Get UI serving configuration")
 public class ServingConfResource {
 
