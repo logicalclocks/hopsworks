@@ -17,16 +17,12 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.validation.ConstraintViolationException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A facade for the external_training_dataset table in the Hopsworks database,
@@ -34,8 +30,7 @@ import java.util.logging.Logger;
  */
 @Stateless
 public class ExternalTrainingDatasetFacade extends AbstractFacade<ExternalTrainingDataset> {
-  private static final Logger LOGGER = Logger.getLogger(
-    ExternalTrainingDatasetFacade.class.getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -44,30 +39,17 @@ public class ExternalTrainingDatasetFacade extends AbstractFacade<ExternalTraini
   }
 
   /**
-   * A transaction to persist a external training dataset for the featurestore in the database
-   *
-   * @param externalTrainingDataset the external training dataset to persist
-   */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(ExternalTrainingDataset externalTrainingDataset) {
-    try {
-      em.persist(externalTrainingDataset);
-      em.flush();
-    } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new external training dataset", cve);
-      throw cve;
-    }
-  }
-  
-  /**
-   * Updates metadata about a external training dataset
-   *
-   * @param externalTrainingDataset the external training dataset to update
+   * Create and persist an external training dataset
+   * @param connector
+   * @param path
    * @return
    */
-  public ExternalTrainingDataset updateExternalTrainingDatasetMetadata(
-    ExternalTrainingDataset externalTrainingDataset) {
-    em.merge(externalTrainingDataset);
+  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreS3Connector connector, String path) {
+    ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
+    externalTrainingDataset.setFeaturestoreS3Connector(connector);
+    externalTrainingDataset.setPath(path);
+    em.persist(externalTrainingDataset);
+    em.flush();
     return externalTrainingDataset;
   }
 

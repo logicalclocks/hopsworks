@@ -240,10 +240,10 @@ public class TrainingDatasetController {
     switch (trainingDatasetDTO.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
         hopsfsTrainingDataset =
-            hopsfsTrainingDatasetController.createHopsfsTrainingDataset(hopsfsConnector, inode);
+            hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(hopsfsConnector, inode);
         break;
       case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDataset = externalTrainingDatasetController.createExternalTrainingDataset(S3Connector,
+        externalTrainingDataset = externalTrainingDatasetFacade.createExternalTrainingDataset(S3Connector,
             trainingDatasetDTO.getLocation());
         break;
       default:

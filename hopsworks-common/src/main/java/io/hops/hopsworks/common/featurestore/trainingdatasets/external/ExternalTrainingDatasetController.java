@@ -16,23 +16,18 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
-import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 
 /**
  * Class controlling the interaction with the external_training_dataset table and required business logic
@@ -42,25 +37,7 @@ import java.util.logging.Level;
 public class ExternalTrainingDatasetController {
   @EJB
   private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
-  @EJB
-  private FeaturestoreS3ConnectorFacade featurestoreS3ConnectorFacade;
 
-
-  /**
-   * Create and persist an external training dataset
-   * @param connector
-   * @param path
-   * @return
-   */
-  @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreS3Connector connector, String path) {
-    ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setFeaturestoreS3Connector(connector);
-    externalTrainingDataset.setPath(path);
-    externalTrainingDatasetFacade.persist(externalTrainingDataset);
-    return externalTrainingDataset;
-  }
-  
   /**
    * Removes an external training dataset from the database
    *
@@ -69,27 +46,6 @@ public class ExternalTrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeExternalTrainingDataset(ExternalTrainingDataset externalTrainingDataset) {
     externalTrainingDatasetFacade.remove(externalTrainingDataset);
-  }
-  
-  /**
-   * Verifies a s3ConnectorId for an external training dataset
-   *
-   * @param s3ConnectorId the connector id to verify
-   * @return if the verification passed, returns the connector
-   * @throws FeaturestoreException
-   */
-  private FeaturestoreS3Connector verifyExternalTrainingDatasetS3ConnectorId(Integer s3ConnectorId)
-    throws FeaturestoreException {
-    if(s3ConnectorId == null){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_ID_NOT_PROVIDED.getMessage());
-    }
-    FeaturestoreS3Connector featurestoreS3Connector =
-      featurestoreS3ConnectorFacade.find(s3ConnectorId);
-    if(featurestoreS3Connector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND, Level.FINE,
-        "S3 connector with id: " + s3ConnectorId + " was not found");
-    }
-    return featurestoreS3Connector;
   }
   
   /**
