@@ -1085,7 +1085,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
-        it "should not be able to update the metaddata of a hopsfs training dataset from the featurestore" do
+        it "should not be able to update the metadata of a hopsfs training dataset from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
@@ -1101,14 +1101,14 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("creator")).to be true
           expect(parsed_json2.key?("location")).to be true
           expect(parsed_json2.key?("version")).to be true
-          expect(parsed_json2.key?("dataformat")).to be true
-          expect(parsed_json2.key?("trainingdatasettype")).to be true
-          expect(parsed_json2.key?("storageconnectorid")).to be true
-          expect(parsed_json2.key?("storageconnectorname")).to be true
-          expect(parsed_json2.key?("inodeid")).to be true
+          expect(parsed_json2.key?("dataFormat")).to be true
+          expect(parsed_json2.key?("trainingDatasetType")).to be true
+          expect(parsed_json2.key?("storageConnectorId")).to be true
+          expect(parsed_json2.key?("storageConnectorName")).to be true
+          expect(parsed_json2.key?("inodeID")).to be true
 
           # make sure the dataformat didn't change
-          expect(parsed_json2["dataformat"] == "tfrecords").to be true
+          expect(parsed_json2["dataFormat"] == "tfrecords").to be true
         end
 
         it "should not be able to update the name of a training dataset" do
@@ -1158,7 +1158,7 @@ describe "On #{ENV['OS']}" do
           # Create a fake job
           create_sparktour_job(project, "ingestion_job", "jar", nil)
 
-          jobs = [{"name" => "ingestion_job"}]
+          jobs = [{"jobName" => "ingestion_job"}]
 
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
@@ -1167,8 +1167,8 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           # make sure the name didn't change
-          expect(parsed_json2["jobs"].count).to be 1
-          expect(parsed_json2["jobs"][1]["name"]).to eql("ingestion_job")
+          expect(parsed_json2["jobs"].count).to eql(1)
+          expect(parsed_json2["jobs"][0]["jobName"]).to eql("ingestion_job")
         end
 
         it "should be able to get a list of training dataset versions based on the name" do

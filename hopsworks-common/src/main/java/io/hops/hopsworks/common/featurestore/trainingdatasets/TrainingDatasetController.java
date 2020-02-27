@@ -484,7 +484,7 @@ public class TrainingDatasetController {
     // Update metadata
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
     TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
-    trainingDataset.setJobs(updatedJobsList);
+    updatedTrainingDataset.setJobs(updatedJobsList);
 
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }

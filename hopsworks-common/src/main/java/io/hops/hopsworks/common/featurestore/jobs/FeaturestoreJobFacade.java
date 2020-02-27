@@ -105,7 +105,7 @@ public class FeaturestoreJobFacade extends AbstractFacade<FeaturestoreJob> {
    */
   public List<FeaturestoreJob> getByTrainingDataset(TrainingDataset trainingDataset) {
     return em.createNamedQuery("FeaturestoreJob.findByTrainingDataset", FeaturestoreJob.class)
-        .setParameter("featuregroup", trainingDataset)
+        .setParameter("trainingDataset", trainingDataset)
         .getResultList();
   }
 
