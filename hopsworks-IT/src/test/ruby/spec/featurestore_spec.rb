@@ -1103,11 +1103,11 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = json.parse(json_result1)
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id, training_dataset_id, "petastorm", connector)
-          parsed_json2 = json.parse(json_result2)
+          parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
@@ -1129,13 +1129,13 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = json.parse(json_result1)
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
 
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
                                                                  training_dataset_id, "tfrecords", connector)
-          parsed_json2 = json.parse(json_result2)
+          parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
 
           # make sure the name didn't change
@@ -1147,13 +1147,13 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = json.parse(json_result1)
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
 
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
                                                                  training_dataset_id, "tfrecords", connector)
-          parsed_json2 = json.parse(json_result2)
+          parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
 
           # make sure the name didn't change
@@ -1165,7 +1165,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = json.parse(json_result1)
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
 
           # Create a fake job
@@ -1176,7 +1176,7 @@ describe "On #{ENV['OS']}" do
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
                                                                  training_dataset_id, "tfrecords", connector, jobs)
-          parsed_json2 = json.parse(json_result2)
+          parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
 
           # make sure the name didn't change
@@ -1305,24 +1305,8 @@ describe "On #{ENV['OS']}" do
           training_dataset_id = parsed_json1["id"]
           delete_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s +
               "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
-          json_result2 = delete delete_training_dataset_endpoint
-          parsed_json2 = JSON.parse(json_result2)
+          delete delete_training_dataset_endpoint
           expect_status(200)
-          expect(parsed_json2.key?("id")).to be true
-          expect(parsed_json2.key?("featurestoreName")).to be true
-          expect(parsed_json2.key?("name")).to be true
-          expect(parsed_json2.key?("creator")).to be true
-          expect(parsed_json2.key?("location")).to be true
-          expect(parsed_json2.key?("version")).to be true
-          expect(parsed_json2.key?("dataFormat")).to be true
-          expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("description")).to be true
-          expect(parsed_json2.key?("storageConnectorId")).to be true
-          expect(parsed_json2.key?("storageConnectorName")).to be true
-          expect(parsed_json2["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
-          expect(parsed_json2["name"] == training_dataset_name).to be true
-          expect(parsed_json2["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
-          expect(parsed_json2["storageConnectorId"] == connector_id).to be true
         end
 
         it "should be able to update the metadata (description) of an external training dataset from the featurestore" do
@@ -1359,17 +1343,17 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           connector_id = get_s3_connector_id
           json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
-          parsed_json1 = json.parse(json_result1)
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
 
           training_dataset_id = parsed_json1["id"]
           json_new_connector, _ = create_s3_connector(project.id, featurestore_id)
-          new_connector = json.parse(json_new_connector)
+          new_connector = JSON.parse(json_new_connector)
 
           json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id,
                                                                    training_dataset_id, training_dataset_name, "desc",
                                                                    new_connector.id)
-          parsed_json2 = json.parse(json_result2)
+          parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
 
           # make sure the name didn't change
@@ -1382,8 +1366,8 @@ describe "On #{ENV['OS']}" do
           connector_id = get_s3_connector_id
           json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
                                                                                  connector_id,
-                                                                                 location = "/inner/location")
-          parsed_json1 = json.parse(json_result1)
+                                                                                 location: "/inner/location")
+          parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           expect(parsed_json1['location']).to eql("s3://test/inner/location/#{training_dataset_name}_1")
         end
