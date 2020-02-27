@@ -91,18 +91,17 @@ angular.module('hopsWorksApp')
                   growl.error("Select a project to import the Dataset to", {title: 'Error', ttl: 5000, referenceId: 21});
                   return;
                 }
-                ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(
-                        function (response) {
-                          var datasetDto = response;
-                          ProjectService.importPublicDataset({}, {'id': self.request.projectId,
-                            'inodeId': datasetDto.inodeId, 'projectName': datasetDto.projectName}).$promise.then(
-                                  function (success) {
-                                    growl.success("Dataset Imported", {title: 'Success', ttl: 1500});
-                                    $uibModalInstance.close(success);
-                                  }, function (error) {
-                            growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
-                          });
-                        }, function (error) {
+                ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(function (response) {
+                  var datasetDto = response;
+                  var datasetService = DataSetService(self.request.projectId);
+                  datasetService.import(datasetDto.name, datasetDto.projectName, datasetDto.datasetType).then(
+                    function (success) {
+                      growl.success("Dataset Imported", {title: 'Success', ttl: 1500});
+                      $uibModalInstance.close(success);
+                    }, function (error) {
+                      growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000, referenceId: 21});
+                    });
+                  }, function (error) {
                   console.log('Error: ', error);
                 });
               };

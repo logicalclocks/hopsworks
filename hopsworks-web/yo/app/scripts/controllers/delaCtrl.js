@@ -38,8 +38,8 @@
  */
 
 angular.module('hopsWorksApp')
-        .controller('DelaCtrl', ['DelaProjectService', 'DelaClusterProjectService', '$routeParams', '$scope', '$interval', 'growl', 'ModalService',
-          function (DelaProjectService, DelaClusterProjectService, $routeParams, $scope, $interval, growl, ModalService) {
+        .controller('DelaCtrl', ['DelaProjectService', '$routeParams', '$scope', '$interval', 'growl', 'ModalService',
+          function (DelaProjectService, $routeParams, $scope, $interval, growl, ModalService) {
             var self = this;
             self.projectId = parseInt($routeParams.projectID, 10);
             self.delaHopsService = DelaProjectService(self.projectId);

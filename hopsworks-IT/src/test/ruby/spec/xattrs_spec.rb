@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
         @attr2 = "attr2"
         @attr2v = "this is my second attribute"
         @dsname = "dataset_#{short_random_id}"
-        ds = create_dataset_by_name(@project, @dsname)
+        ds = create_dataset_by_name_checked(@project, @dsname)
       end
 
       it "should attach an extended attribute to a dataset" do

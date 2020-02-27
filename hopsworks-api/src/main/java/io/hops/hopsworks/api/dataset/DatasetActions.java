@@ -35,7 +35,11 @@ public class DatasetActions {
     SHARE(),
     ACCEPT(),
     UNZIP(),
-    ZIP();
+    ZIP(),
+    PUBLISH(),
+    UNPUBLISH(),
+    IMPORT(),
+    UNSHARE_ALL();
   
     public static Post fromString(String param) {
       return valueOf(param.toUpperCase());

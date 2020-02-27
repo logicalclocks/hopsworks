@@ -43,9 +43,17 @@ describe "On #{ENV['OS']}" do
     @debugOpt = false
   end
 
-  after(:all) {clean_all_test_projects}
+  after(:all) {
+    clean_all_test_projects
+  }
   describe 'dataset' do
-    before(:all) { setVar("download_allowed", "true") }
+    before(:all) {
+      setVar("download_allowed", "true")
+      @debugOpt = true
+    }
+    after(:all) {
+      clean_projects
+    }
     describe "#create" do
       context 'without authentication' do
         before :all do
@@ -69,7 +77,7 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
           create_dir(@project, dsname, "&#{query}")
-          expect_status(201)
+          expect_status_details(201)
           get_dataset_stat(@project, dsname, "&type=DATASET")
           expect_status(200)
           ds = json_body
@@ -268,7 +276,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail to upload to a dataset with permission owner only if Data scientist" do
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           member = create_user
           add_member_to_project(@project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
@@ -282,7 +290,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], "")
           uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
@@ -296,7 +304,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should upload file" do
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
           expect_status(204)
         end
@@ -304,7 +312,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], "")
           update_dataset_permissions(@project, dsname, "GROUP_WRITABLE_SB", "&type=DATASET")
@@ -313,7 +321,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should upload to a dataset with permission owner only if Data owner" do
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           member = create_user
           add_member_to_project(@project, member[:email], "Data owner")
           create_session(member[:email], "Pass123")
@@ -442,7 +450,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           create_session(project[:username], "Pass123")
-          create_dataset_by_name(project, dsname)
+          create_dataset_by_name_checked(project, dsname)
           reset_session
           share_dataset(project, dsname, project1[:name], "&type=DATASET")
           expect_json(errorCode: 200003)
@@ -460,7 +468,7 @@ describe "On #{ENV['OS']}" do
           project1 = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           create_session(project[:username], "Pass123")
-          create_dataset_by_name(project, dsname)
+          create_dataset_by_name_checked(project, dsname)
           member = create_user
           add_member_to_project(project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
@@ -478,7 +486,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_dataset_by_name(@project, dsname)
+          create_dataset_by_name_checked(@project, dsname)
           share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
           expect_status(204)
         end
@@ -494,7 +502,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_dataset_by_name(@project, dsname)
+          create_dataset_by_name_checked(@project, dsname)
           share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
           shared_ds = json_body
@@ -504,7 +512,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
@@ -516,7 +524,7 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           permissions = "GROUP_WRITABLE_SB"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           share_dataset(@project, dsname, project[:projectname], "")
           update_dataset_permissions(project, "#{@project[:projectname]}::#{dsname}", permissions, "&type=DATASET")
           expect_status(400)
@@ -525,7 +533,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           share_dataset(@project, dsname, project[:projectname], "")
           # Accept dataset
           accept_dataset(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
@@ -538,7 +546,7 @@ describe "On #{ENV['OS']}" do
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           permissions = "GROUP_WRITABLE_SB"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           # Make the dataset editable
           update_dataset_permissions(@project, dsname, permissions, "&type=DATASET")
           # share it
@@ -557,8 +565,8 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_dataset_by_name(project, dsname)
-          ds = create_dataset_by_name(@project, dsname)
+          create_dataset_by_name_checked(project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_dataset_access(project, ds[:inode_id])
           share_dataset(@project, dsname, project[:projectname], "&type=DATASET")
           get_datasets_in_path(project, "#{@project[:projectname]}::#{dsname}", "")
@@ -576,7 +584,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
@@ -589,7 +597,7 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
           get_dataset_stat(project, "#{@project[:projectname]}::#{dsname}", "&type=DATASET")
@@ -605,7 +613,7 @@ describe "On #{ENV['OS']}" do
           projectname1 = "project_#{short_random_id}"
           project1 = create_project_by_name(projectname1)
           dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name(@project, dsname)
+          ds = create_dataset_by_name_checked(@project, dsname)
           request_access(@project, ds, project)
           request_access(@project, ds, project1)
           share_dataset(@project, dsname, project[:projectname], "") # should work with no dataset type (default is dataset)
@@ -623,6 +631,144 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "#publish-import" do
+      context 'regular dataset' do
+        before :all do
+          with_valid_project
+          with_valid_dataset
+          expect(@dataset[:public_ds]).to eq false
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+        end
+
+        it 'same user - import dataset in parent project' do
+          import_dataset(@project, @dataset[:inode_name], "DATASET", @project)
+          expect_status_details(400)
+        end
+
+        it 'same user - import dataset to a different project' do
+          project1 = create_project
+          import_dataset_checked(project1, @dataset[:inode_name], "DATASET", @project)
+        end
+
+        it 'same user - import dataset twice to same project' do
+          project1 = create_project
+          import_dataset_checked(project1, @dataset[:inode_name], "DATASET", @project)
+          import_dataset(project1, @dataset[:inode_name], "DATASET", @project)
+          expect_status_details(400)
+        end
+      end
+
+      context 'hive dataset' do
+        before :all do
+          with_valid_project
+        end
+        it 'same user - publish and import hive featurestore dataset' do
+          featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
+          featurestore_dataset = get_dataset(@project, featurestore_dataset_name)
+          expect(featurestore_dataset[:public_ds]).to eq false
+          publish_dataset_checked(@project, featurestore_dataset_name, "FEATURESTORE")
+          project1 = create_project
+          import_dataset_checked(project1, featurestore_dataset_name, "FEATURESTORE", @project)
+        end
+        it 'same user - publish and import hive db dataset' do
+          hivedb_dataset_name = "#{@project[:projectname]}.db".downcase
+          featurestore_dataset = get_dataset(@project, hivedb_dataset_name)
+          expect(featurestore_dataset[:public_ds]).to eq false
+          publish_dataset_checked(@project, hivedb_dataset_name, "HIVEDB")
+          project1 = create_project
+          import_dataset_checked(project1, hivedb_dataset_name, "HIVEDB", @project)
+        end
+      end
+
+      context 'workflows' do
+        it 'share-share-unshare-share' do
+          with_valid_project
+          with_valid_dataset
+          expect(@dataset[:public_ds]).to eq false
+
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          #publishing a public dataset should succeede
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          unpublish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+        end
+
+        it 'workflow 1' do
+          with_valid_project
+          with_valid_dataset
+          expect(@dataset[:public_ds]).to eq false
+
+          project1 = create_project
+          project2 = create_project
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          import_dataset_checked(project1, @dataset[:inode_name], "DATASET", @project)
+          import_dataset_checked(project2, @dataset[:inode_name], "DATASET", @project)
+          unpublish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          #unpublishing a private dataset should succeede
+          unpublish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          check_shared_dataset(project1, @dataset[:inode_name], @project)
+          check_shared_dataset(project2, @dataset[:inode_name], @project)
+          unshare_all_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          check_not_shared_dataset(project1, @dataset[:inode_name], @project)
+          check_not_shared_dataset(project2, @dataset[:inode_name], @project)
+          #unsharing a private dataset should succeede
+          unshare_all_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+        end
+
+        it 'workflow 2' do
+          with_valid_project
+          with_valid_dataset
+          project1 = create_project
+          project2 = create_project
+          project3= create_project
+          share_dataset(@project, @dataset[:inode_name], project1[:projectname], "")
+          accept_dataset(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}", "&type=DATASET")
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
+          expect_status_details(200)
+          create_dir_checked(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}/test_#{short_random_id}", "&type=DATASET")
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          create_dir(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}/test_#{short_random_id}", "&type=DATASET")
+          expect_status_details(403)
+          import_dataset_checked(project2, @dataset[:inode_name], "DATASET", @project)
+          import_dataset_checked(project3, @dataset[:inode_name], "DATASET", @project)
+          unpublish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
+          create_dir_checked(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}/test_#{short_random_id}", "&type=DATASET")
+          create_dir_checked(project2, "#{@project[:projectname]}::#{@dataset[:inode_name]}/test_#{short_random_id}", "&type=DATASET")
+          unshare_dataset(@project, "#{@dataset[:inode_name]}", "&type=DATASET&target_project=#{project1[:projectname]}")
+          expect_status_details(204)
+          unshare_all_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          get_dataset_stat(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}", "&type=DATASET")
+          expect_status_details(400)
+          get_dataset_stat(project3, "#{@project[:projectname]}::#{@dataset[:inode_name]}", "&type=DATASET")
+          expect_status_details(400)
+        end
+      end
+
+      context 'permissions' do
+        before :all do
+          with_valid_project
+          with_valid_dataset
+        end
+        it 'check correct editable reset on publishing dataset' do
+          ds = get_dataset_stat_checked(@project, @dataset[:inode_name], "&type=DATASET")
+          expect(ds[:permission]).to eq("OWNER_ONLY"), "dataset should not be editable, found:#{ds[:permission]}"
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
+          ds = get_dataset_stat_checked(@project, @dataset[:inode_name], "&type=DATASET")
+          expect(ds[:permission]).to eq("GROUP_WRITABLE_SB"), "dataset should be editable, found:#{ds[:permission]}"
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          ds = get_dataset_stat_checked(@project, @dataset[:inode_name], "&type=DATASET")
+          expect(ds[:permission]).to eq("OWNER_ONLY"), "dataset should not be editable, found:#{ds[:permission]}"
+        end
+        it 'check published dataset cannot be made editable' do
+          publish_dataset_checked(@project, @dataset[:inode_name], "DATASET")
+          ds = get_dataset_stat_checked(@project, @dataset[:inode_name], "&type=DATASET")
+          expect(ds[:permission]).to eq("OWNER_ONLY"), "dataset should not be editable, found:#{ds[:permission]}"
+          update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE", "&type=DATASET")
+          expect_status_details(400)
+        end
+      end
+    end
     describe "#permissions" do
       context 'with authentication and insufficient privileges' do
         before :all do
@@ -633,7 +779,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           dsname = "dataset_#{short_random_id}"
           permissions = "GROUP_WRITABLE_SB"
-          create_dataset_by_name(project, dsname)
+          create_dataset_by_name_checked(project, dsname)
           member = create_user
           add_member_to_project(project, member[:email], "Data scientist")
           create_session(member[:email], "Pass123")
@@ -941,7 +1087,7 @@ describe "On #{ENV['OS']}" do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
         dsname = "dataset_#{short_random_id}"
-        ds = create_dataset_by_name(@project, dsname)
+        ds = create_dataset_by_name_checked(@project, dsname)
         request_access(@project, ds, project)
         share_dataset(@project, dsname, project[:projectname], "")
         get_dataset_stat(project, "Logs/../../../Projects/#{@project[:projectname]}/#{dsname}", "&type=DATASET")
@@ -951,7 +1097,7 @@ describe "On #{ENV['OS']}" do
       end
       it 'should not allow path with too many ..' do
         dsname = "dataset_#{short_random_id}"
-        ds = create_dataset_by_name(@project, dsname)
+        ds = create_dataset_by_name_checked(@project, dsname)
         get_dataset_stat(@project, "Logs/../../../../Projects/#{@project[:projectname]}/#{dsname}", "&type=DATASET")
         expect_status(400) # bad request
         expect_json(errorCode: 110011) # DataSet not found.
@@ -959,14 +1105,46 @@ describe "On #{ENV['OS']}" do
       it 'should not let users create dataset with type Hive' do
         dsname = "dataset_#{short_random_id}"
         create_dir(@project, dsname, "&type=HIVEDB")
-        expect_status(201)
-        expect(json_body[:datasetType]).to eq ("DATASET")
+        expect_status(400)
       end
       it 'should not let users create dataset with type FS' do
         dsname = "dataset_#{short_random_id}"
         create_dir(@project, dsname, "&type=FEATURESTORE")
-        expect_status(201)
-        expect(json_body[:datasetType]).to eq ("DATASET")
+        expect_status(400)
+      end
+      it 'should not let users create dirs within featurestore' do
+        featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
+        create_dir(@project, "#{featurestore_dataset_name}/test_#{short_random_id}", "&type=FEATURESTORE")
+        expect_status(400)
+      end
+      it 'should not let users create dirs within hivedb' do
+        hivedb_dataset_name = "#{@project[:projectname]}.db".downcase
+        create_dir(@project, "#{hivedb_dataset_name}/test_#{short_random_id}", "&type=HIVEDB")
+        expect_status(400)
+      end
+      it 'should not allow :: in dataset name' do
+        create_dataset_by_name(@project, "test::dataset_#{short_random_id}")
+        expect_status_details(400)
+      end
+      it 'should not allow create fake shared dataset' do
+        with_valid_dataset
+        project1 = create_project
+        share_dataset(@project, @dataset[:inode_name], project1[:projectname], "")
+        accept_dataset(project1, "#{@project[:projectname]}::#{@dataset[:inode_name]}", "&type=DATASET")
+        project2 = create_project
+        create_dataset_by_name(project2, "#{@project[:projectname]}::#{@dataset[:inode_name]}")
+        expect_status_details(400)
+      end
+      it 'should not allow :: in file name' do
+        with_valid_dataset
+        create_dir(@project, "#{@dataset[:inode_name]}/test::dir_#{short_random_id}", "&type=DATASET")
+        expect_status_details(400)
+        featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
+        create_dir(@project, "#{featurestore_dataset_name}/test::dir_#{short_random_id}", "&type=FEATURESTORE")
+        expect_status_details(400)
+        hivedb_dataset_name = "#{@project[:projectname]}.db".downcase
+        create_dir(@project, "#{hivedb_dataset_name}/test::dir_#{short_random_id}", "&type=HIVEDB")
+        expect_status_details(400)
       end
     end
     describe '#sort' do
@@ -1329,7 +1507,7 @@ describe "On #{ENV['OS']}" do
         end
         it 'should create' do
           set_api_key_to_header(@key_create)
-          create_dataset_by_name(@project, "dataset_#{Time.now.to_i}")
+          create_dataset_by_name_checked(@project, "dataset_#{Time.now.to_i}")
           expect_status(201)
         end
         it 'should move a dataset' do

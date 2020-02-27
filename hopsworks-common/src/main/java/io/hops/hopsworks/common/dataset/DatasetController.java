@@ -48,6 +48,8 @@ import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.common.dao.dataset.SharedState;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.log.operation.OperationType;
@@ -63,6 +65,8 @@ import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -151,6 +155,8 @@ public class DatasetController {
   private HopsFSProvenanceController fsProvController;
   @EJB
   private JupyterController jupyterController;
+  @EJB
+  private DatasetHelper datasetHelper;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -812,10 +818,19 @@ public class DatasetController {
     datasetSharedWith = new DatasetSharedWith(targetProject, ds, true);
     // if the dataset is not requested or is requested by a data scientist set status to pending.
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(targetProject, ds);
-    if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(AllowedRoles.DATA_SCIENTIST)) {
-      datasetSharedWith.setAccepted(false);
-    } else {
+    if(ds.isPublicDs()) {
+      if(targetProject.equals(ds.getProject())) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ALREADY_IN_PROJECT, Level.FINE,
+          "Dataset already in project.");
+      }
       hdfsUsersController.shareDataset(targetProject, ds);
+    } else {
+      if (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(AllowedRoles.DATA_SCIENTIST)) {
+        datasetSharedWith.setAccepted(false);
+      } else {
+        //dataset is private and requested by a data owner
+        hdfsUsersController.shareDataset(targetProject, ds);
+      }
     }
     datasetSharedWithFacade.save(datasetSharedWith);
     if (dsReq != null) {
@@ -968,8 +983,11 @@ public class DatasetController {
   
   public void setPermissions(Path path, Dataset ds, DatasetPermissions datasetPermissions, Project project, Users user)
     throws DatasetException {
-    if (ds.isShared(project) || (ds.isPublicDs() && !ds.isShared(project))) {
+    if (ds.isShared(project)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    }
+    if(ds.isPublicDs()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
     }
     DistributedFileSystemOps dfso = null;
     try {
@@ -1092,6 +1110,39 @@ public class DatasetController {
       datasetFacade.update(dataset);
       activityFacade.persistActivity(ActivityFacade.UPDATE_DATASET_DESCRIPTION + dataset.getName(), project, user,
         ActivityFlag.DATASET);
+    }
+  }
+  
+  public void shareWithCluster(Project project, Dataset dataset, Users user, DatasetType datasetType)
+      throws DatasetException {
+    if (dataset.isPublicDs()) {
+      return;
+    }
+    DatasetPath dsPath = datasetHelper.getDatasetPath(project, getDatasetPath(dataset).toString(), datasetType);
+    setPermissions(dsPath.getFullPath(), dataset, DatasetPermissions.OWNER_ONLY, project, user);
+    dataset.setPublicDsState(SharedState.CLUSTER);
+    datasetFacade.merge(dataset);
+    logDataset(project, dataset, OperationType.Update);
+    activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataset.getName() + " with cluster ",
+      project, user, ActivityFlag.DATASET);
+
+  }
+  
+  public void unshareFromCluster(Project project, Dataset dataset, Users user) {
+    if (!dataset.isPublicDs()) {
+      return;
+    }
+    dataset.setPublicDsState(SharedState.PRIVATE);
+    datasetFacade.merge(dataset);
+    logDataset(project, dataset, OperationType.Update);
+    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " from cluster ",
+      project, user, ActivityFlag.DATASET);
+  }
+
+  public void unshareAll(Dataset dataset, Users user) throws DatasetException {
+    List<DatasetSharedWith> shared = datasetSharedWithFacade.findByDataset(dataset);
+    for(DatasetSharedWith s : shared) {
+      unshare(dataset.getProject(), user, dataset, s.getProject().getName());
     }
   }
 }
