@@ -86,7 +86,7 @@ public abstract class FeaturestoreEntityDTO {
     this.version = version;
     this.name = name;
     this.id = id;
-    this.jobs = featurestoreJobs.stream().map(fj -> new FeaturestoreJobDTO(fj)).collect(Collectors.toList());
+    this.jobs = featurestoreJobs.stream().map(FeaturestoreJobDTO::new).collect(Collectors.toList());
     this.clusterAnalysis = parseClusterAnalysis(featurestoreStatistics);
     this.featureCorrelationMatrix = parseFeatureCorrelation(featurestoreStatistics);
     this.descriptiveStatistics = parseDescriptiveStats(featurestoreStatistics);

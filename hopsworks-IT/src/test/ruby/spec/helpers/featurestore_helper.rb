@@ -346,12 +346,13 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat, hopsfs_connector, jobs: [])
+  def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat,
+                                              hopsfs_connector, jobs: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "new_dataset_name",
-        jobs: [],
+        jobs: jobs,
         description: "new_testtrainingdatasetdescription",
         version: 1,
         dataFormat: dataFormat,

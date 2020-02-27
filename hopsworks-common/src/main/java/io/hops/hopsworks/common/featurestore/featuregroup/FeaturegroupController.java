@@ -28,9 +28,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPre
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticController;
+import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
@@ -83,7 +83,7 @@ public class FeaturegroupController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private FeaturestoreJobController featurestoreJobController;
+  private FeaturestoreJobFacade featurestoreJobFacade;
   @EJB
   private JobFacade jobFacade;
   @EJB
@@ -198,7 +198,7 @@ public class FeaturegroupController {
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
     
     //Store jobs
-    featurestoreJobController.insertJobs(featuregroup, jobs);
+    featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
     return convertFeaturegrouptoDTO(featuregroup);
   }
@@ -318,7 +318,7 @@ public class FeaturegroupController {
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
     //Store jobs
-    featurestoreJobController.insertJobs(featuregroup, jobs);
+    featurestoreJobFacade.insertJobs(featuregroup, jobs);
 
     return convertFeaturegrouptoDTO(featuregroup);
   }
@@ -334,7 +334,7 @@ public class FeaturegroupController {
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
     //Store jobs
-    featurestoreJobController.insertJobs(featuregroup, jobs);
+    featurestoreJobFacade.insertJobs(featuregroup, jobs);
 
     return convertFeaturegrouptoDTO(featuregroup);
   }
@@ -739,7 +739,7 @@ public class FeaturegroupController {
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
   
     //Store jobs
-    featurestoreJobController.insertJobs(featuregroup, jobs);
+    featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
     return featuregroupDTO;
   }
