@@ -208,39 +208,39 @@ module ProjectHelper
 
   # This function must be added under the first describe of each .spec file to ensure test projects are cleaned up properly
   def clean_all_test_projects
-    pp "Cleaning up test projects"
+    # pp "Cleaning up test projects"
 
-    starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    hydra = Typhoeus::Hydra.new(max_concurrency: 10)
+    # starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    # hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
-    Project.where("projectname LIKE ?", 'project\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'project\_%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    Project.where("projectname LIKE ?", 'ProJect\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'ProJect\_%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    Project.where("projectname LIKE ?", 'demo\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'demo\_%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    Project.where("projectname LIKE ?", 'HOPSWORKS256%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'HOPSWORKS256%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    Project.where("projectname LIKE ?", 'hopsworks256%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'hopsworks256%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    Project.where("projectname LIKE ?", 'prov\_proj\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
+    # Project.where("projectname LIKE ?", 'prov\_proj\_%').each{|project|
+    #   hydra.queue clean_test_project(project)
+    # }
 
-    hydra.run
-    ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-    elapsed = ending - starting
+    # hydra.run
+    # ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    # elapsed = ending - starting
 
-    pp "Finished cleanup - time elapsed " + elapsed.to_s + "s"
+    # pp "Finished cleanup - time elapsed " + elapsed.to_s + "s"
   end
 end
