@@ -47,6 +47,7 @@ import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.dela.AddressJSON;
 import io.hops.hopsworks.common.dela.DelaClientType;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
@@ -186,6 +187,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUDOERS_DIR = "sudoers_dir";
   private static final String VARIABLE_YARN_DEFAULT_QUOTA = "yarn_default_quota";
   private static final String VARIABLE_HDFS_DEFAULT_QUOTA = "hdfs_default_quota";
+  private static final String VARIABLE_HDFS_BASE_STORAGE_POLICY = "hdfs_base_storage_policy";
+  private static final String VARIABLE_HDFS_LOG_STORAGE_POLICY = "hdfs_log_storage_policy";
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
       = "max_num_proj_per_user";
   private static final String VARIABLE_RESERVED_PROJECT_NAMES = "reserved_project_names";
@@ -610,6 +613,8 @@ public class Settings implements Serializable {
       YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
           HDFS_DEFAULT_QUOTA_MBs);
+      HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
+      HDFS_LOG_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_LOG_STORAGE_POLICY, HDFS_LOG_STORAGE_POLICY);
       MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER,
           MAX_NUM_PROJ_PER_USER);
       CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
@@ -1197,6 +1202,38 @@ public class Settings implements Serializable {
   public synchronized long getHdfsDefaultQuotaInMBs() {
     checkCache();
     return Long.parseLong(HDFS_DEFAULT_QUOTA_MBs);
+  }
+  
+  // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
+  private DistributedFileSystemOps.StoragePolicy HDFS_BASE_STORAGE_POLICY
+    = DistributedFileSystemOps.StoragePolicy.SMALL_FILES;
+  // To not fill the SSDs with Logs files that nobody access frequently
+  // We set the StoragePolicy for the LOGS dir to be DEFAULT
+  private DistributedFileSystemOps.StoragePolicy HDFS_LOG_STORAGE_POLICY
+      = DistributedFileSystemOps.StoragePolicy.DEFAULT;
+
+  private DistributedFileSystemOps.StoragePolicy setHdfsStoragePolicy(String policyName,
+    DistributedFileSystemOps.StoragePolicy defaultPolicy) {
+    Variables existingPolicy = findById(policyName);
+    if (existingPolicy == null || existingPolicy.getValue() == null || existingPolicy.getValue().isEmpty()) {
+      return defaultPolicy;
+    }
+    try {
+      return DistributedFileSystemOps.StoragePolicy.fromPolicy(existingPolicy.getValue());
+    } catch(IllegalArgumentException ex) {
+      LOGGER.warning("Error - not a valid storage policy! Value was:" + existingPolicy.getValue());
+      return defaultPolicy;
+    }
+  }
+
+  public synchronized DistributedFileSystemOps.StoragePolicy getHdfsBaseStoragePolicy() {
+    checkCache();
+    return HDFS_BASE_STORAGE_POLICY;
+  }
+  
+  public synchronized DistributedFileSystemOps.StoragePolicy getHdfsLogStoragePolicy() {
+    checkCache();
+    return HDFS_LOG_STORAGE_POLICY;
   }
 
   private String AIRFLOW_WEB_UI_IP = "127.0.0.1";
