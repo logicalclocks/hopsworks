@@ -40,8 +40,8 @@
 package io.hops.hopsworks.api.util;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.api.dataset.util.DatasetHelper;
-import io.hops.hopsworks.api.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;

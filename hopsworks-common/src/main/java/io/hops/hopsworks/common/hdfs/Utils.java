@@ -207,4 +207,14 @@ public final class Utils {
     }
     return result;
   }
+  
+  public static String pathStripSlash(String path) {
+    while (path.startsWith(File.separator)) {
+      path = path.substring(1);
+    }
+    while (path.endsWith(File.separator)) {
+      path = path.substring(0, path.length() - 1);
+    }
+    return path;
+  }
 }

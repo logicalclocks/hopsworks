@@ -49,14 +49,16 @@ angular.module('hopsWorksApp')
             self.loading = true;
             var dataSetService = DataSetService(self.pId);
             var defaultPermissions = 'OWNER_ONLY';
-            
-            self.ownerOnlyMsg = "Sets default permissions setting of a Dataset. " +
-                    "Only Data Owners will be able to upload/remove files, either via the Dataset Browser or via Jobs and Jupyter notebooks.";
-            self.groupWritableAndStickyBitSet = "Allow Data Owners to upload/remove files, Data Scientists are allowed to upload files but only remove files/dirs they own, via the Dataset Browser. "+
-                    "<br> Are you sure you want to proceed?";
-            self.groupWritable = "This is the least strict setting. It allows both Data Owners and Data Scientists to upload/remove files either via the Dataset Browser or via Jobs/Notebooks. <br> Are you sure you want to proceed?";
 
-            ProjectService.getAll().$promise.then(
+            self.ownerOnlyMsg = "Sets default permissions setting of a Data Set. Only Data Owners will be able to upload/remove files either via the Data Sets browser and only the owner of the Data Set via Jobs and Jupyter notebooks.";
+            self.groupWritableAndStickyBitSet = "Data Owners are allowed to upload/remove files and Data Scientists are allowed to upload files, but only remove files/dirs they own. These operations can be done via the Data Set Browser, Jobs and Jupyter notebooks. <br> Are you sure you want to proceed?";
+            self.groupWritable = "This is the least strict setting. It allows both Data Owners and Data Scientists to upload/remove files either via the Data Set Browser, Jobs and Jupyter Notebooks. <br> Are you sure you want to proceed?";
+
+            self.hiveOwnerOnlyMsg = "Sets default permissions setting of a Data Set. Only the owner will be able to upload/remove files from the Data Set via Jobs and Jupyter notebooks.";
+            self.hiveGroupWritableAndStickyBitSet = "Data Owners are allowed to upload/remove files and Data Scientists are allowed to upload files, but only remove files/dirs they own. These operations can be done via Jobs and Jupyter notebooks. <br> Are you sure you want to proceed?";
+            self.hiveGroupWritable = "This is the least strict setting. It allows both Data Owners and Data Scientists to upload/remove files either via Jobs and Jupyter Notebooks. <br> Are you sure you want to proceed?";
+
+          ProjectService.getAll().$promise.then(
                 function (success) {
                     self.projects = success;
                     self.loading = false;
@@ -77,7 +79,7 @@ angular.module('hopsWorksApp')
 
             self.shareDataset = function () {
                 if ($scope.dataSetForm.$valid) {
-                    dataSetService.share(datasetPath, self.targetProject)
+                    dataSetService.share(datasetPath, self.targetProject, dsType)
                         .then(function (success) {
                             $uibModalInstance.close(success);
                         },
@@ -110,14 +112,24 @@ angular.module('hopsWorksApp')
             };
             
             self.getPermissionsText = function() {
-              if(typeof permissions !== 'undefined'){
+              if(dsType === "HIVEDB" || dsType === "FEATURESTORE") {
                 if(permissions === 'GROUP_WRITABLE_SB'){
-                  return self.groupWritableAndStickyBitSet;
+                  return self.hiveGroupWritableAndStickyBitSet;
                 } else if(permissions === 'GROUP_WRITABLE'){
-                  return self.groupWritable;
+                  return self.hiveGroupWritable;
                 } else if(permissions === 'OWNER_ONLY'){
-                  return self.ownerOnlyMsg;
-                } 
+                  return self.hiveOwnerOnlyMsg;
+                }
+              } else {
+                if (typeof permissions !== 'undefined') {
+                  if (permissions === 'GROUP_WRITABLE_SB') {
+                    return self.groupWritableAndStickyBitSet;
+                  } else if (permissions === 'GROUP_WRITABLE') {
+                    return self.groupWritable;
+                  } else if (permissions === 'OWNER_ONLY') {
+                    return self.ownerOnlyMsg;
+                  }
+                }
               }
             };
             

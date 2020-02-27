@@ -103,6 +103,8 @@ package-lock.json
 ## Directory-based project format:
 .idea/
 
+.java-version
+
 hopsworks-web/yo/node_modules
 
 ## File-based project format:

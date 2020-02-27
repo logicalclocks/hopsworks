@@ -128,7 +128,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
     for(Map.Entry<String, Integer> entry : featureCount.entrySet()) {
       if(entry.getValue() == 0){
         String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_FEATURE_NOT_EXISTING,
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST,
           Level.WARNING,
           String.format("Feature %s does not exist in featurestore %s", entry.getKey(), featurestoreName));
       }

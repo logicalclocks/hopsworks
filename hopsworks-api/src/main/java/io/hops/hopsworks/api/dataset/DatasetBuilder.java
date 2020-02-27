@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
-import io.hops.hopsworks.api.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.dataset.Dataset;

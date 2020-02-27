@@ -105,6 +105,23 @@ public class DataSetDTO {
               getUser().getLname(), member.getUser().getEmail()));
     }
   }
+
+  public DataSetDTO(Dataset ds) {
+    this.inodeId = ds.getInode().getId();
+    this.name = ds.getInode().getInodePK().getName();
+    this.description = ds.getDescription();
+    this.projectName = ds.getProject().getName();
+    this.sharedWith = sharedWith;
+    this.projectTeam = new ArrayList<>();
+    this.isPublic = ds.isPublicDs();
+    this.searchable = ds.isSearchable();
+    //this have to be done because project team contains too much info.
+    for (ProjectTeam member : ds.getProject().getProjectTeamCollection()) {
+      projectTeam.add(new UserCardDTO(member.getUser().getFname(), member.
+          getUser().getLname(), member.getUser().getEmail()));
+    }
+    this.type = ds.getDsType();
+  }
   
   public Long getInodeId() {
     return inodeId;
