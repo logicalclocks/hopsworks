@@ -293,9 +293,12 @@ public class TrainingDatasetController {
    */
   private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
     if(jobDTOs != null){
-      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
-           .map(FeaturestoreJobDTO::getJobName).distinct().map(jobName ->
-          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
+      return jobDTOs.stream()
+          .filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
+          .map(FeaturestoreJobDTO::getJobName)
+          .distinct()
+          .map(jobName -> jobFacade.findByProjectAndName(project, jobName))
+          .collect(Collectors.toList());
     } else {
       return new ArrayList<>();
     }
@@ -470,10 +473,7 @@ public class TrainingDatasetController {
   
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
-  
-    // Verify training dataset specific information
-    verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
-  
+
     //Get jobs
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
     //Store jobs
@@ -481,7 +481,6 @@ public class TrainingDatasetController {
     
     // Update metadata
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
-
     TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
 
     return convertTrainingDatasetToDTO(updatedTrainingDataset);

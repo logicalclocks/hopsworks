@@ -1013,14 +1013,14 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("version")).to be true
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
-          expect(parsed_json.key?("hdfsStorePath")).to be true
-          expect(parsed_json.key?("hopsfsConnectorId")).to be true
-          expect(parsed_json.key?("hopsfsConnectorName")).to be true
+          expect(parsed_json.key?("location")).to be true
+          expect(parsed_json.key?("storageConnectorId")).to be true
+          expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("inodeId")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "HOPSFS_TRAINING_DATASET").to be true
-          expect(parsed_json["hopsfsConnectorId"] == connector.id).to be true
+          expect(parsed_json["storageConnectorId"] == connector.id).to be true
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with upper case characters" do
@@ -1050,20 +1050,32 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270057).to be true
         end
 
-        it "should not be able to add a hopsfs training dataset to the featurestore without specifying a hopsfs connector" do
+        it "should not be able to create a training dataset with the same name and version" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, nil)
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
-          expect_status(422)
+          expect_status(201)
+
+          create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name)
+          expect_status(400)
+        end
+
+        it "should be able to add a hopsfs training dataset to the featurestore without specifying a hopsfs connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, nil)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["storageConnectorName"] == "#{project['projectname']}_Training_Datasets")
         end
 
         it "should be able to delete a hopsfs training dataset from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          json_result1, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           training_dataset_id = parsed_json1["id"]
@@ -1079,37 +1091,97 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("hdfsStorePath")).to be true
-          expect(parsed_json2.key?("hopsfsConnectorId")).to be true
-          expect(parsed_json2.key?("hopsfsConnectorName")).to be true
+          expect(parsed_json2.key?("storageConnectorId")).to be true
+          expect(parsed_json2.key?("storageConnectorName")).to be true
           expect(parsed_json2.key?("inodeId")).to be true
           expect(parsed_json2["id"] == training_dataset_id).to be true
-          expect(parsed_json2["hopsfsConnectorId"] == connector.id).to be true
+          expect(parsed_json2["storageConnectorId"] == connector.id).to be true
         end
 
-        it "should be able to update the metadata of a hopsfs training dataset from the featurestore" do
+        it "should not be able to update the metaddata of a hopsfs training dataset from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json1 = JSON.parse(json_result1)
+          parsed_json1 = json.parse(json_result1)
           expect_status(201)
           training_dataset_id = parsed_json1["id"]
           json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id, training_dataset_id, "petastorm", connector)
-          parsed_json2 = JSON.parse(json_result2)
+          parsed_json2 = json.parse(json_result2)
           expect_status(200)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
           expect(parsed_json2.key?("creator")).to be true
           expect(parsed_json2.key?("location")).to be true
           expect(parsed_json2.key?("version")).to be true
-          expect(parsed_json2.key?("dataFormat")).to be true
-          expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("hdfsStorePath")).to be true
-          expect(parsed_json2.key?("hopsfsConnectorId")).to be true
-          expect(parsed_json2.key?("hopsfsConnectorName")).to be true
-          expect(parsed_json2.key?("inodeId")).to be true
-          expect(parsed_json2["dataFormat"] == "petastorm").to be true
+          expect(parsed_json2.key?("dataformat")).to be true
+          expect(parsed_json2.key?("trainingdatasettype")).to be true
+          expect(parsed_json2.key?("storageconnectorid")).to be true
+          expect(parsed_json2.key?("storageconnectorname")).to be true
+          expect(parsed_json2.key?("inodeid")).to be true
+
+          # make sure the dataformat didn't change
+          expect(parsed_json2["dataformat"] == "tfrecords").to be true
+        end
+
+        it "should not be able to update the name of a training dataset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          parsed_json1 = json.parse(json_result1)
+          expect_status(201)
+
+          training_dataset_id = parsed_json1["id"]
+          json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
+                                                                 training_dataset_id, "tfrecords", connector)
+          parsed_json2 = json.parse(json_result2)
+          expect_status(200)
+
+          # make sure the name didn't change
+          expect(parsed_json2["name"]).to eql(training_dataset_name)
+        end
+
+        it "should be able to update the description of a training dataset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          parsed_json1 = json.parse(json_result1)
+          expect_status(201)
+
+          training_dataset_id = parsed_json1["id"]
+          json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
+                                                                 training_dataset_id, "tfrecords", connector)
+          parsed_json2 = json.parse(json_result2)
+          expect_status(200)
+
+          # make sure the name didn't change
+          expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
+        end
+
+        it "should be able to update the jobs of a training dataset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result1, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          parsed_json1 = json.parse(json_result1)
+          expect_status(201)
+
+          # Create a fake job
+          create_sparktour_job(project, "ingestion_job", "jar")
+
+          jobs = [{"name": "ingestion_job"}]
+
+          training_dataset_id = parsed_json1["id"]
+          json_result2 = update_hopsfs_training_dataset_metadata(project.id, featurestore_id,
+                                                                 training_dataset_id, "tfrecords", connector, jobs)
+          parsed_json2 = json.parse(json_result2)
+          expect_status(200)
+
+          # make sure the name didn't change
+          expect(parsed_json2["jobs"].count).to be 1
+          expect(parsed_json2["jobs"][1]["name"]).to eql("ingestion_job")
         end
 
         it "should be able to get a list of training dataset versions based on the name" do
@@ -1192,12 +1264,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
           expect(parsed_json.key?("description")).to be true
-          expect(parsed_json.key?("s3ConnectorId")).to be true
-          expect(parsed_json.key?("s3ConnectorName")).to be true
+          expect(parsed_json.key?("storageConnectorId")).to be true
+          expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
-          expect(parsed_json["s3ConnectorId"] == connector_id).to be true
+          expect(parsed_json["storageConnectorId"] == connector_id).to be true
         end
 
         it "should not be able to add an external training dataset to the featurestore with upper case characters" do
@@ -1220,7 +1292,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, nil)
           parsed_json = JSON.parse(json_result)
-          expect_status(422)
+          expect_status(400)
         end
 
         it "should be able to delete an external training dataset from the featurestore" do
@@ -1245,12 +1317,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
           expect(parsed_json2.key?("description")).to be true
-          expect(parsed_json2.key?("s3ConnectorId")).to be true
-          expect(parsed_json2.key?("s3ConnectorName")).to be true
+          expect(parsed_json2.key?("storageConnectorId")).to be true
+          expect(parsed_json2.key?("storageConnectorName")).to be true
           expect(parsed_json2["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json2["name"] == training_dataset_name).to be true
           expect(parsed_json2["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
-          expect(parsed_json2["s3ConnectorId"] == connector_id).to be true
+          expect(parsed_json2["storageConnectorId"] == connector_id).to be true
         end
 
         it "should be able to update the metadata (description) of an external training dataset from the featurestore" do
@@ -1275,13 +1347,46 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
           expect(parsed_json2.key?("description")).to be true
-          expect(parsed_json2.key?("s3ConnectorId")).to be true
-          expect(parsed_json2.key?("s3ConnectorName")).to be true
+          expect(parsed_json2.key?("storageConnectorId")).to be true
+          expect(parsed_json2.key?("storageConnectorName")).to be true
           expect(parsed_json2["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json2["description"] == "new description").to be true
           expect(parsed_json2["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
         end
 
+        it "should not be able do change the storage connector" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, connector_id)
+          parsed_json1 = json.parse(json_result1)
+          expect_status(201)
+
+          training_dataset_id = parsed_json1["id"]
+          json_new_connector, _ = create_s3_connector(project.id, featurestore_id)
+          new_connector = json.parse(json_new_connector)
+
+          json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id,
+                                                                   training_dataset_id, training_dataset_name, "desc",
+                                                                   new_connector.id)
+          parsed_json2 = json.parse(json_result2)
+          expect_status(200)
+
+          # make sure the name didn't change
+          expect(parsed_json2["storageConnectorId"]).to be connector.id
+        end
+
+        it "should store and return the correct path within the bucket" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          json_result1, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                 connector_id,
+                                                                                 location = "/inner/location")
+          parsed_json1 = json.parse(json_result1)
+          expect_status(201)
+          expect(parsed_json1['location']).to eql("s3://test/inner/location/#{training_dataset_name}_1")
+        end
       end
     end
 

@@ -171,7 +171,6 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
    * @return
    */
   public TrainingDataset updateTrainingDatasetMetadata(TrainingDataset trainingDataset) {
-    em.merge(trainingDataset);
-    return trainingDataset;
+    return em.merge(trainingDataset);
   }
 }

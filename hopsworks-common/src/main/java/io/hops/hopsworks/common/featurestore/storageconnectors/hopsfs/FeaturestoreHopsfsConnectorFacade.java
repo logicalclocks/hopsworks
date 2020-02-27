@@ -84,7 +84,7 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
    */
   public Optional<FeaturestoreHopsfsConnector> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return Optional.of(em.createNamedQuery("FeaturestoreHopsfsConnector.findById",
+      return Optional.of(em.createNamedQuery("FeaturestoreHopsfsConnector.findByFeaturestoreAndId",
           FeaturestoreHopsfsConnector.class)
           .setParameter("id", id)
           .setParameter("featurestore", featurestore)

@@ -43,7 +43,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -245,7 +244,7 @@ public class TrainingDatasetService {
   public Response delete(
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid)
-      throws FeaturestoreException, IOException, UnsupportedEncodingException {
+      throws FeaturestoreException, IOException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     String trainingDsName = trainingDatasetController.delete(user, project, featurestore, trainingdatasetid);
@@ -276,11 +275,11 @@ public class TrainingDatasetService {
   public Response updateTrainingDataset(@Context SecurityContext sc,
                                         @ApiParam(value = "Id of the training dataset", required = true)
                                         @PathParam("trainingdatasetid") Integer trainingdatasetid,
-    @ApiParam(value = "updateMetadata", example = "true")
-    @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
-    @ApiParam(value = "updateStats", example = "true")
-    @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
-    TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
+                                        @ApiParam(value = "updateMetadata", example = "true")
+                                          @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
+                                        @ApiParam(value = "updateStats", example = "true")
+                                          @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
+                                        TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
@@ -289,26 +288,20 @@ public class TrainingDatasetService {
     Users user = jWTHelper.getUserPrincipal(sc);
     TrainingDatasetDTO oldTrainingDatasetDTO =
       trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
-    // TODO(Fabio): what do we allow people to update?
-    // - description
-    // - stats
-    // - jobs
-    // WTF is even this code ?????????
+
     if(updateMetadata){
-      TrainingDatasetDTO updatedTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetMetadata(
-          featurestore, trainingDatasetDTO);
+      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetMetadata(featurestore, trainingDatasetDTO);
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
           project, user, ActivityFlag.SERVICE);
     }
     if(updateStats) {
-      TrainingDatasetDTO updatedTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStats(featurestore,
-        trainingDatasetDTO);
+      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStats(featurestore, trainingDatasetDTO);
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
           project, user, ActivityFlag.SERVICE);
     }
 
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
-      new GenericEntity<TrainingDatasetDTO>(trainingDatasetDTO) {};
+      new GenericEntity<TrainingDatasetDTO>(oldTrainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetDTOGenericEntity)
       .build();
   }
