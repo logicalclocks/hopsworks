@@ -87,25 +87,21 @@ angular.module('hopsWorksApp')
             //front-end variables
             self.accordion1 = {
                 "isOpen": true,
-                "visible": true,
                 "value": "",
                 "title": "Name"
             };
             self.accordion2 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Description"
             };
             self.accordion3 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Configure"
             };
             self.accordion4 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Create"
             };
@@ -118,14 +114,6 @@ angular.module('hopsWorksApp')
                 var j = 0;
                 if (self.storageConnectorOperation === "UPDATE") {
                     self.accordion4.title = "Update"
-                    self.accordion4.visible = true
-                    self.accordion4.isOpen = true
-                    self.accordion3.visible = true
-                    self.accordion3.isOpen = false
-                    self.accordion2.visible = true
-                    self.accordion2.isOpen = false
-                    self.accordion1.visible = true
-                    self.accordion1.isOpen = true
                     self.storageConnectorName = self.storageConnector.name
                     self.storageConnectorDescription = self.storageConnector.description
                     if (self.storageConnector.storageConnectorType === self.jdbcConnectorType) {
@@ -490,7 +478,7 @@ angular.module('hopsWorksApp')
                 //Get the path for an empty patharray: will get the datasets
                 self.dataSetService.getAllDatasets("").then(
                     function (success) {
-                        self.datasets = success.data;
+                        self.datasets = success.data.items;
                         self.initVariables()
                     }, function (error) {
                         growl.error(error.data.errorMsg, { title: 'Failed to fetch datasets in project', ttl: 15000 });

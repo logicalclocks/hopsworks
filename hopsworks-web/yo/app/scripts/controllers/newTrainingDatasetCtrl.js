@@ -19,9 +19,9 @@
  * Controller for managing the "create new training dataset" page
  */
 angular.module('hopsWorksApp')
-    .controller('newTrainingDatasetCtrl', ['$routeParams', 'growl',
+    .controller('newTrainingDatasetCtrl', ['$routeParams', '$scope', 'growl',
         '$location', 'StorageService', 'FeaturestoreService', 'ModalService',
-        function ($routeParams, growl, $location, StorageService, FeaturestoreService, ModalService) {
+        function ($routeParams, $scope, growl, $location, StorageService, FeaturestoreService, ModalService) {
 
             var self = this;
 
@@ -63,9 +63,7 @@ angular.module('hopsWorksApp')
             self.trainingDatasetNameRegexp = self.settings.featurestoreRegex
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
-            self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatasetDtoType
             self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
-            self.externalTrainingDatasetTypeDTO = self.settings.externalTrainingDatasetDtoType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.featuregroupType = self.settings.featuregroupType
@@ -272,21 +270,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.descriptionFilledIn = function () {
-                if (self.trainingDatasetOperation === 'CREATE') {
-                    if (self.phase === 1) {
-                        if (!self.trainingDatasetDoc) {
-                            self.trainingDatasetDoc = "-";
-                        }
-                        self.phase = 2;
-                        self.td_accordion3.visible = true;
-                        self.td_accordion3.isOpen = false;
-                        self.td_accordion4.visible = true;
-                        self.td_accordion4.isOpen = true;
-                        self.td_accordion5.visible = true;
-                        self.td_accordion5.isOpen = false;
-                    }
-                    self.td_accordion2.value = " - " + self.trainingDatasetDoc; //Edit panel title
-                }
+                self.td_accordion2.value = " - " + self.trainingDatasetDoc; //Edit panel title
             };
 
             /**
@@ -301,8 +285,6 @@ angular.module('hopsWorksApp')
                             self.trainingDatasetName = "TrainingDataset-" + Math.round(new Date().getTime() / 1000);
                         }
                         self.phase = 1;
-                        self.td_accordion2.isOpen = true; //Open description selection
-                        self.td_accordion2.visible = true; //Display description selection
                     }
                     self.td_accordion1.value = " - " + self.trainingDatasetName; //Edit panel title
                 }
@@ -796,6 +778,16 @@ angular.module('hopsWorksApp')
                         // Users changed their minds.
                     });
             };
+
+
+            /**
+             * Remove entries from local storage
+             */
+            $scope.$on("$destroy", function() {
+                StorageService.remove(self.projectId + "_fgFeatures");
+                StorageService.remove("trainingdataset_operation");
+                StorageService.remove(self.projectId + "_trainingDataset");
+            });
 
             self.init();
         }
