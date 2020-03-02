@@ -230,8 +230,12 @@ angular.module('hopsWorksApp')
                             var i=0;
                                 self.experiments = self.experiments.slice(0, success.data.items.length)
                                 angular.forEach(success.data.items, function (experiment, key) {
-                                    if(typeof self.experiments[i] === 'undefined') {
+                                    if(typeof self.experiments[i] === 'undefined' || self.experiments[i] === null || self.experiments[i] === "") {
                                         self.experiments[i] = {};
+                                    } else {
+                                        for (var key in self.experiments[i]) {
+                                            delete self.experiments[i][key];
+                                        }
                                     }
                                     for (var key in experiment) {
                                         self.experiments[i][key] = experiment[key];
@@ -349,7 +353,6 @@ angular.module('hopsWorksApp')
             self.experimentResults = {};
 
             self.initExpansionTable = function(experiment) {
-                console.log(experiment);
                 var experimentId = experiment.id;
                 self.experimentResults[experimentId] = [];
 
