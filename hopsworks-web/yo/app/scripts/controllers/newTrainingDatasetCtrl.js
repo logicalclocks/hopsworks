@@ -68,11 +68,8 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.featuregroupType = self.settings.featuregroupType
             self.trainingDatasetType = self.settings.trainingDatasetType
-            self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
             self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
-            self.featurestoreUtil4JExecutable = self.settings.featurestoreUtil4jExecutable
             self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
-            self.sparkJobType = "SPARK"
             self.pySparkJobType = "PYSPARK"
 
             //Input Variables
@@ -537,7 +534,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             var hdfsPath = success.data.successMessage;
                             StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
-                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath);
+                            var runConfig = self.setupHopsworksCreateTdJob(jobName);
                             FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
                                 function (success) {
                                     self.working = false;
@@ -657,7 +654,7 @@ angular.module('hopsWorksApp')
              */
             self.setupJobArgs = function (fileName) {
                 return {
-                    "operation": "create_td",
+                    "operation": "insert_into_td",
                     "featurestore": self.featurestore.featurestoreName,
                     "features": self.featureBasket,
                     "featuregroups": self.queryPlan.featuregroups,
@@ -681,31 +678,18 @@ angular.module('hopsWorksApp')
              * Sets up the job configuration for creating a training dataset using Spark and the Featurestore API
              *
              * @param jobName name of the job
-             * @param argsPath HDSF path to the input arguments
              * @returns the configured json
              */
-            self.setupHopsworksCreateTdJob = function (jobName, argsPath) {
-                var path = ""
-                var mainClass = ""
-                var jobType = ""
-                if (self.trainingDatasetFormat === "petastorm" || self.trainingDatasetFormat === "npy") {
-                    path = self.featurestoreUtilPythonExecutable
-                    mainClass = self.settings.featurestoreUtilPythonMainClass
-                    jobType = self.pySparkJobType
-                } else {
-                    path = self.featurestoreUtil4JExecutable
-                    mainClass = self.settings.featurestoreUtil4jMainClass
-                    jobType = self.sparkJobType
-                }
+            self.setupHopsworksCreateTdJob = function (jobName) {
                 return {
                     type: "sparkJobConfiguration",
                     appName: jobName,
                     amQueue: "default",
                     amMemory: 4000,
                     amVCores: 1,
-                    jobType: jobType,
-                    appPath: path,
-                    mainClass: mainClass,
+                    jobType: self.pySparkJobType,
+                    appPath: self.featurestoreUtilPythonExecutable,
+                    mainClass: self.settings.featurestoreUtilPythonMainClass,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,
