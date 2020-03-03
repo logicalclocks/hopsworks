@@ -105,8 +105,7 @@ public class TensorBoardController {
     String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
 
     tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, tensorBoardLogdir,
-        tfLdLibraryPath,
-            tensorBoardDirectory);
+        tfLdLibraryPath, tensorBoardDirectory);
     Date lastAccessed = new Date();
     tensorBoardDTO.setMlId(mlId);
     tensorBoardDTO.setLastAccessed(lastAccessed);

@@ -3177,7 +3177,8 @@ public class Settings implements Serializable {
   private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
   private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, pandas, numpy";
+      "hops, pandas, numpy, matplotlib, maggy, tqdm, Flask, scikit-learn, avro, seaborn, confluent-kafka, " +
+          "hops-petastorm, opencv-python, tfx, tensorflow-model-analysis, pytorch, torchvision";
 
   public synchronized Set<String> getProvidedPythonLibraryNames() {
     checkCache();
@@ -3188,7 +3189,8 @@ public class Settings implements Serializable {
   private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
   private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
-      "tensorflow-gpu, tensorflow, pydoop, pyspark, tensorboard";
+      "tensorflow, pydoop, pyspark, tensorboard, jupyterlab, sparkmagic, hdfscontents, pyjks, hops-apache-beam, " +
+          "pyopenssl";
 
   public synchronized Set<String> getPreinstalledPythonLibraryNames() {
     checkCache();
