@@ -1143,8 +1143,9 @@ describe "On #{ENV['OS']}" do
           parsed_json2 = JSON.parse(json_result2)
           expect_status(200)
 
-          # make sure the name didn't change
           expect(parsed_json2["description"]).to eql("new_testtrainingdatasetdescription")
+          # make sure the name didn't change
+          expect(parsed_json2["name"]).to eql(training_dataset_name)
         end
 
         it "should be able to update the jobs of a training dataset" do
