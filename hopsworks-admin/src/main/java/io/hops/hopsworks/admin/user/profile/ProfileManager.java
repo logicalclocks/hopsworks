@@ -43,13 +43,8 @@ import io.hops.hopsworks.admin.maintenance.ClientSessionState;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.admin.user.administration.AuditedUserAdministration;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.Address;
-import io.hops.hopsworks.persistence.entity.user.security.Organization;
-import io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins;
-
+import java.io.Serializable;
+import java.util.List;
 import javax.ejb.EJB;
 import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
@@ -57,8 +52,13 @@ import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
-import java.io.Serializable;
-import java.util.List;
+
+import io.hops.hopsworks.common.dao.user.security.Address;
+import io.hops.hopsworks.common.dao.user.security.Organization;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
+import io.hops.hopsworks.common.user.UsersController;
 
 @ManagedBean
 @ViewScoped

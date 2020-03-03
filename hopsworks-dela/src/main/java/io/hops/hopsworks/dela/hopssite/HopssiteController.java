@@ -40,6 +40,8 @@
 package io.hops.hopsworks.dela.hopssite;
 
 import com.google.gson.Gson;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.ClientWrapper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaStateController;
@@ -52,11 +54,9 @@ import io.hops.hopsworks.dela.dto.hopssite.HopsSiteDatasetDTO;
 import io.hops.hopsworks.dela.dto.hopssite.RateDTO;
 import io.hops.hopsworks.dela.dto.hopssite.RatingDTO;
 import io.hops.hopsworks.dela.dto.hopssite.SearchServiceDTO;
+import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.old_hopssite_dto.DatasetIssueDTO;
 import io.hops.hopsworks.dela.old_hopssite_dto.PopularDatasetJSON;
-import io.hops.hopsworks.exceptions.DelaException;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.util.SettingsHelper;
 
 import javax.ejb.EJB;

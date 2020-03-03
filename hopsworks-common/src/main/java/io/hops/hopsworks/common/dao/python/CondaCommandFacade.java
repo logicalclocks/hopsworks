@@ -16,14 +16,8 @@
 package io.hops.hopsworks.common.dao.python;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
-import io.hops.hopsworks.persistence.entity.python.CondaOp;
-import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
-
+import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.common.dao.project.Project;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -49,6 +43,46 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
 
   public CondaCommandFacade() {
     super(CondaCommands.class);
+  }
+
+  public enum CondaOp {
+    CLONE,
+    CREATE,
+    BACKUP,
+    REMOVE,
+    LIST,
+    INSTALL,
+    UNINSTALL,
+    UPGRADE,
+    CLEAN,
+    YML,
+    EXPORT;
+
+    public boolean isEnvOp() {
+      return CondaOp.isEnvOp(this);
+    }
+  
+    public static boolean isEnvOp(CondaOp arg) {
+      if (arg.compareTo(CondaOp.CLONE) == 0 || arg.compareTo(CondaOp.CREATE) == 0 || arg.compareTo(CondaOp.YML) == 0 ||
+        arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.BACKUP) == 0 || arg.compareTo(CondaOp.CLEAN) == 0
+        || arg.compareTo(CondaOp.EXPORT) == 0) {
+        return true;
+      }
+      return false;
+    }
+  }
+
+  public enum CondaInstallType {
+    ENVIRONMENT,
+    CONDA,
+    PIP
+  }
+
+  public enum CondaStatus {
+    NEW,
+    SUCCESS,
+    ONGOING,
+    FAILED
   }
 
   public int deleteAllCommandsByStatus(CondaStatus status) {
@@ -124,7 +158,7 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     return query.getResultList();
   }
   
-  public List<CondaCommands> findByStatus(CondaStatus status) {
+  public List<CondaCommands> findByStatus(CondaCommandFacade.CondaStatus status) {
     TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByStatus", CondaCommands.class);
     query.setParameter("status", status);
     return query.getResultList();
@@ -141,9 +175,9 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     String queryCountStr = buildQuery("SELECT COUNT(c.id) FROM CondaCommands c ", filter, sort,
         "c.installType = :installType AND c.projectId = :project ");
     Query query = em.createQuery(queryStr, CondaCommands.class)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("installType", CondaCommandFacade.CondaInstallType.ENVIRONMENT).setParameter("project", project);
     Query queryCount = em.createQuery(queryCountStr, CondaCommands.class)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("installType", CondaCommandFacade.CondaInstallType.ENVIRONMENT).setParameter("project", project);
     return findAll(offset, limit, filter, query, queryCount);
   }
 
@@ -155,9 +189,9 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     String queryCountStr = buildQuery("SELECT COUNT(c.id) FROM CondaCommands c ", filter, sort,
         "c.lib = :lib AND c.installType <> :installType AND c.projectId = :project ");
     Query query = em.createQuery(queryStr, CondaCommands.class).setParameter("lib", libName)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("installType", CondaCommandFacade.CondaInstallType.ENVIRONMENT).setParameter("project", project);
     Query queryCount = em.createQuery(queryCountStr, CondaCommands.class).setParameter("lib", libName)
-        .setParameter("installType", CondaInstallType.ENVIRONMENT).setParameter("project", project);
+        .setParameter("installType", CondaCommandFacade.CondaInstallType.ENVIRONMENT).setParameter("project", project);
     return findAll(offset, limit, filter, query, queryCount);
   }
 
@@ -206,17 +240,17 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   }
   
   private void setCondaOp(AbstractFacade.FilterBy filterBy, Query q) {
-    List<CondaOp> ops = getEnumValues(filterBy, CondaOp.class);
+    List<CondaCommandFacade.CondaOp> ops = getEnumValues(filterBy, CondaCommandFacade.CondaOp.class);
     q.setParameter(filterBy.getField(), ops);
   }
 
   private void setStatus(AbstractFacade.FilterBy filterBy, Query q) {
-    List<CondaStatus> status = getEnumValues(filterBy, CondaStatus.class);
+    List<CondaCommandFacade.CondaStatus> status = getEnumValues(filterBy, CondaCommandFacade.CondaStatus.class);
     q.setParameter(filterBy.getField(), status);
   }
 
   private void setMachineType(AbstractFacade.FilterBy filterBy, Query q) {
-    List<MachineType> machineTypes = getEnumValues(filterBy, MachineType.class);
+    List<LibraryFacade.MachineType> machineTypes = getEnumValues(filterBy, LibraryFacade.MachineType.class);
     q.setParameter(filterBy.getField(), machineTypes);
   }
 

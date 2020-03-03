@@ -16,8 +16,7 @@
 package io.hops.hopsworks.common.dao.user.security.apiKey;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
+import io.hops.hopsworks.common.dao.user.Users;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

@@ -18,6 +18,10 @@ package io.hops.hopsworks.api.models;
 import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
@@ -27,7 +31,6 @@ import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.search.sort.SortOrder;
 import org.json.JSONObject;
@@ -52,6 +55,12 @@ public class ModelsBuilder {
   public final static String MODEL_SUMMARY_XATTR_NAME = "model_summary";
 
   private static final Logger LOGGER = Logger.getLogger(ModelsBuilder.class.getName());
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private HdfsUsersFacade hdfsUsersFacade;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   @EJB
   private ProvStateController provenanceController;
   @EJB

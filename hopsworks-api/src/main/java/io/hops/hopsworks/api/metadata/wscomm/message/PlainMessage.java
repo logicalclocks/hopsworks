@@ -39,11 +39,10 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
-
-import javax.json.JsonObject;
+import io.hops.hopsworks.common.dao.metadata.EntityIntf;
 import java.util.LinkedList;
 import java.util.List;
+import javax.json.JsonObject;
 
 public abstract class PlainMessage implements Message {
 

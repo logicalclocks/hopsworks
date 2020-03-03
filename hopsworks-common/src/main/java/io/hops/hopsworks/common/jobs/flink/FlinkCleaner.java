@@ -15,12 +15,13 @@
  */
 package io.hops.hopsworks.common.jobs.flink;
 
+import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.kagent.HostServices;
+import io.hops.hopsworks.common.util.Settings;
 import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
@@ -42,6 +43,8 @@ public class FlinkCleaner {
   
   @EJB
   private FlinkController flinkController;
+  @EJB
+  private Settings settings;
   @EJB
   private InodeController inodeController;
   @EJB

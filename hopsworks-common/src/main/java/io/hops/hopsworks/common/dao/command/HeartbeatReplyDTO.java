@@ -39,8 +39,7 @@
 
 package io.hops.hopsworks.common.dao.command;
 
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 
 import java.util.List;
 

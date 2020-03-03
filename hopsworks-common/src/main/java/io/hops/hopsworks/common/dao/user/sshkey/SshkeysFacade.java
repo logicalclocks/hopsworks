@@ -40,8 +40,6 @@
 package io.hops.hopsworks.common.dao.user.sshkey;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.user.sshkey.SshKeys;
-import io.hops.hopsworks.persistence.entity.user.sshkey.SshKeysPK;
 
 import javax.ejb.Stateless;
 import java.util.List;

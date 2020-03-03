@@ -38,8 +38,6 @@
  */
 package io.hops.hopsworks.common.dao.ndb;
 
-import io.hops.hopsworks.persistence.entity.ndb.NdbBackup;
-
 import java.io.Serializable;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

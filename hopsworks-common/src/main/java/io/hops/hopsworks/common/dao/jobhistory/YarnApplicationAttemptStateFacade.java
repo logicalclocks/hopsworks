@@ -44,7 +44,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationattemptstate;
 
 @Stateless
 public class YarnApplicationAttemptStateFacade extends AbstractFacade<YarnApplicationattemptstate> {

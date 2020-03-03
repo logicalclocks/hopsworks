@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.common.dao.maggy;
 
-import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
-
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;

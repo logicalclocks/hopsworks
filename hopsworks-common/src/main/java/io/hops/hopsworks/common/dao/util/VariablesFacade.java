@@ -40,7 +40,6 @@
 package io.hops.hopsworks.common.dao.util;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.util.Variables;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

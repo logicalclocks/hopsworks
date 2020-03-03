@@ -19,8 +19,6 @@ import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.livy.LivyMsg.Session;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
