@@ -52,7 +52,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -346,9 +345,6 @@ public class AgentController {
 
     String[] lines = condaListStr.split(System.getProperty("line.separator"));
 
-    Optional<String> cpuHost = hostsFacade.findCPUHost();
-    Optional<String> gpuHost = hostsFacade.findGPUHost();
-
     for (int i = 3; i < lines.length; i++) {
 
       String line = lines[i];
@@ -364,26 +360,6 @@ public class AgentController {
         PythonDep pyDep = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.ALL,
           CondaCommandFacade.CondaInstallType.PIP, libraryName, version, true, true);
         deps.add(pyDep);
-        continue;
-      }
-
-      //Special case for tensorflow
-      if (libraryName.equals("tensorflow") || libraryName.equals("tensorflow-gpu") || libraryName.equals("tensorflow" +
-          "-rocm")) {
-        AnacondaRepo repo = libraryFacade.getRepo("PyPi", true);
-        if(cpuHost.isPresent()) {
-          PythonDep tensorflowCPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.CPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow", version, true, true);
-          deps.add(tensorflowCPU);
-        }
-        if(gpuHost.isPresent()) {
-          PythonDep tensorflowCudaGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-gpu", version, true, true);
-          deps.add(tensorflowCudaGPU);
-          PythonDep tensorflowROCmGPU = libraryFacade.getOrCreateDep(repo, LibraryFacade.MachineType.GPU,
-            CondaCommandFacade.CondaInstallType.PIP, "tensorflow-rocm", version, true, true);
-          deps.add(tensorflowROCmGPU);
-        }
         continue;
       }
 
