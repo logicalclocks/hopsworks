@@ -38,10 +38,9 @@
  */
 package io.hops.hopsworks.cluster;
 
-import io.hops.hopsworks.persistence.entity.user.cluster.RegistrationStatusEnum;
-
-import javax.xml.bind.annotation.XmlRootElement;
+import io.hops.hopsworks.common.dao.user.cluster.RegistrationStatusEnum;
 import java.util.Date;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class ClusterYmlDTO {

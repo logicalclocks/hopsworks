@@ -39,9 +39,8 @@
 
 package io.hops.hopsworks.kmon.struct;
 
-import io.hops.hopsworks.persistence.entity.host.Health;
-import io.hops.hopsworks.persistence.entity.host.Status;
-
+import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.common.dao.host.Health;
 import java.util.SortedMap;
 import java.util.TreeMap;
 

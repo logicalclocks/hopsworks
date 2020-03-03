@@ -39,8 +39,6 @@
 
 package io.hops.hopsworks.common.dao.metadata;
 
-import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
-
 import java.io.Serializable;
 
 /**

@@ -39,24 +39,23 @@
 
 package io.hops.hopsworks.kmon.communication;
 
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.util.WebCommunication;
-import io.hops.hopsworks.kmon.group.ServiceInstancesController;
-import io.hops.hopsworks.kmon.struct.InstanceInfo;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
-import javax.faces.context.FacesContext;
-import java.util.ArrayList;
-import java.util.List;
+import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.kmon.group.ServiceInstancesController;
+import io.hops.hopsworks.kmon.struct.InstanceInfo;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.faces.application.FacesMessage;
+import javax.faces.context.FacesContext;
 
 @ManagedBean
 @RequestScoped

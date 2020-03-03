@@ -15,8 +15,6 @@
  */
 package io.hops.hopsworks.jwt.dao;
 
-import io.hops.hopsworks.persistence.entity.jwt.InvalidJwt;
-
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

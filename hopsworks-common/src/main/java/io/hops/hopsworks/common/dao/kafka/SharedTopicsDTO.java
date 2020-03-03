@@ -16,7 +16,6 @@
 package io.hops.hopsworks.common.dao.kafka;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.persistence.entity.kafka.SharedTopicsPK;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

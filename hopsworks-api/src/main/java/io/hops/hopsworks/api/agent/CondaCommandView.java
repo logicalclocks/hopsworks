@@ -16,10 +16,8 @@
 
 package io.hops.hopsworks.api.agent;
 
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
-import io.hops.hopsworks.persistence.entity.python.CondaOp;
-import io.hops.hopsworks.persistence.entity.python.CondaStatus;
+import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -30,16 +28,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class CondaCommandView {
   
-  private CondaOp op;
+  private CondaCommandFacade.CondaOp op;
   private String user;
   @XmlElement(name = "proj")
   private String project;
   private Integer id;
   private String arg;
-  private CondaStatus status;
+  private CondaCommandFacade.CondaStatus status;
   private String version;
   private String channelUrl;
-  private CondaInstallType installType;
+  private CondaCommandFacade.CondaInstallType installType;
   private String lib;
   private String environmentYml;
   private Boolean installJupyter;
@@ -63,11 +61,11 @@ public class CondaCommandView {
   }
 
   @ApiModelProperty(value = "Operation to be performed", required = true)
-  public CondaOp getOp() {
+  public CondaCommandFacade.CondaOp getOp() {
     return op;
   }
   
-  public void setOp(CondaOp op) {
+  public void setOp(CondaCommandFacade.CondaOp op) {
     this.op = op;
   }
   
@@ -108,11 +106,11 @@ public class CondaCommandView {
   }
 
   @ApiModelProperty(value = "Status of comamnd", required = true)
-  public CondaStatus getStatus() {
+  public CondaCommandFacade.CondaStatus getStatus() {
     return status;
   }
   
-  public void setStatus(CondaStatus status) {
+  public void setStatus(CondaCommandFacade.CondaStatus status) {
     this.status = status;
   }
   
@@ -135,11 +133,11 @@ public class CondaCommandView {
   }
 
   @ApiModelProperty(value = "Type of Conda installation")
-  public CondaInstallType getInstallType() {
+  public CondaCommandFacade.CondaInstallType getInstallType() {
     return installType;
   }
   
-  public void setInstallType(CondaInstallType installType) {
+  public void setInstallType(CondaCommandFacade.CondaInstallType installType) {
     this.installType = installType;
   }
   
@@ -188,22 +186,22 @@ public class CondaCommandView {
   }
   
   public static class Builder {
-    private CondaOp op;
+    private CondaCommandFacade.CondaOp op;
     private String user;
     private String project;
     private Integer id;
     private String arg;
-    private CondaStatus status;
+    private CondaCommandFacade.CondaStatus status;
     private String version;
     private String channelUrl;
-    private CondaInstallType installType;
+    private CondaCommandFacade.CondaInstallType installType;
     private String lib;
     private String environmentYml;
     private Boolean installJupyter;
     
     public Builder() {}
     
-    public Builder setCondaOp(CondaOp op) {
+    public Builder setCondaOp(CondaCommandFacade.CondaOp op) {
       this.op = op;
       return this;
     }
@@ -228,7 +226,7 @@ public class CondaCommandView {
       return this;
     }
     
-    public Builder setStatus(CondaStatus status) {
+    public Builder setStatus(CondaCommandFacade.CondaStatus status) {
       this.status = status;
       return this;
     }
@@ -243,7 +241,7 @@ public class CondaCommandView {
       return this;
     }
     
-    public Builder setInstallType(CondaInstallType installType) {
+    public Builder setInstallType(CondaCommandFacade.CondaInstallType installType) {
       this.installType = installType;
       return this;
     }

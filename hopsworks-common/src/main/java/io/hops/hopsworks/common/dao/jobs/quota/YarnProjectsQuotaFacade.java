@@ -39,8 +39,6 @@
 package io.hops.hopsworks.common.dao.jobs.quota;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.jobs.quota.YarnPriceMultiplicator;
-import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.metadata.yarn.entity.quota.PriceMultiplicator;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

@@ -39,24 +39,25 @@
 
 package io.hops.hopsworks.admin.security.ua;
 
-import io.hops.hopsworks.admin.user.administration.UserAdministrationController;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
-
+import java.io.Serializable;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+
+import io.hops.hopsworks.admin.user.administration.UserAdministrationController;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.UsersController;
 import java.io.IOException;
-import java.io.Serializable;
 import java.security.Principal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.servlet.ServletException;
 
 @ManagedBean
 @RequestScoped
@@ -64,6 +65,8 @@ public class RoleEnforcementPoint implements Serializable {
 
   @EJB
   protected UsersController usersController;
+  @EJB
+  protected AuthController authController;
   @EJB
   private UserFacade userFacade;
   @EJB

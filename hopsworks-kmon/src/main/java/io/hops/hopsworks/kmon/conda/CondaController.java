@@ -19,6 +19,7 @@
 package io.hops.hopsworks.kmon.conda;
 
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.dao.python.CondaCommands;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -28,9 +29,6 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.CondaOp;
-import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -87,19 +85,19 @@ public class CondaController implements Serializable {
   }
 
   public void deleteAllFailedCommands() {
-    condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.FAILED);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.FAILED);
     message("deleting all commands with the state 'failed'");
     loadFailedCommands();
   }
 
   public void deleteAllOngoingCommands() {
-    condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.ONGOING);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.ONGOING);
     message("deleting all commands with the state 'ongoing'");
     loadOngoingCommands();
   }
 
   public void deleteAllNewCommands() {
-    condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.NEW);
+    condaCommandFacade.deleteAllCommandsByStatus(CondaCommandFacade.CondaStatus.NEW);
     message("deleting all commands with the state 'new'");
     loadNewCommands();
   }
@@ -114,7 +112,7 @@ public class CondaController implements Serializable {
     // ssh to the host, run the command, print out the results to the terminal.
 
     try {
-      if (command.getStatus() != CondaStatus.FAILED) {
+      if (command.getStatus() != CondaCommandFacade.CondaStatus.FAILED) {
         FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO,
             "You can only execute failed commands.", "Not executed");
         FacesContext.getCurrentInstance().addMessage(null, message);
@@ -125,7 +123,7 @@ public class CondaController implements Serializable {
         this.output = "Conda command was null. Report a bug.";
       } else {
         message("executing");
-        CondaOp op = command.getOp();
+        CondaCommandFacade.CondaOp op = command.getOp();
         if (op.isEnvOp()) {
           // anaconda environment command: <host> <op> <proj> <arg> <offline> <hadoop_home>
           String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-command-ssh.sh";
@@ -157,12 +155,12 @@ public class CondaController implements Serializable {
           
           if (processResult.getExitCode() == 0) {
             // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
+            command.setStatus(CondaCommandFacade.CondaStatus.SUCCESS);
             condaCommandFacade.removeCondaCommand(command.getId());
 
 
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            commandsController.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
+            commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
                 command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
                 command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
 
@@ -195,11 +193,11 @@ public class CondaController implements Serializable {
           }
           if (processResult.getExitCode() == 0) {
             // delete from conda_commands tables
-            command.setStatus(CondaStatus.SUCCESS);
+            command.setStatus(CondaCommandFacade.CondaStatus.SUCCESS);
 
             condaCommandFacade.removeCondaCommand(command.getId());
             this.output = "SUCCESS. \r\n" + processResult.getStdout();
-            commandsController.updateCondaCommandStatus(command.getId(), CondaStatus.SUCCESS,
+            commandsController.updateCondaCommandStatus(command.getId(), CondaCommandFacade.CondaStatus.SUCCESS,
                 command.getInstallType(), command.getMachineType(), command.getArg(), command.getProj(),
                 command.getUserId(), command.getOp(), command.getLib(), command.getVersion(), command.getChannelUrl());
             loadCommands();
@@ -232,21 +230,21 @@ public class CondaController implements Serializable {
   }
 
   private void loadFailedCommands() {
-    failedCommands = condaCommandFacade.findByStatus(CondaStatus.FAILED);
+    failedCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.FAILED);
     if (failedCommands == null) {
       failedCommands = new ArrayList<>();
     }
   }
 
   private void loadOngoingCommands() {
-    ongoingCommands = condaCommandFacade.findByStatus(CondaStatus.ONGOING);
+    ongoingCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.ONGOING);
     if (ongoingCommands == null) {
       ongoingCommands = new ArrayList<>();
     }
   }
 
   private void loadNewCommands() {
-    newCommands = condaCommandFacade.findByStatus(CondaStatus.NEW);
+    newCommands = condaCommandFacade.findByStatus(CondaCommandFacade.CondaStatus.NEW);
     if (newCommands == null) {
       newCommands = new ArrayList<>();
     }

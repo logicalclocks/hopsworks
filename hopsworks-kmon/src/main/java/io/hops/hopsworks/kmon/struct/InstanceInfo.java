@@ -39,8 +39,7 @@
 
 package io.hops.hopsworks.kmon.struct;
 
-import io.hops.hopsworks.persistence.entity.host.Status;
-
+import io.hops.hopsworks.common.dao.host.Status;
 import java.io.Serializable;
 
 public class InstanceInfo implements Serializable {

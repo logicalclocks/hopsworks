@@ -40,15 +40,14 @@
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
 import io.hops.hopsworks.common.dao.metadata.DirPath;
-import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
-
-import javax.json.Json;
-import javax.json.JsonObject;
+import io.hops.hopsworks.common.dao.metadata.EntityIntf;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.JsonObject;
 
 public class RenameDirMessage extends TextMessage {
 

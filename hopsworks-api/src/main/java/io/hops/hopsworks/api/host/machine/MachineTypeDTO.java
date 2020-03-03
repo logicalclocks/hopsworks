@@ -16,21 +16,21 @@
 package io.hops.hopsworks.api.host.machine;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
+import io.hops.hopsworks.common.dao.python.LibraryFacade;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class MachineTypeDTO extends RestDTO<MachineTypeDTO> {
 
-  private MachineType machineType;
+  private LibraryFacade.MachineType machineType;
   private Integer numMachines;
   
-  public MachineType getMachineType() {
+  public LibraryFacade.MachineType getMachineType() {
     return machineType;
   }
 
-  public void setMachineType(MachineType machineType) {
+  public void setMachineType(LibraryFacade.MachineType machineType) {
     this.machineType = machineType;
   }
   

@@ -39,8 +39,7 @@
 
 package io.hops.hopsworks.api.cluster;
 
-import io.hops.hopsworks.persistence.entity.kagent.Action;
-
+import io.hops.hopsworks.common.dao.kagent.Action;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 

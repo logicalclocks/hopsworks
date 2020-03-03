@@ -16,10 +16,8 @@
 package io.hops.hopsworks.common.dao.kafka.schemas;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
-import io.hops.hopsworks.persistence.entity.kafka.schemas.SubjectsCompatibility;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
