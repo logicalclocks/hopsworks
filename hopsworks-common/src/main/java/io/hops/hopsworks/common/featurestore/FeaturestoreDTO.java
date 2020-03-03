@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore;
 
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

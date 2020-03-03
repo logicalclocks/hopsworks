@@ -17,8 +17,8 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

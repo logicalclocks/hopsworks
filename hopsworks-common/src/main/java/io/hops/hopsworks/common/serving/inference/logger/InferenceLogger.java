@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.serving.inference.logger;
 
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 
 public interface InferenceLogger {
 

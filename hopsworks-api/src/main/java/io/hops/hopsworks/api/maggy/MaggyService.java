@@ -18,10 +18,10 @@ package io.hops.hopsworks.api.maggy;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
-import io.hops.hopsworks.common.dao.maggy.MaggyDriver;
 import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

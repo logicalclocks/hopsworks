@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.dela.certs;
 
+import io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;

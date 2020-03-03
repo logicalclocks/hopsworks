@@ -16,11 +16,11 @@
 
 package io.hops.hopsworks.common.serving;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.dao.serving.ServingType;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
 import io.hops.hopsworks.common.serving.sklearn.LocalhostSkLearnServingController;
 import io.hops.hopsworks.common.serving.tf.LocalhostTfServingController;

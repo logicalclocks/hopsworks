@@ -44,6 +44,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.log.meta.MetaLog;
 
 @Stateless
 public class MetaLogFacade extends AbstractFacade<MetaLog> {

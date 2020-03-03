@@ -40,9 +40,9 @@
 package io.hops.hopsworks.common.dao.jupyter.config;
 
 import freemarker.template.TemplateException;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.jobs.spark.SparkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
 import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;

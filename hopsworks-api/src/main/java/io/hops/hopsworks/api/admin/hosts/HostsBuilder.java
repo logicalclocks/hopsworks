@@ -17,10 +17,10 @@ package io.hops.hopsworks.api.admin.hosts;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

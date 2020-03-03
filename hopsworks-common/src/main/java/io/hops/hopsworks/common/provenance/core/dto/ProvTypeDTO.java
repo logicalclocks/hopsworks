@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.core.dto;
 
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.provenance.core.ProvXAttrs;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.exceptions.ProvenanceException;

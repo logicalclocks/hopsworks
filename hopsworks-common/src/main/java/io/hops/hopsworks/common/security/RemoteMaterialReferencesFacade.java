@@ -38,8 +38,8 @@
  */
 package io.hops.hopsworks.common.security;
 
-import io.hops.hopsworks.common.security.dao.RemoteMaterialRefID;
-import io.hops.hopsworks.common.security.dao.RemoteMaterialReferences;
+import io.hops.hopsworks.persistence.entity.security.RemoteMaterialRefID;
+import io.hops.hopsworks.persistence.entity.security.RemoteMaterialReferences;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

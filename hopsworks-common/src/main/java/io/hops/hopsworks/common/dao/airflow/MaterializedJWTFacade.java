@@ -17,6 +17,9 @@
 package io.hops.hopsworks.common.dao.airflow;
 
 
+import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT;
+import io.hops.hopsworks.persistence.entity.airflow.MaterializedJWTID;
+
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;

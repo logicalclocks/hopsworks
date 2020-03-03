@@ -19,7 +19,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.auth0.jwt.interfaces.ECDSAKeyProvider;
 import com.auth0.jwt.interfaces.RSAKeyProvider;
-import io.hops.hopsworks.jwt.dao.JwtSigningKey;
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import java.security.interfaces.ECPrivateKey;

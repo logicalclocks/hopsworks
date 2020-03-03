@@ -44,6 +44,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeEncodingStatus;
 
 public class InodeEncodingStatusFacade extends AbstractFacade<InodeEncodingStatus> {
 

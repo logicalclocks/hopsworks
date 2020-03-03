@@ -39,7 +39,8 @@
 
 package io.hops.hopsworks.common.dao.command;
 
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -53,18 +54,6 @@ import java.util.logging.Logger;
 @Stateless
 public class SystemCommandFacade {
   private static final Logger LOGGER = Logger.getLogger(SystemCommandFacade.class.getName());
-  
-  public enum OP {
-    SERVICE_KEY_ROTATION,
-    CONDA_GC
-  }
-  
-  public enum STATUS {
-   NEW,
-   ONGOING,
-   FINISHED,
-   FAILED
-  }
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager entityManager;

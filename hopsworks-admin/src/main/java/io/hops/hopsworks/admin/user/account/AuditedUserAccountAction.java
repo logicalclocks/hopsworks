@@ -15,11 +15,11 @@
  */
 package io.hops.hopsworks.admin.user.account;
 
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -56,8 +56,7 @@ public class AuditedUserAccountAction {
     usersController.changePassword(key, passwd1, passwd2);
   }
   
-  public void changePassword(Users user,
-    String current, String passwd1, String passwd2, HttpServletRequest req)
+  public void changePassword(Users user, String current, String passwd1, String passwd2, HttpServletRequest req)
     throws UserException {
     usersController.changePassword(user, current, passwd1, passwd2);
   }

@@ -16,10 +16,10 @@
 
 package io.hops.hopsworks.common.featurestore.jobs;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

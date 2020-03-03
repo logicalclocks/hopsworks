@@ -46,7 +46,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.FieldType;
+import io.hops.hopsworks.persistence.entity.metadata.FieldType;
 
 @Stateless
 public class FieldTypeFacade extends AbstractFacade<FieldType> {

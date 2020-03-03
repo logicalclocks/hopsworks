@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.execution;
 
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.logging.Level;
@@ -47,10 +47,10 @@ import java.util.logging.Logger;
 
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.exceptions.JobException;

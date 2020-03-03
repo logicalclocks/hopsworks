@@ -40,7 +40,8 @@
 package io.hops.hopsworks.admin.security.ua;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import java.io.IOException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+
 import javax.ejb.EJB;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -50,7 +51,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import io.hops.hopsworks.common.dao.user.Users;
+import java.io.IOException;
 
 public class LoginFilter extends PolicyDecisionPoint implements Filter {
 

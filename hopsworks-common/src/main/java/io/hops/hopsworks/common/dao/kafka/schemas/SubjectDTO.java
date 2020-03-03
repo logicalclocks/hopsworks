@@ -15,6 +15,8 @@
  */
 package io.hops.hopsworks.common.dao.kafka.schemas;
 
+import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /*

@@ -22,9 +22,9 @@ import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.KafkaException;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

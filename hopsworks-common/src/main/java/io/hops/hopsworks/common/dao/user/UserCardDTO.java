@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.user;
 
+import io.hops.hopsworks.persistence.entity.user.Users;
+
 import java.io.Serializable;
 import javax.xml.bind.annotation.XmlRootElement;
 

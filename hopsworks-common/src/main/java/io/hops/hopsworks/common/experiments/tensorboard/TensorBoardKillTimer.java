@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.experiments.tensorboard;
 
-import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
+import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.common.util.Settings;

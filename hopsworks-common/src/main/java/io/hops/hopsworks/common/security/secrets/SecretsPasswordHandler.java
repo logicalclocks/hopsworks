@@ -16,8 +16,8 @@
 
 package io.hops.hopsworks.common.security.secrets;
 
-import io.hops.hopsworks.common.dao.user.security.secrets.Secret;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretId;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.security.MasterPasswordChangeResult;
 import io.hops.hopsworks.common.security.MasterPasswordHandler;

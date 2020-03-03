@@ -16,7 +16,9 @@
 
 package io.hops.hopsworks.common.dao.user.security.secrets;
 
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

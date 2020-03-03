@@ -19,7 +19,7 @@ package io.hops.hopsworks.ca.controllers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.hops.hopsworks.ca.dao.ConfEntry;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
@@ -49,7 +49,7 @@ public class CAConf {
 
           @Override
           public String load(CAConfKeys s) throws Exception {
-            ConfEntry confEntry = em.find(ConfEntry.class, s.getKey());
+            Variables confEntry = em.find(Variables.class, s.getKey());
             if (confEntry != null) {
               return confEntry.getValue();
             } else {

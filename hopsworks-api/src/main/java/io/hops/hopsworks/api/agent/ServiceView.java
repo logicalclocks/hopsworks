@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.common.agent.AgentController;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.persistence.entity.host.Status;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

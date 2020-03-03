@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.jobs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

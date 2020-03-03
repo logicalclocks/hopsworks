@@ -38,8 +38,8 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
-import io.hops.hopsworks.common.dao.util.Variables;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 

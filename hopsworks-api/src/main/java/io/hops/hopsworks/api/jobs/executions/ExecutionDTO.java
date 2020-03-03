@@ -17,8 +17,8 @@ package io.hops.hopsworks.api.jobs.executions;
 
 import io.hops.hopsworks.api.user.UserDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.jobs.jobhistory.JobFinalStatus;
-import io.hops.hopsworks.common.jobs.jobhistory.JobState;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
