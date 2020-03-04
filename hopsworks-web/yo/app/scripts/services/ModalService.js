@@ -1287,30 +1287,6 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeatureInfo: function (size, feature, settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/featureViewInfo.html',
-                    controller: 'featureViewInfoCtrl as featureViewInfoCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        feature: function () {
-                            return feature;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
             storageConnectorViewInfo: function (size, projectId, storageConnector, featurestore, settings) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/storageConnectorViewInfo.html',
@@ -1330,66 +1306,6 @@ angular.module('hopsWorksApp')
                         },
                         storageConnector: function () {
                             return storageConnector;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            viewFeaturegroupInfo: function (size, projectId, featuregroup, featurestore, settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/featuregroupViewInfo.html',
-                    controller: 'featuregroupViewInfoCtrl as featuregroupViewInfoCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
-                        },
-                        featuregroup: function () {
-                            return featuregroup;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            viewTrainingDatasetInfo: function (size, projectId, trainingDataset, featurestore, settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/trainingDatasetViewInfo.html',
-                    controller: 'trainingDatasetViewInfoCtrl as trainingDatasetViewInfoCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
-                        },
-                        trainingDataset: function () {
-                            return trainingDataset;
                         },
                         featurestore: function () {
                             return featurestore;

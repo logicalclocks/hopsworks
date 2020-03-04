@@ -18,23 +18,24 @@
  * Controller for the Featuregroup-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('featuregroupViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', '$location', 'growl', 'projectId', 'featuregroup', 'featurestore', 'settings',
-        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
-                  projectId, featuregroup, featurestore, settings) {
+    .controller('featuregroupViewInfoCtrl', ['$scope', 'FeaturestoreService', 'ProjectService',
+        'JobService', 'StorageService', 'ModalService', '$location', 'growl',
+        function ($scope, FeaturestoreService, ProjectService, JobService, StorageService, ModalService, $location, growl) {
 
             /**
              * Initialize controller state
              */
             var self = this;
 
-            //Controller Input
-            self.projectId = projectId;
-            self.featuregroup = featuregroup;
-            self.featurestore = featurestore;
-            self.settings = settings;
-
             //Controller State
+            self.tgState = false;
+            self.projectName = null;
+            self.projectId = null;
+            self.selectedFeaturegroup = null;
+            self.featuregroups = null;
+            self.activeVersion = null;
+            self.featurestore = null;
+            self.settings = null;
             self.sampleWorking = false;
             self.sizeWorking = false;
             self.size = "Not fetched"
@@ -48,20 +49,15 @@ angular.module('hopsWorksApp')
             self.offlineSample = []
             self.onlineSampleColumns = []
             self.onlineSample = []
-            self.notFetchedSample = true;
 
             self.customMetadata = null;
-
-            //Constants
-            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
-            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
 
             /**
              * Get the API code to retrieve the featuregroup with the Python API
              */
-            self.getPythonCode = function (featuregroup) {
+            self.getPythonCode = function () {
                 var codeStr = "from hops import featurestore\n"
-                codeStr = codeStr + "featurestore.get_featuregroup('" + featuregroup.name + "')"
+                codeStr = codeStr + "featurestore.get_featuregroup('" + self.selectedFeaturegroup.name + "')"
                 return codeStr
             };
 
@@ -73,10 +69,9 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.sampleWorking = true
-                FeaturestoreService.getFeaturegroupSample(self.projectId, self.featurestore, self.featuregroup).then(
+                FeaturestoreService.getFeaturegroupSample(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
                     function (success) {
                         self.sampleWorking = false;
-                        self.notFetchedSample = false;
                         if(success.data.offlineFeaturegroupPreview != null) {
                             var preProcessedOfflineSample = self.preprocessSample(success.data.offlineFeaturegroupPreview);
                             self.offlineSample = preProcessedOfflineSample[0]
@@ -88,8 +83,8 @@ angular.module('hopsWorksApp')
                             self.onlineSampleColumns = preProcessedOnlineSample[1]
                         }
                     }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to fetch data sample', ttl: 5000});
                         self.sampleWorking = false;
+                        growl.error(error.data.errorMsg, {title: 'Failed to fetch data sample', ttl: 5000});
                     });
             };
 
@@ -126,16 +121,16 @@ angular.module('hopsWorksApp')
              * @returns truncated colName
              */
             self.removeTableNameFromColName = function(colName) {
-                return colName.replace(self.featuregroup.name + "_" + self.featuregroup.version + ".", "")
+                return colName.replace(self.selectedFeaturegroup.name + "_" + self.selectedFeaturegroup.version + ".", "")
             }
 
 
             /**
              * Get the API code to retrieve the featuregroup with the Scala API
              */
-            self.getScalaCode = function (featuregroup) {
+            self.getScalaCode = function () {
                 var codeStr = "import io.hops.util.Hops\n"
-                codeStr = codeStr + "Hops.getFeaturegroup(\"" + featuregroup.name + "\").read()"
+                codeStr = codeStr + "Hops.getFeaturegroup(\"" + self.selectedFeaturegroup.name + "\").read()"
                 return codeStr
             };
 
@@ -147,11 +142,12 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.schemaWorking = true
-                FeaturestoreService.getFeaturegroupSchema(self.projectId, self.featurestore, self.featuregroup).then(
+
+                FeaturestoreService.getFeaturegroupSchema(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
                     function (success) {
                         self.schemaWorking = false;
                         self.offlineSchema = success.data.columns[0].value;
-                        if(self.featuregroup.onlineFeaturegroupEnabled){
+                        if(self.selectedFeaturegroup.onlineFeaturegroupEnabled){
                             self.onlineSchema = success.data.columns[1].value;
                         }
                     }, function (error) {
@@ -174,7 +170,6 @@ angular.module('hopsWorksApp')
              */
             self.launchJob = function (jobName) {
                 JobService.setJobFilter(jobName);
-                self.close();
                 self.goToUrl("jobs")
             };
 
@@ -187,7 +182,7 @@ angular.module('hopsWorksApp')
                     return
                 }
                 self.sizeWorking = true
-                var request = {type: "inode", inodeId: self.featuregroup.inodeId};
+                var request = {type: "inode", inodeId: self.selectedFeaturegroup.inodeId};
                 ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
                     self.sizeWorking = false;
                     self.size = self.sizeOnDisk(success.size)
@@ -201,22 +196,49 @@ angular.module('hopsWorksApp')
              * Get custom metadata for feature groups
              */
             self.fetchCustomMetadata = function() {
-                FeaturestoreService.getFeaturegroupCustomMetadata(self.projectId, self.featurestore, self.featuregroup).then(
+                FeaturestoreService.getFeaturegroupCustomMetadata(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
                     function (success) {
                         self.customMetadata = success.data.items;
                     });
             };
 
+            self.toggle = function(selectedFeatureGroup) {
+                if(self.selectedFeaturegroup === null) {
+                    self.tgState = true;
+                } else if ((self.selectedFeaturegroup.id === selectedFeatureGroup.id) && self.tgState === true) {
+                    self.tgState = false;
+                    return;
+                } else {
+                    self.tgState = true;
+                }
+            }
+
             /**
              * Initialization function
              */
-            self.init = function () {
-                self.formatCreated = self.formatDate(self.featuregroup.created)
-                self.pythonCode = self.getPythonCode(self.featuregroup)
-                self.scalaCode = self.getScalaCode(self.featuregroup)
-                self.featuregroupType = ""
-                if(self.featuregroup.featuregroupType === self.onDemandFeaturegroupType){
-                    self.featuregroupType = "ON DEMAND"
+            self.view = function (projectId, projectName, featurestore, featuregroups, settings, toggle) {
+
+                if(toggle) {
+                    self.toggle(featuregroups.versionToGroups[featuregroups.activeVersion]);
+                }
+
+                self.selectedFeaturegroup = featuregroups.versionToGroups[featuregroups.activeVersion]
+
+                self.projectId = projectId;
+                self.projectName = projectName;
+                self.featurestore = featurestore;
+                self.featuregroups = featuregroups;
+                self.activeVersion = featuregroups.activeVersion;
+                self.settings = settings;
+
+                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
+                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
+                self.pythonCode = self.getPythonCode();
+                self.scalaCode = self.getScalaCode();
+
+                self.featuregroupType = "";
+                if(self.selectedFeaturegroup.featuregroupType === self.onDemandFeaturegroupType){
+                    self.featuregroupType = "ON DEMAND";
                 } else {
                     self.featuregroupType = "CACHED";
                     self.fetchSchema();
@@ -224,36 +246,7 @@ angular.module('hopsWorksApp')
                     self.fetchSample();
                     self.fetchCustomMetadata();
                 }
-            };
 
-            /**
-             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
-             *
-             * @param d date to format
-             * @returns {string} formatted string
-             */
-            self.formatDate = function(javaDate) {
-                var d = new Date(javaDate)
-                var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+((parseInt(d.getMinutes()/5)*5).toString().length==2?(parseInt(d.getMinutes()/5)*5).toString():"0"+(parseInt(d.getMinutes()/5)*5).toString())+":00";
-                return date_format_str
-            }
-
-            /**
-             * Closes the modal
-             */
-            self.close = function () {
-                $uibModalInstance.dismiss('cancel');
-            };
-
-            /**
-             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
-             *
-             * @param javaDate date to format
-             * @returns {string} formatted string
-             */
-            $scope.formatDate = function (javaDate) {
-                var d = new Date(javaDate);
-                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
             };
 
             /**
@@ -265,6 +258,74 @@ angular.module('hopsWorksApp')
                 $location.path('project/' + self.projectId + '/' + serviceName);
             };
 
-            self.init()
+            self.goToDataValidation = function () {
+                StorageService.store("dv_featuregroup", self.selectedFeaturegroup);
+                $location.path('project/' + self.projectId + "/featurestore/datavalidation");
+            };
+
+            /**
+             * Called when the increment-version-featuregroup-button is pressed
+             *
+             */
+            self.newFeaturegroupVersion = function () {
+                var i;
+                var maxVersion = -1;
+                for (i = 0; i < self.featuregroups.versions.length; i++) {
+                    if (self.featuregroups.versions[i] > maxVersion)
+                        maxVersion = self.featuregroups.versions[i]
+                }
+                StorageService.store("featuregroup_operation", "NEW_VERSION");
+                StorageService.store(self.projectId + "_featuregroup", self.featuregroups.versionToGroups[maxVersion]);
+                self.goToUrl("newfeaturegroup")
+            };
+
+            /**
+             * Called when the delete-featuregroup-button is pressed
+             *
+             */
+            self.deleteFeaturegroup = function (featurestoreCtrl) {
+                ModalService.confirm('md', 'Are you sure?',
+                    'Are you sure that you want to delete version ' + self.selectedFeaturegroup.version + ' of the ' + self.selectedFeaturegroup.name + ' featuregroup? ' +
+                                        'This action will delete the data and metadata and can not be undone.')
+                    .then(function (success) {
+                        FeaturestoreService.deleteFeaturegroup(self.projectId, self.featurestore, self.selectedFeaturegroup.id).then(
+                            function (success) {
+                                self.tgState = false;
+                                featurestoreCtrl.getFeaturegroups(self.featurestore);
+                                growl.success("Feature group deleted", {title: 'Success', ttl: 2000});
+                            },
+                            function (error) {
+                                growl.error(error.data.errorMsg, {
+                                    title: 'Failed to delete the feature group',
+                                    ttl: 15000
+                                });
+                            });
+                        growl.info("Deleting featuregroup...", {title: 'Deleting', ttl: 2000})
+                    }, function (error) {});
+            };
+
+            /**
+             * Goes to the edit page for updating a feature group
+             *
+             * @param featuregroup
+             */
+            self.updateFeaturegroup = function () {
+                StorageService.store("featuregroup_operation", "UPDATE");
+                StorageService.store(self.projectId + "_featuregroup", self.selectedFeaturegroup);
+                self.goToUrl("newfeaturegroup")
+            };
+
+            /**
+             * Called when the view-featuregroup-statistics button is pressed
+             *
+             * @param featuregroup
+             */
+            self.viewFeaturegroupStatistics = function () {
+                ModalService.viewFeaturegroupStatistics('lg', self.projectId, self.selectedFeaturegroup, self.projectName,
+                    self.featurestore, self.settings).then(
+                    function (success) {
+                    }, function (error) {
+                    });
+            };
         }]);
 

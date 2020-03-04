@@ -899,7 +899,7 @@ angular.module('hopsWorksApp')
                     "jobs": [],
                     "onlineFeaturegroupEnabled": self.onlineFg
                 }
-                ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive/MySQL' +
+                ModalService.confirm('lg', 'This is a cached feature group, updating the feature group Hive/MySQL' +
                     ' metadata' +
                     ' (description, feature group name, and features schema) ' +
                     'will delete the existing data.',
@@ -1024,25 +1024,19 @@ angular.module('hopsWorksApp')
                             self.cachedFgWorking = false;
                         });
                 } else {
-                    ModalService.confirm('sm', 'If a Feature Group with the same name and version already' +
-                        ' exists in the Feature Store, it will be overridden.')
-                        .then(function (success) {
-                            FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
-                                function (success) {
-                                    self.cachedFgWorking = false;
-                                    self.exitToFeaturestore()
-                                    growl.success("Feature group created", {title: 'Success', ttl: 1000});
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {
-                                        title: 'Failed to create feature group',
-                                        ttl: 15000
-                                    });
-                                    self.cachedFgWorking = false;
-                                });
-                            growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
-                        }, function (error) {
-                            self.cachedFgWorking = false;
+                    FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
+                    function (success) {
+                        self.cachedFgWorking = false;
+                        self.exitToFeaturestore()
+                        growl.success("Feature group created", {title: 'Success', ttl: 1000});
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to create feature group',
+                            ttl: 15000
                         });
+                        self.cachedFgWorking = false;
+                    });
+                    growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
                 }
             };
 

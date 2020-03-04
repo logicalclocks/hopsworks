@@ -14,12 +14,7 @@
   ~ If not, see <https://www.gnu.org/licenses/>.
   -->
 
-<div class="modal-header">
-  <button class="close" ng-click="featureViewInfoCtrl.close()" data-dismiss="modal" aria-hidden="true"
-          type="button">&times;</button>
-  <h2 class="modal-title">Feature details: {{featureViewInfoCtrl.feature.name}}</h2>
-</div>
-<div class="modal-body" style="overflow: auto">
+<div>
     <div uib-accordion close-others="false">
         <div uib-accordion-group class="panel-default" is-open="true">
             <div uib-accordion-heading>
@@ -37,7 +32,7 @@
                         Name
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.name}}
+                        {{featureViewInfoCtrl.selectedFeature.name}}
                     </td>
                 </tr>
 
@@ -46,7 +41,7 @@
                         Version
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.version}}
+                        {{featureViewInfoCtrl.selectedFeature.version}}
                     </td>
                 </tr>
 
@@ -55,7 +50,7 @@
                         Type
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.type}}
+                        {{featureViewInfoCtrl.selectedFeature.type}}
                     </td>
                 </tr>
 
@@ -64,7 +59,7 @@
                         Description
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.description}}
+                        {{featureViewInfoCtrl.selectedFeature.description}}
                     </td>
                 </tr>
 
@@ -73,51 +68,51 @@
                         Feature Store
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.featurestore.name}}
+                        {{featureViewInfoCtrl.selectedFeature.featuregroup.featurestoreName}}
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity == 'Feature Group'">
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.selectedFeature.entity == 'Feature Group'">
                     <td style="font-weight:700;" class="fs-table">
                         Primary
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.primary}}
+                        {{featureViewInfoCtrl.selectedFeature.primary}}
                     </td>
                 </tr>
 
                 <tr class="fs-table"
-                    ng-if="featureViewInfoCtrl.feature.entity == 'Feature Group' && featureViewInfoCtrl.feature.featuregroup.featuregroupType === featureViewInfoCtrl.cachedFeaturegroupType">
+                    ng-if="featureViewInfoCtrl.selectedFeature.entity == 'Feature Group' && featureViewInfoCtrl.selectedFeature.featuregroup.featuregroupType === featureViewInfoCtrl.cachedFeaturegroupType">
                     <td style="font-weight:700;" class="fs-table">
                         Partition Key
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.partition}}
+                        {{featureViewInfoCtrl.selectedFeature.partition}}
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity === 1">
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.selectedFeature.entity === 1">
                     <td style="font-weight:700;" class="fs-table">
                         Feature Group
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.featuregroup.name}}
+                        {{featureViewInfoCtrl.selectedFeature.featuregroup.name}}
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="featureViewInfoCtrl.feature.entity === 0">
+                <tr class="fs-table" ng-if="featureViewInfoCtrl.selectedFeature.entity === 0">
                     <td style="font-weight:700;" class="fs-table">
                         Training Dataset
                     </td>
                     <td class="fs-table">
-                        {{featureViewInfoCtrl.feature.trainingDataset.name}}
+                        {{featureViewInfoCtrl.selectedFeature.trainingDataset.name}}
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
 
-        <div uib-accordion-group class="panel-default">
+        <div uib-accordion-group class="panel-default" is-open="true">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='API for reading the feature programmatically'></i>

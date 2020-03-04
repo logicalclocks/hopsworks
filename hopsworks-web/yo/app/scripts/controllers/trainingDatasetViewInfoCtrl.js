@@ -18,44 +18,42 @@
  * Controller for the Training Dataset-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'ProjectService',
-        'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore', 'settings',
-        function ($uibModalInstance, $scope, ProjectService, JobService, $location, growl,
-                  projectId, trainingDataset, featurestore, settings) {
+    .controller('trainingDatasetViewInfoCtrl', ['$scope', 'ProjectService',
+        'JobService', 'ModalService', 'StorageService', '$location', 'growl',
+        function ($scope, ProjectService, JobService, ModalService, StorageService, $location, growl) {
 
             /**
              * Initialize controller state
              */
             var self = this;
             //Controller Inputs
-            self.projectId = projectId;
-            self.trainingDataset = trainingDataset;
-            self.featurestore = featurestore;
-            self.settings = settings;
+            self.tgState = false;
+            self.projectId = null;
+            self.selectedTrainingDataset = null;
+            self.trainingDatasets = null;
+            self.featurestore = null;
+            self.settings = null;
             //State
             self.sizeWorking = false;
             self.size = "Not fetched"
             self.pythonCode = ""
             self.scalaCode = ""
-            //Constants
-            self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
-            self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
 
             /**
              * Get the Python API code to retrieve the featuregroup
              */
-            self.getPythonCode = function (trainingDataset) {
+            self.getPythonCode = function () {
                 var codeStr = "from hops import featurestore\n"
-                codeStr = codeStr + "featurestore.get_training_dataset_path('" + trainingDataset.name + "')"
+                codeStr = codeStr + "featurestore.get_training_dataset_path('" + self.selectedTrainingDataset.name + "')"
                 return codeStr
             };
 
             /**
              * Get the Scala API code to retrieve the featuregroup
              */
-            self.getScalaCode = function (trainingDataset) {
+            self.getScalaCode = function () {
                 var codeStr = "import io.hops.util.Hops\n"
-                codeStr = codeStr + "Hops.getTrainingDatasetPath(\"" + trainingDataset.name + "\").read()"
+                codeStr = codeStr + "Hops.getTrainingDatasetPath(\"" + self.selectedTrainingDataset.name + "\").read()"
                 return codeStr
             };
 
@@ -64,7 +62,6 @@ angular.module('hopsWorksApp')
              */
             self.launchJob = function (jobName) {
                 JobService.setJobFilter(jobName);
-                self.close();
                 self.goToUrl("jobs")
             };
 
@@ -78,27 +75,42 @@ angular.module('hopsWorksApp')
                 return true
             }
 
+            self.toggle = function(selectedTrainingDataset) {
+                if(self.selectedTrainingDataset === null) {
+                    self.tgState = true;
+                } else if ((self.selectedTrainingDataset.id === selectedTrainingDataset.id) && self.tgState === true) {
+                    self.tgState = false;
+                    return;
+                } else {
+                    self.tgState = true;
+                }
+            }
+
             /**
              * Initialization function
              */
-            self.init= function () {
-                self.formatCreated = self.formatDate(self.trainingDataset.created)
-                self.pythonCode = self.getPythonCode(self.trainingDataset)
-                self.scalaCode = self.getScalaCode(self.trainingDataset)
+            self.view = function (featurestoreCtrl, trainingDatasets, activeVersion, toggle) {
+
+                if(toggle) {
+                    self.toggle(trainingDatasets.versionToGroups[activeVersion]);
+                }
+
+                self.selectedTrainingDataset = trainingDatasets.versionToGroups[activeVersion]
+
+                self.projectId = featurestoreCtrl.projectId;
+                self.projectName = featurestoreCtrl.projectName;
+                self.featurestore = featurestoreCtrl.featurestore;
+                self.trainingDatasets = trainingDatasets;
+                self.activeVersion = activeVersion;
+                self.settings = featurestoreCtrl.settings;
+
+                self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
+                self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
+
+                self.pythonCode = self.getPythonCode();
+                self.scalaCode = self.getScalaCode();
                 self.fetchSize()
             };
-
-            /**
-             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
-             *
-             * @param d date to format
-             * @returns {string} formatted string
-             */
-            self.formatDate = function(javaDate) {
-                var d = new Date(javaDate)
-                var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+((parseInt(d.getMinutes()/5)*5).toString().length==2?(parseInt(d.getMinutes()/5)*5).toString():"0"+(parseInt(d.getMinutes()/5)*5).toString())+":00";
-                return date_format_str
-            }
 
             /**
              * Convert bytes into bytes + suitable unit (e.g KB, MB, GB etc)
@@ -114,14 +126,14 @@ angular.module('hopsWorksApp')
              * this can potentially be a long running operation if the directory is deeply nested
              */
             self.fetchSize = function () {
-                if(self.trainingDataset.trainingDatasetType == self.externalTrainingDatasetType){
+                if(self.selectedTrainingDataset.trainingDatasetType == self.externalTrainingDatasetType){
                     return
                 }
                 if(self.sizeWorking){
                     return
                 }
                 self.sizeWorking = true
-                var request = {type: "inode", inodeId: self.trainingDataset.inodeId};
+                var request = {type: "inode", inodeId: self.selectedTrainingDataset.inodeId};
                 ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
                     self.sizeWorking = false;
                     self.size = self.sizeOnDisk(success.size)
@@ -129,17 +141,6 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Failed to fetch training dataset size', ttl: 5000});
                     self.sizeWorking = false;
                 });
-            };
-
-            /**
-             * Format javascript date as string (YYYY-mm-dd HH:MM:SS)
-             *
-             * @param javaDate date to format
-             * @returns {string} formatted string
-             */
-            $scope.formatDate = function (javaDate) {
-                var d = new Date(javaDate);
-                return d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + ((parseInt(d.getMinutes() / 5) * 5).toString().length == 2 ? (parseInt(d.getMinutes() / 5) * 5).toString() : "0" + (parseInt(d.getMinutes() / 5) * 5).toString()) + ":00";
             };
 
             /**
@@ -152,12 +153,74 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Closes the modal
+             * Called when the view-training-dataset-statistics button is pressed
+             *
+             * @param trainingDataset
              */
-            self.close = function () {
-                $uibModalInstance.dismiss('cancel');
+            self.viewTrainingDatasetStatistics = function () {
+                ModalService.viewTrainingDatasetStatistics('lg', self.projectId, self.selectedTrainingDataset, self.projectName,
+                    self.featurestore, self.settings).then(
+                    function (success) {
+                    }, function (error) {
+                    });
             };
 
-            self.init()
+            /**
+             * Called when the delete-trainingDataset-button is pressed
+             *
+             * @param trainingDataset
+             */
+            self.deleteTrainingDataset = function (featurestoreCtrl) {
+                ModalService.confirm('md', 'Are you sure?',
+                    'Are you sure that you want to delete version ' + self.selectedTrainingDataset.version + ' of the ' + self.selectedTrainingDataset.name + ' training dataset? ' +
+                    'This action will delete the data and metadata and can not be undone.')
+                    .then(function (success) {
+                        FeaturestoreService.deleteTrainingDataset(self.projectId, self.featurestore, self.selectedTrainingDataset.id).then(
+                            function (success) {
+                                self.tgState = false;
+                                featurestoreCtrl.getTrainingDatasets(self.featurestore)
+                                growl.success("Training Dataset deleted", {title: 'Success', ttl: 2000});
+                            },
+                            function (error) {
+                                growl.error(error.data.errorMsg, {
+                                    title: 'Failed to delete the training dataset',
+                                    ttl: 15000
+                                });
+                            });
+                        growl.info("Deleting training dataset...", {title: 'Deleting', ttl: 2000})
+                    }, function (error) {});
+            };
+
+            /**
+             * Called when the increment-version-trainingDataset-button is pressed
+             *
+             * @param trainingDatasets list of featuregroup versions
+             * @param versions list
+             */
+            self.newTrainingDatasetVersion = function (featurestoreCtrl) {
+                var i;
+                var maxVersion = -1;
+                for (i = 0; i < self.trainingDatasets.versions.length; i++) {
+                    if (self.trainingDatasets.versions[i] > maxVersion)
+                        maxVersion = self.trainingDatasets.versions[i]
+                }
+                StorageService.store("trainingdataset_operation", "NEW_VERSION");
+                StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
+                StorageService.store(self.projectId + "_trainingDataset", self.trainingDatasets.versionToGroups[maxVersion]);
+                self.goToUrl("newtrainingdataset")
+            };
+
+            /**
+             * Shows the page for updating an existing training dataset.
+             *
+             * @param trainingDataset
+             */
+            self.updateTrainingDataset = function (featurestoreCtrl) {
+                StorageService.store("trainingdataset_operation", "UPDATE");
+                StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
+                StorageService.store(self.projectId + "_trainingDataset", self.trainingDataset);
+                self.goToUrl("newtrainingdataset")
+            };
+
         }]);
 

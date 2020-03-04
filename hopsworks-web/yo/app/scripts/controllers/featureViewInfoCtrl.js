@@ -18,23 +18,24 @@
  * Controller for the Feature-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('featureViewInfoCtrl', ['$uibModalInstance', 'feature', 'settings',
-        function ($uibModalInstance, feature, settings) {
+    .controller('featureViewInfoCtrl', [
+        function () {
 
             /**
              * Initialize controller state
              */
             //Controller Inputs
             var self = this;
-            self.feature = feature
-            self.settings = settings
             //State
+            self.selectedFeature = null;
+            self.tgState = false;
+            self.settings;
             self.pythonCode = ""
             self.scalaCode = ""
             self.table = []
             //Constants
-            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
-            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
+            self.cachedFeaturegroupType = "";
+            self.onDemandFeaturegroupType = "";
 
             /**
              * Get the Python API code to retrieve the feature
@@ -62,13 +63,48 @@ angular.module('hopsWorksApp')
                 self.scalaCode = self.getScalaCode(self.feature)
             };
 
-            /**
-             * Closes the modal
-             */
-            self.close = function () {
-                $uibModalInstance.dismiss('cancel');
-            };
+            self.isToggled = function(feature) {
+                if(!self.selectedFeature || !feature) {
+                    return false;
+                } else {
+                    return self.selectedFeature.featuregroup.id === feature.featuregroup.id && self.selectedFeature.name === feature.name && self.tgState === true;
+                }
+            }
 
-            self.init()
+            self.toggle = function(feature) {
+                if(self.selectedFeature === null) {
+                    self.tgState = true;
+                } else if (((self.selectedFeature.featuregroup.id === feature.featuregroup.id)
+                    && (self.selectedFeature.name === feature.name))
+                    && self.tgState === true) {
+                    self.tgState = false;
+                    return;
+                } else {
+                    self.tgState = true;
+                }
+            }
+
+            self.view = function(projectId, projectName, featurestore, feature, settings, featuregroupViewInfoCtrl) {
+
+                self.toggle(feature);
+
+                self.selectedFeature = feature;
+                self.settings = settings;
+
+                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
+                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
+
+                self.pythonCode = self.getPythonCode(self.selectedFeature)
+                self.scalaCode = self.getScalaCode(self.selectedFeature)
+
+                //build featuregroups object
+                var featuregroups = {};
+                featuregroups.versionToGroups = {};
+                featuregroups.activeVersion = feature.featuregroup.version;
+                featuregroups.versionToGroups[feature.featuregroup.version] = feature.featuregroup;
+
+                featuregroupViewInfoCtrl.view(projectId, projectName, featurestore, featuregroups, settings, false)
+
+            }
         }]);
 

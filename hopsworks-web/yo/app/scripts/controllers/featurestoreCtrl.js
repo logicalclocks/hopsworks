@@ -436,29 +436,6 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Goes to the edit page for updating a feature group
-             *
-             * @param featuregroup
-             */
-            self.updateFeaturegroup = function (featuregroup) {
-                StorageService.store("featuregroup_operation", "UPDATE");
-                StorageService.store(self.projectId + "_featuregroup", featuregroup);
-                self.goToUrl("newfeaturegroup")
-            };
-
-            /**
-             * Shows the page for updating an existing training dataset.
-             *
-             * @param trainingDataset
-             */
-            self.updateTrainingDatasetMetadata = function (trainingDataset) {
-                StorageService.store("trainingdataset_operation", "UPDATE");
-                StorageService.store(self.projectId + "_fgFeatures", self.fgFeatures);
-                StorageService.store(self.projectId + "_trainingDataset", trainingDataset);
-                self.goToUrl("newtrainingdataset")
-            };
-
-            /**
              * Shows the page for updating an existing storage connector.
              *
              * @param storageConnector
@@ -467,123 +444,6 @@ angular.module('hopsWorksApp')
                 StorageService.store("connector_operation", "UPDATE");
                 StorageService.store(self.projectId + "_connector", storageConnector);
                 self.goToUrl("newstorageconnector")
-            };
-
-            /**
-             * Called when the delete-featuregroup-button is pressed
-             *
-             * @param featuregroup
-             */
-            self.deleteFeaturegroup = function (featuregroup) {
-                ModalService.confirm('sm', 'Are you sure?',
-                    'Are you sure that you want to delete this version of the feature group? ' +
-                    'this action will delete all the data in the feature group with the selected version')
-                    .then(function (success) {
-                        FeaturestoreService.deleteFeaturegroup(self.projectId, self.featurestore, featuregroup.id).then(
-                            function (success) {
-                                self.getFeaturegroups(self.featurestore);
-                                growl.success("Feature group deleted", {title: 'Success', ttl: 1000});
-                            },
-                            function (error) {
-                                growl.error(error.data.errorMsg, {
-                                    title: 'Failed to delete the feature group',
-                                    ttl: 15000
-                                });
-                            });
-                        growl.info("Deleting featuregroup... wait", {title: 'Deleting', ttl: 1000})
-                    }, function (error) {
-                        $uibModalInstance.close()
-                    });
-            };
-
-            /**
-             * Called when the delete-trainingDataset-button is pressed
-             *
-             * @param trainingDataset
-             */
-            self.deleteTrainingDataset = function (trainingDataset) {
-                ModalService.confirm('sm', 'Are you sure?',
-                    'Are you sure that you want to delete this version of the training dataset? ' +
-                    'this action will delete all the data in the training dataset of this version together with its metadata')
-                    .then(function (success) {
-                        FeaturestoreService.deleteTrainingDataset(self.projectId, self.featurestore, trainingDataset.id).then(
-                            function (success) {
-                                self.getTrainingDatasets(self.featurestore)
-                                growl.success("Training Dataset deleted", {title: 'Success', ttl: 1000});
-                            },
-                            function (error) {
-                                growl.error(error.data.errorMsg, {
-                                    title: 'Failed to delete the training dataset',
-                                    ttl: 15000
-                                });
-                            });
-                        growl.info("Deleting training dataset... wait", {title: 'Deleting', ttl: 1000})
-                    }, function (error) {
-                        $uibModalInstance.close()
-                    });
-            };
-
-            /**
-             * Called when the increment-version-featuregroup-button is pressed
-             *
-             * @param featuregroups list of featuregroup versions
-             * @param versions list
-             */
-            self.newFeaturegroupVersion = function (featuregroups, versions) {
-                var i;
-                var maxVersion = -1;
-                for (i = 0; i < versions.length; i++) {
-                    if (versions[i] > maxVersion)
-                        maxVersion = versions[i]
-                }
-                StorageService.store("featuregroup_operation", "NEW_VERSION");
-                StorageService.store(self.projectId + "_featuregroup", featuregroups[maxVersion]);
-                self.goToUrl("newfeaturegroup")
-            };
-
-            /**
-             * Called when the increment-version-trainingDataset-button is pressed
-             *
-             * @param trainingDatasets list of featuregroup versions
-             * @param versions list
-             */
-            self.newTrainingDatasetVersion = function (trainingDatasets, versions) {
-                var i;
-                var maxVersion = -1;
-                for (i = 0; i < versions.length; i++) {
-                    if (versions[i] > maxVersion)
-                        maxVersion = versions[i]
-                }
-                StorageService.store("trainingdataset_operation", "NEW_VERSION");
-                StorageService.store(self.projectId + "_fgFeatures", self.fgFeatures);
-                StorageService.store(self.projectId + "_trainingDataset", trainingDatasets[maxVersion]);
-                self.goToUrl("newtrainingdataset")
-            };
-
-            /**
-             * Called when the view-featuregroup-statistics button is pressed
-             *
-             * @param featuregroup
-             */
-            self.viewFeaturegroupStatistics = function (featuregroup) {
-                ModalService.viewFeaturegroupStatistics('lg', self.projectId, featuregroup, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
-            /**
-             * Called when the view-training-dataset-statistics button is pressed
-             *
-             * @param trainingDataset
-             */
-            self.viewTrainingDatasetStatistics = function (trainingDataset) {
-                ModalService.viewTrainingDatasetStatistics('lg', self.projectId, trainingDataset, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
             };
 
             /**
@@ -808,31 +668,6 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Opens the modal to view featuregroup information
-             *
-             * @param featuregroup
-             */
-            self.viewFeaturegroupInfo = function (featuregroup) {
-                ModalService.viewFeaturegroupInfo('lg', self.projectId, featuregroup, self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
-            /**
-             * Opens the modal to view training dataset information
-             *
-             * @param trainingDataset
-             */
-            self.viewTrainingDatasetInfo = function (trainingDataset) {
-                ModalService.viewTrainingDatasetInfo('lg', self.projectId, trainingDataset, self.featurestore,
-                    self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
-            /**
              * Gets the feature store Quota from Hopsworks
              */
             self.getFeaturestoreQuota = function () {
@@ -897,13 +732,6 @@ angular.module('hopsWorksApp')
                 }
                 return null;
             };
-
-
-            self.goToDataValidation = function (featureGroup) {
-                StorageService.store("dv_featuregroup",
-                    featureGroup.versionToGroups[featureGroup.activeVersion]);
-                $location.path('project/' + self.projectId + "/featurestore/datavalidation");
-            }
 
             /**
              * Called when a new featurestore is selected in the dropdown list in the UI
