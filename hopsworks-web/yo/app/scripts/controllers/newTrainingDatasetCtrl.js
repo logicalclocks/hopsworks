@@ -486,9 +486,6 @@ angular.module('hopsWorksApp')
                     "features": self.trainingDataset.features,
                     "updateStats": false,
                     "trainingDatasetType": self.hopsfsTrainingDatasetType,
-                    "type": self.hopsfsTrainingDatasetTypeDTO,
-                    "hopsfsConnectorId": self.selectedHopsfsConnector.id,
-                    "hopsfsConnectorName": self.selectedHopsfsConnector.name,
                     "jobs": []
                 }
                 FeaturestoreService.updateTrainingDatasetMetadata(self.projectId, self.trainingDataset.id,
@@ -496,8 +493,8 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.working = false;
                         growl.success("Training dataset updated", {title: 'Success', ttl: 1000});
-                        self.exitToFeaturestore()
                     }, function (error) {
+                        self.exitToFeaturestore()
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to update training dataset',
                             ttl: 15000
@@ -524,8 +521,8 @@ angular.module('hopsWorksApp')
                     "dataFormat": self.trainingDatasetFormat,
                     "features": self.featureBasket,
                     "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
-                    "storageConnectorId": self.selectedHopsfsConnector != null ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
-                    "storageConnectorName": self.selectedHopsfsConnector != null ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
+                    "storageConnectorId": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
+                    "storageConnectorName": self.sinkType === 0 ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
                     "path": self.path,
                 }
                 if(self.configureJob){
