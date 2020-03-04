@@ -523,7 +523,7 @@ angular.module('hopsWorksApp')
                     "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
                     "storageConnectorId": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
                     "storageConnectorName": self.sinkType === 0 ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
-                    "path": self.path,
+                    "location": self.path,
                 }
                 if(self.configureJob){
                     var utilArgs = self.setupJobArgs(jobName + "_args.json");
@@ -660,14 +660,11 @@ angular.module('hopsWorksApp')
                     "version": 1,
                     "joinKey": self.queryPlan.joinKey,
                     "description": self.trainingDatasetDoc,
-                    "fileName": fileName,
                     "descriptiveStats": false,
                     "featureCorrelation": false,
                     "clusterAnalysis": false,
                     "featureHistograms": false,
                     "statColumns": [],
-                    "sink": self.getConnectorName(),
-                    "path": self.path
                 };
             };
 
