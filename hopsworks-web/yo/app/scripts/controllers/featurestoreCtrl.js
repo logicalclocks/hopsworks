@@ -32,7 +32,8 @@ angular.module('hopsWorksApp')
             self.projectId = $routeParams.projectID;
 
             //State
-            self.projectName = null;
+            self.projectFeaturestoreName = null;
+            self.projectTrainingdatasetsName = null;
             self.featurestores = [];
             self.trainingDatasets = [];
             self.storageConnectors = [];
@@ -120,6 +121,8 @@ angular.module('hopsWorksApp')
                 ProjectService.get({}, {'id': self.projectId}).$promise.then(
                     function (success) {
                         self.projectName = success.projectName;
+                        self.projectFeaturestoreName = self.projectName.toLowerCase() + "_featurestore";
+                        self.projectTrainingdatasetsName = self.projectName + "_Training_Datasets";
                         StorageService.store("projectName", self.projectName)
                         self.selectProjectFeaturestore()
                     }, function (error) {
@@ -388,10 +391,10 @@ angular.module('hopsWorksApp')
                 if(name === self.projectName){
                     return true
                 }
-                if(name === (self.projectName + "_featurestore")){
+                if(name === (self.projectFeaturestoreName)){
                     return true
                 }
-                if(name === (self.projectName + "_Training_Datasets")){
+                if(name === (self.projectTrainingdatasetsName)){
                     return true
                 }
                 if(name.includes("_onlinefeaturestore")) {
@@ -426,10 +429,10 @@ angular.module('hopsWorksApp')
              * the project).
              */
             self.selectProjectFeaturestore = function() {
-                if(self.projectName == null || self.featurestores.length < 1){
+                if(self.projectFeaturestoreName == null || self.featurestores.length < 1){
                     return
                 }
-                self.selectFeaturestore(self.projectName + "_featurestore");
+                self.selectFeaturestore(self.projectFeaturestoreName);
             };
 
             /**
