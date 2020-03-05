@@ -43,7 +43,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -479,12 +478,16 @@ public class TrainingDatasetController {
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
     //Store jobs
     featurestoreJobFacade.insertJobs(trainingDataset, jobs);
-    List<FeaturestoreJob> updatedJobsList = featurestoreJobFacade.getByTrainingDataset(trainingDataset);
 
     // Update metadata
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
-    TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
-    updatedTrainingDataset.setJobs(updatedJobsList);
+    trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
+
+    // Refetch the updated entry from the database
+    TrainingDataset updatedTrainingDataset =
+        trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetDTO.getId(), featurestore)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+                Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
 
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }
