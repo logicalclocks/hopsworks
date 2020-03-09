@@ -100,7 +100,7 @@ public class FeaturestoreController {
   private List<Featurestore> getProjectFeaturestores(Project project) {
     Collection<Dataset> dsInProject = project.getDatasetCollection();
     // Add all datasets shared with the project
-    dsInProject.addAll(project.getDatasetSharedWithCollectionCollection().stream()
+    dsInProject.addAll(project.getDatasetSharedWithCollection().stream()
         // Filter out datasets which have not been accepted
         .filter(DatasetSharedWith::getAccepted)
         .map(DatasetSharedWith::getDataset).collect(Collectors.toList()));

@@ -387,7 +387,7 @@ public class ProjectService {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE, "inodeId: " + inodeId);
     }
 
-    Collection<DatasetSharedWith> projectsContainingInode = proj.getDatasetSharedWithCollectionCollection();
+    Collection<DatasetSharedWith> projectsContainingInode = proj.getDatasetSharedWithCollection();
     List<String> sharedWith = new ArrayList<>();
     for (DatasetSharedWith d : projectsContainingInode) {
       if (!d.getProject().getId().equals(proj.getId())) {

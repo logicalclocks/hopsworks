@@ -106,7 +106,7 @@ public final class Utils {
   }
   
   public static String getHiveDBName(Project project) {
-    return project.getName() + ".db";
+    return project.getName().toLowerCase() + ".db";
   }
   
   public static String getHiveDBPath(Project project, Settings settings) {

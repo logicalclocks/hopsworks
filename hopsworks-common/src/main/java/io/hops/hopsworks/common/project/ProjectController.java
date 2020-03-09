@@ -2023,7 +2023,7 @@ public class ProjectController {
     List<InodeView> kids = new ArrayList<>();
 
     Collection<Dataset> dsInProject = project.getDatasetCollection();
-    Collection<DatasetSharedWith> dsSharedWithProject = project.getDatasetSharedWithCollectionCollection();
+    Collection<DatasetSharedWith> dsSharedWithProject = project.getDatasetSharedWithCollection();
     for (Dataset ds : dsInProject) {
       parent = inodes.findParent(ds.getInode());
       kids.add(new InodeView(parent, ds, inodeController.getPath(ds.getInode())));
