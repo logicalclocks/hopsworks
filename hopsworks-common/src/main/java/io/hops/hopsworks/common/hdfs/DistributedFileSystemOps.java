@@ -84,6 +84,7 @@ public class DistributedFileSystemOps {
   private final String effectiveUser;
 
   public enum StoragePolicy {
+    CLOUD("CLOUD"),
     SMALL_FILES("DB"),
     DEFAULT("HOT");
 
@@ -96,6 +97,15 @@ public class DistributedFileSystemOps {
     @Override
     public String toString() {
       return policyName;
+    }
+    
+    public static StoragePolicy fromPolicy(String policyName) {
+      switch(policyName) {
+        case "CLOUD": return CLOUD;
+        case "DB": return SMALL_FILES;
+        case "HOT": return DEFAULT;
+        default: throw new IllegalArgumentException("unknown policy:" + policyName);
+      }
     }
   }
 
