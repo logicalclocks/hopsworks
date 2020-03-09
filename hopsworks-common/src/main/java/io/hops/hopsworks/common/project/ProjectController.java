@@ -702,9 +702,7 @@ public class ProjectController {
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
-        // To not fill the SSDs with Logs files that nobody access frequently
-        // We set the StoragePolicy for the LOGS dir to be DEFAULT
-        dfso.setStoragePolicy(dsPath, DistributedFileSystemOps.StoragePolicy.DEFAULT);
+        dfso.setStoragePolicy(dsPath, settings.getHdfsLogStoragePolicy());
       }
 
       //Persist README.md to hdfs for Default Datasets
@@ -1004,9 +1002,7 @@ public class ProjectController {
       Path location = new Path(File.separator + rootDir);
       rootDirCreated = dfso.mkdir(location, FsPermission.getDirDefault());
       dfso.setPermission(location, FsPermissions.rwxrwxr_x);
-
-      // Set the DIR_ROOT (/Projects) to have DB storage policy, i.e. - small files stored on db
-      dfso.setStoragePolicy(location, DistributedFileSystemOps.StoragePolicy.SMALL_FILES);
+      dfso.setStoragePolicy(location, settings.getHdfsBaseStoragePolicy());
     } else {
       rootDirCreated = true;
     }
