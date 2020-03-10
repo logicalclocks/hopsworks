@@ -19,7 +19,12 @@
     <div id="wrapper" class="toggled" ng-controller="featurestoreCtrl as featurestoreCtrl">
         <div class="overlay"></div>
         <div ng-include="'navProject.html'"></div>
-        <div class="content-wrapper">
+        <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+            <div id="projectSearchResults">
+                <div ng-include="'views/search.html'"></div>
+            </div>
+        </div>
+        <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
                     <div class="loader-in-wrap"></div>

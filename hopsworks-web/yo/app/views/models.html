@@ -19,7 +19,12 @@
         <div id="wrapper" class="toggled" ng-controller="ModelCtrl as modelCtrl">
             <div class="overlay"></div>
             <div ng-include="'navProject.html'"></div>
-            <div class="content-wrapper">
+            <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+                <div id="projectSearchResults">
+                    <div ng-include="'views/search.html'"></div>
+                </div>
+            </div>
+            <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
                 <div class="row">
                     <div class="col-sm-9 col-md-9 col-lg-9 form-inline">
                         <label>Search

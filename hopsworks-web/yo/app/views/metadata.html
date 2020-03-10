@@ -48,7 +48,12 @@
 
     <div ng-include="'navProject.html'"></div>
 
-    <div ng-controller="DatasetsCtrl as datasetsCtrl">
+    <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+      <div id="projectSearchResults">
+        <div ng-include="'views/search.html'"></div>
+      </div>
+    </div>
+    <div ng-if="!mainCtrl.showSearchPage" ng-controller="DatasetsCtrl as datasetsCtrl">
 
       <div ng-controller="MetadataCtrl as metadataCtrl">
 
