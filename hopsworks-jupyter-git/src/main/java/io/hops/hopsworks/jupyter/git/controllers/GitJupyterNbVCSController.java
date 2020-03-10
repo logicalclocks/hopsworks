@@ -5,10 +5,7 @@
 package io.hops.hopsworks.jupyter.git.controllers;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
@@ -21,6 +18,9 @@ import io.hops.hopsworks.jupyter.git.controllers.qualifiers.GitHubQualifier;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitConfigResponse;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitResponse;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitStatusResponse;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.egit.github.core.client.RequestException;
 
