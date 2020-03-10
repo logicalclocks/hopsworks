@@ -399,7 +399,7 @@ public class ElasticController {
   private void projectSearchInSharedDatasets(RestHighLevelClient client, Integer projectId,
       String searchTerm, List<ElasticHit> elasticHits) throws ServiceException {
     Project project = projectFacade.find(projectId);
-    Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollectionCollection();
+    Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
     for (DatasetSharedWith ds : datasetSharedWithCollection) {
       long datasetId = ds.getDataset().getInode().getId();
       executeProjectSearchQuery(client, searchSpecificDataset(datasetId, searchTerm), elasticHits);

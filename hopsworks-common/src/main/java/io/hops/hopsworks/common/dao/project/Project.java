@@ -135,7 +135,7 @@ public class Project implements Serializable {
   private Collection<Dataset> datasetCollection;
   @OneToMany(cascade = CascadeType.ALL,
     mappedBy = "project", fetch = FetchType.LAZY)
-  private Collection<DatasetSharedWith> datasetSharedWithCollectionCollection;
+  private Collection<DatasetSharedWith> datasetSharedWithCollection;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "projectId")
   private Collection<CondaCommands> condaCommandsCollection;
@@ -444,13 +444,13 @@ public class Project implements Serializable {
   
   @XmlTransient
   @JsonIgnore
-  public Collection<DatasetSharedWith> getDatasetSharedWithCollectionCollection() {
-    return datasetSharedWithCollectionCollection;
+  public Collection<DatasetSharedWith> getDatasetSharedWithCollection() {
+    return datasetSharedWithCollection;
   }
   
-  public void setDatasetSharedWithCollectionCollection(
-    Collection<DatasetSharedWith> datasetSharedWithCollectionCollection) {
-    this.datasetSharedWithCollectionCollection = datasetSharedWithCollectionCollection;
+  public void setDatasetSharedWithCollection(
+    Collection<DatasetSharedWith> datasetSharedWithCollection) {
+    this.datasetSharedWithCollection = datasetSharedWithCollection;
   }
   
   @XmlTransient
