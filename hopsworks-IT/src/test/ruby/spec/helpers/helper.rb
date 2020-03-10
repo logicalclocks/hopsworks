@@ -14,7 +14,14 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module Helper
-  def wait_for(timeout=480)
+  def time_this
+    start_time = Time.now
+    yield
+    end_time = Time.now
+    pp "time = #{end_time - start_time}"
+  end
+
+  def wait_for_me(timeout=480)
     start = Time.now
     x = yield
     until x
@@ -32,5 +39,24 @@ module Helper
     else
       expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and body:#{json_body}"
     end
+  end
+
+  def array_contains_one_of(array, &predicate)
+    selected = array.select { |s| predicate.call(s) }
+    expect(selected.length).to eq(1)
+    selected[0]
+  end
+
+  def check_array_contains_one_of(array, &predicate)
+    selected = array.select { |s| predicate.call(s) }
+    selected.length == 1
+  end
+
+  def get_path_dataset(project, dataset)
+    "/Projects/#{project[:projectname]}/#{dataset[:inode_name]}"
+  end
+
+  def get_path_dir(project, dataset, dir_relative_path)
+    "/Projects/#{project[:projectname]}/#{dataset[:inode_name]}/#{dir_relative_path}"
   end
 end

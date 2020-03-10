@@ -69,13 +69,6 @@ describe "On #{ENV['OS']}" do
     clean_all_test_projects
   end
 
-  def fix_json(json)
-    json1 = json.gsub(/([a-zA-Z_1-9]+)=/, '"\1"=')
-    json2 = json1.gsub(/=([a-zA-Z_1-9]+)/, '="\1"')
-    json3 = json2.gsub('=', ':')
-    json4 = JSON.parse(json3)
-  end
-
   describe 'test provenance auxiliary mechanisms' do
     it 'index cleaning' do
       prov_wait_for_epipe
@@ -885,10 +878,10 @@ describe "On #{ENV['OS']}" do
           prov_wait_for_epipe
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
-          #pp experiment
+          pp experiment if defined?(@debugOpt) && @debugOpt == true
           prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
           expect(prov_xattr.length).to eq 1
-          fixed_json = fix_json(prov_xattr[0]["value"])
+          fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
           test_xattr_field = fixed_json["test_xattr_string"]["raw"]
           expect(test_xattr_field).to eq @xattrV4
         end
@@ -920,17 +913,16 @@ describe "On #{ENV['OS']}" do
           experiment_record = prov_get_experiment_record(@project1, @experiment_app1_name1)
           expect(experiment_record.length).to eq 1
           xattr_key = "test_xattr_json_1"
-          prov_add_xattr(experiment_record[0], xattr_key, JSON[@xattrV3], "XATTR_ADD", 1)
+          prov_add_xattr(experiment_record[0], xattr_key, @xattrV3, "XATTR_ADD", 1)
 
         #pp "check experiment dataset"
           prov_wait_for_epipe
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
-          #pp experiment
-
+          pp experiment if defined?(@debugOpt) && @debugOpt == true
           prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
           expect(prov_xattr.length).to eq 1
-          fixed_json = fix_json(prov_xattr[0]["value"])
+          fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
           test_xattr_field = fixed_json[xattr_key]["value"]
           expect(test_xattr_field).to eq @xattrV3
         end
@@ -949,7 +941,7 @@ describe "On #{ENV['OS']}" do
           #pp experiment
           prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
           expect(prov_xattr.length).to eq 1
-          fixed_json = fix_json(prov_xattr[0]["value"])
+          fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
           test_xattr_field = fixed_json[xattr_key]["value"]
           expect(test_xattr_field).to eq @xattrV2
         end
@@ -967,7 +959,7 @@ describe "On #{ENV['OS']}" do
           #pp experiment
           prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
           expect(prov_xattr.length).to eq 1
-          fixed_json = fix_json(prov_xattr[0]["value"])
+          fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
           test_xattr_field = fixed_json[xattr_key]["value"]
           expect(test_xattr_field).to eq @xattrV1
         end

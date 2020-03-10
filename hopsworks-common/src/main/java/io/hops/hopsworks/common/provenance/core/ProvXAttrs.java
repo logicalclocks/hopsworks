@@ -22,7 +22,7 @@ public class ProvXAttrs {
   public static final String PROV_CORE_PROJECT_IID_KEY = "project_iid";
   public static final String PROV_CORE_META_STATUS_KEY = "meta_status";
   public static final String PROV_CORE_STATUS_KEY = "prov_status";
-  public static final String PROV_XATTR_FEATURES = PROV_XATTR + ".features";
+  
   public static final String PROV_XATTR_EXPERIMENT_SUMMARY = PROV_XATTR + ".experiment_summary";
   public static final String PROV_EXP_EXECUTABLE = "executable";
   public static final String PROV_EXP_ENVIRONMENT = "environment";
