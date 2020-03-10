@@ -18,16 +18,16 @@ package io.hops.hopsworks.api.filter.apiKey;
 import io.hops.hopsworks.api.filter.util.HopsworksSecurityContext;
 import io.hops.hopsworks.api.filter.util.Subject;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiKey;
-import io.hops.hopsworks.common.dao.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ApiKeyException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
-import static io.hops.hopsworks.jwt.Constants.BEARER;
+
 import javax.annotation.Priority;
 import javax.ejb.EJB;
 import javax.ws.rs.Priorities;
@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.BEARER;
 
 @Provider
 @ApiKeyRequired

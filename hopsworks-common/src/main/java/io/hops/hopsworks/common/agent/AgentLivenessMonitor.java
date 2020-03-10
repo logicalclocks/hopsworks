@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.agent;
 
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.util.RemoteCommand;
 import io.hops.hopsworks.common.util.RemoteCommandExecutor;

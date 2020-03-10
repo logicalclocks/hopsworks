@@ -41,32 +41,32 @@ package io.hops.hopsworks.common.dataset;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
-import io.hops.hopsworks.common.dao.dataset.DatasetRequest;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
-import io.hops.hopsworks.common.dao.dataset.DatasetType;
-import io.hops.hopsworks.common.dao.dataset.SharedState;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.dataset.SharedState;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.dao.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.common.dao.metadata.Template;
+import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
+import io.hops.hopsworks.persistence.entity.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -172,8 +172,6 @@ public class DatasetController {
    * be null.
    * @param templateId The id of the metadata template to be associated with
    * this DataSet.
-   * @param searchable Defines whether the dataset can be indexed or not (i.e.
-   * whether it can be visible in the search results or not)
    * @param stickyBit Whether or not the dataset should have the sticky bit set
    * @param defaultDataset
    * @param dfso

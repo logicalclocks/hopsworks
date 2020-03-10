@@ -43,19 +43,16 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.CommentIssueReqDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.CommentDTO;
 import io.hops.hopsworks.dela.dto.hopssite.CommentIssueDTO;
-import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
+import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.util.SettingsHelper;
-import java.util.List;
-import java.util.logging.Logger;
+
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -72,6 +69,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.List;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -80,10 +79,6 @@ public class CommentService {
   private final static Logger LOG = Logger.getLogger(CommentService.class.getName());
   @EJB
   private HopssiteController hopsSite;
-  @EJB
-  protected UsersController usersController;
-  @EJB
-  private UserFacade userFacade;
   @EJB
   private Settings settings;
   @EJB

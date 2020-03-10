@@ -45,7 +45,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
 
 @Stateless
 public class FieldFacade extends AbstractFacade<Field> {

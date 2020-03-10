@@ -38,9 +38,11 @@
  */
 package io.hops.hopsworks.common.dao.project.team;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

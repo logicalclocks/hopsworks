@@ -16,8 +16,10 @@
 package io.hops.hopsworks.common.featurestore.online;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
@@ -26,20 +28,18 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryRe
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretId;
-import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
-import io.hops.hopsworks.common.dao.user.security.secrets.VisibilityType;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.RandomStringUtils;
 

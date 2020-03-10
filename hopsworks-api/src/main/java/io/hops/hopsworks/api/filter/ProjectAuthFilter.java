@@ -16,20 +16,14 @@
 package io.hops.hopsworks.api.filter;
 
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.annotation.Priority;
 import javax.ejb.EJB;
 import javax.ws.rs.Priorities;
@@ -40,6 +34,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Request filter that can be used to restrict users accesses to projects based

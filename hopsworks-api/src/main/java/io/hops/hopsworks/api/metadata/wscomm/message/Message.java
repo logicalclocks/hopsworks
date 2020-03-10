@@ -39,9 +39,10 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import java.util.List;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+
 import javax.json.JsonObject;
+import java.util.List;
 
 /**
  * Represents the different types of messages that may be exchanged between the

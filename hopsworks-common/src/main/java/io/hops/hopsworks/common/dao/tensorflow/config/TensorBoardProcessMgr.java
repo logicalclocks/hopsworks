@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.dao.tensorflow.config;
 
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.tensorflow.TensorBoard;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.proxies.client.HttpClient;

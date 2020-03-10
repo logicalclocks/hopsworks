@@ -39,17 +39,10 @@
 
 package io.hops.hopsworks.dela;
 
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopsworks.HopsworksTransferDTO;
-import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
 import io.hops.hopsworks.dela.old_dto.ExtendedDetails;
@@ -61,6 +54,21 @@ import io.hops.hopsworks.dela.old_dto.KafkaDetails;
 import io.hops.hopsworks.dela.old_dto.KafkaEndpoint;
 import io.hops.hopsworks.dela.old_dto.KafkaResource;
 import io.hops.hopsworks.dela.old_dto.ManifestJSON;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.DelaException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,14 +76,6 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import org.apache.hadoop.fs.Path;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

@@ -39,12 +39,19 @@
 package io.hops.hopsworks.admin.ndb;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.dao.ndb.NdbBackup;
 import io.hops.hopsworks.common.dao.ndb.NdbBackupFacade;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.ndb.NdbBackup;
+import org.primefaces.event.RowEditEvent;
+
+import javax.ejb.EJB;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.SessionScoped;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -54,12 +61,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.ejb.EJB;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.SessionScoped;
-import org.primefaces.event.RowEditEvent;
 
 @ManagedBean(name = "ndbBackupBean")
 @SessionScoped

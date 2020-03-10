@@ -17,9 +17,9 @@ package io.hops.hopsworks.api.python.library;
 
 import io.hops.hopsworks.api.python.command.CommandDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.python.CondaStatus;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -28,10 +28,10 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
 
   private String channel;
   private PackageManager packageManager;
-  private LibraryFacade.MachineType machine;
+  private MachineType machine;
   private String library;
   private String version;
-  private CondaCommandFacade.CondaStatus status;
+  private CondaStatus status;
   private String preinstalled;
   private CommandDTO commands;
 
@@ -54,11 +54,11 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     this.packageManager = packageManager;
   }
   
-  public LibraryFacade.MachineType getMachine() {
+  public MachineType getMachine() {
     return machine;
   }
   
-  public void setMachine(LibraryFacade.MachineType machine) {
+  public void setMachine(MachineType machine) {
     this.machine = machine;
   }
   
@@ -78,11 +78,11 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     this.version = version;
   }
   
-  public CondaCommandFacade.CondaStatus getStatus() {
+  public CondaStatus getStatus() {
     return status;
   }
   
-  public void setStatus(CondaCommandFacade.CondaStatus status) {
+  public void setStatus(CondaStatus status) {
     this.status = status;
   }
   

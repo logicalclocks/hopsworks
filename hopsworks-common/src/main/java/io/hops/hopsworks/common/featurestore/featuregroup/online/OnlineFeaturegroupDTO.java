@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

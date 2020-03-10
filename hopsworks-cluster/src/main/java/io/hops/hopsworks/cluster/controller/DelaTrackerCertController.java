@@ -40,14 +40,14 @@
 package io.hops.hopsworks.cluster.controller;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.cluster.ClusterCert;
 import io.hops.hopsworks.common.dao.user.cluster.ClusterCertFacade;
 import io.hops.hopsworks.common.security.CSR;
 import io.hops.hopsworks.common.security.CertificatesController;
 import io.hops.hopsworks.exceptions.DelaCSRCheckException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.cluster.ClusterCert;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -66,8 +66,8 @@ import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.CN;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.CNNOTFOUND;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.EMAIL;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.NOTFOUND;
-import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.OU;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.O;
+import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.OU;
 import static io.hops.hopsworks.restutils.RESTCodes.DelaCSRErrorCode.SERIALNUMBER;
 
 @Stateless

@@ -1,0 +1,199 @@
+/*
+ * Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * This file is part of Hopsworks
+ * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+ * are released under the following license:
+ *
+ * Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package io.hops.hopsworks.persistence.entity.hdfs.inode;
+
+import java.io.Serializable;
+import java.util.Date;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@Entity
+@Table(name = "inodes_ops")
+@XmlRootElement
+@NamedQueries({
+  @NamedQuery(name = "InodeOps.findAll",
+          query = "SELECT i FROM InodeOps i"),
+  @NamedQuery(name = "InodeOps.findByInodeid",
+          query = "SELECT i FROM InodeOps i WHERE i.inodeid = :inodeid"),
+  @NamedQuery(name = "InodeOps.findByInodePid",
+          query = "SELECT i FROM InodeOps i WHERE i.inodePid = :inodePid"),
+  @NamedQuery(name = "InodeOps.findByInodeRoot",
+          query = "SELECT i FROM InodeOps i WHERE i.inodeRoot = :inodeRoot"),
+  @NamedQuery(name = "InodeOps.findByModified",
+          query = "SELECT i FROM InodeOps i WHERE i.modified = :modified")})
+public class InodeOps implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+  @Id
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "inodeid")
+  private Integer inodeid;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "inode_pid")
+  private int inodePid;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "inode_root")
+  private int inodeRoot;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "modified")
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date modified;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "operationn")
+  private int operationn;
+
+  @Basic(optional = false)
+  @NotNull
+  @Column(name = "processed")
+  private int processed;
+
+  public InodeOps() {
+  }
+
+  public InodeOps(Integer inodeid) {
+    this.inodeid = inodeid;
+  }
+
+  public InodeOps(Integer inodeid, int inodePid, int inodeRoot,
+          Date modified, int operationn, int processed) {
+    this.inodeid = inodeid;
+    this.inodePid = inodePid;
+    this.inodeRoot = inodeRoot;
+    this.modified = modified;
+    this.operationn = operationn;
+    this.processed = processed;
+  }
+
+  public Integer getInodeid() {
+    return inodeid;
+  }
+
+  public void setInodeid(Integer inodeid) {
+    this.inodeid = inodeid;
+  }
+
+  public int getInodePid() {
+    return inodePid;
+  }
+
+  public void setInodePid(int inodePid) {
+    this.inodePid = inodePid;
+  }
+
+  public int getInodeRoot() {
+    return inodeRoot;
+  }
+
+  public void setInodeRoot(int inodeRoot) {
+    this.inodeRoot = inodeRoot;
+  }
+
+  public Date getModified() {
+    return modified;
+  }
+
+  public void setModified(Date modified) {
+    this.modified = modified;
+  }
+
+  public int getOperationn() {
+    return this.operationn;
+  }
+
+  public void setOperation(int operationn) {
+    this.operationn = operationn;
+  }
+
+  public int getProcessed() {
+    return this.processed;
+  }
+
+  public void setProcessed(int processed) {
+    this.processed = processed;
+  }
+
+  @Override
+  public int hashCode() {
+    int hash = 0;
+    hash += (inodeid != null ? inodeid.hashCode() : 0);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    // TODO: Warning - this method won't work in the case the id fields are not set
+    if (!(object instanceof InodeOps)) {
+      return false;
+    }
+    InodeOps other = (InodeOps) object;
+    if ((this.inodeid == null && other.inodeid != null) || (this.inodeid != null
+            && !this.inodeid.equals(other.inodeid))) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.project.fb.InodesOps[ inodeid=" + inodeid + ","
+            + " inodepid=" + inodePid + ", inoderoot=" + inodeRoot
+            + ", operation=" + operationn + ", processed=" + processed + ""
+            + " modified=" + modified + " ]";
+  }
+
+}

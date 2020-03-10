@@ -39,9 +39,9 @@
 
 package io.hops.hopsworks.api.admin.dto;
 
-import io.hops.hopsworks.common.dao.project.PaymentType;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.project.QuotasDTO;
+import io.hops.hopsworks.persistence.entity.project.PaymentType;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

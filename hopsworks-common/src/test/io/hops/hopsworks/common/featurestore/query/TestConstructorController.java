@@ -16,14 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import org.apache.calcite.sql.JoinType;
 import org.junit.Assert;
 import org.junit.Before;

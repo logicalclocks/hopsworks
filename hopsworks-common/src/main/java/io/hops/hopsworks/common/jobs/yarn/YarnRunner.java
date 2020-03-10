@@ -39,12 +39,14 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.flink.client.deployment.ClusterDeploymentException;

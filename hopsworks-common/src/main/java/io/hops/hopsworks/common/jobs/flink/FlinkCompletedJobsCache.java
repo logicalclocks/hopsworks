@@ -18,10 +18,10 @@ package io.hops.hopsworks.common.jobs.flink;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.security.UserNotFoundException;
 

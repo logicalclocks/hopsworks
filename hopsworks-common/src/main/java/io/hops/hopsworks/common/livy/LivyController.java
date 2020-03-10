@@ -39,14 +39,14 @@
 
 package io.hops.hopsworks.common.livy;
 
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
+import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
 import java.util.ArrayList;

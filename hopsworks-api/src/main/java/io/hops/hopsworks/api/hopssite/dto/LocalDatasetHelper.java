@@ -39,13 +39,14 @@
 
 package io.hops.hopsworks.api.hopssite.dto;
 
-import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import org.apache.hadoop.fs.Path;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.apache.hadoop.fs.Path;
 
 public class LocalDatasetHelper {
 

@@ -39,24 +39,25 @@
 
 package io.hops.hopsworks.api.kibana;
 
-import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstate;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.user.Users;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Stateless
 public class GrafanaProxyServlet extends ProxyServlet {

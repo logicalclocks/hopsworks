@@ -39,6 +39,16 @@
 
 package io.hops.hopsworks.kmon.group;
 
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
+import io.hops.hopsworks.kmon.struct.ServiceInstancesInfo;
+import io.hops.hopsworks.persistence.entity.host.Health;
+import io.hops.hopsworks.persistence.entity.kagent.HostServices;
+
+import javax.annotation.PostConstruct;
+import javax.ejb.EJB;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.RequestScoped;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,16 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.PostConstruct;
-import javax.ejb.EJB;
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.ManagedProperty;
-import javax.faces.bean.RequestScoped;
-
-import io.hops.hopsworks.common.dao.kagent.HostServices;
-import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.kmon.struct.ServiceInstancesInfo;
 
 @ManagedBean
 @RequestScoped

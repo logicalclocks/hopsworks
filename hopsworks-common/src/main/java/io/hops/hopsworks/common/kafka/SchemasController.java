@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.common.kafka;
 
-import io.hops.hopsworks.common.dao.kafka.schemas.Schemas;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.Schemas;
 import io.hops.hopsworks.common.dao.kafka.schemas.SchemasFacade;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.avro.Schema;

@@ -42,9 +42,9 @@ package io.hops.hopsworks.common.project;
 import java.util.Date;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.hdfs.inode.InodeView;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeView;
 
 @XmlRootElement
 public class ProjectDTO {

@@ -39,14 +39,14 @@
 
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.certificates.UserCerts;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.yarn.LocalResourceDTO;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.templates.AppendConfigReplacementPolicy;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;

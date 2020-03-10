@@ -42,9 +42,13 @@ package io.hops.hopsworks.common.dao.dataset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+
+import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserCardDTO;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 
 @XmlRootElement
 public class DataSetDTO {

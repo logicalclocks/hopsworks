@@ -17,27 +17,27 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.featurestore.Featurestore;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.online.OnlineFeaturegroup;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
-import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hive.HiveTableType;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
 

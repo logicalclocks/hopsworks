@@ -17,17 +17,17 @@
 package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.common.dao.jupyter.JupyterProject;
-import io.hops.hopsworks.common.dao.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;

@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.state;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.provenance.app.ProvAppController;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;

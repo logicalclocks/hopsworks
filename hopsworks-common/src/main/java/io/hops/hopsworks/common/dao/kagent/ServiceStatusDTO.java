@@ -39,8 +39,8 @@
 
 package io.hops.hopsworks.common.dao.kagent;
 
-import io.hops.hopsworks.common.dao.host.Health;
-import io.hops.hopsworks.common.dao.host.Status;
+import io.hops.hopsworks.persistence.entity.host.Health;
+import io.hops.hopsworks.persistence.entity.host.Status;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement

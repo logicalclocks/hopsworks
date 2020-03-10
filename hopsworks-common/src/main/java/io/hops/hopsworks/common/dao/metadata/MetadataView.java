@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.metadata;
 
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
+
 import java.util.LinkedList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;

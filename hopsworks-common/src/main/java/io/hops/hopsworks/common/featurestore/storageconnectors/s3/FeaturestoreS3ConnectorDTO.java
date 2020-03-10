@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 

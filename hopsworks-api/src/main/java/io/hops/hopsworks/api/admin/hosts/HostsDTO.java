@@ -16,7 +16,7 @@
 package io.hops.hopsworks.api.admin.hosts;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;

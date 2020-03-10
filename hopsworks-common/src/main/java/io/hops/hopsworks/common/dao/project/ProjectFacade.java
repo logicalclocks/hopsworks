@@ -46,7 +46,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import io.hops.hopsworks.common.dao.user.Users;
+
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 
 @Stateless

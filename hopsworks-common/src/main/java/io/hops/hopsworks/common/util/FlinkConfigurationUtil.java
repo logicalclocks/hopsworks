@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.Utils;
-import io.hops.hopsworks.common.jobs.configuration.JobConfiguration;
-import io.hops.hopsworks.common.jobs.flink.FlinkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 
 import java.io.IOException;

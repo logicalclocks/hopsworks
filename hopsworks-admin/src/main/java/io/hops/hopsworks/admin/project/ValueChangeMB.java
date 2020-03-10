@@ -40,9 +40,11 @@
 package io.hops.hopsworks.admin.project;
 
 import io.hops.hopsworks.admin.maintenance.ClientSessionState;
-import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import java.io.Serializable;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
+
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
@@ -50,11 +52,9 @@ import javax.faces.bean.RequestScoped;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.ValueChangeEvent;
 import javax.faces.event.ValueChangeListener;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dao.user.activity.ActivityFlag;
+import java.io.Serializable;
 
-@ManagedBean(name = "valueChangeMB",
-        eager = true)
+@ManagedBean(name = "valueChangeMB", eager = true)
 @RequestScoped
 public class ValueChangeMB implements Serializable, ValueChangeListener {
 
@@ -84,8 +84,7 @@ public class ValueChangeMB implements Serializable, ValueChangeListener {
   public synchronized String updateProjectTeamRole(String email,
           ProjectRoleTypes role) {
     try {
-      projectTeamController.updateTeamRole(sessionState.getActiveProject(),
-              email, role.getRole());
+      projectTeamController.updateTeamRole(sessionState.getActiveProject(), email, role.getRole());
       activityFacade.persistActivity(ActivityFacade.CHANGE_ROLE + email + " to " + role, sessionState.getActiveProject()
           , sessionState.getLoggedInUsername(), ActivityFlag.MEMBER);
     } catch (Exception ejb) {

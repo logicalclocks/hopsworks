@@ -40,14 +40,15 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.FlinkConfigurationUtil;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.flink.client.deployment.ClusterSpecification;
 import org.apache.flink.yarn.YarnClusterDescriptor;
 import org.apache.hadoop.conf.Configuration;

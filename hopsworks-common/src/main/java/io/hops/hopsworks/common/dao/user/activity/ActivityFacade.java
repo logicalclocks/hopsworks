@@ -39,8 +39,10 @@
 package io.hops.hopsworks.common.dao.user.activity;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.Activity;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;

@@ -41,13 +41,13 @@ package io.hops.hopsworks.api.util;
 
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.audit.AccountAudit;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.maintenance.Maintenance;
 import io.hops.hopsworks.common.maintenance.MaintenanceController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;

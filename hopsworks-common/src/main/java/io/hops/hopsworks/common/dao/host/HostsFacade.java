@@ -40,7 +40,8 @@
 package io.hops.hopsworks.common.dao.host;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -161,7 +162,7 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     }
   }
 
-  public List<Hosts> getCondaHosts(LibraryFacade.MachineType machineType) {
+  public List<Hosts> getCondaHosts(MachineType machineType) {
     TypedQuery<Hosts> query;
     switch (machineType) {
       case CPU:

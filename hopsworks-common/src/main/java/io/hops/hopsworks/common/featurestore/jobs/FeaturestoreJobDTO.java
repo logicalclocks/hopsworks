@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.jobs;
 
-import io.hops.hopsworks.common.dao.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.common.dao.jobhistory.Execution;
-import io.hops.hopsworks.common.dao.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

@@ -39,10 +39,10 @@
 
 package io.hops.hopsworks.api.project.util;
 
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 

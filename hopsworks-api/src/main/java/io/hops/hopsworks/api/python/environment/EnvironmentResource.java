@@ -25,8 +25,6 @@ import io.hops.hopsworks.api.python.environment.command.EnvironmentCommandsResou
 import io.hops.hopsworks.api.python.library.LibraryResource;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -35,10 +33,11 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -59,6 +58,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.io.UnsupportedEncodingException;
 import java.util.logging.Level;
 
 @Api(value = "Python Environments Resource")
@@ -80,8 +80,6 @@ public class EnvironmentResource {
   private EnvironmentCommandsResource environmentCommandsResource;
   @EJB
   private EnvironmentBuilder environmentBuilder;
-  @EJB
-  private Settings settings;
   
   private Project project;
   

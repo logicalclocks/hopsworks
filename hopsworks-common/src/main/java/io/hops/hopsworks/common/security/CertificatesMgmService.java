@@ -41,13 +41,14 @@ package io.hops.hopsworks.common.security;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.common.dao.command.SystemCommand;
+import io.hops.hopsworks.persistence.entity.command.Operation;
+import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
@@ -264,7 +265,7 @@ public class CertificatesMgmService {
   public void issueServiceKeyRotationCommand() {
     List<Hosts> allHosts = hostsFacade.findAll();
     for (Hosts host : allHosts) {
-      SystemCommand rotateCommand = new SystemCommand(host, SystemCommandFacade.OP.SERVICE_KEY_ROTATION);
+      SystemCommand rotateCommand = new SystemCommand(host, Operation.SERVICE_KEY_ROTATION);
       systemCommandFacade.persist(rotateCommand);
     }
   }

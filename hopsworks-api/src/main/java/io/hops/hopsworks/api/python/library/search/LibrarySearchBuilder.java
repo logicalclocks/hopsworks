@@ -15,11 +15,11 @@
  */
 package io.hops.hopsworks.api.python.library.search;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.python.PythonDep;
 import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.python.library.LibraryVersionDTO;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

@@ -21,17 +21,16 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.project.util.DsPath;
 import io.hops.hopsworks.api.project.util.PathValidator;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
-import java.io.UnsupportedEncodingException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -48,11 +47,12 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)

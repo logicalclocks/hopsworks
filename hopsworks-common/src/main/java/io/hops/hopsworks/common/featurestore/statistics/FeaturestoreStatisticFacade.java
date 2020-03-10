@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.statistics;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.statistics.FeaturestoreStatistic;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
