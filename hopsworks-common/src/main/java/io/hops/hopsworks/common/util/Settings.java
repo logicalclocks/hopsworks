@@ -367,11 +367,11 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CLIENT_PATH = "client_path";
   
   private String setVar(String varName, String defaultValue) {
-    Variables userName = findById(varName);
-    if (userName != null && userName.getValue() != null && (!userName.getValue().isEmpty())) {
-      String user = userName.getValue();
-      if (user != null && !user.isEmpty()) {
-        return user;
+    Variables var = findById(varName);
+    if (var != null && var.getValue() != null && (!var.getValue().isEmpty())) {
+      String val = var.getValue();
+      if (val != null && !val.isEmpty()) {
+        return val;
       }
     }
     return defaultValue;

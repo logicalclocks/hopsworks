@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.provenance.core;
 
 import io.hops.hopsworks.common.dao.dataset.Dataset;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
@@ -225,6 +226,18 @@ public class HopsFSProvenanceController {
             "malformed dataset - provenance", "no provenance core xattr");
         }
         ProvDatasetDTO dsState = new ProvDatasetDTO(dataset.getName(), dataset.getInode().getId(), provCore.getType());
+        result.add(dsState);
+      }
+      for(DatasetSharedWith dataset : project.getDatasetSharedWithCollection()) {
+        String datasetPath = Utils.getFileSystemDatasetPath(dataset.getDataset(), settings);
+        ProvCoreDTO provCore = getProvCoreXAttr(datasetPath, udfso);
+        if(provCore == null) {
+          throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
+            "malformed dataset - provenance", "no provenance core xattr");
+        }
+        ProvDatasetDTO dsState = new ProvDatasetDTO(
+          dataset.getDataset().getProject().getName() + "::" + dataset.getDataset().getName(),
+          dataset.getDataset().getInode().getId(), provCore.getType());
         result.add(dsState);
       }
       return result;
