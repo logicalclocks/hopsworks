@@ -18,9 +18,9 @@ package io.hops.hopsworks.audit.helper;
 import io.hops.hopsworks.audit.auditor.AuditType;
 import io.hops.hopsworks.audit.auditor.annotation.Audited;
 import io.hops.hopsworks.audit.exception.AuditException;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.util.HttpUtil;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

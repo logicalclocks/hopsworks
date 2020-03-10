@@ -39,6 +39,8 @@
 
 package io.hops.hopsworks.common.dao.certificates;
 
+import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;

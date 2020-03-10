@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.featurestore;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

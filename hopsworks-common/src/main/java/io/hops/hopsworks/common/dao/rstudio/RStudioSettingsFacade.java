@@ -46,6 +46,9 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+
+import io.hops.hopsworks.persistence.entity.rstudio.RStudioSettings;
+import io.hops.hopsworks.persistence.entity.rstudio.RStudioSettingsPK;
 import org.apache.commons.codec.digest.DigestUtils;
 
 /**

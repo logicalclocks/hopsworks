@@ -15,12 +15,13 @@
  */
 package io.hops.hopsworks.common.dataset.util;
 
-import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.project.Project;
+
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.hadoop.fs.Path;
 
 import java.io.File;

@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 

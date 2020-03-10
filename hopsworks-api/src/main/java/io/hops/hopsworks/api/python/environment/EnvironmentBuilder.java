@@ -18,8 +18,8 @@ package io.hops.hopsworks.api.python.environment;
 import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.api.python.library.LibraryBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

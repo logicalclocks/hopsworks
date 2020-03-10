@@ -38,7 +38,7 @@
  */
 package io.hops.hopsworks.common.project;
 
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 
 public enum TourProjectType {
   SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),

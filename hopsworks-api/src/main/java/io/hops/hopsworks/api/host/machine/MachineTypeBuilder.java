@@ -17,7 +17,7 @@ package io.hops.hopsworks.api.host.machine;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -35,7 +35,7 @@ public class MachineTypeBuilder {
     return dto;
   }
   
-  private MachineTypeDTO url(UriInfo uriInfo, MachineTypeDTO dto, LibraryFacade.MachineType machineType) {
+  private MachineTypeDTO url(UriInfo uriInfo, MachineTypeDTO dto, MachineType machineType) {
     dto.setHref(uriInfo.getAbsolutePathBuilder()
       .path(machineType.name())
       .build());
@@ -50,7 +50,7 @@ public class MachineTypeBuilder {
   }
   
   private MachineTypeDTO build(UriInfo uriInfo, ResourceRequest resourceProperties,
-    LibraryFacade.MachineType machineType, Integer count) {
+    MachineType machineType, Integer count) {
     MachineTypeDTO dto = new MachineTypeDTO();
     url(uriInfo, dto, machineType);
     expand(dto, resourceProperties);
@@ -62,7 +62,7 @@ public class MachineTypeBuilder {
   }
   
   private MachineTypeDTO build(MachineTypeDTO dto, UriInfo uriInfo, ResourceRequest resourceProperties,
-    LibraryFacade.MachineType machineType, Integer count) {
+    MachineType machineType, Integer count) {
     url(uriInfo, dto);
     expand(dto, resourceProperties);
     dto.setMachineType(machineType);
@@ -73,7 +73,7 @@ public class MachineTypeBuilder {
   }
   
   public MachineTypeDTO buildItem(UriInfo uriInfo, ResourceRequest resourceProperties,
-    LibraryFacade.MachineType machineType) {
+    MachineType machineType) {
     MachineTypeDTO dto = new MachineTypeDTO();
     return build(dto, uriInfo, resourceProperties, machineType, hostsFacade.getCondaHosts(machineType).size());
   }
@@ -89,17 +89,17 @@ public class MachineTypeBuilder {
   }
   
   private MachineTypeDTO buildItems(MachineTypeDTO dto, UriInfo uriInfo, ResourceRequest resourceProperties,
-    HashMap<LibraryFacade.MachineType, Integer> machineTypes) {
+    HashMap<MachineType, Integer> machineTypes) {
     if (machineTypes != null && !machineTypes.isEmpty()) {
       machineTypes.forEach((k, v) -> dto.addItem(build(uriInfo, resourceProperties, k, v)));
     }
     return dto;
   }
   
-  public HashMap<LibraryFacade.MachineType, Integer> getMachineTypes() {
-    HashMap<LibraryFacade.MachineType, Integer> machineTypesHashMap = new HashMap<>();
-    LibraryFacade.MachineType [] machineTypes = LibraryFacade.MachineType.values();
-    for(LibraryFacade.MachineType machineType: machineTypes) {
+  public HashMap<MachineType, Integer> getMachineTypes() {
+    HashMap<MachineType, Integer> machineTypesHashMap = new HashMap<>();
+    MachineType [] machineTypes = MachineType.values();
+    for(MachineType machineType: machineTypes) {
       machineTypesHashMap.put(machineType, hostsFacade.getCondaHosts(machineType).size());
     }
     return machineTypesHashMap;

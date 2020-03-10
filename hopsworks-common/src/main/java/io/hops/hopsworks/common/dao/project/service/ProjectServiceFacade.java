@@ -45,8 +45,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServicePK;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
 
 @Stateless
 public class ProjectServiceFacade extends AbstractFacade<ProjectServices> {

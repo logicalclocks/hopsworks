@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.api.admin.dto;
 
-import io.hops.hopsworks.common.dao.util.Variables;
+import io.hops.hopsworks.persistence.entity.util.Variables;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

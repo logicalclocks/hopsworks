@@ -45,7 +45,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.user.security.audit.Userlogins;
+import io.hops.hopsworks.persistence.entity.user.security.audit.Userlogins;
 
 @Stateless
 public class UserLoginsFacade extends AbstractFacade<Userlogins> {

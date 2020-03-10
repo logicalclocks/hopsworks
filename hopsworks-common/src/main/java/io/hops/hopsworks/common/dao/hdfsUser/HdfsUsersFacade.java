@@ -44,6 +44,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractReadOnlyFacade;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+
 import java.util.ArrayList;
 import java.util.List;
 

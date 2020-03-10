@@ -39,8 +39,9 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
 import io.hops.hopsworks.common.util.JsonUtil;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+
 import java.util.List;
 import java.util.logging.Logger;
 

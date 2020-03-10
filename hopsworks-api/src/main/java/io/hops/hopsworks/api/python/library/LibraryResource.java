@@ -25,11 +25,6 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.python.PythonDep;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.python.library.LibraryController;
@@ -40,6 +35,11 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
+import io.hops.hopsworks.persistence.entity.python.MachineType;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -182,7 +182,7 @@ public class LibraryResource {
                           @QueryParam("package_manager") LibraryDTO.PackageManager packageManager,
                           @QueryParam("version") String version,
                           @QueryParam("channel") String channel,
-                          @QueryParam("machine") LibraryFacade.MachineType machine,
+                          @QueryParam("machine") MachineType machine,
                           @Context UriInfo uriInfo,
                           @Context HttpServletRequest req)
       throws ServiceException, GenericException, PythonException,
@@ -226,8 +226,8 @@ public class LibraryResource {
 
     environmentController.checkCondaEnvExists(project, user);
   
-    PythonDep dep = libraryController.addLibrary(project, user, CondaCommandFacade.
-        CondaInstallType.valueOf(packageManager.name().toUpperCase()), machine, channel, library, version);
+    PythonDep dep = libraryController.addLibrary(project, user,
+      CondaInstallType.valueOf(packageManager.name().toUpperCase()), machine, channel, library, version);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     LibraryDTO libraryDTO = librariesBuilder.build(uriInfo, resourceRequest, dep, project);
     return Response.created(libraryDTO.getHref()).entity(libraryDTO).build();

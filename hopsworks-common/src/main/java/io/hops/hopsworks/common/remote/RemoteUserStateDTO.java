@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.common.remote;
 
-import io.hops.hopsworks.common.dao.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

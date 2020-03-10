@@ -39,16 +39,17 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.dao.metadata.MetadataPK;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
+import io.hops.hopsworks.persistence.entity.metadata.MetadataPK;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.StringReader;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.JsonObject;
 
 /**
  * A message request to update a specific raw data row.

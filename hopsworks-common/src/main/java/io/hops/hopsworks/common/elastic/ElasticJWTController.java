@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.common.elastic;
 
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectRoleTypes;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.util.ElasticSettings;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;

@@ -19,8 +19,8 @@ import io.hops.hopsworks.audit.auditor.annotation.AuditTarget;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

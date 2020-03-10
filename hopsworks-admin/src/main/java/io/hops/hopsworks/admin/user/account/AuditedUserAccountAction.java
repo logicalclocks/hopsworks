@@ -23,11 +23,11 @@ import io.hops.hopsworks.audit.helper.UserIdentifier;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.user.UsersController;
-import io.hops.hopsworks.common.util.FormatUtils;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

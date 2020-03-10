@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.hive.HiveTableType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

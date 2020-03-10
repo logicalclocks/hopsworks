@@ -39,7 +39,7 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

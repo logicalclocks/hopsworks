@@ -44,19 +44,17 @@ import io.hops.hopsworks.api.hopssite.dto.RatingValueDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.RateDTO;
 import io.hops.hopsworks.dela.dto.hopssite.RatingDTO;
-import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopsSite;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
+import io.hops.hopsworks.exceptions.DelaException;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.util.SettingsHelper;
 import io.swagger.annotations.ApiParam;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -67,6 +65,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Logged
 @RequestScoped

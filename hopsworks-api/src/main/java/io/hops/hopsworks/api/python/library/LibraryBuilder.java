@@ -19,8 +19,8 @@ import io.hops.hopsworks.api.python.command.CommandBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

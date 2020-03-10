@@ -43,13 +43,13 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.dao.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServices;
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.kagent.ServiceStatusDTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
+import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 import io.swagger.annotations.Api;
 
 import javax.annotation.security.RolesAllowed;

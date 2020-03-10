@@ -20,7 +20,7 @@ import io.hops.hopsworks.audit.auditor.annotation.AuditedList;
 import io.hops.hopsworks.audit.helper.AnnotationHelper;
 import io.hops.hopsworks.audit.helper.AuditActionStatus;
 import io.hops.hopsworks.audit.helper.AuditHelper;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.annotation.Priority;
 import javax.inject.Inject;

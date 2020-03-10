@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
 import java.util.Arrays;
 import java.util.List;

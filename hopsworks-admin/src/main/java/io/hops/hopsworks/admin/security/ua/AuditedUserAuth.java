@@ -23,9 +23,9 @@ import io.hops.hopsworks.audit.helper.UserIdentifier;
 import io.hops.hopsworks.audit.logger.annotation.Caller;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

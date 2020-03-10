@@ -16,9 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
-import io.hops.hopsworks.common.dao.featurestore.storageconnector.s3.FeaturestoreS3Connector;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.TrainingDataset;
-import io.hops.hopsworks.common.dao.featurestore.trainingdataset.external.ExternalTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;

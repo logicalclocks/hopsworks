@@ -35,9 +35,7 @@ import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.UserInfoSuccessResponse;
 import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
-import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
-import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginState;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
 import io.hops.hopsworks.common.remote.OpenIdConstant;
 import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
@@ -45,6 +43,8 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
 import io.hops.hopsworks.jwt.exception.VerificationException;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState;
 import net.minidev.json.JSONObject;
 
 import javax.ejb.EJB;

@@ -16,8 +16,9 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
+
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import java.util.List;
 

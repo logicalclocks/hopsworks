@@ -17,7 +17,7 @@
 package io.hops.hopsworks.api.user;
 
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.user.security.secrets.VisibilityType;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

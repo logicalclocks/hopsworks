@@ -40,24 +40,11 @@
 package io.hops.hopsworks.api.metadata.wscomm;
 
 import io.hops.common.Pair;
-import io.hops.hopsworks.common.dao.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.log.meta.MetaLog;
 import io.hops.hopsworks.common.dao.log.meta.MetaLogFacade;
-import io.hops.hopsworks.common.dao.log.operation.OperationType;
-import io.hops.hopsworks.common.dao.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import io.hops.hopsworks.common.dao.metadata.Field;
-import io.hops.hopsworks.common.dao.metadata.FieldPredefinedValue;
 import io.hops.hopsworks.common.dao.metadata.InodeTableComposite;
-import io.hops.hopsworks.common.dao.metadata.MTable;
-import io.hops.hopsworks.common.dao.metadata.Metadata;
-import io.hops.hopsworks.common.dao.metadata.RawData;
-import io.hops.hopsworks.common.dao.metadata.Template;
-import io.hops.hopsworks.common.dao.metadata.TupleToFile;
 import io.hops.hopsworks.common.dao.metadata.db.FieldFacade;
 import io.hops.hopsworks.common.dao.metadata.db.FieldPredefinedValueFacade;
 import io.hops.hopsworks.common.dao.metadata.db.MTableFacade;
@@ -65,18 +52,32 @@ import io.hops.hopsworks.common.dao.metadata.db.MetadataFacade;
 import io.hops.hopsworks.common.dao.metadata.db.RawDataFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TupleToFileFacade;
-import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.log.meta.MetaLog;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+import io.hops.hopsworks.persistence.entity.metadata.Field;
+import io.hops.hopsworks.persistence.entity.metadata.FieldPredefinedValue;
+import io.hops.hopsworks.persistence.entity.metadata.MTable;
+import io.hops.hopsworks.persistence.entity.metadata.Metadata;
+import io.hops.hopsworks.persistence.entity.metadata.RawData;
+import io.hops.hopsworks.persistence.entity.metadata.Template;
+import io.hops.hopsworks.persistence.entity.metadata.TupleToFile;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
 
 @Stateless(name = "metadataController")
 public class MetadataController {

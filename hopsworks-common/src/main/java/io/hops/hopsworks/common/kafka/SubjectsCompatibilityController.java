@@ -17,11 +17,11 @@ package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.schemas.Compatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.CompatibilityLevel;
-import io.hops.hopsworks.common.dao.kafka.schemas.SchemaCompatibility;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.SchemaCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibility;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.SubjectsCompatibility;
 import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsCompatibilityFacade;
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.restutils.RESTCodes;

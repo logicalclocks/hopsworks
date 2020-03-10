@@ -19,11 +19,11 @@ package io.hops.hopsworks.api.serving;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
-import io.hops.hopsworks.common.dao.serving.ServingType;
-import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.serving.ServingStatusEnum;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.ServingType;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

@@ -16,8 +16,8 @@
 package io.hops.hopsworks.admin.remote.user.ldap;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;

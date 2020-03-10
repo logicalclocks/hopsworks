@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.dataset;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

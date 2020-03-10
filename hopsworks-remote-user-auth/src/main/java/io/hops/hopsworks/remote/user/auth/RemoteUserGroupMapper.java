@@ -38,8 +38,9 @@
  */
 package io.hops.hopsworks.remote.user.auth;
 
-import io.hops.hopsworks.common.dao.remote.user.RemoteUserType;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

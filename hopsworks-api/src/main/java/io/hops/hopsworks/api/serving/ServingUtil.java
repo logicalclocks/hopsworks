@@ -17,15 +17,15 @@
 package io.hops.hopsworks.api.serving;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.hdfs.inode.Inode;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.dao.serving.ServingType;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
 import io.hops.hopsworks.exceptions.ServingException;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.serving.ServingType;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;

@@ -40,7 +40,7 @@
 package io.hops.hopsworks.common.kafka;
 
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
-import io.hops.hopsworks.common.dao.kafka.ProjectTopics;
+import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;

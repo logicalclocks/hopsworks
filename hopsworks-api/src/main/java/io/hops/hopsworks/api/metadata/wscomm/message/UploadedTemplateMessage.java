@@ -39,14 +39,15 @@
 
 package io.hops.hopsworks.api.metadata.wscomm.message;
 
-import io.hops.hopsworks.common.dao.metadata.EntityIntf;
-import java.io.StringReader;
-import java.util.List;
-import java.util.logging.Logger;
+import io.hops.hopsworks.persistence.entity.metadata.EntityIntf;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import java.io.StringReader;
+import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Represents the message produced by an uploaded file

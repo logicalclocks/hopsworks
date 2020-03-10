@@ -183,6 +183,9 @@
           <logViolationsToConsole>true</logViolationsToConsole>
           <failsOnError>true</failsOnError>
           <consoleOutput>true</consoleOutput>
+          <sourceDirectories>
+            <sourceDirectory>src/main/java</sourceDirectory>
+          </sourceDirectories>
         </configuration>
       </plugin>
       <plugin>

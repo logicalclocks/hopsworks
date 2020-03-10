@@ -41,10 +41,10 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.dao.remote.oauth.OauthClient;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
-import io.hops.hopsworks.common.dao.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;

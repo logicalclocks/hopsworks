@@ -38,14 +38,14 @@
  */
 package io.hops.hopsworks.remote.user.auth.ldap;
 
-import io.hops.hopsworks.common.dao.remote.user.RemoteUser;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
-import io.hops.hopsworks.common.dao.remote.user.RemoteUserType;
-import io.hops.hopsworks.common.dao.user.Users;
-import io.hops.hopsworks.common.dao.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.remote.user.auth.RemoteUserAuthController;
 
 import java.util.logging.Level;

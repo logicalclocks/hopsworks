@@ -38,9 +38,9 @@
  */
 package io.hops.hopsworks.remote.user.auth.ldap;
 
-import io.hops.hopsworks.common.dao.remote.user.RemoteUser;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 
 import java.util.ArrayList;
 import java.util.Enumeration;

@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.util.templates.jupyter;
 
-import io.hops.hopsworks.common.dao.project.Project;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
 public class KernelTemplateBuilder {
   private String hdfsUser;

@@ -41,7 +41,7 @@ package io.hops.hopsworks.common.project;
 
 import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 
 @XmlRootElement
 public class MembersDTO {

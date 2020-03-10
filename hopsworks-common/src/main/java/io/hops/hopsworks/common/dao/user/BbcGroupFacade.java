@@ -45,6 +45,8 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+
 import javax.persistence.Query;
 
 @Stateless

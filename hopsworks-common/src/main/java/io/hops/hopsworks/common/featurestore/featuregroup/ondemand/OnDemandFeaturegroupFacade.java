@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;

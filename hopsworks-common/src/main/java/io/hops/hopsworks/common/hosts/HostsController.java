@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.hosts;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.host.HostDTO;
-import io.hops.hopsworks.common.dao.host.Hosts;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;

@@ -19,12 +19,12 @@ package io.hops.hopsworks.common.featurestore.featuregroup;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.dao.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
-import io.hops.hopsworks.common.dao.featurestore.statistics.columns.StatisticColumn;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
+import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;

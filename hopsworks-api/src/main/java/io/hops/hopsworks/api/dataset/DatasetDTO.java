@@ -17,8 +17,8 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
 import io.hops.hopsworks.common.api.RestDTO;
-import io.hops.hopsworks.common.dao.dataset.DatasetPermissions;
-import io.hops.hopsworks.common.dao.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;

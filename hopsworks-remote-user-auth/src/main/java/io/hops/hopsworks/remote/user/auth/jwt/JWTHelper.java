@@ -4,37 +4,38 @@
 package io.hops.hopsworks.remote.user.auth.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import io.hops.hopsworks.common.dao.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.common.dao.user.Users;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.Constants;
-import static io.hops.hopsworks.jwt.Constants.BEARER;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.SignatureAlgorithm;
-import io.hops.hopsworks.remote.user.auth.api.Audience;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.remote.user.auth.api.Audience;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.SecurityContext;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import static io.hops.hopsworks.jwt.Constants.BEARER;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import javax.ws.rs.core.SecurityContext;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)

@@ -17,10 +17,10 @@
 package io.hops.hopsworks.common.serving.sklearn;
 
 import com.google.common.io.Files;
-import io.hops.hopsworks.common.dao.project.Project;
-import io.hops.hopsworks.common.dao.serving.Serving;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.exceptions.ServingException;
