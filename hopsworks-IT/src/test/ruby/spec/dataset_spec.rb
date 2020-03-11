@@ -938,6 +938,7 @@ describe "On #{ENV['OS']}" do
           get_dataset_stat(@project, ds5name, "&type=DATASET")
           ds = json_body
           expect(ds).to be_present
+
         end
 
         it 'zip directory' do
@@ -1012,6 +1013,48 @@ describe "On #{ENV['OS']}" do
           expect_status(400) # bad request
           expect_json(errorCode: 110011) # DataSet not found.
           reset_session
+        end
+        context 'zip/unzip dir with url encoded chars' do
+          before :all do
+            with_valid_project
+            with_valid_dataset
+            hdfs_user="#{@project[:inode_name]}__#{@user[:username]}"
+            topDataset = "#{@dataset[:inode_name]}/top%3ADir"
+            mkdir("/Projects/#{@project[:inode_name]}/#{topDataset}", hdfs_user, hdfs_user, 755)
+            subDataset = "#{topDataset}/sub%20Dir"
+            mkdir("/Projects/#{@project[:inode_name]}/#{subDataset}", hdfs_user, hdfs_user, 755)
+          end
+          it 'zip directory with url encoded char' do
+            topDataset = "#{@dataset[:inode_name]}/top%253ADir"
+            subDataset = "#{topDataset}/sub%2520Dir"
+            get_datasets_in_path(@project, topDataset, "&type=DATASET")
+            expect_status(200)
+
+            zip_dataset(@project, subDataset, "&type=DATASET")
+            expect_status(204)
+
+            wait_for do
+              get_datasets_in_path(@project, topDataset, "&type=DATASET")
+              ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir.zip" }
+              !ds.nil?
+            end
+          end
+
+          it 'unzip directory with url encoded char' do
+            topDataset = "#{@dataset[:inode_name]}/top%253ADir"
+            subDataset = "#{topDataset}/sub%2520Dir"
+            delete_dataset(@project, subDataset, "?type=DATASET")
+            expect_status(204)
+
+            unzip_dataset(@project, "#{subDataset}.zip", "&type=DATASET")
+            expect_status(204)
+
+            wait_for do
+              get_datasets_in_path(@project, topDataset, "&type=DATASET")
+              ds = json_body[:items].detect { |d| d[:attributes][:name] == "sub%20Dir" }
+              !ds.nil?
+            end
+          end
         end
       end
     end
