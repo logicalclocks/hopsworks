@@ -106,7 +106,7 @@ angular.module('hopsWorksApp')
             self.onDemandFeaturegroupSqlQueryWrongValue = 1
 
             //Constants
-            self.hiveDatabases = [self.featurestore.featurestoreName, self.projectName]
+            self.hiveDatabases = [self.featurestore.featurestoreName, self.projectName.toLowerCase()]
             self.hiveRegexp = self.settings.featurestoreRegex;
             self.featurestoreEntityNameMaxLength = self.settings.featurestoreEntityNameMaxLength
             self.featurestoreEntityDescriptionMaxLength = self.settings.featurestoreEntityDescriptionMaxLength
