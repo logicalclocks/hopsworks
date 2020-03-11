@@ -151,7 +151,6 @@ angular.module('hopsWorksApp')
              */
             self.initVariables = function () {
                 self.trainingDatasetFormat = self.dataFormats[1]
-                //self.projectName + "_Training_Datasets"
                 self.s3Connectors = []
                 self.selectedS3Connector = null
                 self.hopsfsConnectors = []
