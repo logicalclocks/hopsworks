@@ -651,13 +651,14 @@ angular.module('hopsWorksApp')
              */
             self.setupJobArgs = function (fileName) {
                 return {
+                    "fileName": fileName,
                     "operation": "insert_into_td",
                     "featurestore": self.featurestore.featurestoreName,
                     "features": self.featureBasket,
                     "featuregroups": self.queryPlan.featuregroups,
                     "trainingDataset": self.trainingDatasetName,
                     "dataFormat": self.trainingDatasetFormat,
-                    "version": 1,
+                    "version": self.version,
                     "joinKey": self.queryPlan.joinKey,
                     "description": self.trainingDatasetDoc,
                     "descriptiveStats": false,
