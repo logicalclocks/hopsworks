@@ -45,14 +45,19 @@
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
-    <div class="job-content-wrapper">
+    <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+      <div id="projectSearchResults">
+        <div ng-include="'views/search.html'"></div>
+      </div>
+    </div>
+    <div ng-if="!mainCtrl.showSearchPage" class="job-content-wrapper">
       <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
-    <div class="">
+    <div ng-if="!mainCtrl.showSearchPage" class="">
       <!-- Page Content -->
       <div class="content-wrapper" style="height:100%; overflow: hidden; margin-top: 50px;" >
-
-        <div class="panel-default panel-fullscreen" ng-show="!jobsCtrl.loadingLog && jobsCtrl.showlogs"
+        <div class="panel-default panel-fullscreen"
+             ng-show="!jobsCtrl.loadingLog && jobsCtrl.showlogs"
              ng-class="{'sidenav-open': projectCtrl.isClosed}">
           <div class="panel-heading">
             <h3 class="panel-title"><i class="fa fa-book"></i> {{jobsCtrl.log['type']}} log</h3>

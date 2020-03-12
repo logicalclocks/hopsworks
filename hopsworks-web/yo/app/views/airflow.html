@@ -46,12 +46,17 @@
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
-    <div class="job-content-wrapper">
+    <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+      <div id="projectSearchResults">
+        <div ng-include="'views/search.html'"></div>
+      </div>
+    </div>
+    <div ng-if="!mainCtrl.showSearchPage" class="job-content-wrapper">
       <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
     <!-- Page Content -->
     <!--class="content"--> 
-    <div style="overflow: hidden; margin-top: 50px;" >
+    <div ng-if="!mainCtrl.showSearchPage" style="overflow: hidden; margin-top: 50px;" >
 
       <div class="row" style="margin-top: 20px; height: 60px;" >
         <div class="col-sm-2" >
