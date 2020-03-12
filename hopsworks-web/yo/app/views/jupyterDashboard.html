@@ -41,7 +41,13 @@
   <div id="wrapper" class="toggled"  ng-controller="JupyterCtrl as jupyterCtrl">
     <div class="overlay"></div>
     <div ng-include="'navProject.html'"></div>
-    <div ng-controller="SparkConfigCtrl as sparkConfigCtrl">
+    <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
+      <div id="projectSearchResults">
+        <div ng-include="'views/search.html'"></div>
+      </div>
+    </div>
+
+    <div ng-if="!mainCtrl.showSearchPage" ng-controller="SparkConfigCtrl as sparkConfigCtrl">
       <section>
         <div ng-if="jupyterCtrl.loading" class="loadingwrap">
           <div class="loading-content">
@@ -49,7 +55,7 @@
             {{jupyterCtrl.loadingText}}
           </div>
         </div>
-        <div class="content-wrapper">
+        <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
         <div growl reference="10" class="pull-right" ></div>
           <h3 ng-class="{'hidden' : jupyterCtrl.ui == ''}">
             <div class="col-md-4 col-lg-4" style="margin-top:-25px;">
