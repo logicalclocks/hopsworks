@@ -64,6 +64,13 @@
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-persistence</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <!-- exclude all transitive dependencies -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
