@@ -1105,7 +1105,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("trainingDatasetType")).to be true
           expect(parsed_json2.key?("storageConnectorId")).to be true
           expect(parsed_json2.key?("storageConnectorName")).to be true
-          expect(parsed_json2.key?("inodeID")).to be true
+          expect(parsed_json2.key?("inodeId")).to be true
 
           # make sure the dataformat didn't change
           expect(parsed_json2["dataFormat"] == "tfrecords").to be true
