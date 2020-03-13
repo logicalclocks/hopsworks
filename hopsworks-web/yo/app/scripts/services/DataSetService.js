@@ -48,6 +48,9 @@ angular.module('hopsWorksApp')
                 var c = typeof first === "undefined" || first === false? '&' : '?';
                 return typeof query === "undefined"? '': c + queryName + '=' + query;
             };
+            var getEncodedPath = function (path) {
+              return typeof path === "undefined"? '': encodeURIComponent(path);
+            };
             return function (id) {
               var baseUrl = '/api/project/' + id + '/dataset/';
               var services = {
@@ -56,7 +59,7 @@ angular.module('hopsWorksApp')
                  * @returns {unresolved}
                  */
                 getAllDatasets: function (path, offset, limit, sortBy, filterBy, type) {
-                  var datasetPath = typeof path === "undefined"? '': path;
+                  var datasetPath = getEncodedPath(path);
                   var datasetType = getQuery(type, 'type');
                   var lim = getQuery(limit, 'limit');
                   var off = getQuery(offset, 'offset');
@@ -80,12 +83,12 @@ angular.module('hopsWorksApp')
                 },
                 getDatasetStat: function (path, type) {
                   var datasetType = getQuery(type, 'type');
-                  return $http.get(baseUrl + path + '?action=stat&expand=inodes' + datasetType);
+                  return $http.get(baseUrl + getEncodedPath(path) + '?action=stat&expand=inodes' + datasetType);
                 },
                 getDatasetBlob: function (path, mode, type) {
                   var datasetType = getQuery(type, 'type');
                   var previewMode = getQuery(mode, 'mode');
-                  return $http.get(baseUrl + path + '?action=blob&expand=inodes' + datasetType + previewMode);
+                  return $http.get(baseUrl + getEncodedPath(path) + '?action=blob&expand=inodes' + datasetType + previewMode);
                 },
                 create: function (path, templateId, description, searchable, generateReadme, type) {
                   var template = getQuery(templateId, 'templateId');
@@ -93,72 +96,72 @@ angular.module('hopsWorksApp')
                   var searchable = getQuery(searchable, 'searchable');
                   var generateReadme = getQuery(generateReadme, 'generate_readme');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=create' + template + description + searchable + generateReadme + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + template + description + searchable + generateReadme + datasetType);
                 },
                 copy: function (path, destinationPath) {
-                  var destinationPath = getQuery(destinationPath, 'destination_path');
-                  return $http.post(baseUrl + path + '?action=copy' + destinationPath);
+                  var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=copy' + destinationPath);
                 },
                 move: function (path, destinationPath) {
-                  var destinationPath = getQuery(destinationPath, 'destination_path');
-                  return $http.post(baseUrl + path + '?action=move' + destinationPath);
+                  var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=move' + destinationPath);
                 },
                 share: function (path, targetProject, type) {
                   var targetProject = getQuery(targetProject, 'target_project');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=share' + targetProject + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=share' + targetProject + datasetType);
                 },
                 accept: function (path, type) {
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=accept' + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=accept' + datasetType);
                 },
                 reject: function (path, type) {
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=reject' + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=reject' + datasetType);
                 },
                 zip: function (path) {
-                  return $http.post(baseUrl + path + '?action=zip');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=zip');
                 },
                 unzip: function (path) {
-                  return $http.post(baseUrl + path + '?action=unzip');
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=unzip');
                 },
                 permissions: function (path, permissions) {
-                  return $http.put(baseUrl + path + '?action=permission' + '&permissions=' + permissions);
+                  return $http.put(baseUrl + getEncodedPath(path) + '?action=permission' + '&permissions=' + permissions);
                 },
                 updateDescription: function (path, description) {
-                  return $http.put(baseUrl + path + '?action=description' + '&description=' + description);
+                  return $http.put(baseUrl + getEncodedPath(path) + '?action=description' + '&description=' + description);
                 },
                 delete: function (path) {
-                  return $http.delete(baseUrl + path);
+                  return $http.delete(baseUrl + getEncodedPath(path));
                 },
                 deleteCorrupted: function (path) {
-                  return $http.delete(baseUrl + path + '?action=corrupted');
+                  return $http.delete(baseUrl + getEncodedPath(path) + '?action=corrupted');
                 },
                 unshare: function (path, targetProject, type) {
                   var targetProject = getQuery(targetProject, 'target_project');
                   var datasetType = getQuery(type, 'type');
-                  return $http.delete(baseUrl + path + '?action=unshare' + targetProject + datasetType);
+                  return $http.delete(baseUrl + getEncodedPath(path) + '?action=unshare' + targetProject + datasetType);
                 },
                 getDownloadToken: function (path, type) {
                   var datasetType = getQuery(type, 'type', true);
-                  return $http.get(baseUrl + 'download/token/' + path + datasetType);
+                  return $http.get(baseUrl + 'download/token/' + getEncodedPath(path) + datasetType);
                 },
                 download: function (path, token, type) {
                   var datasetType = getQuery(type, 'type');
-                  location.href=getPathname() + baseUrl + 'download/' + path + '?token=' + token + datasetType;
+                  location.href=getPathname() + baseUrl + 'download/' + getEncodedPath(path) + '?token=' + token + datasetType;
                 },
                 publish: function (path, type) {
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=publish' + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=publish' + datasetType);
                 },
                 unpublish: function (path, type) {
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=unpublish' + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=unpublish' + datasetType);
                 },
                 import: function (path, targetProject, type) {
                   var targetProject = getQuery(targetProject, 'target_project');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + path + '?action=import' + targetProject + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=import' + targetProject + datasetType);
                 },
                 unshareAll: function (datasetName, type) {
                   var datasetType = getQuery(type, 'type');
