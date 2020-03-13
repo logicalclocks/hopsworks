@@ -31,6 +31,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity class representing the feature_store_feature table in Hopsworks database.
@@ -132,28 +133,25 @@ public class FeaturestoreFeature implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof FeaturestoreFeature)) return false;
+    if (o == null || getClass() != o.getClass()) return false;
 
     FeaturestoreFeature that = (FeaturestoreFeature) o;
 
-    if (primary != that.primary) return false;
-    if (!id.equals(that.id)) return false;
-    if (trainingDataset != null && !trainingDataset.equals(that.trainingDataset)) return false;
-    if (onDemandFeaturegroup != null && !onDemandFeaturegroup.equals(that.onDemandFeaturegroup)) return false;
-    if (!description.equals(that.description)) return false;
-    if (!name.equals(that.name)) return false;
-    return type.equals(that.type);
+    if (!Objects.equals(id, that.id)) return false;
+    if (!Objects.equals(description, that.description)) return false;
+    if (!Objects.equals(name, that.name)) return false;
+    if (!Objects.equals(type, that.type)) return false;
+    return Objects.equals(primary, that.primary);
   }
 
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
-    result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (type != null ? type.hashCode() : 0);
-    result = 31 * result + (primary ? 1 : 0);
+    result = 31 * result + (primary != null ? primary.hashCode() : 0);
     return result;
   }
 }

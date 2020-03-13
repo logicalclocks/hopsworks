@@ -16,19 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,16 +32,20 @@ import java.util.stream.Collectors;
  * using jaxb.
  */
 @XmlRootElement
-@XmlSeeAlso({HopsfsTrainingDatasetDTO.class, ExternalTrainingDatasetDTO.class})
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = HopsfsTrainingDatasetDTO.class, name = "HopsfsTrainingDatasetDTO"),
-  @JsonSubTypes.Type(value = ExternalTrainingDatasetDTO.class, name = "ExternalTrainingDatasetDTO")})
 public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   private String dataFormat;
   private TrainingDatasetType trainingDatasetType;
+
+  private Integer storageConnectorId; // Need to know which storage connector to use it
+  // ID + type would be unique. However momentarily keep also the name, until we switch to
+  // rest api v2 with expansion on the storage controller.
+  private String storageConnectorName;
+  private FeaturestoreStorageConnectorType storageConnectorType;
+
+  // This is here for the frontend. The frontend uses a rest call to get the total size of
+  // a subdirectory - the rest call requires the inode id.
+  private Long inodeId;
 
   public TrainingDatasetDTO() {
   }
@@ -73,7 +72,39 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   public void setDataFormat(String dataFormat) {
     this.dataFormat = dataFormat;
   }
-  
+
+  public Integer getStorageConnectorId() {
+    return storageConnectorId;
+  }
+
+  public void setStorageConnectorId(Integer storageConnectorId) {
+    this.storageConnectorId = storageConnectorId;
+  }
+
+  public String getStorageConnectorName() {
+    return storageConnectorName;
+  }
+
+  public void setStorageConnectorName(String storageConnectorName) {
+    this.storageConnectorName = storageConnectorName;
+  }
+
+  public FeaturestoreStorageConnectorType getStorageConnectorType() {
+    return storageConnectorType;
+  }
+
+  public void setStorageConnectorType(FeaturestoreStorageConnectorType storageConnectorType) {
+    this.storageConnectorType = storageConnectorType;
+  }
+
+  public Long getInodeId() {
+    return inodeId;
+  }
+
+  public void setInodeId(Long inodeId) {
+    this.inodeId = inodeId;
+  }
+
   @XmlElement
   public TrainingDatasetType getTrainingDatasetType() {
     return trainingDatasetType;
@@ -83,7 +114,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     TrainingDatasetType trainingDatasetType) {
     this.trainingDatasetType = trainingDatasetType;
   }
-  
+
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +

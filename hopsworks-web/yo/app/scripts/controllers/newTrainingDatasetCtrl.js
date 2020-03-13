@@ -19,9 +19,9 @@
  * Controller for managing the "create new training dataset" page
  */
 angular.module('hopsWorksApp')
-    .controller('newTrainingDatasetCtrl', ['$routeParams', 'growl',
+    .controller('newTrainingDatasetCtrl', ['$routeParams', '$scope', 'growl',
         '$location', 'StorageService', 'FeaturestoreService', 'ModalService',
-        function ($routeParams, growl, $location, StorageService, FeaturestoreService, ModalService) {
+        function ($routeParams, $scope, growl, $location, StorageService, FeaturestoreService, ModalService) {
 
             var self = this;
 
@@ -63,18 +63,13 @@ angular.module('hopsWorksApp')
             self.trainingDatasetNameRegexp = self.settings.featurestoreRegex
             self.dataFormats = self.settings.trainingDatasetDataFormats
             self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
-            self.hopsfsTrainingDatasetTypeDTO = self.settings.hopsfsTrainingDatasetDtoType
             self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
-            self.externalTrainingDatasetTypeDTO = self.settings.externalTrainingDatasetDtoType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.featuregroupType = self.settings.featuregroupType
             self.trainingDatasetType = self.settings.trainingDatasetType
-            self.featurestoreUtil4jMainClass = self.settings.featurestoreUtil4jMainClass
             self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
-            self.featurestoreUtil4JExecutable = self.settings.featurestoreUtil4jExecutable
             self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable
-            self.sparkJobType = "SPARK"
             self.pySparkJobType = "PYSPARK"
 
             //Input Variables
@@ -102,46 +97,39 @@ angular.module('hopsWorksApp')
             //front-end variables
             self.td_accordion0 = {
                 "isOpen": false,
-                "visible": true,
                 "value": "",
                 "title": "Query Plan"
             };
 
             self.td_accordion1 = {
                 "isOpen": true,
-                "visible": true,
                 "value": "",
                 "title": "Training Dataset Name"
             };
             self.td_accordion2 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Training Dataset Description"
             };
             self.td_accordion3 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Training Dataset Format"
             };
             self.td_accordion4 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Create"
             };
 
             self.td_accordion5 = {
-                "isOpen": false,
-                "visible": false,
+                "isOpen": true,
                 "value": "",
                 "title": "Output Location"
             };
 
             self.td_accordion6 = {
                 "isOpen": false,
-                "visible": false,
                 "value": "",
                 "title": "Schema"
             };
@@ -278,21 +266,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             self.descriptionFilledIn = function () {
-                if (self.trainingDatasetOperation === 'CREATE') {
-                    if (self.phase === 1) {
-                        if (!self.trainingDatasetDoc) {
-                            self.trainingDatasetDoc = "-";
-                        }
-                        self.phase = 2;
-                        self.td_accordion3.visible = true;
-                        self.td_accordion3.isOpen = false;
-                        self.td_accordion4.visible = true;
-                        self.td_accordion4.isOpen = true;
-                        self.td_accordion5.visible = true;
-                        self.td_accordion5.isOpen = false;
-                    }
-                    self.td_accordion2.value = " - " + self.trainingDatasetDoc; //Edit panel title
-                }
+                self.td_accordion2.value = " - " + self.trainingDatasetDoc; //Edit panel title
             };
 
             /**
@@ -307,8 +281,6 @@ angular.module('hopsWorksApp')
                             self.trainingDatasetName = "TrainingDataset-" + Math.round(new Date().getTime() / 1000);
                         }
                         self.phase = 1;
-                        self.td_accordion2.isOpen = true; //Open description selection
-                        self.td_accordion2.visible = true; //Display description selection
                     }
                     self.td_accordion1.value = " - " + self.trainingDatasetName; //Edit panel title
                 }
@@ -510,16 +482,9 @@ angular.module('hopsWorksApp')
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "featuresHistogram": null,
                     "features": self.trainingDataset.features,
-                    "updateMetadata": true,
                     "updateStats": false,
                     "trainingDatasetType": self.hopsfsTrainingDatasetType,
-                    "type": self.hopsfsTrainingDatasetTypeDTO,
-                    "hopsfsConnectorId": self.selectedHopsfsConnector.id,
-                    "hopsfsConnectorName": self.selectedHopsfsConnector.name,
                     "jobs": []
                 }
                 FeaturestoreService.updateTrainingDatasetMetadata(self.projectId, self.trainingDataset.id,
@@ -527,8 +492,8 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.working = false;
                         growl.success("Training dataset updated", {title: 'Success', ttl: 1000});
-                        self.exitToFeaturestore()
                     }, function (error) {
+                        self.exitToFeaturestore()
                         growl.error(error.data.errorMsg, {
                             title: 'Failed to update training dataset',
                             ttl: 15000
@@ -550,19 +515,14 @@ angular.module('hopsWorksApp')
                 var jobName = "create_training_dataset_" + self.trainingDatasetName + "_" + new Date().getTime()
                 var trainingDatasetJson = {
                     "name": self.trainingDatasetName,
-                    "jobName": jobName,
                     "version": self.version,
                     "description": self.trainingDatasetDoc,
                     "dataFormat": self.trainingDatasetFormat,
-                    "featureCorrelationMatrix": null,
-                    "descriptiveStatistics": null,
-                    "featuresHistogram": null,
                     "features": self.featureBasket,
-                    "trainingDatasetType": self.hopsfsTrainingDatasetType,
-                    "type": self.hopsfsTrainingDatasetTypeDTO,
-                    "hopsfsConnectorId": self.selectedHopsfsConnector.id,
-                    "hopsfsConnectorName": self.selectedHopsfsConnector.name,
-                    "jobs": []
+                    "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
+                    "storageConnectorId": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
+                    "storageConnectorName": self.sinkType === 0 ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
+                    "location": self.path,
                 }
                 if(self.configureJob){
                     var utilArgs = self.setupJobArgs(jobName + "_args.json");
@@ -570,7 +530,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             var hdfsPath = success.data.successMessage;
                             StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
-                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath);
+                            var runConfig = self.setupHopsworksCreateTdJob(jobName);
                             FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
                                 function (success) {
                                     self.working = false;
@@ -690,23 +650,21 @@ angular.module('hopsWorksApp')
              */
             self.setupJobArgs = function (fileName) {
                 return {
-                    "operation": "create_td",
+                    "fileName": fileName,
+                    "operation": "insert_into_td",
                     "featurestore": self.featurestore.featurestoreName,
                     "features": self.featureBasket,
                     "featuregroups": self.queryPlan.featuregroups,
                     "trainingDataset": self.trainingDatasetName,
                     "dataFormat": self.trainingDatasetFormat,
-                    "version": 1,
+                    "version": self.version,
                     "joinKey": self.queryPlan.joinKey,
                     "description": self.trainingDatasetDoc,
-                    "fileName": fileName,
                     "descriptiveStats": false,
                     "featureCorrelation": false,
                     "clusterAnalysis": false,
                     "featureHistograms": false,
                     "statColumns": [],
-                    "sink": self.getConnectorName(),
-                    "path": self.path
                 };
             };
 
@@ -714,31 +672,18 @@ angular.module('hopsWorksApp')
              * Sets up the job configuration for creating a training dataset using Spark and the Featurestore API
              *
              * @param jobName name of the job
-             * @param argsPath HDSF path to the input arguments
              * @returns the configured json
              */
-            self.setupHopsworksCreateTdJob = function (jobName, argsPath) {
-                var path = ""
-                var mainClass = ""
-                var jobType = ""
-                if (self.trainingDatasetFormat === "petastorm" || self.trainingDatasetFormat === "npy") {
-                    path = self.featurestoreUtilPythonExecutable
-                    mainClass = self.settings.featurestoreUtilPythonMainClass
-                    jobType = self.pySparkJobType
-                } else {
-                    path = self.featurestoreUtil4JExecutable
-                    mainClass = self.settings.featurestoreUtil4jMainClass
-                    jobType = self.sparkJobType
-                }
+            self.setupHopsworksCreateTdJob = function (jobName) {
                 return {
                     type: "sparkJobConfiguration",
                     appName: jobName,
                     amQueue: "default",
                     amMemory: 4000,
                     amVCores: 1,
-                    jobType: jobType,
-                    appPath: path,
-                    mainClass: mainClass,
+                    jobType: self.pySparkJobType,
+                    appPath: self.featurestoreUtilPythonExecutable,
+                    mainClass: self.settings.featurestoreUtilPythonMainClass,
                     "spark.blacklist.enabled": false,
                     "spark.dynamicAllocation.enabled": true,
                     "spark.dynamicAllocation.initialExecutors": 1,
@@ -811,6 +756,16 @@ angular.module('hopsWorksApp')
                         // Users changed their minds.
                     });
             };
+
+
+            /**
+             * Remove entries from local storage
+             */
+            $scope.$on("$destroy", function() {
+                StorageService.remove(self.projectId + "_fgFeatures");
+                StorageService.remove("trainingdataset_operation");
+                StorageService.remove(self.projectId + "_trainingDataset");
+            });
 
             self.init();
         }

@@ -18,9 +18,9 @@
  * Controller for the Training Dataset-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'FeaturestoreService', 'ProjectService',
+    .controller('trainingDatasetViewInfoCtrl', ['$uibModalInstance', '$scope', 'ProjectService',
         'JobService', '$location', 'growl', 'projectId', 'trainingDataset', 'featurestore', 'settings',
-        function ($uibModalInstance, $scope, FeaturestoreService, ProjectService, JobService, $location, growl,
+        function ($uibModalInstance, $scope, ProjectService, JobService, $location, growl,
                   projectId, trainingDataset, featurestore, settings) {
 
             /**

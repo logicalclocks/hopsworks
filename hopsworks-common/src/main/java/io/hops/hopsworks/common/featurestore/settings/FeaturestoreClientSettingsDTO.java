@@ -59,8 +59,6 @@ public class FeaturestoreClientSettingsDTO {
   private String onDemandFeaturegroupDtoType = FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_DTO_TYPE;
   private String hopsfsTrainingDatasetType = FeaturestoreConstants.HOPSFS_TRAINING_DATASET_TYPE;
   private String externalTrainingDatasetType = FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_TYPE;
-  private String hopsfsTrainingDatasetDtoType = FeaturestoreConstants.HOPSFS_TRAINING_DATASET_DTO_TYPE;
-  private String externalTrainingDatasetDtoType = FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_DTO_TYPE;
   private String s3ConnectorDtoType = FeaturestoreConstants.S3_CONNECTOR_DTO_TYPE;
   private String jdbcConnectorDtoType = FeaturestoreConstants.JDBC_CONNECTOR_DTO_TYPE;
   private String hopsfsConnectorDtoType = FeaturestoreConstants.HOPSFS_CONNECTOR_DTO_TYPE;
@@ -288,25 +286,7 @@ public class FeaturestoreClientSettingsDTO {
   public void setExternalTrainingDatasetType(String externalTrainingDatasetType) {
     this.externalTrainingDatasetType = externalTrainingDatasetType;
   }
-  
-  @XmlElement
-  public String getHopsfsTrainingDatasetDtoType() {
-    return hopsfsTrainingDatasetDtoType;
-  }
-  
-  public void setHopsfsTrainingDatasetDtoType(String hopsfsTrainingDatasetDtoType) {
-    this.hopsfsTrainingDatasetDtoType = hopsfsTrainingDatasetDtoType;
-  }
-  
-  @XmlElement
-  public String getExternalTrainingDatasetDtoType() {
-    return externalTrainingDatasetDtoType;
-  }
-  
-  public void setExternalTrainingDatasetDtoType(String externalTrainingDatasetDtoType) {
-    this.externalTrainingDatasetDtoType = externalTrainingDatasetDtoType;
-  }
-  
+
   @XmlElement
   public String getS3ConnectorDtoType() {
     return s3ConnectorDtoType;

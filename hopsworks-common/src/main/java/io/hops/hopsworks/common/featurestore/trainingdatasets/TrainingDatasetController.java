@@ -17,34 +17,43 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
-import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
+import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetController;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
 
@@ -52,6 +61,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -68,10 +78,6 @@ public class TrainingDatasetController {
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
   @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
   private FeaturestoreStatisticController featurestoreStatisticController;
@@ -84,11 +90,31 @@ public class TrainingDatasetController {
   @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
+  private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
+  @EJB
   private ExternalTrainingDatasetController externalTrainingDatasetController;
   @EJB
-  private FeaturestoreJobController featurestoreJobController;
+  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
+  @EJB
+  private FeaturestoreJobFacade featurestoreJobFacade;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
+  @EJB
+  private FeaturestoreHopsfsConnectorFacade hopsfsConnectorFacade;
+  @EJB
+  private FeaturestoreS3ConnectorFacade S3ConnectorFacade;
+  @EJB
+  private InodeController inodeController;
+  @EJB
+  private HopsFSProvenanceController fsProvenanceController;
+  @EJB
+  private FeaturestoreHopsfsConnectorController hopsfsConnectorController;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersBean;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -98,7 +124,7 @@ public class TrainingDatasetController {
    */
   public List<TrainingDatasetDTO> getTrainingDatasetsForFeaturestore(Featurestore featurestore) {
     List<TrainingDataset> trainingDatasets = trainingDatasetFacade.findByFeaturestore(featurestore);
-    return trainingDatasets.stream().map(td -> convertTrainingDatasetToDTO(td)).collect(Collectors.toList());
+    return trainingDatasets.stream().map(this::convertTrainingDatasetToDTO).collect(Collectors.toList());
   }
 
   /**
@@ -109,18 +135,17 @@ public class TrainingDatasetController {
    * @throws FeaturestoreException
    */
   private TrainingDatasetDTO convertTrainingDatasetToDTO(TrainingDataset trainingDataset) {
+    TrainingDatasetDTO trainingDatasetDTO = new TrainingDatasetDTO(trainingDataset);
+
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
+    trainingDatasetDTO.setFeaturestoreName(featurestoreName);
+
     switch (trainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
-        HopsfsTrainingDatasetDTO hopsfsTrainingDatasetDTO =
-          hopsfsTrainingDatasetController.convertHopsfsTrainingDatasetToDTO(trainingDataset);
-        hopsfsTrainingDatasetDTO.setFeaturestoreName(featurestoreName);
-        return hopsfsTrainingDatasetDTO;
+        return hopsfsTrainingDatasetController.convertHopsfsTrainingDatasetToDTO(trainingDatasetDTO, trainingDataset);
       case EXTERNAL_TRAINING_DATASET:
-        ExternalTrainingDatasetDTO externalTrainingDatasetDTO =
-          externalTrainingDatasetController.convertExternalTrainingDatasetToDTO(trainingDataset);
-        externalTrainingDatasetDTO.setFeaturestoreName(featurestoreName);
-        return externalTrainingDatasetDTO;
+        return externalTrainingDatasetController.convertExternalTrainingDatasetToDTO(trainingDatasetDTO,
+            trainingDataset);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE.getMessage() +
           ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
@@ -129,40 +154,97 @@ public class TrainingDatasetController {
     }
   }
 
+  public TrainingDatasetDTO createTrainingDataset(Users user, Project project, Featurestore featurestore,
+                                                  TrainingDatasetDTO trainingDatasetDTO)
+      throws FeaturestoreException, ProvenanceException, IOException {
+
+    // Check that training dataset doesn't already exists
+    if (trainingDatasetFacade.findByNameVersionAndFeaturestore
+        (trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion(), featurestore)
+        .isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
+          "Training Dataset: " + trainingDatasetDTO.getName() + ", version: " + trainingDatasetDTO.getVersion());
+    }
+
+    Inode inode = null;
+    FeaturestoreHopsfsConnector hopsfsConnector = null;
+    FeaturestoreS3Connector s3Connector = null;
+
+    if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+      if (trainingDatasetDTO.getStorageConnectorId() == null) {
+        hopsfsConnector = hopsfsConnectorController.getDefaultStorageConnector(featurestore);
+      } else {
+        hopsfsConnector = hopsfsConnectorFacade.
+            findByIdAndFeaturestore(trainingDatasetDTO.getStorageConnectorId(), featurestore)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+                Level.FINE, "HOPSFS Connector: " + trainingDatasetDTO.getStorageConnectorId()));
+      }
+
+      Dataset trainingDatasetsFolder = hopsfsConnector.getHopsfsDataset();
+
+      // TODO(Fabio) account for path
+      String trainingDatasetPath = getTrainingDatasetPath(
+          inodeController.getPath(trainingDatasetsFolder.getInode()),
+          trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion());
+
+      DistributedFileSystemOps udfso = null;
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      try {
+        udfso = dfs.getDfsOps(username);
+        udfso.mkdir(trainingDatasetPath);
+      } finally {
+        if (udfso != null) {
+          udfso.close();
+        }
+      }
+
+      inode = inodeController.getInodeAtPath(trainingDatasetPath);
+      fsProvenanceController.trainingDatasetAttachXAttr(user, project, trainingDatasetPath,
+          trainingDatasetDTO.getFeatures());
+    } else {
+      s3Connector = S3ConnectorFacade.findByIdAndFeaturestore(trainingDatasetDTO.getStorageConnectorId(), featurestore)
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
+              Level.FINE, "S3 connector: " + trainingDatasetDTO.getStorageConnectorId()));
+    }
+
+    return createTrainingDatasetMetadata(user, featurestore, trainingDatasetDTO, hopsfsConnector,  inode, s3Connector);
+  }
+
+
   /**
-   * Creates a new 'managed' training dataset with extended metadata stored in Hopsworks
+   * Creates the metadata structure in DB for the training dataset
    *
    * @param user                     the user creating the dataset
    * @param featurestore             the featurestore linked to the training dataset
    * @param trainingDatasetDTO       user input data
+   * @param inode                    for hopsfs training dataset the inode where the training
    * @return JSON/XML DTO of the trainingDataset
    */
-  public TrainingDatasetDTO createTrainingDataset(Users user, Featurestore featurestore,
-    TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
-    // Verify general entity related information
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Featurestore featurestore,
+                                                           TrainingDatasetDTO trainingDatasetDTO,
+                                                           FeaturestoreHopsfsConnector hopsfsConnector,
+                                                           Inode inode,
+                                                           FeaturestoreS3Connector S3Connector)
+      throws FeaturestoreException {
+    // Verify general entity related informatio
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
     // Verify input specific for training dataset
     verifyTrainingDatasetInput(trainingDatasetDTO, featurestore);
     // Statistics
     verifyStatisticsInput(trainingDatasetDTO);
     
-    //Get username
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-  
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
     ExternalTrainingDataset externalTrainingDataset = null;
     switch (trainingDatasetDTO.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
         hopsfsTrainingDataset =
-          hopsfsTrainingDatasetController.createHopsfsTrainingDataset((HopsfsTrainingDatasetDTO) trainingDatasetDTO);
+            hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(hopsfsConnector, inode);
         break;
       case EXTERNAL_TRAINING_DATASET:
-        removeExternalTrainingDatasetIfExists(featurestore, trainingDatasetDTO.getName(),
-          trainingDatasetDTO.getVersion());
-        externalTrainingDataset = externalTrainingDatasetController.createExternalTrainingDataset(
-          (ExternalTrainingDatasetDTO) trainingDatasetDTO);
+        externalTrainingDataset = externalTrainingDatasetFacade.createExternalTrainingDataset(S3Connector,
+            trainingDatasetDTO.getLocation());
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
@@ -179,7 +261,6 @@ public class TrainingDatasetController {
     trainingDataset.setDataFormat(trainingDatasetDTO.getDataFormat());
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
     trainingDataset.setFeaturestore(featurestore);
-    trainingDataset.setHdfsUserId(hdfsUser.getId());
     trainingDataset.setCreated(new Date());
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(trainingDatasetDTO.getVersion());
@@ -198,7 +279,7 @@ public class TrainingDatasetController {
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
     
     //Store jobs
-    featurestoreJobController.insertJobs(trainingDataset, jobs);
+    featurestoreJobFacade.insertJobs(trainingDataset, jobs);
     
     return convertTrainingDatasetToDTO(trainingDataset);
   }
@@ -212,9 +293,12 @@ public class TrainingDatasetController {
    */
   private List<Jobs> getJobs(List<FeaturestoreJobDTO> jobDTOs, Project project) {
     if(jobDTOs != null){
-      return jobDTOs.stream().filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
-           .map(jobDTO -> jobDTO.getJobName()).distinct().map(jobName ->
-          jobFacade.findByProjectAndName(project, jobName)).collect(Collectors.toList());
+      return jobDTOs.stream()
+          .filter(jobDTO -> jobDTO != null && !Strings.isNullOrEmpty(jobDTO.getJobName()))
+          .map(FeaturestoreJobDTO::getJobName)
+          .distinct()
+          .map(jobName -> jobFacade.findByProjectAndName(project, jobName))
+          .collect(Collectors.toList());
     } else {
       return new ArrayList<>();
     }
@@ -230,11 +314,10 @@ public class TrainingDatasetController {
    */
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
-    if (trainingDataset == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
-          Level.FINE, "trainingDatasetId: " + id);
-    }
+    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "trainingDatasetId: " + id));
+
     return convertTrainingDatasetToDTO(trainingDataset);
   }
 
@@ -284,11 +367,10 @@ public class TrainingDatasetController {
    */
   public Inode getInodeWithTrainingDatasetIdAndFeaturestore(Featurestore featurestore, Integer id)
       throws FeaturestoreException {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
-    if (trainingDataset == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
-          Level.FINE, "trainingDatasetId: " + id);
-    }
+    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "trainingDatasetId: " + id));
+
     if(trainingDataset.getTrainingDatasetType() != TrainingDatasetType.HOPSFS_TRAINING_DATASET){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.CAN_ONLY_GET_INODE_FOR_HOPSFS_TRAINING_DATASETS, Level.FINE,
@@ -327,24 +409,46 @@ public class TrainingDatasetController {
     return trainingDatasetsDTOWithName.get(0);
   }
 
+  public String delete(Users user, Project project, Featurestore featurestore, Integer trainingDatasetId)
+      throws FeaturestoreException, IOException {
+
+    TrainingDataset trainingDataset =
+        trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "training dataset id:" + trainingDatasetId));
+
+    featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
+
+    if(trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+      String dsPath = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+      String username = hdfsUsersBean.getHdfsUserName(project, user);
+      DistributedFileSystemOps udfso = dfs.getDfsOps(username);
+      try {
+        // TODO(Fabio): if Data owner *In project* do operation as superuser
+        udfso.rm(dsPath, true);
+      } finally {
+        if (udfso != null) {
+          udfso.close();
+        }
+      }
+    }
+    deleteMetadata(trainingDataset);
+    return trainingDataset.getName();
+  }
+
   /**
    * Deletes a trainingDataset with a particular id from a particular featurestore
    *
-   * @param id           if od the trainingDataset
-   * @param featurestore the featurestore that the trainingDataset belongs to
-   * @return JSON/XML DTO of the deleted trainingDataset
-   * @throws FeaturestoreException
+   * @param trainingDataset the traininig dataset for which to delete the metadata
    */
-  public TrainingDatasetDTO deleteTrainingDatasetWithIdAndFeaturestore(
-      Featurestore featurestore, Integer id) throws FeaturestoreException {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore);
-    TrainingDatasetDTO trainingDatasetDTO = convertTrainingDatasetToDTO(trainingDataset);
+  private void deleteMetadata(TrainingDataset trainingDataset) throws FeaturestoreException {
+    // Here we are relying on the FK to delete the training dataset. Not great.
     switch(trainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
-        hopsfsTrainingDatasetController.removeHopsfsTrainingDataset(trainingDataset.getHopsfsTrainingDataset());
+        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
         break;
       case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDatasetController.removeExternalTrainingDataset(trainingDataset.getExternalTrainingDataset());
+        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
@@ -352,7 +456,6 @@ public class TrainingDatasetController {
           TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
           + trainingDataset.getTrainingDatasetType());
     }
-    return trainingDatasetDTO;
   }
 
 
@@ -370,37 +473,22 @@ public class TrainingDatasetController {
   
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
-  
-    // Verify training dataset specific information
-    verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
-  
+
     //Get jobs
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
     //Store jobs
-    featurestoreJobController.insertJobs(trainingDataset, jobs);
-    
+    featurestoreJobFacade.insertJobs(trainingDataset, jobs);
+
     // Update metadata
-    trainingDataset.setDataFormat(trainingDataset.getDataFormat());
     trainingDataset.setDescription(trainingDatasetDTO.getDescription());
-    TrainingDataset updatedTrainingDataset = trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
-    // Store features
-    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
-    switch (updatedTrainingDataset.getTrainingDatasetType()) {
-      case HOPSFS_TRAINING_DATASET:
-        hopsfsTrainingDatasetController.updateHopsfsTrainingDatasetMetadata(trainingDataset.getHopsfsTrainingDataset(),
-          (HopsfsTrainingDatasetDTO) trainingDatasetDTO);
-        break;
-      case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDatasetController.updateExternalTrainingDatasetMetadata(
-          trainingDataset.getExternalTrainingDataset(), (ExternalTrainingDatasetDTO) trainingDatasetDTO);
-        break;
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
-          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
-            TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
-            + trainingDatasetDTO.getTrainingDatasetType());
-        
-    }
+    trainingDatasetFacade.updateTrainingDatasetMetadata(trainingDataset);
+
+    // Refetch the updated entry from the database
+    TrainingDataset updatedTrainingDataset =
+        trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetDTO.getId(), featurestore)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+                Level.FINE, "training dataset id: " + trainingDatasetDTO.getId()));
+
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }
   
@@ -413,7 +501,7 @@ public class TrainingDatasetController {
    * @return a JSON/XML DTO of the updated training dataset
    */
   public TrainingDatasetDTO updateTrainingDatasetStats(
-    Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) {
+    Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
     TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
     verifyStatisticsInput(trainingDatasetDTO);
     featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
@@ -476,14 +564,13 @@ public class TrainingDatasetController {
    * @param trainingDatasetId the id of the training dataset
    * @param featurestore the featurestore to query
    * @return the training dataset with the Id if it passed the validation
+   * @throws FeaturestoreException if the training dataset was not found
    */
-  private TrainingDataset verifyTrainingDatasetId(Integer trainingDatasetId, Featurestore featurestore) {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore);
-    if (trainingDataset == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND +
-        ", training dataset id: " + trainingDatasetId);
-    }
-    return trainingDataset;
+  private TrainingDataset verifyTrainingDatasetId(Integer trainingDatasetId, Featurestore featurestore)
+      throws FeaturestoreException {
+    return trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "training dataset id: " + trainingDatasetId));
   }
   
   /**
@@ -549,29 +636,4 @@ public class TrainingDatasetController {
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
   }
-  
-  /**
-   * Checks whether an external training dataset with the provided name and version already exists, and if so, deletes
-   * it (overwrite semantics for creating new training datasets, for hopsfs training datasets this is enforced
-   * by foreign key on the inode with ON DELETE CASCADE, but not for external training datasets)
-   *
-   * @param featurestore the featurestore to query
-   * @param externalTrainingDatasetName the name of the external training dataset
-   * @param externalTrainingDatasetVersion the version of the external training dataset
-   */
-  private void removeExternalTrainingDatasetIfExists(Featurestore featurestore, String externalTrainingDatasetName,
-    Integer externalTrainingDatasetVersion) {
-    List<TrainingDataset> trainingDatasets = trainingDatasetFacade.findByFeaturestore(featurestore);
-    trainingDatasets.stream().filter(td -> {
-      return (
-        td.getTrainingDatasetType() == TrainingDatasetType.EXTERNAL_TRAINING_DATASET &&
-          td.getName().equals(externalTrainingDatasetName) &&
-          td.getVersion().equals(externalTrainingDatasetVersion)
-        );
-      }
-    ).collect(Collectors.toList());
-    trainingDatasets.forEach(td ->
-      externalTrainingDatasetController.removeExternalTrainingDataset(td.getExternalTrainingDataset()));
-  }
-
 }

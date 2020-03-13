@@ -43,6 +43,10 @@ import java.io.Serializable;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "FeaturestoreJob.findAll", query = "SELECT fsjob FROM FeaturestoreJob fsjob"),
+    @NamedQuery(name = "FeaturestoreJob.findByFeaturegroup", query = "SELECT fsjob FROM FeaturestoreJob fsjob " +
+        "WHERE fsjob.featuregroup = :featuregroup "),
+    @NamedQuery(name = "FeaturestoreJob.findByTrainingDataset", query = "SELECT fsjob FROM FeaturestoreJob fsjob " +
+        "WHERE fsjob.trainingDataset = :trainingDataset"),
     @NamedQuery(name = "FeaturestoreJob.findById",
         query = "SELECT fsjob FROM FeaturestoreJob fsjob WHERE fsjob.id = :id")})
 public class FeaturestoreJob implements Serializable {

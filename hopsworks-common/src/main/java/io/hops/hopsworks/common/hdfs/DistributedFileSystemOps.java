@@ -366,6 +366,19 @@ public class DistributedFileSystemOps {
   }
 
   /**
+   * Delete a file or directory from the file system.
+   *
+   * @param location The location of file or directory to be removed.
+   * @param recursive If true, a directory will be removed with all its
+   * children.
+   * @return True if the operation is successful.
+   * @throws IOException
+   */
+  public boolean rm(String location, boolean recursive) throws IOException {
+    return rm(new Path(location), recursive);
+  }
+
+  /**
    * Copy a file from one file system to the other.
    * <p/>
    * @param deleteSource If true, the file at the source path will be deleted
