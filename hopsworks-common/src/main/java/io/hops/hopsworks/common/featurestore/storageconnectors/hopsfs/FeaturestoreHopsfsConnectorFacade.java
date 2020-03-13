@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,19 +77,38 @@ public class FeaturestoreHopsfsConnectorFacade extends AbstractFacade<Featuresto
   }
 
   /**
-   * Retrieves a particular hopsfs connector given its Id and featurestore from the database
+   * Retrieves a particular hopsfs connector given its id
    *
    * @param id           id of the hopsfs connector
-   * @param featurestore featurestore of the connector
    * @return a single FeaturestoreHopsfsConnector entity
    */
-  public FeaturestoreHopsfsConnector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<FeaturestoreHopsfsConnector> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("FeaturestoreHopsfsConnector.findByFeaturestoreAndId",
-          FeaturestoreHopsfsConnector.class).setParameter("featurestore", featurestore).setParameter("id", id)
-          .getSingleResult();
+      return Optional.of(em.createNamedQuery("FeaturestoreHopsfsConnector.findByFeaturestoreAndId",
+          FeaturestoreHopsfsConnector.class)
+          .setParameter("id", id)
+          .setParameter("featurestore", featurestore)
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Retrive a hopsfs storage connector give its name and feature store
+   * @param name
+   * @param featurestore
+   * @return
+   */
+  public Optional<FeaturestoreHopsfsConnector> findByNameAndFeaturestore(String name, Featurestore featurestore) {
+    try {
+      return Optional.of(em.createNamedQuery("FeaturestoreHopsfsConnector.findByNameAndFeaturestore",
+          FeaturestoreHopsfsConnector.class)
+          .setParameter("name", name)
+          .setParameter("featurestore", featurestore)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
 

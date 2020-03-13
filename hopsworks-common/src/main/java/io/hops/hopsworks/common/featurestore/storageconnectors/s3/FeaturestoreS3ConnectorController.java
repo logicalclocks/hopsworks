@@ -127,13 +127,9 @@ public class FeaturestoreS3ConnectorController {
    */
   private FeaturestoreS3Connector verifyS3ConnectorId(
       Integer s3ConnectorId, Featurestore featurestore) throws FeaturestoreException {
-    FeaturestoreS3Connector featurestoreS3Connector =
-        featurestoreS3ConnectorFacade.findByIdAndFeaturestore(s3ConnectorId, featurestore);
-    if (featurestoreS3Connector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
-          Level.FINE, "s3ConnectorId: " + s3ConnectorId);
-    }
-    return featurestoreS3Connector;
+    return featurestoreS3ConnectorFacade.findByIdAndFeaturestore(s3ConnectorId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
+            Level.FINE, "S3 connector id: " + s3ConnectorId));
   }
 
   /**

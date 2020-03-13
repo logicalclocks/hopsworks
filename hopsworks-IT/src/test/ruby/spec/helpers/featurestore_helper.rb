@@ -346,20 +346,18 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat, hopsfs_connector)
-    type = "hopsfsTrainingDatasetDTO"
+  def update_hopsfs_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, dataFormat,
+                                              hopsfs_connector, jobs: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
         name: "new_dataset_name",
-        jobs: [],
+        jobs: jobs,
         description: "new_testtrainingdatasetdescription",
         version: 1,
         dataFormat: dataFormat,
-        type: type,
         trainingDatasetType: trainingDatasetType,
-        hopsfsConnectorId: hopsfs_connector.id,
-        hopsfsConnectorName: hopsfs_connector.name
+        storageConnectorId: hopsfs_connector.id
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -368,7 +366,6 @@ module FeaturestoreHelper
 
   def update_external_training_dataset_metadata(project_id, featurestore_id, training_dataset_id, name,
                                                 description, s3_connector_id)
-    type = "externalTrainingDatasetDTO"
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     update_training_dataset_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "?updateMetadata=true"
     json_data = {
@@ -377,9 +374,8 @@ module FeaturestoreHelper
         description: description,
         version: 1,
         dataFormat: "parquet",
-        type: type,
         trainingDatasetType: trainingDatasetType,
-        s3ConnectorId: s3_connector_id
+        storageConnectorId: s3_connector_id
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -387,7 +383,6 @@ module FeaturestoreHelper
   end
 
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil, version: 1)
-    type = "hopsfsTrainingDatasetDTO"
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     if name == nil
@@ -411,18 +406,16 @@ module FeaturestoreHelper
         description: "testtrainingdatasetdescription",
         version: version,
         dataFormat: data_format,
-        type: type,
         trainingDatasetType: trainingDatasetType,
-        hopsfsConnectorId: connector_id,
-        hopsfsConnectorName: connector_name
+        storageConnectorId: connector_id,
+        storageConnectorName: connector_name
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
     return json_result, training_dataset_name
   end
 
-  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil)
-    type = "externalTrainingDatasetDTO"
+  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil, location: "")
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     if name == nil
@@ -436,9 +429,9 @@ module FeaturestoreHelper
         description: "testtrainingdatasetdescription",
         version: 1,
         dataFormat: "tfrecords",
-        type: type,
+        location: location,
         trainingDatasetType: trainingDatasetType,
-        s3ConnectorId: s3_connector_id
+        storageConnectorId: s3_connector_id
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data

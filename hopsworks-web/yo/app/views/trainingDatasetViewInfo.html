@@ -108,19 +108,9 @@
 
             <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
                 <tbody class="fs-table">
-                <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.hopsfsTrainingDatasetType">
+                <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        HDFS path
-                    </td>
-                    <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.location}}
-                    </td>
-                </tr>
-
-                <tr class="fs-table"
-                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
-                    <td style="font-weight:700;" class="fs-table">
-                        S3 Bucket Path
+                        Location
                     </td>
                     <td class="fs-table">
                         {{trainingDatasetViewInfoCtrl.trainingDataset.location}}
@@ -147,51 +137,23 @@
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.hopsfsTrainingDatasetType">
+                <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        HopsFS Storage Connector Name
+                        <span ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.hopsfsTrainingDatasetType">HopsFS Storage Connector Name</span>
+                        <span ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">S3 Storage Connector Name</span>
                     </td>
                     <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.hopsfsConnectorName}}
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.storageConnectorName}}
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.hopsfsTrainingDatasetType">
+                <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        HopsFS Storage Connector Id
+                        <span ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.hopsfsTrainingDatasetType">HopsFS Storage Connector Id</span>
+                        <span ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">S3 Storage Connector Id</span>
                     </td>
                     <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.hopsfsConnectorId}}
-                    </td>
-                </tr>
-
-                <tr class="fs-table"
-                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
-                    <td style="font-weight:700;" class="fs-table">
-                        S3 Storage Connector Name
-                    </td>
-                    <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.s3ConnectorName}}
-                    </td>
-                </tr>
-
-                <tr class="fs-table"
-                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
-                    <td style="font-weight:700;" class="fs-table">
-                        S3 Storage Connector Id
-                    </td>
-                    <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.s3ConnectorId}}
-                    </td>
-                </tr>
-
-                <tr class="fs-table"
-                    ng-if="trainingDatasetViewInfoCtrl.trainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
-                    <td style="font-weight:700;" class="fs-table">
-                        S3 Storage Connector Bucket
-                    </td>
-                    <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.trainingDataset.s3ConnectorBucket}}
+                        {{trainingDatasetViewInfoCtrl.trainingDataset.storageConnectorId}}
                     </td>
                 </tr>
                 </tbody>

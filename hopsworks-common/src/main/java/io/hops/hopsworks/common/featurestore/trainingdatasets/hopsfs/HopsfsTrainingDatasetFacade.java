@@ -17,16 +17,13 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.validation.ConstraintViolationException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A facade for the hopsfs_training_dataset table in the Hopsworks database,
@@ -34,8 +31,7 @@ import java.util.logging.Logger;
  */
 @Stateless
 public class HopsfsTrainingDatasetFacade extends AbstractFacade<HopsfsTrainingDataset> {
-  private static final Logger LOGGER = Logger.getLogger(
-    HopsfsTrainingDatasetFacade.class.getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -44,19 +40,18 @@ public class HopsfsTrainingDatasetFacade extends AbstractFacade<HopsfsTrainingDa
   }
 
   /**
-   * A transaction to persist a hopsfs training dataset for the featurestore in the database
-   *
-   * @param hopsfsTrainingDataset the hopsfs training dataset to persist
+   * Create and persiste a HopsFS training dataset
+   * @param connector
+   * @param inode
+   * @return
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(HopsfsTrainingDataset hopsfsTrainingDataset) {
-    try {
-      em.persist(hopsfsTrainingDataset);
-      em.flush();
-    } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new hopsfs training dataset", cve);
-      throw cve;
-    }
+  public HopsfsTrainingDataset createHopsfsTrainingDataset(FeaturestoreHopsfsConnector connector, Inode inode) {
+    HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
+    hopsfsTrainingDataset.setInode(inode);
+    hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(connector);
+    em.persist(hopsfsTrainingDataset);
+    em.flush();
+    return hopsfsTrainingDataset;
   }
 
   /**

@@ -17,7 +17,6 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.api.featurestore.util.FeaturestoreUtil;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -35,6 +34,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -96,7 +96,7 @@ public class FeaturegroupService {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private FeaturestoreUtil featurestoreUtil;
+  private FeaturestoreUtils featurestoreUtils;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -274,7 +274,7 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
-    featurestoreUtil.verifyUserRole(featuregroupDTO, featurestore, user, project);
+    featurestoreUtils.verifyUserRole(featuregroupDTO, featurestore, user, project);
     try {
       featuregroupDTO = new FeaturegroupDTO();
       featuregroupDTO.setId(featuregroupId);
@@ -401,7 +401,7 @@ public class FeaturegroupService {
     //Verify that the user has the data-owner role or is the creator of the featuregroup
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
-    featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
+    featurestoreUtils.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     try {
       FeaturegroupDTO newFeaturegroupDTO = featuregroupController.clearFeaturegroup(featurestore, oldFeaturegroupDTO,
           user);
@@ -457,7 +457,7 @@ public class FeaturegroupService {
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featuregroupId);
-    featurestoreUtil.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
+    featurestoreUtils.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);

@@ -17,25 +17,26 @@
 package io.hops.hopsworks.common.featurestore.jobs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import javax.validation.ConstraintViolationException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
 /**
  * A facade for the feature_store_job table in the Hopsworks database,
  * use this interface when performing database operations against the table.
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class FeaturestoreJobFacade extends AbstractFacade<FeaturestoreJob> {
-  private static final Logger LOGGER = Logger.getLogger(
-    FeaturestoreJobFacade.class.getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
 
@@ -43,20 +44,80 @@ public class FeaturestoreJobFacade extends AbstractFacade<FeaturestoreJob> {
     super(FeaturestoreJob.class);
   }
 
+
   /**
-   * A transaction to persist a feature store job in the database
+   * Insert a list of Hopsworks Jobs as Feature Store Jobs linked to a training dataset
    *
-   * @param featurestoreJob the featurestore job to persist
+   * @param trainingDataset the training dataset to link the jobs to
+   * @param jobs the jobs to insert
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void persist(FeaturestoreJob featurestoreJob) {
-    try {
-      em.persist(featurestoreJob);
+  public void insertJobs(TrainingDataset trainingDataset, List<Jobs> jobs){
+    if(jobs != null){
+      jobs.stream().forEach(job -> {
+        if(!isJobExists((List) trainingDataset.getJobs(), job)) {
+          FeaturestoreJob featurestoreJob = new FeaturestoreJob();
+          featurestoreJob.setTrainingDataset(trainingDataset);
+          featurestoreJob.setJob(job);
+          featurestoreJob.setFeaturegroup(null);
+          em.persist(featurestoreJob);
+        }
+      });
       em.flush();
-    } catch (ConstraintViolationException cve) {
-      LOGGER.log(Level.WARNING, "Could not persist the new Feature Store Job connector", cve);
-      throw cve;
     }
+  }
+
+  /**
+   * Insert a list of Hopsworks Jobs as Feature Store Jobs linked to a feature group
+   *
+   * @param featuregroup the featuregroup to link the jobs to
+   * @param jobs the jobs to insert
+   */
+  public void insertJobs(Featuregroup featuregroup, List<Jobs> jobs){
+    if(jobs != null){
+      jobs.stream().forEach(job -> {
+        if(!isJobExists((List) featuregroup.getJobs(), job)) {
+          FeaturestoreJob featurestoreJob = new FeaturestoreJob();
+          featurestoreJob.setTrainingDataset(null);
+          featurestoreJob.setJob(job);
+          featurestoreJob.setFeaturegroup(featuregroup);
+          em.persist(featurestoreJob);
+        }
+      });
+      em.flush();
+    }
+  }
+
+  /**
+   * Get all the jobs for a specific feature group
+   * @param featuregroup
+   * @return
+   */
+  public List<FeaturestoreJob> getByFeatureGroup(Featuregroup featuregroup) {
+    return em.createNamedQuery("FeaturestoreJob.findByFeaturegroup", FeaturestoreJob.class)
+        .setParameter("featuregroup", featuregroup)
+        .getResultList();
+  }
+
+  /**
+   * Get all the jobs for a specific feature group
+   * @param trainingDataset
+   * @return
+   */
+  public List<FeaturestoreJob> getByTrainingDataset(TrainingDataset trainingDataset) {
+    return em.createNamedQuery("FeaturestoreJob.findByTrainingDataset", FeaturestoreJob.class)
+        .setParameter("trainingDataset", trainingDataset)
+        .getResultList();
+  }
+
+  /**
+   * Check if a job exists in a list of jobs
+   *
+   * @param jobs the list of jobs to search
+   * @param job the job to search for
+   * @return true if there is a match, otherwise false
+   */
+  private Boolean isJobExists(List<FeaturestoreJob> jobs, Jobs job) {
+    return jobs.stream().anyMatch(fsjob -> fsjob.getJob().getId().equals(job.getId()));
   }
 
   /**

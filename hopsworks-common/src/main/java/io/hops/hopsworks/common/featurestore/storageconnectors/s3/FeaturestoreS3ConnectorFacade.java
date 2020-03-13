@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,14 +83,15 @@ public class FeaturestoreS3ConnectorFacade extends AbstractFacade<FeaturestoreS3
    * @param featurestore featurestore of the connector
    * @return a single FeaturestoreS3Connector entity
    */
-  public FeaturestoreS3Connector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<FeaturestoreS3Connector> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("FeaturestoreS3Connector.findByFeaturestoreAndId", FeaturestoreS3Connector.class)
+      return Optional.of(em.createNamedQuery("FeaturestoreS3Connector.findByFeaturestoreAndId",
+          FeaturestoreS3Connector.class)
           .setParameter("featurestore", featurestore)
           .setParameter("id", id)
-          .getSingleResult();
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 

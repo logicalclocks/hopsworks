@@ -83,10 +83,6 @@ public class TrainingDataset implements Serializable {
   @ManyToOne(optional = false)
   private Featurestore featurestore;
   @Basic(optional = false)
-  @NotNull
-  @Column(name = "hdfs_user_id")
-  private Integer hdfsUserId;
-  @Basic(optional = false)
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
@@ -139,14 +135,6 @@ public class TrainingDataset implements Serializable {
 
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
-  }
-
-  public Integer getHdfsUserId() {
-    return hdfsUserId;
-  }
-
-  public void setHdfsUserId(Integer hdfsUserId) {
-    this.hdfsUserId = hdfsUserId;
   }
 
   public Date getCreated() {
@@ -258,7 +246,6 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
-    if (!Objects.equals(hdfsUserId, that.hdfsUserId)) return false;
     if (!Objects.equals(created, that.created)) return false;
     if (!Objects.equals(creator, that.creator)) return false;
     if (!Objects.equals(version, that.version)) return false;
@@ -278,7 +265,6 @@ public class TrainingDataset implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (name != null ? name.hashCode() : 0);
     result = 31 * result + (featurestore != null ? featurestore.hashCode() : 0);
-    result = 31 * result + (hdfsUserId != null ? hdfsUserId.hashCode() : 0);
     result = 31 * result + (created != null ? created.hashCode() : 0);
     result = 31 * result + (creator != null ? creator.hashCode() : 0);
     result = 31 * result + (version != null ? version.hashCode() : 0);
