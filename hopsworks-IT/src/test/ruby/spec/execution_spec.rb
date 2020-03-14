@@ -70,8 +70,7 @@ describe "On #{ENV['OS']}" do
 
               wait_for_execution_completed(@project[:id], $job_name_1, execution_id, "FINISHED")
             end
-          end
-          it "should start and stop job" do
+            it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
               create_sparktour_job(@project, $job_name_2, type, nil)
               expect_status(201)
