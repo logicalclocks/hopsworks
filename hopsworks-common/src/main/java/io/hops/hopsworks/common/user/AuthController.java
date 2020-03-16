@@ -39,28 +39,28 @@
 package io.hops.hopsworks.common.user;
 
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
-import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
-import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
-import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.common.dao.user.security.ua.UserAccountsEmailMessages;
 import io.hops.hopsworks.common.security.utils.Secret;
 import io.hops.hopsworks.common.security.utils.SecurityUtils;
-import io.hops.hopsworks.common.util.HttpUtil;
-import io.hops.hopsworks.persistence.entity.user.security.ua.ValidationKeyType;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
+import io.hops.hopsworks.persistence.entity.user.security.ua.ValidationKeyType;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -98,7 +98,7 @@ public class AuthController {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private MasterPasswordService masterPasswordService;
   @EJB
   private SecurityUtils securityUtils;
   @EJB
@@ -510,7 +510,7 @@ public class AuthController {
     try {
       for (Project project : projects) {
         UserCerts userCert = userCertsFacade.findUserCert(project.getName(), p.getUsername());
-        String masterEncryptionPassword = certificatesMgmService.getMasterEncryptionPassword();
+        String masterEncryptionPassword = masterPasswordService.getMasterEncryptionPassword();
         String certPassword = HopsUtils.decrypt(oldPass, userCert.getUserKeyPwd(), masterEncryptionPassword);
         //Encrypt it with new password and store it in the db
         String newSecret = HopsUtils.encrypt(p.getPassword(), certPassword, masterEncryptionPassword);

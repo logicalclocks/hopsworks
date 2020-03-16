@@ -27,15 +27,14 @@ import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
-import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
-import io.hops.hopsworks.common.security.SymmetricEncryptionDescriptor;
-import io.hops.hopsworks.common.security.SymmetricEncryptionService;
 import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.security.encryption.SymmetricEncryptionDescriptor;
+import io.hops.hopsworks.security.encryption.SymmetricEncryptionService;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -64,11 +63,9 @@ public class SecretsController {
   @EJB
   private SymmetricEncryptionService symmetricEncryptionService;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private MasterPasswordService masterPasswordService;
   @EJB
   private UserFacade userFacade;
-  @EJB
-  private ProjectController projectController;
   @EJB
   private ProjectFacade projectFacade;
   
@@ -299,7 +296,7 @@ public class SecretsController {
    */
   private SecretPlaintext decrypt(Users user, Secret ciphered)
       throws IOException, GeneralSecurityException {
-    String password = certificatesMgmService.getMasterEncryptionPassword();
+    String password = masterPasswordService.getMasterEncryptionPassword();
   
     // [salt(64),iv(12),payload)]
     byte[][] split = symmetricEncryptionService.splitPayloadFromCryptoPrimitives(ciphered.getSecret());
@@ -329,7 +326,7 @@ public class SecretsController {
    * @throws GeneralSecurityException
    */
   private byte[] encryptSecret(String secret) throws IOException, GeneralSecurityException {
-    String password = certificatesMgmService.getMasterEncryptionPassword();
+    String password = masterPasswordService.getMasterEncryptionPassword();
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
         .setInput(string2bytes(secret))
         .setPassword(password)

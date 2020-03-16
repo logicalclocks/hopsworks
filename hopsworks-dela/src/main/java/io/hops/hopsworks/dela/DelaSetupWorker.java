@@ -41,23 +41,19 @@ package io.hops.hopsworks.dela;
 import com.google.gson.Gson;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.dela.AddressJSON;
-import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.ClusterServiceDTO;
-import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.dela.hopssite.HopssiteController;
+import io.hops.hopsworks.exceptions.DelaException;
+import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 import io.hops.hopsworks.util.CertificateHelper;
 import io.hops.hopsworks.util.SettingsHelper;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.KeyStore;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.javatuples.Pair;
+import org.javatuples.Triplet;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -69,9 +65,14 @@ import javax.ejb.Timer;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.javatuples.Pair;
-import org.javatuples.Triplet;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.KeyStore;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Startup
 @Singleton
@@ -92,7 +93,7 @@ public class DelaSetupWorker {
   @EJB
   private TransferDelaController delaCtrl;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private MasterPasswordService masterPasswordService;
   @EJB
   private OSProcessExecutor osProcessExecutor;
 
@@ -174,7 +175,7 @@ public class DelaSetupWorker {
     if (clusterName.isPresent()) {
       Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
         = CertificateHelper.loadKeystoreFromDB(masterPswd.get(), clusterName.get(), clusterCertFacade,
-          certificatesMgmService);
+        masterPasswordService);
       if (keystoreAux.isPresent()) {
         setupComplete(keystoreAux.get(), timer);
         return;
@@ -182,7 +183,7 @@ public class DelaSetupWorker {
     }
 
     Optional<Triplet<KeyStore, KeyStore, String>> keystoreAux
-      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade, certificatesMgmService,
+      = CertificateHelper.loadKeystoreFromFile(masterPswd.get(), settings, clusterCertFacade, masterPasswordService,
           osProcessExecutor);
     if (keystoreAux.isPresent()) {
       setupComplete(keystoreAux.get(), timer);

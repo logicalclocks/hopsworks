@@ -26,7 +26,7 @@ import java.io.File;
 
 @Singleton
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
-public class Settings {
+public class SecuritySettings {
   
   private static final String VARIABLE_CERTS_DIRS = "certs_dir";
   private static final String VARIABLE_ADMIN_EMAIL = "admin_email";

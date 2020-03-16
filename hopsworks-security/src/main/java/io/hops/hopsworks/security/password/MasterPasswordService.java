@@ -22,7 +22,7 @@ import io.hops.hopsworks.persistence.entity.message.Message;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.security.dao.MessageFacade;
 import io.hops.hopsworks.security.dao.UsersFacade;
-import io.hops.hopsworks.security.util.Settings;
+import io.hops.hopsworks.security.util.SecuritySettings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
@@ -61,7 +61,7 @@ public class MasterPasswordService {
   private final Logger LOG = Logger.getLogger(MasterPasswordService.class.getName());
   
   @EJB
-  private Settings settings;
+  private SecuritySettings securitySettings;
   @EJB
   private UsersFacade userFacade;
   @EJB
@@ -85,7 +85,7 @@ public class MasterPasswordService {
   
   @PostConstruct
   public void init() {
-    masterPasswordFile = new File(settings.getHopsworksMasterEncPasswordFile());
+    masterPasswordFile = new File(securitySettings.getHopsworksMasterEncPasswordFile());
     if (!masterPasswordFile.exists()) {
       throw new IllegalStateException("Master encryption file does not exist");
     }
@@ -133,6 +133,36 @@ public class MasterPasswordService {
     }
   }
   
+  @Lock(LockType.READ)
+  @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
+  public String getMasterEncryptionPassword() throws IOException {
+    return FileUtils.readFileToString(masterPasswordFile).trim();
+  }
+  
+  /**
+   * Validates the provided password against the configured one
+   * @param providedPassword Password to validate
+   * @param userRequestedEmail User requested the password check
+   * @throws IOException
+   * @throws EncryptionMasterPasswordException
+   */
+  @Lock(LockType.READ)
+  @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
+  public void checkPassword(String providedPassword, String userRequestedEmail)
+    throws IOException, EncryptionMasterPasswordException {
+    String sha = DigestUtils.sha256Hex(providedPassword);
+    if (!getMasterEncryptionPassword().equals(sha)) {
+      Users user = userFacade.findByEmail(userRequestedEmail);
+      String logMsg = "*** Attempt to change master encryption password with wrong credentials";
+      if (user != null) {
+        LOG.log(Level.INFO, logMsg + " by user <" + user.getUsername() + ">");
+      } else {
+        LOG.log(Level.INFO, logMsg);
+      }
+      throw new EncryptionMasterPasswordException("Provided password is incorrect");
+    }
+  }
+  
   public Integer initUpdateOperation() {
     Integer operationId = rand.nextInt();
     updateStatus.put(operationId, UPDATE_STATUS.WORKING);
@@ -142,12 +172,6 @@ public class MasterPasswordService {
   public UPDATE_STATUS getOperationStatus(Integer operationId) {
     UPDATE_STATUS status = updateStatus.getIfPresent(operationId);
     return status != null ? status : UPDATE_STATUS.NOT_FOUND;
-  }
-  
-  @Lock(LockType.READ)
-  @AccessTimeout(value = 3, unit = TimeUnit.SECONDS)
-  public String getMasterEncryptionPassword() throws IOException {
-    return FileUtils.readFileToString(masterPasswordFile).trim();
   }
   
   /**
@@ -231,7 +255,7 @@ public class MasterPasswordService {
   
   private void sendInbox(String message, String preview, String userRequested) {
     Users to = userFacade.findByEmail(userRequested);
-    Users from = userFacade.findByEmail(settings.getAdminEmail());
+    Users from = userFacade.findByEmail(securitySettings.getAdminEmail());
     send(to, from, message, preview);
   }
   

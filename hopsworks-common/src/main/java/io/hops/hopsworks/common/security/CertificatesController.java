@@ -49,6 +49,7 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
@@ -114,6 +115,10 @@ public class CertificatesController {
   private CertsFacade certsFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private MasterPasswordService masterPasswordService;
+  @EJB
+  private Settings settings;
   @Inject
   @Any
   private Instance<CertificateHandler> certificateHandlers;
@@ -163,7 +168,7 @@ public class CertificatesController {
   public Future<CertsResult> generateCertificates(Project project, Users user) throws Exception {
     String userKeyPwd = HopsUtils.randomString(64);
     String encryptedKey = HopsUtils.encrypt(user.getPassword(), userKeyPwd,
-        certificatesMgmService.getMasterEncryptionPassword());
+      masterPasswordService.getMasterEncryptionPassword());
 
     Pair<KeyStore, KeyStore> userKeystores =
         generateStores(project.getName() + Settings.HOPS_USERNAME_SEPARATOR + user.getUsername(),
