@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.security.password;
 
+import io.hops.hopsworks.security.encryption.SymmetricEncryptionUtil;
+
 /**
  * Interface for various handlers when Hopsworks master encryption password changes
  */
@@ -24,4 +26,9 @@ public interface MasterPasswordHandler {
   MasterPasswordChangeResult perform(String oldPassword, String newPassword);
   void rollback(MasterPasswordChangeResult result);
   void post();
+  default String getNewUserPassword(String userPassword, String cipherText, String oldMasterPassword,
+    String newMasterPassword) throws Exception {
+    String plainCertPassword = SymmetricEncryptionUtil.decrypt(userPassword, cipherText, oldMasterPassword);
+    return SymmetricEncryptionUtil.encrypt(userPassword, plainCertPassword, newMasterPassword);
+  }
 }

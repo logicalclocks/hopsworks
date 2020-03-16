@@ -18,6 +18,11 @@ package io.hops.hopsworks.security.password;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.persistence.entity.message.Message;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.security.dao.MessageFacade;
+import io.hops.hopsworks.security.dao.UsersFacade;
+import io.hops.hopsworks.security.util.Settings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 
@@ -26,6 +31,7 @@ import javax.ejb.AccessTimeout;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
+import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -39,6 +45,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -51,6 +59,13 @@ import java.util.logging.Logger;
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class MasterPasswordService {
   private final Logger LOG = Logger.getLogger(MasterPasswordService.class.getName());
+  
+  @EJB
+  private Settings settings;
+  @EJB
+  private UsersFacade userFacade;
+  @EJB
+  private MessageFacade messageFacade;
   
   @Inject
   @Any
@@ -70,8 +85,7 @@ public class MasterPasswordService {
   
   @PostConstruct
   public void init() {
-    //settings.getHopsworksMasterEncPasswordFile() this needs redeploy or reload
-    masterPasswordFile = new File("");
+    masterPasswordFile = new File(settings.getHopsworksMasterEncPasswordFile());
     if (!masterPasswordFile.exists()) {
       throw new IllegalStateException("Master encryption file does not exist");
     }
@@ -152,7 +166,7 @@ public class MasterPasswordService {
       callUpdateHandlers(newDigest);
       updateMasterEncryptionPassword(newDigest);
       StringBuilder successLog = gatherLogs();
-      //sendSuccessfulMessage(successLog, userRequested);
+      sendSuccessfulMessage(successLog, userRequested);
       updateStatus.put(operationId, UPDATE_STATUS.OK);
       LOG.log(Level.INFO, "Master encryption password changed!");
     } catch (EncryptionMasterPasswordException ex) {
@@ -160,14 +174,14 @@ public class MasterPasswordService {
       LOG.log(Level.SEVERE, errorMsg, ex);
       updateStatus.put(operationId, UPDATE_STATUS.FAILED);
       callRollbackHandlers();
-      //sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
+      sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     } catch (IOException ex) {
       String errorMsg = "*** Failed to write new encryption password to file: " + masterPasswordFile.getAbsolutePath()
         + ". Rolling back...";
       LOG.log(Level.SEVERE, errorMsg, ex);
       updateStatus.put(operationId, UPDATE_STATUS.FAILED);
       callRollbackHandlers();
-      //sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
+      sendUnsuccessfulMessage(errorMsg + "\n" + ex.getMessage(), userRequested);
     } finally {
       handlersResult.clear();
     }
@@ -205,6 +219,32 @@ public class MasterPasswordService {
   
   private void updateMasterEncryptionPassword(String newPassword) throws IOException {
     FileUtils.writeStringToFile(masterPasswordFile, newPassword);
+  }
+  
+  private void sendSuccessfulMessage(StringBuilder successLog, String userRequested) {
+    sendInbox(successLog.toString(), "Changed successfully", userRequested);
+  }
+  
+  private void sendUnsuccessfulMessage(String message, String userRequested) {
+    sendInbox(message, "Change failed!", userRequested);
+  }
+  
+  private void sendInbox(String message, String preview, String userRequested) {
+    Users to = userFacade.findByEmail(userRequested);
+    Users from = userFacade.findByEmail(settings.getAdminEmail());
+    send(to, from, message, preview);
+  }
+  
+  private void send(Users to, Users from, String msg, String preview) {
+    Date now = new Date();
+    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(now);
+    String dateAndWriter = "On " + date + ", " + from.getFname() + " " + from.getLname() + " wrote: <br><br>";
+    String message = "<hr>" + dateAndWriter + msg;
+    Message newMsg = new Message(from, to, now, message, true, false);
+    newMsg.setPath("");
+    newMsg.setSubject("Master encryption password changed");
+    newMsg.setPreview(preview);
+    messageFacade.save(newMsg);
   }
   
 }

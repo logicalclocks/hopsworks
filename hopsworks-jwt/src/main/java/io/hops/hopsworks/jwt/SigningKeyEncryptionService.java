@@ -58,6 +58,21 @@ public class SigningKeyEncryptionService {
     }
   }
   
+  public DecryptedSigningKey removeFromCache(JwtSigningKey jwtSigningKey) {
+    return signingKeys.remove(jwtSigningKey.getId());
+  }
+  
+  private DecryptedSigningKey decryptAndSave(JwtSigningKey jwtSigningKey) throws SigningKeyEncryptionException {
+    byte[] decryptedSecret = decrypt(jwtSigningKey.getSecret());
+    return save(decryptedSecret, jwtSigningKey);
+  }
+  
+  private DecryptedSigningKey save(byte[] decryptedSecret, JwtSigningKey jwtSigningKey) {
+    DecryptedSigningKey decryptedSigningKey = new DecryptedSigningKey(jwtSigningKey, decryptedSecret);
+    signingKeys.put(jwtSigningKey.getId(), decryptedSigningKey);
+    return decryptedSigningKey;
+  }
+  
   /**
    * Get DecryptedSigningKey from cache if it exists else gets it from database
    * @param id
@@ -69,9 +84,15 @@ public class SigningKeyEncryptionService {
     if (decryptedSigningKey != null) {
       return decryptedSigningKey;
     }
-    decryptedSigningKey = getSigningKeyFromDb(id);
-    signingKeys.put(id, decryptedSigningKey);
-    return decryptedSigningKey;
+    return getSigningKeyFromDb(id);
+  }
+  
+  public DecryptedSigningKey getSigningKey(JwtSigningKey jwtSigningKey) throws SigningKeyEncryptionException {
+    DecryptedSigningKey decryptedSigningKey = signingKeys.get(jwtSigningKey.getId());
+    if (decryptedSigningKey != null) {
+      return decryptedSigningKey;
+    }
+    return decryptAndSave(jwtSigningKey);
   }
   
   /**
@@ -85,8 +106,7 @@ public class SigningKeyEncryptionService {
     if (jwtSigningKey == null) {
       throw new SigningKeyNotFoundException("Signing key not found.");
     }
-    byte[] decryptedSecret = decrypt(jwtSigningKey.getSecret());
-    return new DecryptedSigningKey(jwtSigningKey, decryptedSecret);
+    return decryptAndSave(jwtSigningKey);
   }
   
   /**
@@ -116,11 +136,10 @@ public class SigningKeyEncryptionService {
   public DecryptedSigningKey getOrCreateSigningKey(String keyName, SignatureAlgorithm alg)
     throws NoSuchAlgorithmException, SigningKeyEncryptionException {
     JwtSigningKey signingKey = jwtSigningKeyFacade.findByName(keyName);
-    DecryptedSigningKey decryptedSigningKey = signingKeys.get(signingKey.getId());
-    if (decryptedSigningKey != null) {
-      return decryptedSigningKey;
+    if (signingKey == null) {
+      return createNewSigningKey(keyName, alg);
     }
-    return createNewSigningKey(keyName, alg);
+    return getSigningKey(signingKey);
   }
   
   private DecryptedSigningKey createNewSigningKey(String keyName, SignatureAlgorithm alg)
@@ -129,7 +148,8 @@ public class SigningKeyEncryptionService {
     String encryptedSecret = encrypt(signingKey);
     JwtSigningKey jwtSigningKey = new JwtSigningKey(encryptedSecret, keyName);
     jwtSigningKeyFacade.persist(jwtSigningKey);
-    return new DecryptedSigningKey(jwtSigningKey, signingKey);
+    jwtSigningKey = jwtSigningKeyFacade.findByName(keyName);
+    return save(signingKey, jwtSigningKey);
   }
   
   private byte[] decrypt(String secret) throws SigningKeyEncryptionException {

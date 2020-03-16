@@ -690,7 +690,9 @@ public class JWTController {
    * @param keyName a unique name given to signing key when created.
    */
   public void deleteSigningKey(String keyName) {
-    jwtSigningKeyFacade.remove(keyName);
+    JwtSigningKey jsk = jwtSigningKeyFacade.findByName(keyName);
+    signingKeyEncryptionService.removeFromCache(jsk);
+    jwtSigningKeyFacade.remove(jsk);
   }
   
   /**
@@ -732,6 +734,7 @@ public class JWTController {
   public void removeMarkedKeys() {
     JwtSigningKey jwtSigningKey = jwtSigningKeyFacade.findByName(Constants.OLD_ONE_TIME_JWT_SIGNING_KEY_NAME);
     if (jwtSigningKey != null) {
+      signingKeyEncryptionService.removeFromCache(jwtSigningKey);
       jwtSigningKeyFacade.remove(jwtSigningKey);
     }
   }
