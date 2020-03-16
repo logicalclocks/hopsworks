@@ -131,13 +131,22 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
                 return this.relativePath;
             }
             var files = angular.copy(this.pathFiles);
-            var type = findType(files);
+            var dataset = findDataset(files);
             var file = files.pop();
             var path = getPathArray(file.attributes.path);
-            if (type === "DATASET") {
-                path.splice(0, 2); // remove /Projects/projectName
+            if (dataset.shared) {
+                if (dataset.datasetType === "DATASET") {
+                    path.splice(0, 3); // remove /Projects/projectName/datasetName
+                } else {
+                    path.splice(0, 4); // remove /apps/hive/warehouse/datasetName
+                }
+                path.unshift(dataset.name);
             } else {
-                path.splice(0, 3); // remove /apps/hive/warehouse
+                if (dataset.datasetType === "DATASET") {
+                    path.splice(0, 2); // remove /Projects/projectName
+                } else {
+                    path.splice(0, 3); // remove /apps/hive/warehouse
+                }
             }
             this.relativePath = path.join('/');
             return this.relativePath;
@@ -193,6 +202,10 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             });
         };
 
+        DatasetBrowserService.prototype.isTopLevelDataset = function(file) {
+            return typeof file.datasetType !== 'undefined';
+        }
+
         function getPathArray(path) {
             if (typeof path === 'undefined') {
                 return [];
@@ -202,11 +215,11 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
             });
         }
 
-        function findType(files) {
+        function findDataset(files) {
             var i;
             for (i = 0; i < files.length; i++) {
                 if (typeof files[i].datasetType !== 'undefined') {
-                   return files[i].datasetType;
+                    return files[i];
                 }
             }
         }
