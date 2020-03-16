@@ -27,6 +27,7 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -75,7 +76,7 @@ public class JWTResource {
   @POST
   @ApiOperation(value = "Create application token", response = JWTResponseDTO.class)
   public Response createToken(JWTRequestDTO jWTRequestDTO, @Context SecurityContext sc) throws NoSuchAlgorithmException,
-    SigningKeyNotFoundException, DuplicateSigningKeyException {
+    SigningKeyNotFoundException, DuplicateSigningKeyException, SigningKeyEncryptionException {
     JWTResponseDTO jWTResponseDTO = jWTHelper.createToken(jWTRequestDTO, settings.getJWTIssuer());
     return Response.ok().entity(jWTResponseDTO).build();
   }
@@ -83,7 +84,7 @@ public class JWTResource {
   @PUT
   @ApiOperation(value = "Renew application token", response = JWTResponseDTO.class)
   public Response renewToken(JsonWebTokenDTO jsonWebTokenDTO, @Context SecurityContext sc)
-    throws SigningKeyNotFoundException, NotRenewableException, InvalidationException {
+    throws SigningKeyNotFoundException, NotRenewableException, InvalidationException, SigningKeyEncryptionException {
     JWTResponseDTO jWTResponseDTO = jWTHelper.renewToken(jsonWebTokenDTO, true, new HashMap<>(3));
     return Response.ok().entity(jWTResponseDTO).build();
   }

@@ -33,6 +33,7 @@ import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
 import io.hops.hopsworks.jwt.exception.JWTException;
 import io.hops.hopsworks.jwt.exception.NotRenewableException;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -163,8 +164,7 @@ public class JWTHelper {
    * @throws DuplicateSigningKeyException
    */
   public String createToken(Users user, String issuer, Map<String, Object> claims) throws NoSuchAlgorithmException,
-      SigningKeyNotFoundException,
-      DuplicateSigningKeyException {
+    SigningKeyNotFoundException, DuplicateSigningKeyException, SigningKeyEncryptionException {
     String[] audience = null;
     Date expiresAt = null;
 
@@ -204,7 +204,8 @@ public class JWTHelper {
     try {
       token = createOneTimeToken(user, roles, issuer, audience, now, expiresAt,
           Constants.ONE_TIME_JWT_SIGNING_KEY_NAME, claims, false);
-    } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException ex) {
+    } catch (NoSuchAlgorithmException | SigningKeyNotFoundException | DuplicateSigningKeyException |
+      SigningKeyEncryptionException ex) {
       Logger.getLogger(JWTHelper.class.getName()).log(Level.SEVERE, null, ex);
     }
     return token;
@@ -212,7 +213,8 @@ public class JWTHelper {
 
   public String createOneTimeToken(Users user, String[] roles, String issuer, String[] audience, Date notBefore,
       Date expiresAt, String keyName, Map<String, Object> claims, boolean createNewKey)
-    throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
+    throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException,
+    SigningKeyEncryptionException {
     SignatureAlgorithm algorithm = SignatureAlgorithm.valueOf(Constants.ONE_TIME_JWT_SIGNATURE_ALGORITHM);
     claims = jwtController.addDefaultClaimsIfMissing(claims, false, 0, roles);
     
@@ -233,7 +235,8 @@ public class JWTHelper {
    * @throws DuplicateSigningKeyException
    */
   public String createToken(Users user, String[] audience, String issuer, Date expiresAt, Map<String, Object> claims)
-      throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException {
+    throws NoSuchAlgorithmException, SigningKeyNotFoundException, DuplicateSigningKeyException,
+    SigningKeyEncryptionException {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     String[] roles = userController.getUserRoles(user).toArray(new String[0]);
     
@@ -253,7 +256,7 @@ public class JWTHelper {
    * @throws DuplicateSigningKeyException
    */
   public JWTResponseDTO createToken(JWTRequestDTO jWTRequestDTO, String issuer) throws NoSuchAlgorithmException,
-      SigningKeyNotFoundException, DuplicateSigningKeyException {
+    SigningKeyNotFoundException, DuplicateSigningKeyException, SigningKeyEncryptionException {
     if (jWTRequestDTO == null || jWTRequestDTO.getKeyName() == null || jWTRequestDTO.getKeyName().isEmpty()
         || jWTRequestDTO.getAudiences() == null || jWTRequestDTO.getAudiences().length == 0
         || jWTRequestDTO.getSubject() == null || jWTRequestDTO.getSubject().isEmpty()) {
@@ -302,9 +305,8 @@ public class JWTHelper {
    * @throws NotRenewableException
    * @throws InvalidationException  
    */
-  public JWTResponseDTO renewToken(JsonWebTokenDTO jsonWebTokenDTO, boolean invalidate,
-      Map<String, Object> claims)
-      throws SigningKeyNotFoundException, NotRenewableException, InvalidationException {
+  public JWTResponseDTO renewToken(JsonWebTokenDTO jsonWebTokenDTO, boolean invalidate, Map<String, Object> claims)
+    throws SigningKeyNotFoundException, NotRenewableException, InvalidationException, SigningKeyEncryptionException {
     if (jsonWebTokenDTO == null || jsonWebTokenDTO.getToken() == null || jsonWebTokenDTO.getToken().isEmpty()) {
       throw new IllegalArgumentException("No token provided.");
     }
@@ -414,8 +416,8 @@ public class JWTHelper {
    * @throws SigningKeyNotFoundException
    * @throws VerificationException 
    */
-  public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException, 
-      VerificationException {
+  public DecodedJWT verifyOneTimeToken(String token, String issuer) throws SigningKeyNotFoundException,
+    VerificationException, SigningKeyEncryptionException {
     DecodedJWT jwt = null;
     if (token == null || token.trim().isEmpty()) {
       throw new VerificationException("Token not provided.");

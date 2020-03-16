@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.jwt;
 
-import io.hops.hopsworks.jwt.dao.JwtSigningKey;
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 
 import java.util.Base64;
 import java.util.Date;

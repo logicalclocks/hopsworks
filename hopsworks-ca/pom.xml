@@ -74,6 +74,12 @@
     </dependency>
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-security</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-jwt</artifactId>
       <version>${project.version}</version>
       <type>ejb</type>

@@ -57,6 +57,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.exception.VerificationException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -171,7 +172,7 @@ public class DownloadService {
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
   public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token,
     @QueryParam("type") DatasetType datasetType, @Context SecurityContext sc) throws DatasetException,
-    SigningKeyNotFoundException, VerificationException, ProjectException {
+    SigningKeyNotFoundException, VerificationException, ProjectException, SigningKeyEncryptionException {
     if(!settings.isDownloadAllowed()){
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
     }

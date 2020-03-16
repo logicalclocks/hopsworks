@@ -16,8 +16,8 @@
 package io.hops.hopsworks.jwt;
 
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
-import io.hops.hopsworks.jwt.dao.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 import io.hops.hopsworks.security.password.MasterPasswordChangeResult;
 import io.hops.hopsworks.security.password.MasterPasswordHandler;
 

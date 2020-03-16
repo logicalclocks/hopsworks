@@ -15,9 +15,9 @@
  */
 package io.hops.hopsworks.jwt;
 
+import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 import io.hops.hopsworks.security.encryption.SymmetricEncryptionDescriptor;
 import io.hops.hopsworks.security.encryption.SymmetricEncryptionService;
-import io.hops.hopsworks.jwt.dao.JwtSigningKey;
 import io.hops.hopsworks.jwt.dao.JwtSigningKeyFacade;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
