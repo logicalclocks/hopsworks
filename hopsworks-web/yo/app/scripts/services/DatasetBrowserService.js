@@ -105,7 +105,7 @@ angular.module('hopsWorksApp').service('DatasetBrowserService', ['DataSetService
         };
 
         DatasetBrowserService.prototype.select = function(file, index) {
-            if (typeof file === "undefined") {
+            if (typeof file === "undefined" || (file.accepted !== undefined && file.accepted === false)) {
                 return;
             }
             var self = this;
