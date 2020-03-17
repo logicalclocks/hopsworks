@@ -208,7 +208,7 @@ angular.module('hopsWorksApp')
                         maxVersion = version
                     }
                 }
-                StorageService.store(self.projectId + "_trainingDataset_version", parseInt(maxVersion) + 1);
+                StorageService.store(self.projectId + "_trainingDataset_version", maxVersion + 1);
                 self.goToUrl("newtrainingdataset")
             };
 
