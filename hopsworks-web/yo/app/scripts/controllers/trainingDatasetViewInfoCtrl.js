@@ -200,6 +200,15 @@ angular.module('hopsWorksApp')
                 StorageService.store("trainingdataset_operation", "NEW_VERSION");
                 StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
                 StorageService.store(self.projectId + "_trainingDataset", self.selectedTrainingDataset);
+
+                var maxVersion = -1;
+                for (var i = 0; i < self.trainingDatasets.versions.length; i++) {
+                    var version = parseInt(self.trainingDatasets.versions[i])
+                    if (version > maxVersion) {
+                        maxVersion = version
+                    }
+                }
+                StorageService.store(self.projectId + "_trainingDataset_version", parseInt(maxVersion) + 1);
                 self.goToUrl("newtrainingdataset")
             };
 
@@ -212,6 +221,7 @@ angular.module('hopsWorksApp')
                 StorageService.store("trainingdataset_operation", "UPDATE");
                 StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
                 StorageService.store(self.projectId + "_trainingDataset", self.selectedTrainingDataset);
+                StorageService.store(self.projectId + "_trainingDataset_version", self.selectedTrainingDataset.version);
                 self.goToUrl("newtrainingdataset")
             };
 

@@ -269,6 +269,15 @@ angular.module('hopsWorksApp')
             self.newFeaturegroupVersion = function () {
                 StorageService.store("featuregroup_operation", "NEW_VERSION");
                 StorageService.store(self.projectId + "_featuregroup", self.selectedFeaturegroup);
+
+                var maxVersion = -1;
+                for (var i = 0; i < self.featuregroups.versions.length; i++) {
+                    var version = parseInt(self.featuregroups.versions[i])
+                    if (version > maxVersion) {
+                        maxVersion = version
+                    }
+                }
+                StorageService.store(self.projectId + "_featuregroup_version", maxVersion + 1);
                 self.goToUrl("newfeaturegroup")
             };
 
@@ -305,6 +314,7 @@ angular.module('hopsWorksApp')
             self.updateFeaturegroup = function () {
                 StorageService.store("featuregroup_operation", "UPDATE");
                 StorageService.store(self.projectId + "_featuregroup", self.selectedFeaturegroup);
+                StorageService.store(self.projectId + "_featuregroup_version", self.selectedFeaturegroup.version);
                 self.goToUrl("newfeaturegroup")
             };
 

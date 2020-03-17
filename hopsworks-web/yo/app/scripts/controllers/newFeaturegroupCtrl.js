@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.projectName = StorageService.get("projectName");
             self.featuregroupOperation = StorageService.get("featuregroup_operation");
             self.featuregroup = StorageService.get(self.projectId + "_featuregroup");
+            self.version = StorageService.get(self.projectId + "_featuregroup_version");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.jdbcConnectors = []
             self.settings = StorageService.get(self.projectId + "_fssettings")
@@ -44,7 +45,6 @@ angular.module('hopsWorksApp')
             self.onDemandFgWorking = false;
             self.enableServingWorking = false;
             self.disableServingWorking = false;
-            self.version = 1;
             self.onlineFg = false;
 
             //User Input values for Cached Feature Groups
@@ -198,7 +198,6 @@ angular.module('hopsWorksApp')
                     self.cachedSqlQuery = self.featuregroup.query
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
-                    self.version = self.featuregroup.version;
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
                         self.activeTab = 1
@@ -232,7 +231,6 @@ angular.module('hopsWorksApp')
                     self.cachedSqlQuery = self.featuregroup.query
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
-                    self.version = self.featuregroup.version + 1
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
                         self.activeTab = 1
