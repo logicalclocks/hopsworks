@@ -60,14 +60,17 @@
                 <div class="row">
                     <div class="col-sm-9">
                         <div>
-                            <div>
-                                <feature-list project-id="newTrainingDatasetCtrl.projectId" 
-                                              features="newTrainingDatasetCtrl.features"
-                                              settings="newTrainingDatasetCtrl.settings"
-                                              add-feature-to-basket="newTrainingDatasetCtrl.addFeatureToBasket"
-                                              feature-in-basket="newTrainingDatasetCtrl.featureInBasket">
-                                </feature-list>
-                            </div>
+
+                            <feature-list id="newTdFeaturesList"
+                                          project-id="newTrainingDatasetCtrl.projectId"
+                                          project-name="newTrainingDatasetCtrl.projectName"
+                                          featurestore="newTrainingDatasetCtrl.featurestore"
+                                          features="newTrainingDatasetCtrl.features"
+                                          settings="newTrainingDatasetCtrl.settings"
+                                          add-feature-to-basket="newTrainingDatasetCtrl.addFeatureToBasket"
+                                          feature-in-basket="newTrainingDatasetCtrl.featureInBasket">
+                            </feature-list>
+
                             <div class="row divider" style="margin-bottom: 0px;"></div>
                             <div class="row" style="margin-top: -20px">
                                 <dir-pagination-controls
@@ -133,7 +136,7 @@
                                     <span ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'CREATE' || newTrainingDatasetCtrl.trainingDatasetOperation === 'NEW_VERSION'">
                                         Create training dataset
                                     </span> 
-                                    <span ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'"">
+                                    <span ng-if="newTrainingDatasetCtrl.trainingDatasetOperation === 'UPDATE'">
                                         Update training dataset
                                     </span> 
                                 </a>

@@ -22,6 +22,8 @@ angular.module('hopsWorksApp').directive("featureList", function() {
         restrict: 'E',
         scope: {
             projectId: "=",
+            projectName: "=",
+            featurestore: "=",
             features: "=",
             addButton: "=",
             settings: '=',

@@ -172,6 +172,7 @@ ul.dropdown-messages .dropdown-header {
 .ds-content.sidenav-open {
   width: 79%;
 }
+
 .ds-sidenav {
   width: 0;
   overflow: auto;
@@ -189,8 +190,8 @@ ul.dropdown-messages .dropdown-header {
   z-index: 10;
   height: calc(100% - 125px);
   margin-top: 15px;
-
 }
+
 .ds-sidenav.open {
     width: 20%;
 }
