@@ -55,13 +55,6 @@ angular.module('hopsWorksApp')
                 self.filterForm = !self.filterForm;
             };
 
-            self.viewFeatureInfo = function(feature) { 
-                ModalService.viewFeatureInfo('lg', feature, $scope.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
             self.showAdd = function() { 
                 return (typeof $scope.addFeatureToBasket !== 'undefined');
             };

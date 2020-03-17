@@ -14,8 +14,9 @@
   ~ If not, see <https://www.gnu.org/licenses/>.
   -->
 
-<div>
-    <div>
+<div ng-controller="featureViewInfoCtrl as featureViewInfoCtrl">
+    <div ng-controller="featuregroupViewInfoCtrl as featuregroupViewInfoCtrl">
+        <div class="fs-content" ng-class="{'sidenav-open': featureViewInfoCtrl.tgState}">
         <div class="row form-inline" style="margin-top: 20px;">
             <div class="col-sm-9 form-group">
                 <label style="color:#555">
@@ -29,18 +30,18 @@
                     <md-datepicker ng-model="featureListCtrl.toDate" md-placeholder="To"></md-datepicker>
                 </label>
             </div>
-            <div class="col-sm-3 form-group">
-                <div class="pull-right btn-group">
-                    <label>Features per page:
-                        <input type="number" min="1"
-                               max="50"
-                               class="form-control" ng-model="featureListCtrl.pageSize"
-                               style="width:80px">
-                    </label>
+            <div class="col-sm-3">
+                <div class="pull-right" style="padding-right:30px;">
+                <label> Hits per page:
+                    <input type="number" min="1"
+                           max="50"
+                           class="form-control" ng-model="featureListCtrl.pageSize"
+                           style="width:80px">
+                </label>
                 </div>
             </div>
         </div>
-        <div class="row" style="margin-left:15px; margin-top:10px">
+        <div class="row" style="margin-left:15px; margin-top:10px;">
             <div>
                 <label ng-click="featureListCtrl.setFilterForm();" style="color:#555">
                     <span class="glyphicon glyphicon-chevron-right" ng-if="!featureListCtrl.filterForm"></span>
@@ -49,19 +50,17 @@
             </div>
 
             <div ng-if="featureListCtrl.filterForm" class="animate-if">
-
                 <div class="form-group">
                     <form class="form-inline">
-                        <div class="form-group">
+                        <label>
                             Feature Group:
                             <input class="form-control" style="margin-left: 10px" ng-model="featureListCtrl.fgFilter">
-                        </div>
-                    </form>
-                    <form class="form-inline">
-                        <div class="form-group">
-                            Version Filter:
+                        </label>
+                        <label>
+                            <span style="margin-left:20px;">Version Filter:</span>
+
                             <input class="form-control" style="margin-left: 17px" ng-model="featureListCtrl.versionFilter">
-                        </div>
+                        </label>
                     </form>
                 </div>
             </div>
@@ -75,6 +74,7 @@
                     </h3>
                 </div>
             </div>
+            <div class="table-responsive" style="overflow: hidden; padding-right: 35px;" ng-class="{'sidenav-open': featureViewInfoCtrl.tgState}">
             <table class="table table-hover">
                 <thead>
                 <tr>
@@ -119,40 +119,32 @@
                               ng-class="{'glyphicon-chevron-up':featureListCtrl.reverse, 
                                          'glyphicon-chevron-down':!featureListCtrl.reverse}"></span>
                     </th>
-                    <th style="width: 10%" class="fs-table">Actions</th>
+                    <th style="width: 5%" class="fs-table" ng-if="featureListCtrl.showAdd()">Actions</th>
                 </tr>
                 </thead>
                 <tbody class="table-hover">
-                <tr
-                        dir-paginate="result in ((filteredResults = (features | orderBy:featureListCtrl.sortFn:featureListCtrl.reverse |  
+                <tr     dir-paginate="result in ((filteredResults = (features | orderBy:featureListCtrl.sortFn:featureListCtrl.reverse |
                         filterByFg:featureListCtrl.fgFilter:false |
                         dateRange:featureListCtrl.fromDate:featureListCtrl.toDate:false | 
                         filter:{name:featureListCtrl.filter}:false |
                         filter:{version:featureListCtrl.versionFilter}:false)) |
                         itemsPerPage:featureListCtrl.pageSize)"
+                        ng-click="featureViewInfoCtrl.view(projectId, projectName, featurestore, result, settings, featuregroupViewInfoCtrl); $event.stopPropagation();"
+                        ng-class="{'active':featureViewInfoCtrl.isToggled(result)}"
                         class="fs-table">
                     <td class="fs-table">{{result.name}}</td>
                     <td class="fs-table">{{result.description | strLimit:200: '...'  }}</td>
                     <td class="fs-table">{{result.date | date:'medium'}}</td>
                     <td class="fs-table">{{result.type}}</td>
-                    <td class="fs-table">
-                        <a style="color: #000000;" ng-click="featureListCtrl.viewFgInfo(result)">{{result.featuregroup.name}}</a>
-                    </td>
+                    <td class="fs-table">{{result.featuregroup.name}}</td>
                     <td class="fs-table">{{result.version}}</td>
-                    <td class="fs-table">
+                    <td class="fs-table" ng-if="featureListCtrl.showAdd()">
                         <div class="btn-group fs-btn" role="group">
-                            <button uib-tooltip="Feature Details"
-                                    type="button"
-                                    class="btn btn-info btn-sm glyphicon glyphicon-eye-open"
-                                    ng-click="featureListCtrl.viewFeatureInfo(result)"
-                                    style="background-color:rgb(51, 122, 183); border:rgb(51, 122, 183);">
-                            </button>
-                            <button ng-if="featureListCtrl.showAdd()"
-                                    uib-tooltip="Add feature to Training Dataset"
+                            <button uib-tooltip="Add feature to Training Dataset"
                                     type="button"
                                     class="btn btn-success btn-sm glyphicon glyphicon-plus"
                                     ng-disabled="featureInBasket(result)"
-                                    ng-click="addFeatureToBasket(result)">
+                                    ng-click="addFeatureToBasket(result); $event.stopPropagation();">
                             </button>
                         </div>
                     </td>
@@ -168,6 +160,25 @@
                         boundary-links="true"
                         class="no-margin-pagination pull-right">
                 </dir-pagination-controls>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="fs-sidenav" ng-class="{open: featureViewInfoCtrl.tgState}">
+            <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px;">
+                <div>
+                    <md-content class="md-padding" style="padding-top: 0px;">
+                        <md-tabs md-dynamic-height md-border-bottom md-no-pagination="true" md-center-tabs="true">
+                            <md-tab label="Feature">
+                                <div ng-include="'views/featureViewInfo.html'"></div>
+                            </md-tab>
+                            <md-tab label="Feature Group">
+                                <div ng-include="'views/featuregroupViewInfo.html'"></div>
+                            </md-tab>
+                        </md-tabs>
+                    </md-content>
+                </div>
             </div>
         </div>
     </div>

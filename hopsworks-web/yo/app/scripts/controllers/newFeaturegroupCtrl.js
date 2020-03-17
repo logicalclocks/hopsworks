@@ -31,6 +31,7 @@ angular.module('hopsWorksApp')
             self.projectName = StorageService.get("projectName");
             self.featuregroupOperation = StorageService.get("featuregroup_operation");
             self.featuregroup = StorageService.get(self.projectId + "_featuregroup");
+            self.version = StorageService.get(self.projectId + "_featuregroup_version");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.jdbcConnectors = []
             self.settings = StorageService.get(self.projectId + "_fssettings")
@@ -44,7 +45,6 @@ angular.module('hopsWorksApp')
             self.onDemandFgWorking = false;
             self.enableServingWorking = false;
             self.disableServingWorking = false;
-            self.version = 1;
             self.onlineFg = false;
 
             //User Input values for Cached Feature Groups
@@ -198,7 +198,6 @@ angular.module('hopsWorksApp')
                     self.cachedSqlQuery = self.featuregroup.query
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
-                    self.version = self.featuregroup.version;
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
                         self.activeTab = 1
@@ -232,7 +231,6 @@ angular.module('hopsWorksApp')
                     self.cachedSqlQuery = self.featuregroup.query
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
-                    self.version = self.featuregroup.version + 1
                     self.oldFeaturegroupId = self.featuregroup.id
                     if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
                         self.activeTab = 1
@@ -899,7 +897,7 @@ angular.module('hopsWorksApp')
                     "jobs": [],
                     "onlineFeaturegroupEnabled": self.onlineFg
                 }
-                ModalService.confirm('sm', 'This is a cached feature group, updating the feature group Hive/MySQL' +
+                ModalService.confirm('lg', 'This is a cached feature group, updating the feature group Hive/MySQL' +
                     ' metadata' +
                     ' (description, feature group name, and features schema) ' +
                     'will delete the existing data.',
@@ -1024,25 +1022,19 @@ angular.module('hopsWorksApp')
                             self.cachedFgWorking = false;
                         });
                 } else {
-                    ModalService.confirm('sm', 'If a Feature Group with the same name and version already' +
-                        ' exists in the Feature Store, it will be overridden.')
-                        .then(function (success) {
-                            FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
-                                function (success) {
-                                    self.cachedFgWorking = false;
-                                    self.exitToFeaturestore()
-                                    growl.success("Feature group created", {title: 'Success', ttl: 1000});
-                                }, function (error) {
-                                    growl.error(error.data.errorMsg, {
-                                        title: 'Failed to create feature group',
-                                        ttl: 15000
-                                    });
-                                    self.cachedFgWorking = false;
-                                });
-                            growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
-                        }, function (error) {
-                            self.cachedFgWorking = false;
+                    FeaturestoreService.createFeaturegroup(self.projectId, featuregroupJson, self.featurestore).then(
+                    function (success) {
+                        self.cachedFgWorking = false;
+                        self.exitToFeaturestore()
+                        growl.success("Feature group created", {title: 'Success', ttl: 1000});
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to create feature group',
+                            ttl: 15000
                         });
+                        self.cachedFgWorking = false;
+                    });
+                    growl.info("Creating feature group... wait", {title: 'Creating', ttl: 1000})
                 }
             };
 

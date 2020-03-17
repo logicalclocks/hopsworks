@@ -574,3 +574,58 @@ a.fs_card.bg-inverse:focus, a.fs_card.bg-inverse:hover {
     display: table;
     clear: both;
 }
+
+.fs-sidenav {
+  width: 0;
+  overflow: auto;
+  position: absolute;
+  right: 0;/*start from right*/
+  bottom: 0;
+  transition: all 0.3s ease;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
+  background: rgb(250,250,250);
+  z-index: 10;
+  height: calc(100% - 125px);
+  margin-top: 15px;
+}
+
+.fs-sidenav .md-tabs.md-default-theme md-ink-bar, md-tabs md-ink-bar {
+  color: #4285f4 !important;
+  background-color:#4285f4 !important;
+}
+
+.fs-sidenav td {
+  text-align:left !important;
+}
+
+.fs-content {
+  width: 100%;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.panel-fullscreen.sidenav-open {
+  width: calc(100% - 200px);
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+.fs-sidenav.open {
+    width: 30%;
+}
+
+.fs-content.sidenav-open {
+  width: 68%;
+}
+
+#newTdFeaturesList .fs-sidenav {
+  top: 145px !important;
+}

@@ -32,6 +32,7 @@ angular.module('hopsWorksApp')
             self.features = StorageService.get(self.projectId + "_fgFeatures");
             self.trainingDatasetOperation = StorageService.get("trainingdataset_operation");
             self.trainingDataset = StorageService.get(self.projectId + "_trainingDataset");
+            self.version = StorageService.get(self.projectId + "_trainingDataset_version");
             self.storageConnectors = StorageService.get(self.projectId + "_storageconnectors")
             self.settings = StorageService.get(self.projectId + "_fssettings")
             self.newJobName = self.projectId + "_newjob";
@@ -49,7 +50,7 @@ angular.module('hopsWorksApp')
                 "joinKey": [],
                 "possibleJoinKeys": []
             }
-            self.version = 1
+
             self.s3Connectors = []
             self.hopsfsConnectors = []
             self.selectedS3Connector = null
@@ -177,11 +178,7 @@ angular.module('hopsWorksApp')
                     self.td_accordion4.isOpen = true
 
                     if (self.trainingDatasetOperation === 'UPDATE') {
-                        self.version = self.trainingDataset.version
                         self.td_accordion4.title = "Update"
-                    }
-                    if (self.trainingDatasetOperation === 'NEW_VERSION') {
-                        self.version = self.trainingDataset.version + 1
                     }
                 }
                 if(self.trainingDataset != null && self.trainingDatasetOperation === 'UPDATE'){
