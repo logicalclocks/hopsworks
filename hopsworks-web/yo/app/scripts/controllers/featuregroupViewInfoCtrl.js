@@ -203,11 +203,10 @@ angular.module('hopsWorksApp')
             };
 
             self.toggle = function(selectedFeatureGroup) {
-                if(self.selectedFeaturegroup === null) {
-                    self.tgState = true;
-                } else if ((self.selectedFeaturegroup.id === selectedFeatureGroup.id) && self.tgState === true) {
+                if (self.selectedFeaturegroup
+                    && (self.selectedFeaturegroup.id === selectedFeatureGroup.id)
+                    && self.tgState === true) {
                     self.tgState = false;
-                    return;
                 } else {
                     self.tgState = true;
                 }
@@ -268,14 +267,8 @@ angular.module('hopsWorksApp')
              *
              */
             self.newFeaturegroupVersion = function () {
-                var i;
-                var maxVersion = -1;
-                for (i = 0; i < self.featuregroups.versions.length; i++) {
-                    if (self.featuregroups.versions[i] > maxVersion)
-                        maxVersion = self.featuregroups.versions[i]
-                }
                 StorageService.store("featuregroup_operation", "NEW_VERSION");
-                StorageService.store(self.projectId + "_featuregroup", self.featuregroups.versionToGroups[maxVersion]);
+                StorageService.store(self.projectId + "_featuregroup", self.selectedFeaturegroup);
                 self.goToUrl("newfeaturegroup")
             };
 

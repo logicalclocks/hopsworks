@@ -76,11 +76,10 @@ angular.module('hopsWorksApp')
             }
 
             self.toggle = function(selectedTrainingDataset) {
-                if(self.selectedTrainingDataset === null) {
-                    self.tgState = true;
-                } else if ((self.selectedTrainingDataset.id === selectedTrainingDataset.id) && self.tgState === true) {
+                if (self.selectedTrainingDataset &&
+                          (self.selectedTrainingDataset.id === selectedTrainingDataset.id) &&
+                           self.tgState === true) {
                     self.tgState = false;
-                    return;
                 } else {
                     self.tgState = true;
                 }
@@ -198,15 +197,9 @@ angular.module('hopsWorksApp')
              * @param versions list
              */
             self.newTrainingDatasetVersion = function (featurestoreCtrl) {
-                var i;
-                var maxVersion = -1;
-                for (i = 0; i < self.trainingDatasets.versions.length; i++) {
-                    if (self.trainingDatasets.versions[i] > maxVersion)
-                        maxVersion = self.trainingDatasets.versions[i]
-                }
                 StorageService.store("trainingdataset_operation", "NEW_VERSION");
                 StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
-                StorageService.store(self.projectId + "_trainingDataset", self.trainingDatasets.versionToGroups[maxVersion]);
+                StorageService.store(self.projectId + "_trainingDataset", self.selectedTrainingDataset);
                 self.goToUrl("newtrainingdataset")
             };
 
@@ -218,7 +211,7 @@ angular.module('hopsWorksApp')
             self.updateTrainingDataset = function (featurestoreCtrl) {
                 StorageService.store("trainingdataset_operation", "UPDATE");
                 StorageService.store(self.projectId + "_fgFeatures", featurestoreCtrl.fgFeatures);
-                StorageService.store(self.projectId + "_trainingDataset", self.trainingDataset);
+                StorageService.store(self.projectId + "_trainingDataset", self.selectedTrainingDataset);
                 self.goToUrl("newtrainingdataset")
             };
 

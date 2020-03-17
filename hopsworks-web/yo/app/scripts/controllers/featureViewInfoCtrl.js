@@ -55,14 +55,6 @@ angular.module('hopsWorksApp')
                 return codeStr
             };
 
-            /**
-             * Initialization function
-             */
-            self.init = function () {
-                self.pythonCode = self.getPythonCode(self.feature)
-                self.scalaCode = self.getScalaCode(self.feature)
-            };
-
             self.isToggled = function(feature) {
                 if(!self.selectedFeature || !feature) {
                     return false;
@@ -72,13 +64,11 @@ angular.module('hopsWorksApp')
             }
 
             self.toggle = function(feature) {
-                if(self.selectedFeature === null) {
-                    self.tgState = true;
-                } else if (((self.selectedFeature.featuregroup.id === feature.featuregroup.id)
+                if (self.selectedFeature
+                    && ((self.selectedFeature.featuregroup.id === feature.featuregroup.id)
                     && (self.selectedFeature.name === feature.name))
                     && self.tgState === true) {
                     self.tgState = false;
-                    return;
                 } else {
                     self.tgState = true;
                 }
