@@ -76,9 +76,9 @@ angular.module('hopsWorksApp')
             }
 
             self.toggle = function(selectedTrainingDataset) {
-                if (self.selectedTrainingDataset &&
-                          (self.selectedTrainingDataset.id === selectedTrainingDataset.id) &&
-                           self.tgState === true) {
+                if (self.selectedTrainingDataset
+                    && self.selectedTrainingDataset.id === selectedTrainingDataset.id
+                    && self.tgState === true) {
                     self.tgState = false;
                 } else {
                     self.tgState = true;

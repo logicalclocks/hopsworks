@@ -204,7 +204,7 @@ angular.module('hopsWorksApp')
 
             self.toggle = function(selectedFeatureGroup) {
                 if (self.selectedFeaturegroup
-                    && (self.selectedFeaturegroup.id === selectedFeatureGroup.id)
+                    && self.selectedFeaturegroup.id === selectedFeatureGroup.id
                     && self.tgState === true) {
                     self.tgState = false;
                 } else {
