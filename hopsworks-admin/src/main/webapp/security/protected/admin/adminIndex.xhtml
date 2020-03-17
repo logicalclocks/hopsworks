@@ -54,6 +54,7 @@
       <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}" />
       <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}" />
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
       <meta http-equiv="refresh" content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=/hopsworks/#!/login"/>
     </h:head>
 
@@ -296,6 +297,14 @@
               </h:commandLink>
               <br></br>
               <p:outputLabel style="text-align: left" value="Configure LDAP"></p:outputLabel>
+            </p:column>
+
+            <p:column>
+              <h:commandLink action="fs_tags">
+                <i class="fa fa-tags fa-5x" title="Add Feature store tags" style="color: gray;"></i>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left" value="Add Feature store tags"></p:outputLabel>
             </p:column>
 
           </h:panelGrid>

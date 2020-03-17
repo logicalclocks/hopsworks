@@ -1888,4 +1888,40 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum FeatureStoreTagErrorCode implements RESTErrorCode {
+    TAG_NOT_FOUND(0, "No tag found for provided name.", Response.Status.NOT_FOUND),
+    TAG_ALREADY_EXISTS(1, "Tag with the same name already exists.", Response.Status.CONFLICT),
+    INVALID_TAG_NAME(2, "Invalid tag name.", Response.Status.BAD_REQUEST);
+    
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 370000;
+    
+    FeatureStoreTagErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+    
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+    
+    @Override
+    public String getMessage() {
+      return message;
+    }
+    
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+    
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 }

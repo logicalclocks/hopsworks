@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+
+<h:head>
+    <title>Hopsworks - User Administration</title>
+    <link rel="icon" type="image/png" href="#{resource['images/hops-black.png']}"/>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}"/>
+    <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}"/>
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet"/>
+    <meta http-equiv="refresh"
+          content="#{facesContext.externalContext.sessionMaxInactiveInterval};url=#{request.contextPath}/index.xhtml"/>
+</h:head>
+<h:body>
+    <ui:insert name="titleBar">
+        <ui:include src="/security/protected/admin/admintitleBar.xhtml"/>
+    </ui:insert>
+    <div align="center">
+        <h:form id="tags_form" style="margin-top: 50px; width: 800px;">
+            <p:growl id="msgs" showDetail="true"/>
+            <p:dataTable id="tags" widgetVar="tags" var="tag" value="#{createTagsBean.featureStoreTagList}"
+                         editable="true"
+                         rows="25"
+                         paginator="true"
+                         paginatorPosition="top"
+                         paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="15,25,35,45,55"
+                         emptyMessage="No tags found."
+                         style="margin-bottom:20px">
+                <f:facet name="header">
+                    Feature store tages.
+                </f:facet>
+
+                <p:ajax event="rowEdit" listener="#{createTagsBean.onRowEdit}"
+                        update=":tags_form:msgs"/>
+                <p:ajax event="rowEditCancel" listener="#{createTagsBean.onRowCancel}"
+                        update=":tags_form:msgs"/>
+
+                <p:column headerText="Name"
+                          filterBy="#{tag.name}"
+                          filterMatchMode="contains"
+                          sortBy="#{tag.name}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{tag.name}"/></f:facet>
+                        <f:facet
+                                name="input"><p:inputText id="tagValueInput" value="#{tag.name}" style="width:100%"/></f:facet>
+                    </p:cellEditor>
+                </p:column>
+
+                <p:column headerText="Type" sortBy="#{tag.type}">
+                    <p:cellEditor>
+                        <f:facet name="output"><h:outputText value="#{tag.type}"/></f:facet>
+                        <f:facet name="input">
+                            <h:selectOneMenu value="#{tag.type}" style="width:100%">
+                                <f:selectItems value="#{createTagsBean.tagTypes}" var="type" itemLabel="#{type}"
+                                               itemValue="#{type}"/>
+                            </h:selectOneMenu>
+                        </f:facet>
+                    </p:cellEditor>
+                </p:column>
+                <p:column headerText="Action" style="width: 35px;">
+                    <p:commandButton icon="ui-icon-trash" disabled="#{tag.id == null}"
+                                     title="Delete tag"
+                                     action="#{createTagsBean.remove(tag)}"
+                                     update=":tags_form :tags_form:msgs">
+                        <p:confirm header="Remove tag"
+                                   message="Are you sure you want to remove this tag?"
+                                   icon="ui-icon-alert"/>
+                    </p:commandButton>
+                </p:column>
+                <p:column style="width:32px">
+                    <p:rowEditor/>
+                </p:column>
+            </p:dataTable>
+            <p:confirmDialog global="true" severity="alert" showEffect="fade">
+                <p:commandButton value="Yes" icon="ui-icon-check" styleClass="ui-confirmdialog-yes" type="submit"/>
+                <p:commandButton value="No" icon="ui-icon-close" styleClass="ui-confirmdialog-no" type="button"/>
+            </p:confirmDialog>
+        </h:form>
+        <h:form id="add_tags_form" style="margin-top: -20px;">
+            <div class="ui-datatable-tablewrapper">
+                <table class="ui-datatable" style="width: 800px; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th class="ui-state-default" style="width: 43%;"></th>
+                            <th class="ui-state-default" style="width: 43%;"></th>
+                            <th class="ui-state-default" style="width: 14%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="ui-datatable-data ui-widget-content">
+                        <tr class="ui-widget-content ui-datatable-even ui-row-editing">
+                            <td class="ui-editable-column" style="padding: 4px 10px">
+                                <div class="ui-cell-editor">
+                                    <div class="ui-cell-editor-input">
+                                        <p:inputText id="value_input"
+                                                     style="width: 96%;" value="#{createTagsBean.name}"
+                                                     required="true" validator="#{createTagsBean.noSpaceValidator}"/>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="ui-editable-column" style="padding: 4px 10px">
+                                <div class="ui-cell-editor">
+                                    <div class="ui-cell-editor-input">
+                                        <h:selectOneMenu value="#{createTagsBean.type}" required="true" style="width: 100%;">
+                                            <f:selectItems value="#{createTagsBean.tagTypes}" var="type" itemLabel="#{type}"
+                                                           itemValue="#{type}"/>
+                                        </h:selectOneMenu>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="ui-editable-column" style="padding: 4px 10px">
+                                <div class="ui-cell-editor ui-helper-clearfix">
+                                    <div class="ui-g-12">
+                                        <p:commandButton icon="ui-icon-plus" style="width: 100%;"
+                                                         update=":add_tags_form :tags_form"
+                                                         action="#{createTagsBean.onAddNew()}"/>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </h:form>
+    </div>
+</h:body>
+</html>
