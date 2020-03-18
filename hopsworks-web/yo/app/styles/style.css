@@ -350,6 +350,12 @@ div.scroll > ul > li > textarea {
   pointer-events: none;
 }
 
+.disabled-stroke {
+  cursor: not-allowed;
+  opacity: .5;
+  pointer-events: stroke;
+}
+
 .vtop {
   display: inline-block;
   vertical-align: top;
