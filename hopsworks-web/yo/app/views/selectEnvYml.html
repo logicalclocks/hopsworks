@@ -117,11 +117,17 @@
             current-page="selectEnvYmlCtrl.datasetBrowser.currentPage"
             total-items="selectEnvYmlCtrl.datasetBrowser.filesCount"
             ng-click="selectEnvYmlCtrl.selectEnvYml(pythonCtrl, $index, file);"
-            ng-class="{'highlight': selectEnvYmlCtrl.datasetBrowser.selected === $index }">
-          <td>
-            <i ng-show="file.attributes.dir" class="fa fa-folder" style="padding-right: 10px; color: #757575;"></i>
-            <i ng-show="!file.attributes.dir" class="fa fa-file" style="padding-right: 10px; color: #757575;"></i>
-            {{file.attributes.name}}
+            ng-class="{'highlight': selectEnvYmlCtrl.datasetBrowser.selected === $index, 'disabled-stroke': (file.accepted !== undefined && file.accepted === false) }"
+            title="{{(file.accepted !== undefined && file.accepted === false) ? 'You need to accept this dataset.':''}}">
+          <td ng-if="selectFileCtrl.datasetBrowser.isTopLevelDataset(file)">
+            <i class="fa"
+               ng-class="{'fa-file': (!file.attributes.dir), 'fa-folder': (file.attributes.dir && (file.accepted === undefined || file.accepted === true)), 'fa-database': ((file.datasetType === 'HIVEDB' || file.datasetType === 'FEATURESTORE') && file.accepted === true) , 'fa-eye-slash': (file.accepted === false), 'fa-cloud-download': (file.downloading)}"></i>
+            &nbsp; {{file.name}}
+          </td>
+          <td ng-if="!selectFileCtrl.datasetBrowser.isTopLevelDataset(file)">
+            <i class="fa"
+               ng-class="{'fa-file': (!file.attributes.dir), 'fa-folder': (file.attributes.dir && (file.accepted === undefined || file.accepted === true)), 'fa-database': ((file.datasetType === 'HIVEDB' || file.datasetType === 'FEATURESTORE') && file.accepted === true) , 'fa-eye-slash': (file.accepted === false), 'fa-cloud-download': (file.downloading)}"></i>
+            &nbsp; {{file.attributes.name}}
           </td>
         </tr>
         </tbody>
