@@ -1,0 +1,97 @@
+<!--
+  ~ Changes to this file committed after and not including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2018, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+  ~ Changes to this file committed before and including commit-id: ccc0d2c5f9a5ac661e60e6eaf138de7889928b8b
+  ~ are released under the following license:
+  ~
+  ~ Copyright (C) 2013 - 2018, Logical Clocks AB and RISE SICS AB. All rights reserved
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy of this
+  ~ software and associated documentation files (the "Software"), to deal in the Software
+  ~ without restriction, including without limitation the rights to use, copy, modify, merge,
+  ~ publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+  ~ persons to whom the Software is furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all copies or
+  ~ substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS  OR IMPLIED, INCLUDING
+  ~ BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  ~ NONINFRINGEMENT. IN NO EVENT SHALL  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+  ~ DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  -->
+
+<div class="container-fluid" ng-class="{'main-search': !projectView, 'project-search': projectView}">
+  <div class="row" style="margin-right: 10px; margin-bottom: 5px">
+    <a class="pull-right text-muted" ng-click="mainCtrl.clearSearch()" title="Close search"
+       data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
+      <span class="glyphicon glyphicon-remove" aria-hidden="true" style="font-size: 20px;"></span></a>
+  </div>
+
+  <div class="loader loader-md" ng-show="mainCtrl.searching"></div>
+  <section class="search-result"
+           ng-if="!mainCtrl.searching && (mainCtrl.searchScope === 'Everything' || mainCtrl.searchScope === 'Feature store' || mainCtrl.searchScope === 'This project')">
+    <div ng-cloak>
+      <md-content style="margin-top: -15px;">
+        <md-tabs class="md-default" md-center-tabs md-dynamic-height md-selected="mainCtrl.selectedIndex">
+          <md-tab label="Feature group" md-on-select="mainCtrl.selectedIndex = 0"
+                  ng-if="mainCtrl.searchView('featureGroupTab')">
+            <md-content class="md-padding search-result-tab">
+              <div class="md-body-1 result-body">
+                <div ng-include="'views/search/featureGroup.html'"></div>
+              </div>
+            </md-content>
+          </md-tab>
+          <md-tab label="Training dataset" md-on-select="mainCtrl.selectedIndex = 1"
+                  ng-if="mainCtrl.searchView('trainingDatasetTab')">
+            <md-content class="md-padding search-result-tab">
+              <div class="md-body-1 result-body">
+                <div ng-include="'views/search/trainingDataset.html'"></div>
+              </div>
+            </md-content>
+          </md-tab>
+          <md-tab label="Features" md-on-select="mainCtrl.selectedIndex = 2"
+                  ng-if="mainCtrl.searchView('featureTab')">
+            <md-content class="md-padding search-result-tab">
+              <div class="md-body-1 result-body">
+                <div ng-include="'views/search/feature.html'"></div>
+              </div>
+            </md-content>
+          </md-tab>
+          <md-tab label="Others" md-on-select="mainCtrl.selectedIndex = 3"
+                  ng-if="mainCtrl.searchView('othersTab')">
+            <md-content class="search-result-tab">
+              <div class="md-body-1 result-body">
+                <div ng-include="'views/search/others.html'"></div>
+              </div>
+            </md-content>
+          </md-tab>
+        </md-tabs>
+      </md-content>
+    </div>
+  </section>
+  <section class="search-result"
+           ng-if="!mainCtrl.searching && (mainCtrl.searchView('others'))">
+    <div ng-cloak>
+      <div class="md-body-1">
+        <div ng-include="'views/search/others.html'"></div>
+      </div>
+    </div>
+  </section>
+</div>

@@ -31,6 +31,11 @@
     border-radius: .25rem
 }
 
+#search-sidenav.fs-sidenav.open {
+    height: calc(100% - 20px) !important;
+    padding: 20px;
+}
+
 .fs_card.card-block {
     -webkit-box-flex: 1;
     -webkit-flex: 1 1 auto;

@@ -180,7 +180,6 @@ textarea.form-control {
 }
 
 .project-content-wrapper {
-  border-top: 1px solid rgba(0, 0, 0, 0.15);
   margin-top: -20px;
   padding: 30px;
 }
@@ -189,13 +188,13 @@ textarea.form-control {
   margin: -15px;
 }
 
-.content-wrapper>.content-heading, .content-wrapper>h3 {
+.content-wrapper >.content-heading, .content-wrapper > h3 {
   font-family: inherit;
   line-height: 0;
   font-size: 16px;
   color: #2B2B20;
-  margin: -23px -23px 5px;
-  padding: 35px 23px 22px;
+  margin: -30px -23px 5px;
+  padding: 20px 23px 15px;
   font-weight: 400;
   background-color: #fafbfc;
   border-bottom: 1px solid #cfdbe2;

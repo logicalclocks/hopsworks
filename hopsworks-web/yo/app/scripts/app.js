@@ -565,6 +565,15 @@ angular.module('hopsWorksApp', [
             return text;
           };
         })
+        .filter('highlightText', function () {
+            return function (text, highlight, term) {
+                if (typeof highlight !== 'undefined') {
+                    return text.replace(new RegExp(term, 'gi'), '<span class="highlight-search-result">$&</span>');
+                } else {
+                    return text;
+                }
+            };
+        })
         //restrict the number of displayed characters
         .filter('cut', function () {
           return function (value, wordwise, max, tail) {
@@ -628,6 +637,20 @@ angular.module('hopsWorksApp', [
             var result = fileManagerConfig.useBinarySizePrefixes ? binaryByteUnits[i] : decimalByteUnits[i];
             return Math.max(fileSizeInBytes, 0.1).toFixed(1) + ' ' + result;
           };
+        }])
+        .filter('dateRangeFilter', ['$filter', function() {
+            return function(items, fieldName, fromDate, toDate) {
+                var filtered = [];
+                var from_date = typeof fromDate === 'undefined'? new Date(null) : new Date(fromDate);
+                var to_date = typeof toDate === 'undefined'? new Date() : new Date(toDate);
+                angular.forEach(items, function(item) {
+                    var createdDate = new Date(item[fieldName]);
+                    if(createdDate.getTime() >= from_date.getTime() && createdDate.getTime() <= to_date.getTime()) {
+                        filtered.push(item);
+                    }
+                });
+                return filtered;
+            };
         }])
         .filter('dateRangeFilterFeaturegroups', ['$filter', function() {
             return function(items, fromDate, toDate) {

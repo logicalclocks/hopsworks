@@ -17,21 +17,20 @@
 
 'use strict';
 
-angular.module('hopsWorksApp').directive("featureList", function() {
+angular.module('hopsWorksApp').directive("featureStoreTable", function() {
     return {
         restrict: 'E',
         scope: {
-            projectId: "=",
-            projectName: "=",
-            featurestore: "=",
-            features: "=",
-            addButton: "=",
-            settings: '=',
-            addFeatureToBasket: '=',
-            featureInBasket: '=',
-            selectedFeature: '='
+            searchTerm: "@",
+            paginationService: "=",
+            name: "@",
+            detailFn: "&"
         },
-        templateUrl: 'views/featureList.html',
-        controller: 'FeatureListCtrl as featureListCtrl'
+        transclude: {
+            'thead': '?featureStoreTableHead',
+            'sidenav': '?sidenav'
+        },
+        templateUrl: 'views/featureStoreTable.html',
+        controller: 'FeatureStoreTableCtrl as featureStoreTableCtrl'
     }
 });

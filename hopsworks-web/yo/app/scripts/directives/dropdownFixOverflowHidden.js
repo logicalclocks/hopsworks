@@ -12,26 +12,25 @@
  *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 'use strict';
 
-angular.module('hopsWorksApp').directive("featureList", function() {
+angular.module('hopsWorksApp').directive("dropdownFixOverflowHidden", function() {
     return {
-        restrict: 'E',
-        scope: {
-            projectId: "=",
-            projectName: "=",
-            featurestore: "=",
-            features: "=",
-            addButton: "=",
-            settings: '=',
-            addFeatureToBasket: '=',
-            featureInBasket: '=',
-            selectedFeature: '='
-        },
-        templateUrl: 'views/featureList.html',
-        controller: 'FeatureListCtrl as featureListCtrl'
-    }
+        restrict: 'A',
+        link: function (scope, element) {
+            element.on("show.bs.dropdown", function () {
+                var $btnDropDown = element.find(".dropdown-toggle");
+                var $menu = element.find(".dropdown-menu");
+                element.css("position", "static");
+                $menu.css({
+                    "top": $btnDropDown.position().top + $btnDropDown.innerHeight(),
+                    "left": $btnDropDown.position().left + $btnDropDown.innerWidth() - $menu.innerWidth(),
+                    "z-index": 1
+                });
+                $menu.data("open", true);
+            });
+        }
+    };
 });

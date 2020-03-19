@@ -17,7 +17,7 @@
 <div ng-controller="MainCtrl as mainCtrl">
     <div ng-include="'nav.html'"></div>
 
-    <div id="wrapper" class="toggled" ng-controller="newFeaturegroupCtrl as newFeaturegroupCtrl">
+    <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="newFeaturegroupCtrl as newFeaturegroupCtrl">
         <div class="overlay"></div>
 
         <div ng-include="'navProject.html'"></div>

@@ -64,7 +64,16 @@ nav.navbar-sics li.divider { background: #ccc; }
 nav.navbar-sics button.navbar-toggle { background: #337ab7; border-radius: 2px; }
 nav.navbar-sics button.navbar-toggle:hover { background: #999; }
 nav.navbar-sics button.navbar-toggle > span.icon-bar { background: #fff; }
-nav.navbar-sics ul.dropdown-menu { border: 0; background: #fff; border-radius: 4px; margin: 4px 0; box-shadow: 0 0 4px 0 #ccc; }
+
+nav.navbar-sics ul.dropdown-menu {
+    border: 0;
+    background: #fff;
+    border-radius: 4px;
+    margin: 4px 0;
+    box-shadow: 0 0 4px 0 #ccc;
+    left: auto !important;
+}
+
 nav.navbar-sics ul.dropdown-menu > li > a { color: #444; }
 nav.navbar-sics ul.dropdown-menu > li > a:hover { background: #337ab7; color: #fff; }
 nav.navbar-sics span.badge { background: #337ab7; font-weight: normal; font-size: 11px; margin: 0 4px; }
@@ -178,7 +187,7 @@ ul.dropdown-messages .dropdown-header {
   overflow: auto;
   position: absolute;
   right: 0;/*start from right*/
-  top: 110px;
+  top: 88px;
   bottom: 0;
   transition: all 0.3s ease;
   -webkit-transition: all 0.3s ease;
@@ -188,7 +197,7 @@ ul.dropdown-messages .dropdown-header {
   -webkit-box-shadow: 0 4px 8px rgba(0,0,0,.2);
   background: rgb(250,250,250);
   z-index: 10;
-  height: calc(100% - 125px);
+  height: calc(100% - 110px);
   margin-top: 15px;
 }
 
@@ -258,4 +267,98 @@ ul.dropdown-messages .dropdown-header {
 #profile-content div .breadcrumb {
     font-weight: bold;
     font-size: large;
+}
+
+.container .navbar-header,
+.container .navbar-collapse {
+    margin-right: 0;
+    margin-left: 0;
+}
+
+/* Always float the navbar header */
+.navbar-header {
+    float: left;
+}
+
+/* Undo the collapsing navbar */
+.navbar-collapse {
+    display: block !important;
+    height: auto !important;
+    padding-bottom: 0;
+    overflow: visible !important;
+}
+
+.navbar-toggle {
+    display: none;
+}
+.navbar-collapse {
+    border-top: 0;
+}
+
+.navbar-brand {
+    margin-left: -15px;
+}
+
+/* Always apply the floated nav */
+.navbar-nav {
+    float: left;
+    margin: 0;
+}
+.navbar-nav > li {
+    float: left;
+}
+.navbar-nav > li > a {
+    padding: 15px;
+}
+
+/* Redeclare since we override the float above */
+.navbar-nav.navbar-right {
+    float: right;
+}
+
+/* Undo custom dropdowns */
+.navbar .navbar-nav .open .dropdown-menu {
+    position: absolute;
+    float: left;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-width: 0 1px 1px;
+    border-radius: 0 0 4px 4px;
+    -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+}
+.navbar-default .navbar-nav .open .dropdown-menu > li > a {
+    color: #333;
+}
+.navbar .navbar-nav .open .dropdown-menu > li > a:hover,
+.navbar .navbar-nav .open .dropdown-menu > li > a:focus,
+.navbar .navbar-nav .open .dropdown-menu > .active > a,
+.navbar .navbar-nav .open .dropdown-menu > .active > a:hover,
+.navbar .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #fff !important;
+    background-color: #428bca !important;
+}
+.navbar .navbar-nav .open .dropdown-menu > .disabled > a,
+.navbar .navbar-nav .open .dropdown-menu > .disabled > a:hover,
+.navbar .navbar-nav .open .dropdown-menu > .disabled > a:focus {
+    color: #999 !important;
+    background-color: transparent !important;
+}
+
+.navbar-default .navbar-collapse, .navbar-default .navbar-form {
+    border-color: unset !important;
+    box-shadow: unset !important;
+}
+
+.container {
+    min-width: 970px !important;
+}
+
+.container > div.navbar-header > div {
+    padding-right: 50px
+}
+
+.container-fluid > div.navbar-header > div {
+    padding-right: 10px
 }

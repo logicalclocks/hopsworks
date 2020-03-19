@@ -603,7 +603,8 @@ angular.module('hopsWorksApp')
               newPathArray = pathComponents;
               //Convert into a path
               var newPath = getPath(newPathArray);
-              dataSetService.getDatasetStat(newPath).then(function (success) {
+              var type = getDatasetType(pathComponents[0]);
+              dataSetService.getDatasetStat(newPath, type).then(function (success) {
                       self.highlighted = success.data;
                       self.select(-1, self.highlighted, undefined);
                       $scope.search = self.highlighted.name;

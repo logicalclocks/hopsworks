@@ -356,6 +356,7 @@ module.exports = function (grunt) {
     htmlmin: {
       dist: {
         options: {
+          removeComments: true,
           collapseWhitespace: true,
           conservativeCollapse: true,
           collapseBooleanAttributes: true,
@@ -493,8 +494,8 @@ module.exports = function (grunt) {
     'cssmin',
     'uglify',
     'filerev',
-    'usemin'
-//    'htmlmin'
+    'usemin',
+    'htmlmin'
   ]);
 
   grunt.registerTask('default', [

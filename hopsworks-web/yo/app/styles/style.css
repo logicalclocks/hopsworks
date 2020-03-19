@@ -617,3 +617,9 @@ md-input-container {
     -webkit-animation: spin 2000ms infinite linear;
     animation: spin 2000ms infinite linear;
 }
+
+.hw-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -39,17 +39,20 @@
 
   <div ng-controller="MainCtrl as mainCtrl" ng-cloak="">
     <div ng-include="'nav.html'"></div>
-    <div id="wrapper" class="toggled">
+    <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}">
       <div class="overlay"></div>
         <div>
           <div ng-include="'navProject.html'" ng-model="projectCtrl.loaded" ng-change="projectCtrl.navLoaded()"></div>
           <section>
             <div class="content-wrapper">
-              <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} /</h3>
+              <h3 id="projectBread">
+                <div layout="row" style="display: block; padding: 5px">{{ projectCtrl.currentProject.projectName}}
+                  /</div>
+              </h3>
               <!-- Page Content -->
               <div ng-if="mainCtrl.showSearchPage">
                 <div id="projectSearchResults">
-                  <div ng-include="'views/search.html'"></div>
+                  <div ng-include="'views/search/search.html'"></div>
                 </div>
               </div>
               <div ng-if="!mainCtrl.showSearchPage">

@@ -79,7 +79,9 @@ angular.module('hopsWorksApp')
             };
 
             self.sortFn = function(feature) {
-                if (self.sortKey === "fg") {
+                if (typeof $scope.selectedFeature !== 'undefined') {
+                    return undefined;
+                } else if (self.sortKey === "fg") {
                     return feature.featuregroup.name;
                 } else {
                     return feature[self.sortKey];
