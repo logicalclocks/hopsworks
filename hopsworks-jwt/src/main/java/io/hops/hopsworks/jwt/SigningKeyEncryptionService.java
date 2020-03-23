@@ -48,6 +48,18 @@ public class SigningKeyEncryptionService {
   @EJB
   private MasterPasswordService masterPasswordService;
   
+  public SigningKeyEncryptionService() {
+  }
+  
+  //for test
+  public SigningKeyEncryptionService(JwtSigningKeyFacade jwtSigningKeyFacade, SigningKeyGenerator signingKeyGenerator
+    , SymmetricEncryptionService symmetricEncryptionService, MasterPasswordService masterPasswordService) {
+    this.jwtSigningKeyFacade = jwtSigningKeyFacade;
+    this.signingKeyGenerator = signingKeyGenerator;
+    this.symmetricEncryptionService = symmetricEncryptionService;
+    this.masterPasswordService = masterPasswordService;
+  }
+  
   /**
    * Clears decrypted signing keys from the cache.
    */
