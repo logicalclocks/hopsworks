@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetViewInfoCtrl', ['$scope', 'ProjectService',
-        'JobService', 'ModalService', 'StorageService', '$location', 'growl',
-        function ($scope, ProjectService, JobService, ModalService, StorageService, $location, growl) {
+        'JobService', 'ModalService', 'StorageService', 'FeaturestoreService', '$location', 'growl',
+        function ($scope, ProjectService, JobService, ModalService, StorageService, FeaturestoreService, $location, growl) {
 
             /**
              * Initialize controller state
