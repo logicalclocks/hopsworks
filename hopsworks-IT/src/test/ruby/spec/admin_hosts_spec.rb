@@ -129,7 +129,7 @@ describe "On #{ENV['OS']}" do
     context "does operations on host services with admin authentication" do
       before :all do
         with_admin_session()
-        @hostname = find_all_hostnames().first
+        @hostname = find_all_hostnames().sort.first
       end
 
       it "gets list of services of a hostname" do
