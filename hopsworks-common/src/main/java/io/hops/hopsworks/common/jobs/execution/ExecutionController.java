@@ -158,7 +158,6 @@ public class ExecutionController {
 
     Execution exec;
     switch (job.getJobType()) {
-      case BEAM_FLINK:
       case FLINK:
         //Materialize certs
         return flinkController.startJob(job, user);
@@ -204,7 +203,6 @@ public class ExecutionController {
       case SPARK:
       case PYSPARK:
       case FLINK:
-      case BEAM_FLINK:
         //Get all the executions that are in a non-final state
         List<Execution> executions = execFacade.findByJobAndNotFinished(job);
         if (executions != null && !executions.isEmpty()) {

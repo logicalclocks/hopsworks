@@ -48,8 +48,6 @@ public enum JobType {
   FLINK("Flink"),
   SPARK("Spark"),
   PYSPARK("PySpark"),
-  BEAM_FLINK("Beam(Flink)"),
-  BEAM_SPARK("Beam(Spark)"),
   ERASURE_CODING("ERASURE_CODING");
 
   private final String name;

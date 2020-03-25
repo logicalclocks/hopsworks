@@ -15,29 +15,13 @@
 =end
 module JobHelper
 
-  def create_flink_job(project, job_name, properties, is_beam)
-    job_conf = get_flink_conf(job_name)
-    if properties.nil?
-      job_conf[:properties] = properties
-    end
-    if is_beam.eql? true
-      job_conf[:type] = "beamFlinkJobConfiguration"
-      job_conf[:jobType] = "BEAM_FLINK"
-    end
-
-    job_conf[:appName] = job_name
-    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-    expect_status(201)
-  end
-
-  def create_flink_beam_job(project, job_name, properties)
+  def create_flink_job(project, job_name, properties)
     job_conf = get_flink_conf(job_name)
     if properties.nil?
       job_conf[:properties] = properties
     end
 
     job_conf[:appName] = job_name
-    job_conf[:type] = "beamFlinkJobConfiguration"
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     expect_status(201)
   end

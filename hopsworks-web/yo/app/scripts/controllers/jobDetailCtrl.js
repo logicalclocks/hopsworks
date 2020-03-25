@@ -99,8 +99,6 @@ angular.module('hopsWorksApp')
                     self.execFile = getFileName(job.runConfig.appPath);
               } else if (self.job.runConfig.jobType === "FLINK") {
                 self.jobtype = "Flink";
-              } else if (self.job.runConfig.jobType === 'BEAM_FLINK') {
-                  self.jobtype = 'Beam(Flink)';
               }
             };
             

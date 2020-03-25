@@ -62,7 +62,7 @@
         <div class="col-md-8">{{executionDetailsCtrl.execution.stderrPath}}</div>
     </div>
     <div class="row"
-         ng-show="executionDetailsCtrl.job.jobType === 'FLINK' || executionDetailsCtrl.job.jobType === 'BEAM_FLINK'">
+         ng-show="executionDetailsCtrl.job.jobType === 'FLINK'">
         <div class="text-right col-md-4">Flink master URL
             <i class="fa fa-info-circle"
                uib-tooltip="The url to the Flink master."

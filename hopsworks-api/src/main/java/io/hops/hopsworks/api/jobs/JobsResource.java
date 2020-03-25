@@ -217,7 +217,6 @@ public class JobsResource {
       case SPARK:
       case PYSPARK:
       case FLINK:
-      case BEAM_FLINK:
         jobController.deleteJob(job, user);
         break;
       default:
