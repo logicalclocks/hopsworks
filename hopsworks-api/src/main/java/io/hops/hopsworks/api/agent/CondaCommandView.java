@@ -107,7 +107,7 @@ public class CondaCommandView {
     this.arg = arg;
   }
 
-  @ApiModelProperty(value = "Status of comamnd", required = true)
+  @ApiModelProperty(value = "ServiceStatus of command", required = true)
   public CondaStatus getStatus() {
     return status;
   }

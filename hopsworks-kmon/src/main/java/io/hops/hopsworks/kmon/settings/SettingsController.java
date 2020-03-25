@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.kmon.settings;
 
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
@@ -68,15 +68,15 @@ public class SettingsController implements Serializable {
 
   public String tooltip(String id, int n) {
 
-    if (id.equals(Status.TimedOut.toString())) {
+    if (id.equals(ServiceStatus.TimedOut.toString())) {
       return n > 1 ? n
               + " services have been timed out (No heartbeat from the host)"
               : "1 service has been timed out (No heartbeat from the host)";
     }
-    if (id.equals(Status.Stopped.toString())) {
+    if (id.equals(ServiceStatus.Stopped.toString())) {
       return n > 1 ? n + " services are not running" : "1 service is not running";
     }
-    if (id.equals(Status.Started.toString())) {
+    if (id.equals(ServiceStatus.Started.toString())) {
       return n > 1 ? n + " services are running" : "1 service is running";
     }
     return "";
@@ -84,13 +84,13 @@ public class SettingsController implements Serializable {
 
   public String tooltip(String id) {
 
-    if (id.equals(Status.TimedOut.toString())) {
+    if (id.equals(ServiceStatus.TimedOut.toString())) {
       return "The service instance has been timed out: no heartbeat from the host";
     }
-    if (id.equals(Status.Stopped.toString())) {
+    if (id.equals(ServiceStatus.Stopped.toString())) {
       return "service is not running";
     }
-    if (id.equals(Status.Started.toString())) {
+    if (id.equals(ServiceStatus.Started.toString())) {
       return "service is running";
     }
     return "";

@@ -41,7 +41,7 @@ package io.hops.hopsworks.kmon.group;
 
 import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.kmon.struct.InstanceInfo;
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 
 import javax.ejb.EJB;
@@ -105,7 +105,7 @@ public class ServiceInstancesController {
     List<HostServices> serviceHostList = new ArrayList<>();
     if (group != null && service != null && status != null) {
       for (HostServices hostServicesInfo : hostServicesFacade.findServices(service)) {
-        if (hostServicesInfo.getStatus() == Status.valueOf(status)) {
+        if (hostServicesInfo.getStatus() == ServiceStatus.valueOf(status)) {
           serviceHostList.add(hostServicesInfo);
         }
       }
@@ -118,7 +118,7 @@ public class ServiceInstancesController {
     }
 
     for (HostServices hsi : serviceHostList) {
-      instances.add(new InstanceInfo(hsi.getGroup(), hsi.getService(), hsi.getHost().getHostname(),
+      instances.add(new InstanceInfo(hsi.getGroup(), hsi.getName(), hsi.getHost().getHostname(),
           hsi.getStatus(), hsi.getHealth().toString()));
     }
     filteredInstances.addAll(instances);
@@ -129,7 +129,7 @@ public class ServiceInstancesController {
     List<InstanceInfo> instances = getInstances();
     if (!instances.isEmpty()) {
       for (InstanceInfo instance : instances) {
-        if (instance.getStatus() == Status.Stopped) {
+        if (instance.getStatus() == ServiceStatus.Stopped) {
           return false;
         }
       }
@@ -141,7 +141,7 @@ public class ServiceInstancesController {
     List<InstanceInfo> instances = getInstances();
     if (!instances.isEmpty()) {
       for (InstanceInfo instance : instances) {
-        if (instance.getStatus() == Status.Started) {
+        if (instance.getStatus() == ServiceStatus.Started) {
           return false;
         }
       }

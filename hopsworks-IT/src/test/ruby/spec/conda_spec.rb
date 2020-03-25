@@ -326,7 +326,7 @@ describe "On #{ENV['OS']}" do
             hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
 
-            expect(tensorflow_library[:machine]).to eq ("CPU")
+            expect(tensorflow_library[:machine]).to eq ("ALL")
 
             expect(tflearn_library[:machine]).to eq ("ALL")
             expect(tflearn_library[:packageManager]).to eq ("PIP")

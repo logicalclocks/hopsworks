@@ -41,7 +41,8 @@ package io.hops.hopsworks.persistence.entity.kagent;
 
 import io.hops.hopsworks.persistence.entity.host.Health;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
+
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -62,26 +63,20 @@ import javax.validation.constraints.Size;
 @Entity
 @Table(name = "host_services", catalog = "hopsworks")
 @NamedQueries({
-  @NamedQuery(name = "HostServices.findAll", query = "SELECT r from HostServices r"),
-  @NamedQuery(name = "HostServices.findGroups", query = "SELECT DISTINCT r.group FROM HostServices r"),
-  @NamedQuery(name = "HostServices.find",
-      query = "SELECT r FROM HostServices r WHERE r.group = :group "
-      + "AND r.service = :service AND r.host.hostname = :hostname"),
-  @NamedQuery(name = "HostServices.findOnHost",
-      query = "SELECT r FROM HostServices r " +
-          "WHERE r.group = :group AND r.service = :service AND r.host.hostname = :hostname"),
-  @NamedQuery(name = "HostServices.findBy-Hostname",
-      query = "SELECT r FROM HostServices r WHERE r.host.hostname = :hostname ORDER BY r.group, r.service"),
-  @NamedQuery(name = "HostServices.findBy-Group", query = "SELECT r FROM HostServices r WHERE r.group = :group "),
-  @NamedQuery(name = "HostServices.findBy-Group-Service",
-      query = "SELECT r FROM HostServices r WHERE r.group = :group AND r.service = :service"),
-  @NamedQuery(name = "HostServices.findBy-Service", query = "SELECT r FROM HostServices r WHERE r.service = :service"),
-  @NamedQuery(name = "HostServices.Count",
-      query = "SELECT COUNT(r) FROM HostServices r WHERE r.group = :group AND r.service = :service"),
-  @NamedQuery(name = "HostServices.Count-services",
-      query = "SELECT COUNT(r) FROM HostServices r WHERE r.group = :group"),
-  @NamedQuery(name = "HostServices.DeleteBy-Hostname",
-      query = "DELETE FROM HostServices r WHERE r.host.hostname = :hostname")})
+  @NamedQuery(name = "HostServices.findGroups",
+    query = "SELECT DISTINCT r.group FROM HostServices r"),
+  @NamedQuery(name = "HostServices.findByHostnameServiceNameGroup",
+    query = "SELECT r FROM HostServices r WHERE r.group = :group AND r.name = :name AND r.host.hostname = :hostname"),
+  @NamedQuery(name = "HostServices.findByHostname",
+    query = "SELECT r FROM HostServices r WHERE r.host.hostname = :hostname ORDER BY r.group, r.name"),
+  @NamedQuery(name = "HostServices.findByGroup",
+    query = "SELECT r FROM HostServices r WHERE r.group = :group "),
+  @NamedQuery(name = "HostServices.findByServiceName",
+    query = "SELECT r FROM HostServices r WHERE r.name = :name"),
+  @NamedQuery(name = "HostServices.CountServices",
+    query = "SELECT COUNT(r) FROM HostServices r WHERE r.group = :group"),
+  @NamedQuery(name = "HostServices.findByServiceNameAndHostname",
+    query = "SELECT r FROM HostServices r WHERE r.host.hostname = :hostname AND r.name = :name")})
 public class HostServices implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -101,19 +96,19 @@ public class HostServices implements Serializable {
   @NotNull
   @Size(min = 1,
       max = 48)
-  @Column(name = "service")
-  private String service;
+  @Column(name = "name")
+  private String name;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "status")
-  private Status status;
+  private ServiceStatus status;
   @Column(name = "uptime")
-  private long uptime;
+  private Long uptime;
   @Column(name = "startTime")
-  private long startTime;
+  private Long startTime;
   @Column(name = "stopTime")
-  private long stopTime;
+  private Long stopTime;
   @JoinColumn(name = "host_id",
       referencedColumnName = "id")
   @ManyToOne
@@ -126,9 +121,9 @@ public class HostServices implements Serializable {
     this.id = id;
   }
 
-  public HostServices(Long id, String service, String group, Status status, Hosts host) {
+  public HostServices(Long id, String name, String group, ServiceStatus status, Hosts host) {
     this.id = id;
-    this.service = service;
+    this.name = name;
     this.group = group;
     this.status = status;
     this.host = host;
@@ -150,12 +145,12 @@ public class HostServices implements Serializable {
     this.pid = pid;
   }
 
-  public String getService() {
-    return service;
+  public String getName() {
+    return name;
   }
 
-  public void setService(String service) {
-    this.service = service;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getGroup() {
@@ -166,35 +161,35 @@ public class HostServices implements Serializable {
     this.group = group;
   }
 
-  public Status getStatus() {
+  public ServiceStatus getStatus() {
     return status;
   }
 
-  public void setStatus(Status status) {
+  public void setStatus(ServiceStatus status) {
     this.status = status;
   }
 
-  public long getUptime() {
+  public Long getUptime() {
     return uptime;
   }
 
-  public void setUptime(long uptime) {
+  public void setUptime(Long uptime) {
     this.uptime = uptime;
   }
 
-  public long getStartTime() {
+  public Long getStartTime() {
     return startTime;
   }
 
-  public void setStartTime(long startTime) {
+  public void setStartTime(Long startTime) {
     this.startTime = startTime;
   }
 
-  public long getStopTime() {
+  public Long getStopTime() {
     return stopTime;
   }
 
-  public void setStopTime(long stopTime) {
+  public void setStopTime(Long stopTime) {
     this.stopTime = stopTime;
   }
 
@@ -232,7 +227,7 @@ public class HostServices implements Serializable {
   }
 
   public Health getHealth() {
-    if (status == Status.Failed || status == Status.Stopped) {
+    if (status == ServiceStatus.Failed || status == ServiceStatus.Stopped) {
       return Health.Bad;
     }
     return Health.Good;

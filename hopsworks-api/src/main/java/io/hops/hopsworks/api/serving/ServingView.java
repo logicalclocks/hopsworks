@@ -158,7 +158,7 @@ public class ServingView implements Serializable {
     this.creator = creator;
   }
 
-  @ApiModelProperty(value = "Status of the Serving entry", readOnly = true)
+  @ApiModelProperty(value = "ServiceStatus of the Serving entry", readOnly = true)
   public ServingStatusEnum getStatus() {
     return status;
   }

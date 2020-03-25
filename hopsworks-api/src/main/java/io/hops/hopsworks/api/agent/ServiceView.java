@@ -17,19 +17,19 @@
 package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.common.agent.AgentController;
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-@ApiModel(value = "Status report for running services on host")
+@ApiModel(value = "ServiceStatus report for running services on host")
 @XmlRootElement
 public class ServiceView {
   private String service;
   private String group;
   private Integer pid;
-  private Status status;
+  private ServiceStatus status;
   
   public ServiceView() {
   }
@@ -62,11 +62,11 @@ public class ServiceView {
   }
   
   @ApiModelProperty(value = "Current status of the service")
-  public Status getStatus() {
+  public ServiceStatus getStatus() {
     return status;
   }
   
-  public void setStatus(Status status) {
+  public void setStatus(ServiceStatus status) {
     this.status = status;
   }
   

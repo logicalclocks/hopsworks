@@ -93,7 +93,7 @@ RSpec.configure do |config|
   config.include JupyterHelper
   config.include UsersHelper
   config.include ApiKeyHelper
-  config.include AdminUsersHelper
+  config.include AdminHelper
   config.include SchemaHelper
   config.include ProvStateHelper
   config.include ExperimentHelper

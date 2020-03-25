@@ -13,7 +13,7 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
-module AdminUsersHelper
+module AdminHelper
   def admin_get_users()
     get "#{ENV['HOPSWORKS_API']}/admin/users"
   end
@@ -42,4 +42,22 @@ module AdminUsersHelper
   def admin_get_user_groups()
     get "#{ENV['HOPSWORKS_API']}/admin/users/groups"
   end
+
+  def service_status(status)
+    case status
+    when 0
+      "INIT"
+    when 1
+      "Started"
+    when 2
+      "Stopped"
+    when 3
+      "Failed"
+    when 4
+      "TimedOut"
+    when 5
+      "None"
+    end
+  end
+
 end
