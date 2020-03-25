@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.persistence.entity.host;
 
-public enum Status {
+public enum ServiceStatus {
   INIT,
   Started,
   Stopped,

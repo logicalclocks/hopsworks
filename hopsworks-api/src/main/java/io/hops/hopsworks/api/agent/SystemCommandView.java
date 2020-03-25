@@ -55,7 +55,7 @@ public class SystemCommandView {
     this.op = op;
   }
   
-  @ApiModelProperty(value = "Status of command", required = true)
+  @ApiModelProperty(value = "ServiceStatus of command", required = true)
   public CommandStatus getStatus() {
     return status;
   }

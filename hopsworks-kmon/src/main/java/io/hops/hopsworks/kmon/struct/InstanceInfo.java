@@ -39,7 +39,7 @@
 
 package io.hops.hopsworks.kmon.struct;
 
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 
 import java.io.Serializable;
 
@@ -50,12 +50,12 @@ public class InstanceInfo implements Serializable {
   private String ip;
   private String group;
   private String service;
-  private Status status;
+  private ServiceStatus status;
   private String health;
   private int pid;
   private String uptime;
 
-  public InstanceInfo(String group, String service, String host, Status status, String health) {
+  public InstanceInfo(String group, String service, String host, ServiceStatus status, String health) {
     this.name = service;
     this.host = host;
     this.group = group;
@@ -64,7 +64,7 @@ public class InstanceInfo implements Serializable {
     this.health = health;
   }
 
-  public InstanceInfo(String group, String service, String host, String ip, Status status, String health) {
+  public InstanceInfo(String group, String service, String host, String ip, ServiceStatus status, String health) {
 
     this.name = service;
     this.host = host;
@@ -87,7 +87,7 @@ public class InstanceInfo implements Serializable {
     return ip;
   }
 
-  public Status getStatus() {
+  public ServiceStatus getStatus() {
     return status;
   }
 

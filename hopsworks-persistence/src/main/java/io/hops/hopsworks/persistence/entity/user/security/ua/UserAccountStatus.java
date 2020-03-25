@@ -47,7 +47,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum UserAccountStatus {
 
-  // Status of new Mobile users requests
+  // ServiceStatus of new Mobile users requests
   @XmlEnumValue("NEW_MOBILE_ACCOUNT")
   NEW_MOBILE_ACCOUNT(0),
 

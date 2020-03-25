@@ -110,11 +110,11 @@ public class GroupStatusController {
     Map<String, ServiceInstancesInfo> serviceInstancesInfoMap = new HashMap<>();
 
     for (HostServices hostService : serviceHosts) {
-      if (!serviceInstancesInfoMap.containsKey(hostService.getService())) {
-        serviceInstancesInfoMap.put(hostService.getService(), new ServiceInstancesInfo(hostService.getService()));
+      if (!serviceInstancesInfoMap.containsKey(hostService.getName())) {
+        serviceInstancesInfoMap.put(hostService.getName(), new ServiceInstancesInfo(hostService.getName()));
       }
 
-      serviceInstancesInfoMap.get(hostService.getService())
+      serviceInstancesInfoMap.get(hostService.getName())
           .addInstanceInfo(hostService.getStatus(), hostService.getHealth());
 
       if (hostService.getHealth() == Health.Bad) {

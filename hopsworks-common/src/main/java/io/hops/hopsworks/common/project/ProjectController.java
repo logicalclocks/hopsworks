@@ -1459,7 +1459,7 @@ public class ProjectController {
   private void sendInbox(String message, String userRequested) {
     Users to = userFacade.findByEmail(userRequested);
     Users from = userFacade.findByEmail(settings.getAdminEmail());
-    messageController.send(to, from, "Force project cleanup", "Status", message, "");
+    messageController.send(to, from, "Force project cleanup", "ServiceStatus", message, "");
   }
 
   private void removeProjectRelatedFiles(List<HdfsUsers> hdfsUsers, DistributedFileSystemOps dfso)

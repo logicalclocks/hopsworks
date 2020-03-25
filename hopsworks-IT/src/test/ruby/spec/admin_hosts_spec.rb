@@ -126,6 +126,56 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    context "does operations on host services with admin authentication" do
+      before :all do
+        with_admin_session()
+        @hostname = find_all_hostnames().sort.first
+      end
+
+      it "gets list of services of a hostname" do
+        hosts_get_host_services(@hostname)
+        expect_status(200)
+        expect(json_body[:count]).to be > 0
+      end
+
+      it "gets service metadata by name" do
+        hosts_get_host_services(@hostname)
+        name = json_body[:items].first[:name]
+        hosts_get_host_service_by_name(@hostname, name)
+        expect_status(200)
+        expect(json_body[:name]).to eq(name)
+      end
+
+      it "stops a service" do
+        sparkhistoryserver_start(@hostname)
+        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+        hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_STOP")
+        expect_status(200)
+        # wait for service to stop
+        sleep(10)
+        expect(is_sparkhistoryserver_running(@hostname)).to eq(false)
+      end
+
+      it "starts a service" do
+        sparkhistoryserver_stop(@hostname)
+        expect(is_sparkhistoryserver_running(@hostname)).to eq(false)
+        hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_START")
+        expect_status(200)
+        # wait for service to stop
+        sleep(10)
+        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+      end
+
+      it "restart a service" do
+        hosts_update_host_service(@hostname, "sparkhistoryserver", "SERVICE_RESTART")
+        expect_status(200)
+        # wait for service to stop
+        sleep(10)
+        expect(is_sparkhistoryserver_running(@hostname)).to eq(true)
+      end
+
+    end
+
     context 'Cluster nodes sorts and filters with admin authentication' do
       before :all do
         with_admin_session()

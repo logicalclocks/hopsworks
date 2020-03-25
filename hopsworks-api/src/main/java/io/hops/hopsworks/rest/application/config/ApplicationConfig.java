@@ -102,6 +102,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.admin.security.CertificateMaterializerAdmin.class);
     register(io.hops.hopsworks.api.admin.security.CredentialsResource.class);
     register(io.hops.hopsworks.api.admin.security.X509Resource.class);
+    register(io.hops.hopsworks.api.admin.services.ServicesResource.class);
 
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
 

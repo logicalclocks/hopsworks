@@ -20,6 +20,9 @@ module AgentHelper
     @@KAGENT_STATUS = "systemctl is-active kagent"
     @@KAGENT_START = "sudo systemctl start kagent"
     @@KAGENT_STOP = "sudo systemctl stop kagent"
+    @@SPARKHISTORYSERVER_STATUS = "systemctl is-active sparkhistoryserver"
+    @@SPARKHISTORYSERVER_START = "systemctl start sparkhistoryserver"
+    @@SPARKHISTORYSERVER_STOP = "systemctl stop sparkhistoryserver"
 
     @@username = ENV.fetch('REMOTE_SSH_USER', 'vagrant')
     @@port = ENV.fetch('REMOTE_SSH_PORT', '22')
@@ -36,6 +39,19 @@ module AgentHelper
 
     def kagent_stop(hostname)
         execute_remotely hostname, @@KAGENT_STOP
+    end
+
+    def sparkhistoryserver_start(hostname)
+        execute_remotely hostname, @@SPARKHISTORYSERVER_START
+    end
+
+    def sparkhistoryserver_stop(hostname)
+        execute_remotely hostname, @@SPARKHISTORYSERVER_STOP
+    end
+
+    def is_sparkhistoryserver_running(hostname)
+      output = execute_remotely hostname, @@SPARKHISTORYSERVER_STATUS
+      output.strip.eql? "active"
     end
 
     def execute_remotely(hostname, command)

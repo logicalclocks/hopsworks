@@ -40,7 +40,7 @@
 package io.hops.hopsworks.kmon.struct;
 
 import io.hops.hopsworks.persistence.entity.host.Health;
-import io.hops.hopsworks.persistence.entity.host.Status;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.hops.hopsworks.persistence.entity.kagent.HostServices;
 
 import java.util.HashMap;
@@ -74,15 +74,15 @@ public class GroupInfo {
 
   public Map getStatus() {
 
-    Map<Status, Integer> statusMap = new TreeMap<>();
+    Map<ServiceStatus, Integer> statusMap = new TreeMap<>();
     if (started > 0) {
-      statusMap.put(Status.Started, started);
+      statusMap.put(ServiceStatus.Started, started);
     }
     if (stopped > 0) {
-      statusMap.put(Status.Stopped, stopped);
+      statusMap.put(ServiceStatus.Stopped, stopped);
     }
     if (timedOut > 0) {
-      statusMap.put(Status.TimedOut, timedOut);
+      statusMap.put(ServiceStatus.TimedOut, timedOut);
     }
     return statusMap;
   }
@@ -108,21 +108,21 @@ public class GroupInfo {
 
   public void addServices(List<HostServices> services) {
     for (HostServices serviceHostInfo : services) {
-      if (serviceHostInfo.getService().equals("")) {
+      if (serviceHostInfo.getName().equals("")) {
         continue;
       }
-      this.services.add(serviceHostInfo.getService());
-      if (serviceHostInfo.getStatus() == Status.Started) {
+      this.services.add(serviceHostInfo.getName());
+      if (serviceHostInfo.getStatus() == ServiceStatus.Started) {
         started += 1;
       } else {
-        badServices.add(serviceHostInfo.getService());
-        if (serviceHostInfo.getStatus() == Status.Stopped) {
+        badServices.add(serviceHostInfo.getName());
+        if (serviceHostInfo.getStatus() == ServiceStatus.Stopped) {
           stopped += 1;
         } else {
           timedOut += 1;
         }
       }
-      addService(serviceHostInfo.getService());
+      addService(serviceHostInfo.getName());
     }
     health = (stopped + timedOut > 0) ? Health.Bad : Health.Good;
   }

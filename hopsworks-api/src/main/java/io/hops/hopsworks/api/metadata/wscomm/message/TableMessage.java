@@ -83,7 +83,7 @@ public class TableMessage extends ContentMessage {
             .add("type", this.TYPE)
             .add("status", this.status)
             .add("message", this.message)
-            .build() //pretty necessary so as to build the actual json structure
+            .build() //pretty necessary so as to buildItems the actual json structure
             .toString();
 
     return value;
