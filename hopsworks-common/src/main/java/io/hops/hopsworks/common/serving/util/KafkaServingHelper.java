@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.serving.util;
 
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
@@ -53,7 +54,9 @@ public class KafkaServingHelper {
   private KafkaController kafkaController;
   @EJB
   private ProjectTopicsFacade projectTopicsFacade;
-  
+  @EJB
+  private KafkaBrokers kafkaBrokers;
+
   
   /**
    * Sets up the kafka topic for logging inference requests for models being served on Hopsworks. This kafka topic
@@ -135,7 +138,7 @@ public class KafkaServingHelper {
       // Check that the user is not trying to create a topic with  more replicas than brokers.
       if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() != null &&
           (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() <= 0 ||
-              servingWrapper.getKafkaTopicDTO().getNumOfReplicas() > settings.getBrokerEndpoints().size())) {
+              servingWrapper.getKafkaTopicDTO().getNumOfReplicas() > kafkaBrokers.getBrokerEndpoints().size())) {
         throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE);
 
       } else if (servingWrapper.getKafkaTopicDTO().getNumOfReplicas() == null) {

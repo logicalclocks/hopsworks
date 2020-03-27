@@ -129,6 +129,8 @@ public class KafkaController {
   private TopicAclsFacade topicAclsFacade;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
   
   public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
     ProjectException, UserException, InterruptedException, ExecutionException {
@@ -151,7 +153,7 @@ public class KafkaController {
     //check if the replication factor is not greater than the
     //number of running brokers
     try {
-      Set<String> brokerEndpoints = settings.getBrokerEndpoints();
+      Set<String> brokerEndpoints = kafkaBrokers.getBrokerEndpoints();
       if (brokerEndpoints.size() < topicDto.getNumOfReplicas()) {
         throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_REPLICATION_ERROR, Level.FINE,
           "maximum: " + brokerEndpoints.size());
@@ -462,7 +464,7 @@ public class KafkaController {
   
   public TopicDefaultValueDTO topicDefaultValues() throws KafkaException {
     try {
-      Set<String> brokers = settings.getBrokerEndpoints();
+      Set<String> brokers = kafkaBrokers.getBrokerEndpoints();
       return new TopicDefaultValueDTO(
         settings.getKafkaDefaultNumReplicas(),
         settings.getKafkaDefaultNumPartitions(),

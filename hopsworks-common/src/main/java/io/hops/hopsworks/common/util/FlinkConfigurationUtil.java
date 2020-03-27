@@ -30,7 +30,8 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                     Settings settings, String hdfsUser,
                                                     String tfLdLibraryPath, Map<String,
-                                                    String> extraJavaOptions) throws IOException {
+                                                    String> extraJavaOptions,
+                                                    String kafkaBrokersString) throws IOException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     
     Map<String, ConfigProperty> flinkProps = new HashMap<>();
@@ -55,7 +56,7 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTNAME_PROPERTY, project.getName());
   
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
-    extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, settings.getKafkaBrokersStr());
+    extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, kafkaBrokersString);
     extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, jobConfiguration.getJobType().name());
     if (jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());

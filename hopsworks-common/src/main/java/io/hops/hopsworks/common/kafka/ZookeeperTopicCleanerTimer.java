@@ -39,10 +39,12 @@
 
 package io.hops.hopsworks.common.kafka;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.restutils.RESTCodes;
 import kafka.admin.AdminUtils;
 import kafka.common.TopicAlreadyMarkedForDeletionException;
@@ -84,7 +86,9 @@ public class ZookeeperTopicCleanerTimer {
   private EntityManager em;
 
   @EJB
-  Settings settings;
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
 
   private ZkClient zkClient = null;
   private ZkConnection zkConnection = null;
@@ -98,6 +102,7 @@ public class ZookeeperTopicCleanerTimer {
     LOGGER.log(Level.INFO, "Running ZookeeperTopicCleanerTimer.");
 
     try {
+      String zkConnectionString = getZookeeperConnectionString();
       Set<String> zkTopics = new HashSet<>();
       //30 seconds
       int sessionTimeoutMs = 30 * 1000;
@@ -106,8 +111,7 @@ public class ZookeeperTopicCleanerTimer {
           if (zk != null) {
             zk.close();
           }
-          zk = new ZooKeeper(settings.getZkConnectStr(),
-              sessionTimeoutMs, new ZookeeperWatcher());
+          zk = new ZooKeeper(zkConnectionString, sessionTimeoutMs, new ZookeeperWatcher());
         }
         List<String> topics = zk.getChildren("/brokers/topics", false);
         zkTopics.addAll(topics);
@@ -144,7 +148,7 @@ public class ZookeeperTopicCleanerTimer {
         if (zkClient == null) {
           // 30 seconds
           int connectionTimeout = 90 * 1000;
-          zkClient = new ZkClient(getIp(settings.getZkConnectStr()).getHostName(),
+          zkClient = new ZkClient(getIp(zkConnectionString).getHostName(),
               sessionTimeoutMs, connectionTimeout,
               ZKStringSerializer$.MODULE$);
         }
@@ -152,7 +156,7 @@ public class ZookeeperTopicCleanerTimer {
           zkTopics.removeAll(dbTopics);
           for (String topicName : zkTopics) {
             if (zkConnection == null) {
-              zkConnection = new ZkConnection(settings.getZkConnectStr());
+              zkConnection = new ZkConnection(zkConnectionString);
             }
             ZkUtils zkUtils = new ZkUtils(zkClient, zkConnection, false);
 
@@ -198,7 +202,7 @@ public class ZookeeperTopicCleanerTimer {
   }
 
   /**
-   * Get kafka broker endpoints and update them in Settings.
+   * Get kafka broker endpoints and update them in KafkaBrokers
    * These topics are used for passing broker endpoints to HopsUtil and to Kafka controllers.
    */
   @Schedule(persistent = false,
@@ -206,7 +210,7 @@ public class ZookeeperTopicCleanerTimer {
       hour = "*")
   public void getBrokers() {
     try {
-      settings.setKafkaBrokers(settings.getBrokerEndpoints());
+      kafkaBrokers.setKafkaBrokers(kafkaBrokers.getBrokerEndpoints());
     } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
@@ -217,5 +221,11 @@ public class ZookeeperTopicCleanerTimer {
     @Override
     public void process(WatchedEvent we) {
     }
+  }
+
+  private String getZookeeperConnectionString() throws ServiceDiscoveryException {
+    Service zk = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.ZOOKEEPER_CLIENT);
+    return zk.getAddress() + ":" + zk.getPort();
   }
 }

@@ -39,6 +39,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String flinkConfDirectory;
   private Boolean requestsVerify;
   private String domainCATruststorePem;
+  private String serviceDiscoveryDomain = "consul";
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -214,6 +215,15 @@ public class JupyterNotebookConfigTemplateBuilder {
   
   public JupyterNotebookConfigTemplateBuilder setDomainCATruststorePem(String domainCATruststorePem) {
     this.domainCATruststorePem = domainCATruststorePem;
+    return this;
+  }
+  
+  public String getServiceDiscoveryDomain() {
+    return serviceDiscoveryDomain;
+  }
+  
+  public JupyterNotebookConfigTemplateBuilder setServiceDiscoveryDomain(String serviceDiscoveryDomain) {
+    this.serviceDiscoveryDomain = serviceDiscoveryDomain;
     return this;
   }
   
