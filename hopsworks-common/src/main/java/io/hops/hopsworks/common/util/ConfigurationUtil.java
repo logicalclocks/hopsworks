@@ -26,6 +26,7 @@ public abstract class ConfigurationUtil {
   public abstract Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                                     Settings settings, String hdfsUser,
                                                                     String tfLibraryPath,
-                                                                    Map<String, String> extraJavaOptions)
+                                                                    Map<String, String> extraJavaOptions,
+                                                                    String kafkaBrokersString)
                                                                       throws IOException;
 }

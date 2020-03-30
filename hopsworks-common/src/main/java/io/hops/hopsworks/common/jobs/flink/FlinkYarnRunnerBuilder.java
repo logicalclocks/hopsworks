@@ -103,7 +103,8 @@ public class FlinkYarnRunnerBuilder {
   }
 
   YarnRunner getYarnRunner(Project project, String jobUser, DistributedFileSystemOps dfsClient,
-    YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings) throws IOException {
+    YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings, String kafkaBrokersString)
+      throws IOException {
 
     String stagingPath = File.separator + "Projects" + File.separator + project.getName() + File.separator
             + Settings.PROJECT_STAGING_DIR;
@@ -128,7 +129,8 @@ public class FlinkYarnRunnerBuilder {
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
-      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, null, extraJavaOptions);
+      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, null, extraJavaOptions,
+          kafkaBrokersString);
   
     //Parse properties from Spark config file
     Yaml yaml = new Yaml();

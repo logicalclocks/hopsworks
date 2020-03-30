@@ -51,6 +51,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.DelaHdfsController;
@@ -127,6 +128,8 @@ public class DelaProjectService {
   private InodeFacade inodeFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
 
   private Project project;
   private Integer projectId;
@@ -255,7 +258,11 @@ public class DelaProjectService {
     Dataset dataset = getDatasetByPublicId(publicDSId);
 
     String certPath = kafkaController.getKafkaCertPaths(project);
-    String brokerEndpoint = settings.getRandomKafkaBroker();
+    Optional<String> kafkaBrokerOpt = kafkaBrokers.getAnyKafkaBroker();
+    String brokerEndpoint = kafkaBrokerOpt.orElseThrow(() ->
+      new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.WARNING, DelaException.Source.KAFKA,
+              "Could not find any active Kafka broker"));
+
     String restEndpoint = settings.getRestEndpoint();
     String keyStore = certPath + "/keystore.jks";
     String trustStore = certPath + "/truststore.jks";

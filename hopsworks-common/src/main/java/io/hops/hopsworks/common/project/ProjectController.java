@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.project;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.airflow.AirflowManager;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
@@ -846,7 +847,7 @@ public class ProjectController {
     try {
       hiveController.createDatabase(project.getName(), "Project general-purpose Hive database");
       hiveController.createDatasetDb(project, user, dfso, project.getName());
-    } catch (SQLException | IOException ex) {
+    } catch (SQLException | IOException | ServiceDiscoveryException ex) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
     }
@@ -920,7 +921,7 @@ public class ProjectController {
         trainingDatasets);
       //Create Hopsworks Dataset of the HiveDb
       hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore);
-    } catch (SQLException | IOException ex) {
+    } catch (SQLException | IOException | ServiceDiscoveryException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);

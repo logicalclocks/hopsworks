@@ -15,12 +15,14 @@
  */
 package io.hops.hopsworks.common.featurestore;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
+import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
@@ -72,6 +74,8 @@ public class FeaturestoreController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
+  @EJB
+  private HiveController hiveController;
   
   private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private Marshaller featurestoreUtilJobArgsMarshaller = null;
@@ -86,9 +90,18 @@ public class FeaturestoreController {
    * @param project the project to retrieve featurestores for
    * @return a list of DTOs for the featurestores
    */
-  public List<FeaturestoreDTO> getFeaturestoresForProject(Project project) {
+  public List<FeaturestoreDTO> getFeaturestoresForProject(Project project) throws FeaturestoreException {
     List<Featurestore> featurestores = getProjectFeaturestores(project);
-    return featurestores.stream().map(this::convertFeaturestoreToDTO).collect(Collectors.toList());
+    try {
+      return featurestores.stream().map(this::convertFeaturestoreToDTO).collect(Collectors.toList());
+    } catch (RuntimeException ex) {
+      if (ex.getCause() instanceof ServiceDiscoveryException) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
+            Level.SEVERE, "Could not create Hive connection string",
+            ex.getMessage(), ex);
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -118,13 +131,22 @@ public class FeaturestoreController {
    */
   public FeaturestoreDTO getFeaturestoreForProjectWithName(Project project, String featurestoreName)
       throws FeaturestoreException {
-    return getProjectFeaturestores(project).stream()
-        .map(this::convertFeaturestoreToDTO)
-        .filter(fs -> fs.getFeaturestoreName().equals(featurestoreName))
-        .findFirst()
-        //Featurestore name corresponds to Hive databases so uniqueness is enforced by Hive
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName()));
+    try {
+      return getProjectFeaturestores(project).stream()
+          .map(this::convertFeaturestoreToDTO)
+          .filter(fs -> fs.getFeaturestoreName().equals(featurestoreName))
+          .findFirst()
+          //Featurestore name corresponds to Hive databases so uniqueness is enforced by Hive
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+              Level.FINE, "featurestoreName: " + featurestoreName + " , project: " + project.getName()));
+    } catch (RuntimeException ex) {
+      if (ex.getCause() instanceof ServiceDiscoveryException) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
+            Level.SEVERE, "Could not create Hive connection string",
+            ex.getMessage(), ex);
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -137,12 +159,21 @@ public class FeaturestoreController {
    */
   public FeaturestoreDTO getFeaturestoreForProjectWithId(Project project, Integer featurestoreId)
       throws FeaturestoreException {
-    return getProjectFeaturestores(project).stream()
-        .filter(fs -> fs.getId().equals(featurestoreId))
-        .map(this::convertFeaturestoreToDTO)
-        .findAny()
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
-          Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName()));
+    try {
+      return getProjectFeaturestores(project).stream()
+          .filter(fs -> fs.getId().equals(featurestoreId))
+          .map(this::convertFeaturestoreToDTO)
+          .findAny()
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+              Level.FINE, "featurestoreId: " + featurestoreId + " , project: " + project.getName()));
+    } catch (RuntimeException ex) {
+      if (ex.getCause() instanceof ServiceDiscoveryException) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_INITIALIZATION_ERROR,
+            Level.SEVERE, "Could not create Hive connection string",
+            ex.getMessage(), ex);
+      }
+      throw ex;
+    }
   }
 
   /**
@@ -217,20 +248,24 @@ public class FeaturestoreController {
     featurestoreDTO.setHdfsStorePath(hdfsPath);
     Long inodeId = featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId());
     featurestoreDTO.setInodeId(inodeId);
-    String hiveEndpoint = settings.getHiveServerHostName(false);
-    featurestoreDTO.setHiveEndpoint(hiveEndpoint);
-    featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
-    if(settings.isOnlineFeaturestore() &&
-      onlineFeaturestoreController.checkIfDatabaseExists(
-          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-      featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
-      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
-          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
-      featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
-      featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
-      featurestoreDTO.setOnlineEnabled(true);
+    try {
+      String hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
+      featurestoreDTO.setHiveEndpoint(hiveEndpoint);
+      featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
+      if (settings.isOnlineFeaturestore() &&
+          onlineFeaturestoreController.checkIfDatabaseExists(
+              onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+        featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
+        featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
+            onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
+        featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
+        featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
+        featurestoreDTO.setOnlineEnabled(true);
+      }
+      return featurestoreDTO;
+    } catch (ServiceDiscoveryException ex) {
+      throw new RuntimeException(ex);
     }
-    return featurestoreDTO;
   }
 
   /**

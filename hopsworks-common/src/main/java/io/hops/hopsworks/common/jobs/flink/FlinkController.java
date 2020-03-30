@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -114,6 +115,8 @@ public class FlinkController {
   private ProjectFacade projectFacade;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
 
   
   public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException {
@@ -133,7 +136,8 @@ public class FlinkController {
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
         flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
-          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings));
+          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings,
+          kafkaBrokers.getKafkaBrokersString()));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

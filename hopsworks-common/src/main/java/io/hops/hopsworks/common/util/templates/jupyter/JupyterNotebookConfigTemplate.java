@@ -36,6 +36,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String flinkConfDirectory;
   private final Boolean requestsVerify;
   private final String domainCATruststorePem;
+  private final String serviceDiscoveryDomain;
   
   public JupyterNotebookConfigTemplate(JupyterNotebookConfigTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder.getHadoopHome(), builder.getProject());
@@ -55,6 +56,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.flinkConfDirectory = builder.getFlinkConfDirectory();
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststorePem = builder.getDomainCATruststorePem();
+    this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
   }
   
   public String getNamenodeIp() {
@@ -120,5 +122,8 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public String getDomainCATruststorePem() {
     return domainCATruststorePem;
   }
-
+  
+  public String getServiceDiscoveryDomain() {
+    return serviceDiscoveryDomain;
+  }
 }

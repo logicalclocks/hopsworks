@@ -15,8 +15,8 @@
  */
 package io.hops.hopsworks.common.dao.kafka;
 
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
-import io.hops.hopsworks.common.util.Settings;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
@@ -38,14 +38,14 @@ import java.util.Properties;
 import java.util.Set;
 
 @Singleton
-@DependsOn("Settings")
+@DependsOn("KafkaBrokers")
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class HopsKafkaAdminClient {
   
   @EJB
-  private Settings settings;
-  @EJB
   private BaseHadoopClientsService baseHadoopService;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
   
   private AdminClient adminClient;
   
@@ -56,7 +56,7 @@ public class HopsKafkaAdminClient {
   
   private AdminClient getAdminClient()  {
     Properties props = new Properties();
-    Set<String> brokers = settings.getKafkaBrokers();
+    Set<String> brokers = kafkaBrokers.getKafkaBrokers();
     //Keep only INTERNAL protocol brokers
     brokers.removeIf(seed -> seed.split(KafkaConst.COLON_SEPARATOR)[0]
       .equalsIgnoreCase(KafkaConst.KAFKA_BROKER_EXTERNAL_PROTOCOL));

@@ -5,6 +5,7 @@
 package io.hops.hopsworks.kube.jupyter;
 
 import com.google.common.collect.ImmutableMap;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -153,9 +154,8 @@ public class KubeJupyterManager implements JupyterManager {
       int nodePort = nodePortOptional.orElseThrow(() -> new IOException("NodePort could not be retrieved"));
   
       Writer jupyterNotebookConfig = new StringWriter();
-      jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project,
-          hdfsLeFacade.getRPCEndpoint(), nodePort, jupyterSettings, hdfsUser, pythonKernelName,
-          jupyterPaths.getCertificatesDir(), allowOrigin);
+      jupyterConfigFilesGenerator.createJupyterNotebookConfig(jupyterNotebookConfig, project, nodePort,
+              jupyterSettings, hdfsUser, jupyterPaths.getCertificatesDir(), allowOrigin);
       Writer sparkMagicConfig = new StringWriter();
       jupyterConfigFilesGenerator.createSparkMagicConfig(sparkMagicConfig,project, jupyterSettings, hdfsUser,
           jupyterPaths.getConfDirPath());
@@ -189,7 +189,7 @@ public class KubeJupyterManager implements JupyterManager {
           nodePort, jupyterSettings.getMode().getValue()));
       
       return new JupyterDTO(nodePort, token, PID, secretConfig, jupyterPaths.getCertificatesDir());
-    } catch (KubernetesClientException | IOException e) {
+    } catch (KubernetesClientException | IOException | ServiceDiscoveryException e) {
       logger.log(SEVERE, "Failed to start Jupyter notebook on Kubernetes", e);
       nodePortOptional.ifPresent(nodePort -> {
         try {

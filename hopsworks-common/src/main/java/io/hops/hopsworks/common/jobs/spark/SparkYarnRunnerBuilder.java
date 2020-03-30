@@ -118,7 +118,7 @@ public class SparkYarnRunnerBuilder {
   public YarnRunner getYarnRunner(Project project,
       String jobUser, AsynchronousJobExecutor services,
       final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
-      Settings settings) throws IOException {
+      Settings settings, String kafkaBrokersString) throws IOException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -194,7 +194,7 @@ public class SparkYarnRunnerBuilder {
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, tfLibraryPath, extraJavaOptions));
+            jobUser, tfLibraryPath, extraJavaOptions, kafkaBrokersString));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_ENV + "SPARK_USER", jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_ENV + "SPARK_USER", jobUser);
