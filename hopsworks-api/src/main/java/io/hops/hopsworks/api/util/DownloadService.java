@@ -190,9 +190,10 @@ public class DownloadService {
     try {
       if (projectUsername != null) {
         udfso = dfs.getDfsOps(projectUsername);
-        stream = udfso.open(new Path(fullPath));
+        Path p = new Path(fullPath);
+        stream = udfso.open(p);
         Response.ResponseBuilder response = Response.ok(buildOutputStream(stream, udfso));
-        response.header("Content-disposition", "attachment;");
+        response.header("Content-disposition", "attachment; filename=\"" + p.getName() + "\"" );
         return response.build();
       } else {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING);
