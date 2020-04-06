@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -320,6 +321,7 @@ public class AgentController {
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand(prog)
         .addCommand(project)
+        .setWaitTimeout(60, TimeUnit.SECONDS)
         .build();
 
     try {
