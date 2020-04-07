@@ -1017,10 +1017,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("storageConnectorId")).to be true
           expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("inodeId")).to be true
+          expect(parsed_json.key?("features")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "HOPSFS_TRAINING_DATASET").to be true
           expect(parsed_json["storageConnectorId"] == connector.id).to be true
+          expect(parsed_json["features"].length).to be 2
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with upper case characters" do
@@ -1254,10 +1256,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("description")).to be true
           expect(parsed_json.key?("storageConnectorId")).to be true
           expect(parsed_json.key?("storageConnectorName")).to be true
+          expect(parsed_json.key?("features")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
           expect(parsed_json["storageConnectorId"] == connector_id).to be true
+          expect(parsed_json["features"].length).to be 2
         end
 
         it "should not be able to add an external training dataset to the featurestore with upper case characters" do
