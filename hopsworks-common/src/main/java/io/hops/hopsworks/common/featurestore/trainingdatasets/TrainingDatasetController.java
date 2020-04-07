@@ -281,7 +281,9 @@ public class TrainingDatasetController {
     //Store jobs
     featurestoreJobFacade.insertJobs(trainingDataset, jobs);
     
-    return convertTrainingDatasetToDTO(trainingDataset);
+    //Get final entity from the database
+    return getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDataset.getName(),
+      trainingDataset.getVersion());
   }
   
   /**
