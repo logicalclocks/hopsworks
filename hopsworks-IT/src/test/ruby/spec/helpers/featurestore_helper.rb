@@ -408,7 +408,19 @@ module FeaturestoreHelper
         dataFormat: data_format,
         trainingDatasetType: trainingDatasetType,
         storageConnectorId: connector_id,
-        storageConnectorName: connector_name
+        storageConnectorName: connector_name,
+        features: [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription"
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription2"
+            }
+        ]
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
@@ -431,7 +443,19 @@ module FeaturestoreHelper
         dataFormat: "tfrecords",
         location: location,
         trainingDatasetType: trainingDatasetType,
-        storageConnectorId: s3_connector_id
+        storageConnectorId: s3_connector_id,
+        features: [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription"
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription2"
+            }
+        ]
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
