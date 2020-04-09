@@ -64,8 +64,7 @@ public class CloudClient {
     try {
       HttpHost host = new HttpHost(recoverPasswordUrl.getHost(),
           recoverPasswordUrl.getPort(), recoverPasswordUrl.getScheme());
-      int statusCode = httpClient.execute(host, request,
-          httpResponse -> {
+      int statusCode = httpClient.execute(host, request, httpResponse -> {
         String responseStr = EntityUtils.toString(httpResponse.getEntity());
         LOGGER.log(Level.INFO, responseStr);
         return httpResponse.getStatusLine().getStatusCode();
