@@ -319,7 +319,7 @@ public class AuthController {
     }
   }
   
-  private void checkUserStatus(Users user, boolean newUser) throws UserException {
+  public void checkUserStatus(Users user, boolean newUser) throws UserException {
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
@@ -365,7 +365,7 @@ public class AuthController {
     sendRecoveryValidationKey(user, url, securityUtils.urlEncode(resetToken), isPassword, validForHour);
   }
   
-  private long diffMillis(Date date) {
+  public long diffMillis(Date date) {
     if (date == null) {
       return -1;
     }

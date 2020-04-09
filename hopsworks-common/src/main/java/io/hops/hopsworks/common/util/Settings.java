@@ -343,6 +343,12 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_JWT_EXP_MS = "elastic_jwt_exp_ms";
   private static final String VARIABLE_KIBANA_MULTI_TENANCY_ENABLED = "kibana_multi_tenancy_enabled";
   
+  //Cloud
+  private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT=
+      "cloud_events_endpoint";
+  private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY=
+      "cloud_events_endpoint_api_key";
+  
   private String setVar(String varName, String defaultValue) {
     Variables var = findById(varName);
     if (var != null && var.getValue() != null && (!var.getValue().isEmpty())) {
@@ -726,8 +732,13 @@ public class Settings implements Serializable {
       while (tokenizer.hasMoreTokens()) {
         RESERVED_PROJECT_NAMES.add(tokenizer.nextToken());
       }
-
-
+  
+      CLOUD_EVENTS_ENDPOINT = setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT,
+          CLOUD_EVENTS_ENDPOINT);
+  
+      CLOUD_EVENTS_ENDPOINT_API_KEY =
+          setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY, CLOUD_EVENTS_ENDPOINT_API_KEY);
+      
       populateProvenanceCache();
       cached = true;
     }
@@ -3689,4 +3700,19 @@ public class Settings implements Serializable {
     }
   }
   //------------------------------ END PROVENANCE --------------------------------------------//
+  
+  // CLOUD
+  private String CLOUD_EVENTS_ENDPOINT = "";
+  
+  public synchronized String getCloudEventsEndPoint() {
+    checkCache();
+    return CLOUD_EVENTS_ENDPOINT;
+  }
+  
+  private String CLOUD_EVENTS_ENDPOINT_API_KEY = "";
+  
+  public synchronized String getCloudEventsEndPointAPIKey() {
+    checkCache();
+    return CLOUD_EVENTS_ENDPOINT_API_KEY;
+  }
 }

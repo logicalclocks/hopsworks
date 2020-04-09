@@ -128,31 +128,32 @@
                             <span class="text-danger ng-hide"
                                   ng-show="(recoveryForm.$submitted || recoveryForm.user_email.$dirty) && recoveryForm.user_email.$error.email">This field must be a valid email address</span>
                         </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Security question</label>
-                            <select name="sec_question"
-                                    ng-model="recoverCtrl.user.securityQuestion"
-                                    required
-                                    class="form-control">
-                                <option value="">Select security question</option>
-                                <option ng-repeat="question in recoverCtrl.securityQuestions" value="{{question.value}}">
-                                    {{question.value}}
-                                </option>
-                            </select>
-                            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_question.$dirty) &amp;&amp; recoveryForm.sec_question.$error.required"
-                                  class="text-danger ng-hide">This field is required</span>
+                        <div ng-show="!recoverCtrl.isCloud">
+                            <div class="form-group has-feedback">
+                                <label class="text-muted">Security question</label>
+                                <select name="sec_question"
+                                        ng-model="recoverCtrl.user.securityQuestion"
+                                        [required]="!recoverCtrl.isCloud"
+                                        class="form-control">
+                                    <option value="">Select security question</option>
+                                    <option ng-repeat="question in recoverCtrl.securityQuestions" value="{{question.value}}">
+                                        {{question.value}}
+                                    </option>
+                                </select>
+                                <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_question.$dirty) &amp;&amp; recoveryForm.sec_question.$error.required"
+                                      class="text-danger ng-hide">This field is required</span>
+                            </div>
+                            <div class="form-group has-feedback">
+                                <label class="text-muted">Security answer</label>
+                                <input id="sec-answer-field" name="sec_answer" placeholder="Security answer"
+                                       autocomplete="off"
+                                       ng-model="recoverCtrl.user.securityAnswer" [required]="!recoverCtrl.isCloud"
+                                       class="form-control"
+                                       type="password" show-hide-password/>
+                                <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_answer.$dirty) &amp;&amp; recoveryForm.sec_answer.$error.required"
+                                      class="text-danger ng-hide">This field is required</span>
+                            </div>
                         </div>
-                        <div class="form-group has-feedback">
-                            <label class="text-muted">Security answer</label>
-                            <input id="sec-answer-field" name="sec_answer" placeholder="Security answer"
-                                   autocomplete="off"
-                                   ng-model="recoverCtrl.user.securityAnswer" required
-                                   class="form-control"
-                                   type="password" show-hide-password/>
-                            <span ng-show="(recoveryForm.$submitted || recoveryForm.sec_answer.$dirty) &amp;&amp; recoveryForm.sec_answer.$error.required"
-                                  class="text-danger ng-hide">This field is required</span>
-                        </div>
-
                         <button class="btn btn-block btn-primary mt-lg" type="submit"
                                 data-ng-disabled="recoverCtrl.working">Send
                         </button>
