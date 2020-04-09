@@ -40,8 +40,9 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('RecoverCtrl', ['$location', 'AuthService', '$scope', 'SecurityQuestions',
-          function ($location, AuthService, $scope, SecurityQuestions) {
+        .controller('RecoverCtrl', ['$location', 'AuthService', '$scope',
+        'SecurityQuestions', 'VariablesService',
+          function ($location, AuthService, $scope, SecurityQuestions, VariablesService) {
 
             var self = this;
             self.working = false;
@@ -54,9 +55,14 @@ angular.module('hopsWorksApp')
 
             self.mode = 'password_issue';
             self.state = "login_issue";
+            self.isCloud = false;
 
             SecurityQuestions.getQuestions().then(function(success) {
                 self.securityQuestions = success.data;
+            });
+
+            VariablesService.getCloudProvider().then(function(success){
+              self.isCloud = success.data.successMessage !== "";
             });
 
             self.choose = function () {

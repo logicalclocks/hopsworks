@@ -56,6 +56,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
+import io.hops.hopsworks.common.user.CloudController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
@@ -133,7 +134,9 @@ public class AuthService {
   private Settings settings;
   @EJB
   private JWTController jwtController;
-
+  @EJB
+  private CloudController cloudController;
+  
   @GET
   @Path("session")
   @Logged(logLevel = LogLevel.FINE)
@@ -356,7 +359,11 @@ public class AuthService {
     MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
-    userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
+    if(settings.isCloud()){
+      cloudController.sendPasswordRecoveryEmailForCloud(email, reqUrl);
+    }else{
+      userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
+    }
     json.setSuccessMessage(ResponseMessages.PASSWORD_RESET);
     return Response.ok(json).build();
   }
