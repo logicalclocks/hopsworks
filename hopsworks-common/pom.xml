@@ -379,7 +379,7 @@
     <dependency>
       <groupId>com.logicalclocks</groupId>
       <artifactId>service-discovery-client</artifactId>
-      <version>0.3</version>
+      <version>0.4-SNAPSHOT</version>
     </dependency>
 
     <!-- Test dependencies -->

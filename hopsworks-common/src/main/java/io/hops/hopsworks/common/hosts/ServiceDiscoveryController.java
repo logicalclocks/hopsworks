@@ -96,10 +96,7 @@ public class ServiceDiscoveryController {
   private ServiceDiscoveryClient getClient(Type type) throws ServiceDiscoveryException {
     switch (type) {
       case DNS:
-        return new Builder(type)
-            .withDnsHost("127.0.0.1")
-            .withDnsPort(53)
-            .build();
+        return new Builder(type).build();
       case HTTP:
       case CACHING:
         throw new NotImplementedException(type + " resolver is not implemented yet");
