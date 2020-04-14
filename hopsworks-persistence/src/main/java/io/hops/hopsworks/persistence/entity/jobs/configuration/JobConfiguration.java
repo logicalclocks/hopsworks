@@ -39,20 +39,18 @@
 
 package io.hops.hopsworks.persistence.entity.jobs.configuration;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.beam.BeamFlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -131,9 +129,6 @@ public abstract class JobConfiguration {
           break;
         case FLINK:
           conf = new FlinkJobConfiguration();
-          break;
-        case BEAM_FLINK:
-          conf = new BeamFlinkJobConfiguration();
           break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();

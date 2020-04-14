@@ -153,10 +153,6 @@ public class FlinkYarnRunnerBuilder {
                  .createClusterSpecification();
     
     cluster.setLocalJarPath(new Path(settings.getLocalFlinkJarPath()));
-//    if (flinkJobConfiguration.getJobType() == JobType.BEAM_FLINK) {
-//      cluster.addHopsLocalResources("sdk_worker.sh", "hdfs:///user/flink/sdk_worker.sh");
-//      cluster.addHopsLocalResources("boot", "hdfs:///user/flink/boot");
-//    }
     // Glassfish domain truststore
     cluster.addHopsLocalResources(Settings.DOMAIN_CA_TRUSTSTORE, settings.getGlassfishTrustStoreHdfs());
     // Add HopsUtil

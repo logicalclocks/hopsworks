@@ -20,9 +20,6 @@ describe "On #{ENV['OS']}" do
   job_spark_3 = "demo_job_3"
   job_flink =  "job_flink"
   job_flink_2 =  "job_flink_2"
-  job_flink_beam =  "job_flink_beam"
-  job_flink_beam_2 =  "job_flink_beam_2"
-  job_flink_properties_beam = "job_flink_properties_beam"
   job_flink_properties = "job_flink_properties"
 
   describe 'job' do
@@ -101,19 +98,13 @@ describe "On #{ENV['OS']}" do
         expect_status(404)
       end
       it "should create one flink job" do
-        create_flink_job(@project, job_flink, nil, false)
-      end
-      it "should create one flink job with beam" do
-        create_flink_beam_job(@project, job_flink_beam, nil)
+        create_flink_job(@project, job_flink, nil)
       end
       it "should create one flink job with properties" do
-        create_flink_job(@project, job_flink_properties, "key1=val1\nkey2=val2", false)
-      end
-      it "should create one flink job with beam and properties" do
-        create_flink_beam_job(@project, job_flink_properties_beam, "key1=val1\nkey2=val2")
+        create_flink_job(@project, job_flink_properties, "key1=val1\nkey2=val2")
       end
       it "should get a single flink job" do
-        create_flink_job(@project, job_flink, nil, false)
+        create_flink_job(@project, job_flink, nil)
         get_job(@project[:id], job_flink, nil)
         expect_status(200)
       end
@@ -126,29 +117,24 @@ describe "On #{ENV['OS']}" do
         expect_status(403)
       end
     end
-    context 'with authentication test Flink and Beam jobs' do
+    context 'with authentication test Flink jobs' do
       before :all do
         with_valid_tour_project("spark")
-        create_flink_job(@project, job_flink_beam, nil, true)
+        create_flink_job(@project, job_flink, nil)
       end
       after :each do
         clean_jobs(@project[:id])
       end
       it "start a flink session cluster, test proxy servlet" do
-        start_execution(@project[:id], job_flink_beam, nil)
+        start_execution(@project[:id], job_flink, nil)
         execution_id = json_body[:id]
-        app_id = wait_for_execution_active(@project[:id], job_flink_beam, execution_id, 'RUNNING')
+        app_id = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING')
         #Get flink master
         get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
         expect_status(200)
         #Kill job
-        stop_execution(@project[:id], job_flink_beam, execution_id)
+        stop_execution(@project[:id], job_flink, execution_id)
       end
-      # it "get flink history server" do
-      #   #Get flink master
-      #   get "#{ENV['HOPSWORKS_BASE_API']}/flinkhistoryserver/"
-      #   expect_status(200)
-      # end
     end
   end
   describe 'deleting running jobs' do
@@ -178,7 +164,7 @@ describe "On #{ENV['OS']}" do
         expect(test_dir(kafka_certs_dir)).to be false
       end
       it 'should delete flink job with non-finished execution and cleanup tmp files and get status of new job correctly' do
-        create_flink_job(@project, job_flink, nil, false)
+        create_flink_job(@project, job_flink, nil)
         start_execution(@project[:id], job_flink, nil)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
@@ -207,10 +193,8 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "demo_job_5", "jar", nil)
         create_sparktour_job(@project, "demo_py_job_2", "py", nil)
         create_sparktour_job(@project, "demo_ipynb_job_2", "ipynb", nil)
-        create_flink_job(@project, job_flink, nil, false)
-        create_flink_job(@project, job_flink_2, nil, false)
-        create_flink_job(@project, job_flink_beam, nil, true)
-        create_flink_job(@project, job_flink_beam_2, nil, true)
+        create_flink_job(@project, job_flink, nil)
+        create_flink_job(@project, job_flink_2, nil)
       end
       after :all do
         clean_jobs(@project[:id])
@@ -398,11 +382,6 @@ describe "On #{ENV['OS']}" do
         end
         it "should find jobs with type flink" do
           get_jobs(@project[:id], "?filter_by=jobtype:flink")
-          expect_status(200)
-          expect(json_body[:items].count).to be 2
-        end
-        it "should find jobs with type beam flink" do
-          get_jobs(@project[:id], "?filter_by=jobtype:beam_flink")
           expect_status(200)
           expect(json_body[:items].count).to be 2
         end

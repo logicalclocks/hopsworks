@@ -150,7 +150,7 @@ angular.module('hopsWorksApp')
 
             var getJobUIInt = function () {
               //If job is not flink
-                if (!self.isLivy && (typeof self.job !== "undefined" && (self.job.jobType === 'FLINK' || self.job.jobType === 'BEAM_FLINK'))) {
+                if (!self.isLivy && (typeof self.job !== "undefined" && (self.job.jobType === 'FLINK'))) {
                     //Get Flink master url from job
                     self.ui = '/hopsworks-api/flinkmaster/' + self.appId + '/';
                     JobService.getFlinkMaster(self.appId).then(

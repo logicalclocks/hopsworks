@@ -218,9 +218,6 @@ angular.module('hopsWorksApp')
                 case "FLINK":
                   jobType = 3;
                   break;
-                case 'BEAM_FLINK':
-                  jobType = 4;
-                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState;
               if (jobType === 1 || jobType === 2 ) {
@@ -467,8 +464,8 @@ angular.module('hopsWorksApp')
               self.runJob = function (job, index) {
                   self.toggleOn(job, index);
 
-                  //If type Flink/Beam, run immediately
-                  if (job.jobType.toUpperCase() === 'FLINK' || job.jobType.toUpperCase() === 'BEAM_FLINK'){
+                  //If type Flink, run immediately
+                  if (job.jobType.toUpperCase() === 'FLINK'){
                       JobService.runJob(self.projectId, job.name).then(
                           function (success) {
                               self.getAllJobsStatus();
