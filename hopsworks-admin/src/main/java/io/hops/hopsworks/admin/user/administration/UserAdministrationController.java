@@ -85,9 +85,6 @@ public class UserAdministrationController {
       MessagesController.addSecurityErrorMessage("User is null.");
       return;
     }
-    if (user.getGroupName() == null || user.getGroupName().isEmpty()) {
-      user.setGroupName("HOPS_USER");
-    }
     HttpServletRequest httpServletRequest = getHttpServletRequest();
     try {
       auditedUserAdministration.activateUser(user, httpServletRequest);

@@ -313,6 +313,7 @@ public class AdminProfileAdministration implements Serializable {
       UserAccountStatus status = UserAccountStatus.valueOf(selectedStatus);
       try {
         auditedUserAdministration.changeStatus(editingUser, status, httpServletRequest);
+        editingUser = userFacade.find(editingUser.getUid());
         MessagesController.addInfoMessage("User " + editingUser.getEmail() + " status updated successfully.");
       } catch (UserException ex) {
         MessagesController.addInfoMessage("Problem Could not update account status.", ex.getMessage());
@@ -320,7 +321,6 @@ public class AdminProfileAdministration implements Serializable {
       }
     } else {
       MessagesController.addErrorMessage("Error", "No selection made!");
-
     }
 
   }
@@ -332,6 +332,7 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#!".equals(newGroup)) {
       try {
         auditedUserAdministration.addRole(editingUser, newGroup, httpServletRequest);
+        editingUser = userFacade.find(editingUser.getUid());
         MessagesController
           .addInfoMessage("Added role:" + newGroup + " to user " + editingUser.getEmail() + " activated successfully");
       } catch (UserException ue) {
@@ -350,6 +351,7 @@ public class AdminProfileAdministration implements Serializable {
     if (!"#!".equals(selectedGroup)) {
       try {
         auditedUserAdministration.removeRole(editingUser, selectedGroup, httpServletRequest);
+        editingUser = userFacade.find(editingUser.getUid());
         MessagesController.addInfoMessage("Removed role:" + selectedGroup + " from user " + editingUser.getEmail() + " "
           + "successfully");
       } catch (UserException ue) {

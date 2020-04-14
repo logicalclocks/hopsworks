@@ -141,33 +141,22 @@ public class UsersController {
     return qrCode;
   }
   
-  public void activateUser(Users user) throws UserException {
-    try {
-      updateStatus(user, UserAccountStatus.ACTIVATED_ACCOUNT);
-      //send confirmation email
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO,
-        UserAccountsEmailMessages.ACCOUNT_CONFIRMATION_SUBJECT,
-        UserAccountsEmailMessages.accountActivatedMessage(user.getEmail()));
-    } catch (IllegalArgumentException | MessagingException ex) {
-      throw new UserException(RESTCodes.UserErrorCode.ACCOUNT_ACTIVATION_FAILED, Level.FINE,
-        "User could not be activated.");
-    }
-  }
-  
-  public void addRole(String role, Users user) throws UserException {
+  public void addRole(String role, Integer id) throws UserException {
+    Users p = userFacade.find(id);
     BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
     if (bbcGroup != null) {
-      registerGroup(user, bbcGroup.getGid());
+      registerGroup(p, bbcGroup.getGid());
     } else {
       throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
   }
   
-  public void removeRole(String role, Users user) throws UserException {
+  public void removeRole(String role, Integer id) throws UserException {
+    Users p = userFacade.find(id);
     BbcGroup bbcGroup = bbcGroupFacade.findByGroupName(role);
-    if (bbcGroup != null && user.getBbcGroupCollection().contains(bbcGroup)) {
-      userFacade.removeGroup(user.getEmail(), bbcGroup.getGid());// remove from table only
-      user.getBbcGroupCollection().remove(bbcGroup);// remove from the user entity
+    if (bbcGroup != null && p.getBbcGroupCollection().contains(bbcGroup)) {
+      userFacade.removeGroup(p.getEmail(), bbcGroup.getGid());// remove from table only
+      p.getBbcGroupCollection().remove(bbcGroup);// remove from the user entity
     } else if (bbcGroup != null) {
       throw new UserException(RESTCodes.UserErrorCode.ROLE_NOT_FOUND, Level.FINE, "Role could not be granted.");
     }
@@ -374,12 +363,13 @@ public class UsersController {
   
   /**
    * Use to reset password to a temporary random password
-   * @param user
+   * @param id
    * @return
    * @throws UserException
    * @throws MessagingException
    */
-  public String resetPassword(Users user, String initiator) throws UserException, MessagingException {
+  public String resetPassword(Integer id, String initiator) throws UserException, MessagingException {
+    Users user = userFacade.find(id);
     String randomPwd = securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
     user.setStatus(UserAccountStatus.TEMP_PASSWORD);
     changePasswordAsAdmin(user, randomPwd);
@@ -639,6 +629,12 @@ public class UsersController {
     if (p != null) {
       if (UserAccountStatus.ACTIVATED_ACCOUNT.equals(status)) {
         p.setFalseLogin(0);
+        if (p.getBbcGroupCollection() == null || p.getBbcGroupCollection().isEmpty()) {
+          BbcGroup group = bbcGroupFacade.findByGroupName("HOPS_USER");
+          List<BbcGroup> groups = new ArrayList<>();
+          groups.add(group);
+          p.setBbcGroupCollection(groups);
+        }
       }
       p.setNotes(note);
       p.setStatus(status);
@@ -714,9 +710,10 @@ public class UsersController {
     return list;
   }
 
-  public void updateMaxNumProjs(Users id, int maxNumProjs) {
-    id.setMaxNumProjects(maxNumProjs);
-    userFacade.update(id);
+  public void updateMaxNumProjs(Integer id, int maxNumProjs) {
+    Users user = userFacade.find(id);
+    user.setMaxNumProjects(maxNumProjs);
+    userFacade.update(user);
   }
   
   /**
