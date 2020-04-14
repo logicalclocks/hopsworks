@@ -64,13 +64,11 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "BEAM_FLINK": /.jar\b/,
               "PYSPARK": /(.py|.ipynb)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "BEAM_FLINK": "Please select a JAR file.",
               "PYSPARK": "Please select a .py or .ipynb file."
             };
 
@@ -443,16 +441,10 @@ angular.module('hopsWorksApp')
                   selectedType = "PySpark";
                   break;
                 case 3:
-                case 4:
                   self.accordion4.title = "Job details";
                   var jobConfig;
-                  if(self.jobtype === 3){
-                    selectedType = "Flink";
-                    jobConfig = 'flinkJobConfiguration';
-                  } else {
-                    selectedType = "Beam(Flink)";
-                    jobConfig = 'beamFlinkJobConfiguration';
-                  }
+                  selectedType = "Flink";
+                  jobConfig = 'flinkJobConfiguration';
                   self.accordion3.visible = false;
                   self.accordion4.isOpen = true;
                   self.accordion4.visible = true;
@@ -490,8 +482,6 @@ angular.module('hopsWorksApp')
                   return "PYSPARK";
                 case 3:
                   return "FLINK";
-                case 4:
-                  return "BEAM_FLINK";
                 default:
                   return null;
               }

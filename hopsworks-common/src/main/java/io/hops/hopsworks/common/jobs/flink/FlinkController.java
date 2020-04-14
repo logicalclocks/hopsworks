@@ -125,9 +125,9 @@ public class FlinkController {
       throw new NullPointerException("Cannot run a null job.");
     } else if (user == null) {
       throw new NullPointerException("Cannot run a job as a null user.");
-    } else if (job.getJobType() != JobType.FLINK && job.getJobType() != JobType.BEAM_FLINK) {
+    } else if (job.getJobType() != JobType.FLINK) {
       throw new IllegalArgumentException(
-        "Job configuration is not a Flink or Beam job configuration.");
+        "Job configuration is not a Flink job configuration.");
     }
     
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);

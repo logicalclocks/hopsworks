@@ -35,9 +35,8 @@ public class JobsBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=jobtype:spark&filter_by=date_created_gt:2018-12-25T17:12:10",
     allowableValues =
-      "filter_by=jobtype:spark,filter_by=jobtype:pyspark,filter_by=jobtype:flink,filter_by=jobtype:beam_flink," +
+      "filter_by=jobtype:spark,filter_by=jobtype:pyspark,filter_by=jobtype:flink," +
       "filter_by=jobtype_neq:spark,filter_by=jobtype_neq:pyspark,filter_by=jobtype_neq:flink," +
-      "filter_by=jobtype_neq:beam_flink,filter_by=date_created:2018-12-25T17:12:10.058," +
       "filter_by=date_created_gt:2018-12-25T17:12:10.058, filter_by=date_created_lt:2018-12-25T17:12:10.058," +
       "filter_by=name:myetl,filter_by=creator:john,filter_by=latest_execution:finished",
     allowMultiple = true)

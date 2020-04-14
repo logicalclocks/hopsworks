@@ -39,18 +39,13 @@
 
 package io.hops.hopsworks.persistence.entity.jobs.configuration.flink;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
-import io.hops.hopsworks.persistence.entity.jobs.configuration.beam.BeamFlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSeeAlso;
 
 /**
  * Contains Flink-specific run information for a Flink job, on top of Yarn
@@ -58,12 +53,6 @@ import javax.xml.bind.annotation.XmlSeeAlso;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlSeeAlso({BeamFlinkJobConfiguration.class})
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = BeamFlinkJobConfiguration.class, name = "BeamFlinkJobConfiguration")}
-)
 public class FlinkJobConfiguration extends YarnJobConfiguration {
   
   @XmlElement(name="jobmanager.heap.size")
