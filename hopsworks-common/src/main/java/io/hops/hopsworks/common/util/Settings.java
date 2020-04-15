@@ -176,6 +176,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_MAX_NUM_PROJ_PER_USER
       = "max_num_proj_per_user";
   private static final String VARIABLE_RESERVED_PROJECT_NAMES = "reserved_project_names";
+  private static final String VARIABLE_HOPSWORKS_ENTERPRISE = "hopsworks_enterprise";
   
   // HIVE configuration variables
   private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
@@ -302,7 +303,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_CORES_FRACTION = "kube_docker_cores_fraction";
   private static final String VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION = "kube_docker_max_gpus_allocation";
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
-
+  private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
+  
   // Container image versions
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
@@ -705,6 +707,9 @@ public class Settings implements Serializable {
           KUBE_DOCKER_CORES_FRACTION);
       KUBE_DOCKER_MAX_GPUS_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_GPUS_ALLOCATION,
           KUBE_DOCKER_MAX_GPUS_ALLOCATION);
+      KUBE_INSTALLED = setBoolVar(VARIABLE_KUBE_INSTALLED, KUBE_INSTALLED);
+  
+      HOPSWORKS_ENTERPRISE = setBoolVar(VARIABLE_HOPSWORKS_ENTERPRISE, HOPSWORKS_ENTERPRISE);
 
       JUPYTER_HOST = setStrVar(VARIABLE_JUPYTER_HOST, JUPYTER_HOST);
 
@@ -3439,6 +3444,18 @@ public class Settings implements Serializable {
   public synchronized Double getKubeDockerCoresFraction() {
     checkCache();
     return KUBE_DOCKER_CORES_FRACTION;
+  }
+  
+  private Boolean KUBE_INSTALLED = false;
+  public synchronized Boolean getKubeInstalled() {
+    checkCache();
+    return KUBE_INSTALLED;
+  }
+  
+  private Boolean HOPSWORKS_ENTERPRISE = false;
+  public synchronized Boolean getHopsworksEnterprise() {
+    checkCache();
+    return HOPSWORKS_ENTERPRISE;
   }
 
   private String SERVING_MONITOR_INT = "30s";
