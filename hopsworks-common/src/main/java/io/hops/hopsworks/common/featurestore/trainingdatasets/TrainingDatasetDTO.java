@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
@@ -36,6 +37,8 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   
   private String dataFormat;
   private TrainingDatasetType trainingDatasetType;
+  private List<TrainingDatasetSplitDTO> splits;
+  private Long seed;
 
   private Integer storageConnectorId; // Need to know which storage connector to use it
   // ID + type would be unique. However momentarily keep also the name, until we switch to
@@ -52,16 +55,20 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
 
   public TrainingDatasetDTO(TrainingDataset trainingDataset) {
     super(trainingDataset.getFeaturestore().getId(),
-        trainingDataset.getName(),
-        trainingDataset.getCreated(),
-        trainingDataset.getCreator(), trainingDataset.getVersion(),
-        (List) trainingDataset.getStatistics(), (List) trainingDataset.getJobs(),
-        trainingDataset.getId());
+      trainingDataset.getName(),
+      trainingDataset.getCreated(),
+      trainingDataset.getCreator(), trainingDataset.getVersion(),
+      (List) trainingDataset.getStatistics(), (List) trainingDataset.getJobs(),
+      trainingDataset.getId());
     setDescription(trainingDataset.getDescription());
     setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
-        tdf.getType(), tdf.getDescription(), tdf.getPrimary(), false, null)).collect(Collectors.toList()));
+      tdf.getType(), tdf.getDescription(), tdf.getPrimary(), false, null)).collect(Collectors.toList()));
     this.dataFormat = trainingDataset.getDataFormat();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
+    this.splits =
+      trainingDataset.getSplits().stream().map(tds -> new TrainingDatasetSplitDTO(tds.getName(), tds.getPercentage()))
+        .collect(Collectors.toList());
+    this.seed = trainingDataset.getSeed();
   }
   
   @XmlElement
@@ -115,11 +122,35 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     this.trainingDatasetType = trainingDatasetType;
   }
 
+  @XmlElement
+  public List<TrainingDatasetSplitDTO> getSplits() {
+    return splits;
+  }
+  
+  public void setSplits(
+    List<TrainingDatasetSplitDTO> splits) {
+    this.splits = splits;
+  }
+  
+  public Long getSeed() {
+    return seed;
+  }
+  
+  public void setSeed(Long seed) {
+    this.seed = seed;
+  }
+  
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +
       "dataFormat='" + dataFormat + '\'' +
       ", trainingDatasetType=" + trainingDatasetType +
+      ", splits=" + splits +
+      ", seed=" + seed +
+      ", storageConnectorId=" + storageConnectorId +
+      ", storageConnectorName='" + storageConnectorName + '\'' +
+      ", storageConnectorType=" + storageConnectorType +
+      ", inodeId=" + inodeId +
       '}';
   }
 }

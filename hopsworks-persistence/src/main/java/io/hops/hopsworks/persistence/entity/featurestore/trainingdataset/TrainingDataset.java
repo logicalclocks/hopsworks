@@ -23,6 +23,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.statistics.Featurestore
 
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -100,6 +101,9 @@ public class TrainingDataset implements Serializable {
   @Basic(optional = false)
   @Column(name = "description")
   private String description;
+  @Basic
+  @Column(name = "seed")
+  private Long seed;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreStatistic> statistics;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
@@ -116,6 +120,8 @@ public class TrainingDataset implements Serializable {
   @JoinColumn(name = "external_training_dataset_id", referencedColumnName = "id")
   @OneToOne
   private ExternalTrainingDataset externalTrainingDataset;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
+  private Collection<TrainingDatasetSplit> splits;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -235,7 +241,24 @@ public class TrainingDataset implements Serializable {
   public void setName(String name) {
     this.name = name;
   }
-
+  
+  public Collection<TrainingDatasetSplit> getSplits() {
+    return splits;
+  }
+  
+  public void setSplits(
+    Collection<TrainingDatasetSplit> splits) {
+    this.splits = splits;
+  }
+  
+  public Long getSeed() {
+    return seed;
+  }
+  
+  public void setSeed(Long seed) {
+    this.seed = seed;
+  }
+  
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -255,6 +278,8 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(features, that.features)) return false;
     if (!Objects.equals(jobs, that.jobs)) return false;
     if (trainingDatasetType != that.trainingDatasetType) return false;
+    if (!Objects.equals(splits, that.splits)) return false;
+    if (!Objects.equals(seed, that.seed)) return false;
     if (!Objects.equals(hopsfsTrainingDataset, that.hopsfsTrainingDataset))
       return false;
     return Objects.equals(externalTrainingDataset, that.externalTrainingDataset);
@@ -276,6 +301,8 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);
     result = 31 * result + (hopsfsTrainingDataset != null ? hopsfsTrainingDataset.hashCode() : 0);
     result = 31 * result + (externalTrainingDataset != null ? externalTrainingDataset.hashCode() : 0);
+    result = 31 * result + (splits != null ? splits.hashCode() : 0);
+    result = 31 * result + (seed != null ? seed.hashCode() : 0);
     return result;
   }
 }

@@ -49,6 +49,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -265,6 +266,10 @@ public class TrainingDatasetController {
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(trainingDatasetDTO.getVersion());
     trainingDataset.setTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
+    trainingDataset.setSeed(trainingDatasetDTO.getSeed());
+    trainingDataset.setSplits(trainingDatasetDTO.getSplits().stream()
+      .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
+        Collectors.toList()));
     trainingDatasetFacade.persist(trainingDataset);
   
     // Store statistics
