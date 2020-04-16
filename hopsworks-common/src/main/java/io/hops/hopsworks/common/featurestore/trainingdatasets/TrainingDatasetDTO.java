@@ -132,6 +132,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     this.splits = splits;
   }
   
+  @XmlElement
   public Long getSeed() {
     return seed;
   }
