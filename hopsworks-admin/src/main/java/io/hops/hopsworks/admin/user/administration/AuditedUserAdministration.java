@@ -52,17 +52,18 @@ public class AuditedUserAdministration {
   
   public void activateUser(Users user, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
-    usersController.activateUser(user);
+    UserAccountStatus accountStatus = UserAccountStatus.ACTIVATED_ACCOUNT;
+    usersController.changeAccountStatus(user.getUid(), accountStatus.getUserStatus(), accountStatus);
   }
   
   public void addRole(Users user, String role, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
-    usersController.addRole(role, user);
+    usersController.addRole(role, user.getUid());
   }
   
   public void removeRole(Users user, String role,
     HttpServletRequest httpServletRequest) throws UserException {//httpServletRequest needed for logging
-    usersController.removeRole(role, user);
+    usersController.removeRole(role, user.getUid());
   }
   
   public void changeStatus(Users user, UserAccountStatus accountStatus,
@@ -83,7 +84,7 @@ public class AuditedUserAdministration {
     String userAgent = HttpUtil.extractUserAgent(request);
     String pwd;
     try {
-      pwd = usersController.resetPassword(user, request.getRemoteUser());
+      pwd = usersController.resetPassword(user.getUid(), request.getRemoteUser());
       accountAuditFacade.registerAccountChange(init, "PASSWORD CHANGE", "SUCCESS", "Admin reset password", user,
         remoteHost, userAgent);
     } catch (UserException ue) {
@@ -96,7 +97,7 @@ public class AuditedUserAdministration {
   
   public void setMaxProject(Users user, int num, HttpServletRequest request) {
     //httpServletRequest needed for logging
-    usersController.updateMaxNumProjs(user, num);
+    usersController.updateMaxNumProjs(user.getUid(), num);
   }
   
   public void updateProfile(Users user, HttpServletRequest request) {
