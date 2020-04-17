@@ -60,21 +60,22 @@ public class AuditedUserAdministration {
     @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Added role")})
   public void activateUser(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
-    usersController.activateUser(user);
+    UserAccountStatus accountStatus = UserAccountStatus.ACTIVATED_ACCOUNT;
+    usersController.changeAccountStatus(user.getUid(), accountStatus.getUserStatus(), accountStatus);
   }
   
   @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ROLE_ADDED, message = "Add role"),
     @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Add role")})
   public void addRole(@AuditTarget(UserIdentifier.USERS) Users user, String role, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
-    usersController.addRole(role, user);
+    usersController.addRole(role, user.getUid());
   }
   
   @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.ROLE_REMOVED, message = "Removed role"),
     @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_REMOVED, message = "Removed role")})
   public void removeRole(@AuditTarget(UserIdentifier.USERS) Users user, String role,
     HttpServletRequest httpServletRequest) throws UserException {//httpServletRequest needed for logging
-    usersController.removeRole(role, user);
+    usersController.removeRole(role, user.getUid());
   }
   
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Status change")
@@ -93,13 +94,13 @@ public class AuditedUserAdministration {
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PASSWORD_CHANGE, message = "Admin reset password")
   public String resetPassword(@AuditTarget(UserIdentifier.USERS) Users user, HttpServletRequest request)
     throws MessagingException, UserException {//httpServletRequest needed for logging
-    return usersController.resetPassword(user, request.getRemoteUser());
+    return usersController.resetPassword(user.getUid(), request.getRemoteUser());
   }
   
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "Set max project")
   public void setMaxProject(@AuditTarget(UserIdentifier.USERS) Users user, int num, HttpServletRequest request) {
     //httpServletRequest needed for logging
-    usersController.updateMaxNumProjs(user, num);
+    usersController.updateMaxNumProjs(user.getUid(), num);
   }
   
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.PROFILE_UPDATE, message = "User updated profile")
