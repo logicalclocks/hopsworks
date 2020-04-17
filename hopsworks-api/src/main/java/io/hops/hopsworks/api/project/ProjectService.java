@@ -42,6 +42,7 @@ import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
 import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaProjectService;
+import io.hops.hopsworks.api.elastic.ElasticResource;
 import io.hops.hopsworks.api.experiments.ExperimentsResource;
 import io.hops.hopsworks.api.featurestore.FeaturestoreService;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -224,6 +225,8 @@ public class ProjectService {
   private XAttrsResource xattrs;
   @Inject
   private ProjectProvenanceResource provenance;
+  @Inject
+  private ElasticResource elastic;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
 
@@ -885,5 +888,11 @@ public class ProjectService {
   public ProjectProvenanceResource provenance(@PathParam("projectId") Integer id) {
     this.provenance.setProjectId(id);
     return provenance;
+  }
+  
+  @Path("{projectId}/elastic")
+  public ElasticResource elastic(@PathParam("projectId") Integer id) {
+    this.elastic.setProjectId(id);
+    return elastic;
   }
 }

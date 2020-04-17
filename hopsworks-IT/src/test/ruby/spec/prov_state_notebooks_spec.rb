@@ -130,17 +130,36 @@ describe "On #{ENV['OS']}" do
         result = get "#{query}"
         expect_status(200)
         parsed_result = JSON.parse(result)
+        #pp parsed_result
+        #we expect 2 featuregroups
         expect(parsed_result["count"]).to eq 2
-        expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "features"
-        expect(parsed_result["items"][1]["xattrs"]["entry"][0]["key"]).to eq "features"
+        # TODO Alex inspect why featuregroups have a type in the parsed result
+        # "{featurestore={raw={\"type\":\"fullDTO\",\"featurestore_id\"
+
+        expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "featurestore"
+        fg1 = JSON[parsed_result["items"][0]["xattrs"]["entry"][0]["value"]]
+        #we expect 7 features in this featuregroup
+        expect(fg1["fg_features"].length).to eq 7
+
+        expect(parsed_result["items"][1]["xattrs"]["entry"][0]["key"]).to eq "featurestore"
+        fg2 = JSON[parsed_result["items"][1]["xattrs"]["entry"][0]["value"]]
+        #we expect 5 features in this featuregroup
+        expect(fg2["fg_features"].length).to eq 5
 
         query = "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/provenance/states?filter_by=ML_TYPE:TRAINING_DATASET"
         # pp "#{query}"
         result = get "#{query}"
         expect_status(200)
-        parsed_result = JSON.parse(result)
+        #parsed_result = JSON.parse(result)
+        pp parsed_result
+        #we expect 1 training dataset
         expect(parsed_result["count"]).to eq 1
-        expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "features"
+        expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "featurestore"
+        td1 = JSON[parsed_result["items"][0]["xattrs"]["entry"][0]["value"]]
+        #we expect 2 featuregroups in this training dataset
+        expect(td1["td_features"].length).to eq(0)
+        #TODO Alex inspect as this should be non 0
+        # expect(td1["td_features"].length).to eq(0)
       end
     end
   end

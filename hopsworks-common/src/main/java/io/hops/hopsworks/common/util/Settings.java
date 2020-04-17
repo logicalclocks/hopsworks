@@ -39,7 +39,6 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -104,8 +103,6 @@ public class Settings implements Serializable {
   private ProjectUtils projectUtils;
   @EJB
   private OSProcessExecutor osProcessExecutor;
-  @EJB
-  private ServiceDiscoveryController serviceDiscoveryController;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -1934,7 +1931,7 @@ public class Settings implements Serializable {
   public static final String META_ID = "_id";
   public static final String META_DATA_NESTED_FIELD = "xattr";
   public static final String META_DATA_FIELDS = META_DATA_NESTED_FIELD + ".*";
-
+  
   //Filename conventions
   public static final String FILENAME_DISALLOWED_CHARS = " /\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
   public static final String SUBDIR_DISALLOWED_CHARS = "/\\?*:|'\"<>%()&;#öäåÖÅÄàáéèâîïüÜ@${}[]+~^$`";
@@ -3777,4 +3774,7 @@ public class Settings implements Serializable {
     checkCache();
     return CLOUD_EVENTS_ENDPOINT_API_KEY;
   }
+
+  public static final String FEATURESTORE_INDEX = "featurestore";
+  public static final String FEATURESTORE_PROJECT_ID_FIELD = "project_id";
 }
