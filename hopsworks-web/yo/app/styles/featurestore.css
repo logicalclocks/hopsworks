@@ -31,11 +31,6 @@
     border-radius: .25rem
 }
 
-#search-sidenav.fs-sidenav.open {
-    height: calc(100% - 20px) !important;
-    padding: 20px;
-}
-
 .fs_card.card-block {
     -webkit-box-flex: 1;
     -webkit-flex: 1 1 auto;
@@ -596,6 +591,11 @@ a.fs_card.bg-inverse:focus, a.fs_card.bg-inverse:hover {
   z-index: 10;
   height: calc(100% - 125px);
   margin-top: 15px;
+}
+
+#search-sidenav.fs-sidenav.open {
+    height: calc(100% - 20px) !important;
+    padding: 20px;
 }
 
 .fs-sidenav .md-tabs.md-default-theme md-ink-bar, md-tabs md-ink-bar {

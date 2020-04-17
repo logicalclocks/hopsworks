@@ -48,7 +48,7 @@
   <section class="search-result"
            ng-if="!mainCtrl.searching && (mainCtrl.searchScope === 'Everything' || mainCtrl.searchScope === 'Feature store' || mainCtrl.searchScope === 'This project')">
     <div ng-cloak>
-      <md-content style="margin-top: -15px;">
+      <md-content style="margin-top: -5px; margin-bottom: -10px">
         <md-tabs class="md-default" md-center-tabs md-dynamic-height md-selected="mainCtrl.selectedIndex">
           <md-tab label="Feature group" md-on-select="mainCtrl.selectedIndex = 0"
                   ng-if="mainCtrl.searchView('featureGroupTab')">
