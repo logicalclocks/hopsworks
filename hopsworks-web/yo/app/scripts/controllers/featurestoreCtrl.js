@@ -230,6 +230,7 @@ angular.module('hopsWorksApp')
              * Shows the Modal for creating new feature groups through the UI
              */
             self.showCreateFeaturegroupForm = function () {
+                StorageService.store(self.projectId + "_featuregroup_version", 1);
                 StorageService.store("featuregroup_operation", "CREATE");
                 self.goToUrl("newfeaturegroup")
             };
@@ -298,6 +299,7 @@ angular.module('hopsWorksApp')
              */
             self.showCreateTrainingDatasetForm = function () {
                 StorageService.store("trainingdataset_operation", "CREATE");
+                StorageService.store(self.projectId + "_trainingDataset_version", 1);
                 StorageService.store(self.projectId + "_fgFeatures", self.fgFeatures);
                 self.goToUrl("newtrainingdataset")
             };
