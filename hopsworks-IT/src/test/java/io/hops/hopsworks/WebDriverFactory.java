@@ -42,14 +42,14 @@ public class WebDriverFactory {
   
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
   private static final String GECKODRIVER_VERSION = "0.26.0";
-  private static final String CHROMEDRIVER_VERSION = "80.0.3987.16";
+  private static final String CHROMEDRIVER_VERSION = "81.0.4044.69";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
     + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
   private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
     + "/chromedriver_";
-  private static final int SUPPORTED_CHROME_VERSION = 80;
+  private static final int SUPPORTED_CHROME_VERSION = 81;
   private static final int SUPPORTED_FIREFOX_VERSION = 60;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
@@ -94,7 +94,7 @@ public class WebDriverFactory {
 
     if (driver == null) {
       throw new IllegalStateException("No web driver found. Check your browser versions. Supported versions are:"
-        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION);
+        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION + " and Chrome >= " + SUPPORTED_CHROME_VERSION);
     }
 
     String url;
@@ -174,6 +174,7 @@ public class WebDriverFactory {
       LOGGER.log(Level.SEVERE, "Failed to get browser version with command: {0}. {1}", new Object[]{processBuilder.
         command(), e});
     }
+    LOGGER.log(Level.INFO, "Installed browser version: {0}", builder.toString());
     return builder.toString();
   }
 

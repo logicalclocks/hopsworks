@@ -148,7 +148,7 @@ public class LoginIT {
     By error = By.id("second-factor-error");
     By errorClose = By.id("second-factor-error-close");
     Helpers
-      .assertEqualsElementText("An argument was not provided or it was malformed.", error, verificationErrors, driver);
+      .assertEqualsElementText("Could not recognize the account type. Report a bug.", error, verificationErrors, driver);
     driver.findElement(LOGIN_INPUT_OTP).clear();
     driver.findElement(errorClose).click();
     driver.findElement(LOGIN_INPUT_OTP).sendKeys("123456");
