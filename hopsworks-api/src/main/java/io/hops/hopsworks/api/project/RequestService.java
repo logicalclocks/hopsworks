@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.message.MessageController;
 import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.Settings;
@@ -101,6 +102,8 @@ public class RequestService {
   @EJB
   private DatasetFacade datasetFacade;
   @EJB
+  private DatasetController datasetCtrl;
+  @EJB
   private DatasetRequestFacade datasetRequest;
   @EJB
   private InodeFacade inodes;
@@ -127,9 +130,8 @@ public class RequestService {
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     Inode inode = inodes.findById(requestDTO.getInodeId());
-    Inode parent = inodes.findParent(inode);
     //requested project
-    Project proj = projectFacade.findByName(parent.getInodePK().getName());
+    Project proj = datasetCtrl.getOwningProject(inode);
     Dataset ds = datasetFacade.findByProjectAndInode(proj, inode);
 
     //requesting project

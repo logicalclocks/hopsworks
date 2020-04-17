@@ -26,13 +26,11 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hive.HiveTableType;
-import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -80,8 +78,6 @@ public class CachedFeaturegroupController {
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
-  private HopsFSProvenanceController fsController;
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
@@ -261,7 +257,7 @@ public class CachedFeaturegroupController {
    */
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
-    throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
+    throws FeaturestoreException, HopsSecurityException, SQLException {
 
     //Prepare DDL statement
     String hiveFeatureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
@@ -270,7 +266,6 @@ public class CachedFeaturegroupController {
     
     //Create Hive Table for Offline Cached Feature Group
     createHiveFeaturegroup(cachedFeaturegroupDTO, featurestore, user, hiveFeatureStr, tableName);
-    fsController.featuregroupAttachXAttrs(user, featurestore.getProject(), cachedFeaturegroupDTO);
   
     //Create MySQL Table for Online Cached Feature Group
     OnlineFeaturegroup onlineFeaturegroup = null;

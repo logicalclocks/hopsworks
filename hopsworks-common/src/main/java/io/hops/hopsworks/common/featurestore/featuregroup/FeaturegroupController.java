@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnC
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -94,6 +95,8 @@ public class FeaturegroupController {
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
   private CachedFeaturegroupFacade cachedFeaturegroupFacade;
+  @EJB
+  private HopsFSProvenanceController fsController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -200,7 +203,12 @@ public class FeaturegroupController {
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
-    return convertFeaturegrouptoDTO(featuregroup);
+    FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
+    
+    if(FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroupDTO.getFeaturegroupType())) {
+      fsController.featuregroupAttachXAttrs(user, featurestore.getProject(), completeFeaturegroupDTO);
+    }
+    return completeFeaturegroupDTO;
   }
   
   /**

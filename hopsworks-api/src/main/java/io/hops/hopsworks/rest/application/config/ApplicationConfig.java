@@ -120,6 +120,9 @@ public class ApplicationConfig extends ResourceConfig {
 
     //provenance
     register(io.hops.hopsworks.api.provenance.ProjectProvenanceResource.class);
+    
+    //search
+    register(io.hops.hopsworks.api.elastic.ElasticResource.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

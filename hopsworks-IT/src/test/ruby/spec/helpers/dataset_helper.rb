@@ -115,6 +115,15 @@ module DatasetHelper
     request_dataset_access(requestingProject, ds[:attributes][:id])
   end
 
+  def request_access_by_dataset(dataset, requesting_project)
+    dataset_inode = get_dataset_inode(dataset)
+    query = "#{ENV['HOPSWORKS_API']}/request/access"
+    payload = {inodeId: dataset_inode[:id], projectId: requesting_project[:id]}
+    pp "#{query}, #{payload}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}", payload
+    expect_status_details(200)
+  end
+
   def find_inode_in_dataset(inode_list, inode_substring_name)
     inode_list.each do |inode|
       if inode["name"].include?(inode_substring_name)
@@ -239,6 +248,13 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}#{datasetType}"
   end
 
+  def share_dataset_checked(project, path, target_project, datasetType)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&type=#{datasetType}"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+    expect_status_details(204)
+  end
+
   def get_dataset_inode(dataset)
     inode = INode.where(partition_id: dataset[:partition_id], parent_id: dataset[:inode_pid], name: dataset[:inode_name])
     expect(inode.length).to eq(1), "inode not found for dataset: #{dataset[:inode_name]}"
@@ -313,6 +329,13 @@ module DatasetHelper
 
   def accept_dataset(project, path, datasetType)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept#{datasetType}"
+  end
+
+  def accept_dataset_checked(project, path, datasetType)
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+    expect_status_details(204)
   end
 
   def reject_dataset(project, path, datasetType)
