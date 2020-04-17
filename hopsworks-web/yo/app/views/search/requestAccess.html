@@ -1,0 +1,49 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+<div>
+    <div growl reference="22" class="pull-right"></div>
+    <form role="form" name="requestForm" novalidate ng-submit="requestForm.$valid && requestAccessCtrl.sendRequest()">
+        <div class="modal-header">
+            <button class="close" ng-click="requestAccessCtrl.close()" data-dismiss="modal" aria-hidden="true"
+                    type="button">&times;</button>
+            <h4 style="margin-top: 0px; margin-bottom: 0px;">Request access</h4>
+        </div>
+        <div class="card-body">
+                <div style="margin: 20px;">
+                    <label class="text-muted control-label">Projects</label>
+                    <ui-select name="project_name" theme="select2" style="min-width: 300px;" title="Choose a project"
+                               ng-model="requestAccessCtrl.request.projectId" required>
+                        <ui-select-match placeholder="Select a project this dataset will be shared with">{{$select.selected.project.name}}</ui-select-match>
+                        <ui-select-choices repeat="item.project.id as item in requestAccessCtrl.projects | filter: $select.search">
+                            <div ng-bind-html="item.project.name | highlight: $select.search"></div>
+                            <small>
+                                Owner: {{item.project.owner.fname}} {{item.project.owner.lname}}
+                            </small>
+                        </ui-select-choices>
+                    </ui-select><br>
+                    <span ng-show="(requestForm.$submitted || requestForm.project_name.$dirty) && requestForm.project_name.$error.required"
+                          class="text-danger ng-hide">
+                      Choose a project the dataset will be shared with.
+                    </span>
+                </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" type="button" ng-click="requestAccessCtrl.close()">Cancel</button>
+            <button class="btn btn-primary" type="submit" >Send request</button>
+        </div>
+    </form>
+</div>

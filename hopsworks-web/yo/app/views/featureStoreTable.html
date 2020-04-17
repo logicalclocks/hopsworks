@@ -1,0 +1,136 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+
+<section class="fs-content"> <!-- ng-class="{'sidenav-open': featureStoreTableCtrl.tgState}" -->
+    <h3 class="text-muted" style="text-align: center;" ng-show="paginationService.pagination.totalItems < 1">
+        No results found for your search: {{searchTerm}}
+    </h3>
+    <div id="tableContent" class="row form-inline" ng-show="paginationService.result.paginatedContent.length > 0">
+        <div class="row form-inline">
+            <div class="col-sm-9 form-group">
+                <label style="color:#555">
+                    Filter:
+                    <input class="form-control" style="margin-left: 10px;" ng-model="fgFilter">
+                    <md-datepicker ng-model="featureStoreTableCtrl.fromDate" md-placeholder="From"></md-datepicker>
+                    <md-datepicker ng-model="featureStoreTableCtrl.toDate" md-placeholder="To"></md-datepicker>
+                </label>
+            </div>
+        </div>
+        <div class="table-responsive" style="overflow: hidden;">
+            <table class="table table-hover" style="margin-bottom: 0px">
+                <thead>
+                    <tr ng-transclude="thead">
+                        <th style="width: 20%" ng-click="sortKey = 'name'; reverse = !reverse">Name
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'name'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span>
+                        </th>
+                        <th style="width: 30%">Description</th>
+                        <th style="width: 15%" ng-click="sortKey = 'parentProjectName'; reverse = !reverse">Project
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'parentProjectName'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span>
+                        </th>
+                        <th style="width: 11%" ng-click="sortKey = 'created'; reverse = !reverse">Created
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'created'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span>
+                        </th>
+                        <th style="width: 5%" ng-click="sortKey = 'version'; reverse = !reverse">Version
+                            <span class="glyphicon sort-icon" ng-show="sortKey === 'version'"
+                                  ng-class="{'glyphicon-chevron-up':!reverse,'glyphicon-chevron-down':reverse}"></span>
+                        </th>
+                        <th style="width: 13%">Matched</th>
+                        <th style="width: 6%">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="table-hover">
+                    <tr dir-paginate="data in paginationService.result.paginatedContent | orderBy:sortKey:reverse | filter:fgFilter:false | dateRangeFilter:featureStoreTableCtrl.created:featureStoreTableCtrl.fromDate:featureStoreTableCtrl.toDate | itemsPerPage:paginationService.pagination.itemsPerPage"
+                        pagination-id="name"
+                        current-page="paginationService.pagination.currentPage"
+                        total-items="paginationService.pagination.totalItems"
+                        ng-click="featureStoreTableCtrl.selected = data.elasticId; featureStoreTableCtrl.toggleTgstate()"
+                        ng-class="{'active': featureStoreTableCtrl.selected === data.elasticId}">
+                        <td class="hw-ellipsis" style="max-width: 0;">
+                            <span ng-bind-html="data.name | highlightText:data.highlights.name:searchTerm"></span>
+                        </td>
+                        <td class="hw-ellipsis" style="max-width: 0;">
+                            <span ng-bind-html="data.description | highlightText:data.highlights.description:searchTerm || '-'"></span>
+                        </td>
+                        <td class="hw-ellipsis" style="max-width: 0;">{{data.parentProjectName}}</td>
+                        <td>{{data.created | date:'medium'}}</td>
+                        <td>{{data.version}}</td>
+                        <td class="hw-ellipsis" style="max-width: 0;">
+                            <span ng-if="featureStoreTableCtrl.showMatch(data.highlights.name)" uib-tooltip="Name">Name,
+                            </span>
+                            <span ng-if="featureStoreTableCtrl.showMatch(data.highlights.description)"
+                                  uib-tooltip="Description">Description, </span>
+                            <span ng-if="featureStoreTableCtrl.showMatch(data.highlights.features)"
+                                  uib-tooltip-html="'Features: {{featureStoreTableCtrl.showTitle(data.highlights.features)}}'">
+                                Feature<span class="badge search-result-badge">{{data.highlights.features.length}}</span>, </span>
+                            <span ng-if="featureStoreTableCtrl.showMatch(data.highlights.tags)"
+                                  uib-tooltip-html="'Tags: {{featureStoreTableCtrl.showTitle(data.highlights.tags)}}'">
+                                Tag<span class="badge search-result-badge">{{data.highlights.tags.length}}</span>,
+                            </span>
+                            <span ng-if="featureStoreTableCtrl.showMatch(data.highlights.otherXattrs)"
+                                  uib-tooltip-html="'Other X atteributes: {{featureStoreTableCtrl.showTitle(data.highlights.otherXattrs)}}'">
+                                OtherXattr<span class="badge search-result-badge">{{data.highlights.otherXattrs.length}}</span></span>
+                        </td>
+                        <td>
+                            <button class="btn btn-default fa fa-external-link" title="Go to"
+                                    ng-if="data.accessProjects.entry.length === 1"
+                                    ng-click="featureStoreTableCtrl.goto(data.accessProjects.entry[0].key, data.featurestoreId, data.name, data.version)"></button>
+                            <span id="fs-search-dropdown-{{$index}}"
+                                  class="dropdown" dropdown-fix-overflow-hidden
+                                  ng-if="data.accessProjects.entry.length > 1">
+                                <button class="btn btn-default dropdown-toggle"
+                                        title="Select a project to go to"
+                                        data-toggle="dropdown">
+                                    <i class="fa fa-external-link" aria-hidden="true"
+                                       style="margin-right: 1px; margin-left: -4px"></i>
+                                    <i class="fa fa-ellipsis-v" aria-hidden="true"
+                                       style="margin-right: -4px; margin-left: 1px"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li ng-repeat="project in data.accessProjects.entry"
+                                        ng-click="featureStoreTableCtrl.goto(project.key, data.featurestoreId, data.name, data.version)">
+                                        <a>{{project.value}}</a></li>
+                                </ul>
+                            </span>
+                            <button class="btn btn-default fa fa-paper-plane"
+                                    title="Request access"
+                                    ng-if="data.accessProjects.entry.length === 0"
+                                    ng-click="detailFn({inodeId: data.datasetIId})">
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <dir-pagination-controls pagination-id="name"
+                                     max-size="10"
+                                     direction-links="true"
+                                     boundary-links="true"
+                                     on-page-change="featureStoreTableCtrl.pageChange(newPageNumber)"
+                                     class="pull-right no-margin-bottom">
+            </dir-pagination-controls>
+        </div>
+<!--        <div id="search-sidenav" class="fs-sidenav" ng-class="{'open': featureStoreTableCtrl.tgState}">-->
+<!--            <div class="ibox float-e-margins" style="margin-top: 0px; margin-bottom: 0px;">-->
+<!--                <div ng-transclude="sidenav">-->
+<!--                    <p>No content.</p>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+    </div>
+</section>

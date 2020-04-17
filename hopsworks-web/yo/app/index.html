@@ -97,6 +97,7 @@
     <link rel="stylesheet" href="styles/filemgr/main.css">
     <link rel="stylesheet" href="styles/featurestore.css">
     <link rel="stylesheet" href="styles/jupyter.css">
+    <link rel="stylesheet" href="styles/hwSearch.css">
     <!-- endbuild -->
 </head>
 <body ng-app="hopsWorksApp">
@@ -183,7 +184,6 @@
     <script src="scripts/app.js"></script>
     <script src="scripts/js/util.js"></script>
     <script src="scripts/js/countries.js"></script>
-    <script src="scripts/js/hamburger.js"></script>
     <script src="scripts/js/ace/ace.js"></script>
     <script src="scripts/js/ace/mode-json.js"></script>
 
@@ -197,6 +197,9 @@
     <script src="scripts/directives/showHidePassword.js"></script>
     <script src="scripts/directives/fileViewer.js"></script>
     <script src="scripts/directives/datasetMenu.js"></script>
+    <script src="scripts/directives/hwSearch.js"></script>
+    <script src="scripts/directives/featureStoreTable.js"></script>
+    <script src="scripts/directives/dropdownFixOverflowHidden.js"></script>
 
     <script src="scripts/controllers/dataSetCreatorCtrl.js"></script>
     <script src="scripts/controllers/datasetsCtrl.js"></script>
@@ -299,6 +302,9 @@
     <script src="scripts/controllers/dagComposerModalsCtrl.js"></script>
     <script src="scripts/controllers/provenanceCtrl.js"></script>
     <script src="scripts/controllers/featureListCtrl.js"></script>
+    <script src="scripts/controllers/hwSearchCtrl.js"></script>
+    <script src="scripts/controllers/featureStoreTableCtrl.js"></script>
+    <script src="scripts/controllers/requestAccessCtrl.js"></script>
 
     <!-- Services -->
     <script src="scripts/services/AuthInterceptorService.js"></script>
@@ -350,6 +356,7 @@
     <script src="scripts/services/ApiKeyService.js"></script>
     <script src="scripts/services/DataValidationService.js"></script>
     <script src="scripts/services/TemplateService.js"></script>
+    <script src="scripts/services/PaginationService.js"></script>
     <!-- Providers -->
     <script src="scripts/providers/filemgr/config.js"></script>
     <!-- Entities -->

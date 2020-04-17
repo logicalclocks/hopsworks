@@ -38,16 +38,23 @@
   -->
 
 <aside class="offsidebar">
+  <a id="show-sidebar" class="btn btn-sm btn-default"  title="Show"
+     ng-click="projectCtrl.isClosed = !projectCtrl.isClosed">
+    <i class="fa fa-2x fa-bars"></i>
+  </a>
   <nav class="navbar navbar-inverse navbar-fixed-top" id="sidebar-wrapper" role="navigation" style="margin-top:50px;"  ng-cloak>
 
     <ul class="nav sidebar-nav" ng-cloak ng-controller="ClusterUtilisationCtrl as clusterUtilCtrl">
 
       <li style="background: #1a1a1a;">
-        <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="text-center" id="project_nav_title"
-           title="{{projectCtrl.currentProject.projectName.length > 17 ? projectCtrl.currentProject.projectName:''}}">
-          {{ projectCtrl.currentProject.projectName | limitTo: 17 }}{{projectCtrl.currentProject.projectName.length > 17
-          ? '...' : ''}}
+        <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="project-name" id="project_nav_title"
+           title="{{projectCtrl.currentProject.projectName.length > 14 ? projectCtrl.currentProject.projectName:''}}">
+          {{projectCtrl.currentProject.projectName}}
         </a>
+        <div id="close-sidebar" title="Hide"
+             ng-click="projectCtrl.isClosed = !projectCtrl.isClosed">
+          <i class="glyphicon glyphicon-remove" style="font-size: 20px"></i>
+        </div>
       </li>
 
       <li ng-click="projectCtrl.goToJupyter()" ng-show="projectCtrl.showJupyter()">

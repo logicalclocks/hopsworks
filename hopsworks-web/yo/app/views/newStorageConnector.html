@@ -18,7 +18,7 @@
     <div ng-include="'nav.html'"></div>
 
 
-    <div id="wrapper" class="toggled" ng-controller="newStorageConnectorCtrl as newStorageConnectorCtrl">
+    <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="newStorageConnectorCtrl as newStorageConnectorCtrl">
         <div class="overlay"></div>
 
         <div ng-include="'navProject.html'"></div>

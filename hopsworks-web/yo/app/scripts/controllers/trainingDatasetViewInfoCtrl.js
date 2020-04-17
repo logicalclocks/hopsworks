@@ -111,6 +111,33 @@ angular.module('hopsWorksApp')
                 self.fetchSize()
             };
 
+            self.viewSelected = function (projectId, projectName, featurestore, settings, trainingDatasets, toggle) {
+                if(toggle) {
+                    self.toggle(trainingDatasets.versionToGroups[trainingDatasets.activeVersion]);
+                }
+
+                self.selectedTrainingDataset = trainingDatasets.versionToGroups[trainingDatasets.activeVersion];
+
+                self.projectId = projectId;
+                self.projectName = projectName;
+                self.featurestore = featurestore;
+                self.trainingDatasets = trainingDatasets;
+                self.activeVersion = trainingDatasets.activeVersion;
+                self.settings = settings;
+
+                self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType;
+                self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType;
+
+                self.pythonCode = self.getPythonCode();
+                self.scalaCode = self.getScalaCode();
+                self.fetchSize()
+            };
+
+            $scope.$on('trainingDatasetSelected', function (event, args) {
+                self.viewSelected(args.projectId, args.projectName, args.featurestore, args.settings, args.trainingDatasets, args.toggle);
+            });
+
+
             /**
              * Convert bytes into bytes + suitable unit (e.g KB, MB, GB etc)
              *

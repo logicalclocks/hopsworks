@@ -421,6 +421,30 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            requestAccess: function (size, response, projects) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/search/requestAccess.html',
+                    controller: 'RequestAccessCtrl as requestAccessCtrl',
+                    size: size,
+                    resolve: {
+                        auth: ['$q', 'AuthGuardService',
+                            function ($q, AuthGuardService) {
+                                return AuthGuardService.guardSession($q).then(
+                                    function (success) {
+                                    }, function (error) {
+                                        return $q.reject(error)
+                                    });
+                            }],
+                        response: function () {
+                            return response;
+                        },
+                        projects: function () {
+                            return projects;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             viewPublicDataset: function (size, projects, datasetDto) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/viewPublicDataset.html',

@@ -18,8 +18,8 @@
  * Controller for the Feature-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('featureViewInfoCtrl', [
-        function () {
+    .controller('featureViewInfoCtrl', ['$scope',
+        function ($scope) {
 
             /**
              * Initialize controller state
@@ -96,5 +96,35 @@ angular.module('hopsWorksApp')
                 featuregroupViewInfoCtrl.view(projectId, projectName, featurestore, featuregroups, settings, false)
 
             }
+
+            self.viewSelected = function (projectId, projectName, featurestore, feature, settings) {
+                self.toggle(feature);
+
+                self.selectedFeature = feature;
+                self.settings = settings;
+
+                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
+                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
+
+                self.pythonCode = self.getPythonCode(self.selectedFeature);
+                self.scalaCode = self.getScalaCode(self.selectedFeature);
+
+                //build featuregroups object
+                var featuregroups = {};
+                featuregroups.versionToGroups = {};
+                featuregroups.activeVersion = feature.featuregroup.version;
+                featuregroups.versionToGroups[feature.featuregroup.version] = feature.featuregroup;
+
+                $scope.$broadcast('featuregroupSelected', { projectId: projectId,
+                    projectName: projectName,
+                    featurestore: featurestore,
+                    featuregroups: featuregroups,
+                    settings: settings,
+                    toggle: false });
+            };
+
+            $scope.$on('featureSelected', function (event, args) {
+                self.viewSelected(args.projectId, args.projectName, args.featurestore, args.feature, args.settings);
+            });
         }]);
 

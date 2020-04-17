@@ -140,7 +140,6 @@ angular.module('hopsWorksApp')
             };
 
             $scope.$on("$destroy", function () {
-              console.log("Destroy getUserContentsInterval.");
               if(getUserContentsInterval) {
                 $interval.cancel(getUserContentsInterval);
               }

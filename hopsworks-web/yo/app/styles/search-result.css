@@ -37,18 +37,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+.container-fluid.main-search {
+    margin: 55px 0px 15px 15px;
+}
+
+.container-fluid.project-search {
+    margin: 0px 15px 15px 15px;
+}
+
 .search-result {
   width: 100%;
 }
 
-.search-result-header > div > h3 {
-  color: #8A8A8A;
-  font-weight: 500;
-  margin: 1rem 0;
+.search-result-tab {
+    background: #fff !important;
+    margin-top: -15px;
 }
+
+.search-result-h3 {
+    color: #8A8A8A;
+    font-weight: 500;
+    margin: 1rem 0;
+}
+
 .search-result-header {
   border-bottom: 1px solid #e5e5e5;
 }
+
 .search-result-filter {
   background: #FFFFFF;
   width: 100%;
@@ -121,8 +136,11 @@
 
 .search-result-body {
   margin: 2rem 0;
-  height:650px;
   overflow:auto;
+}
+
+.md-body-1.result-body {
+  margin-top: 5px;
 }
 
 .filter-menu-uppercase {
@@ -277,4 +295,20 @@
 }
 .icon-stack-3x {
   font-size: 2em;
+}
+
+#tableContent {
+    min-height: calc(100vh - 12vh);
+}
+
+#fs-search-dropdown.dropdown.open {
+   z-index: 1;
+}
+
+#fs-search-dropdown.dropdown {
+    z-index: 0;
+}
+
+.no-margin-bottom .pagination {
+    margin-bottom: 0px !important;
 }

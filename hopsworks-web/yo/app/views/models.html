@@ -16,15 +16,16 @@
 <div ng-controller="MainCtrl as mainCtrl">
     <div ng-controller="ProjectCtrl as projectCtrl">
         <div ng-include="'nav.html'"></div>
-        <div id="wrapper" class="toggled" ng-controller="ModelCtrl as modelCtrl">
+        <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="ModelCtrl as modelCtrl">
             <div class="overlay"></div>
             <div ng-include="'navProject.html'"></div>
             <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
                 <div id="projectSearchResults">
-                    <div ng-include="'views/search.html'"></div>
+                    <div ng-include="'views/search/search.html'"></div>
                 </div>
             </div>
             <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
+                <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
                 <div class="row">
                     <div class="col-sm-9 col-md-9 col-lg-9 form-inline">
                         <label>Search

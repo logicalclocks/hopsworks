@@ -17,21 +17,17 @@
 
 'use strict';
 
-angular.module('hopsWorksApp').directive("featureList", function() {
+angular.module('hopsWorksApp').directive("hwSearch", function() {
     return {
         restrict: 'E',
         scope: {
-            projectId: "=",
-            projectName: "=",
-            featurestore: "=",
-            features: "=",
-            addButton: "=",
-            settings: '=',
-            addFeatureToBasket: '=',
-            featureInBasket: '=',
-            selectedFeature: '='
+            scopes: "=",
+            searchTerm: '=',
+            projectView: '=',
+            searching: '=',
+            clickFn: '&'
         },
-        templateUrl: 'views/featureList.html',
-        controller: 'FeatureListCtrl as featureListCtrl'
+        templateUrl: 'views/hwSearch.html',
+        controller: 'HwSearchCtrl as hwSearchCtrl'
     }
 });
