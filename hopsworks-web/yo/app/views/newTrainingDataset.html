@@ -18,7 +18,7 @@
     <div ng-include="'nav.html'"></div>
 
 
-    <div id="wrapper" class="toggled" ng-controller="newTrainingDatasetCtrl as newTrainingDatasetCtrl">
+    <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="newTrainingDatasetCtrl as newTrainingDatasetCtrl">
         <div class="overlay"></div>
 
         <div ng-include="'navProject.html'"></div>

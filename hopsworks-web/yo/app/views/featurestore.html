@@ -16,24 +16,25 @@
 
 <div ng-controller="MainCtrl as mainCtrl">
     <div ng-include="'nav.html'"></div>
-    <div id="wrapper" class="toggled" ng-controller="featurestoreCtrl as featurestoreCtrl">
+    <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="featurestoreCtrl as featurestoreCtrl">
         <div class="overlay"></div>
         <div ng-include="'navProject.html'"></div>
         <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
             <div id="projectSearchResults">
-                <div ng-include="'views/search.html'"></div>
+                <div ng-include="'views/search/search.html'"></div>
             </div>
         </div>
         <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
+            <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
                     <div class="loader-in-wrap"></div>
                     {{featurestoreCtrl.loadingText}}
                 </div>
             </div>
-            <span style="float: right;margin-top: 7px;" class="glyphicon glyphicon-refresh fa-2x"
-                  ng-click="featurestoreCtrl.refresh()"> </span>
-            <uib-tabset active="featurestoreSelectedTab">
+            <span style="float: right;" class="glyphicon glyphicon-refresh fa-2x"
+                  ng-click="featurestoreCtrl.refresh()"></span>
+            <uib-tabset active="featurestoreCtrl.featurestoreSelectedTab">
                 <uib-tab index="0" heading="Feature Groups" uib-tooltip="A Feature Group is a Logical Grouping of Features." class="fs-tab" id="featuregroupsTab">
 
                     <section ng-controller="featuregroupViewInfoCtrl as featuregroupViewInfoCtrl" class="fs-content" ng-class="{'sidenav-open': featuregroupViewInfoCtrl.tgState}">
@@ -344,7 +345,8 @@
                                   project-name="featurestoreCtrl.projectName"
                                   features="featurestoreCtrl.fgFeatures"
                                   settings="featurestoreCtrl.settings"
-                                  featurestore="featurestoreCtrl.featurestore"></feature-list>
+                                  featurestore="featurestoreCtrl.featurestore"
+                                  selected-feature="featurestoreCtrl.selectedFeature"></feature-list>
                 </uib-tab>
                 <uib-tab index="3" heading="Feature Store Details" class="fs-tab"
                          uib-tooltip="View Details of the Feature Store."

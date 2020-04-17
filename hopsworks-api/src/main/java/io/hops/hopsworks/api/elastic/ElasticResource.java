@@ -21,6 +21,8 @@ import io.hops.hopsworks.api.elastic.featurestore.ElasticFeaturestoreDTO;
 import io.hops.hopsworks.api.elastic.featurestore.ElasticFeaturestoreRequest;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.audit.logger.LogLevel;
+import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.elastic.FeaturestoreDocType;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -47,6 +49,7 @@ import javax.ws.rs.core.SecurityContext;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@Logged
 @Api(value = "Elastic Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -59,10 +62,11 @@ public class ElasticResource {
   private Integer projectId;
   private String projectName;
   
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.projectId = projectId;
   }
-  
+  @Logged(logLevel = LogLevel.OFF)
   public void setProjectName(String projectName) {
     this.projectName = projectName;
   }

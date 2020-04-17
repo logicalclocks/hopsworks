@@ -42,14 +42,14 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled" ng-controller="NewJobCtrl as newJobCtrl">
+  <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="NewJobCtrl as newJobCtrl">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
 
     <section>
       <div class="content-wrapper">
-        <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
+        <h3 id="projectBread"> {{ projectCtrl.currentProject.projectName}} / New job</h3>
 
       <div class="row">
         <div class="panel-header col-md-9">

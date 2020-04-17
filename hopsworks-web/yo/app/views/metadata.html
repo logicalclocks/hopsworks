@@ -43,31 +43,20 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled">
+  <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
 
     <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
       <div id="projectSearchResults">
-        <div ng-include="'views/search.html'"></div>
+        <div ng-include="'views/search/search.html'"></div>
       </div>
     </div>
     <div ng-if="!mainCtrl.showSearchPage" ng-controller="DatasetsCtrl as datasetsCtrl">
 
-      <div ng-controller="MetadataCtrl as metadataCtrl">
-
-
-        <md-toolbar class="md-theme-light"
-                    style="background-color: #f1f1f1;color: gray; height: 39px; min-height: 39px;">
-
-          <div class="md-toolbar-tools">
-            <h2 style="margin:0;">
-              <span>Metadata designer</span>
-            </h2>
-            <span flex></span>
-          </div>
-        </md-toolbar>
+      <div class="content-wrapper" ng-controller="MetadataCtrl as metadataCtrl" style="padding: unset">
+        <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
 
         <md-content layout-padding style="overflow: hidden; padding: 15px;
                     height: 95%; overflow-y: auto;">

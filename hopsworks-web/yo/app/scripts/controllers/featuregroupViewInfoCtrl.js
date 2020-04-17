@@ -52,6 +52,8 @@ angular.module('hopsWorksApp')
 
             self.customMetadata = null;
 
+            self.queryFeaturegroup = $location.search()['featuregroup'];
+
             /**
              * Get the API code to retrieve the featuregroup with the Python API
              */
@@ -247,6 +249,10 @@ angular.module('hopsWorksApp')
                 }
 
             };
+
+            $scope.$on('featuregroupSelected', function (event, args) {
+                self.view(args.projectId, args.projectName, args.featurestore, args.featuregroups, args.settings, args.toggle);
+            });
 
             /**
              * Helper function for redirecting to another project page

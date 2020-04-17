@@ -41,7 +41,7 @@
   <div ng-include="'nav.html'"></div>
   <div ng-controller="KafkaCtrl as kafkaCtrl">
 
-  <div id="wrapper" class="toggled">
+  <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
@@ -49,11 +49,11 @@
     <section>
       <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
         <div id="projectSearchResults">
-          <div ng-include="'views/search.html'"></div>
+          <div ng-include="'views/search/search.html'"></div>
         </div>
       </div>
       <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
-        <!--<h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Kafka</h3>-->
+        <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
         <div growl reference="10" class="pull-right" ></div>
 
         <div>

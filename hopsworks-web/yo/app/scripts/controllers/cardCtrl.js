@@ -46,7 +46,6 @@ angular.module('hopsWorksApp')
             self.detail = [];
             var init = function (content) {
               if (content.details !== undefined) {
-                console.log("No need to get detail: ", content);
                 return;
               }
               if (content.map !== undefined) {
@@ -113,7 +112,6 @@ angular.module('hopsWorksApp')
                 });
               }
               content.details = self.detail;
-              console.log("Controller init: ", content);
             };
 
             $scope.$watch("content", function (newValue, oldValue) {

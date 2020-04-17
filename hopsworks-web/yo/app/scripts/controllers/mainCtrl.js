@@ -43,24 +43,29 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('MainCtrl', ['$interval', '$cookies', '$location', '$scope', '$rootScope',
+        .controller('MainCtrl', ['$q', '$interval', '$cookies', '$location', '$scope', '$rootScope',
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          'AirflowService',
-          function ($interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
+          'AirflowService', 'PaginationService',
+          function ($q, $interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService,
-                  AirflowService) {
-            const MIN_SEARCH_TERM_LEN = 2;
+                  AirflowService, PaginationService) {
             var self = this;
 
-
+            const MAX_IN_MEMORY_ITEMS = 1000;
             self.ui = "/hopsworks-api/airflow/login?q=username=";
 
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
+
+              const searchScopes = {
+                  "datasetCentric": ['This dataset'],
+                  "projectCentric": ['This project', 'Datasets', 'Feature store'],
+                  "global": ['Everything', 'Projects', 'Datasets', 'Feature store']
+              };
 
             if (!angular.isUndefined($routeParams.datasetName)) {
               self.searchType = "datasetCentric";
@@ -69,8 +74,23 @@ angular.module('hopsWorksApp')
             } else {
               self.searchType = "global";
             }
+            self.searchScopes = searchScopes[self.searchType];
+            self.searchScope = self.searchScopes[0];
 
-            var checkeIsAdmin = function () {
+            self.searchView = function (page) {
+                switch (page) {
+                    case "featureGroupTab":
+                    case "trainingDatasetTab":
+                    case "featureTab":
+                        return self.searchScope === 'Everything' || self.searchScope === 'This project' || self.searchScope === 'Feature store';
+                    case "othersTab":
+                        return self.searchScope === 'Everything' || self.searchScope === 'This project';
+                    case "others":
+                        return self.searchScope === 'Projects' || self.searchScope === 'Datasets' || self.searchScope === 'This dataset';
+                }
+            };
+
+              var checkeIsAdmin = function () {
               var isAdmin = sessionStorage.getItem("isAdmin");
               if (isAdmin != 'true' && isAdmin != 'false') {
                 AuthService.isAdmin().then(
@@ -183,8 +203,7 @@ angular.module('hopsWorksApp')
             self.openMessageModal = function (selected) {
               if (selected !== undefined) {
                 MessageService.markAsRead(selected.id);
-              }
-              ;
+              };
               ModalService.messages('lg', selected)
                       .then(function (success) {
                         growl.success(success.data.successMessage,
@@ -194,156 +213,192 @@ angular.module('hopsWorksApp')
             };
 
             self.searchTerm = "";
+            self.searchFor = "";
             self.searching = false;
             self.globalClusterBoundary = false;
-            self.searchReturned = "";
-            self.searchReturnedPublicSearch = "";
-            self.searchResult = [];
+
             self.searchResultPublicSearch = [];
-            self.resultPages = 0;
             self.resultPagesPublicSearch = 0;
-            self.resultItems = 0;
             self.resultItemsPublicSearch = 0;
-            self.currentPage = 1;
-            self.pageSize = 9;
+            self.selectedIndex = 0;
+            const fsResults = {featuregroups: [], featuregroupsTotal: 0,
+                               trainingdatasets: [], trainingdatasetsTotal: 0,
+                               features: [], featuresTotal: 0};
 
-            self.hitEnter = function (event) {
-              var code = event.which || event.keyCode || event.charCode;
-              if (angular.equals(code, 13) && !self.searching) {
-                self.searchResult = [];
-                self.search();
-              } else if (angular.equals(code, 27)) {
-                self.showSearchPage = false;
-                self.clearSearch();
-              }
+            var docTypeToResponseObject = function (docType) {
+                return docType.toLowerCase() + 's';
             };
 
-            self.keyTyped = function (evt) {
-              if (self.searchTerm.length >= MIN_SEARCH_TERM_LEN || (self.searchResult.length > 0 && self.searchTerm.length > 0)) {
-                self.searchReturned = "Searching for <b>" + self.searchTerm + "<b> ...";
-                self.searchResult = [];
-                self.search();
-              } else {
-                self.showSearchPage = false;
-                self.searchResult = [];
-                self.searchReturned = "";
-                self.searchResultPublicSearch = [];
-                self.searchReturnedPublicSearch = "";
+            var getFromServer = function (docType, paginationService) {
+              var search;
+              if (self.searchType === "global") {
+                  if (typeof docType !== 'undefined') {
+                      search = ElasticService.globalfeaturestore(self.searchFor, docType,
+                          paginationService.getLimit(), paginationService.getServerOffset());
+                  } else {
+                      search = ElasticService.globalSearch(self.searchFor);
+                  }
+              } else if (self.searchType === "projectCentric") {
+                  if (typeof docType !== 'undefined') {
+                      search = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchFor,
+                          docType, paginationService.getLimit(), paginationService.getServerOffset());
+                  } else {
+                      search = ElasticService.projectSearch($routeParams.projectID, self.searchFor);
+                  }
+              } else if (self.searchType === "datasetCentric") {
+                  search = ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchFor);
               }
+
+              search.then( function(response) {
+                  var data = response.data;
+                  if (typeof docType !== 'undefined') {
+                      data = data[docTypeToResponseObject(docType)];
+                  }
+                  paginationService.setContent(data);
+              }, function (error) {
+                  var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+                  growl.error(errorMsg, {title: 'Error', ttl: 5000});
+              });
             };
+
+            var searchResultGetFromServer = function (paginationService) {
+              //currently not supported for project and dataset search
+              //getFromServer('', paginationService);
+              throw "Unsupported Operation";
+            };
+
+            var featuregroupsSearchResultGetFromServer = function (paginationService) {
+              getFromServer('FEATUREGROUP', paginationService);
+            };
+
+            var trainingdatasetsSearchResultGetFromServer = function (paginationService) {
+              getFromServer('TRAININGDATASET', paginationService);
+            };
+
+            var featureSearchResultGetFromServer = function (start, paginationService) {
+              getFromServer('FEATURE', paginationService);
+            };
+
+            self.searchResult = new PaginationService([], searchResultGetFromServer);
+            self.featuregroupsSearchResult =
+                new PaginationService([], featuregroupsSearchResultGetFromServer, 0, 20, 1, MAX_IN_MEMORY_ITEMS);
+            self.trainingdatasetsSearchResult =
+                new PaginationService([], trainingdatasetsSearchResultGetFromServer, 0, 20, 1, MAX_IN_MEMORY_ITEMS);
+            self.featureSearchResult =
+                new PaginationService([], featureSearchResultGetFromServer, 0, 20, 1, undefined);//get all until
+              // features total is fixed
 
             self.clearSearch = function () {
               self.showSearchPage = false;
-              self.searchResult = [];
-              self.searchReturned = "";
+              self.searchResult = new PaginationService([], searchResultGetFromServer);
               self.searchTerm = "";
             };
 
-            self.search = function () {
-              self.showSearchPage = true;
-              self.currentPage = 1;
-              self.pageSize = 9;
-              self.searchResult = [];
-
-              if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
-                return;
-              }
-              self.searching = true;
-              if (self.searchType === "global" && $rootScope.isDelaEnabled) {
-                var global_data;
-                var searchHits;
-                //triggering a global search
-                self.searchResult = [];
-                ElasticService.globalSearch(self.searchTerm)
-                        .then(function (response) {
-                          searchHits = response.data;
-                          if (searchHits.length > 0) {
-                            self.searchResult = searchHits;
-                          } else {
-                            self.searchResult = [];
-                          }
-                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;
-                          DelaService.search(self.searchTerm).then(function (response2) {
-                            global_data = response2.data;
-                            if (global_data.length > 0) {
-                              self.searchResult = concatUnique(searchHits, global_data);
-                              self.searching = false;
-                            } else {
-                              self.searching = false;
-                            }
-                            self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                            self.resultItems = self.searchResult.length;
-                          });
-                        }, function (error) {
-                          self.searching = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-              } else if (self.searchType === "global" && !$rootScope.isDelaEnabled) {
-                var searchHits;
-                //triggering a global search
-                self.searchResult = [];
-                ElasticService.globalSearch(self.searchTerm)
-                        .then(function (response) {
-                          searchHits = response.data;
-                          if (searchHits.length > 0) {
-                            self.searchResult = searchHits;
-                          } else {
-                            self.searchResult = [];
-                          }
-                          self.searching = false;
-                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;
-                        }, function (error) {
-                          self.searching = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-              } else if (self.searchType === "projectCentric") {
-                ElasticService.projectSearch($routeParams.projectID, self.searchTerm)
-                        .then(function (response) {
-                          self.searching = false;
-                          var searchHits = response.data;
-                          if (searchHits.length > 0) {
-                            self.searchResult = searchHits;
-                          } else {
-                            self.searchResult = [];
-                          }
-                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;
-                        }, function (error) {
-                          self.searching = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-              } else if (self.searchType === "datasetCentric") {
-                ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm)
-                        .then(function (response) {
-                          self.searching = false;
-                          var searchHits = response.data;
-                          if (searchHits.length > 0) {
-                            self.searchResult = searchHits;
-                          } else {
-                            self.searchResult = [];
-                          }
-                          self.resultPages = Math.ceil(self.searchResult.length / self.pageSize);
-                          self.resultItems = self.searchResult.length;
-                        }, function (error) {
-                          self.searching = false;
-                          growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                        });
-              }
-              datePicker();// this will load the function so that the date picker can call it.
+            var sendSearchRequest = function(searches, deferred) {
+                var searchHits = {fsResults: fsResults, otherResults: []};
+                $q.all(searches).then( function(response) {
+                    searchHits.otherResults = response.length > 0? response[0].data : [];
+                    searchHits.fsResults = response.length > 1? response[1].data : fsResults;
+                    if (response.length > 2) {
+                        searchHits.otherResults.push(response[2].data);//dela results might take longer so maybe
+                        // should be moved out
+                    }
+                    deferred.resolve(searchHits);
+                }, function (error) {
+                    var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+                    deferred.reject(errorMsg);
+                });
             };
 
-            var concatUnique = function (a, array2) {
-              a = a.concat(array2);
-              for (var i = 0; i < a.length; ++i) {
-                for (var j = i + 1; j < a.length; ++j) {
-                  if (!(a[i].publicId === undefined || a[i].publicId === null) &&
-                          a[i].publicId === a[j].publicId)
-                    a.splice(j--, 1);
+            var globalSearch = function(deferred) {
+                var searches = [];
+                if (self.searchScope === self.searchScopes[0]) {
+                    searches[0] = ElasticService.globalSearch(self.searchTerm);
+                    searches[1] = ElasticService.globalfeaturestore(self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
+                } else if (self.searchScope === self.searchScopes[1]) {
+                    searches[0] = ElasticService.globalSearch(self.searchTerm);//project
+                    searches[1] = {data: fsResults};
+                } else if (self.searchScope === self.searchScopes[2]) {
+                    searches[0] = ElasticService.globalSearch(self.searchTerm);//dataset
+                    searches[1] = {data: fsResults};
+                } else if (self.searchScope === self.searchScopes[3]) {
+                    searches[0] = {data: []};
+                    searches[1] = ElasticService.globalfeaturestore(self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
                 }
+                if ($rootScope.isDelaEnabled) {
+                    searches[2] = DelaService.search(self.searchTerm);
+                }
+                sendSearchRequest(searches, deferred);
+            };
+
+            var projectCentricSearch = function(deferred) {
+                var searches = [];
+                if (self.searchScope === self.searchScopes[0]) {
+                    searches[0] = ElasticService.projectSearch($routeParams.projectID, self.searchTerm);
+                    searches[1] = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
+                } else if (self.searchScope === self.searchScopes[1]) {
+                    searches[0] = ElasticService.projectSearch($routeParams.projectID, self.searchTerm);
+                } else if (self.searchScope === self.searchScopes[2]) {
+                    searches[0] = {data: []};
+                    searches[1] = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
+                }
+                sendSearchRequest(searches, deferred);
+            };
+
+            var datasetCentric = function(deferred) {
+                var searches = [];
+                searches[0] = ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm);
+                sendSearchRequest(searches, deferred);
+            };
+
+            var search = function () {
+                const deferred = $q.defer();
+                self.showSearchPage = true;
+                self.searchResult = new PaginationService();
+                self.searchFor = self.searchTerm;//save it for search result pagination
+                if (self.searchType === "global") {
+                    globalSearch(deferred);
+                } else if (self.searchType === "projectCentric") {
+                    projectCentricSearch(deferred);
+                } else if (self.searchType === "datasetCentric") {
+                    datasetCentric(deferred);
+                }
+                return deferred.promise;
+            };
+
+            self.searchInScope = function (scope) {
+              self.searchScope = scope;
+              if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
+                  return;
               }
-              return a;
+              self.searching = true;
+              search().then(function (results) {
+                  self.searching = false;
+                  self.searchResult.setContent(results.otherResults);
+                  self.searchResult.setTotal(results.otherResults.length);
+                  self.featuregroupsSearchResult.setContent(results.fsResults.featuregroups);
+                  self.featuregroupsSearchResult.setTotal(results.fsResults.featuregroupsTotal);
+                  self.trainingdatasetsSearchResult.setContent(results.fsResults.trainingdatasets);
+                  self.trainingdatasetsSearchResult.setTotal(results.fsResults.trainingdatasetsTotal);
+                  self.featureSearchResult.setContent(results.fsResults.features);
+                  self.featureSearchResult.setTotal(results.fsResults.featuresTotal);
+
+                  if (self.featuregroupsSearchResult.result.content.length > 0) {
+                      self.selectedIndex = 0;
+                  } else if (self.trainingdatasetsSearchResult.result.content.length > 0) {
+                      self.selectedIndex = 1;
+                  } else if (self.featureSearchResult.result.content.length > 0) {
+                      self.selectedIndex = 2;
+                  } else if (self.searchResult.result.content.length > 0) {
+                      self.selectedIndex = 3;
+                  }
+                  self.searchTerm = '';
+              }, function(error) {
+                  self.searching = false;
+                  growl.error(error, {title: 'Error', ttl: 5000});
+                  self.searchTerm = '';
+              });
+              datePicker();// this will load the function so that the date picker can call it.
             };
 
             var datePicker = function () {
@@ -398,21 +453,21 @@ angular.module('hopsWorksApp')
 
             self.viewType = function (listView) {
               if (listView) {
-                self.pageSize = 4;
+                  self.searchResult.pagination.itemsPerPage = 4;
               } else {
-                self.pageSize = 9;
+                  self.searchResult.pagination.itemsPerPage = 9;
               }
             };
 
             self.incrementPage = function () {
-              self.pageSize = self.pageSize + 1;
+                self.searchResult.pagination.itemsPerPage++;
             };
 
             self.decrementPage = function () {
-              if (self.pageSize < 2) {
+              if (self.searchResult.pagination.itemsPerPage < 2) {
                 return;
               }
-              self.pageSize = self.pageSize - 1;
+                self.searchResult.pagination.itemsPerPage--;
             };
 
             self.viewDetail = function (result) {
@@ -454,6 +509,18 @@ angular.module('hopsWorksApp')
               }
             };
 
-
+            self.datasetDetail = function (inodeId) {
+                ProjectService.getDatasetInfo({inodeId: inodeId}).$promise.then(
+                    function (response) {
+                        var projects;
+                        ProjectService.query().$promise.then(
+                            function (success) {
+                                projects = success;
+                                ModalService.requestAccess('md', response, projects);
+                            }, function (error) {
+                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
+                            });
+                    });
+            };
 
           }]);

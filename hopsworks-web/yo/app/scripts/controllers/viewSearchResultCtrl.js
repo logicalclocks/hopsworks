@@ -185,10 +185,14 @@ angular.module('hopsWorksApp')
             };
 
             self.goto = function () {
+              var i = 3;
+              if (self.content.details.path.startsWith("/apps/hive/warehouse")) {
+                i = 4;
+              }
               var splitedPath = self.content.details.path.split("/");
               var parentPath = "/";
 
-              for (var i = 3; i < splitedPath.length - 1; i++) {
+              for (; i < splitedPath.length - 1; i++) {
                 parentPath = parentPath + splitedPath[i] + "/";
               }
               $rootScope.selectedFile = splitedPath[splitedPath.length - 1];

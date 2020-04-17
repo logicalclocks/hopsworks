@@ -28,7 +28,8 @@ angular.module('hopsWorksApp').directive("featureList", function() {
             addButton: "=",
             settings: '=',
             addFeatureToBasket: '=',
-            featureInBasket: '='
+            featureInBasket: '=',
+            selectedFeature: '='
         },
         templateUrl: 'views/featureList.html',
         controller: 'FeatureListCtrl as featureListCtrl'

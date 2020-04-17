@@ -41,17 +41,17 @@
   <div ng-include="'nav.html'"></div>
 
 
-  <div id="wrapper" class="toggled" ng-controller="ProjectCtrl as projectCtrl">
+  <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}" ng-controller="ProjectCtrl as projectCtrl">
     <div class="overlay"></div>
 
     <div ng-include="'navProject.html'"></div>
     <div ng-if="mainCtrl.showSearchPage" class="content-wrapper">
       <div id="projectSearchResults">
-        <div ng-include="'views/search.html'"></div>
+        <div ng-include="'views/search/search.html'"></div>
       </div>
     </div>
     <div ng-if="!mainCtrl.showSearchPage" class="job-content-wrapper">
-      <h3 id="projectBread" style="display: none;"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
+      <h3 id="projectBread"> {{ projectCtrl.currentProject.projectName}} / Jobs</h3>
     </div>
     <div ng-if="!mainCtrl.showSearchPage" class="">
 

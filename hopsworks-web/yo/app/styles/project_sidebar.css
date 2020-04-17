@@ -87,6 +87,60 @@
   margin-right: -200px;
 }
 
+#wrapper.toggled #projectBread {
+  display: none;
+}
+
+#wrapper #projectBread {
+  display: block;
+}
+
+#close-sidebar {
+  float: right;
+  margin-top: -40px;
+  color: #ddd;
+  padding: 10px 21px 10px 10px;
+}
+
+.project-name {
+  width: 155px;
+  margin-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#show-sidebar {
+  position: fixed;
+  left: -5px;
+  top: 50px;
+  border-radius: 0 4px 4px 0px;
+  width: 40px;
+  background: #2e353d;
+  color: #ddd;
+  z-index: 1;
+}
+
+#show-sidebar {
+  -webkit-transition: all 1s ease;
+  -moz-transition: all 1s ease;
+  -ms-transition: all 1s ease;
+  -o-transition: all 1s ease;
+  transition: all 1s ease;
+}
+
+#wrapper.toggled #show-sidebar {
+  left: -40px;
+}
+
+#wrapper .breadcrumb {
+  padding-left: 40px;
+}
+
+#projectBread {
+  padding-left: 40px;
+}
+
 /*-------------------------------*/
 /*     Sidebar nav styles        */
 /*-------------------------------*/

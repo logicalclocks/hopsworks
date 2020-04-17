@@ -890,6 +890,7 @@ public class ProjectService {
     return provenance;
   }
   
+  @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/elastic")
   public ElasticResource elastic(@PathParam("projectId") Integer id) {
     this.elastic.setProjectId(id);

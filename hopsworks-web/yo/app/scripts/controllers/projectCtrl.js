@@ -291,12 +291,14 @@ angular.module('hopsWorksApp')
             self.goToHopsworksInstance = function (endpoint, serviceName) {
               $scope.activeService = serviceName;
               $location.path('http://' + endpoint + '/project/' + self.projectId + '/' + serviceName);
+              $location.search('');
             };
 
 
             self.goToUrl = function (serviceName) {
               $scope.activeService = serviceName;
               $location.path('project/' + self.projectId + '/' + serviceName);
+              $location.search('');
             };
 
             self.goToDatasets = function () {
