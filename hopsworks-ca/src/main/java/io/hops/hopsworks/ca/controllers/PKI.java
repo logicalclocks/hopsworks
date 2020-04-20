@@ -98,7 +98,7 @@ public class PKI {
       case APP:
         return subject.get("CN") + "__" + subject.get("O") + "__" + subject.get("OU");
       case HOST:
-        return subject.get("CN") + "__" + subject.get("OU");
+        return subject.get("CN") + "__" + subject.get("L") + "__" + subject.get("OU");
       default:
         return subject.get("CN");
     }

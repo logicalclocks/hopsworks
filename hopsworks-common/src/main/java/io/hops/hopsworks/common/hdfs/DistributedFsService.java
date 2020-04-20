@@ -94,12 +94,19 @@ public class DistributedFsService {
   private Configuration conf;
   private String hadoopConfDir;
   private String transientDir;
+  private UserGroupInformation loginUser;
 
   public DistributedFsService() {
   }
   
   @PostConstruct
   public void init() {
+    try {
+      loginUser = UserGroupInformation.getLoginUser();
+    } catch (IOException ex) {
+      logger.log(Level.SEVERE, "Could not get login user", ex);
+      throw new IllegalStateException(ex);
+    }
     System.setProperty("hadoop.home.dir", settings.getHadoopSymbolicLinkDir());
     hadoopConfDir = settings.getHadoopConfDir();
     //Get the configuration file at found path
@@ -154,12 +161,10 @@ public class DistributedFsService {
           truststorePath, truststorePass, newConf);
       
       return new DistributedFileSystemOps(
-          UserGroupInformation.createRemoteUser(settings.getHdfsSuperUser()),
-          newConf);
+          UserGroupInformation.createRemoteUser(loginUser.getUserName()), newConf);
     }
   
-    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(
-        settings.getHdfsSuperUser()), conf);
+    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(loginUser.getUserName()), conf);
   }
   
   public DistributedFileSystemOps getDfsOps(URI uri) {
@@ -175,12 +180,10 @@ public class DistributedFsService {
           truststorePath, truststorePass, newConf);
       
       return new DistributedFileSystemOps(
-          UserGroupInformation.createRemoteUser(settings.getHdfsSuperUser()),
-          newConf, uri);
+          UserGroupInformation.createRemoteUser(loginUser.getUserName()), newConf, uri);
     }
     
-    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser
-        (settings.getHdfsSuperUser()), conf, uri);
+    return new DistributedFileSystemOps(UserGroupInformation.createRemoteUser(loginUser.getUserName()), conf, uri);
   }
   
   /**
@@ -224,7 +227,7 @@ public class DistributedFsService {
   public void closeDfsClient(DistributedFileSystemOps udfso) {
     if (null != udfso) {
       if (settings.getHopsRpcTls()
-          && !udfso.getEffectiveUser().equals(settings.getHdfsSuperUser())) {
+          && !udfso.getEffectiveUser().equals(loginUser.getUserName())) {
         bhcs.removeNonSuperUserCertificate(udfso.getEffectiveUser());
       }
       udfso.close();
@@ -297,6 +300,14 @@ public class DistributedFsService {
     }
   }
 
+  /**
+   * Get the login user which acts as HDFS superuser
+   *
+   * @return UGI of login user
+   */
+  public UserGroupInformation getLoginUser() {
+    return loginUser;
+  }
   /**
    * Check if the inode at the given path is a directory.
    * <p/>
