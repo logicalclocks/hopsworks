@@ -41,8 +41,11 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.persistence.entity.util.Variables;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
@@ -60,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 @Path("/variables")
 @Stateless
@@ -78,10 +82,13 @@ public class VariablesService {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getVar(@PathParam("id") String id) {
+  public Response getVar(@PathParam("id") String id) throws ServiceException {
+    Variables variable = settings.findById(id)
+        .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.VARIABLE_NOT_FOUND, Level.FINE,
+            "Variable: " + id + "not found"));
     RESTApiJsonResponse json = new RESTApiJsonResponse();
-    json.setSuccessMessage(settings.findById(id).getValue());
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+    json.setSuccessMessage(variable.getValue());
+    return Response.ok().entity(json).build();
   }
 
   @GET
