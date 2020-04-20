@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalT
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -49,6 +50,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.Trainin
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -67,6 +69,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -267,6 +270,10 @@ public class TrainingDatasetController {
     trainingDataset.setCreator(user);
     trainingDataset.setVersion(trainingDatasetDTO.getVersion());
     trainingDataset.setTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
+    trainingDataset.setSeed(trainingDatasetDTO.getSeed());
+    trainingDataset.setSplits(trainingDatasetDTO.getSplits().stream()
+      .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
+        Collectors.toList()));
     trainingDatasetFacade.persist(trainingDataset);
   
     // Store statistics
@@ -628,6 +635,32 @@ public class TrainingDatasetController {
   }
   
   /**
+   * Verfiy user input split information
+   *
+   * @param trainingDatasetSplitDTOs the list of training dataset splits
+   * @throws FeaturestoreException
+   */
+  private void verifyTrainingDatasetSplits(List<TrainingDatasetSplitDTO> trainingDatasetSplitDTOs)
+    throws FeaturestoreException {
+    if (trainingDatasetSplitDTOs != null && !trainingDatasetSplitDTOs.isEmpty()) {
+      Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
+      for (TrainingDatasetSplitDTO trainingDatasetSplitDTO : trainingDatasetSplitDTOs) {
+        if (!namePattern.matcher(trainingDatasetSplitDTO.getName()).matches()) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME,
+            Level.FINE, ", the provided training dataset split name " + trainingDatasetSplitDTO.getName() + " is " +
+            "invalid. Split names can only contain lower case characters, numbers and underscores and cannot be " +
+            "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
+        }
+        if (trainingDatasetSplitDTO.getPercentage() == null) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
+            Level.FINE, ", the provided training dataset split percentage is invalid. Percentages can only be numeric" +
+            ". Weights will be normalized if they don’t sum up to 1.0.");
+        }
+      }
+    }
+  }
+  
+  /**
    * Verify training dataset specific input
    *
    * @param trainingDatasetDTO the provided user input
@@ -639,5 +672,6 @@ public class TrainingDatasetController {
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
+    verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
   }
 }
