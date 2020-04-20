@@ -695,6 +695,52 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["descStatsEnabled"]).to be false
         end
 
+        it "should be able to get schema of shared feature group" do
+          project = get_project
+          create_session(project[:username], "Pass123")
+          projectname = "project_#{short_random_id}"
+          # Create a feature group in second project and share it with the first project
+          second_project = create_project_by_name(projectname)
+          featurestore_id = get_featurestore_id(second_project.id)
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+          json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
+          featuregroup_id = JSON.parse(json_result)['id']
+          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", "&type=FEATURESTORE")
+
+          # Create a new user and add it only to the first project
+          member = create_user
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+
+          # The new member should be able to fetch the schema from Hive
+          result =
+              get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/schema"
+          expect_status(200)
+          parsed_json = JSON.parse(result)
+          expect(parsed_json['columns'][0]['value']).to start_with "CREATE TABLE"
+        end
+
+        it "should be able to get a data preview of a shared feature group" do
+          project = get_project
+          create_session(project[:username], "Pass123")
+          projectname = "project_#{short_random_id}"
+          # Create a feature group in second project and share it with the first project
+          second_project = create_project_by_name(projectname)
+          featurestore_id = get_featurestore_id(second_project.id)
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+          json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
+          featuregroup_id = JSON.parse(json_result)['id']
+          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", "&type=FEATURESTORE")
+
+          # Create a new user and add it only to the first project
+          member = create_user
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+
+          # The new member should be able to fetch the schema from Hive
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview"
+          expect_status(200)
+        end
       end
     end
 
