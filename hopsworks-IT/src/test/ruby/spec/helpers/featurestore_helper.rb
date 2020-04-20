@@ -382,7 +382,8 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil, version: 1)
+  def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
+                                     version: 1, splits: [])
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     if name == nil
@@ -420,14 +421,16 @@ module FeaturestoreHelper
                 name: "testfeature2",
                 description: "testfeaturedescription2"
             }
-        ]
+        ],
+        splits: splits,
+        seed: 1234
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
     return json_result, training_dataset_name
   end
 
-  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil, location: "")
+  def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil, location: "", splits:[])
     trainingDatasetType = "EXTERNAL_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     if name == nil
@@ -455,7 +458,9 @@ module FeaturestoreHelper
                 name: "testfeature2",
                 description: "testfeaturedescription2"
             }
-        ]
+        ],
+        splits: splits,
+        seed: 1234
     }
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data

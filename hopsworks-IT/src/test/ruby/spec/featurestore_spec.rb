@@ -1018,11 +1018,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("inodeId")).to be true
           expect(parsed_json.key?("features")).to be true
+          expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "HOPSFS_TRAINING_DATASET").to be true
           expect(parsed_json["storageConnectorId"] == connector.id).to be true
           expect(parsed_json["features"].length).to be 2
+          expect(parsed_json["seed"] == 1234).to be true
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with upper case characters" do
@@ -1050,6 +1052,56 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270057).to be true
+        end
+
+        it "should be able to add a hopsfs training dataset to the featurestore with splits" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          splits = [
+              {
+                  name: "test_split",
+                  percentage: 0.8
+              },
+              {
+                  name: "train_split",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              splits: splits)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 2
+        end
+
+        it "should not be able to add a hopsfs training dataset to the featurestore with a non numeric split percentage" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          split = [{name: "train_split", percentage: "wrong"}]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270099).to be true
+        end
+
+        it "should not be able to add a hopsfs training dataset to the featurestore with a illegal split name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          split = [{name: "ILLEGALNAME!!!", percentage: 0.8}]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, splits: split)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270098).to be true
         end
 
         it "should not be able to create a training dataset with the same name and version" do
@@ -1257,11 +1309,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("storageConnectorId")).to be true
           expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("features")).to be true
+          expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
           expect(parsed_json["storageConnectorId"] == connector_id).to be true
           expect(parsed_json["features"].length).to be 2
+          expect(parsed_json["seed"] == 1234).to be true
         end
 
         it "should not be able to add an external training dataset to the featurestore with upper case characters" do
@@ -1285,6 +1339,59 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, nil)
           parsed_json = JSON.parse(json_result)
           expect_status(400)
+        end
+
+        it "should be able to add an external training dataset to the featurestore with splits" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          splits = [
+              {
+                  name: "test_split",
+                  percentage: 0.8
+              },
+              {
+                  name: "train_split",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                connector_id, splits: splits)
+
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 2
+        end
+
+        it "should not be able to add an external training dataset to the featurestore with a non numeric split percentage" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          splits = [{name: "train_split", percentage: "wrong"}]
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                connector_id, splits: splits)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270099).to be true
+        end
+
+        it "should not be able to add an external training dataset to the featurestore with a illegal split name" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          splits = [{name: "ILLEGALNAME!!!", percentage: 0.8}]
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                connector_id, splits: splits)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270098).to be true
         end
 
         it "should be able to delete an external training dataset from the featurestore" do

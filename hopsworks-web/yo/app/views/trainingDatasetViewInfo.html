@@ -181,6 +181,52 @@
         <div uib-accordion-group class="panel-default">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Details about the splits in which the Training Dataset is stored.'></i>
+                <span style="margin-left: 20px">
+                    Splits
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.splits.length > 0">
+                <tbody class="fs-table">
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Seed
+                    </td>
+                    <td class="fs-table" ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.seed != null">
+                        {{trainingDatasetViewInfoCtrl.selectedTrainingDataset.seed}}
+                    </td>
+                    <td class="fs-table" ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.seed == null">
+                        undefined
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
+                   ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.splits.length > 0">
+                <thead style="border:none;" class="fs-table">
+                <th class="fs-table" style="width: 20%">Split Name</th>
+                <th class="fs-table" style="width: 20%">Percentage</th>
+                </thead>
+                <tbody>
+                <tr class="fs-table"
+                    data-ng-repeat="split in trainingDatasetViewInfoCtrl.selectedTrainingDataset.splits">
+                    <td class="fs-table"> {{split.name}}</td>
+                    <td class="fs-table"> {{split.percentage}}</td>
+                </tr>
+                </tbody>
+            </table>
+
+            <h4 style="margin-left: 10px"
+                ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.splits.length == 0">
+                This training dataset does not contain separate splits</h4>
+        </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Hopsworks Jobs that update the training dataset in some way'></i>
                 <span style="margin-left: 20px">
                     Jobs
