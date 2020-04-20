@@ -142,14 +142,16 @@ public class CachedFeaturegroupController {
    * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
    *
    * @param featuregroupDTO the featuregroup to get the schema for
-   * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
+   * @param project         project from which the user is making the request
+   * @param user            the user making the request
    * @return                JSON/XML DTO with the schema
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Users user, Featurestore featurestore)
+  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Featurestore featurestore,
+                                          Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
@@ -157,7 +159,7 @@ public class CachedFeaturegroupController {
           Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
     }
     String offlineSqlSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroupDTO,
-        featurestore.getProject(), user, featurestore));
+        project, user, featurestore));
     ColumnValueQueryResult offlineSchemaColumn = new ColumnValueQueryResult("schema", offlineSqlSchema);
     List<ColumnValueQueryResult> columns = new ArrayList<>();
     columns.add(offlineSchemaColumn);
@@ -203,6 +205,7 @@ public class CachedFeaturegroupController {
    *
    * @param featuregroupDTO DTO of the featuregroup to preview
    * @param featurestore    the feature store where the feature group resides
+   * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
    * @return A DTO with the first 20 feature rows of the online and offline tables.
    * @throws SQLException
@@ -210,10 +213,13 @@ public class CachedFeaturegroupController {
    * @throws HopsSecurityException
    */
   public FeaturegroupPreview getFeaturegroupPreview(
-      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user)
+      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     FeaturegroupPreview featuregroupPreview = new FeaturegroupPreview();
-    List<RowValueQueryResult> offlinePreview = getOfflineFeaturegroupPreview(featuregroupDTO, featurestore, user);
+
+    List<RowValueQueryResult> offlinePreview =
+        getOfflineFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
+
     featuregroupPreview.setOfflineFeaturegroupPreview(offlinePreview);
     if(settings.isOnlineFeaturestore() && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineFeaturegroupEnabled()){
       List<RowValueQueryResult> onlinePreview =
@@ -229,6 +235,7 @@ public class CachedFeaturegroupController {
    *
    * @param featuregroupDTO DTO of the featuregroup to preview
    * @param featurestore    the feature store where the feature group resides
+   * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
    * @return list of feature-rows from the Hive table where the featuregroup is stored
    * @throws SQLException
@@ -236,14 +243,15 @@ public class CachedFeaturegroupController {
    * @throws HopsSecurityException
    */
   public List<RowValueQueryResult> getOfflineFeaturegroupPreview(FeaturegroupDTO featuregroupDTO,
-    Featurestore featurestore, Users user) throws FeaturestoreException, HopsSecurityException, SQLException {
+                                                                 Featurestore featurestore, Project project, Users user)
+      throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
     String query = "SELECT * FROM " + tbl + " LIMIT 20";
     String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     try {
-      return executeReadHiveQuery(query, db, featurestore.getProject(), user);
+      return executeReadHiveQuery(query, db, project, user);
     } catch(Exception e) {
-      return executeReadHiveQuery(query, db, featurestore.getProject(), user);
+      return executeReadHiveQuery(query, db, project, user);
     }
   }
 
