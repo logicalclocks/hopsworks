@@ -39,6 +39,7 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -62,10 +63,8 @@ import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -75,7 +74,6 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -353,140 +351,123 @@ public class Settings implements Serializable {
       "cloud_events_endpoint_api_key";
   
   private String setVar(String varName, String defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null && (!var.getValue().isEmpty())) {
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return val;
-      }
-    }
-    return defaultValue;
+    return setStrVar(varName, defaultValue);
   }
 
   private String setStrVar(String varName, String defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return val;
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value)) {
+        return value;
       }
     }
     return defaultValue;
   }
 
   private String setDirVar(String varName, String defaultValue) {
-    Variables dirName = findById(varName);
-    if (dirName != null && dirName.getValue() != null && (new File(dirName.
-        getValue()).isDirectory())) {
-      String val = dirName.getValue();
-      if (val != null && !val.isEmpty()) {
-        return val;
+    Optional<Variables> dirName = findById(varName);
+    if (dirName.isPresent()) {
+      String value = dirName.get().getValue();
+      if (!Strings.isNullOrEmpty(value) && new File(value).isDirectory()) {
+        return value;
       }
     }
     return defaultValue;
   }
 
   private String setIpVar(String varName, String defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null && Ip.validIp(var.getValue())) {
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return val;
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value) && Ip.validIp(value)) {
+        return value;
       }
     }
-    return defaultValue;
-  }
 
-  private String setDbVar(String varName, String defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      // TODO - check this is a valid DB name
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return val;
-      }
-    }
     return defaultValue;
   }
 
   private Boolean setBoolVar(String varName, Boolean defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return Boolean.parseBoolean(val);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value)) {
+        return Boolean.parseBoolean(value);
       }
     }
+
     return defaultValue;
   }
 
   private Integer setIntVar(String varName, Integer defaultValue) {
-    Variables var = findById(varName);
-    try {
-      if (var != null && var.getValue() != null) {
-        String val = var.getValue();
-        if (val != null && !val.isEmpty()) {
-          return Integer.parseInt(val);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      try {
+        if (!Strings.isNullOrEmpty(value)) {
+          return Integer.parseInt(value);
         }
+      } catch(NumberFormatException ex){
+        LOGGER.log(Level.WARNING,
+            "Error - not an integer! " + varName + " should be an integer. Value was " + value);
       }
-    } catch (NumberFormatException ex) {
-      LOGGER.info("Error - not an integer! " + varName
-          + " should be an integer. Value was " + defaultValue);
     }
     return defaultValue;
   }
 
   private Double setDoubleVar(String varName, Double defaultValue) {
-    Variables var = findById(varName);
-    try {
-      if (var != null && var.getValue() != null) {
-        String val = var.getValue();
-        if (val != null && !val.isEmpty()) {
-          return Double.parseDouble(val);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      try {
+        if (!Strings.isNullOrEmpty(value)) {
+          return Double.parseDouble(value);
         }
+      } catch(NumberFormatException ex){
+        LOGGER.log(Level.WARNING, "Error - not a double! " + varName + " should be a double. Value was " + value);
       }
-    } catch (NumberFormatException ex) {
-      LOGGER.info("Error - not a double! " + varName
-          + " should be a double. Value was " + defaultValue);
     }
+
     return defaultValue;
   }
 
   private long setLongVar(String varName, Long defaultValue) {
-    Variables var = findById(varName);
-    try {
-      if (var != null && var.getValue() != null) {
-        String val = var.getValue();
-        if (val != null && !val.isEmpty()) {
-          return Long.parseLong(val);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      try {
+        if (!Strings.isNullOrEmpty(value)) {
+          return Long.parseLong(value);
         }
+      } catch (NumberFormatException ex) {
+        LOGGER.log(Level.WARNING, "Error - not a long! " + varName + " should be an integer. Value was " + value);
       }
-    } catch (NumberFormatException ex) {
-      LOGGER.info("Error - not a long! " + varName
-          + " should be an integer. Value was " + defaultValue);
     }
 
     return defaultValue;
   }
 
   private RESTLogLevel setLogLevelVar(String varName, RESTLogLevel defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null) {
-      String val = var.getValue();
-      if (val != null && !val.isEmpty()) {
-        return RESTLogLevel.valueOf(val);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value)) {
+        return RESTLogLevel.valueOf(value);
       }
     }
     return defaultValue;
   }
 
   private long setMillisecondVar(String varName, Long defaultValue) {
-    Variables var = findById(varName);
-    if (var != null && var.getValue() != null && !var.getValue().isEmpty()) {
-      String val = var.getValue();
-      long timeValue = getConfTimeValue(val);
-      TimeUnit timeUnit = getConfTimeTimeUnit(val);
-      return timeUnit.toMillis(timeValue);
+    Optional<Variables> variable = findById(varName);
+    if (variable.isPresent()) {
+      String value = variable.get().getValue();
+      if (!Strings.isNullOrEmpty(value)) {
+        long timeValue = getConfTimeValue(value);
+        TimeUnit timeUnit = getConfTimeTimeUnit(value);
+        return timeUnit.toMillis(timeValue);
+      }
     }
 
     return defaultValue;
@@ -577,7 +558,7 @@ public class Settings implements Serializable {
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
       DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
-      DRELEPHANT_DB = setDbVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
+      DRELEPHANT_DB = setStrVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -1196,14 +1177,21 @@ public class Settings implements Serializable {
 
   private DistributedFileSystemOps.StoragePolicy setHdfsStoragePolicy(String policyName,
     DistributedFileSystemOps.StoragePolicy defaultPolicy) {
-    Variables existingPolicy = findById(policyName);
-    if (existingPolicy == null || existingPolicy.getValue() == null || existingPolicy.getValue().isEmpty()) {
+
+    Optional<Variables> policyOptional = findById(policyName);
+    if (!policyOptional.isPresent()) {
       return defaultPolicy;
     }
-    try {
-      return DistributedFileSystemOps.StoragePolicy.fromPolicy(existingPolicy.getValue());
-    } catch(IllegalArgumentException ex) {
-      LOGGER.warning("Error - not a valid storage policy! Value was:" + existingPolicy.getValue());
+
+    String existingPolicy = policyOptional.get().getValue();
+    if (!Strings.isNullOrEmpty(existingPolicy)) {
+      try {
+        return DistributedFileSystemOps.StoragePolicy.fromPolicy(existingPolicy);
+      } catch (IllegalArgumentException ex) {
+        LOGGER.warning("Error - not a valid storage policy! Value was:" + existingPolicy);
+        return defaultPolicy;
+      }
+    } else {
       return defaultPolicy;
     }
   }
@@ -2206,12 +2194,13 @@ public class Settings implements Serializable {
    * @param id
    * @return The user with given email, or null if no such user exists.
    */
-  public Variables findById(String id) {
+  public Optional<Variables> findById(String id) {
     try {
-      return em.createNamedQuery("Variables.findById", Variables.class
-      ).setParameter("id", id).getSingleResult();
+      return Optional.of(em.createNamedQuery("Variables.findById", Variables.class)
+          .setParameter("id", id)
+          .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 
@@ -2221,15 +2210,7 @@ public class Settings implements Serializable {
    * @return List with all the variables
    */
   public List<Variables> getAllVariables() {
-    TypedQuery<Variables> query = em.createNamedQuery("Variables.findAll", Variables.class);
-
-    try {
-      return query.getResultList();
-    } catch (EntityNotFoundException ex) {
-      LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-    } catch (NoResultException ex) {
-    }
-    return new ArrayList<>();
+    return em.createNamedQuery("Variables.findAll", Variables.class).getResultList();
   }
 
   /**
@@ -2239,10 +2220,9 @@ public class Settings implements Serializable {
    * @param variableValue value
    */
   private void updateVariableInternal(String variableName, String variableValue) {
-    Variables var = findById(variableName);
-    if (var == null) {
-      throw new NoResultException("Variable <" + variableName + "> does not exist in the database");
-    }
+    Variables var = findById(variableName)
+        .orElseThrow(() -> new NoResultException("Variable <" + variableName + "> does not exist in the database"));
+
     if (!var.getValue().equals(variableValue)) {
       var.setValue(variableValue);
       em.persist(var);
@@ -2613,11 +2593,7 @@ public class Settings implements Serializable {
     if (DELA_SEARCH_ENDPOINT != null) {
       return DELA_SEARCH_ENDPOINT;
     }
-    Variables v = findById(DELA_SEARCH_ENDPOINT);
-    if (v != null) {
-      return v.getValue();
-    }
-    return null;
+    return setStrVar(DELA_SEARCH_ENDPOINT, null);
   }
 
   public synchronized String getDELA_TRANSFER_ENDPOINT() {
@@ -2625,11 +2601,7 @@ public class Settings implements Serializable {
     if (DELA_TRANSFER_ENDPOINT != null) {
       return DELA_TRANSFER_ENDPOINT;
     }
-    Variables v = findById(DELA_TRANSFER_ENDPOINT);
-    if (v != null) {
-      return v.getValue();
-    }
-    return null;
+    return setStrVar(DELA_TRANSFER_ENDPOINT, null);
   }
 
   public synchronized void setDELA_PUBLIC_ENDPOINT(AddressJSON endpoint) {
@@ -2667,13 +2639,8 @@ public class Settings implements Serializable {
     checkCache();
     if (DELA_CLUSTER_ID != null) {
       return DELA_CLUSTER_ID;
-    } else {
-      Variables v = findById(VARIABLE_DELA_CLUSTER_ID);
-      if (v != null) {
-        return v.getValue();
-      }
-      return null;
     }
+    return setStrVar(VARIABLE_DELA_CLUSTER_ID, null);
   }
 
   public synchronized String getDELA_DOMAIN() {
@@ -2715,9 +2682,11 @@ public class Settings implements Serializable {
 
   public synchronized void deleteHopsSiteClusterName() {
     if (getHopsSiteClusterName().isPresent()) {
-      Variables v = findById(VARIABLE_HOPSSITE_CLUSTER_NAME);
-      em.remove(v);
-      HOPSSITE_CLUSTER_NAME = null;
+      Optional<Variables> v = findById(VARIABLE_HOPSSITE_CLUSTER_NAME);
+      if (v.isPresent()) {
+        em.remove(v);
+        HOPSSITE_CLUSTER_NAME = null;
+      }
     }
   }
 
