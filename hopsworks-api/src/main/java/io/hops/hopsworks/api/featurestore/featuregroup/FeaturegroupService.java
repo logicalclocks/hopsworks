@@ -325,7 +325,7 @@ public class FeaturegroupService {
       FeaturegroupDTO featuregroupDTO =
           featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
       FeaturegroupPreview featuresPreview =
-          featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, user);
+          featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
       GenericEntity<FeaturegroupPreview> featuresdataGeneric =
           new GenericEntity<FeaturegroupPreview>(featuresPreview) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuresdataGeneric).build();
@@ -362,7 +362,7 @@ public class FeaturegroupService {
     try {
       FeaturegroupDTO featuregroupDTO =
           featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-      RowValueQueryResult schema = featuregroupController.getDDLSchema(featuregroupDTO, user, featurestore);
+      RowValueQueryResult schema = featuregroupController.getDDLSchema(featuregroupDTO, featurestore, project, user);
       GenericEntity<RowValueQueryResult> schemaGeneric = new GenericEntity<RowValueQueryResult>(schema) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaGeneric).build();
     } catch (SQLException e) {

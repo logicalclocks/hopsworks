@@ -563,6 +563,7 @@ public class FeaturegroupController {
    *
    * @param featuregroupDTO DTO of the featuregroup to preview
    * @param featurestore    the feature store where the feature group resides
+   * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
    * @return A DTO object with the first 20 rows of the offline and online feature tables
    * @throws SQLException
@@ -570,11 +571,11 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    */
   public FeaturegroupPreview getFeaturegroupPreview(
-      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
+      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user) throws SQLException,
       FeaturestoreException, HopsSecurityException {
     switch (featuregroupDTO.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, user);
+        return cachedFeaturegroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.PREVIEW_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
@@ -591,18 +592,20 @@ public class FeaturegroupController {
    * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
    *
    * @param featuregroupDTO the featuregroup to get the schema for
-   * @param user            the user making the request
    * @param featurestore    the featurestore where the featuregroup resides
+   * @param project         project from which the user making the request
+   * @param user            the user making the request
    * @return JSON/XML DTO with the schema
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Users user, Featurestore featurestore)
+  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Featurestore featurestore,
+                                          Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     switch (featuregroupDTO.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getDDLSchema(featuregroupDTO, user, featurestore);
+        return cachedFeaturegroupController.getDDLSchema(featuregroupDTO, featurestore, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
