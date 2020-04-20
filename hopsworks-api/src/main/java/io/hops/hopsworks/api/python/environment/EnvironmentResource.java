@@ -38,7 +38,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.io.IOException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -147,7 +146,7 @@ public class EnvironmentResource {
   public Response post(@PathParam("version") String version,
       @QueryParam("action") EnvironmentDTO.Operation action,
       @Context UriInfo uriInfo,
-      @Context SecurityContext sc) throws PythonException, ServiceException, ProjectException, IOException {
+      @Context SecurityContext sc) throws PythonException, ServiceException, ProjectException {
     EnvironmentDTO dto;
     Users user = jWTHelper.getUserPrincipal(sc);
     switch ((action != null) ? action : EnvironmentDTO.Operation.CREATE) {

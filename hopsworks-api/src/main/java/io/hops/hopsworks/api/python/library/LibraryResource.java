@@ -41,7 +41,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.io.IOException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -152,7 +151,7 @@ public class LibraryResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response uninstall(@Context SecurityContext sc, @PathParam("library") String library)
-    throws ServiceException, GenericException, ProjectException, PythonException, ElasticException, IOException {
+    throws ServiceException, GenericException, ProjectException, PythonException, ElasticException {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion);
@@ -182,7 +181,7 @@ public class LibraryResource {
                           @Context UriInfo uriInfo,
                           @Context HttpServletRequest req)
       throws ServiceException, GenericException, PythonException,
-      ProjectException, ElasticException, IOException {
+      ProjectException, ElasticException {
     Users user = jwtHelper.getUserPrincipal(req);
     if (version == null || version.isEmpty()) {
       throw new PythonException(RESTCodes.PythonErrorCode.VERSION_NOT_SPECIFIED, Level.FINE);

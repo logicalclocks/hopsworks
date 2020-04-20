@@ -20,7 +20,6 @@ public enum CondaOp {
   REMOVE,
   INSTALL,
   UNINSTALL,
-//  YML,
   EXPORT;
   
   public boolean isEnvOp() {
@@ -28,7 +27,7 @@ public enum CondaOp {
   }
   
   public static boolean isEnvOp(CondaOp arg) {
-    if (arg.compareTo(CondaOp.CREATE) == 0 || //arg.compareTo(CondaOp.YML) == 0 ||
+    if (arg.compareTo(CondaOp.CREATE) == 0 ||
       arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.EXPORT) == 0) {
       return true;
     }

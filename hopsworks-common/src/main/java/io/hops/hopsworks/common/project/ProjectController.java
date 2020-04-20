@@ -447,7 +447,7 @@ public class ProjectController {
   
       try {
         environmentController.createEnv(project, project.getOwner(), "3.6", true);//TODO: use variables for version
-      } catch (PythonException | EJBException | IOException ex) {
+      } catch (PythonException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
             "project: " + projectName, ex.getMessage(), ex);

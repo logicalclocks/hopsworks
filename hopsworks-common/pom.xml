@@ -111,11 +111,6 @@
       <version>1.1</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.htrace</groupId>
-      <artifactId>htrace-core4</artifactId>
-      <version>4.1.0-incubating</version>
-    </dependency>
-    <dependency>
       <groupId>io.hops.metadata</groupId>
       <artifactId>hops-metadata-dal</artifactId>
       <version>${hops.version}</version>
@@ -230,36 +225,6 @@
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcpkix-jdk15on</artifactId>
       <version>1.60</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>org.eclipse.persistence.core</artifactId>
-      <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>org.eclipse.persistence.asm</artifactId>
-      <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>org.eclipse.persistence.antlr</artifactId>
-      <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>org.eclipse.persistence.jpa</artifactId>
-      <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>org.eclipse.persistence.jpa.jpql</artifactId>
-      <version>2.5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.persistence</groupId>
-      <artifactId>javax.persistence</artifactId>
-      <version>2.1.0</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>

@@ -64,15 +64,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class EnvironmentController {
   
-  @PersistenceContext(unitName = "kthfsPU")
-  private EntityManager em;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -112,7 +108,7 @@ public class EnvironmentController {
   
   public void checkCondaEnvExists(Project project, Users user)
       throws ServiceException, ProjectException, PythonException,
-      ElasticException, IOException {
+      ElasticException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
@@ -121,8 +117,7 @@ public class EnvironmentController {
     }
   }
 
-  public void synchronizeDependencies(Project project, boolean createBaseEnv) throws ServiceException,
-      IOException {
+  public void synchronizeDependencies(Project project, boolean createBaseEnv) throws ServiceException {
     String envName = projectUtils.getDockerImageName(project);
     Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
     if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
@@ -181,7 +176,7 @@ public class EnvironmentController {
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void copyOnWriteCondaEnv(Project project, Users user) throws ServiceException, IOException{
+  public void copyOnWriteCondaEnv(Project project, Users user) throws ServiceException {
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, user,
       project.getPythonVersion(), MachineType.ALL, null, false, false);
     setCondaEnv(project, true);
@@ -277,7 +272,7 @@ public class EnvironmentController {
   }
   
   public void createEnv(Project project, Users user, String version, boolean createBaseEnv) throws PythonException,
-      ServiceException, ProjectException, IOException {
+      ServiceException, ProjectException {
     if (project.getConda() || project.getCondaEnv()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }

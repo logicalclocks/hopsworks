@@ -116,7 +116,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
   public Collection<PythonDep> getBaseEnvDeps(String baseEnvName){
     TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findBaseEnv", PythonDep.class);
     deps.setParameter("baseEnv", baseEnvName);
-    Collection<PythonDep> res;
     return deps.getResultList();
   }
   

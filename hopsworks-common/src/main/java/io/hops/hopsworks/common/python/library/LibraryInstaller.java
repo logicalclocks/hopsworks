@@ -32,6 +32,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.restutils.RESTCodes;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -304,7 +305,7 @@ public class LibraryInstaller {
     }
   }
 
-  public Collection<PythonDep> listLibraries(String imageName) throws IOException, ServiceException {
+  public Collection<PythonDep> listLibraries(String imageName) throws ServiceException {
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
@@ -317,14 +318,18 @@ public class LibraryInstaller {
         .setWaitTimeout(60L, TimeUnit.SECONDS)
         .build();
 
-    ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-    if (processResult.getExitCode() != 0) {
-      String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " Error: " + processResult.getStdout();
-      LOG.log(Level.SEVERE, errorMsg);
-      throw new IOException(errorMsg);
-    } else {
-      return depStringToCollec(processResult.getStdout());
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.getExitCode() != 0) {
+        String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
+            + " Error: " + processResult.getStdout();
+        LOG.log(Level.SEVERE, errorMsg);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
+      } else {
+        return depStringToCollec(processResult.getStdout());
+      }
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
     }
   }
 
@@ -408,13 +413,7 @@ public class LibraryInstaller {
     }
 
     private int systemCommandCompare(final SystemCommand t, final SystemCommand t1) {
-      if (t.getId() > t1.getId()) {
-        return 1;
-      } else if (t.getId() < t1.getId()) {
-        return -1;
-      } else {
-        return 0;
-      }
+      return t.getId().compareTo(t1.getId());
     }
   }
 }
