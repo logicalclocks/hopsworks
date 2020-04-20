@@ -880,6 +880,7 @@ public class ProjectController {
     ProjectTeam st = new ProjectTeam(stp);
     st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
     st.setTimestamp(new Date());
+    st.setUser(servingManagerUser);
     projectTeamFacade.persistProjectTeam(st);
     // Create the Hdfs user
     hdfsUsersController.addNewProjectMember(project, st);
@@ -1873,18 +1874,15 @@ public class ProjectController {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(owner.getEmail())) {
 
           //if the role is not properly set set it to the default role (Data Scientist).
-          if (projectTeam.getTeamRole() == null || (!projectTeam.getTeamRole().
-            equals(ProjectRoleTypes.DATA_SCIENTIST.getRole())
-            && !projectTeam.
-            getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getRole()))) {
+          if (projectTeam.getTeamRole() == null ||
+              (!projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()) &&
+                  !projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getRole()))) {
             projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
           }
 
           projectTeam.setTimestamp(new Date());
-          newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().
-            getTeamMember());
-          if (newMember != null && !projectTeamFacade.isUserMemberOfProject(
-            project, newMember)) {
+          newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().getTeamMember());
+          if (newMember != null && !projectTeamFacade.isUserMemberOfProject(project, newMember)) {
             //this makes sure that the member is added to the project sent as the
             //first param b/c the securty check was made on the parameter sent as path.
             projectTeam.getProjectTeamPK().setProjectId(project.getId());
@@ -1937,30 +1935,24 @@ public class ProjectController {
               + projectTeam.getTeamRole() + ".";
             messageController.send(newMember, owner, "You have been added to a project.",
               message, message, "");
-            LOGGER.log(Level.FINE, "{0} - member added to project : {1}.",
-              new Object[]{newMember.getEmail(),
+
+            LOGGER.log(Level.FINE, "{0} - member added to project : {1}.", new Object[]{newMember.getEmail(),
                 project.getName()});
 
             logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner,
               project, ActivityFlag.MEMBER);
           } else if (newMember == null) {
-            failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-              + " was not found in the system.");
+            failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " was not found in the system.");
           } else {
-            failedList.add(newMember.getEmail()
-              + " is already a member in this project.");
+            failedList.add(newMember.getEmail() + " is already a member in this project.");
           }
-
         } else {
-          failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-            + " is already a member in this project.");
+          failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " is already a member in this project.");
         }
       } catch (EJBException ejb) {
-        failedList.add(projectTeam.getProjectTeamPK().getTeamMember()
-          + "could not be added. Try again later.");
+        failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + "could not be added. Try again later.");
         LOGGER.log(Level.SEVERE, "Adding  team member {0} to members failed",
           projectTeam.getProjectTeamPK().getTeamMember());
-
       }
     }
 
