@@ -1441,7 +1441,10 @@ public class RESTCodes {
     FEATUREGROUP_NAME_NOT_PROVIDED(94, "Feature group name was not provided", Response.Status.BAD_REQUEST),
     TRAINING_DATASET_NAME_NOT_PROVIDED(95, "Training dataset name was not provided", Response.Status.BAD_REQUEST),
     NO_PK_JOINING_KEYS(96, "Could not find any matching feature to join", Response.Status.BAD_REQUEST),
-    LEFT_RIGHT_ON_DIFF_SIZES(97, "LeftOn and RightOn have different sizes", Response.Status.BAD_REQUEST);
+    LEFT_RIGHT_ON_DIFF_SIZES(97, "LeftOn and RightOn have different sizes", Response.Status.BAD_REQUEST),
+    ILLEGAL_TRAINING_DATASET_SPLIT_NAME(98, "Illegal training dataset split name", Response.Status.BAD_REQUEST),
+    ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE(99, "Illegal training dataset split percentage",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

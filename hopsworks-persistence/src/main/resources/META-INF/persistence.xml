@@ -62,6 +62,7 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic</class>
