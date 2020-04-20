@@ -40,8 +40,7 @@ package io.hops.hopsworks.common.hdfs;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.dataset.Dataset;
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroups;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsers;
@@ -49,8 +48,8 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.project.Project;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.Users;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -80,10 +79,6 @@ public class HdfsUsersController {
   private DistributedFsService dfsService;
   @EJB
   private InodeController inodes;
-  @EJB
-  private UserFacade userFacade;
-  @EJB
-  private DatasetFacade datasetFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
 
@@ -581,9 +576,7 @@ public class HdfsUsersController {
     if (dataset == null) {
       return null;
     }
-    Project owningProject = dataset.getProject();
-    return owningProject.getName() + USER_NAME_DELIMITER
-        + dataset.getInode().getInodePK().getName();
+    return dataset.getProject().getName() + USER_NAME_DELIMITER + dataset.getInode().getInodePK().getName();
   }
 
   private void addDataOwnerToProject(DistributedFileSystemOps dfso,
@@ -593,9 +586,8 @@ public class HdfsUsersController {
     if (hdfsGroup == null) {
       throw new IllegalArgumentException("No group found for project in HDFS.");
     }
-    Users newMember = userFacade.findByEmail(member.getProjectTeamPK().
-        getTeamMember());
-    String hdfsUsername = getHdfsUserName(project, newMember);
+
+    String hdfsUsername = getHdfsUserName(project, member.getUser());
     HdfsUsers memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
     if (memberHdfsUser == null) {
       dfso.addUser(hdfsUsername);
@@ -610,17 +602,18 @@ public class HdfsUsersController {
     }
 
     if (addToAllDatasetGroups) {
-      String dsGroups;
-      HdfsGroups hdfsDsGroup;
       // add the member to all dataset groups in the project.
-      List<Dataset> dsInProject = datasetFacade.findByProject(project);
+      Collection<Dataset> dsInProject = project.getDatasetCollection();
+      dsInProject.addAll(project.getDatasetSharedWithCollectionCollection().stream()
+          .filter(DatasetSharedWith::getAccepted)
+          .map(DatasetSharedWith::getDataset)
+          .collect(Collectors.toList()));
+
       for (Dataset ds : dsInProject) {
-        dsGroups = getHdfsGroupName(ds);
-        hdfsDsGroup = hdfsGroupsFacade.findByName(dsGroups);
-        if (hdfsDsGroup != null) {
-          if (!memberHdfsUser.inGroup(hdfsDsGroup)) {
-            dfso.addUserToGroup(hdfsUsername, dsGroups);
-          }
+        String dsGroups = getHdfsGroupName(ds);
+        HdfsGroups hdfsDsGroup = hdfsGroupsFacade.findByName(dsGroups);
+        if (hdfsDsGroup != null && !memberHdfsUser.inGroup(hdfsDsGroup)) {
+          dfso.addUserToGroup(hdfsUsername, dsGroups);
         }
       }
     }
