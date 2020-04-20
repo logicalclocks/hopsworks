@@ -574,6 +574,31 @@ describe "On #{ENV['OS']}" do
           get_datasets_in_path(project, dsname, "")
           expect_status(200)
         end
+
+        it "when adding a new member it should add it also to the shared datasets" do
+          project = get_project
+
+          # Create a second project and a dataset in it
+          projectname = "project_#{short_random_id}"
+          second_project = create_project_by_name(projectname)
+          dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(second_project, dsname)
+
+          # Share the dataset with the first project
+          share_dataset(second_project, dsname, project[:projectname], "&type=DATASET")
+          accept_dataset(project, "#{second_project[:projectname]}::#{dsname}", "&type=DATASET")
+
+          # Create a new user and add it only to the first project
+          member = create_user
+          add_member_to_project(project, member[:email], "Data scientist")
+          create_session(member[:email], "Pass123")
+
+          # The new member should be able to fetch the readme in the readme
+          readme = get_dataset_blob(project, "Projects/#{second_project[:projectname]}/#{dsname}/README.md", "&type=DATASET")
+          expect_status(200)
+          readme_parsed = JSON.parse(readme)
+          expect(readme_parsed['preview']).not_to be_nil
+        end
       end
       context 'delete' do
         before :each do
