@@ -145,6 +145,7 @@
                             </table>
                             <dir-pagination-controls pagination-id="featuregroupstable" class="pull-right" max-size="5" direction-links="true" boundary-links="true">
                             </dir-pagination-controls>
+
                             </div>
 
                             <div class="fs-sidenav" ng-class="{open: featuregroupViewInfoCtrl.tgState}">
@@ -154,6 +155,21 @@
                                             <md-tabs md-dynamic-height md-border-bottom md-no-pagination="true" md-center-tabs="true">
                                                 <md-tab label="Details">
                                                     <div ng-include="'views/featuregroupViewInfo.html'"></div>
+                                                </md-tab>
+                                                <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
+                                                    <tags   ng-show="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType == featurestoreCtrl.cachedFeaturegroupType"
+                                                            project-id="featurestoreCtrl.projectId"
+                                                            featurestore="featurestoreCtrl.featurestore"
+                                                            attached-tags="featuregroupViewInfoCtrl.attachedTags"
+                                                            loading-tags="featuregroupViewInfoCtrl.loadingTags"
+                                                            add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
+                                                            delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
+                                                    </tags>
+
+                                                    <div style="margin-left: 10px" ng-show="!(featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType == featurestoreCtrl.cachedFeaturegroupType)">
+                                                        <h3 style="text-align:center;">Tags not supported for </h3>
+                                                        <p style="text-align:center; margin-top:20px;">{{featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType}}</p>
+                                                    </div>
                                                 </md-tab>
                                             </md-tabs>
                                         </md-content>
@@ -323,6 +339,20 @@
                                     <md-tabs md-dynamic-height md-border-bottom md-no-pagination="true" md-center-tabs="true">
                                         <md-tab label="Details">
                                             <div ng-include="'views/trainingDatasetViewInfo.html'"></div>
+                                        </md-tab>
+                                        <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
+                                            <tags   ng-show="trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType == featurestoreCtrl.hopsfsTrainingDatasetType"
+                                                    project-id="featurestoreCtrl.projectId"
+                                                    featurestore="featurestoreCtrl.featurestore"
+                                                    attached-tags="trainingDatasetViewInfoCtrl.attachedTags"
+                                                    loading-tags="trainingDatasetViewInfoCtrl.loadingTags"
+                                                    add-tag="trainingDatasetViewInfoCtrl.addTag(name, value)"
+                                                    delete-tag="trainingDatasetViewInfoCtrl.deleteTag(name)">
+                                            </tags>
+                                            <div style="margin-left: 10px" ng-show="!(trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType == featurestoreCtrl.hopsfsTrainingDatasetType)">
+                                                <h3 style="text-align:center;">Tags not supported for </h3>
+                                                <p style="text-align:center; margin-top:20px;">{{trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType}}</p>
+                                            </div>
                                         </md-tab>
                                     </md-tabs>
                                 </md-content>

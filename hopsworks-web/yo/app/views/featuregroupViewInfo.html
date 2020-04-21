@@ -120,35 +120,6 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             style="overflow-x: scroll">
-            <div uib-accordion-heading>
-                <i class="fa fa-info-circle" tooltip-placement="auto left"
-                   uib-tooltip='Metadata for feature groups'></i>
-                <span style="margin-left: 20px">
-                    Metadata
-                </span>
-            </div>
-
-            <div ng-if="featuregroupViewInfoCtrl.customMetadata !== null">
-                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
-                    <thead style="border:none;" class="fs-table">
-                    <th style="width: 10%;">Name</th>
-                    <th style="width: 90%;">Value</th>
-                    <tbody class="fs-table">
-                    <tr ng-repeat="item in featuregroupViewInfoCtrl.customMetadata" class="fs-table">
-                        <td>{{item['name']}}</td>
-                        <td>{{item['value']}}</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.customMetadata === null">
-                No custom metadata available for this feature group
-            </h3>
-        </div>
-
-        <div uib-accordion-group class="panel-default"
              ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
              style="overflow-x: scroll">
             <div uib-accordion-heading>

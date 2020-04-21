@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.metadata;
+package io.hops.hopsworks.common.hdfs.xattrs;
 
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -27,7 +27,9 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.Charsets;
 import org.apache.hadoop.fs.Path;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -42,25 +44,34 @@ import java.util.logging.Level;
 @Stateless(name = "XAttrsController")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class XAttrsController {
-  
+
   private static String XATTR_USER_NAMESPACE = "user.";
-  
+
   @EJB
   private InodeController inodeController;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
-  
-  
+
+
   public boolean addXAttr(Project project, Users user, String inodePath,
-      String name, String metaObj)
+                          String name, String metaObj)
       throws DatasetException, MetadataException {
-    if(name == null || name.isEmpty()) {
+    if (name == null || name.isEmpty()) {
       throw new MetadataException(
           RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
     }
-    JSONObject metaJSON = new JSONObject(metaObj);
+
+    JSONObject metaJSON = null;
+    Object json = new JSONTokener(metaObj).nextValue();
+    if (json instanceof JSONObject) {
+      metaJSON = (JSONObject) json;
+    } else if (json instanceof JSONArray) {
+      metaJSON = new JSONObject();
+      metaJSON.put(name, json.toString());
+    }
+
     if(!metaJSON.has(name)){
       throw new MetadataException(
           RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
@@ -70,16 +81,16 @@ public class XAttrsController {
       throw new MetadataException(
           RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
     }
-  
+
     boolean created = getXAttr(project, user, inodePath, name) == null;
-    
+
     addXAttrInt(project, user, inodePath, name, metadata);
-    
+
     return created;
   }
-  
+
   public Map<String, String> getXAttrs(Project project, Users user, String inodePath,
-      String name) throws DatasetException, MetadataException{
+                                       String name) throws DatasetException, MetadataException{
     Map<String, String> result = new HashMap<>();;
     if(name == null || name.isEmpty()){
       result = getXAttrs(project, user, inodePath);
@@ -92,13 +103,13 @@ public class XAttrsController {
     }
     return result;
   }
-  
+
   public boolean removeXAttr(Project project, Users user, String inodePath,
-      String name) throws MetadataException, DatasetException {
-    
+                             String name) throws MetadataException, DatasetException {
+
     if(name == null || name.isEmpty())
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
-    
+
     boolean found = getXAttr(project, user, inodePath,
         name) != null;
     if(found){
@@ -106,15 +117,15 @@ public class XAttrsController {
     }
     return found;
   }
-  
+
   private void addXAttrInt(Project project, Users user, String inodePath,
-      String name, String metadataJson)
+                           String name, String metadataJson)
       throws DatasetException, MetadataException {
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
     try {
       udfso.setXAttr(new Path(path), getXAttrName(name),
-              metadataJson.getBytes(Charsets.UTF_8));
+          metadataJson.getBytes(Charsets.UTF_8));
     } catch (IOException e) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
           Level.SEVERE, path, e.getMessage(), e);
@@ -124,9 +135,9 @@ public class XAttrsController {
       }
     }
   }
-  
+
   private void removeXAttrInt(Project project, Users user, String inodePath,
-      String name) throws MetadataException, DatasetException {
+                              String name) throws MetadataException, DatasetException {
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
     try {
@@ -140,9 +151,9 @@ public class XAttrsController {
       }
     }
   }
-  
+
   private String getXAttr(Project project, Users user, String inodePath,
-      String name) throws DatasetException, MetadataException{
+                          String name) throws DatasetException, MetadataException{
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
     try {
@@ -164,9 +175,9 @@ public class XAttrsController {
       }
     }
   }
-  
+
   private Map<String, String> getXAttrs(Project project, Users user,
-      String inodePath)
+                                        String inodePath)
       throws DatasetException, MetadataException {
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
@@ -190,18 +201,18 @@ public class XAttrsController {
       }
     }
   }
-  
+
   private String validatePath(String path)
       throws MetadataException, DatasetException {
     String inodePath = path;
-    
+
     try {
       inodePath = Utils.prepPath(path);
     } catch (UnsupportedEncodingException e) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
           Level.SEVERE, path, e.getMessage(), e);
     }
-  
+
     if (!inodeController.existsPath(inodePath)) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND,
           Level.FINE,
@@ -209,14 +220,14 @@ public class XAttrsController {
     }
     return inodePath;
   }
-  
+
   private DistributedFileSystemOps getDFS(Project project, Users user){
     String hdfsUserName = hdfsUsersController.getHdfsUserName(project, user);
     return dfs.getDfsOps(hdfsUserName);
   }
-  
+
   private String getXAttrName(String name) {
     return XATTR_USER_NAMESPACE + name;
   }
-  
+
 }
