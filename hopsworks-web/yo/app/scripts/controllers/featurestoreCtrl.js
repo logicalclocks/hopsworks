@@ -21,9 +21,9 @@
 
 angular.module('hopsWorksApp')
     .controller('featurestoreCtrl', ['$scope', '$routeParams', '$q', 'growl', 'FeaturestoreService', '$location',
-        'ModalService', 'TourService', 'ProjectService', 'StorageService', 'JobService',
+        'ModalService', 'TourService', 'ProjectService', 'StorageService', 'JobService', 'VariablesService',
         function ($scope, $routeParams, $q, growl, FeaturestoreService, $location, ModalService,
-                  TourService, ProjectService, StorageService, JobService) {
+                  TourService, ProjectService, StorageService, JobService, VariablesService) {
 
             /**
              * Initialize controller state
@@ -95,6 +95,8 @@ angular.module('hopsWorksApp')
             self.externalTrainingDatasetType = ""
             self.featuregroupType = ""
             self.trainingDatasetType = ""
+            self.isEnterprise = ""
+
 
             self.featurestoreSelectedTab = 0;
             self.selectedTrainingDataset = undefined;
@@ -410,6 +412,18 @@ angular.module('hopsWorksApp')
              * @param featurestore the featurestore to query
              */
             self.getFeaturestoreSettings = function() {
+
+                VariablesService.isEnterprise().then(function(success) {
+                  self.isEnterprise = success.data.successMessage == "true";
+                },
+                function (error) {
+                        growl.error(error.data.errorMsg, {
+                            title: 'Failed to fetch if enterprise is enabled',
+                            ttl: 15000
+                        });
+                    }
+                );
+
                 FeaturestoreService.getFeaturestoreSettings(self.projectId).then(
                     function (success) {
                         self.settings = success.data

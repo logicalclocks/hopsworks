@@ -179,9 +179,34 @@ angular.module('hopsWorksApp')
                         featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/preview");
                 },
 
-                getFeaturegroupCustomMetadata: function(projectId, featurestore, featuregroup) {
+                getFeaturegroupTags: function(projectId, featurestore, featuregroup) {
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/xattrs");
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/tags");
+                },
+
+                updateFeaturegroupTag: function(projectId, featurestore, featuregroup, name, value) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/tags/" + name + "?value=" + value);
+                },
+
+                deleteFeaturegroupTag: function(projectId, featurestore, featuregroup, tagName) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/tags/" + tagName);
+                },
+
+                getTrainingDatasetTags: function(projectId, featurestore, td) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags");
+                },
+
+                updateTrainingDatasetTag: function(projectId, featurestore, td, name, value) {
+                    return $http.put('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + name + "?value=" + value);
+                },
+
+                deleteTrainingDatasetTag: function(projectId, featurestore, td, tagName) {
+                    return $http.delete('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags/" + tagName);
                 },
 
                 /**
@@ -323,6 +348,15 @@ angular.module('hopsWorksApp')
                 writeUtilArgstoHdfs: function(projectId, utilArgsJson) {
                     return $http.post('/api/project/' + projectId + '/featurestores/util',
                         JSON.stringify(utilArgsJson), {headers: {'Content-Type': 'application/json'}});
+                },
+                /**
+                 * GET request for the tags that can be attached to featuregroups or training datasets
+                 *
+                 * @param query string for the request
+                 * @returns {HttpPromise}
+                 */
+                getTags: function(query) {
+                    return $http.get('/api/tags' + query);
                 }
             };
           }]);

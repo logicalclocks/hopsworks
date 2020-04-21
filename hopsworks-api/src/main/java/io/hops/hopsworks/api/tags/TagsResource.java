@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.featurestore.tag;
+package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
@@ -57,13 +57,13 @@ public class TagsResource {
   private static final Logger LOGGER = Logger.getLogger(TagsResource.class.getName());
   
   @EJB
-  private TagsBuilder tagsBuilder;
+  private FeatureStoreTagsBuilder tagsBuilder;
   @EJB
   private FeatureStoreTagController featureStoreTagController;
   
   @ApiOperation(value = "Get all tags", response = TagsDTO.class)
   @GET
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
     @BeanParam Pagination pagination, @BeanParam TagsBeanParam tagsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -78,7 +78,7 @@ public class TagsResource {
   @ApiOperation(value = "Get by name", response = TagsDTO.class)
   @GET
   @Path("{name}")
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo, @PathParam("name") String name) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagsBuilder.build(uriInfo, resourceRequest, name);

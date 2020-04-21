@@ -1,0 +1,102 @@
+<!--
+   ~ This file is part of Hopsworks
+   ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+   ~
+   ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+   ~ the GNU Affero General Public License as published by the Free Software Foundation,
+   ~ either version 3 of the License, or (at your option) any later version.
+   ~
+   ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+   ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+   ~ PURPOSE.  See the GNU Affero General Public License for more details.
+   ~
+   ~ You should have received a copy of the GNU Affero General Public License along with this program.
+   ~ If not, see <https://www.gnu.org/licenses/>.
+   -->
+<div style="min-height:500px;">
+    <div>
+        <h3>
+            Attach a tag
+        </h3>
+        <p style="margin-left: 10px; margin-bottom:20px;" ng-if="tagsCtrl.sizeOf(tagsCtrl.allTags) == 0">
+            No tags have been defined
+        </p>
+        <div ng-show="tagsCtrl.sizeOf(tagsCtrl.allTags) > 0">
+            <div class="row form-group">
+                <div class="col-sm-2" for="add-tag">
+                    <p style="margin-top: 10px; margin-left: 10px;">
+                        Name
+                    </p>
+                </div>
+                <div class="col-sm-9">
+                    <select class="form-control" ng-model="tagsCtrl.selectedTag" required>
+                        <option ng-selected="tagsCtrl.selectedTag === tag"
+                                ng-repeat="tag in tagsCtrl.allTags"
+                                ng-value="tag">{{tag}}</option>
+                    </select>
+                </div>
+            </div>
+            <div ng-show="tagsCtrl.selectedTag">
+                <div class="row">
+                    <div class="col-sm-2" for="add-tag">
+                        <p style="margin-top: 2px; margin-left: 10px;">
+                            Value
+                        </p>
+                    </div>
+                    <div class="col-sm-9">
+                  <textarea style="width: 100%; min-width: 100%; padding-left: 5px;"
+                            ng-model="tagsCtrl.selectedValue">
+                  </textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-11">
+                        <button class="btn btn-default" ng-click="addTag({'name': tagsCtrl.selectedTag, 'value': tagsCtrl.selectedValue});" style="float:right; margin-top:10px;">
+                            Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <h3 style="margin-top:20px;">
+            Current tags
+        </h3>
+        <i ng-show="loadingTags" style="margin-top: 2px; text-align: center;"
+           class="fa fa-spinner fa-spin"></i>
+        <div ng-show="!loadingTags">
+            <p style="margin-left: 10px; margin-bottom:20px;" ng-show="attachedTags.length == 0">
+                No tags have been attached
+            </p>
+            <div class="row" ng-show="attachedTags.length > 0">
+                <div class="col-sm-12">
+                <table class="table">
+                    <thead>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th></th>
+                    </thead>
+                    <tr ng-repeat="attachedTag in attachedTags | orderBy:'tag'">
+                        <td>
+                         <span>
+                           {{ attachedTag.tag | limitTo: 18 }}{{attachedTag.tag.length > 18 ? '...' : ''}}
+                         </span>
+                        </td>
+                        <td>
+                     <span ng-show="attachedTag.value">
+                         {{ attachedTag.value | limitTo: 18 }}{{attachedTag.value.length > 18 ? '...' : ''}}
+                     </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-default fa fa-trash-o"
+                                    ng-click="deleteTag({'name': attachedTag.tag});"></button>
+                        </td>
+                    </tr>
+                </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

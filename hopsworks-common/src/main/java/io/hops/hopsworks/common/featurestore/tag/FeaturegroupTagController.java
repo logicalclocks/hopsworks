@@ -14,30 +14,13 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore.tag;
+package io.hops.hopsworks.common.featurestore.tag;
 
-import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.integrations.CommunityStereotype;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.ejb.Stateless;
 
-@XmlRootElement
-public class TagsDTO extends RestDTO<TagsDTO> {
-  private String name;
-  private String value;
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  public void setValue(String value) {
-    this.value = value;
-  }
+@Stateless
+@CommunityStereotype
+public class FeaturegroupTagController implements FeaturegroupTagControllerIface {
 }

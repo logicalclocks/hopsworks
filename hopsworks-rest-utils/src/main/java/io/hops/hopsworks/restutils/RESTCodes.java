@@ -1446,7 +1446,9 @@ public class RESTCodes {
     LEFT_RIGHT_ON_DIFF_SIZES(97, "LeftOn and RightOn have different sizes", Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_SPLIT_NAME(98, "Illegal training dataset split name", Response.Status.BAD_REQUEST),
     ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE(99, "Illegal training dataset split percentage",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    TAG_NOT_ALLOWED(100, "The provided tag is not allowed", Response.Status.BAD_REQUEST),
+    TAG_NOT_FOUND(101, "The provided tag is not attached", Response.Status.NOT_FOUND);
 
     private int code;
     private String message;

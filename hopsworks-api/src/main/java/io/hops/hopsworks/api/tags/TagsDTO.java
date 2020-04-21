@@ -13,31 +13,49 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-
-package io.hops.hopsworks.api.featurestore.tag;
+package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.tag.TagType;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class TagsDTO extends RestDTO<TagsDTO> {
+  private Integer id;
   private String name;
-  private String value;
-
+  private TagType type;
+  
+  public Integer getId() {
+    return id;
+  }
+  
+  public void setId(Integer id) {
+    this.id = id;
+  }
+  
   public String getName() {
     return name;
   }
-
+  
   public void setName(String name) {
     this.name = name;
   }
-
-  public String getValue() {
-    return value;
+  
+  public TagType getType() {
+    return type;
   }
-
-  public void setValue(String value) {
-    this.value = value;
+  
+  public void setType(TagType type) {
+    this.type = type;
+  }
+  
+  @Override
+  public String toString() {
+    return "TagsDTO{" +
+      "id=" + id +
+      ", name='" + name + '\'' +
+      ", type=" + type +
+      '}';
   }
 }

@@ -13,109 +13,78 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+
 package io.hops.hopsworks.api.featurestore.tag;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
+import io.hops.hopsworks.persistence.entity.project.Project;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
-import java.util.List;
+import java.util.Map;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class TagsBuilder {
-  
-  @EJB
-  private FeatureStoreTagFacade featureStoreTagFacade;
-  
-  public TagsDTO uri(TagsDTO dto, UriInfo uriInfo) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder().build());
+
+  public TagsDTO uri(TagsDTO dto, UriInfo uriInfo, Project project, String tagsObjectResource,
+                      Integer featurestoreId, Integer tagsObjectId, String name) {
+    dto.setHref(uriInfo.getBaseUriBuilder().path(
+        ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(project.getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+        .path(Integer.toString(featurestoreId))
+        .path(tagsObjectResource.toLowerCase())
+        .path(Integer.toString(tagsObjectId))
+        .path(ResourceRequest.Name.TAGS.toString().toLowerCase())
+        .path(name)
+        .build());
     return dto;
   }
-  
-  public TagsDTO uriItems(TagsDTO dto, UriInfo uriInfo, FeatureStoreTag tag) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder()
-      .path(Integer.toString(tag.getId()))
-      .build());
+
+  public TagsDTO uri(TagsDTO dto, UriInfo uriInfo, Project project, String tagsObjectResource,
+                     Integer featurestoreId, Integer tagsObjectId) {
+    dto.setHref(uriInfo.getBaseUriBuilder().path(
+        ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(project.getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+        .path(Integer.toString(featurestoreId))
+        .path(tagsObjectResource.toLowerCase())
+        .path(Integer.toString(tagsObjectId))
+        .path(ResourceRequest.Name.TAGS.toString().toLowerCase())
+        .build());
     return dto;
   }
-  
-  public TagsDTO uriItemsByName(TagsDTO dto, UriInfo uriInfo, FeatureStoreTag tag) {
-    dto.setHref(uriInfo.getAbsolutePathBuilder()
-      .path(tag.getName())
-      .build());
-    return dto;
-  }
-  
-  public TagsDTO expand(TagsDTO dto, ResourceRequest resourceRequest) {
-    if (resourceRequest != null) {
-      dto.setExpand(true);
-    }
-    return dto;
-  }
-  
-  public TagsDTO buildItem(UriInfo uriInfo, ResourceRequest resourceRequest, FeatureStoreTag tag) {
+
+  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+                        Project project, Integer featurestoreId,
+                        String fsObjectResource, Integer fsObjectId, String name) {
     TagsDTO dto = new TagsDTO();
-    uriItems(dto, uriInfo, tag);
-    expand(dto, resourceRequest);
-    if (dto.isExpand()) {
-      dto.setId(tag.getId());
-      dto.setName(tag.getName());
-      dto.setType(tag.getType());
-    }
+    uri(dto, uriInfo, project, fsObjectResource, featurestoreId, fsObjectId, name);
+    dto.setName(name);
     return dto;
   }
-  
-  public TagsDTO buildItemByName(UriInfo uriInfo, ResourceRequest resourceRequest, FeatureStoreTag tag) {
+
+  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+                        Project project, Integer featurestoreId, String fsObjectResource,
+                        Integer fsObjectId, Map<String, String> tags) {
     TagsDTO dto = new TagsDTO();
-    uriItemsByName(dto, uriInfo, tag);
-    expand(dto, resourceRequest);
-    if (dto.isExpand()) {
-      dto.setId(tag.getId());
-      dto.setName(tag.getName());
-      dto.setType(tag.getType());
-    }
+    uri(dto, uriInfo, project, fsObjectResource, featurestoreId, fsObjectId);
+    dto.setCount((long)tags.size());
+    tags.forEach((k, v) -> dto.addItem(build(uriInfo, resourceRequest,
+        project, featurestoreId, fsObjectResource, fsObjectId, k, v)));
     return dto;
   }
-  
-  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String value) {
-    FeatureStoreTag tag = featureStoreTagFacade.findByName(value);
-    return buildItemByName(uriInfo, resourceRequest, tag);
-  }
-  
-  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest) {
+
+  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
+                        Project project, Integer featurestoreId, String fsObjectResource,
+                       Integer featuregroupId, String name, String value) {
     TagsDTO dto = new TagsDTO();
-    uri(dto, uriInfo);
-    AbstractFacade.CollectionInfo collectionInfo = featureStoreTagFacade.findAll(resourceRequest.getOffset(),
-      resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort());
-    dto.setCount(collectionInfo.getCount());
-    return items(dto, uriInfo, resourceRequest, collectionInfo.getItems());
-  }
-  
-  private TagsDTO items(TagsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest, List<FeatureStoreTag> items) {
-    items.forEach(tag -> dto.addItem(buildItem(uriInfo, resourceRequest, tag)));
+    uri(dto, uriInfo, project, fsObjectResource, featurestoreId, featuregroupId, name);
+    dto.setName(name);
+    dto.setValue(value);
     return dto;
   }
-  
-  public TagsDTO buildByName(UriInfo uriInfo, ResourceRequest resourceRequest) {
-    TagsDTO dto = new TagsDTO();
-    uri(dto, uriInfo);
-    AbstractFacade.CollectionInfo collectionInfo = featureStoreTagFacade.findAll(resourceRequest.getOffset(),
-      resourceRequest.getLimit(), resourceRequest.getFilter(), resourceRequest.getSort());
-    dto.setCount(collectionInfo.getCount());
-    return itemsByName(dto, uriInfo, resourceRequest, collectionInfo.getItems());
-  }
-  
-  private TagsDTO itemsByName(TagsDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-    List<FeatureStoreTag> items) {
-    items.forEach(tag -> dto.addItem(buildItemByName(uriInfo, resourceRequest, tag)));
-    return dto;
-  }
-  
 }

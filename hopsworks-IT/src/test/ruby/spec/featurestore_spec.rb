@@ -1572,56 +1572,5 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
-
-    describe "add, get, and delete metadata to/from featuregroup" do
-
-      context "" do
-        before :all do
-          with_valid_project
-        end
-
-        it "should be able to add, get, and delete custom metadata" do
-          project = get_project
-          featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
-          parsed_json = JSON.parse(json_result)
-          expect_status(201)
-          featuregroup_id = parsed_json["id"]
-          attr1 = "attr1"
-          attr1v = "this is my first attribute"
-          put "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs/" + attr1,
-          {attr1 => attr1v}.to_json
-          expect_status(201)
-          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs/" + attr1
-          parsed_json = JSON.parse(response.body)
-          expect_status(202)
-          expect(parsed_json["items"].count).to eq(1)
-          expect(parsed_json["items"][0]["name"]).to eq(attr1)
-          expect(parsed_json["items"][0]["value"]).to eq(attr1v)
-          attr2 = "attr2"
-          attr2v = "this is my second attribute"
-          put "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs/" + attr2,
-          {attr2 => attr2v}.to_json
-          expect_status(201)
-          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs"
-          parsed_json = JSON.parse(response.body)
-          expect_status(202)
-          expect(parsed_json["items"].count).to eq(2)
-          for i in 1..2 do
-            if parsed_json["items"][0]["name"] == attr1
-              expect(parsed_json["items"][0]["value"]).to eq(attr1v)
-            else
-              expect(parsed_json["items"][0]["name"]).to eq(attr2)
-              expect(parsed_json["items"][0]["value"]).to eq(attr2v)
-            end
-          end
-         delete "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs/" + attr1
-         expect_status(204)
-         get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/xattrs/" + attr1
-         expect_status(404)
-        end
-
-      end
-    end
   end
 end

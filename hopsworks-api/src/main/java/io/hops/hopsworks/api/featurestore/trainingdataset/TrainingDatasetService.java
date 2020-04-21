@@ -17,13 +17,18 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
+import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
@@ -31,6 +36,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -50,6 +56,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -65,8 +72,11 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
@@ -88,6 +98,12 @@ public class TrainingDatasetService {
   private ActivityFacade activityFacade;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private TagsBuilder tagBuilder;
+  @Inject
+  private TrainingDatasetTagControllerIface tagController;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   private Project project;
   private Featurestore featurestore;
@@ -103,7 +119,7 @@ public class TrainingDatasetService {
   }
 
   /**
-   * Sets the featurestore of the featuregroups (provided by parent resource)
+   * Sets the featurestore of the training datasets (provided by parent resource)
    *
    * @param featurestoreId id of the featurestore
    * @throws FeaturestoreException
@@ -310,6 +326,136 @@ public class TrainingDatasetService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetDTOGenericEntity)
       .build();
   }
+
+  @ApiOperation( value = "Create or update tags for a training dataset", response = TagsDTO.class)
+  @PUT
+  @Path("/{trainingdatasetid}/tags/{name}")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response putTag(@Context
+                             SecurityContext sc, @Context UriInfo uriInfo,
+                         @ApiParam(value = "Id of the training dataset", required = true)
+                         @PathParam("trainingdatasetid") Integer trainingdatasetid,
+                         @ApiParam(value = "Name of the tag", required = true)
+                         @PathParam("name") String name,
+                         @ApiParam(value = "Value to set for the tag")
+                         @QueryParam("value") String value) throws DatasetException,
+      MetadataException, FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    Response.Status status = Response.Status.OK;
+    if(tagController.createOrUpdateSingleTag(project, user, featurestore, trainingdatasetid, name, value)){
+      status = Response.Status.CREATED;
+    }
+
+    Map<String, String> result = tagController.getAll(project, user, featurestore, trainingdatasetid);
+
+    ResourceRequest resourceRequest =
+        new ResourceRequest(ResourceRequest.Name.TAGS);
+    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
+        featurestore.getId(), ResourceRequest.Name.TRAININGDATASETS.name(), trainingdatasetid, result);
+
+    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
+    if(status == Response.Status.CREATED) {
+      return Response.created(builder.build()).entity(dto).build();
+    } else {
+      return Response.ok(builder.build()).entity(dto).build();
+    }
+  }
+
+  @ApiOperation( value = "Get all tags attached to a training dataset", response = TagsDTO.class)
+  @GET
+  @Path("/{trainingdatasetid}/tags")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTags(@Context SecurityContext sc,
+                          @Context UriInfo uriInfo,
+                          @ApiParam(value = "Id of the training dataset", required = true)
+                          @PathParam("trainingdatasetid") Integer trainingdatasetid)
+      throws DatasetException, MetadataException, FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    Map<String, String> result = tagController.getAll(project, user, featurestore, trainingdatasetid);
+
+    ResourceRequest resourceRequest =
+        new ResourceRequest(ResourceRequest.Name.TAGS);
+    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
+        featurestore.getId(), ResourceRequest.Name.TRAININGDATASETS.name(), trainingdatasetid, result);
+    return Response.status(Response.Status.OK).entity(dto).build();
+  }
+
+  @ApiOperation( value = "Get tag attached to a training dataset", response = TagsDTO.class)
+  @GET
+  @Path("/{trainingdatasetid}/tags/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getTag(@Context SecurityContext sc,
+                         @Context UriInfo uriInfo,
+                         @ApiParam(value = "Id of the training dataset", required = true)
+                         @PathParam("trainingdatasetid") Integer trainingdatasetid,
+                         @ApiParam(value = "Name of the tag", required = true)
+                         @PathParam("name") String name)
+      throws DatasetException, MetadataException, FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    Map<String, String> result = tagController.getSingle(project, user, featurestore, trainingdatasetid, name);
+
+    ResourceRequest resourceRequest =
+        new ResourceRequest(ResourceRequest.Name.TAGS);
+    TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
+        featurestore.getId(), ResourceRequest.Name.TRAININGDATASETS.name(), trainingdatasetid, result);
+    return Response.status(Response.Status.OK).entity(dto).build();
+  }
+
+  @ApiOperation( value = "Delete all attached tags to training dataset")
+  @DELETE
+  @Path("/{trainingdatasetid}/tags")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteTags(@Context SecurityContext sc,
+                             @ApiParam(value = "Id of the training dataset", required = true)
+                             @PathParam("trainingdatasetid") Integer trainingdatasetid)
+      throws DatasetException, MetadataException, FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    tagController.deleteAll(project, user, featurestore, trainingdatasetid);
+
+    return Response.noContent().build();
+  }
+
+  @ApiOperation( value = "Delete tag attached to training dataset")
+  @DELETE
+  @Path("/{trainingdatasetid}/tags/{name}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response deleteTag(@Context SecurityContext sc,
+                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
+                            @PathParam("trainingdatasetid") Integer trainingdatasetid,
+                            @ApiParam(value = "Name of the tag", required = true)
+                            @PathParam("name") String name)
+      throws DatasetException, MetadataException, FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
+
+    tagController.deleteSingle(project, user, featurestore, trainingdatasetid, name);
+
+    return Response.noContent().build();
+  }
   
   /**
    * Verify that the user id was provided as a path param
@@ -334,3 +480,4 @@ public class TrainingDatasetService {
     }
   }
 }
+

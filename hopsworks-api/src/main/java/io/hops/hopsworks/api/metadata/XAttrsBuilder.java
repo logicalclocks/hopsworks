@@ -64,46 +64,4 @@ public class XAttrsBuilder {
         project, path, k, v)));
     return dto;
   }
-  
-  public XAttrDTO uri(XAttrDTO dto, UriInfo uriInfo, Project project,
-      Integer featurestoreId, Integer featuregroupId, String name) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(
-        ResourceRequest.Name.PROJECT.toString().toLowerCase())
-        .path(Integer.toString(project.getId()))
-        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
-        .path(Integer.toString(featurestoreId))
-        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
-        .path(Integer.toString(featuregroupId))
-        .path(ResourceRequest.Name.XATTRS.toString().toLowerCase())
-        .path(name)
-        .build());
-    return dto;
-  }
-  
-  public XAttrDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-      Project project, Integer featurestoreId,
-      Integer featuregroupId, String name) {
-    XAttrDTO dto = new XAttrDTO();
-    uri(dto, uriInfo, project, featurestoreId, featuregroupId, name);
-    dto.setName(name);
-    return dto;
-  }
-  
-  public XAttrDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-      Project project, Integer featurestoreId, Integer featuregroupId,
-      Map<String, String> xattrs) {
-    XAttrDTO dto = new XAttrDTO();
-    xattrs.forEach((k, v) -> dto.addItem(build(uriInfo, resourceRequest,
-        project, featurestoreId, featuregroupId, k, v)));
-    return dto;
-  }
-  
-  public XAttrDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-      Project project, Integer featurestoreId, Integer featuregroupId, String name, String value) {
-    XAttrDTO dto = new XAttrDTO();
-    uri(dto, uriInfo, project, featurestoreId, featuregroupId, name);
-    dto.setName(name);
-    dto.setValue(value);
-    return dto;
-  }
 }

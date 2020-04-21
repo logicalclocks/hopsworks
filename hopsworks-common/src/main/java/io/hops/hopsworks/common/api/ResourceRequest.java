@@ -172,7 +172,8 @@ public class ResourceRequest {
     HOSTS,
     QUERY,
     TAGS,
-    SERVICES;
+    SERVICES,
+    TRAININGDATASETS;
     
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

@@ -18,9 +18,9 @@
  * Controller for the Training Dataset-Info view
  */
 angular.module('hopsWorksApp')
-    .controller('trainingDatasetViewInfoCtrl', ['$scope', 'ProjectService',
-        'JobService', 'ModalService', 'StorageService', 'FeaturestoreService', '$location', 'growl',
-        function ($scope, ProjectService, JobService, ModalService, StorageService, FeaturestoreService, $location, growl) {
+    .controller('trainingDatasetViewInfoCtrl', ['$scope', 'FeaturestoreService', 'ProjectService',
+        'JobService', 'ModalService', 'StorageService', '$location', 'growl',
+        function ($scope, FeaturestoreService, ProjectService, JobService, ModalService, StorageService, $location, growl) {
 
             /**
              * Initialize controller state
@@ -33,14 +33,96 @@ angular.module('hopsWorksApp')
             self.trainingDatasets = null;
             self.featurestore = null;
             self.settings = null;
+            self.loadingTags = false;
             //State
             self.sizeWorking = false;
             self.size = "Not fetched"
             self.pythonCode = ""
             self.scalaCode = ""
+            self.attachedTags = [];
 
             /**
-             * Get the Python API code to retrieve the featuregroup
+             * Get training dataset tags
+             */
+            self.fetchTags = function () {
+                self.loadingTags = true;
+                FeaturestoreService.getTrainingDatasetTags(self.projectId, self.featurestore, self.selectedTrainingDataset).then(
+                    function (success) {
+                        self.loadingTags = false;
+                        self.attachedTags = [];
+                        if(success.data.items) {
+                            for (var i = 0; i < success.data.items.length; i++) {
+                                self.attachedTags.push({"tag": success.data.items[i].name, "value": success.data.items[i].value});
+                            }
+                        } else {
+                            self.attachedTags = [];
+                        }
+                      },
+                    function (error) {
+                        self.loadingTags = false;
+                        if(error.status !== 422) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            }
+                        }
+                    });
+            };
+
+            /**
+             * Add training dataset tags
+             */
+            self.addTag = function(name, value) {
+                self.loadingTags = true;
+                FeaturestoreService.updateTrainingDatasetTag(self.projectId, self.featurestore, self.selectedTrainingDataset, name, value).then(
+                    function (success) {
+                        self.attachedTags = [];
+                        self.loadingTags = false;
+                        if(success.data.items) {
+                            for (var i = 0; i < success.data.items.length; i++) {
+                                self.attachedTags.push({"tag": success.data.items[i].name, "value": success.data.items[i].value});
+                            }
+                        } else {
+                            self.attachedTags = [];
+                        }
+                    },
+                    function (error) {
+                        self.loadingTags = false;
+                        if(error.status !== 404) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            }
+                        }
+                    });
+            };
+
+            /**
+             * Delete training dataset tag
+             */
+            self.deleteTag = function(name) {
+                self.loadingTags = true;
+                FeaturestoreService.deleteTrainingDatasetTag(self.projectId, self.featurestore, self.selectedTrainingDataset, name).then(
+                    function (success) {
+                        self.attachedTags = [];
+                        self.fetchTags();
+                    },
+                    function (error) {
+                        self.loadingTags = false;
+                        if(error.status !== 404) {
+                            if (typeof error.data.usrMsg !== 'undefined') {
+                                growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                            } else {
+                                growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            }
+                        }
+                    });
+            };
+
+            /**
+             * Get the Python API code to retrieve the training dataset
              */
             self.getPythonCode = function () {
                 var codeStr = "from hops import featurestore\n"
@@ -49,7 +131,7 @@ angular.module('hopsWorksApp')
             };
 
             /**
-             * Get the Scala API code to retrieve the featuregroup
+             * Get the Scala API code to retrieve the training dataset
              */
             self.getScalaCode = function () {
                 var codeStr = "import io.hops.util.Hops\n"
@@ -109,6 +191,7 @@ angular.module('hopsWorksApp')
                 self.pythonCode = self.getPythonCode();
                 self.scalaCode = self.getScalaCode();
                 self.fetchSize()
+                self.fetchTags();
             };
 
             self.viewSelected = function (projectId, projectName, featurestore, settings, trainingDatasets, toggle) {
@@ -181,7 +264,6 @@ angular.module('hopsWorksApp')
             /**
              * Called when the view-training-dataset-statistics button is pressed
              *
-             * @param trainingDataset
              */
             self.viewTrainingDatasetStatistics = function () {
                 ModalService.viewTrainingDatasetStatistics('lg', self.projectId, self.selectedTrainingDataset, self.projectName,
@@ -194,7 +276,6 @@ angular.module('hopsWorksApp')
             /**
              * Called when the delete-trainingDataset-button is pressed
              *
-             * @param trainingDataset
              */
             self.deleteTrainingDataset = function (featurestoreCtrl) {
                 ModalService.confirm('md', 'Are you sure?',
@@ -220,8 +301,6 @@ angular.module('hopsWorksApp')
             /**
              * Called when the increment-version-trainingDataset-button is pressed
              *
-             * @param trainingDatasets list of featuregroup versions
-             * @param versions list
              */
             self.newTrainingDatasetVersion = function (featurestoreCtrl) {
                 StorageService.store("trainingdataset_operation", "NEW_VERSION");
@@ -242,7 +321,6 @@ angular.module('hopsWorksApp')
             /**
              * Shows the page for updating an existing training dataset.
              *
-             * @param trainingDataset
              */
             self.updateTrainingDataset = function (featurestoreCtrl) {
                 StorageService.store("trainingdataset_operation", "UPDATE");
