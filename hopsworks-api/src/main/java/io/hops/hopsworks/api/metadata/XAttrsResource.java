@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
