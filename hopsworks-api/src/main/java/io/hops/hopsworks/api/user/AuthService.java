@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.user;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
@@ -152,6 +153,7 @@ public class AuthService {
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
     @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
     NoSuchAlgorithmException,
@@ -190,6 +192,7 @@ public class AuthService {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
     logoutAndInvalidateSession(req);
     return Response.ok().build();
@@ -198,6 +201,7 @@ public class AuthService {
   @POST
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response serviceLogin(@FormParam("email") String email, @FormParam("password") String password,
     @Context HttpServletRequest request) throws UserException, GeneralSecurityException, SigningKeyNotFoundException,
     DuplicateSigningKeyException, HopsSecurityException {
@@ -281,6 +285,7 @@ public class AuthService {
   @DELETE
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response serviceLogout(@Context HttpServletRequest request) throws UserException, InvalidationException {
     if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
       jwtController.invalidateServiceToken(jWTHelper.getAuthToken(request), settings.getJWTSigningKeyName());
@@ -307,6 +312,7 @@ public class AuthService {
   @Path("register")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response register(UserDTO newUser, @Context HttpServletRequest req) throws UserException {
     byte[] qrCode;
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -324,6 +330,7 @@ public class AuthService {
   @POST
   @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response recoverPassword(@FormParam("email") String email,
     @FormParam("securityQuestion") String securityQuestion, @FormParam("securityAnswer") String securityAnswer,
     @Context HttpServletRequest req) throws UserException,
@@ -338,6 +345,7 @@ public class AuthService {
   @POST
   @Path("/recover/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response recoverQRCode(@FormParam("email") String email, @FormParam("password") String password,
     @Context HttpServletRequest req) throws UserException, MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -350,6 +358,7 @@ public class AuthService {
   @POST
   @Path("/reset/validate")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response validatePasswordRecovery(@FormParam("key") String key, @Context HttpServletRequest req)
     throws UserException {
     userController.checkRecoveryKey(key);
@@ -359,6 +368,7 @@ public class AuthService {
   @POST
   @Path("/reset/password")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response passwordRecovery(@FormParam("key") String key, @FormParam("newPassword") String newPassword,
     @FormParam("confirmPassword") String confirmPassword, @Context HttpServletRequest req) throws UserException,
     MessagingException {
@@ -371,6 +381,7 @@ public class AuthService {
   @POST
   @Path("/reset/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response qrCodeRecovery(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException,
     MessagingException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
@@ -381,6 +392,7 @@ public class AuthService {
   @POST
   @Path("/validate/email")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response validateUserMail(@FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
     authController.validateEmail(key);
     return Response.ok().build();

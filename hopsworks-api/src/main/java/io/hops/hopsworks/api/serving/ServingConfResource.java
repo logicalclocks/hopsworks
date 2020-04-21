@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.serving;
 
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.util.Settings;
@@ -44,6 +45,7 @@ public class ServingConfResource {
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @ApiOperation(value = "Get UI configuration for serving", response = ServingConf.class)
   public Response getConfiguration() {
     ServingConf servingConf = new ServingConf(servingController.getMaxNumInstances(),
