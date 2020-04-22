@@ -256,7 +256,7 @@ public class EnvironmentController {
     return foundVersion;
   }
     
-  public String exportEnv(Project project, Users user, String projectRelativeExportPath)
+  public String[] exportEnv(Project project, Users user, String projectRelativeExportPath)
       throws PythonException, ServiceException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
@@ -268,7 +268,8 @@ public class EnvironmentController {
     String ymlPath = projectRelativeExportPath + "/" + "environment_" + exportTime + ".yml";
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonVersion(), project, user,
         ymlPath, MachineType.CPU, null, false, true);
-    return ymlPath;
+    String[] result = {ymlPath};
+    return result;
   }
   
   public void createEnv(Project project, Users user, String version, boolean createBaseEnv) throws PythonException,
