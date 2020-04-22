@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
@@ -98,8 +97,6 @@ public class FlinkController {
   private static final Logger LOGGER = Logger.getLogger(FlinkController.class.getName());
   
   @EJB
-  YarnJobsMonitor jobsMonitor;
-  @EJB
   private AsynchronousJobExecutor submitter;
   @EJB
   private ActivityFacade activityFacade;
@@ -136,8 +133,7 @@ public class FlinkController {
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
         flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
-          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), jobsMonitor, settings,
-          kafkaBrokers.getKafkaBrokersString()));
+          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

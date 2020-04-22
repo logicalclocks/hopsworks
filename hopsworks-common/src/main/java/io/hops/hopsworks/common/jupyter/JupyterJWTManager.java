@@ -25,7 +25,6 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
@@ -103,7 +102,7 @@ public class JupyterJWTManager {
       }
     }
   });
-
+  
   private final HashMap<PidAndPort, JupyterJWT> pidAndPortToJWT = new HashMap<>();
 
   @EJB
@@ -127,7 +126,7 @@ public class JupyterJWTManager {
   @EJB
   private UserFacade userFacade;
   @Inject
-  private JupyterJWTTokenWriter jupyterJWTTokenWriter;
+  private JupyterJWTTokenWriter jwtTokenWriter;
   @Resource
   private TimerService timerService;
   
@@ -152,8 +151,8 @@ public class JupyterJWTManager {
     JupyterJWT jupyterJWT = pidAndPortToJWT.remove(pidAndPort);
     jupyterJWTs.remove(jupyterJWT);
   }
-
-  private void recover() {
+  
+  protected void recover() {
     LOG.log(INFO, "Starting Jupyter JWT manager recovery");
     List<MaterializedJWT> failed2recover = new ArrayList<>();
     
@@ -197,7 +196,7 @@ public class JupyterJWTManager {
       try {
         token = FileUtils.readFileToString(tokenFile.toFile());
         DecodedJWT decodedJWT = jwtController.verifyToken(token, settings.getJWTIssuer());
-        jupyterJWT = new JupyterJWT(project, user, pidAndPort, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()));
+        jupyterJWT = new JupyterJWT(project, user, DateUtils.date2LocalDateTime(decodedJWT.getExpiresAt()), pidAndPort);
         jupyterJWT.token = token;
         jupyterJWT.tokenFile = tokenFile;
         LOG.log(Level.FINE, "Successfully read existing JWT from local filesystem");
@@ -216,10 +215,10 @@ public class JupyterJWTManager {
           token = jwtController.createToken(settings.getJWTSigningKeyName(), false, settings.getJWTIssuer(),
               audience, DateUtils.localDateTime2Date(expirationDate), DateUtils.localDateTime2Date(DateUtils.getNow()),
               user.getUsername(), claims, SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg()));
-          jupyterJWT = new JupyterJWT(project, user, pidAndPort, expirationDate);
+          jupyterJWT = new JupyterJWT(project, user, expirationDate, pidAndPort);
           jupyterJWT.token = token;
           jupyterJWT.tokenFile = tokenFile;
-          jupyterJWTTokenWriter.writeToken(settings, jupyterJWT);
+          jwtTokenWriter.writeToken(settings, jupyterJWT);
           LOG.log(Level.FINE, "Generated new Jupyter JWT cause could not recover existing");
         } catch (IOException recIOEx) {
           LOG.log(Level.WARNING, "Failed to recover Jupyter JWT for " + materializedJWT.getIdentifier()
@@ -264,7 +263,7 @@ public class JupyterJWTManager {
       MaterializedJWTID.USAGE.JUPYTER);
     if (!materializedJWTFacade.exists(materialID)) {
       LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-      JupyterJWT jupyterJWT = new JupyterJWT(project, user, new PidAndPort(pid, port), expirationDate);
+      JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate, new PidAndPort(pid, port));
       try {
         String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
         MaterializedJWT materializedJWT = new MaterializedJWT(materialID);
@@ -281,7 +280,7 @@ public class JupyterJWTManager {
         jupyterJWT.tokenFile = constructTokenFilePath(jupyterSettings);
         
         jupyterJWT.token = token;
-        jupyterJWTTokenWriter.writeToken(settings, jupyterJWT);
+        jwtTokenWriter.writeToken(settings, jupyterJWT);
         
         addToken(jupyterJWT);
       } catch (GeneralSecurityException | JWTException ex) {
@@ -307,12 +306,12 @@ public class JupyterJWTManager {
   @AccessTimeout(value = 500)
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   @Timeout
-  public void monitorJupyterJWT() {
+  public void monitorJWT() {
+    // Renew the rest of them
+    Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
+    Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
+    LocalDateTime now = DateUtils.getNow();
     try {
-      // Renew the rest of them
-      Set<JupyterJWT> renewedJWTs = new HashSet<>(this.jupyterJWTs.size());
-      Iterator<JupyterJWT> jupyterJWTs = this.jupyterJWTs.iterator();
-      LocalDateTime now = DateUtils.getNow();
 
       while (jupyterJWTs.hasNext()) {
         JupyterJWT element = jupyterJWTs.next();
@@ -325,11 +324,11 @@ public class JupyterJWTManager {
             newToken = jwtController.renewToken(element.token, DateUtils.localDateTime2Date(newExpirationDate),
                 DateUtils.localDateTime2Date(now), true, new HashMap<>(3));
 
-            JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user,
-                element.pidAndPort, newExpirationDate);
+            JupyterJWT renewedJWT = new JupyterJWT(element.project, element.user, newExpirationDate,
+              element.pidAndPort);
             renewedJWT.tokenFile = element.tokenFile;
             renewedJWT.token = newToken;
-            jupyterJWTTokenWriter.writeToken(settings, renewedJWT);
+            jwtTokenWriter.writeToken(settings, renewedJWT);
             renewedJWTs.add(renewedJWT);
           } catch (JWTException ex) {
             LOG.log(Level.WARNING, "Could not renew Jupyter JWT for " + element, ex);
@@ -373,7 +372,7 @@ public class JupyterJWTManager {
       MaterializedJWTID materializedJWTID = new MaterializedJWTID(element.project.getId(), element.user.getUid(),
         MaterializedJWTID.USAGE.JUPYTER);
       MaterializedJWT material = materializedJWTFacade.findById(materializedJWTID);
-      jupyterJWTTokenWriter.deleteToken(element);
+      jwtTokenWriter.deleteToken(element);
       if (material != null) {
         materializedJWTFacade.delete(materializedJWTID);
       }

@@ -218,9 +218,12 @@ angular.module('hopsWorksApp')
                 case "FLINK":
                   jobType = 3;
                   break;
+                case "PYTHON":
+                  jobType = 4;
+                  break;
               }
               var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState;
-              if (jobType === 1 || jobType === 2 ) {
+              if (jobType === 1 || jobType === 2 || jobType === 4 ) {
 
                 sparkState = {
                   "selectedJar": getFileName(job.config.appPath)
@@ -606,7 +609,13 @@ angular.module('hopsWorksApp')
             };
 
             self.showExecutionUI = function (execution) {
-              $location.path('project/' + self.projectId + '/jobMonitor-app/' + execution.appId);
+              var id = "";
+              if(typeof execution.appId !== "undefined"){
+                  id = execution.appId;
+              } else {
+                  id = execution.id;
+              }
+              $location.path('project/' + self.projectId + '/jobMonitor-app/' + id);
             };
 
 
@@ -695,6 +704,12 @@ angular.module('hopsWorksApp')
                   self.selectedJobs[job.name] = index;
                   var offset = self.executionsPagination[job.name]["pageSize"] * (self.executionsPagination[job.name]["currentPage"] - 1);
                   self.getJobExecutions(job.name, true, null, offset);
+            };
+
+            self.initJobs = function(job, index){
+                if(typeof job !== "undefined" && job.running){
+                    self.toggleOn(job, index);
+                }
             };
 
 

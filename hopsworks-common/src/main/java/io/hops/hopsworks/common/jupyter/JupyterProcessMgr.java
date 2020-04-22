@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package io.hops.hopsworks.common.dao.jupyter.config;
+package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -45,8 +45,11 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterPaths;
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
-import io.hops.hopsworks.common.jupyter.TokenGenerator;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -92,7 +95,7 @@ import java.util.logging.Logger;
  */
 @Stateless
 @LocalhostStereotype
-public class JupyterProcessMgr implements JupyterManager {
+public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterManager {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterProcessMgr.class.getName());
   private static final int TOKEN_LENGTH = 48;
@@ -256,7 +259,7 @@ public class JupyterProcessMgr implements JupyterManager {
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void projectCleanup(Project project) {
-    projectCleanup(settings, LOGGER, osProcessExecutor, project);
+    projectCleanup(LOGGER, project);
   }
   
   @Override

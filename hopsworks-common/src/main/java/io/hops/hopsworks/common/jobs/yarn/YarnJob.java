@@ -48,6 +48,7 @@ import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.exceptions.JobException;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
@@ -55,6 +56,7 @@ import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
@@ -69,6 +71,7 @@ public abstract class YarnJob extends HopsJob {
   private static final Logger LOG = Logger.getLogger(YarnJob.class.getName());
 
   protected YarnRunner runner;
+  protected YarnClient yarnClient;
 
   private String stdOutFinalDestination, stdErrFinalDestination;
   protected List<LocalResourceDTO> projectLocalResources;
@@ -78,7 +81,6 @@ public abstract class YarnJob extends HopsJob {
   protected Settings settings;
   protected String kafkaBrokersString;
   
-
   /**
    * Constructor for job interacting with the Kafka service.
    *
@@ -87,15 +89,14 @@ public abstract class YarnJob extends HopsJob {
    * @param services
    * @param jobUser
    * @param hadoopDir
-   * @param jobsMonitor
    * @param settings
    * @throws IllegalArgumentException If the Jobs does not contain a
  YarnJobConfiguration object.
    */
   public YarnJob(Jobs job, AsynchronousJobExecutor services,
-      Users user, String jobUser, String hadoopDir, YarnJobsMonitor jobsMonitor,
-      Settings settings, String kafkaBrokersString) {
-    super(job, services, user, hadoopDir, jobsMonitor);
+      Users user, String jobUser, String hadoopDir,
+      Settings settings) {
+    super(job, services, user, hadoopDir);
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
       throw new IllegalArgumentException(
           "Job must be a YarnJobConfiguration object. Received class: "
@@ -167,15 +168,8 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
-    //Check if this job is using Kakfa, and include certificate
-    //in local resources
-    serviceProps = new ServiceProperties(jobs.getProject().getId(), jobs.getProject().getName(),
-        services.getSettings().getRestEndpoint(), jobs.getName(), new ElasticProperties(
-        services.getSettings().getElasticRESTEndpoint()));
-    return true;
-  }
-
+  protected abstract boolean setupJob() throws JobException;
+  
   final EnumSet<YarnApplicationState> finalAppState = EnumSet.of(
       YarnApplicationState.FINISHED, YarnApplicationState.FAILED,
       YarnApplicationState.KILLED);
@@ -209,15 +203,68 @@ public abstract class YarnJob extends HopsJob {
   }
 
   @Override
-  protected void runJob(DistributedFileSystemOps udfso,
-      DistributedFileSystemOps dfso, String args) {
+  protected void runJob(String args) {
     // Try to start the AM
-    boolean proceed = startApplicationMaster(udfso, dfso, args);
+    DistributedFileSystemOps dfso = null;
+    DistributedFileSystemOps udfso = null;
+    boolean proceed;
+    try {
+      dfso = services.getFsService().getDfsOps();
+      udfso = services.getFileOperations(hdfsUser.getUserName());
+      proceed = startApplicationMaster(udfso, dfso, args);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+      if (null != udfso) {
+        services.getFsService().closeDfsClient(udfso);
+      }
+    }
 
     if (!proceed) {
       return;
     }
 
   }
-
+  
+  public final void execute(String args) {
+    if (!initialized) {
+      throw new IllegalStateException(
+        "Cannot execute before acquiring an Execution id.");
+    }
+    try {
+      super.execute(args);
+      this.hdfsUser.doAs(new PrivilegedExceptionAction<Void>() {
+        @Override
+        public Void run() {
+          YarnClientWrapper yarnClientWrapper = null;
+          try {
+            yarnClientWrapper = services.getYarnClientService().getYarnClient(hdfsUser.getUserName());
+            yarnClient = yarnClientWrapper.getYarnClient();
+            boolean proceed = false;
+            try {
+              proceed = setupJob();
+            } catch (Exception ex) {
+              LOG.log(Level.SEVERE, "Job Initialization Failed", ex);
+            }
+            if (!proceed) {
+              execution = services.getExecutionFacade().updateExecutionStop(execution, System.currentTimeMillis());
+              services.getExecutionFacade().updateState(execution, JobState.INITIALIZATION_FAILED);
+              cleanup();
+              return null;
+            }
+            runJob(args);
+            return null;
+          } finally {
+            if (yarnClientWrapper != null) {
+              services.getYarnClientService().closeYarnClient(yarnClientWrapper);
+            }
+          }
+        }
+      });
+    } catch (IOException | InterruptedException ex) {
+      LOG.log(Level.SEVERE, null, ex);
+    }
+  
+  }
 }

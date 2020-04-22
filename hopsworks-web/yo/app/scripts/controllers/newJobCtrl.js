@@ -42,10 +42,10 @@
 angular.module('hopsWorksApp')
         .controller('NewJobCtrl', ['$routeParams', 'growl', 'JobService',
           '$location', 'ModalService', 'StorageService', '$scope', 'TourService',
-            'KafkaService', 'ProjectService', 'PythonService', '$timeout',
+            'KafkaService', 'ProjectService', 'PythonService', 'VariablesService', '$timeout',
           function ($routeParams, growl, JobService,
                   $location, ModalService, StorageService, $scope, TourService,
-                  KafkaService, ProjectService, PythonService, $timeout) {
+                  KafkaService, ProjectService, PythonService, VariablesService, $timeout) {
 
             var self = this;
             self.tourService = TourService;
@@ -59,7 +59,8 @@ angular.module('hopsWorksApp')
             self.putAction =  "Create";
             self.showUpdateWarning = false;
             self.updateWarningMsg = "Job already exists. Are you sure you want to update it?";
-
+            self.maxDockerCores = 5;
+            self.isPythonEnabled = false;
             //Set some (semi-)constants
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
@@ -69,7 +70,8 @@ angular.module('hopsWorksApp')
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
               "FLINK": "Please select a JAR file.",
-              "PYSPARK": "Please select a .py or .ipynb file."
+              "PYSPARK": "Please select a .py or .ipynb file.",
+              "PYTHON": "Please select a Python file, archive or ipynb notebook."
             };
 
             //Create variables for user-entered information
@@ -82,11 +84,56 @@ angular.module('hopsWorksApp')
 
             self.phase = 0; //The phase of creation we are in.
             self.runConfig; //Will hold the job configuration
+            self.files = [];
 
             self.sliderVisible = false;
 
             self.guideKafkaTopics = [];
             self.tourService.init(null);
+
+            self.getDockerMaxAllocation = function () {
+              VariablesService.getVariable('kube_docker_max_memory_allocation')
+                  .then(function (success) {
+                    self.hasDockerMemory = true;
+                    self.maxDockerMemory = parseInt(success.data.successMessage);
+                  }, function (error) {
+                    self.hasDockerMemory = false;
+                    self.maxDockerMemory = -1;
+                  });
+              VariablesService.getVariable('kube_docker_max_cores_allocation')
+                  .then(function (success) {
+                    self.hasDockerCores = true;
+                    self.maxDockerCores = parseInt(success.data.successMessage);
+                  }, function (error) {
+                    self.hasDockerCores = false;
+                    self.maxDockerCores = -1;
+                  });
+              VariablesService.getVariable('kube_docker_max_gpus_allocation')
+                  .then(function (success) {
+                    self.hasDockerGpus = true;
+                    self.maxDockerGpus = parseInt(success.data.successMessage);
+                  }, function (error) {
+                    self.hasDockerGpus = false;
+                    self.maxDockerGpus = -1;
+                  });
+            };
+
+            self.checkIfPythonEnabled = function () {
+              VariablesService.isKubernetes()
+                  .then(function (success) {
+                    self.isPythonEnabled = true;
+                    self.getDockerMaxAllocation();
+                  }, function (error) {
+                  });
+            };
+
+            self.range = function (min, max) {
+              var input = [];
+              for (var i = min; i <= max; i++) {
+                input.push(i);
+              }
+              return input;
+            };
 
             self.populateKafkaTopic = function () {
               var tipsEnabled = self.tourService.showTips;
@@ -275,7 +322,8 @@ angular.module('hopsWorksApp')
               })(file);
 
               reader.readAsText(file);
-            }
+            };
+
             document.getElementById('jobConfigFile').addEventListener('change', handleFileSelect, false);
 
             var jobConfigFileImported = function (config) {
@@ -335,6 +383,11 @@ angular.module('hopsWorksApp')
                   return;
                 }
               }
+              //
+              if (self.getJobType() === "PYTHON" && typeof self.runConfig['files'] !== "undefined" && self.runConfig['files'] !== "" ){
+                self.runConfig['files'] = self.runConfig['files'].replace(/,\s*$/, "");
+              }
+
               if (self.tourService.currentStep_TourFour > -1) {
                 //self.tourService.resetTours();
                 self.tourService.currentStep_TourThree = 2;
@@ -459,6 +512,20 @@ angular.module('hopsWorksApp')
                       "\"taskmanager.numberOfTaskSlots\":1}");
                   $scope.jobConfig = self.runConfig;
                   break;
+                case 4:
+                  self.accordion3.title = "File, archive, notebook (.py, .egg, .zip, .ipynb)";
+                  self.accordion4.title = "Job details";
+                  selectedType = "Python";
+                  jobConfig = 'pythonJobConfiguration';
+                  self.accordion3.visible = true; //Display file selection
+                  self.accordion4.isOpen = false; //Close job setup
+                  self.accordion4.visible = false; //Hide job setup
+                  self.accordion5.visible = false; // Hide job configuration
+                  self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
+                      "\"memory\":2048," +
+                      "\"cores\":1," +
+                      "\"gpus\":0}");
+                  break;
                 default:
                   break;
               }
@@ -482,6 +549,8 @@ angular.module('hopsWorksApp')
                   return "PYSPARK";
                 case 3:
                   return "FLINK";
+                case 4:
+                  return "PYTHON";
                 default:
                   return null;
               }
@@ -529,7 +598,7 @@ angular.module('hopsWorksApp')
               self.accordion5.visible = true; // Show job config
               self.accordion3.value = " - " + path; // Set file selection title
               self.accordion3.isOpen = false; //Close file selection
-              if (self.jobtype === 2){
+              if (self.jobtype === 2 || self.jobtype === 4){
                 self.accordion5.isOpen = true;
                 self.accordion3.visible = true;
               }
@@ -567,36 +636,55 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedJar = filename;
-                  JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
-                          function (success) {
-                            $scope.jobConfig = success.data;
-                            self.runConfig = $scope.jobConfig;
-                            $scope.settings = {advanced: true};
+                  if(reason.toUpperCase() !== "PYTHON") {
+                    JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
+                        function (success) {
+                          $scope.jobConfig = success.data;
+                          self.runConfig = $scope.jobConfig;
+                          $scope.settings = {advanced: true};
 
-                            if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
-                            self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
-                              self.jobtype = 2;
-                            } else {
-                              self.jobtype = 1;
-                            }
-                            self.mainFileSelected(filename);
-                            // For Kafka tour
-                            if (self.projectIsGuide) {
-                              self.runConfig['spark.executor.memory']=2048;
-                              self.tourService.currentStep_TourSeven = 6;
-                            }
-
-                            if (self.tourService.currentStep_TourFour > -1) {
-                              self.tourService.currentStep_TourFour = 6;
-                            }
-
-                          }, function (error) {
-                          if (typeof error.data.usrMsg !== 'undefined') {
-                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
+                              self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
+                            self.jobtype = 2;
                           } else {
-                              growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                            self.jobtype = 1;
                           }
-                  });
+                          self.mainFileSelected(filename);
+                          // For Kafka tour
+                          if (self.projectIsGuide) {
+                            self.runConfig['spark.executor.memory'] = 2048;
+                            self.tourService.currentStep_TourSeven = 6;
+                          }
+
+                          if (self.tourService.currentStep_TourFour > -1) {
+                            self.tourService.currentStep_TourFour = 6;
+                          }
+
+                        }, function (error) {
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                          } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                          }
+                        });
+                  }
+                  break;
+                case "PYTHON":
+                  self.runConfig.appPath = path;
+                  self.mainFileSelected(filename);
+                  break;
+                case "FILES":
+                  if (self.files === []) {
+                    self.files = [path];
+                  } else {
+                    if (self.files.indexOf(path) === -1) {
+                      self.files.push(path);
+                    }
+                  }
+                  self.runConfig['files'] = "";
+                  for (var i = 0; i < self.files.length; i++) {
+                    self.runConfig['files'] = self.runConfig['files'] + self.files[i] + ",";
+                  }
                   break;
                 case "LIBRARY":
                   //Push the new library into the localresources array
@@ -614,6 +702,18 @@ angular.module('hopsWorksApp')
                   break;
                 default:
                   break;
+              }
+            };
+
+            self.remove = function (index, type) {
+              var arr = [];
+              if (type === 'files') {
+                self.files.splice(index, 1);
+                arr = self.files;
+              }
+              self.runConfig[type] = "";
+              for (var i = 0; i < arr.length; i++) {
+                self.runConfig[type] = self.runConfig[type] + arr[i] + ",";
               }
             };
 
@@ -694,6 +794,7 @@ angular.module('hopsWorksApp')
              * @returns {undefined}
              */
             var init = function () {
+              self.checkIfPythonEnabled();
               var stored = StorageService.recover(self.newJobName);
               if (stored) {
                 //Job information
@@ -712,6 +813,16 @@ angular.module('hopsWorksApp')
                   self.sparkState = stored.sparkState;
                 } else if (self.jobtype === 3 || self.jobtype === 4) {
                   self.flinkState = stored.flinkState;
+                }
+
+                if(self.jobtype === 4 && typeof self.runConfig['files'] !== "undefined" && self.runConfig['files'] !== "") {
+                  var files = self.runConfig['files'].split(',');
+                  for (var i = 0; i < files.length; i++) {
+                    if (files[i]) {
+                      if(self.files.indexOf(files[i] === -1))
+                        self.files.push(files[i]);
+                    }
+                  }
                 }
                 //GUI state
                 self.accordion1 = stored.accordion1;
@@ -749,5 +860,7 @@ angular.module('hopsWorksApp')
               } else
                 return false;
             };
+
+
 
           }]);

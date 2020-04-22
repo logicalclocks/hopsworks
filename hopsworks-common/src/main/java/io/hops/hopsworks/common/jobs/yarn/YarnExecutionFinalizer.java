@@ -95,37 +95,16 @@ public class YarnExecutionFinalizer {
     YarnMonitor monitor = new YarnMonitor(applicationId, yarnClientWrapper, ycs);
 
     try {
-      String defaultOutputPath;
-      switch (exec.getJob().getJobType()) {
-        case SPARK:
-        case PYSPARK:
-          defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
-          break;
-        case FLINK:
-          defaultOutputPath = Settings.FLINK_DEFAULT_OUTPUT_PATH;
-          break;
-        case YARN:
-          defaultOutputPath = Settings.YARN_DEFAULT_OUTPUT_PATH;
-          break;
-        default:
-          defaultOutputPath = "Logs/";
-      }
-      String stdOutFinalDestination =
-          Utils.getProjectPath(exec.getJob().getProject().getName()) +
-              defaultOutputPath;
-      String stdErrFinalDestination =
-          Utils.getProjectPath(exec.getJob().getProject().getName()) +
-              defaultOutputPath;
-  
       String stdOutPath = settings.getAggregatedLogPath(exec.getHdfsUser(), exec.getAppId());
+      String[] logOutputPaths = Utils.getJobLogLocation(exec.getJob().getProject().getName(),
+        exec.getJob().getJobType());
+      String stdOutFinalDestination = logOutputPaths[0] + exec.getAppId() + File.separator + "stdout.log";
+      String stdErrFinalDestination = logOutputPaths[1] + exec.getAppId() + File.separator + "stderr.log";
+  
       try {
-        stdOutFinalDestination = stdOutFinalDestination + exec.getAppId() + File.separator + "stdout.log";
         String[] desiredOutLogTypes = {"out"};
-
         YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdOutFinalDestination,
             desiredOutLogTypes, monitor);
-
-        stdErrFinalDestination = stdErrFinalDestination + exec.getAppId() + File.separator + "stderr.log";
         String[] desiredErrLogTypes = {"err", ".log"};
         YarnLogUtil.copyAggregatedYarnLogs(udfso, stdOutPath, stdErrFinalDestination,
                 desiredErrLogTypes, monitor);

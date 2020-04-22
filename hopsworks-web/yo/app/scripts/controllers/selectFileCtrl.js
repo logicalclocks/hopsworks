@@ -63,7 +63,7 @@ angular.module('hopsWorksApp')
                 var selectedFilePath = self.datasetBrowser.fullPath;
                 if (typeof selectedFilePath === "undefined" || selectedFilePath.length < 1) {
                     growl.error("Please select a file.", {title: "No file selected", ttl: 5000, referenceId: 114});
-                } else if (self.datasetBrowser.isDir !== isDirectory) {
+                } else if (typeof isDirectory !== "undefined" && self.datasetBrowser.isDir !== isDirectory) {
                     var msg;
                     if (!self.datasetBrowser.isDir) {
                         msg = "You should select a directory."

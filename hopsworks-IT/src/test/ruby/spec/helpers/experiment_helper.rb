@@ -96,7 +96,7 @@ module ExperimentHelper
   end
 
   def run_experiment_blocking(project, job_name)
-    start_execution(project[:id], job_name, nil)
+    start_execution(project[:id], job_name)
     execution_id = json_body[:id]
     expect_status(201)
     wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")

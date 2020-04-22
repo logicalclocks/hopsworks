@@ -99,6 +99,8 @@ angular.module('hopsWorksApp')
                     self.execFile = getFileName(job.runConfig.appPath);
               } else if (self.job.runConfig.jobType === "FLINK") {
                 self.jobtype = "Flink";
+              } else if (self.job.runConfig.jobType === "PYTHON") {
+                  self.jobtype = "Python";
               }
             };
             
@@ -113,7 +115,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                           getConfiguration();
                           self.close();
-                          growl.success(success.data.successMessage, {title: 'Success', ttl: 3000});
+                          growl.success("Schedule updated successfully", {title: 'Success', ttl: 3000});
                         }, function (error) {
                         if (typeof error.data.usrMsg !== 'undefined') {
                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
@@ -131,8 +133,15 @@ angular.module('hopsWorksApp')
                         JobService.unscheduleJob(self.projectId, name).then(
                                 function (success) {
                                   self.unscheduling=false;
-                                  self.close()
-                                  growl.success(success.data.successMessage, {title: 'Success', ttl: 5000});
+                                  self.hasJobScheduled=false;
+                                    self.availableschedule = {
+                                        "start": "-1",
+                                        "number": 1,
+                                        "unit": ""
+                                    };
+
+                                    self.close();
+                                  growl.success("Scheduled was removed", {title: 'Success', ttl: 5000});
                                 }, function (error) {
                                   self.unscheduling=false;
                                 if (typeof error.data.usrMsg !== 'undefined') {

@@ -45,7 +45,7 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_1, type, nil)
               job_id = json_body[:id]
               #start execution
-              start_execution(@project[:id], $job_name_1, nil)
+              start_execution(@project[:id], $job_name_1)
               execution_id = json_body[:id]
               expect_status(201)
               expect(json_body[:state]).to eq "INITIALIZING"
@@ -56,7 +56,7 @@ describe "On #{ENV['OS']}" do
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_name_1, json_body[:id], "FINISHED")
               #start execution
-              start_execution(@project[:id], $job_name_1, nil)
+              start_execution(@project[:id], $job_name_1)
               execution_id = json_body[:id]
               expect_status(201)
 
@@ -76,10 +76,10 @@ describe "On #{ENV['OS']}" do
               expect_status(201)
 
               #start execution
-              start_execution(@project[:id], $job_name_2, nil)
+              start_execution(@project[:id], $job_name_2)
               execution_id = json_body[:id]
               expect_status(201)
-              wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED")
+              wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
               stop_execution(@project[:id], $job_name_2, execution_id)
               expect_status(202)
               wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
@@ -91,7 +91,7 @@ describe "On #{ENV['OS']}" do
               config[:'spark.yarn.dist.files'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.txt"
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
-              start_execution(@project[:id], $job_name_2, nil)
+              start_execution(@project[:id], $job_name_2)
               expect_status(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.pyFiles" do
@@ -101,7 +101,7 @@ describe "On #{ENV['OS']}" do
               config[:'spark.yarn.dist.pyFiles'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.py"
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
-              start_execution(@project[:id], $job_name_2, nil)
+              start_execution(@project[:id], $job_name_2)
               expect_status(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.jars" do
@@ -111,7 +111,7 @@ describe "On #{ENV['OS']}" do
               config[:'spark.yarn.dist.jars'] = "hdfs:///Projects/#{@project[:projectname]}/Resources/iamnothere.jar"
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
-              start_execution(@project[:id], $job_name_2, nil)
+              start_execution(@project[:id], $job_name_2)
               expect_status(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.archives" do
@@ -122,15 +122,15 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_2, type, config)
 
               #start execution
-              start_execution(@project[:id], $job_name_2, nil)
+              start_execution(@project[:id], $job_name_2)
               expect_status(400)
             end
             it "should start two executions in parallel" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type, nil)
-              start_execution(@project[:id], $job_name_3, nil)
+              start_execution(@project[:id], $job_name_3)
               expect_status(201)
-              start_execution(@project[:id], $job_name_3, nil)
+              start_execution(@project[:id], $job_name_3)
               expect_status(201)
             end
             it "should start a job with args 123" do
@@ -147,7 +147,7 @@ describe "On #{ENV['OS']}" do
             it "should run job and get out and err logs" do
               $job_name_4 = "demo_job_4_" + type
               create_sparktour_job(@project, $job_name_4, type, nil)
-              start_execution(@project[:id], $job_name_4, nil)
+              start_execution(@project[:id], $job_name_4)
               execution_id = json_body[:id]
               expect_status(201)
 
@@ -187,7 +187,7 @@ describe "On #{ENV['OS']}" do
             create_sparktour_job(@project, $job_spark_1, 'jar', nil)
             #start 3 executions
             for i in 0..2 do
-              start_execution(@project[:id], $job_spark_1, nil)
+              start_execution(@project[:id], $job_spark_1)
               $execution_ids.push(json_body[:id])
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_spark_1, json_body[:id], "FINISHED")
@@ -466,7 +466,7 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, 0)
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota1", 'jar', nil)
-        start_execution(@project[:id], "quota1", nil)
+        start_execution(@project[:id], "quota1")
         expect_status(412)
       end
 
@@ -474,7 +474,7 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, -10)
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota2", 'jar', nil)
-        start_execution(@project[:id], "quota2", nil)
+        start_execution(@project[:id], "quota2")
         expect_status(412)
       end
 
@@ -482,7 +482,7 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, 1)
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota3", 'jar', nil)
-        start_execution(@project[:id], "quota3", nil)
+        start_execution(@project[:id], "quota3")
         expect_status(201)
         execution_id = json_body[:id]
 
@@ -493,7 +493,7 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, 0)
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota4", 'jar', nil)
-        start_execution(@project[:id], "quota4", nil)
+        start_execution(@project[:id], "quota4")
         expect_status(201)
       end
 
@@ -501,7 +501,7 @@ describe "On #{ENV['OS']}" do
         set_yarn_quota(@project, -10)
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota5", 'jar', nil)
-        start_execution(@project[:id], "quota5", nil)
+        start_execution(@project[:id], "quota5")
         expect_status(201)
       end
     end

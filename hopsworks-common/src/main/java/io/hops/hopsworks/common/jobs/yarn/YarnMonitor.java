@@ -70,12 +70,6 @@ public final class YarnMonitor implements Closeable {
     this.ycs = ycs;
   }
 
-  // Deprecated: YarnClient is initialized and started from the YarnClientService
-  public YarnMonitor start() {
-    yarnClientWrapper.getYarnClient().start();
-    return this;
-  }
-
   public void stop() {
     if (null != yarnClientWrapper) {
       ycs.closeYarnClient(yarnClientWrapper);

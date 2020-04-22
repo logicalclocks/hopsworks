@@ -126,9 +126,9 @@ describe "On #{ENV['OS']}" do
         clean_jobs(@project[:id])
       end
       it "start a flink session cluster, test proxy servlet" do
-        start_execution(@project[:id], job_flink, nil)
+        start_execution(@project[:id], job_flink)
         execution_id = json_body[:id]
-        app_id = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING')
+        app_id = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING', "appId")
         #Get flink master
         get "#{ENV['HOPSWORKS_BASE_API']}/flinkmaster/#{app_id}"
         expect_status(200)
@@ -148,13 +148,13 @@ describe "On #{ENV['OS']}" do
       it 'should delete job with non-finished execution and cleanup tmp files and get status of new job correctly' do
         create_sparktour_job(@project, job_spark_1, 'jar', nil)
         create_sparktour_job(@project, job_spark_2, 'jar', nil)
-        start_execution(@project[:id], job_spark_1, nil)
+        start_execution(@project[:id], job_spark_1)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
-        appId = wait_for_execution_active(@project[:id], job_spark_1, execution_id, 'ACCEPTED')
+        appId = wait_for_execution_active(@project[:id], job_spark_1, execution_id, 'ACCEPTED', "appId")
         #kill job
         stop_execution(@project[:id], job_spark_1, execution_id)
-        start_execution(@project[:id], job_spark_2, nil)
+        start_execution(@project[:id], job_spark_2)
         execution_id = json_body[:id]
         wait_for_execution_completed(@project[:id], job_spark_2, execution_id, 'FINISHED')
 
@@ -165,10 +165,10 @@ describe "On #{ENV['OS']}" do
       end
       it 'should delete flink job with non-finished execution and cleanup tmp files and get status of new job correctly' do
         create_flink_job(@project, job_flink, nil)
-        start_execution(@project[:id], job_flink, nil)
+        start_execution(@project[:id], job_flink)
         execution_id = json_body[:id]
         hdfsUser = json_body[:hdfsUser]
-        appId = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING')
+        appId = wait_for_execution_active(@project[:id], job_flink, execution_id, 'RUNNING', "appId")
         #kill job
         stop_execution(@project[:id], job_flink, execution_id)
         execution_id = json_body[:id]
@@ -403,10 +403,10 @@ describe "On #{ENV['OS']}" do
 
         describe "Jobs filter latest_execution" do
           it "should execute two jobs and search based on finalStatus" do
-            start_execution(@project[:id], job_spark_1, nil)
+            start_execution(@project[:id], job_spark_1)
             execution_id = json_body[:id]
             wait_for_execution_completed(@project[:id], job_spark_1, execution_id, 'FINISHED')
-            start_execution(@project[:id], job_spark_2, nil)
+            start_execution(@project[:id], job_spark_2)
             execution_id = json_body[:id]
             wait_for_execution_completed(@project[:id], job_spark_2, execution_id, 'FINISHED')
             get_jobs(@project[:id], "?filter_by=latest_execution:finished")

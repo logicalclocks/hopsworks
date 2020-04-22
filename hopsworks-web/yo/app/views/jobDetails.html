@@ -218,6 +218,38 @@
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.properties}}</div>
         </div>
       </div>
+      <!-- Python configuration -->
+      <div ng-show="jobDetailCtrl.job.runConfig.type === 'pythonJobConfiguration' || jobDetailCtrl.job.runConfig.jobType === 'PYTHON'">
+        <div class="row">
+          <div class="text-right col-md-4">Memory (MB)
+            <i class="fa fa-info-circle"
+               uib-tooltip="The amount of memory, in MB, available for this the Job."
+               style="margin-left: 10px">
+            </i>
+          </div>
+          <div class="col-md-8">
+            {{jobDetailCtrl.job.runConfig['memory']}}
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">CPU cores
+            <i class="fa fa-info-circle"
+               uib-tooltip="The number of virtual CPU cores available for this job."
+               style="margin-left: 10px">
+            </i>
+          </div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['cores']}}</div>
+        </div>
+        <div class="row">
+          <div class="text-right col-md-4">GPUs
+            <i class="fa fa-info-circle"
+               uib-tooltip="The number of GPUs available for this job."
+               style="margin-left: 10px">
+            </i>
+          </div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig['gpus']}}</div>
+        </div>
+      </div>
       <!-- Common TFSPARK and TENSORFLOW -->
       <div class="row" ng-show="jobDetailCtrl.job.runConfig.type === 'tensorFlowJobConfiguration' || (jobDetailCtrl.job.runConfig.type === 'sparkJobConfiguration' && jobDetailCtrl.job.runConfig.tfOnSpark)">
           <div class="text-right col-md-4">Number of Parameter Servers<i class="fa fa-info-circle" uib-tooltip="The number of parameter servers that should be requested." style="margin-left: 10px"></i></div>

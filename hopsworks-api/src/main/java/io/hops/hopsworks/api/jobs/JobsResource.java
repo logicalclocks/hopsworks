@@ -97,7 +97,7 @@ public class JobsResource {
   private ExecutionsResource executions;
   @EJB
   private JobController jobController;
-  @EJB
+  @Inject
   private ExecutionController executionController;
   @EJB
   private ExecutionFacade executionFacade;

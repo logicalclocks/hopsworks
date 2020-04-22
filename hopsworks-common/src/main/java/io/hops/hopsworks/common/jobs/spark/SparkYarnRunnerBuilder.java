@@ -45,7 +45,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
-import io.hops.hopsworks.common.jobs.yarn.ServiceProperties;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -84,7 +83,6 @@ public class SparkYarnRunnerBuilder {
   private final List<LocalResourceDTO> extraFiles = new ArrayList<>();
 
   private final Map<String, String> sysProps = new HashMap<>();
-  private ServiceProperties serviceProps;
   private SparkConfigurationUtil sparkConfigurationUtil = new SparkConfigurationUtil();
 
   public SparkYarnRunnerBuilder(Jobs job) {
@@ -296,10 +294,6 @@ public class SparkYarnRunnerBuilder {
       this.extraFiles.addAll(projectLocalResources);
     }
     return this;
-  }
-
-  public void setServiceProps(ServiceProperties serviceProps) {
-    this.serviceProps = serviceProps;
   }
 
   public SparkYarnRunnerBuilder addSystemProperty(String name, String value) {
