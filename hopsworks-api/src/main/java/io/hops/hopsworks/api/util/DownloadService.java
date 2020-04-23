@@ -40,6 +40,7 @@
 package io.hops.hopsworks.api.util;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -166,6 +167,7 @@ public class DownloadService {
   @GET
   @javax.ws.rs.Path("/{path: .+}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @JWTNotRequired
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
   public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("token") String token,
     @QueryParam("type") DatasetType datasetType, @Context SecurityContext sc) throws DatasetException,
