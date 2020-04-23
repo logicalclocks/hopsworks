@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after (:all) do
+  after(:all) do
     clean_all_test_projects
     purge_all_sklearn_serving_instances
   end
@@ -43,7 +43,7 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances()
+          purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
         end
 
@@ -62,7 +62,7 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances()
+          purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
         end
 
@@ -83,22 +83,16 @@ describe "On #{ENV['OS']}" do
           before :all do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
             expect_status(200)
-
-            # Sleep a bit to avoid race condition
-            sleep(40)
-
-            # Sleep some time while the SkLearn Flask server starts
-            wait_for do
-              system "pgrep -f sklearn_flask_server.py -a"
-              $?.exitstatus == 0
-            end
+            # Sleep a bit to avoid race condition and SkLearn Flask server starts
+            wait_for_type("sklearn_flask_server.py")
           end
 
           after :all do
-            purge_all_sklearn_serving_instances()
+            purge_all_sklearn_serving_instances
+            delete_all_sklearn_serving_instances(@project)
           end
 
-          it "should succeeds to infer from a serving with kafka logging" do
+          it "should succeed to infer from a serving with kafka logging" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {inputs: test_data}
             expect_status(200)
             parsed_json = JSON.parse(response.body)
@@ -115,7 +109,9 @@ describe "On #{ENV['OS']}" do
                  kafkaTopicDTO: {
                      name: "NONE"
                  },
-                 servingType: "SKLEARN"
+                 servingType: "SKLEARN",
+                 availableInstances: 1,
+                 requestedInstances: 1
                 }
             expect_status(201)
 
@@ -128,15 +124,20 @@ describe "On #{ENV['OS']}" do
                 {id: @serving[:id],
                  name: @serving[:name],
                  artifactPath: @serving[:artifact_path],
-                 modelVersion: @serving[:model_version],
+                 modelVersion: @serving[:version],
                  kafkaTopicDTO: {
                      name: @topic[:topic_name]
                  },
-                 servingType: "SKLEARN"
+                 servingType: "SKLEARN",
+                 availableInstances: 1,
+                 requestedInstances: 1
                 }
           end
 
           it "should receive an error if the input payload is malformed" do
+            # Wait for pod to start
+            kubernetes_installed
+            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 somethingwrong: test_data
             }
@@ -145,6 +146,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it "should receive an error if the input payload is empty" do
+            # Wait for pod to start
+            kubernetes_installed
+            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
             expect_json(errorCode: 250008)
             expect_status(400)

@@ -119,10 +119,7 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             # Sleep some time while the TfServing server starts
-            wait_for do
-              system "pgrep -f #{@serving[:name]} -a"
-              $?.exitstatus == 0
-            end
+            wait_for_type(@serving[:name])
           end
 
           it "should succeeds to infer from a with kafka logging" do

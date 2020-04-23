@@ -137,7 +137,9 @@ describe "On #{ENV['OS']}" do
               {name: "testModel",
                artifactPath: "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/#{SKLEARN_SCRIPT_FILE_NAME}",
                modelVersion: 1,
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -156,7 +158,9 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -182,7 +186,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -207,7 +213,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -236,7 +244,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(400)
         end
@@ -251,7 +261,9 @@ describe "On #{ENV['OS']}" do
                    numOfPartitions: 1,
                    numOfReplicas: 1
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_json(errorMsg: "An entry with the same name already exists in this project")
           expect_status(400)
@@ -262,7 +274,9 @@ describe "On #{ENV['OS']}" do
               {name: "testModel5",
                artifactPath: "/Projects/#{@project[:projectname]}/DOESNTEXISTS",
                modelVersion: 1,
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_json(errorCode: 120001)
           expect_status(422)
@@ -281,7 +295,7 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances()
+          purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
         end
 
@@ -290,10 +304,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           # Check if the process is running on the host
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
+          wait_for_type("sklearn_flask_server.py")
 
           # Sleep a bit to make sure that logs are propagated correctly to the index
           sleep(30)
@@ -311,7 +322,8 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(400)
           expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already started")
+          expect_json(usrMsg: "Instance is already: Running")
+          end
         end
       end
     end
@@ -326,23 +338,17 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(200)
 
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
+          wait_for_type("sklearn_flask_server.py")
         end
 
         after :all do
-          purge_all_sklearn_serving_instances()
+          purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
         end
 
         after :each do
           # Check if the process is
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py -a"
-            $?.exitstatus == 0
-          end
+          wait_for_type("sklearn_flask_server.py")
         end
 
         it "should be able to update the name" do
@@ -354,7 +360,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
         end
@@ -368,7 +376,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
         end
@@ -382,7 +392,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: @topic[:topic_name]
                },
-               servingType: "TENSORFLOW"
+               servingType: "TENSORFLOW",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(422)
         end
@@ -398,7 +410,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: topic_name
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -416,7 +430,9 @@ describe "On #{ENV['OS']}" do
                kafkaTopicDTO: {
                    name: "NONE"
                },
-               servingType: "SKLEARN"
+               servingType: "SKLEARN",
+               availableInstances: 1,
+               requestedInstances: 1
               }
           expect_status(201)
 
@@ -451,11 +467,7 @@ describe "On #{ENV['OS']}" do
           # Wait a bit
           sleep(30)
 
-          # check if the process is running on the host
-          system "pgrep -f sklearn_flask_server.py"
-          if $?.exitstatus != 1
-            raise "the process is still running"
-          end
+          check_process_running("sklearn_flask_server.py")
         end
 
         it "should fail to kill a non running instance" do
@@ -465,19 +477,18 @@ describe "On #{ENV['OS']}" do
           # Wait a bit
           sleep(30)
 
-          # check if the process is running on the host
-          system "pgrep -f sklearn_flask_server.py"
-          if $?.exitstatus != 1
-            raise "the process is still running"
-          end
+          check_process_running("sklearn_flask_server.py")
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=stop"
           expect_status(400)
           expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already stopped")
+          expect_json(usrMsg: "Instance is already: Stopped")
         end
 
         it "should mark the serving as not running if the process dies" do
+          if kubernetes_installed
+            skip "This test does not run on Kubernetes"
+          end
           # Simulate the process dying by its own
           system "pgrep -f sklearn_flask_server.py | xargs kill -9"
 
@@ -517,7 +528,7 @@ describe "On #{ENV['OS']}" do
         end
 
         after :all do
-          purge_all_sklearn_serving_instances()
+          purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
         end
 
@@ -536,21 +547,14 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           # Wait until the service instance is running
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py"
-            $?.exitstatus == 0
-          end
+          wait_for_type("sklearn_flask_server.py")
 
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
           expect_status(200)
 
           # Check that the process has been killed
-          wait_for do
-            system "pgrep -f sklearn_flask_server.py"
-            $?.exitstatus == 1
-          end
+          wait_for_type("sklearn_flask_server.py")
         end
       end
     end
   end
-end
