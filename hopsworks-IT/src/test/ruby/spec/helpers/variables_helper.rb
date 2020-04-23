@@ -84,4 +84,8 @@ module VariablesHelper
     variables
   end
 
+  def kubernetes_installed
+    getVar("kubernetes_installed").value.eql? "true"
+  end
+
 end

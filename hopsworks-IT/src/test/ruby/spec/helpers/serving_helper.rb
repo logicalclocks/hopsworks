@@ -65,15 +65,21 @@ module ServingHelper
                   numOfPartitions: 1,
                   numOfReplicas: 1
                },
-               servingType: "TENSORFLOW"
+               servingType: "TENSORFLOW",
+               availableInstances: 1,
+               requestedInstances: 1
               }
     expect_status(201)
-
+    if kubernetes_installed
+      sleep(20)
+    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
   def purge_all_tf_serving_instances()
-    system "sudo /bin/bash -c \"pgrep -f tensorflow_model_server | xargs kill\""
+    if !kubernetes_installed
+      system "sudo /bin/bash -c \"pgrep -f tensorflow_model_server | xargs kill\""
+    end
   end
 
   def create_sklearn_serving(project_id, project_name)
@@ -87,15 +93,22 @@ module ServingHelper
              numOfPartitions: 1,
              numOfReplicas: 1
          },
-         servingType: "SKLEARN"
+         servingType: "SKLEARN",
+         availableInstances: 1,
+         requestedInstances: 1
         }
     expect_status(201)
-
+    # Wait for pod to start
+    if kubernetes_installed
+      sleep(20)
+    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
   def purge_all_sklearn_serving_instances()
-    system "sudo /bin/bash -c \"pgrep -f sklearn_flask_server | xargs kill\""
+    if !kubernetes_installed
+      system "sudo /bin/bash -c \"pgrep -f sklearn_flask_server | xargs kill\""
+    end
   end
 
   def delete_all_sklearn_serving_instances(project)
@@ -110,11 +123,30 @@ module ServingHelper
   def start_serving(project, serving)
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/serving/#{serving[:id]}?action=start"
     expect_status(200)
-
     # Sleep some time while the TfServing server starts
-    wait_for do
-      system "pgrep -f #{serving[:name]} -a"
-      $?.exitstatus == 0
+
+  end
+
+  def wait_for_type(serving_name)
+    if !kubernetes_installed
+      wait_for do
+        system "pgrep -f #{serving_name} -a"
+        $?.exitstatus == 0
+      end
+    else
+      sleep(120)
+    end
+  end
+
+  def check_process_running(name)
+    if !kubernetes_installed
+    # check if the process is running on the host
+    system "pgrep -f #{name}"
+    if $?.exitstatus != 1
+      raise "the process is still running"
+    end
+    else
+      sleep(120)
     end
   end
 end
