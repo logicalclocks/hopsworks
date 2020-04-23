@@ -47,7 +47,7 @@ module CondaHelper
   @@registry = "registry.service.consul:4443"
 
   def wait_for
-    timeout = 1800
+    timeout = 600
     start = Time.now
     x = yield
     until x
