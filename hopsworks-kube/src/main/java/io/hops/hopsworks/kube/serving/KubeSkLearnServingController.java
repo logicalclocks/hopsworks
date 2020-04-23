@@ -17,14 +17,12 @@
 package io.hops.hopsworks.kube.serving;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
-import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
-import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LabelSelector;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
@@ -36,6 +34,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -50,10 +49,11 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -83,11 +83,13 @@ public class KubeSkLearnServingController {
   @EJB
   private KubeClientService kubeClientService;
   @EJB
-  private HdfsLeDescriptorsFacade hdfsLEFacade;
-  @EJB
   private Settings settings;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private KubeProjectConfigMaps kubeProjectConfigMaps;
+  @EJB
+  private ProjectUtils projectUtils;
   
   public String getDeploymentName(String servingId) {
     return "sklrn-serving-dep-" + servingId;
@@ -114,20 +116,29 @@ public class KubeSkLearnServingController {
 
     String servingIdStr = String.valueOf(serving.getId());
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
-
+    String hadoopHome = settings.getHadoopSymbolicLinkDir();
+    String hadoopConfDir = hadoopHome + "/etc/hadoop";
+    
     List<EnvVar> servingEnv = new ArrayList<>();
     servingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
     servingEnv.add(new EnvVarBuilder().withName(PROJECT_NAME).withValue(project.getName()).build());
     servingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(serving.getName().toLowerCase()).build());
     servingEnv.add(new EnvVarBuilder().withName(ARTIFACT_PATH)
-        .withValue("hdfs://" + hdfsLEFacade.getRPCEndpoint() + serving.getArtifactPath()).build());
+        .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getArtifactPath()).build());
     servingEnv.add(new EnvVarBuilder().withName(DEFAULT_FS)
-        .withValue("hdfs://" + hdfsLEFacade.getRPCEndpoint()).build());
+        .withValue("hdfs://" +  serviceDiscoveryController.constructServiceFQDN(
+          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE)).build());
     servingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
     servingEnv.add(new EnvVarBuilder().withName("TLS").withValue(String.valueOf(settings.getHopsRpcTls())).build());
     servingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER").withValue(projectUser).build());
     servingEnv.add(new EnvVarBuilder().withName("HDFS_USER").withValue(projectUser).build());
-
+    servingEnv.add(new EnvVarBuilder().withName("PYTHONPATH").withValue(
+      settings.getAnacondaProjectDir()+ "/bin/python").build());
+    servingEnv.add(new EnvVarBuilder().withName("SCRIPT_NAME").withValue("predict.py").build());
+    servingEnv.add(new EnvVarBuilder().withName("IS_KUBE").withValue("true").build());
+    servingEnv.add(new EnvVarBuilder().withName("LOGFILE").withValue("/logs/model.log").build());
+    
     List<EnvVar> fileBeatEnv = new ArrayList<>();
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
@@ -149,14 +160,13 @@ public class KubeSkLearnServingController {
         .withEmptyDir(new EmptyDirVolumeSource())
         .build();
 
-    HostPathVolumeSource pythonEnvHPSource = new HostPathVolumeSourceBuilder()
-        .withPath(settings.getAnacondaProjectDir())
-        .build();
-
     Volume pythonEnv = new VolumeBuilder()
-        .withName("pythonenv")
-        .withHostPath(pythonEnvHPSource)
-        .build();
+      .withName("hadoopconf")
+      .withConfigMap(
+        new ConfigMapVolumeSourceBuilder()
+          .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
+          .build())
+      .build();
 
     VolumeMount secretMount = new VolumeMountBuilder()
         .withName("certs")
@@ -169,19 +179,20 @@ public class KubeSkLearnServingController {
         .withMountPath("/logs")
         .build();
 
-    VolumeMount pythonEnvMount = new VolumeMountBuilder()
-        .withName("pythonenv")
-        .withMountPath("/pythonenv")
-        .build();
+    VolumeMount hadoopConfEnvMount = new VolumeMountBuilder()
+      .withName("hadoopconf")
+      .withReadOnly(true)
+      .withMountPath(hadoopConfDir)
+      .build();
 
     Container skLeanContainer = new ContainerBuilder()
         .withName("sklearn")
-        .withImage(ProjectUtils.getRegistryURL(settings,
-            serviceDiscoveryController) + "/sklearn:" + settings.
-            getHopsworksVersion())
+        .withImage(projectUtils.getFullDockerImageName(project, false))
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(servingEnv)
-        .withVolumeMounts(secretMount, logMount, pythonEnvMount)
+        .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
+        .withCommand("sklearn_serving-launcher.sh")
+        .withVolumeMounts(secretMount, logMount, hadoopConfEnvMount)
         .build();
 
     Container fileBeatContainer = new ContainerBuilder()
@@ -230,20 +241,6 @@ public class KubeSkLearnServingController {
   }
 
   public Service buildServingService(Serving serving) {
-    /*
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: skleaern
-    spec:
-      selector:
-        model: id
-      ports:
-      - protocol: TCP
-        port: 5000
-        targetPort: 5000
-      type: NodePort
-     */
     String servingIdStr = String.valueOf(serving.getId());
 
     Map<String, String> selector = new HashMap<>();
