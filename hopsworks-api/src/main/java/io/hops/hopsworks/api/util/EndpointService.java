@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.util;
 
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -73,6 +74,7 @@ public class EndpointService {
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response findEndpoint() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setData(hdfsLeDescriptorsFacade.getRPCEndpoint());

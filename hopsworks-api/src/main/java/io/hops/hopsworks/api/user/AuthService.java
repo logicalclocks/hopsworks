@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.user;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
@@ -167,6 +168,7 @@ public class AuthService {
   @POST
   @Path("login")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
   public Response login(@Caller @AuditTarget @FormParam("email") String email,
     @Secret @FormParam("password") String password, @Secret @FormParam("otp") String otp,
@@ -209,6 +211,7 @@ public class AuthService {
   @GET
   @Path("logout")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
   public Response logout(@Context HttpServletRequest req) throws UserException, InvalidationException {
     logoutAndInvalidateSession(req);
@@ -218,6 +221,7 @@ public class AuthService {
   @POST
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGIN)
   public Response serviceLogin(@Caller @AuditTarget @FormParam("email") String email,
     @Secret @FormParam("password") String password, @Context HttpServletRequest request) throws UserException,
@@ -302,6 +306,7 @@ public class AuthService {
   @DELETE
   @Path("/service")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.USER_LOGIN, action = AuditAction.LOGOUT)
   public Response serviceLogout(@Context HttpServletRequest request) throws UserException, InvalidationException {
     if (jWTHelper.validToken(request, settings.getJWTIssuer())) {
@@ -329,6 +334,7 @@ public class AuthService {
   @Path("register")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user")
   public Response register(@Caller(UserIdentifier.USER_DTO) @AuditTarget(UserIdentifier.USER_DTO) UserDTO newUser,
     @Context HttpServletRequest req) throws UserException {
@@ -352,6 +358,7 @@ public class AuthService {
   @POST
   @Path("/recover/password")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Start password recovery")
   public Response recoverPassword(@Caller @AuditTarget @FormParam("email") String email,
     @Secret @FormParam("securityQuestion") String securityQuestion,
@@ -371,6 +378,7 @@ public class AuthService {
   @POST
   @Path("/recover/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Start QR recovery")
   public Response recoverQRCode(@Caller @AuditTarget @FormParam("email") String email,
     @Secret @FormParam("password") String password, @Context HttpServletRequest req) throws UserException,
@@ -385,6 +393,7 @@ public class AuthService {
   @POST
   @Path("/reset/validate")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Validate password recovery key")
   public Response validatePasswordRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
     @FormParam("key") String key, @Context HttpServletRequest req) throws UserException {
@@ -395,6 +404,7 @@ public class AuthService {
   @POST
   @Path("/reset/password")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.RECOVERY, message = "Reset password")
   public Response passwordRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
     @FormParam("key") String key, @Secret @FormParam("newPassword") String newPassword,
@@ -409,6 +419,7 @@ public class AuthService {
   @POST
   @Path("/reset/qrCode")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.QR_CODE, message = "Reset QR Code")
   public Response qrCodeRecovery(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret
     @FormParam("key") String key, @Context HttpServletRequest req) throws UserException, MessagingException {
@@ -420,6 +431,7 @@ public class AuthService {
   @POST
   @Path("/validate/email")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.VERIFIED_ACCOUNT,
     message = "Account email verification")
   public Response validateUserMail(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) @Secret

@@ -39,11 +39,13 @@
 
 package io.hops.hopsworks.api.hopssite;
 
+import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.hopssite.dto.RatingValueDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.dela.dto.hopssite.RateDTO;
@@ -97,6 +99,7 @@ public class RatingService {
   }
 
   @GET
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getRating(@ApiParam(required = true) @QueryParam("filter") RatingFilter filter,
       @Context SecurityContext sc) throws DelaException {
     switch (filter) {
@@ -127,6 +130,7 @@ public class RatingService {
   }
 
   @POST
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response addRating(@Context SecurityContext sc, RatingValueDTO rating) throws DelaException {
     LOGGER.log(Settings.DELA_DEBUG, "hops-site:rating:add {0}", publicDSId);
     String publicCId = SettingsHelper.clusterId(settings);

@@ -38,12 +38,15 @@
  */
 package io.hops.hopsworks.api.util;
 
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.Variables;
@@ -85,6 +88,7 @@ public class VariablesService {
   @GET
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getVar(@PathParam("id") String id) throws ServiceException {
     Variables variable = settings.findById(id)
         .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.VARIABLE_NOT_FOUND, Level.FINE,
@@ -97,6 +101,7 @@ public class VariablesService {
   @GET
   @Path("twofactor")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response getTwofactor() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(settings.getTwoFactorAuth());
@@ -106,6 +111,7 @@ public class VariablesService {
   @GET
   @Path("ldap")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response getLDAPAuthStatus() {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(settings.getLDAPAuthStatus());
@@ -115,6 +121,7 @@ public class VariablesService {
   @GET
   @Path("authStatus")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response getAuthStatus() {
     List<OauthClient> oauthClients = oauthClientFacade.findAll();
     List<OpenIdProvider> providers = new ArrayList<>();
@@ -131,6 +138,7 @@ public class VariablesService {
   @GET
   @Path("versions")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response getVersions(){
     VersionsDTO dto = new VersionsDTO(settings);
     List<VersionsDTO.Version> list = dto.getVersions();
@@ -144,6 +152,7 @@ public class VariablesService {
   @GET
   @Path("/conda")
   @Produces(MediaType.TEXT_PLAIN)
+  @JWTNotRequired
   public Response getCondaDefaultRepo() {
     String defaultRepo = settings.getCondaDefaultRepo();
     if (settings.isAnacondaEnabled()) {
@@ -155,6 +164,7 @@ public class VariablesService {
   @GET
   @Path("securityQuestions")
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response getSecurityQuestions() {
     List<SecurityQuestion> securityQuestions = Arrays.asList(SecurityQuestion.values());
     Collections.shuffle(securityQuestions);

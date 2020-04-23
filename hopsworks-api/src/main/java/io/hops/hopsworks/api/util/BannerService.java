@@ -39,13 +39,16 @@
 
 package io.hops.hopsworks.api.util;
 
+import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
 import io.hops.hopsworks.common.maintenance.Maintenance;
 import io.hops.hopsworks.common.maintenance.MaintenanceController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
@@ -82,12 +85,13 @@ public class BannerService {
   @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
-  private UserFacade userFacade;
+  private JWTHelper jWTHelper;
   @EJB
   private AccountAuditFacade accountAuditFacade;
 
   @GET
   @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
   public Response findBanner(@Context SecurityContext sc) {
     Maintenance maintenance = maintenanceController.getMaintenance();
     maintenance.setOtp(settings.getTwoFactorAuth());
@@ -97,8 +101,9 @@ public class BannerService {
   @GET
   @Path("user")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response findUserBanner(@Context HttpServletRequest req) {
-    Users user = userFacade.findByEmail(req.getRemoteUser());
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response findUserBanner(@Context SecurityContext sc) {
+    Users user = jWTHelper.getUserPrincipal(sc);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage("");
     if (user != null && (user.getSalt() == null || user.getSalt().isEmpty())) {
@@ -118,6 +123,7 @@ public class BannerService {
   @GET
   @Path("firsttime")
   @Produces(MediaType.TEXT_PLAIN)
+  @JWTNotRequired
   public Response isFirstTimeLogin(@Context HttpServletRequest req){
     if (maintenanceController.isFirstTimeLogin()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -128,6 +134,7 @@ public class BannerService {
   @GET
   @Path("firstlogin")
   @Produces(MediaType.TEXT_PLAIN)
+  @JWTNotRequired
   public Response firstLogin(@Context HttpServletRequest req) {
     settings.updateVariable("first_time_login", "0");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
@@ -136,6 +143,7 @@ public class BannerService {
   @GET
   @Path("admin_pwd_changed")  
   @Produces(MediaType.TEXT_PLAIN)
+  @JWTNotRequired
   public Response adminPwdChanged(@Context HttpServletRequest req) {
     if (settings.isDefaultAdminPasswordChanged()) {
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();

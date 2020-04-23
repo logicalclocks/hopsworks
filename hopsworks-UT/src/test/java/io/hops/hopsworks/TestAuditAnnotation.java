@@ -112,10 +112,10 @@ public class TestAuditAnnotation {
     StringBuilder classNames = new StringBuilder();
     boolean annotated;
     for (Class<?> c : notAnnotatedClasses) {
-      annotated = false;
+      annotated = true;
       for (Method m : c.getDeclaredMethods()) {
-        if (m.getAnnotation(Logged.class) != null) { //if a method in the class is annotated
-          annotated = true;
+        if (m.getAnnotation(Logged.class) == null) { //if all methods in the class are not annotated
+          annotated = false;
         }
       }
       if (!annotated) {
