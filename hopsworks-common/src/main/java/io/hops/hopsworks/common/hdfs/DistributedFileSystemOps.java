@@ -44,6 +44,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -71,7 +72,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 import org.apache.hadoop.security.UserGroupInformation;
 
-public class DistributedFileSystemOps {
+public class DistributedFileSystemOps implements Closeable {
 
   private static final Logger logger = Logger.getLogger(
           DistributedFileSystemOps.class.getName());
