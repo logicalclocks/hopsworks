@@ -46,23 +46,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.NotFoundException;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
-import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import org.apache.hadoop.yarn.client.api.YarnClient;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
+import io.hops.hopsworks.common.jobs.yarn.YarnJob;
+import io.hops.hopsworks.common.util.Settings;
 
-public class ErasureCodeJob extends HopsJob {
+public class ErasureCodeJob extends YarnJob {
 
   private static final Logger logger = Logger.getLogger(ErasureCodeJob.class.
           getName());
   private ErasureCodeJobConfiguration jobConfig;
 
   public ErasureCodeJob(Jobs job, AsynchronousJobExecutor services,
-          Users user, String hadoopDir, YarnJobsMonitor jobsMonitor) {
-
-    super(job, services, user, hadoopDir, jobsMonitor);
-
+          Users user, String jobUser, String hadoopDir, Settings settings) {
+  
+    super(job, services, user, jobUser, hadoopDir, settings);
+    
     if (!(job.getJobConfig() instanceof ErasureCodeJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain an ErasureCodeJobConfiguration object. Received: "
@@ -73,7 +72,7 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) {
+  protected boolean setupJob() {
     if (jobConfig.getAppName() == null || jobConfig.getAppName().isEmpty()) {
       jobConfig.setAppName("Untitled Erasure coding Job");
     }
@@ -82,15 +81,20 @@ public class ErasureCodeJob extends HopsJob {
   }
 
   @Override
-  protected void runJob(DistributedFileSystemOps udfso,
-          DistributedFileSystemOps dfso, String args) {
+  protected void runJob(String args) {
     boolean jobSucceeded = false;
+    DistributedFileSystemOps dfso = null;
     try {
       //do compress the file
+      dfso = services.getFsService().getDfsOps();
       jobSucceeded = dfso.compress(this.jobConfig.
               getFilePath());
     } catch (IOException | NotFoundException e) {
       jobSucceeded = false;
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
     }
     if (jobSucceeded) {
       logger.log(Level.INFO, "File compression was successful");

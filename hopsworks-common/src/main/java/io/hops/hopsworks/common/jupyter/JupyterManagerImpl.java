@@ -14,19 +14,21 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.dao.jupyter.config;
+package io.hops.hopsworks.common.jupyter;
 
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
+import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
@@ -36,12 +38,19 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public interface JupyterManager {
-  JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
+public abstract class JupyterManagerImpl implements JupyterManager {
+  
+  @EJB
+  private Settings settings;
+  
+  @EJB
+  private OSProcessExecutor osProcessExecutor;
+  
+  public abstract JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
     JupyterSettings js, String allowOrigin) throws ServiceException;
   
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  default String getJupyterHome(Settings settings, String hdfsUser, Project project, String secret)
+  public String getJupyterHome(String hdfsUser, Project project, String secret)
       throws ServiceException {
     
     if (project == null || secret == null) {
@@ -53,7 +62,7 @@ public interface JupyterManager {
   }
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  default void projectCleanup(Settings settings, Logger logger, OSProcessExecutor osProcessExecutor, Project project) {
+  public void projectCleanup(Logger logger, Project project) {
     String prog = settings.getSudoersDir() + "/jupyter-project-cleanup.sh";
     int exitValue;
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder()
@@ -80,16 +89,16 @@ public interface JupyterManager {
     }
   }
 
-  void waitForStartup(Project project, Users user) throws TimeoutException;
-
-  void stopOrphanedJupyterServer(Long pid, Integer port) throws ServiceException;
+  public abstract void waitForStartup(Project project, Users user) throws TimeoutException;
   
-  void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, Long pid,
-      Integer port) throws ServiceException;
-
-  void projectCleanup(Project project);
+  public abstract void stopOrphanedJupyterServer(Long pid, Integer port) throws ServiceException;
   
-  boolean ping(JupyterProject jupyterProject);
+  public abstract void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath,
+    Long pid, Integer port) throws ServiceException;
   
-  List<JupyterProject> getAllNotebooks();
+  public abstract void projectCleanup(Project project);
+  
+  public abstract boolean ping(JupyterProject jupyterProject);
+  
+  public abstract List<JupyterProject> getAllNotebooks();
 }

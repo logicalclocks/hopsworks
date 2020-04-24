@@ -22,7 +22,6 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -30,11 +29,10 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
@@ -42,6 +40,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -56,18 +55,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ExecutionsResource {
   
-  private static final Logger LOGGER = Logger.getLogger(ExecutionsResource.class.getName());
-  
-  @EJB
-  private ExecutionFacade executionFacade;
-  @EJB
+  @Inject
   private ExecutionController executionController;
   @EJB
   private ExecutionsBuilder executionsBuilder;
@@ -93,7 +86,7 @@ public class ExecutionsResource {
     @BeanParam Pagination pagination,
     @BeanParam ExecutionsBeanParam executionsBeanParam,
     @Context UriInfo uriInfo, @Context SecurityContext sc) {
-  
+    
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -116,7 +109,7 @@ public class ExecutionsResource {
     @BeanParam ExecutionsBeanParam executionsBeanParam,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
     //If requested execution does not belong to job
-    Execution execution = authorize(id);
+    Execution execution = executionController.authorize(job, id);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     resourceRequest.setExpansions(executionsBeanParam.getExpansions().getResources());
     ExecutionDTO dto = executionsBuilder.build(uriInfo, resourceRequest, execution);
@@ -157,7 +150,7 @@ public class ExecutionsResource {
     @ApiParam(value = "Arguments for executing the job") String args,
     @Context SecurityContext sc,
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
-  
+    
     Users user = jWTHelper.getUserPrincipal(sc);
     Execution exec = executionController.start(job, args, user);
     UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
@@ -177,7 +170,7 @@ public class ExecutionsResource {
   public Response getLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
-    Execution execution = authorize(id);
+    Execution execution = executionController.authorize(job, id);
     JobLogDTO dto = executionController.getLog(execution, type);
     return Response.ok().entity(dto).build();
   }
@@ -192,25 +185,10 @@ public class ExecutionsResource {
   public Response retryLog(
     @PathParam("id") Integer id,
     @PathParam("type") JobLogDTO.LogType type, @Context SecurityContext sc) throws JobException {
-    Execution execution = authorize(id);
+    Execution execution = executionController.authorize(job, id);
     JobLogDTO dto = executionController.retryLogAggregation(execution, type);
     return Response.ok().entity(dto).build();
   }
-  
-  
-  private Execution authorize(Integer id) throws JobException {
-    Execution execution = executionFacade.findById(id);
-    if (execution == null) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
-        "execution with id: " + id + " does not belong to job: " + job.getName() + " or does not exist");
-    } else {
-      if (!job.getExecutions().contains(execution)) {
-        throw new JobException(RESTCodes.JobErrorCode.UNAUTHORIZED_EXECUTION_ACCESS, Level.FINE);
-      }
-    }
-    return execution;
-  }
-  
   
   public enum Status {
     STOPPED("stopped");

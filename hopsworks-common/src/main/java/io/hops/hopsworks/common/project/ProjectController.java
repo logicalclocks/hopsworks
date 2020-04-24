@@ -196,7 +196,7 @@ public class ProjectController {
   protected UsersController usersController;
   @EJB
   protected JobController jobController;
-  @EJB
+  @Inject
   protected ExecutionController executionController;
   @EJB
   private ProjectFacade projectFacade;

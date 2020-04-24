@@ -14,14 +14,44 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.jupyter;
+package io.hops.hopsworks.common.jwt;
 
 import io.hops.hopsworks.common.integrations.LocalhostStereotype;
+import io.hops.hopsworks.common.jobs.ExecutionJWT;
 
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Stateless
 @LocalhostStereotype
-public class LocalJupyterJWTTokenWriter implements JupyterJWTTokenWriter {
-
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class LocalJWTTokenWriter implements JWTTokenWriter {
+  @Override
+  public void writeToken(ServiceJWT serviceJWT) {
+  
+  }
+  
+  @Override
+  public void writeToken(ExecutionJWT executionJWT) {
+  
+  }
+  
+  @Override
+  public void deleteToken(ServiceJWT serviceJWT) {
+  
+  }
+  
+  @Override
+  public void deleteToken(ExecutionJWT executionJWT) {
+  
+  }
+  
+  @Override
+  public Set<ExecutionJWT> getJWTs(Map<String, String> labels) {
+    return new HashSet<>();
+  }
 }

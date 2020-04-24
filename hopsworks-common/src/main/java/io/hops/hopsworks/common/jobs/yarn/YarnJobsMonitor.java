@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.yarn;
 
+import io.hops.hopsworks.common.jobs.JobsMonitor;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
@@ -71,7 +72,7 @@ import org.apache.hadoop.yarn.exceptions.YarnException;
 @Singleton
 @DependsOn("Settings")
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class YarnJobsMonitor {
+public class YarnJobsMonitor implements JobsMonitor {
 
   private static final Logger LOGGER = Logger.getLogger(YarnJobsMonitor.class.getName());
 
@@ -190,15 +191,17 @@ public class YarnJobsMonitor {
     }
     return exec;
   }
-
-  private Execution updateProgress(float progress, Execution execution) {
+  
+  @Override
+  public Execution updateProgress(float progress, Execution execution) {
     return executionFacade.updateProgress(execution, progress);
   }
-
-  private Execution updateState(JobState newState, Execution execution) {
+  
+  @Override
+  public Execution updateState(JobState newState, Execution execution) {
     return executionFacade.updateState(execution, newState);
   }
-
+  
   private Execution updateFinalStatus(JobFinalStatus finalStatus, Execution execution) {
     return executionFacade.updateFinalStatus(execution, finalStatus);
   }

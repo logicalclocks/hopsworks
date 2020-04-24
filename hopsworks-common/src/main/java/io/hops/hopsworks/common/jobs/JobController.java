@@ -64,6 +64,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -86,7 +87,7 @@ public class JobController {
   private DistributedFsService dfs;
   @EJB
   private SparkController sparkController;
-  @EJB
+  @Inject
   private ExecutionController executionController;
   @EJB
   private HdfsUsersController hdfsUsersController;

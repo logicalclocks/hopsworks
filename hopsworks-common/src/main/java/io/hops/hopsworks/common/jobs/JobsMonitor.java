@@ -14,14 +14,15 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.jupyter;
+package io.hops.hopsworks.common.jobs;
 
-import io.hops.hopsworks.common.integrations.LocalhostStereotype;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
+import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 
-import javax.ejb.Stateless;
-
-@Stateless
-@LocalhostStereotype
-public class LocalJupyterJWTTokenWriter implements JupyterJWTTokenWriter {
-
+public interface JobsMonitor {
+  
+  Execution updateProgress(float progress, Execution execution);
+  
+  Execution updateState(JobState newState, Execution execution);
+  
 }

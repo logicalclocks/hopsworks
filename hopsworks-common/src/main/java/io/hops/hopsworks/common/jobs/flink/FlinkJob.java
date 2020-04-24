@@ -42,14 +42,11 @@ package io.hops.hopsworks.common.jobs.flink;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 import java.io.IOException;
 import java.util.Map;
@@ -67,9 +64,9 @@ public class FlinkJob extends YarnJob {
   private FlinkYarnRunnerBuilder flinkBuilder;
   
   FlinkJob(Jobs job, AsynchronousJobExecutor services,
-    Users user, String jobUser, YarnJobsMonitor jobsMonitor,
-    Settings settings, String kafkaBrokersString) {
-    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), jobsMonitor, settings, kafkaBrokersString);
+    Users user, String jobUser,
+    Settings settings) {
+    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings);
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException(
         "Job must contain a FlinkJobConfiguration object. Received: "
@@ -78,8 +75,7 @@ public class FlinkJob extends YarnJob {
   }
   
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
-    super.setupJob(dfso, yarnClient);
+  protected boolean setupJob() throws JobException {
     if (flinkBuilder == null) {
       flinkBuilder = new FlinkYarnRunnerBuilder(jobs);
     }

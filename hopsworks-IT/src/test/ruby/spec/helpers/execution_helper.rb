@@ -23,7 +23,7 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
   end
 
-  def start_execution(project_id, job_name, args)
+  def start_execution(project_id, job_name, args=nil)
       headers = { 'Content-Type' => 'text/plain' }
       post "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions", args, headers
     end
@@ -38,7 +38,7 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/log/#{type}"
   end
 
-  def wait_for_execution(timeout=480)
+  def wait_for_execution(timeout=360)
     start = Time.now
     x = yield
     until x
@@ -50,15 +50,19 @@ module ExecutionHelper
     end
   end
 
-  def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state)
-    app_id = ''
+  def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state, appOrExecId)
+    id = ''
     wait_for_execution do
       get_execution(project_id, job_name, execution_id)
-      app_id = json_body[:appId]
+      if appOrExecId.eql? 'id'
+        id = json_body[:id]
+      else
+        id = json_body[:appId]
+      end
       (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
     end
-    expect(app_id).not_to be_nil
-    app_id
+    expect(id).not_to be_nil
+    id
   end
 
   def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state)

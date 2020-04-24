@@ -44,6 +44,7 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
 
   private static JAXBContext sparkJAXBContext;
   private static JAXBContext flinkJAXBContext;
+  private static JAXBContext pythonJAXBContext;
 
   static {
     try {
