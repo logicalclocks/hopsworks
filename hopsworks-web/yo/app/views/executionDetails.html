@@ -40,7 +40,7 @@
                style="margin-left: 10px"></i></div>
         <div class="col-md-8">{{executionDetailsCtrl.execution.id}}</div>
     </div>
-    <div class="row">
+    <div class="row" ng-show="executionDetailsCtrl.execution.appId !== undefined">
         <div class="text-right col-md-4">YARN Application ID
             <i class="fa fa-info-circle"
                uib-tooltip="The YARN application ID."

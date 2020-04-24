@@ -54,6 +54,9 @@ import javax.ejb.Timeout;
 import javax.ejb.Timer;
 import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -71,7 +74,7 @@ public class JobScheduler {
 
   @EJB
   private JobFacade jobFacade;
-  @EJB
+  @Inject
   private ExecutionController executionController;
   @Resource
   private TimerService timerService;
@@ -84,6 +87,7 @@ public class JobScheduler {
    * @param timer
    */
   @Timeout
+  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void timeout(Timer timer) {
     Serializable jobId = timer.getInfo();
     try {

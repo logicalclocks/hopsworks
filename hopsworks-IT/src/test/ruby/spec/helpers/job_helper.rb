@@ -137,6 +137,49 @@ module JobHelper
     end
   end
 
+  def create_python_job(project, job_name, type, job_conf=nil)
+    # need to enable python for conversion .ipynb to .py works
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
+    if response.code == 404
+      post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.6?action=create"
+      expect_status(201)
+    end
+
+    if job_conf.nil?
+      job_conf = {
+          "type" => "pythonJobConfiguration",
+          "appName" => "#{job_name}",
+          "memory" => 2048,
+          "cores" => 1,
+          "jobType" => "PYTHON",
+          "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
+          "files" => "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
+      }
+    end
+
+    if type.eql? "py"
+      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".py")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/test_job.py",
+                        "/Projects/#{project[:projectname]}/Resources/" + job_name + ".py", @user[:username],
+                        "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+      end
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+
+    elsif type.eql? "ipynb"
+      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/test_job.ipynb",
+                        "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
+                        "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+      end
+
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
+      expect_status(200)
+      job_conf[:appPath] = "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb"
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+
+    end
+  end
+
   def get_jobs(project_id, query)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
   end

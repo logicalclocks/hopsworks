@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.hdfs;
 import com.google.common.base.CharMatcher;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.util.Settings;
 
@@ -103,6 +104,38 @@ public final class Utils {
     } else {
       return "/" + Settings.DIR_ROOT + "/" + dataset.getProject().getName() + "/" + dataset.getName() + "/";
     }
+  }
+  
+  /**
+   * Assemble the log output path of Hopsworks jobs.
+   *
+   * @param projectName projectName
+   * @param jobType jobType
+   * @return String array with out and err log output path
+   */
+  public static String[] getJobLogLocation(String projectName, JobType jobType) {
+    String defaultOutputPath;
+    switch (jobType) {
+      case SPARK:
+      case PYSPARK:
+        defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
+        break;
+      case FLINK:
+        defaultOutputPath =  Settings.FLINK_DEFAULT_OUTPUT_PATH;
+        break;
+      case YARN:
+        defaultOutputPath =  Settings.YARN_DEFAULT_OUTPUT_PATH;
+        break;
+      case PYTHON:
+        defaultOutputPath =  Settings.PYTHON_DEFAULT_OUTPUT_PATH;
+        break;
+      default:
+        defaultOutputPath =  "Logs/";
+    }
+  
+    String stdOutFinalDestination = getProjectPath(projectName) + defaultOutputPath;
+    String stdErrFinalDestination = getProjectPath(projectName) + defaultOutputPath;
+    return new String[]{stdOutFinalDestination, stdErrFinalDestination};
   }
   
   public static String getHiveDBName(Project project) {

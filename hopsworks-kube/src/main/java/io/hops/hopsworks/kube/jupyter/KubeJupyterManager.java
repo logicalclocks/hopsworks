@@ -19,9 +19,7 @@ import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ProbeBuilder;
-import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
-import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -39,13 +37,13 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterPaths;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.jupyter.JupyterManager;
+import io.hops.hopsworks.common.jupyter.JupyterManagerImpl;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
@@ -71,7 +69,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -82,22 +79,22 @@ import static java.util.logging.Level.SEVERE;
 
 @Stateless
 @KubeStereotype
-public class KubeJupyterManager implements JupyterManager {
-  public static final String ANACONDA = "anaconda";
-  public static final String CERTS = "certs";
-  public static final String CONF = "conf";
-  public static final String HADOOP = "hadoop";
-  public static final String JUPYTER = "jupyter";
-  public static final String JUPYTER_NVIDIA = "jupyter_nvidia";
-  public static final String JWT = "jwt";
-  public static final String KERNELS = "kernels";
-  public static final String FLINK = "flink";
-  public static final String SPARK = "spark";
-  public static final String SEPARATOR = "-";
-  public static final String JUPYTER_PREFIX = JUPYTER + SEPARATOR;
-  public static final String CONF_SUFFIX = SEPARATOR + "conf";
+public class KubeJupyterManager extends JupyterManagerImpl implements JupyterManager {
+  private static final String ANACONDA = "anaconda";
+  private static final String CERTS = "certs";
+  private static final String CONF = "conf";
+  private static final String HADOOP = "hadoop";
+  private static final String JUPYTER = "jupyter";
+  private static final String JUPYTER_NVIDIA = "jupyter_nvidia";
+  private static final String JWT = "jwt";
+  private static final String KERNELS = "kernels";
+  private static final String FLINK = "flink";
+  private static final String SPARK = "spark";
+  private static final String SEPARATOR = "-";
+  private static final String JUPYTER_PREFIX = JUPYTER + SEPARATOR;
+  private static final String CONF_SUFFIX = SEPARATOR + "conf";
   public static final String JWT_SUFFIX = SEPARATOR + "jwt";
-  public static final String KERNELS_SUFFIX = SEPARATOR + "kernels";
+  private static final String KERNELS_SUFFIX = SEPARATOR + "kernels";
   private static final String READINESS_PATH = "/hopsworks-api/jupyter/%d/api/status?token=%s";
   
   private static final long PID = -1;
@@ -124,8 +121,6 @@ public class KubeJupyterManager implements JupyterManager {
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
   @EJB
   private KubeClientService kubeClientService;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -133,7 +128,7 @@ public class KubeJupyterManager implements JupyterManager {
     JupyterSettings jupyterSettings, String allowOrigin) throws ServiceException {
 
     JupyterPaths jupyterPaths = jupyterConfigFilesGenerator.generateJupyterPaths(project, hdfsUser, secretConfig);
-    String kubeProjectUser = kubeClientService.getKubeProjectUsername(project, user);
+    String kubeProjectUser = kubeClientService.getKubeDeploymentName(project, user);
     String pythonKernelName = jupyterConfigFilesGenerator.pythonKernelName(project.getPythonVersion());
     String secretDir = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
   
@@ -193,7 +188,7 @@ public class KubeJupyterManager implements JupyterManager {
       logger.log(SEVERE, "Failed to start Jupyter notebook on Kubernetes", e);
       nodePortOptional.ifPresent(nodePort -> {
         try {
-          stopJupyterServer(project, user, hdfsUser, getJupyterHome(settings, hdfsUser, project, secretDir),
+          stopJupyterServer(project, user, hdfsUser, getJupyterHome(hdfsUser, project, secretDir),
             PID, nodePort);
         } catch (Exception ex) {
         }
@@ -217,41 +212,12 @@ public class KubeJupyterManager implements JupyterManager {
     kubeClientService.waitForDeployment(project, deploymentName, settings.getKubeAPIMaxAttempts());
   }
   
-  private String serviceAndDeploymentName(Project project, Users user) {
-    return serviceAndDeploymentName(kubeClientService.getKubeProjectUsername(project, user));
+  public String serviceAndDeploymentName(Project project, Users user) {
+    return serviceAndDeploymentName(kubeClientService.getKubeDeploymentName(project, user));
   }
-
-  private String serviceAndDeploymentName(String kubeProjectUsername) {
+  public String serviceAndDeploymentName(String kubeProjectUsername) {
     return JUPYTER_PREFIX + kubeProjectUsername;
   }
-
-  private ResourceRequirements buildResourceRequirements(DockerJobConfiguration dockerConfig) throws ServiceException {
-
-    if(dockerConfig.getMemory() > settings.getKubeDockerMaxMemoryAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum memory "
-          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
-    } else if(dockerConfig.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum cores "
-          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
-    } else if(dockerConfig.getGpus() > settings.getKubeDockerMaxGpusAllocation()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum gpus "
-          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " gpus");
-    }
-
-    ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
-    resources
-        .addToLimits("memory", new QuantityBuilder().withAmount(dockerConfig.getMemory() + "Mi").build())
-        .addToLimits("cpu", new QuantityBuilder().withAmount(
-            Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build());
-
-    int requestedGPUs = dockerConfig.getGpus();
-    if(requestedGPUs > 0) {
-      resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
-          .withAmount(Double.toString(dockerConfig.getGpus())).build());
-    }
-    return resources.build();
-  }
-
 
   private Container buildContainer(String jupyterHome, String anacondaEnv, String pythonKernelName, String secretDir,
                                    String certificatesDir, String hadoopUser, String token, String flinkConfDir,
@@ -392,7 +358,7 @@ public class KubeJupyterManager implements JupyterManager {
     String jupyterMode)
       throws ServiceException {
 
-    ResourceRequirements resourceRequirements = buildResourceRequirements(dockerConfig);
+    ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(dockerConfig);
     Container container = buildContainer(jupyterHome, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
       hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort, jupyterMode);
     
@@ -465,7 +431,7 @@ public class KubeJupyterManager implements JupyterManager {
     runCatchAndLog(() -> jupyterFacade.remove(hdfsUsername, port), errorMessage, Optional.empty());
 
     deleteKubeResources(kubeClientService.getKubeProjectName(project),
-      kubeClientService.getKubeProjectUsername(project, user));
+      kubeClientService.getKubeDeploymentName(project, user));
   }
 
   private void deleteKubeResources(String kubeProjectName, String kubeProjectUser) throws ServiceException {
@@ -498,7 +464,7 @@ public class KubeJupyterManager implements JupyterManager {
 
   @Override
   public void projectCleanup(Project project) {
-    projectCleanup(settings, logger, osProcessExecutor, project);
+    projectCleanup(logger, project);
   }
   
   @Override

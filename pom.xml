@@ -74,6 +74,7 @@
       </activation>
       <modules>
         <module>hopsworks-kube</module>
+        <module>jobs-ee</module>
       </modules>
     </profile>
     <profile>

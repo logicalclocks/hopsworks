@@ -44,6 +44,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.erasureCode.ErasureCodeJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfiguration;
 
@@ -132,6 +133,9 @@ public abstract class JobConfiguration {
           break;
         case ERASURE_CODING:
           conf = new ErasureCodeJobConfiguration();
+          break;
+        case PYTHON:
+          conf = new PythonJobConfiguration();
           break;
         default:
           throw new UnsupportedOperationException(

@@ -49,7 +49,7 @@ import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
+import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;

@@ -58,6 +58,7 @@ import javax.persistence.TypedQuery;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,13 +92,13 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
     }
   }
   
-  public Execution findById(int id) {
-    TypedQuery<Execution> q = em.createNamedQuery("Execution.findById", Execution.class);
-    q.setParameter("id", id);
+  public Optional<Execution> findById(int id) {
     try {
-      return q.getSingleResult();
+      return Optional.of(em.createNamedQuery("Execution.findById", Execution.class)
+        .setParameter("id", id)
+        .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
   
@@ -145,6 +146,14 @@ public class ExecutionFacade extends AbstractFacade<Execution> {
   public List<Execution> findNotFinished() {
     return em.createNamedQuery("Execution.findByStates",
       Execution.class).setParameter("states", JobState.getRunningStates()).getResultList();
+  }
+  
+  public List<Execution> findByTypeAndStates(JobType type, Set<JobState> jobStates) {
+    TypedQuery<Execution> q = em.createNamedQuery(
+      "Execution.findByTypeAndStates", Execution.class);
+    q.setParameter("type", type );
+    q.setParameter("states", jobStates);
+    return q.getResultList();
   }
   
   public CollectionInfo findByJob(Integer offset, Integer limit,

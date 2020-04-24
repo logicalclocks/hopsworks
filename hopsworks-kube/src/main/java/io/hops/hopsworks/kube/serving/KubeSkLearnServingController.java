@@ -128,7 +128,7 @@ public class KubeSkLearnServingController {
         settings.getLogstashPortSkLearnServing()).build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
-        .withSecretName(kubeClientService.getKubeProjectUsername(kubeClientService.getKubeProjectName(project), user))
+        .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
         .build();
 
     Volume secretVol = new VolumeBuilder()

@@ -49,6 +49,12 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-jwt</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>io.fabric8</groupId>
       <artifactId>kubernetes-client</artifactId>
       <version>3.1.10</version>

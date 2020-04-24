@@ -32,6 +32,7 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -44,11 +45,13 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
 
   private static JAXBContext sparkJAXBContext;
   private static JAXBContext flinkJAXBContext;
+  private static JAXBContext pythonJAXBContext;
 
   static {
     try {
       sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {SparkJobConfiguration.class}, null);
       flinkJAXBContext = JAXBContextFactory.createContext(new Class[] {FlinkJobConfiguration.class}, null);
+      pythonJAXBContext = JAXBContextFactory.createContext(new Class[] {PythonJobConfiguration.class}, null);
     } catch (JAXBException e) {
       LOGGER.log(Level.SEVERE, "An error occurred while initializing JAXBContext", e);
     }
@@ -91,6 +94,8 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
         return sparkJAXBContext;
       case FLINK:
         return flinkJAXBContext;
+      case PYTHON:
+        return pythonJAXBContext;
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
     }
@@ -107,6 +112,8 @@ public class JobConfigurationConverter implements AttributeConverter<JobConfigur
         return unmarshaller.unmarshal(json, SparkJobConfiguration.class).getValue();
       case FLINK:
         return unmarshaller.unmarshal(json, FlinkJobConfiguration.class).getValue();
+      case PYTHON:
+        return unmarshaller.unmarshal(json, PythonJobConfiguration.class).getValue();
       default:
         throw new IllegalArgumentException("Could not find a mapping for JobType " + jobType);
     }

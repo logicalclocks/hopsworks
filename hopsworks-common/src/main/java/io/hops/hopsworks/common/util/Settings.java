@@ -62,6 +62,7 @@ import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -89,6 +90,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Singleton
+@Startup
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class Settings implements Serializable {
 
@@ -137,6 +139,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
   private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
   private static final String VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING = "logstash_port_sklearn_serving";
+  private static final String VARIABLE_LOGSTASH_PORT_PYTHON_JOBS = "logstash_port_python_jobs";
+  
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -265,7 +269,7 @@ public class Settings implements Serializable {
 
   //Used by RESTException to include devMsg or not in response
   private static final String VARIABLE_HOPSWORKS_REST_LOG_LEVEL = "hopsworks_rest_log_level";
-
+  
   /*
    * -------------------- Serving ---------------
    */
@@ -305,6 +309,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
   private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
+  private static final String VARIABLE_KUBE_PYTHON_IMG_VERSION = "kube_python_img_version";
 
   /*
    * -------------------- Jupyter ---------------
@@ -552,6 +557,7 @@ public class Settings implements Serializable {
       LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
       LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
       LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
+      LOGSTASH_PORT_PYTHON_JOBS = setIntVar(VARIABLE_LOGSTASH_PORT_PYTHON_JOBS, LOGSTASH_PORT_PYTHON_JOBS);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
@@ -676,6 +682,7 @@ public class Settings implements Serializable {
       KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
       KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
+      KUBE_PYTHON_IMG_VERSION = setVar(VARIABLE_KUBE_PYTHON_IMG_VERSION, KUBE_PYTHON_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
@@ -915,6 +922,8 @@ public class Settings implements Serializable {
   //PYSPARK constants
   public static final String SPARK_PY_MAINCLASS
       = "org.apache.spark.deploy.PythonRunner";
+  
+  public static final long PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS = 60000;
 
   //Hive config
   public static final String HIVE_SITE = "hive-site.xml";
@@ -1333,6 +1342,9 @@ public class Settings implements Serializable {
   //Serving constants
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
   public static final int INFERENCE_SCHEMAVERSION = 2;
+  
+  //Python constants
+  public static final String PYTHON_DEFAULT_OUTPUT_PATH = "Logs/Python/";
 
   //Kafka constants
   public static final String PROJECT_COMPATIBILITY_SUBJECT = "projectcompatibility";
@@ -1606,6 +1618,13 @@ public class Settings implements Serializable {
   public synchronized Integer getLogstashPortSkLearnServing() {
     checkCache();
     return LOGSTASH_PORT_SKLEARN_SERVING;
+  }
+  
+  private int LOGSTASH_PORT_PYTHON_JOBS = 5051;
+  
+  public synchronized Integer getLogstashPortPythonJobs() {
+    checkCache();
+    return LOGSTASH_PORT_PYTHON_JOBS;
   }
 
   // Livy Server`
@@ -3369,7 +3388,7 @@ public class Settings implements Serializable {
     return KUBE_SKLEARN_IMG_VERSION;
   }
 
-  private String KUBE_FILEBEAT_IMG_VERSION = "0.10.0";
+  private String KUBE_FILEBEAT_IMG_VERSION = "1.3.0";
   public synchronized String getKubeFilebeatImgVersion() {
     checkCache();
     return KUBE_FILEBEAT_IMG_VERSION;
@@ -3386,6 +3405,12 @@ public class Settings implements Serializable {
   public synchronized String getJupyterImgVersion() {
     checkCache();
     return KUBE_JUPYTER_IMG_VERSION;
+  }
+  
+  private String KUBE_PYTHON_IMG_VERSION = "1.3.0";
+  public synchronized String getPythonImgVersion() {
+    checkCache();
+    return KUBE_PYTHON_IMG_VERSION;
   }
 
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;

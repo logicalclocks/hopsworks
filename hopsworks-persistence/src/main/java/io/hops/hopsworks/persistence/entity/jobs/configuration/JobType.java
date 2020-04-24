@@ -49,8 +49,9 @@ public enum JobType {
   SPARK("Spark"),
   PYSPARK("PySpark"),
   ERASURE_CODING("ERASURE_CODING"),
-  DOCKER("Docker");
-  
+  DOCKER("Docker"),
+  PYTHON("Python");
+
   private final String name;
   
   JobType(String name) {

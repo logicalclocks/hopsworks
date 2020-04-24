@@ -130,27 +130,27 @@
                 <table class="table table-hover"
                        ng-style="(jobsCtrl.dimTable) ? {'opacity': 0.3} : {}" id="jobsTable">
                   <thead>
-                  <th ng-click="jobsCtrl.sort('name')" style="width: 17%">
+                  <th ng-click="jobsCtrl.sort('name')" style="width: 28%">
                     Name
                     <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'name'"
                           ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="jobsCtrl.sort('date_created')" style="width: 10%">
+                  <th ng-click="jobsCtrl.sort('date_created')" style="width: 13%">
                     Created on
                     <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'date_created'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="jobsCtrl.sort('jobType')" style="width: 5%">
+                  <th ng-click="jobsCtrl.sort('jobType')" style="width: 12%">
                     Type
                     <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'jobType'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th ng-click="jobsCtrl.sort('creator')" style="width: 8%">
+                  <th ng-click="jobsCtrl.sort('creator')" style="width: 20%">
                     Owner
                     <span class="glyphicon sort-icon" ng-show="jobsCtrl.sortKey == 'creator'" ng-class="{'glyphicon-chevron-up':!jobsCtrl.reverse,'glyphicon-chevron-down':jobsCtrl.reverse}"></span>
                   </th>
-                  <th  style="width: 8%">
-                    Ongoing runs
+                  <th  style="width: 6%">
+                    Ongoing
                   </th>
-                  <th style="width: 8%">
+                  <th style="width: 19%">
                     Actions
                   </th>
                   </thead>
@@ -159,7 +159,8 @@
                       pagination-id="jobs_pagination"
                       current-page="jobsCtrl.currentPage"
                       total-items="jobsCtrl.totalItems"
-                      ng-class="{'active':$index === jobsCtrl.selectedJobs[job.name]['index']}">
+                      ng-class="{'active':$index === jobsCtrl.selectedJobs[job.name]['index']}"
+                      ng-init="jobsCtrl.initJobs(job, $index)">
                       <td id="{{job.name}}" ng-click="jobsCtrl.toggle(job, $index);">
                         {{job.name}}
                       </td>
@@ -195,6 +196,7 @@
                           </button>
                           <button uib-tooltip="Monitoring UI"
                                   type="button" class="btn btn-default fa fa-eye"
+                                  ng-show="job.jobType !== 'PYTHON'"
                                   ng-click="jobsCtrl.showUI(job);$event.stopPropagation();">
                           </button>
                           <button
@@ -229,38 +231,35 @@
                            ng-if="jobsCtrl.executions.hasOwnProperty(job.name) && !jobsCtrl.executionsEmpty(jobsCtrl.executions[job.name])"
                            class="animate-if"
                            id="{{job.name}}-executions">
-                        <table class="table table-hover" style="margin-left: 10px; overflow: scroll; width: 100%;margin: 0 auto;">
+                        <table class="table table-hover" style="overflow: scroll; width: 100%;margin: 0 auto;">
                           <thead style="border:none;">
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'user')" style="width: 15%">Submitter
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'user')" style="width: 21%">Submitter
                                 <span class="glyphicon sort-icon"
                                       ng-show="jobsCtrl.executionsPagination[job.name].sort === 'user'"
                                       ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
                             </th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'submissiontime')" style="width: 12%">Submitted at
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'submissiontime')"
+                                style="width: 10%">Submitted at
                                 <span class="glyphicon sort-icon"
                                       ng-show="jobsCtrl.executionsPagination[job.name].sort === 'submissiontime'"
                                       ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
                             </th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'state')" style="width: 12%">
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'progress')" style="width: 10%">Progress
+                                <span class="glyphicon sort-icon"
+                                      ng-show="jobsCtrl.executionsPagination[job.name].sort === 'progress'"
+                                      ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
+                            </th>
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'state')" style="width: 15%">
                               State
                               <span class="glyphicon sort-icon"
                                     ng-show="jobsCtrl.executionsPagination[job.name].sort === 'state'"
                                     ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
                             </th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'finalstatus')" style="width: 12%">Status
-                                <span class="glyphicon sort-icon"
-                                      ng-show="jobsCtrl.executionsPagination[job.name].sort === 'finalstatus'"
-                                      ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span></th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'progress')" style="width: 12%">Progress
-                                <span class="glyphicon sort-icon"
-                                      ng-show="jobsCtrl.executionsPagination[job.name].sort === 'progress'"
-                                      ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
-                            </th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'duration')" style="width: 6%">Duration
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'duration')" style="width: 5%">Duration
                                 <span class="glyphicon sort-icon"
                                       ng-show="jobsCtrl.executionsPagination[job.name].sort === 'duration'"
                                       ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span></th>
-                            <th style="width: 16%">Actions</th>
+                            <th style="width: 14%">Actions</th>
                           </thead>
                           <tbody class="datasets-jobs-table">
                           <tr
@@ -272,6 +271,13 @@
                             <td>{{execution.user.firstname}} {{execution.user.lastname}} ({{execution.user.username}})</td>
                             <td>
                               {{execution.submissionTime| date:'medium'}}
+                            </td>
+                            <td>
+                              <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="{{execution.progress * 100}}"
+                                   aria-valuemin="0" aria-valuemax="100" style="width:{{execution.progress * 90}}%"
+                                   ng-if="execution.progress !== undefined && execution.progress !== null">
+                                {{execution.progress * 100}}%
+                              </div>
                             </td>
                             <td>
                              <span
@@ -349,36 +355,9 @@
                                           style="color: #880000 ">
                               {{jobsCtrl.toTitleCase(execution.state)}}
                             </span>
-                                </td>
-                                <td>
-                            <span
-                                    ng-if="execution.finalStatus === 'UNDEFINED'"
-                                    style="color: #0066bb ">
-                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
-                            </span>
-                                  <span
-                                          ng-if="execution.finalStatus === 'SUCCEEDED'"
-                                          style="color: #00A000 ">
-                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
-                            </span>
-                                  <span
-                                          ng-if="execution.finalStatus === 'FAILED'"
-                                          style="color: #880000 ">
-                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
-                            </span>
-                                  <span
-                                          ng-if="execution.finalStatus === 'KILLED'"
-                                          style="color: #880000 ">
-                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
-                            </span>
-                                </td>
-                            <td>
-                              <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="{{execution.progress * 100}}"
-                                   aria-valuemin="0" aria-valuemax="100" style="width:{{execution.progress * 90}}%"
-                                   ng-if="execution.progress !== undefined && execution.progress !== null">
-                                {{execution.progress * 100}}%
-                              </div>
                             </td>
+
+
                             <td>
                               {{convertMS(execution.duration)}}
                             </td>
@@ -404,6 +383,14 @@
                                     ng-disabled = "execution.state === 'INITIALIZING' || execution.state === 'APP_MASTER_START_FAILED'"
                                     type="button" class="btn btn-default fa fa-eye"
                                     ng-click="jobsCtrl.showExecutionUI(execution);$event.stopPropagation();">
+                              </button>
+
+                              <button
+                                      uib-tooltip="Real-time logs"
+                                      ng-if="job.jobType === 'PYTHON'"
+                                      ng-disabled = "execution.state === 'INITIALIZING'"
+                                      type="button" class="btn btn-default fa fa-refresh"
+                                      ng-click="jobsCtrl.showExecutionUI(execution);$event.stopPropagation();">
                               </button>
 
                               <button

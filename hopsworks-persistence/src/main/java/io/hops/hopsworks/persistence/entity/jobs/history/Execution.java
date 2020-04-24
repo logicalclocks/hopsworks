@@ -115,6 +115,9 @@ import java.util.List;
           query
           = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.job.project "
           + "= :project ORDER BY e.submissionTime DESC"),
+  @NamedQuery(name = "Execution.findByTypeAndStates",
+          query
+          = "SELECT e FROM Execution e WHERE e.job.type = :type AND e.state in :states"),
   @NamedQuery(name = "Execution.findByJob",
           query
           = "SELECT e FROM Execution e WHERE e.job = :job ORDER BY e.submissionTime DESC"),
@@ -269,8 +272,7 @@ public class Execution implements Serializable {
   }
 
   public long getExecutionDuration() {
-    if (executionStart == -1 || state == JobState.APP_MASTER_START_FAILED || state == JobState.INITIALIZATION_FAILED ||
-      state == JobState.INITIALIZING) {
+    if (executionStart == -1 || state == JobState.APP_MASTER_START_FAILED || state == JobState.INITIALIZATION_FAILED) {
       return 0;
     }
     if (executionStop > executionStart) {
@@ -286,6 +288,10 @@ public class Execution implements Serializable {
 
   public void setExecutionStop(long executionStop) {
     this.executionStop = executionStop;
+  }
+  
+  public long getExecutionStop() {
+    return executionStop;
   }
   
   public String getStdoutPath() {

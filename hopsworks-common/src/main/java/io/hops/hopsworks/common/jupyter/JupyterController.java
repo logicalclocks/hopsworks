@@ -17,18 +17,10 @@
 package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
-import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
-import io.hops.hopsworks.common.dao.jupyter.config.JupyterManager;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -41,12 +33,17 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
+import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.Path;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -84,13 +81,9 @@ public class JupyterController {
   @Inject
   private JupyterManager jupyterManager;
   @EJB
-  private ElasticController elasticController;
-  @EJB
   private CertificateMaterializer certificateMaterializer;
   @EJB
   private DistributedFsService dfsService;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -193,7 +186,7 @@ public class JupyterController {
       }
       retries--;
     }
-    String jupyterHomePath = jupyterManager.getJupyterHome(settings, hdfsUser, project, secret);
+    String jupyterHomePath = jupyterManager.getJupyterHome(hdfsUser, project, secret);
 
     // stop the server, remove the user in this project's local dirs
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
@@ -340,6 +333,7 @@ public class JupyterController {
 
   public enum NotebookConversion {
     PY,
-    HTML
+    HTML,
+    PY_JOB
   }
 }

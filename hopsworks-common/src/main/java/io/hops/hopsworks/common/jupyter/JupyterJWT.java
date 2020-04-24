@@ -16,50 +16,33 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hopsworks.common.jwt.ServiceJWT;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
-public final class JupyterJWT {
-  public final Project project;
-  public final Users user;
+public final class JupyterJWT extends ServiceJWT {
   public final PidAndPort pidAndPort;
-  public final LocalDateTime expiration;
   public Path tokenFile;
-  public String token;
   
   public JupyterJWT(JupyterJWT jupyterJWT) {
-    this(jupyterJWT.project, jupyterJWT.user, jupyterJWT.pidAndPort, jupyterJWT.expiration);
+    this(jupyterJWT.project, jupyterJWT.user, jupyterJWT.expiration, jupyterJWT.pidAndPort);
     this.tokenFile = jupyterJWT.tokenFile;
   }
   
-  public JupyterJWT(Project project, Users user, PidAndPort pidAndPort, LocalDateTime expiration) {
-    this.project = project;
-    this.user = user;
+  public JupyterJWT(Project project, Users user, LocalDateTime expiration, PidAndPort pidAndPort) {
+    super(project, user, expiration);
     this.pidAndPort = pidAndPort;
-    this.expiration = expiration;
   }
   
-  public boolean maybeRenew(LocalDateTime now) {
-    return now.isAfter(expiration) || now.isEqual(expiration);
-  }
-  
-  @Override
-  public int hashCode() {
-    int result = 17;
-    result = 31 * result + project.getId();
-    result = 31 * result + user.getUid();
-    return result;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
     }
-
+    
     if (o instanceof JupyterJWT) {
       JupyterJWT other = (JupyterJWT) o;
       return user.getUid().equals(other.user.getUid()) && project.getId().equals(other.project.getId());

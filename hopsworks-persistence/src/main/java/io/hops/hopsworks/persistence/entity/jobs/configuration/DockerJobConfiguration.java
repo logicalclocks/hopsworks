@@ -4,11 +4,25 @@
 
 package io.hops.hopsworks.persistence.entity.jobs.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlSeeAlso({PythonJobConfiguration.class})
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = PythonJobConfiguration.class, name = "PythonJobConfiguration")}
+)
 public class DockerJobConfiguration extends JobConfiguration {
 
   public DockerJobConfiguration(){}
@@ -21,7 +35,8 @@ public class DockerJobConfiguration extends JobConfiguration {
 
   @XmlElement
   private int gpus = 0;
-
+  
+  
   public int getCores() {
     return cores;
   }
@@ -45,7 +60,7 @@ public class DockerJobConfiguration extends JobConfiguration {
   public void setGpus(int gpus) {
     this.gpus = gpus;
   }
-
+  
   @Override
   @XmlElement(name="jobType")
   public JobType getJobType() {

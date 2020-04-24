@@ -118,6 +118,14 @@ public enum JobState {
             RUNNING, AGGREGATING_LOGS);
   }
   
+  public static Set<JobState> getKubeRunningStates() {
+    return EnumSet.of(INITIALIZING, RUNNING);
+  }
+  
+  public static Set<JobState> getKubeStates() {
+    return EnumSet.of(INITIALIZING, RUNNING, FAILED, FINISHED, KILLED);
+  }
+  
   public static Set<JobState> getFinalStates() {
     return EnumSet.
       of(FINISHED, FAILED, KILLED, FRAMEWORK_FAILURE, APP_MASTER_START_FAILED, INITIALIZATION_FAILED);

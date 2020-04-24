@@ -41,15 +41,10 @@ package io.hops.hopsworks.common.jobs.spark;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
-import io.hops.hopsworks.common.jobs.yarn.YarnJobsMonitor;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.JobException;
-
-import org.apache.hadoop.yarn.client.api.YarnClient;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -68,8 +63,8 @@ public class SparkJob extends YarnJob {
 
   SparkJob(Jobs job, AsynchronousJobExecutor services,
     Users user, final String hadoopDir,
-    String jobUser, YarnJobsMonitor jobsMonitor, Settings settings, String kafkaBrokersString) {
-    super(job, services, user, jobUser, hadoopDir, jobsMonitor, settings, kafkaBrokersString);
+    String jobUser, Settings settings) {
+    super(job, services, user, jobUser, hadoopDir, settings);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -78,8 +73,7 @@ public class SparkJob extends YarnJob {
   }
 
   @Override
-  protected boolean setupJob(DistributedFileSystemOps dfso, YarnClient yarnClient) throws JobException {
-    super.setupJob(dfso, yarnClient);
+  protected boolean setupJob() {
     SparkJobConfiguration jobconfig = (SparkJobConfiguration) jobs.getJobConfig();
     //Then: actually get to running.
     if (jobconfig.getAppName() == null || jobconfig.getAppName().isEmpty()) {
@@ -90,8 +84,6 @@ public class SparkJob extends YarnJob {
       runnerbuilder = new SparkYarnRunnerBuilder(jobs);
       runnerbuilder.setJobName(jobconfig.getAppName());
     }
-    //Set Kafka params
-    runnerbuilder.setServiceProps(serviceProps);
     if(jobconfig.getLocalResources() != null) {
       runnerbuilder.addExtraFiles(Arrays.asList(jobconfig.getLocalResources()));
     }
