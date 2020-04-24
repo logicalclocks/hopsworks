@@ -265,7 +265,7 @@ public class TrainingDatasetService {
   public Response delete(
       @Context SecurityContext sc, @ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid)
-      throws FeaturestoreException, IOException {
+      throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
     String trainingDsName = trainingDatasetController.delete(user, project, featurestore, trainingdatasetid);

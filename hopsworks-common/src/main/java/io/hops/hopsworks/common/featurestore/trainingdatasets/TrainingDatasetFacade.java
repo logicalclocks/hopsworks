@@ -17,9 +17,12 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -40,8 +43,14 @@ import java.util.logging.Logger;
 @Stateless
 public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
   private static final Logger LOGGER = Logger.getLogger(TrainingDatasetFacade.class.getName());
+
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
+
+  @EJB
+  private HopsfsTrainingDatasetFacade hopsfsTrainingDatasetFacade;
+  @EJB
+  private ExternalTrainingDatasetFacade externalTrainingDatasetFacade;
 
   public TrainingDatasetFacade() {
     super(TrainingDataset.class);
@@ -172,5 +181,18 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
    */
   public TrainingDataset updateTrainingDatasetMetadata(TrainingDataset trainingDataset) {
     return em.merge(trainingDataset);
+  }
+
+  public void removeTrainingDataset(TrainingDataset trainingDataset) {
+    switch (trainingDataset.getTrainingDatasetType()) {
+      case HOPSFS_TRAINING_DATASET:
+        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
+        break;
+      case EXTERNAL_TRAINING_DATASET:
+        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
+        break;
+    }
+
+    remove(trainingDataset);
   }
 }
