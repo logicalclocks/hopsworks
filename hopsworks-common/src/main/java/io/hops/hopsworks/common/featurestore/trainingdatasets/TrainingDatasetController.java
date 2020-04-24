@@ -197,7 +197,7 @@ public class TrainingDatasetController {
         udfso.mkdir(trainingDatasetPath);
       } finally {
         if (udfso != null) {
-          udfso.close();
+          dfs.closeDfsClient(udfso);
         }
       }
 
@@ -437,12 +437,17 @@ public class TrainingDatasetController {
       String dsPath = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
       String username = hdfsUsersBean.getHdfsUserName(project, user);
 
-      try (DistributedFileSystemOps udfso = dfs.getDfsOps(username)) {
+      DistributedFileSystemOps udfso = dfs.getDfsOps(username);
+      try {
         // TODO(Fabio): if Data owner *In project* do operation as superuser
         udfso.rm(dsPath, true);
       } catch (IOException e) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_TRAINING_DATASET,
             Level.WARNING, "", e.getMessage(), e);
+      } finally {
+        if (udfso != null) {
+          dfs.closeDfsClient(udfso);
+        }
       }
     }
 
