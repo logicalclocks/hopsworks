@@ -1183,6 +1183,12 @@ describe "On #{ENV['OS']}" do
               "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s
           json_result2 = delete delete_training_dataset_endpoint
           expect_status(200)
+
+          # Make sure that the directory has been removed correctly
+          get_datasets_in_path(project,
+                               "#{project[:projectname]}_Training_Datasets/#{parsed_json1['name']}_#{parsed_json1['version']}",
+                               "&type=DATASET")
+          expect_status(400)
         end
 
         it "should not be able to update the metadata of a hopsfs training dataset from the featurestore" do

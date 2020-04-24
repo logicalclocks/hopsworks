@@ -197,7 +197,7 @@ public class TrainingDatasetController {
         udfso.mkdir(trainingDatasetPath);
       } finally {
         if (udfso != null) {
-          udfso.close();
+          dfs.closeDfsClient(udfso);
         }
       }
 
@@ -421,7 +421,7 @@ public class TrainingDatasetController {
   }
 
   public String delete(Users user, Project project, Featurestore featurestore, Integer trainingDatasetId)
-      throws FeaturestoreException, IOException {
+      throws FeaturestoreException {
 
     TrainingDataset trainingDataset =
         trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
@@ -430,45 +430,29 @@ public class TrainingDatasetController {
 
     featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
 
-    if(trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+    trainingDatasetFacade.removeTrainingDataset(trainingDataset);
+
+    // If the training datasets was an HopsFS Training Dataset, then remove also the directory
+    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
       String dsPath = inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
       String username = hdfsUsersBean.getHdfsUserName(project, user);
+
       DistributedFileSystemOps udfso = dfs.getDfsOps(username);
       try {
         // TODO(Fabio): if Data owner *In project* do operation as superuser
         udfso.rm(dsPath, true);
+      } catch (IOException e) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_TRAINING_DATASET,
+            Level.WARNING, "", e.getMessage(), e);
       } finally {
         if (udfso != null) {
-          udfso.close();
+          dfs.closeDfsClient(udfso);
         }
       }
     }
-    deleteMetadata(trainingDataset);
+
     return trainingDataset.getName();
   }
-
-  /**
-   * Deletes a trainingDataset with a particular id from a particular featurestore
-   *
-   * @param trainingDataset the traininig dataset for which to delete the metadata
-   */
-  private void deleteMetadata(TrainingDataset trainingDataset) throws FeaturestoreException {
-    // Here we are relying on the FK to delete the training dataset. Not great.
-    switch(trainingDataset.getTrainingDatasetType()) {
-      case HOPSFS_TRAINING_DATASET:
-        hopsfsTrainingDatasetFacade.remove(trainingDataset.getHopsfsTrainingDataset());
-        break;
-      case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDatasetFacade.remove(trainingDataset.getExternalTrainingDataset());
-        break;
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_TYPE, Level.FINE,
-          ", Recognized training dataset types are: " + TrainingDatasetType.HOPSFS_TRAINING_DATASET + ", and: " +
-          TrainingDatasetType.EXTERNAL_TRAINING_DATASET + ". The provided training dataset type was not recognized: "
-          + trainingDataset.getTrainingDatasetType());
-    }
-  }
-
 
   /**
    * Updates a training dataset with new metadata
