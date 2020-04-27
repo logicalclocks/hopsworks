@@ -126,11 +126,11 @@ public class EnvironmentController {
         for (PythonDep dep : defaultEnvDeps) {
           dep.setBaseEnv(envName);
         }
+        defaultEnvDeps = agentController.persistAndMarkUnmutable(defaultEnvDeps);
       }
     }
-    final Collection<PythonDep> pythonDeps = agentController.persistAndMarkUnmutable(defaultEnvDeps);
     // Insert all deps in current listing
-    libraryController.addPythonDepsForProject(project, pythonDeps);
+    libraryController.addPythonDepsForProject(project, defaultEnvDeps);
   }
   
   private Collection<PythonDep> createProjectInDb(Project project, Users user, String pythonVersion,

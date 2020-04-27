@@ -125,14 +125,14 @@ public class LibraryInstaller {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
                 cc.getId(), CondaStatus.FAILED, cc.getInstallType(), cc.getMachineType(),
-                cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getChannelUrl(),
-                cc.getArg());
+                cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getVersion(),
+                cc.getChannelUrl(), ex.toString());
             continue;
           }
           commandsController.updateCondaCommandStatus(
               cc.getId(), CondaStatus.SUCCESS, cc.getInstallType(), cc.getMachineType(),
-              cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getChannelUrl(),
-              cc.getArg());
+              cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getVersion(),
+              cc.getChannelUrl());
         } catch (ServiceException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId());
         }
@@ -168,7 +168,6 @@ public class LibraryInstaller {
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " Error: " + processResult.getStdout();
-        LOG.log(Level.SEVERE, errorMsg);
         throw new IOException(errorMsg);
       }
     } finally {
@@ -192,7 +191,6 @@ public class LibraryInstaller {
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not delete the docker image. Exit code: " + processResult.getExitCode()
           + " Error: " + processResult.getStdout();
-      LOG.log(Level.SEVERE, errorMsg);
       throw new IOException(errorMsg);
     }
   }
@@ -248,7 +246,6 @@ public class LibraryInstaller {
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " Error: " + processResult.getStdout();
-        LOG.log(Level.SEVERE, errorMsg);
         throw new IOException(errorMsg);
       }
     } finally {
@@ -297,7 +294,6 @@ public class LibraryInstaller {
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " Error: " + processResult.getStdout();
-        LOG.log(Level.SEVERE, errorMsg);
         throw new IOException(errorMsg);
       }
     } finally {
@@ -350,7 +346,6 @@ public class LibraryInstaller {
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
           + " Error: " + processResult.getStdout();
-      LOG.log(Level.SEVERE, errorMsg);
       throw new IOException(errorMsg);
     } else {
       environmentController.uploadYmlInProject(cc.getProjectId(), cc.getUserId(), processResult.getStdout(),

@@ -87,6 +87,10 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findByProjectAndStatus",
           query
           = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId AND c.status = :status"),
+  @NamedQuery(name = "CondaCommands.findByProjectAndTypeAndStatus",
+          query
+           = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId AND c.installType = :installType"
+               + " AND c.status = :status"),
   @NamedQuery(name = "CondaCommands.findByProjectAndLibAndStatus",
           query
            = "SELECT c FROM CondaCommands c WHERE c.projectId = :projectId AND c.lib = :lib AND c.status = :status"),
@@ -184,13 +188,16 @@ public class CondaCommands implements Serializable {
   @ManyToOne(optional = false)
   private Project projectId;
   @Size(min = 1,
-          max = 10000)
+          max = 6000)
   @Column(name = "environment_yml")
   private String environmentYml;
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
-    
+  @Size(max = 6000)
+  @Column(name = "error_message")
+  private String errorMsg="";
+  
   public CondaCommands() {
   }
 
@@ -340,6 +347,14 @@ public class CondaCommands implements Serializable {
     this.dockerImage = dockerImage;
   }
 
+  public String getErrorMsg() {
+    return errorMsg;
+  }
+
+  public void setErrorMsg(String errorMsg) {
+    this.errorMsg = errorMsg.substring(0, Math.min(errorMsg.length(), 6000));
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
@@ -365,7 +380,7 @@ public class CondaCommands implements Serializable {
   public String toString() {
     return "[ id=" + id + ", proj=" + projectId.getName()  + ", op=" + op + ", installType=" + installType 
         + ", hostType=" + machineType + ", lib=" + lib + ", version=" + version + ", arg=" + arg 
-        + ", channel=" + channelUrl + " ]";
+        + ", channel=" + channelUrl + ", errorMsg=" + errorMsg + " ]";
   }
 
   public Users getUserId() {

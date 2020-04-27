@@ -699,25 +699,26 @@
                         </td>
                         <td class="col-md-2">
                           <div class="btn-group">
-                            <button ng-if="pythonCtrl.getStatus(row) === 'ONGOING'" type="submit" class="btn btn-info"
-                                    tooltip-placement="auto left"
-                                    uib-tooltip="Show hosts this command has succeeded so far "
-                                    ng-click="pythonCtrl.showCommandsLogs(row, true)">
-                              <i class="fa fa-bars"></i>
-                            </button>
                             <button ng-if="pythonCtrl.getStatus(row) === 'FAILED'" type="submit" class="btn btn-info"
                                     tooltip-placement="auto left"
-                                    uib-tooltip="Show the hosts that this conda command failed on "
+                                    uib-tooltip="Show error logs "
                                     ng-click="pythonCtrl.showCommandsLogs(row, false)">
                               <i class="fa fa-bars"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT')" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT' && pythonCtrl.getOp(row) !== 'CREATE' && pythonCtrl.getOp(row) !== 'REMOVE')" type="submit"
                                     class="btn btn-md btn-danger"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Remove the conda command to clean up this environment"
                                     ng-click="pythonCtrl.uninstall(row)">
                               <i ng-show="pythonCtrl.uninstalling[row.library]" style="margin-top: 2px"
                                  class="fa fa-spinner fa-spin pull-right"></i>
+                              <i class="fa fa-trash"></i>
+                            </button>
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) === 'CREATE' || pythonCtrl.getOp(row) === 'REMOVE')" type="submit"
+                                    class="btn btn-md btn-danger"
+                                    tooltip-placement="auto left"
+                                    uib-tooltip="Remove the conda command to clean up this environment"
+                                    ng-click="pythonCtrl.deleteEnvironment()">
                               <i class="fa fa-trash"></i>
                             </button>
                             <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) === 'YML'" type="submit"
@@ -734,11 +735,17 @@
                                     ng-click="pythonCtrl.deleteEnvironmentCommands()">
                               <i class="fa fa-trash"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML'" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT' && pythonCtrl.getOp(row) !== 'CREATE' && pythonCtrl.getOp(row) !== 'REMOVE'" type="submit"
                                     class="btn btn-md btn-warning"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Retry the conda command"
-                                    ng-click="pythonCtrl.retryFailedCondaOp(row)">
+                                    ng-click="pythonCtrl.retryFailedCondaLibraryOp(row)">
+                              <i class="fa fa-repeat"></i>
+                              <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) === 'EXPORT' || pythonCtrl.getOp(row) === 'CREATE' || pythonCtrl.getOp(row) === 'REMOVE')" type="submit"
+                                    class="btn btn-md btn-warning"
+                                    tooltip-placement="auto left"
+                                    uib-tooltip="Retry the conda command"
+                                    ng-click="pythonCtrl.retryFailedCondaEnvOp(row)">
                               <i class="fa fa-repeat"></i>
                             </button>
                           </div>
@@ -748,12 +755,26 @@
                   </table>
                 </div>
                 <div class="" ng-if="pythonCtrl.showLogs === true">
-                  <button ng-click="pythonCtrl.showMainUI(); $event.stopPropagation();" class="btn btn-primary btn-md fa fa-table"
-                    style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
-                    onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Conda
-                    commands summary</button>
-                  <iframe style="overflow-y: auto;" id="ui_iframe" ng-src="{{pythonCtrl.kibanaUI}}" width="99%"
-                    height="80%"></iframe>
+                  <div><button ng-click="pythonCtrl.showMainUI(); $event.stopPropagation();" class="btn btn-primary btn-md fa fa-table"
+                               style="font-size:0.9em; padding:7px 10px; margin-bottom: 3px; background-color:#005571;"
+                               onmouseover="this.style.backgroundColor='#004159'" onmouseout="this.style.backgroundColor='#005571'"> Conda
+                      commands summary</button></div>
+                  <div class="panel panel-default" style="min-height: 212px;">
+                    <div class="panel-heading" >
+                      <div>
+                        <span style="font-weight: bold; id="logs">Error Logs for {{pythonCtrl.errorOp}} {{pythonCtrl.errorArtifact}}</span>
+                      </div>
+                    </div>
+                    <div class="panel-body">
+                      <div>
+                        <table class="table table-hover ds-sidenav-table" style="width: 100%">
+                          <tbody>
+                          <div ng-bind-html="pythonCtrl.errorMessage"></div>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </uib-tab>
             </uib-tabset>

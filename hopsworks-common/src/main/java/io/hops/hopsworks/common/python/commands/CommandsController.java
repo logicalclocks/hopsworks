@@ -94,7 +94,16 @@ public class CommandsController {
     return commands;
   }
   
-  public List<CondaCommands> retryFailedCondaOps(Project project, String library) {
+  public List<CondaCommands> retryFailedCondaEnvOps(Project project) {
+    List<CondaCommands> commands = condaCommandFacade.getFailedEnvCommandsForProject(project);
+    for (CondaCommands cc : commands) {
+      cc.setStatus(CondaStatus.NEW);
+      condaCommandFacade.update(cc);
+    }
+    return commands;
+  }
+    
+  public List<CondaCommands> retryFailedCondaLibraryOps(Project project, String library) {
     List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
     for (CondaCommands cc : commands) {
       cc.setStatus(CondaStatus.NEW);
@@ -179,12 +188,20 @@ public class CommandsController {
   public void updateCondaCommandStatus(Integer commandID, CondaStatus status, String arguments)
     throws ServiceException {
     updateCondaCommandStatus(commandID, status, null, null, arguments, null,
-        null, null, null, null,  null);
+        null, null, null, null,  null, null);
+  }
+  
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
+      CondaInstallType installType, MachineType machineType, String arg, Project p,
+      Users user, CondaOp opType, String lib, String version, String channel) throws ServiceException {
+    updateCondaCommandStatus(commandId, condaStatus, installType, machineType, arg, p, user, opType, lib, version,
+        channel, null);
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
     CondaInstallType installType, MachineType machineType, String arg, Project p,
-    Users user, CondaOp opType, String lib, String version, String channel) throws ServiceException {
+      Users user, CondaOp opType, String lib, String version, String channel, String errorMessage) throws
+      ServiceException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -227,6 +244,7 @@ public class CommandsController {
       } else {
         cc.setStatus(condaStatus);
         cc.setArg(arg);
+        cc.setErrorMsg(errorMessage);
         condaCommandFacade.update(cc);
       }
     } else {

@@ -112,6 +112,7 @@ public class CommandBuilder {
     if (dto.isExpand()) {
       dto.setStatus(command.getStatus().name());
       dto.setOp(command.getOp().name());
+      dto.setErrorMessage(command.getErrorMsg());
     }
     return dto;
   }
@@ -124,6 +125,7 @@ public class CommandBuilder {
     if (dto.isExpand()) {
       dto.setStatus(command.getStatus().name());
       dto.setOp(command.getOp().name());
+      dto.setErrorMessage(command.getErrorMsg());
     }
     return dto;
   }
@@ -136,6 +138,7 @@ public class CommandBuilder {
     if (dto.isExpand()) {
       dto.setStatus(command.getStatus().name());
       dto.setOp(command.getOp().name());
+      dto.setErrorMessage(command.getErrorMsg());
     }
     return dto;
   }

@@ -71,6 +71,15 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     return query.getResultList();
   }
   
+  public List<CondaCommands> getFailedEnvCommandsForProject(Project proj) {
+    TypedQuery<CondaCommands> query =
+      em.createNamedQuery("CondaCommands.findByProjectAndTypeAndStatus", CondaCommands.class);
+    query.setParameter("projectId", proj);
+    query.setParameter("installType", CondaInstallType.ENVIRONMENT);
+    query.setParameter("status", CondaStatus.FAILED);
+    return query.getResultList();
+  }
+  
   public List<CondaCommands> getFailedCommandsForProjectAndLib(Project proj, String lib) {
     TypedQuery<CondaCommands> query =
       em.createNamedQuery("CondaCommands.findByProjectAndLibAndStatus", CondaCommands.class);

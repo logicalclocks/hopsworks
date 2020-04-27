@@ -24,7 +24,7 @@ public class CommandDTO extends RestDTO<CommandDTO> {
 
   private String op;
   private String status;
-  private String host;
+  private String errorMessage;
 
   public String getOp() {
     return op;
@@ -42,11 +42,11 @@ public class CommandDTO extends RestDTO<CommandDTO> {
     this.status = status;
   }
 
-  public String getHost() {
-    return host;
+  public String getErrorMessage() {
+    return errorMessage;
   }
 
-  public void setHost(String host) {
-    this.host = host;
+  public void setErrorMessage(String errorMessage) {
+    this.errorMessage = errorMessage;
   }
 }

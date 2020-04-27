@@ -66,20 +66,12 @@ public class ProjectUtils {
   }
   
   public static String getFullDockerImageName(Project project, Settings settings){
-    String imageName = project.getName();
-    
-    if (project.getConda() && !project.getCondaEnv()) {
-      if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
-        imageName = "python36";
-      } else {
-        throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
-      }
-    }
+    String imageName = getDockerImageName(project);
     return settings.getRegistry() + "/" + imageName;
   }
   
   public static String getDockerImageName(Project project){
-    String imageName = project.getName();
+    String imageName = project.getName().toLowerCase();
     
     if (project.getConda() && !project.getCondaEnv()) {
       if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
