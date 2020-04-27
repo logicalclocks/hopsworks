@@ -51,8 +51,6 @@
                     <div class="form-group has-feedback">
                         <label class="text-muted control-label">Projects</label><br>
                         <div class="btn-group" role="group" aria-label="..." style="min-width: 100%">
-                            
-
                             <div class="btn-group" role="group" style="width: 100%">
                                 <div type="button" class="btn btn-default" style="padding: 3px;width: 100%">
                                     <ui-select multiple name="project_name" theme="select2" id="project_select"
@@ -78,31 +76,29 @@
                                     <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp;
                                           dataSetForm.project_name.$error.required"
                                           class="text-danger ng-hide">
-                                        Choose a projects to unshare with.
+                                        Choose a projects to unshare from.
                                     </span>
                                 </div>
                             </div>
-
                         </div>
-                    <p></p>
-
-                </div>
+                        <br>
+                        <p ng-if="unshareDatasetCtrl.dsType === 'FEATURESTORE'" class="text-warning">
+                            <i class="fa fa-warning"></i>
+                            Unsharing a Featurestore will also unshare Training Dataset for the project.
+                        </p>
+                    </div>
                 </div>
             </fieldset>
             <fieldset>
                 <div class="col-md-1">
-
                 </div>
             </fieldset>
         </div>
-
         <div class="modal-footer" style="padding-bottom: 1px; padding-right: 1px">
-
             <button class="btn btn-default" type="button" ng-click="unshareDatasetCtrl.close()">Cancel</button>
             <button class="btn btn-primary" type="submit" ng-disabled="dataSetForm.dataSet_name.$error.required">
                 Unshare
             </button>
-
         </div>
     </form>
 </div>
