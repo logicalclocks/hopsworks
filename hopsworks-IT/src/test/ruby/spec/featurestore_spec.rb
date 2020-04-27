@@ -111,9 +111,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["projectName"] == projectname).to be true
           expect(parsed_json["featurestoreName"] == "#{projectname}_featurestore").to be true
         end
-      end
     end
-
+    end
 
     describe "grant correct permissions for the online feature store" do
       context 'with valid project and online feature store enabled' do

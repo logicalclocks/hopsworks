@@ -19,7 +19,8 @@ package io.hops.hopsworks.common.featurestore.utils;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -67,30 +68,34 @@ public class FeaturestoreInputValidation {
     }
     
     // features
-    verifyFeatureList(featurestoreEntityDTO.getFeatures());
+    if (featurestoreEntityDTO instanceof FeaturegroupDTO) {
+      verifyFeatureList(((FeaturegroupDTO)featurestoreEntityDTO).getFeatures());
+    }
   }
   
   /**
    * Verifies the user input feature list for a feature store entity
    *
-   * @param featureDTOs the feature list to verify
+   * @param featureGroupFeatureDTOS the feature list to verify
    */
-  private void verifyFeatureList(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
-    if (featureDTOs != null && !featureDTOs.isEmpty()) {
+  private void verifyFeatureList(List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) throws FeaturestoreException {
+    if (featureGroupFeatureDTOS != null && !featureGroupFeatureDTOS.isEmpty()) {
       Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-      for (FeatureDTO featureDTO : featureDTOs) {
-        if (!namePattern.matcher(featureDTO.getName()).matches()) {
+      for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
+        if (!namePattern.matcher(featureGroupFeatureDTO.getName()).matches()) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-            ", the provided feature name " + featureDTO.getName() + " is invalid. Feature names can only contain " +
-              "lower case characters, numbers and underscores and cannot be longer than " +
+            ", the provided feature name " + featureGroupFeatureDTO.getName() +
+                " is invalid. Feature names can only contain lower case characters, numbers and underscores " +
+                "and cannot be longer than " +
               FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
         }
-        if (!Strings.isNullOrEmpty(featureDTO.getDescription()) &&
-          featureDTO.getDescription().length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
+        if (!Strings.isNullOrEmpty(featureGroupFeatureDTO.getDescription()) &&
+          featureGroupFeatureDTO.getDescription().length() >
+              FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-            ", the provided feature description of " + featureDTO.getName() + " is too long with " +
-              featureDTO.getDescription().length() + " characters. Feature descriptions cannot be longer than " +
-              FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
+            ", the provided feature description of " + featureGroupFeatureDTO.getName() + " is too long with " +
+              featureGroupFeatureDTO.getDescription().length() + " characters. Feature descriptions cannot " +
+                "be longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
         }
       }
     }

@@ -17,10 +17,11 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -46,13 +47,17 @@ public class TestConstructorController {
   private Featuregroup fg2;
   private Featuregroup fg3;
 
-  private List<FeatureDTO> fg1Features = new ArrayList<>();
-  private List<FeatureDTO> fg2Features = new ArrayList<>();
-  private List<FeatureDTO> fg3Features = new ArrayList<>();
+  private List<Feature> fg1Features = new ArrayList<>();
+  private List<Feature> fg2Features = new ArrayList<>();
+  private List<Feature> fg3Features = new ArrayList<>();
+
+  private List<FeatureGroupFeatureDTO> fg1FeaturesDTO = new ArrayList<>();
+  private List<FeatureGroupFeatureDTO> fg2FeaturesDTO = new ArrayList<>();
 
   private FeaturegroupController featuregroupController;
   private FeaturestoreFacade featurestoreFacade;
   private FeaturegroupFacade featuregroupFacade;
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   private ConstructorController constructorController;
 
@@ -78,60 +83,70 @@ public class TestConstructorController {
     fg3.setFeaturestore(fs);
 
     fg1Features = new ArrayList<>();
-    fg1Features.add(new FeatureDTO("pr", "Integer", "", true, false, ""));
-    fg1Features.add(new FeatureDTO("fg1_ft2", "String", "", false, false, ""));
+    fg1Features.add(new Feature("pr", "fg1", "", true));
+    fg1Features.add(new Feature("fg1_ft2", "fg1", "", false));
+
+    fg1FeaturesDTO = new ArrayList<>();
+    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, ""));
+    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("fg1_ft2", "String", "", false, false, ""));
 
     fg2Features = new ArrayList<>();
-    fg2Features.add(new FeatureDTO("pr", "Integer", "", true, false, ""));
-    fg2Features.add(new FeatureDTO("fg2_ft2", "String", "", false, false, ""));
+    fg2Features.add(new Feature("pr", "fg2", "", true));
+    fg2Features.add(new Feature("fg2_ft2", "fg2", "", false));
+
+    fg2FeaturesDTO = new ArrayList<>();
+    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, ""));
+    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("fg2_ft2", "String", "", false, false, ""));
 
     fg3Features = new ArrayList<>();
-    fg3Features.add(new FeatureDTO("fg3_ft1", "Integer", "", true, false, ""));
-    fg3Features.add(new FeatureDTO("fg3_ft2", "String", "", false, false, ""));
+    fg3Features.add(new Feature("fg3_ft1", "fg3", "", true));
+    fg3Features.add(new Feature("fg3_ft2", "fg3", "", false));
 
     featuregroupController = Mockito.mock(FeaturegroupController.class);
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
+    onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
 
-    constructorController = new ConstructorController(featuregroupController, featurestoreFacade, featuregroupFacade);
+    constructorController = new ConstructorController(featuregroupController, featurestoreFacade,
+        featuregroupFacade, onlineFeaturestoreController);
   }
 
   @Test
   public void testValidateFeatures() throws Exception {
-    List<FeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureDTO("fg1_ft2"));
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("fg1_ft2"));
 
-    List<FeatureDTO> extractedFeatures =
-        constructorController.validateFeatures(fg1, "fg1", requestedFeatures, fg1Features);
+    List<Feature> extractedFeatures =
+        constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
     Assert.assertEquals(1, extractedFeatures.size());
     Assert.assertEquals("fg1_ft2", extractedFeatures.get(0).getName());
     // Make sure the object returned is the one for the DB with more infomation in (e.g. Type, Primary key)
-    Assert.assertFalse(extractedFeatures.get(0).getPrimary());
+    Assert.assertFalse(extractedFeatures.get(0).isPrimary());
   }
 
   @Test
   public void testMissingFeature() throws Exception {
-    List<FeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureDTO("fg1_ft3"));
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("fg1_ft3"));
 
     thrown.expect(FeaturestoreException.class);
-    constructorController.validateFeatures(fg1, "fg1", requestedFeatures, fg1Features);
+    constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
   }
 
   @Test
   public void testExtractAllFeatures() throws Exception {
-    List<FeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureDTO("*"));
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
 
-    List<FeatureDTO> extractedFeatures =
-        constructorController.validateFeatures(fg1, "fg1", requestedFeatures, fg1Features);
+    List<Feature> extractedFeatures =
+        constructorController.validateFeatures(fg1, requestedFeatures, fg1Features);
     // Make sure both features have been returned.
     Assert.assertEquals(2, extractedFeatures.size());
   }
 
   @Test
   public void testExtractFeaturesBothSides() throws Exception {
-    Mockito.when(featuregroupController.getFeatures(Mockito.any())).thenReturn(fg1Features, fg2Features);
+    Mockito.when(featuregroupController.getFeatures(Mockito.any())).thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
     Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
@@ -140,8 +155,8 @@ public class TestConstructorController {
     FeaturegroupDTO fg2 = new FeaturegroupDTO();
     fg2.setId(2);
 
-    List<FeatureDTO> requestedFeatures = new ArrayList<>();
-    requestedFeatures.add(new FeatureDTO("*"));
+    List<FeatureGroupFeatureDTO> requestedFeatures = new ArrayList<>();
+    requestedFeatures.add(new FeatureGroupFeatureDTO("*"));
 
     QueryDTO rightQueryDTO = new QueryDTO(fg2, requestedFeatures);
     JoinDTO joinDTO = new JoinDTO(rightQueryDTO, null, null);
@@ -150,31 +165,33 @@ public class TestConstructorController {
 
     Query query = constructorController.convertQueryDTO(queryDTO, 1);
 
-    List<FeatureDTO> extractedFeatures = constructorController.collectFeatures(query);
+    List<Feature> extractedFeatures = constructorController.collectFeatures(query);
     // Make sure both features have been returned.
-    Assert.assertEquals(4, extractedFeatures.size());
+    // It's going to be 3 as the feature "pr" will be identified as primary key and joining key
+    // so it's not going to be duplicated
+    Assert.assertEquals(3, extractedFeatures.size());
     // Make sure the method sets the feature group name
-    Assert.assertTrue(extractedFeatures.get(0).getFeaturegroup().equals("fg1") ||
-        extractedFeatures.get(0).getFeaturegroup().equals("fg2") );
+    Assert.assertTrue(extractedFeatures.get(0).getFgAlias().equals("fg1") ||
+        extractedFeatures.get(0).getFgAlias().equals("fg2") );
   }
 
   @Test
   public void testExtractJoinOn() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "Integer", ""));
-    availableLeft.add(new FeatureDTO("ft2", "String", ""));
-    availableLeft.add(new FeatureDTO("fg1_ft3", "Float", ""));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1"));
+    availableLeft.add(new Feature("ft2"));
+    availableLeft.add(new Feature("fg1_ft3"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "Integer", ""));
-    availableRight.add(new FeatureDTO("ft2", "String", ""));
-    availableRight.add(new FeatureDTO("fg2_ft3", "Float", ""));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1"));
+    availableRight.add(new Feature("ft2"));
+    availableRight.add(new Feature("fg2_ft3"));
 
-    List<FeatureDTO> on = new ArrayList<>();
-    on.add(new FeatureDTO("ft1"));
-    on.add(new FeatureDTO("ft2"));
+    List<Feature> on = new ArrayList<>();
+    on.add(new Feature("ft1"));
+    on.add(new Feature("ft2"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -187,15 +204,15 @@ public class TestConstructorController {
   public void testExtractJoinOnMissingFeature() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("fg1_ft2", "Float", ""));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft2"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "String", ""));
-    availableRight.add(new FeatureDTO("fg2_ft2", "Float", ""));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1"));
+    availableRight.add(new Feature("fg2_ft2"));
 
-    List<FeatureDTO> on = new ArrayList<>();
-    on.add(new FeatureDTO("ft1"));
+    List<Feature> on = new ArrayList<>();
+    on.add(new Feature("ft1"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -208,14 +225,14 @@ public class TestConstructorController {
   public void testExtractJoinLeftRight() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("fg1_ft3", "Float", ""));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft3"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("fg2_ft3", "Float", ""));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("fg2_ft3"));
 
-    List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
-    List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1","project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -229,14 +246,14 @@ public class TestConstructorController {
   public void testExtractJoinLeftRightWrongSizes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("fg1_ft3", "Float", ""));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft3"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("fg2_ft3", "Float", ""));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("fg2_ft3"));
 
-    List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"), new FeatureDTO("additional"));
-    List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"), new Feature("additional"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft3"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -250,14 +267,14 @@ public class TestConstructorController {
   public void testExtractJoinLeftRightMissingFeature() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("fg1_ft3", "String", ""));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("fg1_ft3"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("fg2_ft3", "String", ""));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("fg2_ft3"));
 
-    List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
-    List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft1"));
+    List<Feature> leftOn = Arrays.asList(new Feature("fg1_ft3"));
+    List<Feature> rightOn = Arrays.asList(new Feature("fg2_ft1"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -270,11 +287,11 @@ public class TestConstructorController {
   public void testNoJoiningKeySingle() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "String", "", true));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -287,15 +304,15 @@ public class TestConstructorController {
   public void testNoJoiningKeyMultipleDifferentSizes() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", true));
-    availableLeft.add(new FeatureDTO("ft2", "Float", "", true));
-    availableLeft.add(new FeatureDTO("ft4", "Integer", "", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft4", true));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "String", "", true));
-    availableRight.add(new FeatureDTO("ft2", "Float", "", true));
-    availableRight.add(new FeatureDTO("ft3", "Integer", "", true));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -308,11 +325,11 @@ public class TestConstructorController {
   public void testNoPrimaryKeys() throws Exception {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", false));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "String", "", false));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
@@ -325,8 +342,8 @@ public class TestConstructorController {
   public void testSingleSideSQLQuery() {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg1_1", "fg0", true));
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false).replace("\n", " ");
@@ -337,8 +354,8 @@ public class TestConstructorController {
   public void testSingleSideSQLQueryOnline() {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0"));
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true).replace("\n", " ");
@@ -349,11 +366,11 @@ public class TestConstructorController {
   public void testSingleJoinSQLQuery() {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg0"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "Integer", "", "fg1", true));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "fg1"));
 
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
@@ -361,7 +378,7 @@ public class TestConstructorController {
     leftQuery.setJoins(Arrays.asList(join));
 
     String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
+    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
         "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
   }
 
@@ -369,44 +386,46 @@ public class TestConstructorController {
   public void testSingleJoinSQLQueryOnline() {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", "fg1"));
 
-    List<FeatureDTO> availableRight = new ArrayList<>();
-    availableRight.add(new FeatureDTO("ft1", "Integer", "", "fg1", true));
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", "fg2"));
 
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
     Query leftQuery = new Query("fs1", "project_fs2", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
     Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
     leftQuery.setJoins(Arrays.asList(join));
 
     String query = constructorController.generateSQL(leftQuery, true).replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
-        "`project_fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
+    Assert.assertEquals("SELECT `fg1`.`ft1`, `fg2`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
+       "`project_fs1`.`fg2_1` `fg2` ON `fg1`.`ft1` = `fg2`.`ft1`", query);
   }
 
   @Test
   public void testTreeWayJoinSQLNode() {
     ConstructorController constructorController = new ConstructorController();
 
-    List<FeatureDTO> availableLeft = new ArrayList<>();
-    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+    List<Feature> availableFirst = new ArrayList<>();
+    availableFirst.add(new Feature("ft1", "fg0"));
 
-    List<FeatureDTO> availableSecond = new ArrayList<>();
-    availableSecond.add(new FeatureDTO("ft2", "Integer", "", "fg1", true));
+    List<Feature> availableSecond = new ArrayList<>();
+    availableSecond.add(new Feature("ft2", "fg1"));
 
-    List<FeatureDTO> availableThird = new ArrayList<>();
-    availableThird.add(new FeatureDTO("ft1", "Integer", "", "fg2", true));
+    List<Feature> availableThird = new ArrayList<>();
+    availableThird.add(new Feature("ft1", "fg2"));
 
-    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
-    Join join = new Join(leftQuery, secondQuery, availableLeft, availableSecond, JoinType.INNER);
-    Join secondJoin = new Join(leftQuery, thirdQuery, availableLeft, JoinType.INNER);
+    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
+
+    Join join = new Join(leftQuery, secondQuery, availableFirst, availableSecond, JoinType.INNER);
+    Join secondJoin = new Join(leftQuery, thirdQuery, availableFirst, JoinType.INNER);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
     String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
-    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2` " +
+    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2`, `fg2`.`ft1` " +
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);

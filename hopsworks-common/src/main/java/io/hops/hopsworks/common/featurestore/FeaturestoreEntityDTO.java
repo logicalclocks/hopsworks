@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
@@ -54,7 +53,6 @@ public abstract class FeaturestoreEntityDTO {
   private Integer version;
   private String name;
   private Integer id;
-  private List<FeatureDTO> features;
   private String location = null;
   private List<FeaturestoreJobDTO> jobs;
   
@@ -70,6 +68,15 @@ public abstract class FeaturestoreEntityDTO {
     this.name = name;
     this.id = id;
     this.jobs = featurestoreJobs.stream().map(FeaturestoreJobDTO::new).collect(Collectors.toList());
+  }
+
+  public FeaturestoreEntityDTO(Integer featurestoreId, String featurestoreName, Integer id,
+                               String name, Integer version) {
+    this.featurestoreId = featurestoreId;
+    this.featurestoreName = featurestoreName;
+    this.id = id;
+    this.name = name;
+    this.version = version;
   }
   
   @XmlElement
@@ -111,12 +118,7 @@ public abstract class FeaturestoreEntityDTO {
   public Integer getId() {
     return id;
   }
-  
-  @XmlElement
-  public List<FeatureDTO> getFeatures() {
-    return features;
-  }
-  
+
   @XmlElement
   public String getLocation() {
     return location;
@@ -130,11 +132,7 @@ public abstract class FeaturestoreEntityDTO {
   public void setLocation(String location) {
     this.location = location;
   }
-  
-  public void setFeatures(List<FeatureDTO> features) {
-    this.features = features;
-  }
-  
+
   public void setFeaturestoreName(String featurestoreName) {
     this.featurestoreName = featurestoreName;
   }

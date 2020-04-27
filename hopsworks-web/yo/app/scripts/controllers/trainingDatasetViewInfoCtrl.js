@@ -40,6 +40,7 @@ angular.module('hopsWorksApp')
             self.size = "Not fetched"
             self.pythonCode = ""
             self.scalaCode = ""
+            self.tdQuery = null;
             self.attachedTags = [];
 
             /**
@@ -206,6 +207,7 @@ angular.module('hopsWorksApp')
                 self.scalaCode = self.getScalaCode();
                 self.fetchSize()
                 self.fetchTags();
+                self.fetchQuery();
             };
 
             $scope.$on('trainingDatasetSelected', function (event, args) {
@@ -326,4 +328,21 @@ angular.module('hopsWorksApp')
                 self.goToUrl("newtrainingdataset")
             };
 
+            self.fetchQuery = function() {
+                if (!self.selectedTrainingDataset.fromQuery) {
+                    return;
+                }
+                FeaturestoreService.getTdQuery(self.projectId, self.featurestore, self.selectedTrainingDataset).then(
+                    function(success) {
+                        self.tdQuery = success.data.query;
+                    }, 
+                    function(error) {
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                    }
+                )
+            };
         }]);

@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -31,24 +30,23 @@ public class Join {
   private Query leftQuery;
   private Query rightQuery;
 
-  private List<FeatureDTO> on;
-  private List<FeatureDTO> leftOn;
-  private List<FeatureDTO> rightOn;
+  private List<Feature> on;
+  private List<Feature> leftOn;
+  private List<Feature> rightOn;
   private JoinType joinType;
 
   public Join(Query leftQuery) {
     this.leftQuery = leftQuery;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<FeatureDTO> on, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.on = on;
     this.joinType = joinType;
   }
 
-  public Join(Query leftQuery, Query rightQuery, List<FeatureDTO> leftOn,
-              List<FeatureDTO> rightOn, JoinType joinType) {
+  public Join(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn, JoinType joinType) {
     this.leftQuery = leftQuery;
     this.rightQuery = rightQuery;
     this.leftOn = leftOn;
@@ -72,11 +70,11 @@ public class Join {
     this.rightQuery = rightQuery;
   }
 
-  public void setLeftOn(List<FeatureDTO> leftOn) {
+  public void setLeftOn(List<Feature> leftOn) {
     this.leftOn = leftOn;
   }
 
-  public void setRightOn(List<FeatureDTO> rightOn) {
+  public void setRightOn(List<Feature> rightOn) {
     this.rightOn = rightOn;
   }
 
@@ -88,19 +86,19 @@ public class Join {
     this.joinType = joinType;
   }
 
-  public List<FeatureDTO> getOn() {
+  public List<Feature> getOn() {
     return on;
   }
 
-  public void setOn(List<FeatureDTO> on) {
+  public void setOn(List<Feature> on) {
     this.on = on;
   }
 
-  public List<FeatureDTO> getLeftOn() {
+  public List<Feature> getLeftOn() {
     return leftOn;
   }
 
-  public List<FeatureDTO> getRightOn() {
+  public List<Feature> getRightOn() {
     return rightOn;
   }
 
@@ -123,7 +121,7 @@ public class Join {
   private SqlNode getOnCondition() {
     if (on.size() > 1) {
       SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (FeatureDTO f : on) {
+      for (Feature f : on) {
         conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), f, f));
       }
       return  SqlStdOperatorTable.AND.createCall(conditionList);
@@ -158,7 +156,7 @@ public class Join {
    * @param rightOn
    * @return
    */
-  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO leftOn, FeatureDTO rightOn) {
+  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, Feature leftOn, Feature rightOn) {
     SqlIdentifier leftHandside =
         new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"), SqlParserPos.ZERO);
     SqlIdentifier rightHandside =

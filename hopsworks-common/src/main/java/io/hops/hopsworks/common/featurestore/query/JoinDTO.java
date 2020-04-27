@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import org.apache.calcite.sql.JoinType;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,23 +27,23 @@ public class JoinDTO {
 
   private QueryDTO query;
 
-  private List<FeatureDTO> on;
-  private List<FeatureDTO> leftOn;
-  private List<FeatureDTO> rightOn;
+  private List<FeatureGroupFeatureDTO> on;
+  private List<FeatureGroupFeatureDTO> leftOn;
+  private List<FeatureGroupFeatureDTO> rightOn;
 
   private JoinType type = JoinType.INNER;
 
   public JoinDTO() {
   }
 
-  public JoinDTO(QueryDTO query, List<FeatureDTO> on, JoinType type) {
+  public JoinDTO(QueryDTO query, List<FeatureGroupFeatureDTO> on, JoinType type) {
     this.query = query;
     this.on = on;
     this.type = type;
   }
 
-  public JoinDTO(QueryDTO query, List<FeatureDTO> leftOn,
-                 List<FeatureDTO> rightOn, JoinType type) {
+  public JoinDTO(QueryDTO query, List<FeatureGroupFeatureDTO> leftOn,
+                 List<FeatureGroupFeatureDTO> rightOn, JoinType type) {
     this.query = query;
     this.leftOn = leftOn;
     this.rightOn = rightOn;
@@ -58,27 +58,27 @@ public class JoinDTO {
     this.query = query;
   }
 
-  public List<FeatureDTO> getOn() {
+  public List<FeatureGroupFeatureDTO> getOn() {
     return on;
   }
 
-  public void setOn(List<FeatureDTO> on) {
+  public void setOn(List<FeatureGroupFeatureDTO> on) {
     this.on = on;
   }
 
-  public List<FeatureDTO> getLeftOn() {
+  public List<FeatureGroupFeatureDTO> getLeftOn() {
     return leftOn;
   }
 
-  public void setLeftOn(List<FeatureDTO> leftOn) {
+  public void setLeftOn(List<FeatureGroupFeatureDTO> leftOn) {
     this.leftOn = leftOn;
   }
 
-  public List<FeatureDTO> getRightOn() {
+  public List<FeatureGroupFeatureDTO> getRightOn() {
     return rightOn;
   }
 
-  public void setRightOn(List<FeatureDTO> rightOn) {
+  public void setRightOn(List<FeatureGroupFeatureDTO> rightOn) {
     this.rightOn = rightOn;
   }
 

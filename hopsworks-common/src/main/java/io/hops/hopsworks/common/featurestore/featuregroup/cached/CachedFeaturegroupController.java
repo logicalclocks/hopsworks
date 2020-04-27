@@ -19,7 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
@@ -265,9 +265,9 @@ public class CachedFeaturegroupController {
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
     throws FeaturestoreException, ServiceException, IOException, SQLException {
 
-    List<FeatureDTO> primaryKeys = cachedFeaturegroupDTO.getFeatures().stream()
-        .filter(FeatureDTO::getPrimary).collect(Collectors.toList());
-    for (FeatureDTO primaryKey : primaryKeys) {
+    List<FeatureGroupFeatureDTO> primaryKeys = cachedFeaturegroupDTO.getFeatures().stream()
+        .filter(FeatureGroupFeatureDTO::getPrimary).collect(Collectors.toList());
+    for (FeatureGroupFeatureDTO primaryKey : primaryKeys) {
       if(primaryKey.getPartition()){
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.FINE,
             "The primary key column: " + primaryKey.getName() + " was specified as a partition column, which is not " +
@@ -307,20 +307,21 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup) {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
-    List<FeatureDTO> featureDTOS = getFeaturesDTO(hiveTable);
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(hiveTable);
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
-      List<FeatureDTO> onlineFeatureDTOs = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
-      for (FeatureDTO featureDTO : featureDTOS) {
-        for (FeatureDTO onlineFeatureDTO : onlineFeatureDTOs) {
-          if(featureDTO.getName().equalsIgnoreCase(onlineFeatureDTO.getName())){
-            featureDTO.setOnlineType(onlineFeatureDTO.getType());
+      List<FeatureGroupFeatureDTO> onlineFeatureGroupFeatureDTOS =
+          onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
+      for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
+        for (FeatureGroupFeatureDTO onlineFeatureGroupFeatureDTO : onlineFeatureGroupFeatureDTOS) {
+          if(featureGroupFeatureDTO.getName().equalsIgnoreCase(onlineFeatureGroupFeatureDTO.getName())){
+            featureGroupFeatureDTO.setOnlineType(onlineFeatureGroupFeatureDTO.getType());
           }
         }
       }
     }
-    cachedFeaturegroupDTO.setFeatures(featureDTOS);
+    cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setDefaultStorage(featuregroup.getCachedFeaturegroup().getDefaultStorage());
     cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
@@ -337,30 +338,30 @@ public class CachedFeaturegroupController {
     return cachedFeaturegroupDTO;
   }
 
-  public List<FeatureDTO> getFeaturesDTO(HiveTbls hiveTable) {
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(HiveTbls hiveTable) {
     List<HiveKeyConstraints> primaryKeys = hiveTable.getHiveKeyConstraintsCollection().stream()
         // 0 is the primary key index
         .filter(c -> c.getConstraintType() == 0)
         .collect(Collectors.toList());
 
-    List<FeatureDTO> featureDTOS = new ArrayList<>();
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     // Add all the columns - if there is a primary key constraint, set the primary key flag
     for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
       boolean primary = primaryKeys.stream().anyMatch(pk ->
           pk.getParentCdId().getCdId().equals(hc.getHiveColumnsPK().getCdId()) &&
               pk.getParentIntegerIdx() == hc.getIntegerIdx());
 
-      featureDTOS.add(new FeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
+      featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
           hc.getComment(), primary));
     }
 
     // Hive stores the partition columns separately. Add them
-    featureDTOS.addAll(hiveTable.getHivePartitionKeysCollection().stream()
-        .map(pk -> new FeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(), pk.getPkeyType(),
+    featureGroupFeatureDTOS.addAll(hiveTable.getHivePartitionKeysCollection().stream()
+        .map(pk -> new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(), pk.getPkeyType(),
             pk.getPkeyType(), false, true))
         .collect(Collectors.toList()));
 
-    return featureDTOS;
+    return featureGroupFeatureDTOS;
   }
 
   /**
@@ -575,7 +576,7 @@ public class CachedFeaturegroupController {
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     //Create MySQL Table for Online Feature Group
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    List<FeatureDTO> features = getFeaturesDTO(cachedFeaturegroup.getHiveTbls());
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(cachedFeaturegroup.getHiveTbls());
     if(!cachedFeaturegroup.isOnlineEnabled()) {
       onlineFeaturegroupController.createMySQLTable(featurestore, tableName, features, project, user);
     }

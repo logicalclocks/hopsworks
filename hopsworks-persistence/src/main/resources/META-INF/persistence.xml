@@ -51,7 +51,8 @@
     <class>io.hops.hopsworks.persistence.entity.dataset.DatasetRequest</class>
     <class>io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector</class>
@@ -61,6 +62,9 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.split.TrainingDatasetSplit</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn</class>

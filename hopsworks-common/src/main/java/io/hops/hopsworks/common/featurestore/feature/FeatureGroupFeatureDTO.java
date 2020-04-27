@@ -18,15 +18,13 @@ package io.hops.hopsworks.common.featurestore.feature;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * DTO containing the human-readable information of a feature, can be converted to JSON or XML representation
  * using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"name", "type", "description", "primary", "partition", "onlineType", "featuregroup", "version"})
-public class FeatureDTO {
+public class FeatureGroupFeatureDTO {
 
   private String name;
   private String type;
@@ -34,25 +32,11 @@ public class FeatureDTO {
   private String description;
   private Boolean primary = false;
   private Boolean partition = false;
-  private String featuregroup = null;
-  private Integer version = null;
 
-  public FeatureDTO(){}
-  
-  public FeatureDTO(String name, String type, String onlineType, String description, Boolean primary,
-    Boolean partition, String featuregroup, Integer version) {
-    this.name = name;
-    this.type = type;
-    this.onlineType = onlineType;
-    this.description = description;
-    this.primary = primary;
-    this.partition = partition;
-    this.featuregroup = featuregroup;
-    this.version = version;
-  }
+  public FeatureGroupFeatureDTO(){}
 
-  public FeatureDTO(String name, String type, String description, Boolean primary,
-                    Boolean partition, String onlineType) {
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary,
+                                Boolean partition, String onlineType) {
     this.name = name;
     this.type = type;
     this.description = description;
@@ -61,14 +45,14 @@ public class FeatureDTO {
     this.onlineType = onlineType;
   }
 
-  public FeatureDTO(String name, String type, String description, Boolean primary) {
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
   }
 
-  public FeatureDTO(String name, String type, String description, Boolean primary, Boolean partition) {
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, Boolean partition) {
     this.name = name;
     this.type = type;
     this.description = description;
@@ -76,27 +60,19 @@ public class FeatureDTO {
     this.partition = partition;
   }
 
-  public FeatureDTO(String name, String type, String description, String featuregroup, Boolean primary) {
-    this.name = name;
-    this.type = type;
-    this.description = description;
-    this.featuregroup = featuregroup;
-    this.primary = primary;
-  }
-
-  public FeatureDTO(String name, String type, String description) {
+  public FeatureGroupFeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
     this.description = description;
   }
 
-  public FeatureDTO(String name, String type, Boolean primary) {
+  public FeatureGroupFeatureDTO(String name, String type, Boolean primary) {
     this.name = name;
     this.type = type;
     this.primary = primary;
   }
 
-  public FeatureDTO(String name) {
+  public FeatureGroupFeatureDTO(String name) {
     this.name = name;
   }
 
@@ -130,16 +106,6 @@ public class FeatureDTO {
     return onlineType;
   }
   
-  @XmlElement
-  public String getFeaturegroup() {
-    return featuregroup;
-  }
-  
-  @XmlElement
-  public Integer getVersion() {
-    return version;
-  }
-  
   public void setPrimary(Boolean primary) {
     this.primary = primary;
   }
@@ -163,15 +129,7 @@ public class FeatureDTO {
   public void setOnlineType(String onlineType) {
     this.onlineType = onlineType;
   }
-  
-  public void setFeaturegroup(String featuregroup) {
-    this.featuregroup = featuregroup;
-  }
-  
-  public void setVersion(Integer version) {
-    this.version = version;
-  }
-  
+
   @Override
   public String toString() {
     return "FeatureDTO{" +
@@ -181,8 +139,6 @@ public class FeatureDTO {
       ", description='" + description + '\'' +
       ", primary=" + primary +
       ", partition=" + partition +
-      ", featuregroup='" + featuregroup + '\'' +
-      ", version=" + version +
       '}';
   }
 }

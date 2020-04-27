@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
-import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -35,21 +34,21 @@ import java.util.logging.Level;
  * Class controlling the interaction with the on_demand_feature_group table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class OnDemandFeaturegroupController {
   @EJB
   private OnDemandFeaturegroupFacade onDemandFeaturegroupFacade;
   @EJB
   private FeaturestoreJdbcConnectorFacade featurestoreJdbcConnectorFacade;
   @EJB
-  private FeaturestoreFeatureController featurestoreFeatureController;
-  
+  private OnDemandFeatureFacade onDemandFeatureFacade;
+
   /**
    * Persists an on demand feature group
    *
    * @param onDemandFeaturegroupDTO the user input data to use when creating the feature group
    * @return the created entity
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnDemandFeaturegroup createOnDemandFeaturegroup(OnDemandFeaturegroupDTO onDemandFeaturegroupDTO)
       throws FeaturestoreException {
     //Verify User Input specific for on demand feature groups
@@ -64,7 +63,7 @@ public class OnDemandFeaturegroupController {
     onDemandFeaturegroupFacade.persist(onDemandFeaturegroup);
     
     //Persist feature data
-    featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
+    onDemandFeatureFacade.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
       onDemandFeaturegroupDTO.getFeatures());
     
     return onDemandFeaturegroup;
@@ -77,7 +76,6 @@ public class OnDemandFeaturegroupController {
    * @param onDemandFeaturegroupDTO the metadata DTO
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateOnDemandFeaturegroupMetadata(OnDemandFeaturegroup onDemandFeaturegroup,
     OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
 
@@ -93,7 +91,7 @@ public class OnDemandFeaturegroupController {
 
     // finally persist in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
-    featurestoreFeatureController.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
+    onDemandFeatureFacade.updateOnDemandFeaturegroupFeatures(onDemandFeaturegroup,
       onDemandFeaturegroupDTO.getFeatures());
   }
   
@@ -144,7 +142,6 @@ public class OnDemandFeaturegroupController {
    * @param onDemandFeaturegroup the on-demand feature group
    * @return the deleted entity
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnDemandFeaturegroup removeOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup){
     onDemandFeaturegroupFacade.remove(onDemandFeaturegroup);
     return onDemandFeaturegroup;

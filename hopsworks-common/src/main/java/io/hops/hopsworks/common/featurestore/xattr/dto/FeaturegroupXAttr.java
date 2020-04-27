@@ -62,6 +62,10 @@ public class FeaturegroupXAttr {
     public void addFeature(String feature) {
       features.add(feature);
     }
+
+    public void addFeatures(List<String> features) {
+      this.features.addAll(features);
+    }
   
     @Override
     public String toString() {
