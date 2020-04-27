@@ -17,11 +17,15 @@
 module FeaturestoreHelper
 
   def get_featurestore_id(project_id)
-    list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/"
-    get list_project_featurestores_endpoint
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/"
     parsed_json = JSON.parse(response.body)
-    featurestore_id = parsed_json[0]["featurestoreId"]
-    return featurestore_id
+    parsed_json[0]["featurestoreId"]
+  end
+
+  def get_featurestore_name(project_id)
+    get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/"
+    parsed_json = JSON.parse(response.body)
+    parsed_json[0]["featurestoreName"]
   end
 
   def create_cached_featuregroup_checked(project_id, featurestore_id, featuregroup_name, features: nil,
@@ -283,43 +287,28 @@ module FeaturestoreHelper
   end
 
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
-                                     version: 1, splits: [], features: nil, description: nil)
+                                     version: 1, splits: [], features: nil, description: nil, query: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
-    if name == nil
-      training_dataset_name = "training_dataset_#{random_id}"
-    else
-      training_dataset_name = name
-    end
-    if data_format == nil
-      data_format = "tfrecords"
-    end
-    if hopsfs_connector == nil
-      connector_id = nil
-      connector_name = nil
-    else
-      connector_id = hopsfs_connector.id
-      connector_name = hopsfs_connector.name
-    end
-    if features == nil
+    name = name == nil ? "training_dataset_#{random_id}" : name
+    data_format = data_format == nil ? "tfrecords" : data_format
+    connector_id = hopsfs_connector == nil ? nil : hopsfs_connector.id
+    connector_name = hopsfs_connector == nil ? nil : hopsfs_connector.name
+    description = description == nil ? "testtrainingdatasetdescription" : description
+    if features == nil && query == nil
       features = [
           {
               type: "INT",
-              name: "testfeature",
-              description: "testfeaturedescription"
+              name: "testfeature"
           },
           {
               type: "INT",
-              name: "testfeature2",
-              description: "testfeaturedescription2"
+              name: "testfeature2"
           }
       ]
     end
-    if description == nil
-      description = "testtrainingdatasetdescription"
-    end
     json_data = {
-        name: training_dataset_name,
+        name: name,
         jobs: [],
         description: description,
         version: version,
@@ -329,11 +318,11 @@ module FeaturestoreHelper
         storageConnectorName: connector_name,
         features: features,
         splits: splits,
-        seed: 1234
+        seed: 1234,
+        queryDTO: query
     }
-    json_data = json_data.to_json
-    json_result = post create_training_dataset_endpoint, json_data
-    return json_result, training_dataset_name
+    json_result = post create_training_dataset_endpoint, json_data.to_json
+    [json_result, name]
   end
 
   def create_external_training_dataset(project_id, featurestore_id, s3_connector_id, name: nil, location: "", splits:[])
@@ -356,13 +345,11 @@ module FeaturestoreHelper
         features: [
             {
                 type: "INT",
-                name: "testfeature",
-                description: "testfeaturedescription"
+                name: "testfeature"
             },
             {
                 type: "INT",
-                name: "testfeature2",
-                description: "testfeaturedescription2"
+                name: "testfeature2"
             }
         ],
         splits: splits,
@@ -428,7 +415,7 @@ module FeaturestoreHelper
     expect_status(200)
     parsed_result = JSON.parse(result)
     pp parsed_result if (defined?(@debugOpt)) && @debugOpt
-    parsed_result
+    parsed_result[0]
   end
 
   def delete_featuregroup_checked(project_id, featurestore_id, fg_id)

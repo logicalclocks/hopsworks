@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
@@ -52,8 +53,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   private Boolean featHistEnabled;
   @XmlElement
   private List<String> statisticColumns;
+  @XmlElement
+  private List<FeatureGroupFeatureDTO> features;
 
   public FeaturegroupDTO() {
+  }
+
+  public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, Integer id, String name, Integer version) {
+    super(featurestoreId, featurestoreName, id, name, version);
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
@@ -99,6 +106,14 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   
   public void setStatisticColumns(List<String> statisticColumns) {
     this.statisticColumns = statisticColumns;
+  }
+
+  public List<FeatureGroupFeatureDTO> getFeatures() {
+    return features;
+  }
+
+  public void setFeatures(List<FeatureGroupFeatureDTO> features) {
+    this.features = features;
   }
 
   @Override

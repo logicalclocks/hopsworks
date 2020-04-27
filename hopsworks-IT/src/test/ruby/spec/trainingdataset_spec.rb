@@ -12,6 +12,8 @@
 # You should have received a copy of the GNU Affero General Public License along with this program.
 # If not, see <https://www.gnu.org/licenses/>.
 
+require 'json'
+
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "trainingdataset")}
 
@@ -26,9 +28,15 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
-          parsed_json = JSON.parse(json_result)
+
+          features = [
+              {type: "int", name: "testfeature"},
+              {type: "int", name: "testfeature1"}
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, features: features)
           expect_status(201)
+          parsed_json = JSON.parse(json_result)
+
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
@@ -47,9 +55,19 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "HOPSFS_TRAINING_DATASET").to be true
           expect(parsed_json["storageConnectorId"] == connector.id).to be true
-          expect(parsed_json["features"].length).to be 2
           expect(parsed_json["seed"] == 1234).to be true
+          expect(parsed_json["fromQuery"]).to be false
 
+          td_features = parsed_json['features']
+          expect(td_features.length).to be 2
+
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']).to be nil
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['type']).to eql("int")
+
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']).to be nil
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['type']).to eql("int")
 
           # Make sure the location contains the scheme (hopsfs) and the authority
           uri = URI(parsed_json["location"])
@@ -381,6 +399,340 @@ describe "On #{ENV['OS']}" do
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint
           expect_status(400)
+        end
+
+        it "should fail to create a training dataset with no features and no query" do
+          featurestore_id = get_featurestore_id(@project.id)
+          json_data = {
+              name: "no_features_no_query",
+              version: 1,
+              dataFormat: "csv",
+              trainingDatasetType: "HOPSFS_TRAINING_DATASET",
+          }
+          post "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets", json_data.to_json
+          expect_status_details(400)
+        end
+
+        it "should be able to create a training dataset from a query object - 1" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "testfeature", primary: true},
+              {type: "INT", name: "testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
+          }
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+          expect(training_dataset['fromQuery']).to be true
+          td_features = training_dataset['features']
+          expect(td_features.count).to eql(2)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+        end
+
+        it "should fail to create a training dataset with invalid query" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "testfeature", primary: true},
+              {type: "INT", name: "testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'does_not_exists'}]
+          }
+          create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(400)
+        end
+
+        # we have unit tests for the query generation, so here we are testing just that it integrates
+        # correctly with training datasets
+        it "should be able to create a training dataset from a query object - 2" do
+          # create first feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_b_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+              joins: [{
+                       query: {
+                           leftFeatureGroup: {
+                               id: fg_id_b
+                           },
+                           leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                       }
+                  }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+          expect(training_dataset['fromQuery']).to be true
+
+          td_features = training_dataset['features']
+          expect(td_features.length).to eql(3)
+          # check that all the features are indexed correctly and that they are picked from the correct feature group
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("a_testfeature")
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("a_testfeature1")
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
+          expect(td_features.select{|feature| feature['index'] == 2}[0]['name']).to eql("b_testfeature1")
+          expect(td_features.select{|feature| feature['index'] == 2}[0]['featuregroup']['id']).to eql(fg_id_b)
+        end
+
+        it "should fail to replay the query from a feature based training dataset" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+
+          features = [
+              {type: "int", name: "testfeature"},
+              {type: "int", name: "testfeature2"}
+          ]
+
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector, features: features)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(400)
+        end
+
+        it "should succeed to replay the query from a query based training dataset" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_a_name = "test_fg_#{short_random_id}"
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_b_name = "test_fg_#{short_random_id}"
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+              joins: [{
+                       query: {
+                           leftFeatureGroup: {
+                               id: fg_id_b
+                           },
+                           leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                       }
+                  }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+           "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
+           "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+           "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+           "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+        end
+
+        it "should be able to replay a query for a dataset with a feature group joined with itself" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_name = "test_fg_#{short_random_id}"
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_name, features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id
+                              },
+                              leftFeatures: [{name: 'a_testfeature1'}]
+                          },
+                          type: "LEFT"
+                      }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`a_testfeature1`\n" +
+              "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
+              "LEFT JOIN `#{featurestore_name}`.`#{fg_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg1`.`a_testfeature1`\n" +
+              "FROM `#{project_name.downcase}`.`#{fg_name}_1` `fg0`\n" +
+              "LEFT JOIN `#{project_name.downcase}`.`#{fg_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+        end
+
+        it "should create a training dataset with a large amount of features (3k)" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+
+          features = Array.new(3000) {|i| {type:"int", name: "ft#{i}"}}
+
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector, features: features)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          expect(training_dataset['features'].length).to eql(3000)
+
+          delete "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}"
+          expect_status_details(200)
+        end
+
+        it "should create a query based training dataset with a large amount of features (3k)" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+
+          fg_ids = []
+          (0..3).each { |fg|
+            features = Array.new(1000) { |i| {type: "int", name: "fg_#{fg}_ft#{i}"} }
+            features = features << {type: "int", name: "jk", primary: true}
+            fg_ids << create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          }
+
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_ids[0]
+              },
+              leftFeatures: [{name: '*'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_ids[1]
+                              },
+                              leftFeatures: [{name: '*'}]
+                          },
+                      },
+                      {
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_ids[2]
+                              },
+                              leftFeatures: [{name: '*'}]
+                          },
+                      }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          expect(training_dataset['features'].length).to eql(3001)
+
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(200)
+        end
+
+        it "should return a proper error when building the query if a feature group was deleted" do
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+              joins: [{
+                        query: {
+                            leftFeatureGroup: {
+                                id: fg_id_b
+                            },
+                            leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                        }
+                   }
+              ]
+          }
+
+          json_result, training_dataset_name = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          # delete feature group
+          delete_featuregroup_checked(@project.id, featurestore_id, fg_id_b)
+
+          training_dataset = get_trainingdataset(@project.id, featurestore_id, training_dataset_name, 1)
+          # without the feature group we cannot re-create the query
+          expect(training_dataset['fromQuery']).to be true
+
+          features = training_dataset['features']
+          # features should still be returned even if the original feature group was deleted
+          expect(features[2]['name']).to eql("b_testfeature1")
+          expect(features[2]['type']).to eql("int")
+
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(400)
         end
       end
     end

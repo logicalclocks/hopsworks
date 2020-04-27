@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand;
 
-import io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 
 import javax.persistence.Basic;
@@ -62,7 +61,7 @@ public class OnDemandFeaturegroup implements Serializable {
   @JoinColumn(name = "jdbc_connector_id", referencedColumnName = "id")
   private FeaturestoreJdbcConnector featurestoreJdbcConnector;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
-  private Collection<FeaturestoreFeature> features;
+  private Collection<OnDemandFeature> features;
   
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -93,11 +92,11 @@ public class OnDemandFeaturegroup implements Serializable {
     this.featurestoreJdbcConnector = featurestoreJdbcConnector;
   }
   
-  public Collection<FeaturestoreFeature> getFeatures() {
+  public Collection<OnDemandFeature> getFeatures() {
     return features;
   }
   
-  public void setFeatures(Collection<FeaturestoreFeature> features) {
+  public void setFeatures(Collection<OnDemandFeature> features) {
     this.features = features;
   }
 

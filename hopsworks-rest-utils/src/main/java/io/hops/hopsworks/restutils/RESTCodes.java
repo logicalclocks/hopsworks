@@ -1471,7 +1471,13 @@ public class RESTCodes {
     ERROR_DELETING_STATISTICS(109, "Error deleting the statistics of a feature store entity",
       Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_GETTING_S3_CONNECTOR_ACCESS_AND_SECRET_KEY_FROM_SECRET(110, "Could not get access and secret " +
-            "key from the user secret", Response.Status.INTERNAL_SERVER_ERROR);
+            "key from the user secret", Response.Status.INTERNAL_SERVER_ERROR),
+    TRAINING_DATASET_NO_QUERY(111, "The training dataset wasn't generated from a query",
+        Response.Status.BAD_REQUEST),
+    TRAINING_DATASET_NO_SCHEMA(112, "No query or feature schema provided", Response.Status.BAD_REQUEST),
+    TRAINING_DATASET_QUERY_FG_DELETED(113, "Cannot generate query, some feature groups were deleted",
+        Response.Status.BAD_REQUEST);
+
     private int code;
     private String message;
     private Response.Status respStatus;

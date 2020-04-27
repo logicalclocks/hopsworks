@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,10 +14,9 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore.feature;
+package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -26,40 +25,27 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Entity class representing the feature_store_feature table in Hopsworks database.
- * An instance of this class represents a row in the database.
- */
 @Entity
-@Table(name = "feature_store_feature", catalog = "hopsworks")
+@Table(name = "training_dataset_feature", catalog = "hopsworks")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "FeaturestoreFeature.findAll", query = "SELECT fsf FROM FeaturestoreFeature fsf"),
-    @NamedQuery(name = "FeaturestoreFeature.findById",
-        query = "SELECT fsf FROM FeaturestoreFeature fsf WHERE fsf.id = :id"),
-    @NamedQuery(name = "FeaturestoreFeature.deleteByListOfIds",
-        query = "DELETE FROM FeaturestoreFeature WHERE id IN :ids")})
-public class FeaturestoreFeature implements Serializable {
+public class TrainingDatasetFeature implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "training_dataset_id", referencedColumnName = "id")
+  @JoinColumn(name = "training_dataset", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
-  @JoinColumn(name = "on_demand_feature_group_id", referencedColumnName = "id")
-  private OnDemandFeaturegroup onDemandFeaturegroup;
-  @Basic(optional = false)
-  @Column(name = "description")
-  private String description;
+  @JoinColumn(name = "feature_group", referencedColumnName = "id")
+  private Featuregroup featureGroup;
+  @JoinColumn(name = "td_join", referencedColumnName = "id")
+  private TrainingDatasetJoin trainingDatasetJoin;
   @Basic(optional = false)
   @Column(name = "name")
   private String name;
@@ -67,8 +53,28 @@ public class FeaturestoreFeature implements Serializable {
   @Column(name = "type")
   private String type;
   @Basic(optional = false)
-  @Column(name = "primary_column")
-  private Boolean primary = false;
+  @Column(name = "idx")
+  private Integer index;
+
+  public TrainingDatasetFeature() {
+  }
+
+  public TrainingDatasetFeature(TrainingDataset trainingDataset, TrainingDatasetJoin trainingDatasetJoin,
+                                Featuregroup featureGroup, String name, String type, Integer index) {
+    this.trainingDataset = trainingDataset;
+    this.trainingDatasetJoin = trainingDatasetJoin;
+    this.featureGroup = featureGroup;
+    this.name = name;
+    this.type = type;
+    this.index = index;
+  }
+
+  public TrainingDatasetFeature(TrainingDataset trainingDataset, String name, String type, Integer index) {
+    this.trainingDataset = trainingDataset;
+    this.name = name;
+    this.type = type;
+    this.index = index;
+  }
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -90,12 +96,20 @@ public class FeaturestoreFeature implements Serializable {
     this.trainingDataset = trainingDataset;
   }
 
-  public String getDescription() {
-    return description;
+  public Featuregroup getFeatureGroup() {
+    return featureGroup;
   }
 
-  public void setDescription(String description) {
-    this.description = description;
+  public void setFeatureGroup(Featuregroup featureGroup) {
+    this.featureGroup = featureGroup;
+  }
+
+  public TrainingDatasetJoin getTrainingDatasetJoin() {
+    return trainingDatasetJoin;
+  }
+
+  public void setTrainingDatasetJoin(TrainingDatasetJoin trainingDatasetJoin) {
+    this.trainingDatasetJoin = trainingDatasetJoin;
   }
 
   public String getName() {
@@ -114,20 +128,12 @@ public class FeaturestoreFeature implements Serializable {
     this.type = type;
   }
 
-  public Boolean getPrimary() {
-    return primary;
+  public Integer getIndex() {
+    return index;
   }
 
-  public void setPrimary(Boolean primary) {
-    this.primary = primary;
-  }
-
-  public OnDemandFeaturegroup getOnDemandFeaturegroup() {
-    return onDemandFeaturegroup;
-  }
-
-  public void setOnDemandFeaturegroup(OnDemandFeaturegroup onDemandFeaturegroup) {
-    this.onDemandFeaturegroup = onDemandFeaturegroup;
+  public void setIndex(Integer index) {
+    this.index = index;
   }
 
   @Override
@@ -135,23 +141,23 @@ public class FeaturestoreFeature implements Serializable {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
 
-    FeaturestoreFeature that = (FeaturestoreFeature) o;
+    TrainingDatasetFeature that = (TrainingDatasetFeature) o;
 
     if (!Objects.equals(id, that.id)) return false;
-    if (!Objects.equals(description, that.description)) return false;
+    if (!Objects.equals(trainingDataset, that.trainingDataset))
+      return false;
+    if (!Objects.equals(featureGroup, that.featureGroup)) return false;
     if (!Objects.equals(name, that.name)) return false;
-    if (!Objects.equals(type, that.type)) return false;
-    return Objects.equals(primary, that.primary);
+    return Objects.equals(index, that.index);
   }
 
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
-    result = 31 * result + (description != null ? description.hashCode() : 0);
+    result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
     result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (type != null ? type.hashCode() : 0);
-    result = 31 * result + (primary != null ? primary.hashCode() : 0);
+    result = 31 * result + (index!= null ? index.hashCode() : 0);
     return result;
   }
 }

@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
@@ -51,7 +51,7 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->
-        new FeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
+        new FeatureGroupFeatureDTO(fgFeature.getName(), fgFeature.getType(), fgFeature.getDescription(),
             fgFeature.getPrimary(), false, null)).collect(Collectors.toList()));
   }
   

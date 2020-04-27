@@ -623,3 +623,7 @@ md-input-container {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.tooltip-inner {
+  max-width: 350px;
+}

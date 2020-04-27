@@ -7,7 +7,7 @@ package io.hops.hopsworks.featurestore;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobControllerIface;
@@ -84,9 +84,9 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
     
     // check if feature appears in more than one feature group
     for (FeaturegroupDTO group : featuregroupDTOs) {
-      List<FeatureDTO> features = group.getFeatures();
+      List<FeatureGroupFeatureDTO> features = group.getFeatures();
       
-      for (FeatureDTO f : features) {
+      for (FeatureGroupFeatureDTO f : features) {
         String featureName = f.getName();
         String prependedFeatureName = group.getName() + "_" + group.getVersion() + "." + featureName;
         String fullFeaturePath = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject()) + "." +

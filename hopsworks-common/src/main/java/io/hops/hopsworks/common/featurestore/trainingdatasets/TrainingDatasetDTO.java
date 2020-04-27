@@ -16,11 +16,12 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -52,6 +53,11 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   // a subdirectory - the rest call requires the inode id.
   private Long inodeId;
 
+  private QueryDTO queryDTO;
+
+  private Boolean fromQuery;
+  private List<TrainingDatasetFeatureDTO> features;
+
   public TrainingDatasetDTO() {
   }
 
@@ -62,14 +68,13 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
         trainingDataset.getCreator(), trainingDataset.getVersion(),
         (List) trainingDataset.getJobs(), trainingDataset.getId());
     setDescription(trainingDataset.getDescription());
-    setFeatures(trainingDataset.getFeatures().stream().map(tdf -> new FeatureDTO(tdf.getName(),
-      tdf.getType(), tdf.getDescription(), tdf.getPrimary(), false, null)).collect(Collectors.toList()));
     this.dataFormat = trainingDataset.getDataFormat();
     this.trainingDatasetType = trainingDataset.getTrainingDatasetType();
     this.splits =
       trainingDataset.getSplits().stream().map(tds -> new TrainingDatasetSplitDTO(tds.getName(), tds.getPercentage()))
         .collect(Collectors.toList());
     this.seed = trainingDataset.getSeed();
+    this.fromQuery = trainingDataset.isQuery();
   }
   
   @XmlElement
@@ -141,7 +146,31 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   public void setSeed(Long seed) {
     this.seed = seed;
   }
-  
+
+  public QueryDTO getQueryDTO() {
+    return queryDTO;
+  }
+
+  public void setQueryDTO(QueryDTO queryDTO) {
+    this.queryDTO = queryDTO;
+  }
+
+  public List<TrainingDatasetFeatureDTO> getFeatures() {
+    return features;
+  }
+
+  public void setFeatures(List<TrainingDatasetFeatureDTO> features) {
+    this.features = features;
+  }
+
+  public Boolean getFromQuery() {
+    return fromQuery;
+  }
+
+  public void setFromQuery(Boolean fromQuery) {
+    this.fromQuery = fromQuery;
+  }
+
   @Override
   public String toString() {
     return "TrainingDatasetDTO{" +

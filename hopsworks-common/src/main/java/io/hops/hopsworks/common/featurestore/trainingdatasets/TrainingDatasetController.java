@@ -17,14 +17,21 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.shaded.com.google.common.collect.Streams;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
-import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.query.ConstructorController;
+import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.query.Join;
+import io.hops.hopsworks.common.featurestore.query.Query;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
@@ -48,6 +55,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoinCondition;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
@@ -58,6 +68,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.calcite.sql.JoinType;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.ejb.EJB;
@@ -66,9 +77,12 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -86,11 +100,7 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private FeaturestoreFeatureController featurestoreFeatureController;
-  @EJB
   private JobFacade jobFacade;
-  @EJB
-  private DatasetController datasetController;
   @EJB
   private HopsfsTrainingDatasetController hopsfsTrainingDatasetController;
   @EJB
@@ -121,6 +131,10 @@ public class TrainingDatasetController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private StatisticsController statisticsController;
+  @EJB
+  private ConstructorController constructorController;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -151,6 +165,22 @@ public class TrainingDatasetController {
 
     String featurestoreName = featurestoreFacade.getHiveDbName(trainingDataset.getFeaturestore().getHiveDbId());
     trainingDatasetDTO.setFeaturestoreName(featurestoreName);
+
+    // Set features
+    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset);
+    Map<Integer, String> fsLookupTable = getFsLookupTableFeatures(tdFeatures);
+    trainingDatasetDTO.setFeatures(tdFeatures
+        .stream()
+        .map(f -> new TrainingDatasetFeatureDTO(f.getName(), f.getType(),
+            f.getFeatureGroup() != null ?
+                // Don't call the full constructor as it sends also the statistics
+                new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
+                    fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
+                    f.getFeatureGroup().getId(),
+                    f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion())
+                : null,
+            f.getIndex()))
+        .collect(Collectors.toList()));
 
     switch (trainingDataset.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
@@ -219,17 +249,17 @@ public class TrainingDatasetController {
       try {
         udfso = dfs.getDfsOps(username);
         udfso.mkdir(trainingDatasetPath);
+
+        inode = inodeController.getInodeAtPath(trainingDatasetPath);
+        TrainingDatasetDTO completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, featurestore,
+          trainingDatasetDTO, hopsfsConnector, inode, s3Connector);
+        fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
+        return completeTrainingDatasetDTO;
       } finally {
         if (udfso != null) {
           dfs.closeDfsClient(udfso);
         }
       }
-
-      inode = inodeController.getInodeAtPath(trainingDatasetPath);
-      TrainingDatasetDTO completeTrainingDatasetDTO = createTrainingDatasetMetadata(user, featurestore,
-        trainingDatasetDTO, hopsfsConnector, inode, s3Connector);
-      fsProvenanceController.trainingDatasetAttachXAttr(user, project, trainingDatasetPath, completeTrainingDatasetDTO);
-      return completeTrainingDatasetDTO;
     } else {
       s3Connector = S3ConnectorFacade.findByIdAndFeaturestore(trainingDatasetDTO.getStorageConnectorId(), featurestore)
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
@@ -238,7 +268,6 @@ public class TrainingDatasetController {
         s3Connector);
     }
   }
-
 
   /**
    * Creates the metadata structure in DB for the training dataset
@@ -291,20 +320,115 @@ public class TrainingDatasetController {
     trainingDataset.setSplits(trainingDatasetDTO.getSplits().stream()
       .map(tdDTO -> new TrainingDatasetSplit(trainingDataset, tdDTO.getName(), tdDTO.getPercentage())).collect(
         Collectors.toList()));
+
+    // set features/query
+    setTrainingDatasetFeatures(trainingDatasetDTO, trainingDataset);
+
     trainingDatasetFacade.persist(trainingDataset);
-  
-    // Store features
-    featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
   
     //Get jobs
     List<Jobs> jobs = getJobs(trainingDatasetDTO.getJobs(), featurestore.getProject());
-    
+
     //Store jobs
     featurestoreJobFacade.insertJobs(trainingDataset, jobs);
-    
+
     //Get final entity from the database
     return getTrainingDatasetWithNameVersionAndFeaturestore(featurestore, trainingDataset.getName(),
         trainingDataset.getVersion());
+  }
+
+  private void setTrainingDatasetFeatures(TrainingDatasetDTO trainingDatasetDTO, TrainingDataset trainingDataset)
+      throws FeaturestoreException {
+    if (trainingDatasetDTO.getQueryDTO() != null) {
+      // The user has created a training dataset from a query object. Stored it so that it can be reused later
+      setTrainingDatasetQuery(trainingDatasetDTO.getQueryDTO(), trainingDataset);
+    } else if (trainingDatasetDTO.getFeatures() != null && !trainingDatasetDTO.getFeatures().isEmpty()) {
+      // The user has created a training dataset from a dataframe. We can't make any assumption on the content of it
+      // just store the schema (feature name + type)
+      trainingDataset.setFeatures(getTrainingDatasetFeaturesDTO(trainingDatasetDTO.getFeatures(), trainingDataset));
+    } else {
+      // The user didn't specify a query nor a valid set of features. throw an exception
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_SCHEMA,
+          Level.FINE, "The training dataset doesn't have any feature");
+    }
+  }
+
+  private void setTrainingDatasetQuery(QueryDTO queryDTO, TrainingDataset trainingDataset)
+      throws FeaturestoreException {
+    // Convert the queryDTO to the internal representation
+    Query query = constructorController.convertQueryDTO(queryDTO, 0);
+    trainingDataset.setQuery(true);
+    // Convert the joins from the query object into training dataset joins
+    List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
+    trainingDataset.setJoins(tdJoins);
+
+    trainingDataset.setFeatures(collectFeatures(query, trainingDataset, 0, tdJoins, 0));
+  }
+
+  // Here we need to pass the list of training dataset joins so that we can rebuild the aliases.
+  // and handle correctly the case in which a feature group is joined with itself.
+  private List<TrainingDatasetFeature> collectFeatures(Query query, TrainingDataset trainingDataset,
+                                                       int featureIndex, List<TrainingDatasetJoin> tdJoins,
+                                                       int joinIndex) {
+    List<TrainingDatasetFeature> features = new ArrayList<>();
+    for (Feature f : query.getFeatures()) {
+      features.add(new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
+          f.getName(), f.getType(), featureIndex++));
+    }
+
+    if (query.getJoins() != null) {
+      for (Join join : query.getJoins()) {
+        joinIndex++;
+        features.addAll(collectFeatures(join.getRightQuery(), trainingDataset, featureIndex, tdJoins, joinIndex));
+      }
+    }
+    return features;
+  }
+
+  private List<TrainingDatasetJoin> collectJoins(Query query, TrainingDataset trainingDataset) {
+    List<TrainingDatasetJoin> joins = new ArrayList<>();
+    // add the first feature group
+    int index = 0;
+    joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++));
+
+    if (query.getJoins() != null && !query.getJoins().isEmpty()) {
+      for (Join join : query.getJoins()) {
+        TrainingDatasetJoin tdJoin = new TrainingDatasetJoin(trainingDataset,
+            join.getRightQuery().getFeaturegroup(),
+            (short) join.getJoinType().ordinal(),
+            index++);
+
+        tdJoin.setConditions(collectJoinConditions(join, tdJoin));
+
+        joins.add(tdJoin);
+      }
+    }
+
+    return joins;
+  }
+
+  private List<TrainingDatasetJoinCondition> collectJoinConditions(Join join, TrainingDatasetJoin tdJoin) {
+    if (join.getOn() != null)  {
+      return join.getOn().stream()
+          .map(f -> new TrainingDatasetJoinCondition(tdJoin, f.getName(), f.getName()))
+          .collect(Collectors.toList());
+    }
+
+    return Streams.zip(join.getLeftOn().stream(), join.getRightOn().stream(),
+      (left, right) -> new TrainingDatasetJoinCondition(tdJoin, left.getName(), right.getName()))
+        .collect(Collectors.toList());
+  }
+
+  private List<TrainingDatasetFeature> getTrainingDatasetFeaturesDTO(List<TrainingDatasetFeatureDTO> featureList,
+                                                                     TrainingDataset trainingDataset) {
+    List<TrainingDatasetFeature> trainingDatasetFeatureList = new ArrayList<>();
+    int index = 0;
+    for (TrainingDatasetFeatureDTO f : featureList) {
+      trainingDatasetFeatureList.add(
+          new TrainingDatasetFeature(trainingDataset, f.getName(), f.getType(), index++));
+    }
+
+    return trainingDatasetFeatureList;
   }
   
   /**
@@ -456,18 +580,7 @@ public class TrainingDatasetController {
 
     return convertTrainingDatasetToDTO(updatedTrainingDataset);
   }
-  
-  /**
-   * Helper function that gets the Dataset where all the training dataset in the featurestore resides within the project
-   *
-   * @param project the project to get the dataset for
-   * @return the training dataset for the project
-   */
-  public Dataset getTrainingDatasetFolder(Project project){
-    return datasetController.getByProjectAndDsName(project,
-        null, getTrainingDatasetFolderName(project));
-  }
-  
+
   /**
    * Returns the training dataset folder name of a project (projectname_Training_Datasets)
    *
@@ -601,5 +714,159 @@ public class TrainingDatasetController {
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
     verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
+  }
+
+
+  /**
+   * Reconstruct the query used to generate the training datset, fetching the features and the joins
+   * in the proper order from the database.
+   * @param featurestore
+   * @param trainingDatasetId
+   * @return
+   * @throws FeaturestoreException
+   */
+  public Query getQuery(Featurestore featurestore, Integer trainingDatasetId) throws FeaturestoreException {
+    TrainingDataset trainingDataset =
+        trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "Could not find training dataset with id: " + trainingDatasetId));
+
+    if (!trainingDataset.isQuery()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_QUERY,
+          Level.FINE, "Inference vector is only available for datasets generated by queries");
+    }
+
+    List<TrainingDatasetJoin> joins = getJoinsSorted(trainingDataset);
+
+    // Convert all the TrainingDatasetFeatures to QueryFeatures
+    Map<Integer, String> fgAliasLookup = getAliasLookupTable(joins);
+
+    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset);
+
+    // Check that all the feature groups still exists, if not throw a reasonable error
+    if (tdFeatures.stream().anyMatch(j -> j.getFeatureGroup() == null)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_QUERY_FG_DELETED, Level.FINE);
+    }
+
+    List<Feature> features = tdFeatures.stream()
+        .map(f -> new Feature(f.getName(), fgAliasLookup.get(f.getTrainingDatasetJoin().getId())))
+        .collect(Collectors.toList());
+
+    // Keep a map feature store id -> feature store name
+    Map<Integer, String> fsLookup = getFsLookupTableJoins(joins);
+
+    Query query = new Query(
+        fsLookup.get(joins.get(0).getFeatureGroup().getFeaturestore().getId()),
+        onlineFeaturestoreController
+            .getOnlineFeaturestoreDbName(joins.get(0).getFeatureGroup().getFeaturestore().getProject()),
+        joins.get(0).getFeatureGroup(),
+        fgAliasLookup.get(joins.get(0).getId()));
+
+    query.setFeatures(features);
+
+    // The first join is set
+    query.setFeaturegroup(joins.get(0).getFeatureGroup());
+
+    // Set the remaining feature groups as join
+    List<Join> queryJoins = new ArrayList<>();
+    for (int i = 1; i < joins.size(); i++) {
+      // we can get the "left side" of the join by fetching the join at i-1, the counter starts at 1
+      // so we are guarantee it exists
+      queryJoins.add(getQueryJoin(joins.get(i-1), joins.get(i), fgAliasLookup, fsLookup));
+    }
+    query.setJoins(queryJoins);
+    return query;
+  }
+
+  private Map<Integer, String> getAliasLookupTable(List<TrainingDatasetJoin> tdJoins) {
+    // Keep a map of fg Id to fgAlias;
+    int i = 0;
+    Map<Integer, String> fgAlias = new HashMap<>();
+
+    for (TrainingDatasetJoin tdJoin : tdJoins) {
+      fgAlias.put(tdJoin.getId(), "fg" + i++);
+    }
+
+    return fgAlias;
+  }
+
+  // generally in a query there are several feature groups from the same feature store
+  // instead of making a db query for each of it, build an hashmap once and use it while constructing the query
+  private Map<Integer, String> getFsLookupTableJoins(List<TrainingDatasetJoin> tdJoins) {
+    Map<Integer, String> fsLookup = new HashMap<>();
+    for (TrainingDatasetJoin join : tdJoins) {
+      if (!fsLookup.containsKey(join.getFeatureGroup().getFeaturestore().getId())) {
+        fsLookup.put(join.getFeatureGroup().getFeaturestore().getId(),
+            featurestoreFacade.getHiveDbName(join.getFeatureGroup().getFeaturestore().getHiveDbId()));
+      }
+    }
+
+    return fsLookup;
+  }
+
+  private Map<Integer, String> getFsLookupTableFeatures(List<TrainingDatasetFeature> tdFeatures) {
+    Map<Integer, String> fsLookup = new HashMap<>();
+    for (TrainingDatasetFeature tdFeature : tdFeatures) {
+      if (tdFeature.getFeatureGroup() != null &&
+          !fsLookup.containsKey(tdFeature.getFeatureGroup().getFeaturestore().getId())) {
+        fsLookup.put(tdFeature.getFeatureGroup().getFeaturestore().getId(),
+            featurestoreFacade.getHiveDbName(tdFeature.getFeatureGroup().getFeaturestore().getHiveDbId()));
+      }
+    }
+
+    return fsLookup;
+  }
+
+  private List<TrainingDatasetFeature> getFeaturesSorted(TrainingDataset trainingDataset) {
+    return trainingDataset.getFeatures().stream()
+        .sorted((t1, t2) -> {
+          if (t1.getIndex() != null) {
+            // compare based on index
+            return t1.getIndex().compareTo(t2.getIndex());
+          } else {
+            // Old training dataset with no index. compare based on name
+            return t1.getName().compareTo(t2.getName());
+          }
+        })
+        .collect(Collectors.toList());
+  }
+
+  private List<TrainingDatasetJoin> getJoinsSorted(TrainingDataset trainingDataset) {
+    return trainingDataset.getJoins().stream()
+        .sorted(Comparator.comparing(TrainingDatasetJoin::getIndex))
+        .collect(Collectors.toList());
+  }
+
+  // Rebuild query object so that the query constructor can be build the string
+  private Join getQueryJoin(TrainingDatasetJoin leftTdJoin, TrainingDatasetJoin rightTdJoin,
+                            Map<Integer, String> fgAliasLookup, Map<Integer, String> fsLookup) {
+
+    // The query constructor will use the left side for the "AS" part of the query
+    String leftAs = fgAliasLookup.get(leftTdJoin.getId());
+    Query leftQuery = new Query(
+        fsLookup.get(leftTdJoin.getFeatureGroup().getFeaturestore().getId()),
+        onlineFeaturestoreController
+            .getOnlineFeaturestoreDbName(leftTdJoin.getFeatureGroup().getFeaturestore().getProject()),
+        leftTdJoin.getFeatureGroup(),
+        leftAs);
+
+    String rightAs = fgAliasLookup.get(rightTdJoin.getId());
+    Query rightQuery = new Query(
+        fsLookup.get(rightTdJoin.getFeatureGroup().getFeaturestore().getId()),
+        onlineFeaturestoreController
+            .getOnlineFeaturestoreDbName(rightTdJoin.getFeatureGroup().getFeaturestore().getProject()),
+        rightTdJoin.getFeatureGroup(),
+        rightAs);
+
+    List<Feature> leftOn = rightTdJoin.getConditions().stream()
+        .map(c -> new Feature(c.getLeftFeature(), leftAs))
+        .collect(Collectors.toList());
+
+    List<Feature> rightOn = rightTdJoin.getConditions().stream()
+        .map(c -> new Feature(c.getRightFeature(), rightAs))
+        .collect(Collectors.toList());
+
+    JoinType joinType = JoinType.values()[rightTdJoin.getType()];
+    return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
   }
 }
