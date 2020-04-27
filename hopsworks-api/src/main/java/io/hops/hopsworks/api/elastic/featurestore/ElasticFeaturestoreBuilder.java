@@ -178,7 +178,8 @@ public class ElasticFeaturestoreBuilder {
         continue;
       }
       if(e.getKey().equals(
-        FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.TD_FEATURES))) {
+        FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(
+          FeaturestoreXAttrsConstants.TD_FEATURES, FeaturestoreXAttrsConstants.FG_FEATURES))) {
         for(Text t : e.getValue().fragments()) {
           highlights.addFeature(t.toString());
         }

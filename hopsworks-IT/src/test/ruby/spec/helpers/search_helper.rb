@@ -25,30 +25,44 @@ module SearchHelper
 
   def project_search(project, term)
     get "#{ENV['HOPSWORKS_API']}/elastic/projectsearch/#{project[:id]}/#{term}"
-    pp "#{ENV['HOPSWORKS_API']}/elastic/projectsearch/#{project[:id]}/#{term}" if defined?(@debugOpt) && @debugOpt == true
+    pp "#{ENV['HOPSWORKS_API']}/elastic/projectsearch/#{project[:id]}/#{term}" if (defined?(@debugOpt)) && @debugOpt
     expect_status_details(200)
     json_body
   end
 
   def dataset_search(project, dataset, term)
     get "#{ENV['HOPSWORKS_API']}/elastic/datasetsearch/#{project[:id]}/#{dataset[:inode_name]}/#{term}"
-    pp "#{ENV['HOPSWORKS_API']}/elastic/datasetsearch/#{project[:id]}/#{dataset[:inode_name]}/#{term}" if defined? (@debugOpt) && @debugOpt == true
+    pp "#{ENV['HOPSWORKS_API']}/elastic/datasetsearch/#{project[:id]}/#{dataset[:inode_name]}/#{term}" if (defined?(@debugOpt)) && @debugOpt
     expect_status_details(200)
     json_body
   end
 
-  def global_featurestore_search(doc_type, term)
-    get "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}"
-    pp "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}" if defined? (@debugOpt) && @debugOpt == true
+  def global_featurestore_search(doc_type, term, from: nil, size: nil)
+    if from != nil && size != nil
+      pp "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}&from=#{from}&size=#{size}" if (defined?(@debugOpt)) && @debugOpt
+      result = get "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}&from=#{from}&size=#{size}"
+    else
+      pp "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}" if (defined?(@debugOpt)) && @debugOpt
+      result = get "#{ENV['HOPSWORKS_API']}/elastic/featurestore/#{term}?docType=#{doc_type}"
+    end
     expect_status_details(200)
-    json_body
+    parsed_result = JSON.parse(result)
+    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
+    parsed_result
   end
 
-  def local_featurestore_search(project, doc_type, term)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}"
-    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}" if defined? (@debugOpt) && @debugOpt == true
+  def local_featurestore_search(project, doc_type, term, from: nil, size: nil)
+    if from != nil && size != nil
+      pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}&from=#{from}&size=#{size}" if (defined?(@debugOpt)) && @debugOpt
+      result = get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}&from=#{from}&size=#{size}"
+    else
+      pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}" if (defined?(@debugOpt)) && @debugOpt
+      result = get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/elastic/featurestore/#{term}?docType=#{doc_type}"
+    end
     expect_status_details(200)
-    json_body
+    parsed_result = JSON.parse(result)
+    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
+    parsed_result
   end
 
   def result_contains_xattr_one_of(result, &xattr_predicate)
@@ -61,5 +75,77 @@ module SearchHelper
         return false
       end
     end
+  end
+
+  def check_searched(item, expected, search_type)
+    match = true
+    #base check
+    if search_type == "FEATURE"
+      match = match && item["featuregroup"] == expected["name"] &&
+          item["parentProjectName"] == expected["parent_project"] && item["highlights"].key?(expected["highlight"])
+    else
+      match = match && item["name"] == expected["name"] &&
+          item["parentProjectName"] == expected["parent_project"] && item["highlights"].key?(expected["highlight"])
+    end
+    if expected.key?("access_projects")
+      match = match && item.key?("accessProjects") &&
+          item["accessProjects"]["entry"].length == expected["access_projects"]
+    end
+    match
+  end
+
+  def project_search_test(project, term, type, items)
+    search_type = type.upcase
+    result_type = "#{type}s"
+    wait_result = wait_for_me_time(15) do
+      search_hits = local_featurestore_search(project, search_type, term)["#{result_type}"]
+      pp search_hits if defined?(@debugOpt) && @debugOpt
+      error_msg = "expected:#{items.length}, found:#{search_hits.length}"
+      if search_hits.length != items.length
+        { 'success' => false, 'msg' => error_msg }
+      else
+        matched_items = 0
+        items.each do |item|
+          matched = search_hits.select { |r|
+            check_searched(r, item, search_type)
+          }
+          matched_items = matched_items + 1 if matched.length == 1
+        end
+        if matched_items == items.length
+          { 'success' => true }
+        else
+          { 'success' => false, 'msg' => error_msg }
+        end
+      end
+    end
+    expect(wait_result["success"]).to be true, wait_result["msg"]
+  end
+
+  def global_search_test(term, type, items)
+    search_type = type.upcase
+    result_type = "#{type}s"
+    wait_result = wait_for_me_time(15) do
+      search_hits = global_featurestore_search(search_type, term)["#{result_type}"]
+      pp search_hits if defined?(@debugOpt) && @debugOpt
+      error_msg = "expected:#{items.length}, found:#{search_hits.length}"
+      if search_hits.length < items.length
+        { 'success' => false, 'msg' => error_msg }
+      else
+        matched_items = 0
+        items.each do |item|
+          matched = search_hits.select { |r|
+            check_searched(r, item, search_type)
+          }
+          pp "mismatched: #{item}" if defined?(@debugOpt) && @debugOpt && matched.length != 1
+          matched_items = matched_items + 1 if matched.length == 1
+        end
+        if matched_items == items.length
+          { 'success' => true }
+        else
+          { 'success' => false, 'msg' => error_msg }
+        end
+      end
+    end
+    expect(wait_result["success"]).to be true, wait_result["msg"]
   end
 end

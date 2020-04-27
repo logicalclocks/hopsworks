@@ -703,34 +703,35 @@ public class ElasticController {
   }
   
   private QueryBuilder featuregroupQueryB(String searchTerm) {
+    QueryBuilder termQuery = boolQuery()
+      .should(getNameQuery(searchTerm))
+      .should(getDescriptionQuery(searchTerm))
+      .should(getMetadataQuery(searchTerm));
+    
     QueryBuilder query = boolQuery()
       .must(termQuery("doc_type", FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase()))
-      .must(featurestoreTermQueryBuilder(searchTerm));
+      .must(termQuery);
     return query;
   }
   
   private QueryBuilder trainingdatasetQueryB(String searchTerm) {
+    QueryBuilder termQuery = boolQuery()
+      .should(getNameQuery(searchTerm))
+      .should(getDescriptionQuery(searchTerm))
+      .should(getMetadataQuery(searchTerm));
+    
     QueryBuilder query = boolQuery()
       .must(termQuery("doc_type", FeaturestoreDocType.TRAININGDATASET.toString().toLowerCase()))
-      .must(featurestoreTermQueryBuilder(searchTerm));
+      .must(termQuery);
     return query;
   }
   
   private QueryBuilder featureQueryB(String searchTerm) {
-    String xattrKey
-      = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES) + ".*";
-    
+    String key1 = FeaturestoreXAttrsConstants.getFeaturestoreElasticKey(FeaturestoreXAttrsConstants.FG_FEATURES) + ".*";
     QueryBuilder query = boolQuery()
       .must(termQuery("doc_type", FeaturestoreDocType.FEATUREGROUP.toString().toLowerCase()))
-      .must(getXAttrQuery(xattrKey, searchTerm));
+      .must(getXAttrQuery(key1, searchTerm));
     return query;
-  }
-  
-  private QueryBuilder featurestoreTermQueryBuilder(String searchTerm) {
-    QueryBuilder termQuery = boolQuery()
-      .should(getNameQuery(searchTerm))
-      .should(getMetadataQuery(searchTerm));
-    return termQuery;
   }
   
   private HighlightBuilder featuregroupHighlighter() {
