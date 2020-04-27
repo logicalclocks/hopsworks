@@ -201,7 +201,7 @@ public class FeaturestoreController {
    * @throws FeaturestoreException
    */
   public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName,
-      Dataset trainingDatasetsFolder) throws FeaturestoreException, IOException {
+      Dataset trainingDatasetsFolder) throws FeaturestoreException {
 
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
@@ -256,9 +256,7 @@ public class FeaturestoreController {
           onlineFeaturestoreController.checkIfDatabaseExists(
               onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
         featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
-        featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
-            onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
-        featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
+        featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);
       }

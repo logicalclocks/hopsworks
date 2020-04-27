@@ -110,8 +110,6 @@ angular.module('hopsWorksApp')
             self.hiveRegexp = self.settings.featurestoreRegex;
             self.featurestoreEntityNameMaxLength = self.settings.featurestoreEntityNameMaxLength
             self.featurestoreEntityDescriptionMaxLength = self.settings.featurestoreEntityDescriptionMaxLength
-            self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
-            self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
             self.onDemandFeaturegroupSqlQueryMaxLength = self.settings.onDemandFeaturegroupSqlQueryMaxLength
             self.jdbcConnectorType = self.settings.jdbcConnectorType
             self.cachedFeaturegroupDTOType = self.settings.cachedFeaturegroupDtoType
@@ -199,13 +197,13 @@ angular.module('hopsWorksApp')
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
                     self.oldFeaturegroupId = self.featuregroup.id
-                    if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
+                    if (self.featuregroup.type === 'onDemandFeaturegroupDTO') {
                         self.activeTab = 1
                     }
-                    if (self.featuregroup.featuregroupType === self.cachedFeaturegroupType) {
+                    if (self.featuregroup.type === 'cachedFeaturegroupDTO') {
                         self.activeTab = 0
-                        if(self.featuregroup.onlineFeaturegroupEnabled != null){
-                            self.onlineFg = self.featuregroup.onlineFeaturegroupEnabled
+                        if(self.featuregroup.onlineEnabled != null){
+                            self.onlineFg = self.featuregroup.onlineEnabled
                         }
                     }
                     self.cached_fg_accordion1.isOpen = true
@@ -232,10 +230,10 @@ angular.module('hopsWorksApp')
                     self.onDemandFeaturegroupFeatures = self.featuregroup.features
                     self.cachedFeaturegroupFeatures = self.featuregroup.features
                     self.oldFeaturegroupId = self.featuregroup.id
-                    if (self.featuregroup.featuregroupType === self.onDemandFeaturegroupType) {
+                    if (self.featuregroup.type === 'onDemandFeaturegroupDTO') {
                         self.activeTab = 1
                     }
-                    if (self.featuregroup.featuregroupType === self.cachedFeaturegroupType) {
+                    if (self.featuregroup.type === 'cachedFeaturegroupDTO') {
                         self.activeTab = 0
                     }
                     self.onDemandFeaturegroupHeading = 'Create New Version of On-Demand Feature Group'
@@ -744,7 +742,6 @@ angular.module('hopsWorksApp')
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
                     "type": self.onDemandFeaturegroupDTOType,
@@ -784,7 +781,6 @@ angular.module('hopsWorksApp')
                     "description": self.onDemandFeaturegroupDoc,
                     "features": self.onDemandFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.onDemandFeaturegroupType,
                     "jdbcConnectorId": self.onDemandFeaturegroupjdbcConnection.id,
                     "query": self.onDemandSqlQuery,
                     "type": self.onDemandFeaturegroupDTOType,
@@ -821,10 +817,9 @@ angular.module('hopsWorksApp')
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
                     "jobs": [],
-                    "onlineFeaturegroupEnabled": self.onlineFg
+                    "onlineEnabled": self.onlineFg
                 }
                 FeaturestoreService.enableOnlineServing(self.projectId, self.featurestore,
                     self.oldFeaturegroupId, featuregroupJson).then(
@@ -854,10 +849,9 @@ angular.module('hopsWorksApp')
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
                     "jobs": [],
-                    "onlineFeaturegroupEnabled": self.onlineFg
+                    "onlineEnabled": self.onlineFg
                 }
                 FeaturestoreService.disableOnlineServing(self.projectId, self.featurestore,
                     self.oldFeaturegroupId, featuregroupJson).then(
@@ -892,10 +886,9 @@ angular.module('hopsWorksApp')
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
                     "jobs": [],
-                    "onlineFeaturegroupEnabled": self.onlineFg
+                    "onlineEnabled": self.onlineFg
                 }
                 ModalService.confirm('lg', 'This is a cached feature group, updating the feature group Hive/MySQL' +
                     ' metadata' +
@@ -951,10 +944,9 @@ angular.module('hopsWorksApp')
                     "description": self.cachedFeaturegroupDoc,
                     "features": self.cachedFeaturegroupFeatures,
                     "version": self.version,
-                    "featuregroupType": self.cachedFeaturegroupType,
                     "type": self.cachedFeaturegroupDTOType,
                     "jobs": [],
-                    "onlineFeaturegroupEnabled": self.onlineFg
+                    "onlineEnabled": self.onlineFg
                 }
                 if (self.cachedSqlQuery != null && self.cachedSqlQuery && self.cachedSqlQuery != undefined
                     && self.configureJob) {

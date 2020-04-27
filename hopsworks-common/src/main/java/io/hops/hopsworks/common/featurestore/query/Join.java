@@ -159,8 +159,10 @@ public class Join {
    * @return
    */
   private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, FeatureDTO leftOn, FeatureDTO rightOn) {
-    SqlIdentifier leftHandside = new SqlIdentifier(Arrays.asList(leftFgAs, leftOn.getName()), SqlParserPos.ZERO);
-    SqlIdentifier rightHandside = new SqlIdentifier(Arrays.asList(rightFgAs, rightOn.getName()), SqlParserPos.ZERO);
+    SqlIdentifier leftHandside =
+        new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"), SqlParserPos.ZERO);
+    SqlIdentifier rightHandside =
+        new SqlIdentifier(Arrays.asList("`" + rightFgAs + "`", "`" + rightOn.getName() + "`"), SqlParserPos.ZERO);
 
     SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);
     equalityList.add(leftHandside);

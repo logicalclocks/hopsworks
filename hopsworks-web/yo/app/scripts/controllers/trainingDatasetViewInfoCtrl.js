@@ -45,6 +45,10 @@ angular.module('hopsWorksApp')
              * Get training dataset tags
              */
             self.fetchTags = function () {
+                if (self.selectedTrainingDataset.trainingDatasetType === "EXTERNAL_TRAINING_DATASET") {
+                    return 
+                }
+
                 self.loadingTags = true;
                 FeaturestoreService.getTrainingDatasetTags(self.projectId, self.featurestore, self.selectedTrainingDataset).then(
                     function (success) {
@@ -250,6 +254,13 @@ angular.module('hopsWorksApp')
                     growl.error(error.data.errorMsg, {title: 'Failed to fetch training dataset size', ttl: 5000});
                     self.sizeWorking = false;
                 });
+            };
+
+            self.tdLocation = function() {
+                if (self.selectedTrainingDataset.trainingDatasetType == self.externalTrainingDatasetType) {
+                    return
+                }
+                $location.path('project/' + self.projectId + '/datasets' + self.selectedTrainingDataset.location);
             };
 
             /**

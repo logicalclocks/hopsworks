@@ -28,14 +28,11 @@ angular.module('hopsWorksApp')
             var self = this;
             //State
             self.selectedFeature = null;
+            self.featurestoreCtrl = null;
             self.tgState = false;
-            self.settings;
             self.pythonCode = ""
             self.scalaCode = ""
             self.table = []
-            //Constants
-            self.cachedFeaturegroupType = "";
-            self.onDemandFeaturegroupType = "";
 
             /**
              * Get the Python API code to retrieve the feature
@@ -74,15 +71,10 @@ angular.module('hopsWorksApp')
                 }
             }
 
-            self.view = function(projectId, projectName, featurestore, feature, settings, featuregroupViewInfoCtrl) {
-
+            self.view = function(featurestoreCtrl, feature, featuregroupViewInfoCtrl) {
                 self.toggle(feature);
 
                 self.selectedFeature = feature;
-                self.settings = settings;
-
-                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
-                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
 
                 self.pythonCode = self.getPythonCode(self.selectedFeature)
                 self.scalaCode = self.getScalaCode(self.selectedFeature)
@@ -93,18 +85,16 @@ angular.module('hopsWorksApp')
                 featuregroups.activeVersion = feature.featuregroup.version;
                 featuregroups.versionToGroups[feature.featuregroup.version] = feature.featuregroup;
 
-                featuregroupViewInfoCtrl.view(projectId, projectName, featurestore, featuregroups, settings, false)
-
+                if (typeof(featurestoreCtrl) !== 'undefined') {
+                    self.featurestoreCtrl = featurestoreCtrl;
+                    featuregroupViewInfoCtrl.view(featurestoreCtrl, featuregroups, false);
+                }
             }
 
             self.viewSelected = function (projectId, projectName, featurestore, feature, settings) {
                 self.toggle(feature);
 
                 self.selectedFeature = feature;
-                self.settings = settings;
-
-                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
-                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
 
                 self.pythonCode = self.getPythonCode(self.selectedFeature);
                 self.scalaCode = self.getScalaCode(self.selectedFeature);

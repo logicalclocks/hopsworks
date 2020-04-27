@@ -28,39 +28,34 @@ import javax.ejb.TransactionAttributeType;
 import java.util.Map;
 
 
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public interface FeaturegroupTagControllerIface {
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default Map<String, String> getAll(Project project, Users user, Featurestore featurestore, int featuregroupId)
       throws FeaturestoreException, DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default Map<String, String> getSingle(Project project, Users user, Featurestore featurestore, int featuregroupId,
                                         String tagName)
       throws FeaturestoreException, DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default boolean createOrUpdateSingleTag(Project project, Users user, Featurestore featurestore, int featuregroupId,
                                  String name, String value)
       throws FeaturestoreException, DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default void deleteAll(Project project, Users user, Featurestore featurestore, int featuregroupId)
       throws FeaturestoreException, DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default void deleteSingle(Project project, Users user, Featurestore featurestore, int featuregroupId,
                             String tagName)
       throws FeaturestoreException, DatasetException, MetadataException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
-
 }

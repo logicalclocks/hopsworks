@@ -73,13 +73,11 @@ public class TagsBuilder {
     TagsDTO dto = new TagsDTO();
     uri(dto, uriInfo, project, fsObjectResource, featurestoreId, fsObjectId);
     dto.setCount((long)tags.size());
-    tags.forEach((k, v) -> dto.addItem(build(uriInfo, resourceRequest,
-        project, featurestoreId, fsObjectResource, fsObjectId, k, v)));
+    tags.forEach((k, v) -> dto.addItem(build(uriInfo, project, featurestoreId, fsObjectResource, fsObjectId, k, v)));
     return dto;
   }
 
-  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
-                        Project project, Integer featurestoreId, String fsObjectResource,
+  public TagsDTO build(UriInfo uriInfo, Project project, Integer featurestoreId, String fsObjectResource,
                        Integer featuregroupId, String name, String value) {
     TagsDTO dto = new TagsDTO();
     uri(dto, uriInfo, project, fsObjectResource, featurestoreId, featuregroupId, name);

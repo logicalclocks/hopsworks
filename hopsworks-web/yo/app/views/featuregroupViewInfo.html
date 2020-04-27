@@ -16,7 +16,7 @@
 
 <div>
     <div uib-accordion close-others="false">
-        <div uib-accordion-group class="panel-default" is-open="true" style="overflow-x: scroll">
+        <div uib-accordion-group class="panel-default" is-open="true" style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Feature Group Metadata'></i>
@@ -89,6 +89,24 @@
                     </td>
                 </tr>
 
+                <tr class="fs-table" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'">
+                    <td style="font-weight:700;" class="fs-table">
+                        Default Storage 
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.defaultStorage | lowercase}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'">
+                    <td style="font-weight:700;" class="fs-table">
+                        Time Travel Enabled 
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.hudiEnabled | lowercase}}
+                    </td>
+                </tr>
+
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
                         Actions
@@ -96,12 +114,12 @@
                     <td class="fs-table">
                         <button class="btn btn-default fa fa-bar-chart"
                                 uib-tooltip="View statistics"
-                                ng-disabled="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featurestoreCtrl.onDemandFeaturegroupType"
+                                ng-disabled="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'onDemandFeaturegroupDTO'"
                                 ng-click="featuregroupViewInfoCtrl.viewFeaturegroupStatistics(); $event.stopPropagation();"></button>
 
                         <button class="btn btn-default fa fa-external-link" id="toolbar-preview"
                                 uib-tooltip="Preview"
-                                ng-disabled="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featurestoreCtrl.onDemandFeaturegroupType"
+                                ng-disabled="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'onDemandFeaturegroupDTO'"
                                 ng-click="featuregroupViewInfoCtrl.preview(); $event.stopPropagation();"></button>
 
                         <button class="btn btn-default fa fa-edit" id="toolbar-edit"
@@ -125,8 +143,8 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
-             style="overflow-x: scroll">
+             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'"
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Details about the Hive table where the historical feature data of cached
@@ -140,10 +158,12 @@
                 <tbody class="fs-table">
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        HDFS path
+                        Path 
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.hdfsStorePaths[0]}}
+                        <a ng-click="featuregroupViewInfoCtrl.fgLocation()">
+                            {{featuregroupViewInfoCtrl.selectedFeaturegroup.location}}
+                        </a>
                     </td>
                 </tr>
 
@@ -152,7 +172,7 @@
                         Table Type
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.hiveTableType}}
+                        {{featuregroupViewInfoCtrl.hiveTableType}}
                     </td>
                 </tr>
 
@@ -161,7 +181,7 @@
                         Hive Input Format
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.inputFormat}}
+                        {{featuregroupViewInfoCtrl.inputFormat}}
                     </td>
                 </tr>
 
@@ -170,7 +190,7 @@
                         Size
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.size}}
+                        {{featuregroupViewInfoCtrl.offlineSize | humanReadableFileSize}}
                         <i ng-if="featuregroupViewInfoCtrl.sizeWorking" style="margin-top: 2px; text-align: center;"
                            class="fa fa-spinner fa-spin"></i>
                     </td>
@@ -184,7 +204,7 @@
 <pre>
 <code>{{featuregroupViewInfoCtrl.offlineSchema}}</code>
 </pre>
-                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px; text-align: center;"
+                        <i ng-if="featuregroupViewInfoCtrl.offlineSchemaWorking" style="margin-top: 2px; text-align: center;"
                            class="fa fa-spinner fa-spin"></i>
                     </td>
                 </tr>
@@ -193,8 +213,8 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
-             style="overflow-x: scroll">
+             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'"
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Details about the MySQL table where the online feature data of cached
@@ -205,46 +225,14 @@
             </div>
 
             <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
-                   ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupEnabled">
+                   ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 <tbody class="fs-table">
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        MySQL Database
-                    </td>
-                    <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupDTO.dbName}}
-                    </td>
-                </tr>
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        MySQL Table Name
-                    </td>
-                    <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupDTO.tableName}}
-                    </td>
-                </tr>
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        MySQL Table Type
-                    </td>
-                    <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupDTO.tableType}}
-                    </td>
-                </tr>
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
                         Size
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupDTO.size}} MB
-                    </td>
-                </tr>
-                <tr class="fs-table">
-                    <td style="font-weight:700;" class="fs-table">
-                        Number of Rows
-                    </td>
-                    <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupDTO.tableRows}}
+                        {{featuregroupViewInfoCtrl.onlineSize | humanReadableFileSize}}
                     </td>
                 </tr>
                 <tr class="fs-table">
@@ -255,21 +243,21 @@
 <pre>
 <code>{{featuregroupViewInfoCtrl.onlineSchema}}</code>
 </pre>
-                        <i ng-if="featuregroupViewInfoCtrl.schemaWorking" style="margin-top: 2px; text-align: center;"
+                        <i ng-if="featuregroupViewInfoCtrl.onlineSchemaWorking" style="margin-top: 2px; text-align: center;"
                            class="fa fa-spinner fa-spin"></i>
                     </td>
                 </tr>
                 </tbody>
             </table>
 
-            <h3 style="margin-left: 10px" ng-if="!featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupEnabled">
+            <h3 style="margin-left: 10px" ng-if="!featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 Online feature serving has not been enabled for this feature group
             </h3>
         </div>
 
         <div uib-accordion-group class="panel-default"
-             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featuregroupViewInfoCtrl.onDemandFeaturegroupType"
-             style="overflow-x: scroll">
+             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'onDemandFeaturegroupDTO'"
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Details about how the feature group is computed on-demand.'></i>
@@ -303,8 +291,8 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType === featuregroupViewInfoCtrl.cachedFeaturegroupType"
-             style="overflow-x: scroll">
+             ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'"
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='Hopsworks Jobs that update the feature group in some way'></i>
@@ -363,7 +351,7 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             style="overflow-x: scroll">
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='API for reading the feature group programmatically'></i>
@@ -410,7 +398,7 @@
 
             <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
                    ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.features.length > 0 &&
-                   !featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupEnabled">
+                   !featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 <thead style="border:none;" class="fs-table">
                 <th class="fs-table" style="width: 20%">Feature Name</th>
                 <th class="fs-table" style="width: 20%">Feature Type</th>
@@ -430,7 +418,7 @@
             </table>
             <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto"
                    ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.features.length > 0 &&
-                   featuregroupViewInfoCtrl.selectedFeaturegroup.onlineFeaturegroupEnabled">
+                   featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 <thead style="border:none;" class="fs-table">
                 <th class="fs-table" style="width: 16%">Feature Name</th>
                 <th class="fs-table" style="width: 16%">Offline Feature Type</th>

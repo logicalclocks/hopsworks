@@ -50,8 +50,6 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
   private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
-  private String onDemandFeaturegroupType = FeaturestoreConstants.ON_DEMAND_FEATUREGROUP_TYPE;
-  private String cachedFeaturegroupType = FeaturestoreConstants.CACHED_FEATUREGROUP_TYPE;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;
   private String hopsfsConnectorType = FeaturestoreConstants.HOPSFS_CONNECTOR_TYPE;
   private String s3ConnectorType = FeaturestoreConstants.S3_CONNECTOR_TYPE;
@@ -204,24 +202,6 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setTrainingDatasetDataFormats(List<String> trainingDatasetDataFormats) {
     this.trainingDatasetDataFormats = trainingDatasetDataFormats;
-  }
-  
-  @XmlElement
-  public String getOnDemandFeaturegroupType() {
-    return onDemandFeaturegroupType;
-  }
-  
-  public void setOnDemandFeaturegroupType(String onDemandFeaturegroupType) {
-    this.onDemandFeaturegroupType = onDemandFeaturegroupType;
-  }
-  
-  @XmlElement
-  public String getCachedFeaturegroupType() {
-    return cachedFeaturegroupType;
-  }
-  
-  public void setCachedFeaturegroupType(String cachedFeaturegroupType) {
-    this.cachedFeaturegroupType = cachedFeaturegroupType;
   }
   
   @XmlElement

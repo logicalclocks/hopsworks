@@ -22,7 +22,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -54,40 +53,13 @@ public class FeaturestoreUtils {
    * Only data owners are allowed to update/delete feature groups/training datasets
    * created by someone else in the project
    *
-   * @param featurestoreEntityDTO the featurestore entity that the operation concerns (feature group or training
-   *                              dataset)
-   * @param featurestore the featurestore that the operation concerns
-   * @param project the project of the featurestore
-   * @param user the user requesting the operation
-   * @throws FeaturestoreException
-   */
-  public void verifyUserRole(FeaturestoreEntityDTO featurestoreEntityDTO,
-                             Featurestore featurestore, Users user, Project project)
-      throws FeaturestoreException {
-    String userRole = projectTeamFacade.findCurrentRole(project, user);
-    if (!featurestoreEntityDTO.getCreator().equals(user.getEmail()) &&
-        !userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", featuregroupId: " + featurestoreEntityDTO.getId() + ", userRole:" + userRole +
-              ", creator of the featuregroup: " + featurestoreEntityDTO.getCreator());
-    }
-  }
-
-  /**
-   * Verify that the user is allowed to execute the requested operation based on his/hers project role
-   * <p>
-   * Only data owners are allowed to update/delete feature groups/training datasets
-   * created by someone else in the project
-   *
    * @param trainingDataset the training dataset the operation concerns
    * @param featurestore the featurestore that the operation concerns
    * @param project the project of the featurestore
    * @param user the user requesting the operation
    * @throws FeaturestoreException
    */
-  public void verifyUserRole(TrainingDataset trainingDataset,
-                             Featurestore featurestore, Users user, Project project)
+  public void verifyUserRole(TrainingDataset trainingDataset, Featurestore featurestore, Users user, Project project)
       throws FeaturestoreException {
     String userRole = projectTeamFacade.findCurrentRole(project, user);
     if (!trainingDataset.getCreator().equals(user) &&

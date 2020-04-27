@@ -67,7 +67,6 @@ angular.module('hopsWorksApp')
             self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
-            self.featuregroupType = self.settings.featuregroupType
             self.trainingDatasetType = self.settings.trainingDatasetType
             self.featurestoreUtilPythonMainClass = self.settings.featurestoreUtilPythonMainClass
             self.featurestoreUtilPythonExecutable = self.settings.featurestoreUtilPythonExecutable

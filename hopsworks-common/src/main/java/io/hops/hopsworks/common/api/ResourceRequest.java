@@ -165,6 +165,7 @@ public class ResourceRequest {
     FEATURESTORES,
     FEATUREGROUPS,
     PREVIEW,
+    DETAILS,
     PARTITIONS,
     EXPERIMENTS,
     TENSORBOARD,

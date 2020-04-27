@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore;
 
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
 import java.util.Arrays;
@@ -47,8 +46,6 @@ public class FeaturestoreConstants {
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
     "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
-  public static final String ON_DEMAND_FEATUREGROUP_TYPE = FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
-  public static final String CACHED_FEATUREGROUP_TYPE = FeaturegroupType.CACHED_FEATURE_GROUP.name();
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
   public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HOPSFS.name();
   public static final String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
@@ -89,7 +86,6 @@ public class FeaturestoreConstants {
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
-  public static final String ONLINE_FEATURE_STORE_TYPE = "MySQL Cluster";
   public static final String OFFLINE_FEATURE_STORE_TYPE = "Hive";
   public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList(new String[]{
     "None", "INT(11)", "TINYINT(1)", "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
