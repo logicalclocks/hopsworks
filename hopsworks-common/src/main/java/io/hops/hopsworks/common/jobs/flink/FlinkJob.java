@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -102,18 +103,13 @@ public class FlinkJob extends YarnJob {
       return false;
     }
     
-    String stdOutFinalDestination = Utils.getProjectPath(
+    String stdFinalDestination = Utils.getProjectPath(
       jobs.
         getProject().
         getName())
-      + Settings.FLINK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getProjectPath(
-      jobs.
-        getProject().
-        getName())
-      + Settings.FLINK_DEFAULT_OUTPUT_PATH;
-    setStdOutFinalDestination(stdOutFinalDestination);
-    setStdErrFinalDestination(stdErrFinalDestination);
+      + Settings.BaseDataset.LOGS.getName() + "/" + JobType.FLINK.getName();
+    setStdOutFinalDestination(stdFinalDestination);
+    setStdErrFinalDestination(stdFinalDestination);
     return true;
   }
   
