@@ -89,6 +89,12 @@ public class Variables implements Serializable {
     this.value = value;
   }
 
+  public Variables(String id, String value, VariablesVisibility visibility) {
+    this.id = id;
+    this.value = value;
+    this.visibility = visibility;
+  }
+
   public String getId() {
     return id;
   }

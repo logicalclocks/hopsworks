@@ -97,9 +97,10 @@ public class HopsworksVariablesBean implements Serializable {
   public void onRowEdit(RowEditEvent event) {
     String varName = ((Variables) event.getObject()).getId();
     String varValue = ((Variables) event.getObject()).getValue();
+    VariablesVisibility visibility = ((Variables) event.getObject()).getVisibility();
     HttpServletRequest httpServletRequest = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext()
       .getRequest();
-    loggedMaintenanceHelper.updateVariable(varName, varValue, httpServletRequest);
+    loggedMaintenanceHelper.updateVariable(varName, varValue, visibility, httpServletRequest);
     MessagesController.addInfoMessage("Updated variable : " + varName + " to: " + varValue);
   }
   

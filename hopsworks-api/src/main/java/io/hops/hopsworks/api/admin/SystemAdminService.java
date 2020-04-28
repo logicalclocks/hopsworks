@@ -86,9 +86,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -189,13 +187,8 @@ public class SystemAdminService {
     if (variables == null) {
       throw new IllegalArgumentException("variablesRequest was not provided or was incomplete.");
     }
-    
-    Map<String, String> updateVariablesMap = new HashMap<>(variablesRequest.getVariables().size());
-    for (Variables var : variables) {
-      updateVariablesMap.putIfAbsent(var.getId(), var.getValue());
-    }
-    
-    settings.updateVariables(updateVariablesMap);
+
+    settings.updateVariables(variablesRequest.getVariables());
     
     RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.NO_CONTENT, "Variables updated");
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
