@@ -1271,7 +1271,6 @@ public class Settings implements Serializable {
   public static final String ENV_KEY_SPARK_CONF_DIR = "SPARK_CONF_DIR";
   //YARN constants
   public static final int YARN_DEFAULT_APP_MASTER_MEMORY = 2048;
-  public static final String YARN_DEFAULT_OUTPUT_PATH = "Logs/Yarn/";
   public static final String HADOOP_COMMON_HOME_KEY = "HADOOP_COMMON_HOME";
   public static final String HADOOP_HOME_KEY = "HADOOP_HOME";
   public static final String HADOOP_HDFS_HOME_KEY = "HADOOP_HDFS_HOME";
@@ -1298,7 +1297,6 @@ public class Settings implements Serializable {
   // Distribution-defined classpath to add to processes
   public static final String SPARK_AM_MAIN
       = "org.apache.spark.deploy.yarn.ApplicationMaster";
-  public static final String SPARK_DEFAULT_OUTPUT_PATH = "Logs/Spark/";
   public static final String SPARK_CONFIG_FILE = "conf/spark-defaults.conf";
   public static final String SPARK_BLACKLISTED_PROPS
       = "conf/spark-blacklisted-properties.txt";
@@ -1306,7 +1304,6 @@ public class Settings implements Serializable {
   public static final int SPARK_MAX_EXECS = 2;
 
   //Flink constants
-  public static final String FLINK_DEFAULT_OUTPUT_PATH = "Logs/Flink/";
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
   public static final int FLINK_APP_MASTER_MEMORY = 768;
 
@@ -1332,9 +1329,6 @@ public class Settings implements Serializable {
   public static final String INFERENCE_SCHEMANAME = "inferenceschema";
   public static final int INFERENCE_SCHEMAVERSION = 2;
   
-  //Python constants
-  public static final String PYTHON_DEFAULT_OUTPUT_PATH = "Logs/Python/";
-
   //Kafka constants
   public static final String PROJECT_COMPATIBILITY_SUBJECT = "projectcompatibility";
   

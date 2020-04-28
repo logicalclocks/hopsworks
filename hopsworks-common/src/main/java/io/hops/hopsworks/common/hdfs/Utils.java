@@ -118,16 +118,10 @@ public final class Utils {
     switch (jobType) {
       case SPARK:
       case PYSPARK:
-        defaultOutputPath = Settings.SPARK_DEFAULT_OUTPUT_PATH;
-        break;
       case FLINK:
-        defaultOutputPath =  Settings.FLINK_DEFAULT_OUTPUT_PATH;
-        break;
       case YARN:
-        defaultOutputPath =  Settings.YARN_DEFAULT_OUTPUT_PATH;
-        break;
       case PYTHON:
-        defaultOutputPath =  Settings.PYTHON_DEFAULT_OUTPUT_PATH;
+        defaultOutputPath = Settings.BaseDataset.LOGS.getName() + "/" + jobType.getName() +"/";
         break;
       default:
         defaultOutputPath =  "Logs/";

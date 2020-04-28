@@ -147,6 +147,7 @@ describe "On #{ENV['OS']}" do
             it "should run job and get out and err logs" do
               $job_name_4 = "demo_job_4_" + type
               create_sparktour_job(@project, $job_name_4, type, nil)
+              project = get_project
               start_execution(@project[:id], $job_name_4)
               execution_id = json_body[:id]
               expect_status(201)
@@ -173,6 +174,27 @@ describe "On #{ENV['OS']}" do
               #get err log
               get_execution_log(@project[:id], $job_name_4, execution_id, "err")
               expect(json_body[:type]).to eq "ERR"
+              expect(json_body[:log]).to be_present
+
+              member = create_user
+              add_member_to_project(project, member[:email], "Data scientist")
+              create_session(member[:email], "Pass123")
+
+              start_execution(@project[:id], $job_name_4)
+              execution_id = json_body[:id]
+              expect_status(201)
+
+              wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
+
+              #wait for log aggregation
+              wait_for_execution(60) do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+                json_body[:log] != "No log available"
+              end
+
+              #get out log
+              get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+              expect(json_body[:type]).to eq "OUT"
               expect(json_body[:log]).to be_present
             end
           end
