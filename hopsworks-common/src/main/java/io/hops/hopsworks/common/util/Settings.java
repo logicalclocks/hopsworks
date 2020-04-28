@@ -135,12 +135,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
-  private static final String VARIABLE_LOGSTASH_IP = "logstash_ip";
-  private static final String VARIABLE_LOGSTASH_PORT = "logstash_port";
-  private static final String VARIABLE_LOGSTASH_PORT_TF_SERVING = "logstash_port_tf_serving";
-  private static final String VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING = "logstash_port_sklearn_serving";
-  private static final String VARIABLE_LOGSTASH_PORT_PYTHON_JOBS = "logstash_port_python_jobs";
-  
   private static final String VARIABLE_OOZIE_IP = "oozie_ip";
   private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
       = "spark_history_server_ip";
@@ -548,11 +542,6 @@ public class Settings implements Serializable {
           elasticJWTUrlParameter, elasticJWTEXPMS);
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
-      LOGSTASH_IP = setIpVar(VARIABLE_LOGSTASH_IP, LOGSTASH_IP);
-      LOGSTASH_PORT = setIntVar(VARIABLE_LOGSTASH_PORT, LOGSTASH_PORT);
-      LOGSTASH_PORT_TF_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_TF_SERVING, LOGSTASH_PORT_TF_SERVING);
-      LOGSTASH_PORT_SKLEARN_SERVING = setIntVar(VARIABLE_LOGSTASH_PORT_SKLEARN_SERVING, LOGSTASH_PORT_SKLEARN_SERVING);
-      LOGSTASH_PORT_PYTHON_JOBS = setIntVar(VARIABLE_LOGSTASH_PORT_PYTHON_JOBS, LOGSTASH_PORT_PYTHON_JOBS);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
@@ -1578,42 +1567,6 @@ public class Settings implements Serializable {
   public synchronized String getJhsIp() {
     checkCache();
     return JHS_IP;
-  }
-
-  private String LOGSTASH_IP = "127.0.0.1";
-
-  public synchronized String getLogstashIp() {
-    checkCache();
-    return LOGSTASH_IP;
-  }
-
-  // Resource Manager Port
-  private int LOGSTASH_PORT = 8088;
-
-  public synchronized Integer getLogstashPort() {
-    checkCache();
-    return LOGSTASH_PORT;
-  }
-
-  private int LOGSTASH_PORT_TF_SERVING = 5045;
-
-  public synchronized Integer getLogstashPortTfServing() {
-    checkCache();
-    return LOGSTASH_PORT_TF_SERVING;
-  }
-
-  private int LOGSTASH_PORT_SKLEARN_SERVING = 5047;
-
-  public synchronized Integer getLogstashPortSkLearnServing() {
-    checkCache();
-    return LOGSTASH_PORT_SKLEARN_SERVING;
-  }
-  
-  private int LOGSTASH_PORT_PYTHON_JOBS = 5051;
-  
-  public synchronized Integer getLogstashPortPythonJobs() {
-    checkCache();
-    return LOGSTASH_PORT_PYTHON_JOBS;
   }
 
   // Livy Server`
