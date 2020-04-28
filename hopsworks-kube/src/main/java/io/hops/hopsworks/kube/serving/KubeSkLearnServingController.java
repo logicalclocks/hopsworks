@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
@@ -83,7 +85,9 @@ public class KubeSkLearnServingController {
   private HdfsLeDescriptorsFacade hdfsLEFacade;
   @EJB
   private Settings settings;
-
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  
   public String getDeploymentName(String servingId) {
     return "sklrn-serving-dep-" + servingId;
   }
@@ -104,7 +108,8 @@ public class KubeSkLearnServingController {
         .build();
   }
 
-  public Deployment buildServingDeployment(Project project, Users user, Serving serving) {
+  public Deployment buildServingDeployment(Project project, Users user,
+      Serving serving) throws ServiceDiscoveryException {
 
     String servingIdStr = String.valueOf(serving.getId());
     String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
@@ -124,8 +129,7 @@ public class KubeSkLearnServingController {
 
     List<EnvVar> fileBeatEnv = new ArrayList<>();
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(settings.getLogstashIp() + ":" +
-        settings.getLogstashPortSkLearnServing()).build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
@@ -253,5 +257,12 @@ public class KubeSkLearnServingController {
         .withMetadata(getServiceMetadata(servingIdStr))
         .withSpec(tfServingServiceSpec)
         .build();
+  }
+  
+  private String getLogstashURL() throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service logstash =
+        serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.SKLEARN_SERVING_LOGSTASH);
+    return logstash.getAddress() + ":" + logstash.getPort();
   }
 }

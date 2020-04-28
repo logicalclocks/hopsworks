@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -336,14 +337,18 @@ public class KubeServingController implements ServingController {
     return null;
   }
 
-  private Deployment buildServingDeployment(Project project, Users user, Serving serving) {
-    switch (serving.getServingType()) {
-      case TENSORFLOW:
-        return kubeTfServingController.buildServingDeployment(project, user, serving);
-      case SKLEARN:
-        return kubeSKLearnServingController.buildServingDeployment(project, user, serving);
+  private Deployment buildServingDeployment(Project project, Users user,
+      Serving serving) throws ServingException {
+    try{
+      switch (serving.getServingType()) {
+        case TENSORFLOW:
+          return kubeTfServingController.buildServingDeployment(project, user, serving);
+        case SKLEARN:
+          return kubeSKLearnServingController.buildServingDeployment(project, user, serving);
+      }
+    }catch (ServiceDiscoveryException e){
+      throw new ServingException(RESTCodes.ServingErrorCode.DELETIONERROR, Level.SEVERE, null, e.getMessage(), e);
     }
-
     return null;
   }
 

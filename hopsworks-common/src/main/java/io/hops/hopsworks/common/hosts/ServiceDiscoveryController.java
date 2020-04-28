@@ -47,8 +47,11 @@ public class ServiceDiscoveryController {
     HTTP_RESOURCEMANAGER("http.resourcemanager"),
     HIVE_SERVER_PLAIN("hiveserver2-plain.hive"),
     HIVE_SERVER_TLS("hiveserver2-tls.hive"),
-    RPC_NAMENODE("rpc.namenode");
-    
+    RPC_NAMENODE("rpc.namenode"),
+    TF_SERVING_LOGSTASH("tfserving.logstash"),
+    SKLEARN_SERVING_LOGSTASH("sklearnserving.logstash"),
+    PYTHON_JOBS_LOGSTASH("pythonjobs.logstash");
+  
     private String name;
     HopsworksService(String name) {
       this.name = name;

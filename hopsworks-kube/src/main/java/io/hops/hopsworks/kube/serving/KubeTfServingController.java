@@ -4,6 +4,8 @@
 
 package io.hops.hopsworks.kube.serving;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
@@ -68,7 +70,9 @@ public class KubeTfServingController {
   private HdfsLeDescriptorsFacade hdfsLEFacade;
   @EJB
   private Settings settings;
-
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  
   private ObjectMeta getDeploymentMetadata(String servingId) {
     return new ObjectMetaBuilder()
         .withName(getDeploymentName(servingId))
@@ -89,7 +93,8 @@ public class KubeTfServingController {
     return "tf-serving-ser-" + servingId;
   }
 
-  public Deployment buildServingDeployment(Project project, Users user, Serving serving) {
+  public Deployment buildServingDeployment(Project project, Users user,
+      Serving serving) throws ServiceDiscoveryException {
 
     String servingIdStr = String.valueOf(serving.getId());
 
@@ -113,8 +118,7 @@ public class KubeTfServingController {
 
     List<EnvVar> fileBeatEnv = new ArrayList<>();
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
-    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(settings.getLogstashIp() + ":" +
-        settings.getLogstashPortTfServing()).build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
@@ -214,5 +218,12 @@ public class KubeTfServingController {
         .withMetadata(getServiceMetadata(servingIdStr))
         .withSpec(tfServingServiceSpec)
         .build();
+  }
+  
+  private String getLogstashURL() throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service logstash =
+        serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.TF_SERVING_LOGSTASH);
+    return logstash.getAddress() + ":" + logstash.getPort();
   }
 }

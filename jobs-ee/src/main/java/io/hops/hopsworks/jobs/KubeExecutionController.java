@@ -6,6 +6,7 @@ package io.hops.hopsworks.jobs;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
@@ -29,6 +30,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.JobLogDTO;
 import io.hops.hopsworks.common.jobs.execution.AbstractExecutionController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
@@ -113,6 +115,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private JupyterController jupyterController;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -212,7 +216,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private Job buildJob(String name, String secretsName, String kubeProjectUser, String anacondaEnv,
     String secretsDir,
     String certificatesDir, String hadoopUser, String flinkConfDir, String appPath, String args,
-    PythonJobConfiguration pythonJobConfiguration, Execution execution, Project project) throws ServiceException {
+    PythonJobConfiguration pythonJobConfiguration, Execution execution, Project project)
+      throws ServiceException, ServiceDiscoveryException {
   
     ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(pythonJobConfiguration);
     Map<String, String> jobEnv = new HashMap<>();
@@ -263,7 +268,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   
     Map<String, String> filebeatEnv = new HashMap<>();
     filebeatEnv.put("LOGPATH", "/app/logs/*");
-    filebeatEnv.put("LOGSTASH", settings.getLogstashIp() + ":" + settings.getLogstashPortPythonJobs());
+    filebeatEnv.put("LOGSTASH", getLogstashURL());
     filebeatEnv.put("JOB", jobName);
     filebeatEnv.put("EXECUTION", executionId);
     filebeatEnv.put("PROJECT", project.getName().toLowerCase());
@@ -496,4 +501,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return super.getTensorBoardUrls(user, appId, project);
   }
   
+  private String getLogstashURL() throws ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service logstash =
+        serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.PYTHON_JOBS_LOGSTASH);
+    return logstash.getAddress() + ":" + logstash.getPort();
+  }
 }
