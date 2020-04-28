@@ -42,9 +42,8 @@ describe "On #{ENV['OS']}" do
     end
 
     it 'should be able to fetch a variable with notauthenticated visibility' do
-      result = get "#{ENV['HOPSWORKS_API']}/variables/first_time_login"
+      get "#{ENV['HOPSWORKS_API']}/variables/first_time_login"
       expect_status(200)
-      expect(JSON.parse(result)['successMessage']).to eql("1")
     end
 
     it 'should be able to fetch a variable with user visibility' do
@@ -63,20 +62,9 @@ describe "On #{ENV['OS']}" do
       reset_session
     end
 
-    it 'should be able to fetch a variable with notauthenticated visibility' do
-      result = get "#{ENV['HOPSWORKS_API']}/variables/first_time_login"
-      expect_status(200)
-      expect(JSON.parse(result)['successMessage']).to eql("1")
-    end
-
-    it 'should fail to fetch a variable with user visibility' do
-      get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_enterprise"
-      expect_status(403)
-    end
-
-    it 'should fail to fetch a variable with admin visibility' do
+    it 'should fail to fetch a variable' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_master_password"
-      expect_status(403)
+      expect_status(401)
     end
   end
 end
