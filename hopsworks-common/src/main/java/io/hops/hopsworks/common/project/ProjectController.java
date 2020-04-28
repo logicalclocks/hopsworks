@@ -122,6 +122,7 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.InodeView;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -681,7 +682,7 @@ public class ProjectController {
    * @throws java.io.IOException
    */
   public void createProjectLogResources(Users user, Project project,
-    DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException, GenericException {
+    DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
       datasetController.createDataset(user, project, ds.getName(), ds.
@@ -695,15 +696,19 @@ public class ProjectController {
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
-          Path resourceDir = new Path(Utils.getProjectPath(project.getName()),
-            ds.getName());
-          Path subDirPath = new Path(resourceDir, sub);
+          Path subDirPath = new Path(dsPath, sub);
           datasetController.createSubDirectory(project, subDirPath, -1,
             "", false, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
         dfso.setStoragePolicy(dsPath, settings.getHdfsLogStoragePolicy());
+        JobType[] jobTypes = new JobType[]{JobType.SPARK, JobType.PYSPARK, JobType.FLINK};
+        for (JobType jobType : jobTypes) {
+          Path subDirPath = new Path(dsPath, jobType.getName());
+          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
+          dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
+        }
       }
 
       //Persist README.md to hdfs for Default Datasets

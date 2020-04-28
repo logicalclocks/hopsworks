@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -97,12 +98,10 @@ public class SparkJob extends YarnJob {
       }
     }
 
-    String stdOutFinalDestination = Utils.getProjectPath(jobs.getProject().getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    String stdErrFinalDestination = Utils.getProjectPath(jobs.getProject().getName())
-        + Settings.SPARK_DEFAULT_OUTPUT_PATH;
-    setStdOutFinalDestination(stdOutFinalDestination);
-    setStdErrFinalDestination(stdErrFinalDestination);
+    String stdFinalDestination = Utils.getProjectPath(jobs.getProject().getName())
+        + Settings.BaseDataset.LOGS.getName() + "/" + JobType.SPARK.getName();
+    setStdOutFinalDestination(stdFinalDestination);
+    setStdErrFinalDestination(stdFinalDestination);
 
     try {
       runner = runnerbuilder.
