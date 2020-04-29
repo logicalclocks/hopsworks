@@ -58,7 +58,7 @@
   z-index: 12;
   left: 200px;
   width: 0;
-  height: 100%;
+  height: calc(100% - 175px);
   margin-left: -200px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -493,5 +493,78 @@
 
 .status-danger{
   color: #dd8484;
+}
+
+#sidebar-wrapper.navbar-inverse {
+  border-color: transparent;
+}
+
+#wrapper.toggled .project-sidebar-footer {
+  width: 200px;
+}
+
+.project-sidebar-footer {
+  background: #2e353d;
+  color: white;
+  height: 125px;
+  width: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+.project-sidebar-footer .footer-content {
+  display: block;
+  color: #ddd;
+  text-decoration: none;
+}
+
+.project-sidebar-footer .footer-content li a {
+  font-family: 'Roboto', sans-serif;
+  display: block;
+  color: #ddd;
+  text-decoration: none;
+  padding: 10px 10px 10px 15px;
+}
+
+.project-sidebar-footer .footer-content li span {
+  display: block;
+  text-decoration: none;
+  padding: 5px 15px 10px 10px;
+}
+
+.footer-content-list li {
+  position: relative;
+  line-height: 20px;
+  display: inline-block;
+  width: 100%;
+  cursor: pointer;
+  overflow-x: hidden;
+}
+
+.footer-content-list li:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  height: 100%;
+  width: 0px;
+  background-color: gray;
+  -webkit-transition: width .2s ease-in;
+  -moz-transition:  width .2s ease-in;
+  -ms-transition:  width .2s ease-in;
+  transition: width .2s ease-in;
+}
+
+.footer-content-list li:active:before,
+.footer-content-list li:focus:before,
+.footer-content-list li:hover:before {
+  width: 100%;
+  -webkit-transition: width .2s ease-in;
+  -moz-transition:  width .2s ease-in;
+  -ms-transition:  width .2s ease-in;
+  transition: width .2s ease-in;
 }
 
