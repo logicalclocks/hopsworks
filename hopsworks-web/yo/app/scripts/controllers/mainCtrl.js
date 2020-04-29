@@ -47,12 +47,12 @@ angular.module('hopsWorksApp')
           '$http', 'AuthService', 'UtilsService', 'ElasticService', 'DelaProjectService',
           'DelaService', 'md5', 'ModalService', 'ProjectService', 'growl',
           'MessageService', '$routeParams', '$window', 'HopssiteService', 'BannerService',
-          'AirflowService', 'PaginationService',
+          'AirflowService', 'PaginationService', 'VariablesService',
           function ($q, $interval, $cookies, $location, $scope, $rootScope, $http, AuthService, UtilsService,
                   ElasticService, DelaProjectService, DelaService, md5, ModalService, 
                   ProjectService, growl,
                   MessageService, $routeParams, $window, HopssiteService, BannerService,
-                  AirflowService, PaginationService) {
+                  AirflowService, PaginationService, VariablesService) {
             var self = this;
 
             const MAX_IN_MEMORY_ITEMS = 1000;
@@ -522,5 +522,33 @@ angular.module('hopsWorksApp')
                             });
                     });
             };
+
+            self.versions = [];
+            self.hopsworksDocVersion = undefined;
+            var getHopsworksVersion = function (versions) {
+              for (var i = 0; i < versions.length; i++) {
+                  if (versions[i].software === 'hopsworks') {
+                      if (versions[i].version.endsWith('SNAPSHOT')) {
+                          self.hopsworksDocVersion = 'latest';
+                      } else {
+                          var index = versions[i].version.lastIndexOf('.');
+                          self.hopsworksDocVersion = versions[i].version.substring(0, index);
+                      }
+                  }
+              }
+            }
+
+            var getVersions = function () {
+              if (self.versions.length === 0) {
+                  VariablesService.getVersions()
+                      .then(function (success) {
+                          self.versions = success.data;
+                          getHopsworksVersion(self.versions);
+                      }, function (error) {
+                          console.log("Failed to get versions");
+                      });
+              }
+            };
+            getVersions();
 
           }]);
