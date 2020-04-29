@@ -19,13 +19,13 @@ describe "On #{ENV['OS']}" do
       with_admin_session
     end
 
-    it 'should fetch the value of a variable' do
+    it 'should succeed to fetch the value of a variable' do
       result = get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_user"
       expect_status(200)
       expect(JSON.parse(result)['successMessage']).to eql("glassfish")
     end
 
-    it 'should fail to fetch a variable with admin visibility' do
+    it 'should succeed to fetch a variable with admin visibility' do
       get "#{ENV['HOPSWORKS_API']}/variables/hopsworks_master_password"
       expect_status(200)
     end
