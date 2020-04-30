@@ -38,14 +38,14 @@ describe "On #{ENV['OS']}" do
         expect(user[:username]).to match(/^[a-z0-9]{8}$/)
       end
 
-      it 'should fail to register user with capital letters in the email' do
+      it 'should not fail to register user with capital letters in the email' do
         user_params = {}
         email = "TOLOWER#{random_id}@hopsworks.se"
         user_params[:email] = email
         register_user(user_params)
 
         user = User.find_by(email: email)
-        expect(user).to be nil
+        expect(user).not_to be nil
       end
 
       it 'should handle multiple users with similar emails' do

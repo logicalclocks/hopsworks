@@ -121,6 +121,9 @@ public class UsersController {
   private byte[] qrCode;
 
   public byte[] registerUser(UserDTO newUser, String validationKeyUrl) throws UserException {
+    if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
+      newUser.setEmail(newUser.getEmail().toLowerCase());
+    }
     userValidator.isValidNewUser(newUser);
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
