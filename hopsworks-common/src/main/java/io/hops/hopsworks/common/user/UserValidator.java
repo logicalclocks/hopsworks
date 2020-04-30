@@ -111,7 +111,7 @@ public class UserValidator {
   }
 
   public boolean isValidNewUser(UserDTO newUser) throws UserException {
-    //isValidEmail(newUser.getEmail());
+    isValidEmail(newUser.getEmail());
     isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
     isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
     if (userBean.findByEmail(newUser.getEmail()) != null) {
