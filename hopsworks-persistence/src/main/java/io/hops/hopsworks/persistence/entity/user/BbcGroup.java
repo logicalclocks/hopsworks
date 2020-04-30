@@ -73,8 +73,7 @@ public class BbcGroup implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 20)
+  @Size(min = 1, max = 20)
   @Column(name = "group_name")
   private String groupName;
   @Size(max = 200)

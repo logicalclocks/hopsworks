@@ -20,6 +20,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -41,8 +42,9 @@ public class LoggedMaintenanceHelper {
   private CertificatesMgmService certificatesMgmService;
   
   
-  public void updateVariable(String varName, String varValue, HttpServletRequest request) {
-    settings.updateVariable(varName, varValue);
+  public void updateVariable(String varName, String varValue,
+                             VariablesVisibility visibility, HttpServletRequest request) {
+    settings.updateVariable(varName, varValue, visibility);
   }
   
   public void changeMasterEncryptionPassword(String currentPassword, String newPassword, HttpServletRequest request)

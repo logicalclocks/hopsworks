@@ -18,6 +18,8 @@ package io.hops.hopsworks.admin.remote.user.ldap;
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.util.Variables;
+import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -25,8 +27,10 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @ManagedBean
 @ViewScoped
@@ -212,7 +216,10 @@ public class ConfigureLdap implements Serializable {
   
   public void save() {
     try {
-      settings.updateVariables(variablesToUpdate);
+      List<Variables> variablesList = variablesToUpdate.entrySet().stream()
+          .map(v -> new Variables(v.getKey(), v.getValue(), VariablesVisibility.ADMIN))
+          .collect(Collectors.toList());
+      settings.updateVariables(variablesList);
       MessagesController.addInfoMessage("Updated " + variablesToUpdate.size() + " variables.");
       init();
     } catch (Exception e) {
