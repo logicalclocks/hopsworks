@@ -41,13 +41,17 @@ package io.hops.hopsworks.api.util;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.util.Variables;
+import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 
@@ -59,9 +63,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -70,8 +76,7 @@ import java.util.logging.Level;
 
 @Path("/variables")
 @Stateless
-@Api(value = "Variables Service",
-    description = "Variables Service")
+@Api(value = "Variables Service", description = "Variables Service")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class VariablesService {
 
@@ -86,10 +91,18 @@ public class VariablesService {
   @Path("{id}")
   @Produces(MediaType.APPLICATION_JSON)
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getVar(@PathParam("id") String id) throws ServiceException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getVar(@Context SecurityContext sc, @PathParam("id") String id)
+      throws ServiceException, HopsSecurityException {
     Variables variable = settings.findById(id)
         .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.VARIABLE_NOT_FOUND, Level.FINE,
             "Variable: " + id + "not found"));
+
+    if (variable.getVisibility() == VariablesVisibility.ADMIN && !sc.isUserInRole("HOPS_ADMIN")) {
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.REST_ACCESS_CONTROL, Level.FINE,
+          "The requested variable requires admin privileges");
+    }
+
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     json.setSuccessMessage(variable.getValue());
     return Response.ok().entity(json).build();

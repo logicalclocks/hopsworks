@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -731,20 +732,13 @@ public class Settings implements Serializable {
     populateCache();
   }
 
-  public synchronized void updateVariable(String variableName, String variableValue) {
-    updateVariableInternal(variableName, variableValue);
+  public synchronized void updateVariable(String variableName, String variableValue, VariablesVisibility visibility) {
+    updateVariableInternal(variableName, variableValue, visibility);
     refreshCache();
   }
 
-  public synchronized void updateVariable(String variableName, Long variableValue) {
-    updateVariableInternal(variableName, variableValue.toString());
-    refreshCache();
-  }
-
-  public synchronized void updateVariables(Map<String, String> variablesToUpdate) {
-    for (Map.Entry<String, String> entry : variablesToUpdate.entrySet()) {
-      updateVariableInternal(entry.getKey(), entry.getValue());
-    }
+  public synchronized void updateVariables(List<Variables> variablesToUpdate) {
+    variablesToUpdate.forEach(v -> updateVariableInternal(v.getId(), v.getValue(), v.getVisibility()));
     refreshCache();
   }
 
@@ -2174,12 +2168,13 @@ public class Settings implements Serializable {
    * @param variableName name
    * @param variableValue value
    */
-  private void updateVariableInternal(String variableName, String variableValue) {
+  private void updateVariableInternal(String variableName, String variableValue, VariablesVisibility visibility) {
     Variables var = findById(variableName)
         .orElseThrow(() -> new NoResultException("Variable <" + variableName + "> does not exist in the database"));
 
-    if (!var.getValue().equals(variableValue)) {
+    if (!var.getValue().equals(variableValue) || !var.getVisibility().equals(visibility)) {
       var.setValue(variableValue);
+      var.setVisibility(visibility);
       em.persist(var);
     }
   }
@@ -3455,7 +3450,7 @@ public class Settings implements Serializable {
   }
 
   public synchronized void setServiceMasterJWT(String JWT) {
-    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT);
+    updateVariableInternal(VARIABLE_SERVICE_MASTER_JWT, JWT, VariablesVisibility.ADMIN);
     em.flush();
     SERVICE_MASTER_JWT = JWT;
   }
@@ -3471,7 +3466,7 @@ public class Settings implements Serializable {
   public synchronized void setServiceRenewJWTs(String[] renewTokens) {
     for (int i = 0; i < renewTokens.length; i++) {
       String variableKey = String.format(SERVICE_RENEW_TOKEN_VARIABLE_TEMPLATE, i);
-      updateVariableInternal(variableKey, renewTokens[i]);
+      updateVariableInternal(variableKey, renewTokens[i], VariablesVisibility.ADMIN);
     }
     RENEW_TOKENS = renewTokens;
   }

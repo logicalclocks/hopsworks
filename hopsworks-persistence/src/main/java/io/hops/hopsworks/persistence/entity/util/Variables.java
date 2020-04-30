@@ -65,16 +65,17 @@ public class Variables implements Serializable {
   @Id
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 255)
+  @Size(min = 1, max = 255)
   @Column(name = "id")
   private String id;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 255)
+  @Size(min = 1, max = 255)
   @Column(name = "value")
   private String value;
+  @NotNull
+  @Column(name = "visibility")
+  private VariablesVisibility visibility;
 
   public Variables() {
   }
@@ -86,6 +87,12 @@ public class Variables implements Serializable {
   public Variables(String id, String value) {
     this.id = id;
     this.value = value;
+  }
+
+  public Variables(String id, String value, VariablesVisibility visibility) {
+    this.id = id;
+    this.value = value;
+    this.visibility = visibility;
   }
 
   public String getId() {
@@ -102,6 +109,14 @@ public class Variables implements Serializable {
 
   public void setValue(String value) {
     this.value = value;
+  }
+
+  public VariablesVisibility getVisibility() {
+    return visibility;
+  }
+
+  public void setVisibility(VariablesVisibility visibility) {
+    this.visibility = visibility;
   }
 
   @Override

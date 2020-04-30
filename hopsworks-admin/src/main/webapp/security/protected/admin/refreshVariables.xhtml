@@ -117,13 +117,33 @@
                     </p:cellEditor>
                   </p:column>
 
+                  <p:column id="visibilityColumn"
+                            filterBy="#{variable.visibility}"
+                            filterMatchMode="contains"
+                            headerText="Visibility"
+                            style=" font-size: 12px; text-align: center;">
+                    <p:cellEditor>
+                      <f:facet name="output">
+                        <h:outputText value="#{variable.visibility}" />
+                      </f:facet>
+                      <f:facet name="input">
+                        <p:selectOneMenu id="changeVisibility"
+                                         value="#{variable.visibility}"
+                                         editable="false">
+                          <f:selectItem itemLabel="Visibility"/>
+                          <f:selectItems value="#{hopsworksVariablesBean.visibilities}" />
+                        </p:selectOneMenu>
+                      </f:facet>
+                    </p:cellEditor>
+                  </p:column>
+
 
                   <p:column style="width:32px">
                     <p:rowEditor />
                   </p:column>
 
 
-                </p:dataTable>                                            
+                </p:dataTable>
               </h:form>   
 
             </div>

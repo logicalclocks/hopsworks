@@ -51,6 +51,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.audit.AccountAudit;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
@@ -134,7 +135,7 @@ public class BannerService {
   @Produces(MediaType.TEXT_PLAIN)
   @JWTNotRequired
   public Response firstLogin(@Context HttpServletRequest req) {
-    settings.updateVariable("first_time_login", "0");
+    settings.updateVariable("first_time_login", "0", VariablesVisibility.NOTAUTHENTICATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }  
 
