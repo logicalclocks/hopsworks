@@ -68,10 +68,18 @@ public class ElasticCache {
     }
     Map<String, String> mapping = getMapping(index);
     if(mapping == null) {
-      Map<String, Map<String, String>> result = client.mngIndexGetMappings(index);
-      mapping = result.get(index);
-      if(mapping != null) {
-        cacheMapping(index, mapping);
+      try {
+        Map<String, Map<String, String>> result = client.mngIndexGetMappings(index);
+        mapping = result.get(index);
+        if(mapping != null) {
+          cacheMapping(index, mapping);
+        }
+      } catch(ElasticException e) {
+        if(ElasticHelper.indexNotFound(e.getCause())) {
+          return null;
+        } else {
+          throw e;
+        }
       }
     }
     return mapping;

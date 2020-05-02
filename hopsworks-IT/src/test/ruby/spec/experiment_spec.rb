@@ -83,7 +83,7 @@ describe "On #{ENV['OS']}" do
         ml_id = json_body[:items][0][:id]
         delete_experiment(@project[:id], ml_id)
         expect_status(204)
-        wait_for_project_prov(@project)
+        epipe_wait_on_provenance
         get_experiments(@project[:id], nil)
         expect(json_body[:count]).to eq(2)
       end
@@ -92,14 +92,14 @@ describe "On #{ENV['OS']}" do
         ml_id = json_body[:items][0][:id]
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments/#{ml_id}"
         expect_status(204)
-        wait_for_project_prov(@project)
+        epipe_wait_on_provenance
         get_experiments(@project[:id], nil)
         expect(json_body[:count]).to eq(1)
       end
       it "should delete experiment by deleting Experiments dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Experiments"
         expect_status(204)
-        wait_for_project_prov(@project)
+        epipe_wait_on_provenance
         get_experiments(@project[:id], nil)
         expect(json_body[:count]).to eq(0)
       end

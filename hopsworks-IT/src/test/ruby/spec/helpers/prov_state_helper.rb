@@ -62,19 +62,6 @@ module ProvStateHelper
     @cookies = nil
   end
 
-  def stop_epipe
-    execute_remotely ENV['EPIPE_HOST'], "sudo systemctl stop epipe"
-  end
-
-  def restart_epipe
-    execute_remotely ENV['EPIPE_HOST'], "sudo systemctl restart epipe"
-  end
-
-  def check_epipe_service
-    #pp "checking epipe status"
-    prov_wait_for_epipe
-  end
-
   def prov_create_dir(project, dirname)
     create_dir(project, dirname, "")
     expect_status(201)
@@ -179,25 +166,6 @@ module ProvStateHelper
     AppProv.create(id: app_id, state: "null", timestamp: timestamp, name: app_id, user: user, submit_time: timestamp-10, start_time: timestamp-5, finish_time: 0)
     AppProv.create(id: app_id, state: "null", timestamp: timestamp+5, name: app_id, user: user, submit_time: timestamp-10, start_time: timestamp-5, finish_time: 0)
     AppProv.create(id: app_id, state: "FINISHED", timestamp: timestamp+10, name: app_id, user: user, submit_time: timestamp-10, start_time: timestamp-5, finish_time: timestamp+50)
-  end
-
-  def prov_wait_for_epipe() 
-    #pp "waiting"
-    restart_epipe
-    sleep_counter1 = 0
-    sleep_counter2 = 0
-    until FileProv.all.count == 0 || sleep_counter1 == 5 do
-      sleep(10)
-      sleep_counter1 += 1
-
-    end
-    until AppProv.all.count == 0 || sleep_counter2 == 5 do
-      sleep(10)
-      sleep_counter2 += 1
-    end
-    expect(sleep_counter1).to be < 5
-    expect(sleep_counter2).to be < 5
-    #pp "done waiting"
   end
 
   def prov_check_experiment3(experiments, experiment_id, current_state)
@@ -386,17 +354,5 @@ module ProvStateHelper
     }
     expect(response.code).to eq expected_code
     return response
-  end
-
-  def check_epipe_is_active()
-    output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
-    expect(output.strip).to eq("active"), "epipe is down"
-  end
-
-  def wait_for_project_prov(project)
-    check_epipe_is_active
-    wait_for do
-      FileProv.where("project_name": project["inode_name"]).empty?
-    end
   end
 end

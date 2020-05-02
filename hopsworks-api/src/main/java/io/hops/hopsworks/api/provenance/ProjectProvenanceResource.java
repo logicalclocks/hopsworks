@@ -124,7 +124,7 @@ public class ProjectProvenanceResource {
       .withQueryParamExpansions(params.getExpansions())
       .withQueryParamAppExpansionFilter(params.getAppExpansionParams())
       .withPagination(pagination.getOffset(), pagination.getLimit());
-    logger.log(Level.INFO, "Local content path:{0} file state params:{1} ",
+    logger.log(Level.FINE, "Local content path:{0} file state params:{1} ",
       new Object[]{req.getRequestURL().toString(), params});
     return getFileStates(project, paramBuilder, params.getReturnType());
   }
