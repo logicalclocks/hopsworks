@@ -34,10 +34,6 @@
   <description>Hopsworks persistence</description>
   <name>hopsworks-persistence</name>
 
-  <properties>
-    <persistence.version>2.5.2</persistence.version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>javax.validation</groupId>

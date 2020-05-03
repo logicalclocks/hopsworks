@@ -72,8 +72,7 @@
     <dependency>
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
-      <version>RELEASE</version>
-      <scope>compile</scope>
+      <version>${persistence.version}</version>
     </dependency>
   </dependencies>
 
