@@ -32,8 +32,27 @@ module FeatureStoreTagHelper
     get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/tags/" + name
   end
 
-  def add_featuregroup_tag(project_id, featurestore_id, featuregroup_id, name, value)
-    put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/tags/" + name + "?value=" + value
+  def add_featuregroup_tag_checked(project_id, featurestore_id, featuregroup_id, name, value: nil)
+    add_featuregroup_tag(project_id, featurestore_id, featuregroup_id, name, value: value)
+    expect_status_details(201)
+  end
+
+  def update_featuregroup_tag_checked(project_id, featurestore_id, featuregroup_id, name, value: nil)
+    add_featuregroup_tag(project_id, featurestore_id, featuregroup_id, name, value: value)
+    expect_status_details(200)
+  end
+
+  def add_featuregroup_tag(project_id, featurestore_id, featuregroup_id, name, value: nil)
+    if value == nil
+      put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/tags/" + name
+    else
+      put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/tags/" + name + "?value=" + value
+    end
+  end
+
+  def delete_featuregroup_tag_checked(project_id, featurestore_id, featuregroup_id, tag)
+    delete_featuregroup_tag(project_id, featurestore_id, featuregroup_id, tag)
+    expect_status_details(204)
   end
 
   def delete_featuregroup_tag(project_id, featurestore_id, featuregroup_id, tag)
@@ -49,8 +68,22 @@ module FeatureStoreTagHelper
     get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name
   end
 
-  def add_training_dataset_tag(project_id, featurestore_id, training_dataset_id, name, value)
-    put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name + "?value=" + value
+  def add_training_dataset_tag_checked(project_id, featurestore_id, training_dataset_id, name, value:nil)
+    add_training_dataset_tag(project_id, featurestore_id, training_dataset_id, name, value: value)
+    expect_status_details(201)
+  end
+
+  def update_training_dataset_tag_checked(project_id, featurestore_id, training_dataset_id, name, value:nil)
+    add_training_dataset_tag(project_id, featurestore_id, training_dataset_id, name, value: value)
+    expect_status_details(200)
+  end
+
+  def add_training_dataset_tag(project_id, featurestore_id, training_dataset_id, name, value: nil)
+    if value == nil
+      put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name
+    else
+      put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name + "?value=" + value
+    end
   end
 
   def delete_training_dataset_tag(project_id, featurestore_id, training_dataset_id, tag)

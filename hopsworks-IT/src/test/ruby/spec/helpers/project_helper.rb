@@ -241,6 +241,7 @@ module ProjectHelper
     ending = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     elapsed = ending - starting
 
+    epipe_wait_on_mutations(10)
     pp "Finished cleanup - time elapsed " + elapsed.to_s + "s"
   end
 end
