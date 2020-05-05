@@ -51,4 +51,45 @@ module EpipeHelper
     #wait for epipe-elasticsearch propagation
     sleep(3)
   end
+
+  def epipe_wait_on_provenance(repeat=3)
+    epipe_active
+    repeat.times do
+      #check FileProv log table
+      result = wait_for_me_time(30) do
+        pending_prov = FileProv.count
+        if pending_prov == 0
+          { 'success' => true }
+        else
+          { 'success' => false, 'msg' => "hdfs_file_prov_logs is not being consumed by epipe - pending:#{pending_prov}" }
+        end
+      end
+      if result["success"] == true
+        #check AppProv log table
+        result = wait_for_me_time(30) do
+          pending_prov = AppProv.count
+          if pending_prov == 0
+            { 'success' => true }
+          else
+            { 'success' => false, 'msg' => "hdfs_app_prov_logs is not being consumed by epipe - pending:#{pending_prov}" }
+          end
+        end
+      end
+      if result["success"] == true
+        break
+      else
+        #restart epipe and try waiting again
+        pp "WARNING - #{result["msg"]}"
+        epipe_restart
+        sleep(1)
+        epipe_active
+      end
+    end
+    pending_prov = FileProv.count
+    expect(pending_prov).to eq(0), "hdfs_file_prov_logs is not being consumed by epipe - pending:#{pending_prov}"
+    pending_prov = AppProv.count
+    expect(pending_prov).to eq(0), "hdfs_app_prov_logs is not being consumed by epipe - pending:#{pending_prov}"
+    #wait for epipe-elasticsearch propagation
+    sleep(3)
+  end
 end

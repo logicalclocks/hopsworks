@@ -100,7 +100,7 @@ module ExperimentHelper
     execution_id = json_body[:id]
     expect_status(201)
     wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
-    wait_for_project_prov(project)
+    epipe_wait_on_provenance
   end
 
   def get_experiments(project_id, query)

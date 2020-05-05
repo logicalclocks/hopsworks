@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.elastic.ElasticClient;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -41,6 +42,8 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.rest.RestStatus;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
@@ -74,6 +77,20 @@ public class ProvElasticController {
       LOG.log(Level.WARNING, msg, e);
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
         msg, e.getMessage(), e);
+    } catch (IndexNotFoundException e) {
+      String msg = "elastic index:" + request.indices() + " - index not found";
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
+        msg, e.getMessage(), e);
+    } catch (ElasticsearchStatusException e) {
+      if(e.status().equals(RestStatus.NOT_FOUND)) {
+        String msg = "elastic index:" + request.indices() + " - index not found";
+        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
+          msg, e.getMessage(), e);
+      } else {
+        String msg = "elastic index:" + request.indices() + "error during index mapping get";
+        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+          msg, e.getMessage(), e);
+      }
     }
     return response;
   }
@@ -88,6 +105,20 @@ public class ProvElasticController {
       String msg = "elastic index:" + request.indices() + "error during index mapping get";
       throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
         msg, e.getMessage(), e);
+    } catch (IndexNotFoundException e) {
+      String msg = "elastic index:" + request.indices() + " - index not found";
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
+        msg, e.getMessage(), e);
+    } catch (ElasticsearchStatusException e) {
+      if(e.status().equals(RestStatus.NOT_FOUND)) {
+        String msg = "elastic index:" + request.indices() + " - index not found";
+        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.INFO,
+          msg, e.getMessage(), e);
+      } else {
+        String msg = "elastic index:" + request.indices() + "error during index mapping get";
+        throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
+          msg, e.getMessage(), e);
+      }
     }
   
     Map<String, Map<String, String>> result = new HashMap<>();

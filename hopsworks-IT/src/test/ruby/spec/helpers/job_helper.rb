@@ -26,6 +26,28 @@ module JobHelper
     expect_status(201)
   end
 
+  def get_spark_default_py_config(project, job_name, type)
+    job_config = {
+      "type": "sparkJobConfiguration",
+      "appName": "#{job_name}",
+      "amQueue": "default",
+      "amMemory": 1024,
+      "amVCores": 1,
+      "jobType": "PYSPARK",
+      "appPath": "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".#{type}",
+      "mainClass": "org.apache.spark.deploy.PythonRunner",
+      "spark.executor.instances": 1,
+      "spark.executor.cores": 1,
+      "spark.executor.memory": 1500,
+      "spark.executor.gpus": 0,
+      "spark.dynamicAllocation.enabled": true,
+      "spark.dynamicAllocation.minExecutors": 1,
+      "spark.dynamicAllocation.maxExecutors": 1,
+      "spark.dynamicAllocation.initialExecutors": 1
+    }
+    job_config
+  end
+
   def get_flink_conf(job_name)
     job_conf = {
         "type":"flinkJobConfiguration",
@@ -86,24 +108,7 @@ module JobHelper
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
       expect_status(200)
       if job_conf.nil?
-        job_conf = {
-            "type": "sparkJobConfiguration",
-            "appName": "#{job_name}",
-            "amQueue": "default",
-            "amMemory": 1024,
-            "amVCores": 1,
-            "jobType": "PYSPARK",
-            "appPath": "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
-            "mainClass": "org.apache.spark.deploy.PythonRunner",
-            "spark.executor.instances": 1,
-            "spark.executor.cores": 1,
-            "spark.executor.memory": 1500,
-            "spark.executor.gpus": 0,
-            "spark.dynamicAllocation.enabled": true,
-            "spark.dynamicAllocation.minExecutors": 1,
-            "spark.dynamicAllocation.maxExecutors": 1,
-            "spark.dynamicAllocation.initialExecutors": 1
-        }
+        job_conf = get_spark_default_py_config(project, job_name, "py")
       end
 
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
@@ -114,24 +119,7 @@ module JobHelper
           "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
         end
         if job_conf.nil?
-          job_conf = {
-            "type":"sparkJobConfiguration",
-            "appName":"#{job_name}",
-            "amQueue":"default",
-            "amMemory":1024,
-            "amVCores":1,
-            "jobType":"PYSPARK",
-            "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb",
-            "mainClass":"org.apache.spark.deploy.PythonRunner",
-            "spark.executor.instances":1,
-            "spark.executor.cores":1,
-            "spark.executor.memory":1500,
-            "spark.executor.gpus":0,
-            "spark.dynamicAllocation.enabled": true,
-            "spark.dynamicAllocation.minExecutors":1,
-            "spark.dynamicAllocation.maxExecutors":1,
-            "spark.dynamicAllocation.initialExecutors":1
-          }
+          job_conf = get_spark_default_py_config(project, job_name, "ipynb")
         end
         put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     end
