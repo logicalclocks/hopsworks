@@ -51,7 +51,8 @@ HopsFS is a drop-in replacement for HDFS that adds distributed metadata and "sma
 <ul>
 <li><a href="https://twitter.com/hopsworks">Follow our Twitter account.</a></li>
 <li><a href="https://community.hopsworks.ai">Join our support forum.</a></li>
-<li><a href="https://bbc1.sics.se/jenkins/job/Hopsworks-build/">Checkout the current build status.</a></li>
+<li><a href="https://jenkin.hops.works/job/Hopsworks-build/">Checkout the current build status.</a
+></li>
 </ul>
 
 ## Documentation
