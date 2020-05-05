@@ -201,7 +201,7 @@
   </build>
   <repositories>
     <repository>
-      <id>hops-repository</id>
+      <id>Hops</id>
       <name>Hops Repository</name>
       <url>https://archiva.hops.works/repository/Hops/</url>
       <releases>
