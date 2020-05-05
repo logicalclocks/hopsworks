@@ -245,4 +245,10 @@ module ProjectHelper
     epipe_wait_on_provenance(10)
     pp "Finished cleanup - time elapsed " + elapsed.to_s + "s"
   end
+
+  def get_project_inode(project)
+    inode = INode.where(partition_id:project[:partition_id], parent_id:project[:inode_pid], name:project[:inode_name])
+    expect(inode.length).to eq(1), "inode not found for project: #{project[:inode_name]}"
+    inode.first
+  end
 end

@@ -26,6 +26,11 @@ module EpipeHelper
     expect(output.strip).to eq("active"), "epipe is down"
   end
 
+  def is_epipe_active
+    output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
+    output.strip.eql? "active"
+  end
+
   def epipe_wait_on_mutations(repeat=3)
     epipe_active
     repeat.times do
