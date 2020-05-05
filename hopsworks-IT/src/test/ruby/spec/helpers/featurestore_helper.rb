@@ -562,4 +562,24 @@ module FeaturestoreHelper
     connector_id = parsed_json["id"]
     @s3_connector_id = connector_id
   end
+
+  def get_featuregroup(project_id, featurestore_id, name, version)
+    get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{name}?version=#{version}"
+    pp "get #{get_featuregroup_endpoint}" if defined?(@debugOpt) && @debugOpt
+    result = get get_featuregroup_endpoint
+    expect_status(200)
+    parsed_result = JSON.parse(result)
+    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
+    parsed_result
+  end
+
+  def get_trainingdataset(project_id, featurestore_id, name, version)
+    get_trainingdataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{name}?version=#{version}"
+    pp "get #{get_trainingdataset_endpoint}" if defined?(@debugOpt) && @debugOpt
+    result = get get_trainingdataset_endpoint
+    expect_status(200)
+    parsed_result = JSON.parse(result)
+    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
+    parsed_result
+  end
 end

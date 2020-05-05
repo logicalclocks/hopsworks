@@ -27,27 +27,11 @@ describe "On #{ENV['OS']}" do
     clean_all_test_projects
   end
   describe 'provenance state notebook - 1 project' do
-    def prov_run_job(project, job_name, job_conf)
-      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-      expect_status(201)
+    def prov_run_job(project, job_name)
       start_execution(project[:id], job_name)
       execution_id = json_body[:id]
-      app_id = ''
-      # pp "waiting job - running"
-      wait_result = wait_for_me_time(120) do
-        get_execution(project[:id], job_name, execution_id)
-        app_id = json_body[:appId]
-        { 'success' => (json_body[:state].eql? 'RUNNING'),
-          'msg' =>  "current state:#{json_body[:state]}"}
-      end
-      expect(wait_result["success"]).to be true, wait_result["msg"]
-      # pp "waiting job - succeeded"
-      wait_result = wait_for_me_time(600) do
-        get_execution(project[:id], job_name, execution_id)
-        { 'success' => ((json_body[:state].eql? 'FINISHED') && (json_body[:finalStatus].eql? 'SUCCEEDED')),
-          'msg' =>  "current state<#{json_body[:state]}, #{json_body[:finalStatus]}>"}
-      end
-      expect(wait_result["success"]).to be true, wait_result["msg"]
+      app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
+      wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
       app_id
     end
 
@@ -66,27 +50,18 @@ describe "On #{ENV['OS']}" do
       chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
       copy_from_local(src, dst, user, group, 750, project_name)
 
-      job_conf = {
-          "type":"sparkJobConfiguration",
-          "appName":"#{job_name}",
-          "amQueue":"default",
-          "amMemory":2048,
-          "amVCores":1,
-          "jobType":"PYSPARK",
-          "appPath":"hdfs:///Projects/#{project1[:projectname]}/Resources/#{job_name}.ipynb",
-          "mainClass":"org.apache.spark.deploy.PythonRunner",
-          "spark.yarn.maxAppAttempts": 1,
-          "properties":"spark.executor.instances 1",
-          "spark.executor.cores":1,
-          "spark.executor.memory":4096,
-          "spark.executor.gpus":0,
-          "spark.dynamicAllocation.enabled": true,
-          "spark.dynamicAllocation.minExecutors":1,
-          "spark.dynamicAllocation.maxExecutors":1,
-          "spark.dynamicAllocation.initialExecutors":1
-      }
+      job_config = get_spark_default_py_config(project1, job_name, "ipynb")
+      job_config["amMemory"] = 2048
+      job_config["spark.executor.memory"] = 4096
+      create_sparktour_job(project1, job_name, "ipynb", job_config)
+      expect_status(201)
+      prov_run_job(project1, job_name)
+      #check that the job create the 2 featuregroups and the training dataset
+      featurestore_id = get_featurestore_id(project1[:id])
+      get_featuregroup(project1[:id], featurestore_id, "test_houses_for_sale_featuregroup", 1)
+      get_featuregroup(project1[:id], featurestore_id, "test_houses_sold_featuregroup", 1)
+      get_trainingdataset(project1[:id], featurestore_id, "predict_house_sold_for_dataset", 1)
 
-      prov_run_job(project1, job_name, job_conf)
       epipe_wait_on_provenance
       query = "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/provenance/states?filter_by=ML_TYPE:FEATURE"
       pp "#{query}" if defined?(@debugOpt) && @debugOpt
@@ -96,8 +71,6 @@ describe "On #{ENV['OS']}" do
       pp parsed_result if defined?(@debugOpt) && @debugOpt
       #we expect 2 featuregroups
       expect(parsed_result["count"]).to eq 2
-      # TODO Alex inspect why featuregroups have a type in the parsed result
-      # "{featurestore={raw={\"type\":\"fullDTO\",\"featurestore_id\"
 
       expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "featurestore"
       fg1 = JSON[parsed_result["items"][0]["xattrs"]["entry"][0]["value"]]

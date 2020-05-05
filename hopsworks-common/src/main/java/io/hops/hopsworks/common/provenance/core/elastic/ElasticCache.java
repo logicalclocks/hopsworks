@@ -26,6 +26,7 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -76,7 +77,7 @@ public class ElasticCache {
         }
       } catch(ElasticException e) {
         if(ElasticHelper.indexNotFound(e.getCause())) {
-          return null;
+          return new HashMap<>();
         } else {
           throw e;
         }
