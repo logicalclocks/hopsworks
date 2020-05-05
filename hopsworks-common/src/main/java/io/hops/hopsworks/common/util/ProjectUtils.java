@@ -61,25 +61,25 @@ public class ProjectUtils {
     return false;
   }
     
-  public String getFullDockerImageName(Project project){
-    return getFullDockerImageName(project, settings);
+  public String getFullDockerImageName(Project project, boolean canBeDefault){
+    return getFullDockerImageName(project, settings, canBeDefault);
   }
   
-  public static String getFullDockerImageName(Project project, Settings settings){
-    String imageName = getDockerImageName(project);
+  public static String getFullDockerImageName(Project project, Settings settings, boolean canBeDefault){
+    String imageName = getDockerImageName(project, canBeDefault);
     return settings.getRegistry() + "/" + imageName;
   }
   
-  public static String getDockerImageName(Project project){
+  public static String getDockerImageName(Project project, boolean canBeDefault){
     String imageName = project.getName().toLowerCase();
     
-    if (project.getConda() && !project.getCondaEnv()) {
+    if (project.getConda() && !project.getCondaEnv() && canBeDefault) {
       if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
         imageName = "python36";
       } else {
         throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
       }
-    }
+    }    
     return imageName;
   }
   

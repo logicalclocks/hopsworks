@@ -157,7 +157,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + cc.getProjectId().getName())
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(60L, TimeUnit.SECONDS)
@@ -167,7 +167,7 @@ public class LibraryInstaller {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-            + " Error: " + processResult.getStdout();
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       }
     } finally {
@@ -182,7 +182,7 @@ public class LibraryInstaller {
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("delete")
-        .addCommand(settings.getRegistry() + "/" + cc.getProjectId().getName())
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setWaitTimeout(60L, TimeUnit.SECONDS)
         .build();
@@ -190,7 +190,7 @@ public class LibraryInstaller {
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not delete the docker image. Exit code: " + processResult.getExitCode()
-          + " Error: " + processResult.getStdout();
+          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     }
   }
@@ -235,7 +235,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + cc.getProjectId().getName())
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(60L, TimeUnit.SECONDS)
@@ -245,14 +245,14 @@ public class LibraryInstaller {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-            + " Error: " + processResult.getStdout();
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
     
-    Collection<PythonDep> envDeps = listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId()));
+    Collection<PythonDep> envDeps = listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
     libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
   }
 
@@ -283,7 +283,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + cc.getProjectId().getName())
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(60L, TimeUnit.SECONDS)
@@ -293,7 +293,7 @@ public class LibraryInstaller {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-            + " Error: " + processResult.getStdout();
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       }
     } finally {
@@ -318,7 +318,7 @@ public class LibraryInstaller {
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-            + " Error: " + processResult.getStdout();
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         LOG.log(Level.SEVERE, errorMsg);
         throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
       } else {
@@ -337,7 +337,7 @@ public class LibraryInstaller {
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("export")
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId()))
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), true))
         .redirectErrorStream(true)
         .setWaitTimeout(60L, TimeUnit.SECONDS)
         .build();
@@ -345,7 +345,7 @@ public class LibraryInstaller {
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " Error: " + processResult.getStdout();
+          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     } else {
       environmentController.uploadYmlInProject(cc.getProjectId(), cc.getUserId(), processResult.getStdout(),
@@ -365,13 +365,13 @@ public class LibraryInstaller {
 
       String libraryName = split[0];
       String version = split[1];
-      String channel = "defaults";
+      String channel = "conda";
       if (split.length > 3) {
         channel = split[3].trim().isEmpty() ? channel : split[3];
       }
 
       CondaInstallType instalType = CondaInstallType.PIP;
-      if (!(channel.equals("pypi") || channel.equals("defaults"))) {
+      if (!(channel.equals("pypi"))) {
         instalType = CondaInstallType.CONDA;
       }
       AnacondaRepo repo = libraryFacade.getRepo(channel, true);

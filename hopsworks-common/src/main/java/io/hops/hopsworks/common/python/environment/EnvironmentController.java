@@ -118,10 +118,10 @@ public class EnvironmentController {
   }
 
   public void synchronizeDependencies(Project project, boolean createBaseEnv) throws ServiceException {
-    String envName = projectUtils.getDockerImageName(project);
+    String envName = projectUtils.getDockerImageName(project, true);
     Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
     if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
-      defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project));
+      defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project, true));
       if (createBaseEnv) {
         for (PythonDep dep : defaultEnvDeps) {
           dep.setBaseEnv(envName);
@@ -215,7 +215,7 @@ public class EnvironmentController {
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
         user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, machineType,
         proj, pythonVersion, "", "defaults", new Date(), arg, environmentYml, installJupyter,
-        projectUtils.getDockerImageName(proj));
+        projectUtils.getDockerImageName(proj, true));
     condaCommandFacade.save(cc);
   }
   

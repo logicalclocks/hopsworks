@@ -124,7 +124,7 @@ public class JupyterController {
         .addCommand(pyPath)
         .addCommand(conversionDir.getAbsolutePath())
         .addCommand(notebookConversion.name())
-        .addCommand(projectUtils.getFullDockerImageName(project))
+        .addCommand(projectUtils.getFullDockerImageName(project, true))
         .setWaitTimeout(60l, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
         .redirectErrorStream(true)
         .build();

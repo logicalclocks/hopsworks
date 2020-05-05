@@ -154,7 +154,7 @@ public class TensorBoardProcessMgr {
           .addCommand(port.toString())
           .addCommand(anacondaEnvironmentPath)
           .addCommand(tfLdLibraryPath)
-          .addCommand(projectUtils.getFullDockerImageName(project))
+          .addCommand(projectUtils.getFullDockerImageName(project, true))
           .ignoreOutErrStreams(true)
           .build();
         LOGGER.log(Level.FINE, processDescriptor.toString());

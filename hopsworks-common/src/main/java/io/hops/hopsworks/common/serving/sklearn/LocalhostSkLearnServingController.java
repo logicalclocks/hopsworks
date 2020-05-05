@@ -151,7 +151,7 @@ public class LocalhostSkLearnServingController {
         .addCommand(certificateMaterializer.getUserTransientTruststorePath(project, user))
         .addCommand(certificateMaterializer.getUserTransientPasswordPath(project, user))
         .addCommand(serving.getName())
-        .addCommand(projectUtils.getFullDockerImageName(project))
+        .addCommand(projectUtils.getFullDockerImageName(project, true))
         .setWaitTimeout(2L, TimeUnit.MINUTES)
         .ignoreOutErrStreams(true)
         .build();

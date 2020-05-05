@@ -176,7 +176,7 @@ public class CommandsController {
 
       CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
           CondaStatus.NEW, installType, machineType, proj, lib, version, channelUrl,
-          new Date(), "", null, false, projectUtils.getDockerImageName(proj));
+          new Date(), "", null, false, projectUtils.getDockerImageName(proj, true));
       condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",

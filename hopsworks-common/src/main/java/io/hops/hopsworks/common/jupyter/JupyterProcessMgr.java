@@ -168,7 +168,7 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
           .addCommand(hdfsUser)
           .addCommand(token)
           .addCommand(js.getMode().getValue())
-          .addCommand(projectUtils.getFullDockerImageName(project))
+          .addCommand(projectUtils.getFullDockerImageName(project, true))
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
           .setWaitTimeout(20L, TimeUnit.SECONDS)

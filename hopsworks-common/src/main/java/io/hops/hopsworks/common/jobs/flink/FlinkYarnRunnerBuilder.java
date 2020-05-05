@@ -159,7 +159,7 @@ public class FlinkYarnRunnerBuilder {
     // Add HopsUtil
 //    cluster.addHopsLocalResources("hops-util.jar", settings.getHopsUtilHdfsPath());
   
-    cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings),settings.getDockerMounts());
+    cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings, true),settings.getDockerMounts());
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
     builder.setFlinkCluster(cluster);

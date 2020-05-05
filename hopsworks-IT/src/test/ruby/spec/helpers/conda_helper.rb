@@ -58,13 +58,11 @@ module CondaHelper
 
   module_function :wait_for
 
-  def conda_exists
-    conda_var = Variables.find_by(id: "anaconda_dir")
-    if not conda_var
-      return false
-    end
-    @conda_bin = File.join(conda_var.value, 'bin', 'conda')
-    File.exists?(@conda_bin)
+  def conda_exists(python_version)
+    registry = Variables.find_by(id: "docker_registry_name")
+    registry_port = Variables.find_by(id: "docker_registry_port")
+    image_name = registry.value + ":" + registry_port.value + "/python" + python_version.gsub(".","")
+    return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 
   def upload_yml
@@ -83,9 +81,10 @@ module CondaHelper
   end
 
   def check_if_env_exists_locally(env_name)
-    local_envs = get_conda_envs_locally
-    result = local_envs['envs'].select{|x| x.include? env_name}
-    not result.empty?
+    registry = Variables.find_by(id: "docker_registry_name")
+    registry_port = Variables.find_by(id: "docker_registry_port")
+    image_name = registry.value + ":" + registry_port.value + "/" + env_name
+    return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 
   def trigger_conda_gc

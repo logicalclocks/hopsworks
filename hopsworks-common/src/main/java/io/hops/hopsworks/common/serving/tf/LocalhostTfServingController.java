@@ -209,7 +209,7 @@ public class LocalhostTfServingController {
         .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
         .addCommand(serving.isBatchingEnabled() ? "1" : "0")
         .addCommand(project.getName().toLowerCase())
-        .addCommand(projectUtils.getFullDockerImageName(project))
+        .addCommand(projectUtils.getFullDockerImageName(project, true))
         .setWaitTimeout(2L, TimeUnit.MINUTES)
         .ignoreOutErrStreams(false)
         .build();
