@@ -24,8 +24,18 @@ module FeaturestoreHelper
     return featurestore_id
   end
 
+  def create_cached_featuregroup_checked(project_id, featurestore_id, featuregroup_name, features: nil,
+                                         featuregroup_description: nil)
+    pp "create featuregroup:#{featuregroup_name}" if defined?(@debugOpt) && @debugOpt == true
+    json_result, f_name = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
+                                                     features: features, featuregroup_description: featuregroup_description)
+    expect_status_details(201)
+    parsed_json = JSON.parse(json_result, :symbolize_names => true)
+    parsed_json[:id]
+  end
+
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
-                                 default_stats_settings: true, version: 1)
+                                 default_stats_settings: true, version: 1, featuregroup_description: nil)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     if features == nil
@@ -47,11 +57,14 @@ module FeaturestoreHelper
       featuregroup_name = "featuregroup_#{random_id}"
     end
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+    if featuregroup_description == nil
+      featuregroup_description = "testfeaturegroupdescription"
+    end
     json_data = {
         name: featuregroup_name,
         jobs: [],
         features: features,
-        description: "testfeaturegroupdescription",
+        description: featuregroup_description,
         version: version,
         type: type,
         onlineFeaturegroupDTO: nil,
@@ -382,8 +395,16 @@ module FeaturestoreHelper
     return json_result
   end
 
+  def create_hopsfs_training_dataset_checked(project_id, featurestore_id, connector, training_dataset_name, features: nil , description: nil)
+    pp "create training dataset:#{training_dataset_name}" if defined?(@debugOpt) && @debugOpt == true
+    json_result, training_dataset_name_aux = create_hopsfs_training_dataset(project_id, featurestore_id, connector, name:training_dataset_name, features: features, description: description)
+    expect_status_details(201)
+    parsed_json = JSON.parse(json_result, :symbolize_names => true)
+    parsed_json
+  end
+
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,
-                                     version: 1, splits: [])
+                                     version: 1, splits: [], features: nil, description: nil)
     trainingDatasetType = "HOPSFS_TRAINING_DATASET"
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     if name == nil
@@ -401,27 +422,33 @@ module FeaturestoreHelper
       connector_id = hopsfs_connector.id
       connector_name = hopsfs_connector.name
     end
+    if features == nil
+      features = [
+          {
+              type: "INT",
+              name: "testfeature",
+              description: "testfeaturedescription"
+          },
+          {
+              type: "INT",
+              name: "testfeature2",
+              description: "testfeaturedescription2"
+          }
+      ]
+    end
+    if description == nil
+      description = "testtrainingdatasetdescription"
+    end
     json_data = {
         name: training_dataset_name,
         jobs: [],
-        description: "testtrainingdatasetdescription",
+        description: description,
         version: version,
         dataFormat: data_format,
         trainingDatasetType: trainingDatasetType,
         storageConnectorId: connector_id,
         storageConnectorName: connector_name,
-        features: [
-            {
-                type: "INT",
-                name: "testfeature",
-                description: "testfeaturedescription"
-            },
-            {
-                type: "INT",
-                name: "testfeature2",
-                description: "testfeaturedescription2"
-            }
-        ],
+        features: features,
         splits: splits,
         seed: 1234
     }

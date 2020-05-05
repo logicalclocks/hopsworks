@@ -43,8 +43,12 @@ public class FeaturestoreXAttrsConstants {
       + "." + FEATURESTORE;
   }
   
-  public static String getFeaturestoreElasticKey(String key) {
-    return getFeaturestoreElasticKey() + "." + key;
+  public static String getFeaturestoreElasticKey(String... key) {
+    StringBuilder sb = new StringBuilder(getFeaturestoreElasticKey());
+    for(String part: key) {
+      sb.append( "." + part);
+    }
+    return sb.toString();
   }
   
   public static String getTagsElasticKey() {

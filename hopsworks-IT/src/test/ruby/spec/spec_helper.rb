@@ -102,6 +102,7 @@ RSpec.configure do |config|
   config.include AuditHelper
   config.include SearchHelper
   config.include XAttrHelper
+  config.include EpipeHelper
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }
   config.after(:suite) {

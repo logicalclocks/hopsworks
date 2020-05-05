@@ -21,16 +21,17 @@ module Helper
     pp "time = #{end_time - start_time}"
   end
 
-  def wait_for_me(timeout=480)
+  def wait_for_me_time(timeout=480)
     start = Time.now
     x = yield
-    until x
+    until x["success"] == true
       if Time.now - start > timeout
-        raise "Timed out waiting for action to finish. Timeout #{timeout} sec"
+        break
       end
       sleep(1)
       x = yield
     end
+    return x
   end
 
   def expect_status_details(expected_status)

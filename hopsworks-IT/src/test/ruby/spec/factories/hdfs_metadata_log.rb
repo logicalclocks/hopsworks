@@ -13,17 +13,11 @@
  You should have received a copy of the GNU Affero General Public License along with this program.
  If not, see <https://www.gnu.org/licenses/>.
 =end
-module XAttrHelper
-  def add_xattr(project, path, xattr_key, xattr_val)
-    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}", {xattr_key => xattr_val}.to_json
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}, #{{xattr_key => xattr_val}.to_json}" if defined?(@debugOpt) && @debugOpt == true
-    expect_status_details(201)
-  end
+require "composite_primary_keys"
 
-  def get_xattr(project, path, xattr_key)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}"
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}"
-    expect_status_details(200)
-    json_body
+class HDFSMetadataLog < ActiveRecord::Base
+  self.primary_keys = :dataset_id, :inode_id, :logical_time
+  def self.table_name
+    "hops.hdfs_metadata_log"
   end
 end
