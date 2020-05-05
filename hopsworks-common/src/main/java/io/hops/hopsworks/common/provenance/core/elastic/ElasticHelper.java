@@ -22,10 +22,13 @@ import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -160,5 +163,16 @@ public class ElasticHelper {
       query.must(fieldFilters.getValue().query());
     }
     return query;
+  }
+  
+  public static boolean indexNotFound(Throwable t) {
+    if(t instanceof IndexNotFoundException) {
+      return true;
+    }
+    if(t instanceof ElasticsearchStatusException) {
+      ElasticsearchStatusException e = (ElasticsearchStatusException) t;
+      return e.status().equals(RestStatus.NOT_FOUND);
+    }
+    return false;
   }
 }

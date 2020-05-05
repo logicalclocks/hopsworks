@@ -26,6 +26,7 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -68,10 +69,18 @@ public class ElasticCache {
     }
     Map<String, String> mapping = getMapping(index);
     if(mapping == null) {
-      Map<String, Map<String, String>> result = client.mngIndexGetMappings(index);
-      mapping = result.get(index);
-      if(mapping != null) {
-        cacheMapping(index, mapping);
+      try {
+        Map<String, Map<String, String>> result = client.mngIndexGetMappings(index);
+        mapping = result.get(index);
+        if(mapping != null) {
+          cacheMapping(index, mapping);
+        }
+      } catch(ElasticException e) {
+        if(ElasticHelper.indexNotFound(e.getCause())) {
+          return new HashMap<>();
+        } else {
+          throw e;
+        }
       }
     }
     return mapping;

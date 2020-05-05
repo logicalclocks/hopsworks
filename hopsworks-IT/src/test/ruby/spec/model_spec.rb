@@ -62,7 +62,7 @@ describe "On #{ENV['OS']}" do
       it "should delete models by deleting Models dataset" do
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Projects/#{@project[:projectname]}/Models"
         expect_status(204)
-        wait_for_project_prov(@project)
+        epipe_wait_on_provenance
         get_models(@project[:id], nil)
         expect(json_body[:count]).to eq(0)
       end

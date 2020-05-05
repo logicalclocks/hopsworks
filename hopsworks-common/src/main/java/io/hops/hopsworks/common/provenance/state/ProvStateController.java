@@ -126,14 +126,14 @@ public class ProvStateController {
     Map<String, String> mapping;
     try {
       mapping = cache.mngIndexGetMapping(index, false);
-      if(mapping == null) {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
-          "provenance file state - no index");
-      }
       try {
         params.fixSortBy(index, mapping);
       } catch(ProvenanceException e) {
         mapping = cache.mngIndexGetMapping(index, true);
+        if(mapping.isEmpty()) {
+          throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
+            "provenance file state - no index");
+        }
         params.fixSortBy(index, mapping);
       }
     } catch (ElasticException e) {

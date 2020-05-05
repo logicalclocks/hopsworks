@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.core;
 
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -101,8 +102,12 @@ public class ProvenanceCleanerController {
       GetIndexResponse response = client.mngIndexGet(request);
       return response.getIndices();
     } catch(ElasticException e) {
-      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
-        "error querying elastic", e.getMessage(), e);
+      if(ElasticHelper.indexNotFound(e.getCause())) {
+        return new String[0];
+      } else {
+        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
+          "error querying elastic", e.getMessage(), e);
+      }
     }
   }
   
