@@ -48,6 +48,26 @@ describe "On #{ENV['OS']}" do
         expect(user).not_to be nil
       end
 
+      it 'should fail to register user with same email different collate' do
+        user_params = {}
+        email = "TOLOWER#{random_id}@hopsworks.se"
+        user_params[:email] = email
+        register_user(user_params)
+
+        user = User.find_by(email: email)
+        expect(user).not_to be nil
+
+        email = "tolower#{random_id}@hopsworks.se"
+        user_params[:email] = email
+        register_user(user_params)
+        expect_json(errorCode: 160003)
+
+        email = "ToLower#{random_id}@hopsworks.se"
+        user_params[:email] = email
+        register_user(user_params)
+        expect_json(errorCode: 160003)
+      end
+
       it 'should handle multiple users with similar emails' do
         user_params = {}
         email = "userusera#{random_id}@hopsworks.se"
