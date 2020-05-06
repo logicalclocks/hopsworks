@@ -118,7 +118,7 @@ module SearchHelper
         end
       end
     end
-    expect(wait_result["success"]).to be true, wait_result["msg"]
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
   end
 
   def global_search_test(term, type, items)
@@ -146,6 +146,6 @@ module SearchHelper
         end
       end
     end
-    expect(wait_result["success"]).to be true, wait_result["msg"]
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
   end
 end
