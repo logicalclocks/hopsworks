@@ -3724,7 +3724,7 @@ public class Settings implements Serializable {
   }
   
   private static String DOCKER_MOUNTS = 
-      "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/apache-livy,/srv/hops/flink";
+      "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/flink";
   
   public synchronized String getDockerMounts(){
     checkCache();
