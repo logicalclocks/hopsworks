@@ -233,7 +233,7 @@
     <repository>
       <id>HopsEE</id>
       <name>Hops Enterprise Repository</name>
-      <url>https://archive.logicalclocks.com/repository/hops-artifacts</url>
+      <url>https://nexus.hops.works/repository/hops-artifacts</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -242,9 +242,9 @@
       </snapshots>
     </repository>
     <repository>
-      <id>hops-repository</id>
+      <id>Hops</id>
       <name>Hops Repository</name>
-      <url>https://bbc1.sics.se/archiva/repository/Hops/</url>
+      <url>https://archiva.hops.works/repository/Hops/</url>
       <releases>
         <enabled>true</enabled>
       </releases>
@@ -265,7 +265,7 @@
     <repository>
       <id>HopsEE</id>
       <name>Hops Enterprise Repo</name>
-      <url>https://archive.logicalclocks.com/repository/hops-artifacts</url>
+      <url>https://nexus.hops.works/repository/hops-artifacts</url>
     </repository>
   </distributionManagement>
 </project>
