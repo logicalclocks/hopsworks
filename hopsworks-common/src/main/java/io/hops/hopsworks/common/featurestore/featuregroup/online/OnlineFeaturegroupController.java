@@ -16,9 +16,12 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
+import com.google.common.base.Strings;
+import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -32,6 +35,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the online_feature_group table and required business logic
@@ -43,6 +47,8 @@ public class OnlineFeaturegroupController {
   private OnlineFeaturegroupFacade onlineFeaturegroupFacade;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private Settings settings;
   
   /**
    * Persists metadata of a new online feature group in the online_feature_group table
@@ -89,22 +95,49 @@ public class OnlineFeaturegroupController {
     onlineFeaturegroupFacade.remove(onlineFeaturegroup);
     return onlineFeaturegroup;
   }
-  
-  /**
-   * Creates a new table in the online feature store database
-   *
-   * @param featurestore the featurestore that the featuregroup belongs to
-   * @param user the user making the request
-   * @param featureStr DDL string
-   * @param tableName name of the table to create
-   * @return the created entity
-   */
-  public OnlineFeaturegroup createMySQLTable(Featurestore featurestore,
-    Users user, String featureStr, String tableName) throws FeaturestoreException, SQLException {
-    String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
-    String query = "CREATE TABLE " + db + ".`" + tableName + "` " + featureStr;
-    onlineFeaturestoreController.executeUpdateJDBCQuery(query, db, featurestore.getProject(), user);
-    return persistOnlineFeaturegroupMetadata(db, tableName);
+
+  public OnlineFeaturegroup createMySQLTable(Featurestore featurestore, String tableName, List<FeatureDTO> features,
+                                             Project project, Users user)
+      throws FeaturestoreException, SQLException{
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
+    String createStatement = buildCreateStatement(dbName, tableName, features);
+    onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
+    return persistOnlineFeaturegroupMetadata(dbName, tableName);
+  }
+
+  private String buildCreateStatement(String dbName, String tableName, List<FeatureDTO> features) {
+    StringBuilder createStatement = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
+    createStatement.append(dbName).append(".").append(tableName).append("(");
+
+    // Add all features
+    for (FeatureDTO feature : features) {
+      createStatement.append(feature.getName()).append(" ").append(feature.getOnlineType()).append(",");
+    }
+
+    // add primary keys
+    List<FeatureDTO> pkFeatures = features.stream().filter(FeatureDTO::getPrimary).collect(Collectors.toList());
+    if (!pkFeatures.isEmpty()) {
+      createStatement.append("PRIMARY KEY (");
+      createStatement.append(
+          StringUtils.join(pkFeatures.stream().map(FeatureDTO::getName).collect(Collectors.toList()), ","));
+      createStatement.append(")");
+    }
+
+    // Closing parenthesis
+    createStatement.append(")");
+
+    // READ_BACKUP improve reads as long as you don't take locks
+    createStatement.append("ENGINE=ndbcluster ")
+                   .append("COMMENT='NDB_TABLE=READ_BACKUP=1'");
+
+    // Add tablespace if specified
+    if (!Strings.isNullOrEmpty(settings.getOnlineFeatureStoreTableSpace())) {
+      createStatement.append("/*!50100 TABLESPACE `")
+                     .append(settings.getOnlineFeatureStoreTableSpace())
+                     .append("` STORAGE DISK */");
+    }
+
+    return createStatement.toString();
   }
   
   /**
