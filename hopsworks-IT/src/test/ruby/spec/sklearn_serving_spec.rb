@@ -299,19 +299,22 @@ describe "On #{ENV['OS']}" do
           sleep(30)
 
           # Check that the logs are written in the elastic index.
-          Airborne.configure do |config|
-            config.base_url = ''
+          begin
+            Airborne.configure do |config|
+              config.base_url = ''
+            end
+            response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
+            index = response.body
+          rescue
+            p "Sklearn serving spec: Error calling elastic_get #{$!}"
+          else
+            parsed_index = JSON.parse(index)
+            expect(parsed_index['hits']['total']['value']).to be > 0
+          ensure
+            Airborne.configure do |config|
+              config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+            end
           end
-
-          response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
-          index = response.body
-
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-          end
-
-          parsed_index = JSON.parse(index)
-          expect(parsed_index['hits']['total']['value']).to be > 0
         end
 
         it "should fail to start a running instance" do
