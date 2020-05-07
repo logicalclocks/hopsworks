@@ -112,10 +112,6 @@ describe "On #{ENV['OS']}" do
       featurestore1 = get_dataset(project1, featurestore_name)
       request_access_by_dataset(featurestore1, project2)
       share_dataset_checked(project1, featurestore_name, project2[:projectname], "FEATURESTORE")
-      td_name = "#{project1[:projectname]}_Training_Datasets"
-      td1 = get_dataset(project1, td_name)
-      request_access_by_dataset(td1, project2)
-      share_dataset_checked(project1, td_name, project2[:projectname], "DATASET")
       fgs1 = featuregroups_setup(project1)
       fgs2 = featuregroups_setup(project2)
       tds1 = trainingdataset_setup(project1)
