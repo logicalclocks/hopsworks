@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -33,13 +32,13 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.lang3.StringUtils;
+import org.javatuples.Pair;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -78,8 +77,6 @@ public class CachedFeaturegroupController {
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
-  private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
   private HiveController hiveController;
 
@@ -125,13 +122,9 @@ public class CachedFeaturegroupController {
   
       return DriverManager.getConnection(jdbcString);
     } catch (FileNotFoundException | CryptoPasswordNotFoundException | ServiceDiscoveryException e) {
-      LOGGER.log(Level.SEVERE, "Could not find user certificates for authenticating with Hive: " +
-          e);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CERTIFICATES_NOT_FOUND, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
     } catch (SQLException | IOException e) {
-      LOGGER.log(Level.SEVERE, "Error initiating Hive connection: " +
-          e);
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_HIVE_CONNECTION, Level.SEVERE,
           "project: " + project.getName() + ", hive database: " + databaseName, e.getMessage(), e);
@@ -141,8 +134,7 @@ public class CachedFeaturegroupController {
   /**
    * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
    *
-   * @param featuregroupDTO the featuregroup to get the schema for
-   * @param featurestore    the featurestore where the featuregroup resides
+   * @param featuregroup    the featuregroup to get the schema for
    * @param project         project from which the user is making the request
    * @param user            the user making the request
    * @return                JSON/XML DTO with the schema
@@ -150,42 +142,27 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public RowValueQueryResult getDDLSchema(FeaturegroupDTO featuregroupDTO, Featurestore featurestore,
-                                          Project project, Users user)
+  public Pair<String, String> getDDLSchema(Featuregroup featuregroup, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    if(featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
-      throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
-          Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+    String offlineSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroup, project, user));
+    String onlineSchema = null;
+    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
+      onlineSchema = onlineFeaturestoreController.getOnlineFeaturegroupSchema(featuregroup);
     }
-    String offlineSqlSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroupDTO,
-        project, user, featurestore));
-    ColumnValueQueryResult offlineSchemaColumn = new ColumnValueQueryResult("schema", offlineSqlSchema);
-    List<ColumnValueQueryResult> columns = new ArrayList<>();
-    columns.add(offlineSchemaColumn);
-    if(settings.isOnlineFeaturestore() && ((CachedFeaturegroupDTO)featuregroupDTO).getOnlineFeaturegroupDTO() != null) {
-      String onlineSqlSchema =
-        onlineFeaturegroupController.getOnlineFeaturegroupSchema(
-          ((CachedFeaturegroupDTO)featuregroupDTO).getOnlineFeaturegroupDTO());
-      ColumnValueQueryResult onlineSchemaColumn = new ColumnValueQueryResult("onlineSchema", onlineSqlSchema);
-      columns.add(onlineSchemaColumn);
-    }
-    return new RowValueQueryResult(columns);
+    return new Pair<>(offlineSchema, onlineSchema);
   }
 
   /**
    * SHOW CREATE TABLE tblName in Hive returns a table with a single column but multiple rows (cut by String length)
    * this utility method converts the list of rows into a single long string indented with "\n" between rows.
    *
-   * @param rows rows result from running SHOW CREATE TABLE
+   * @param preview rows result from running SHOW CREATE TABLE
    * @return String representation of SHOW CREATE TABLE in Hive
    */
-  private String parseSqlSchemaResult(List<RowValueQueryResult> rows) {
-    return StringUtils.join(rows.stream().map
-            (row -> StringUtils.join(row.getColumns().stream().map
-                    (column -> column.getValue()).collect(Collectors.toList()),
-                "")).collect(Collectors.toList()),
-        "\n");
+  private String parseSqlSchemaResult(FeaturegroupPreview preview){
+    return StringUtils.join(preview.getPreview().stream()
+        .map(row -> row.getValues().get(0).getValue1())
+        .collect(Collectors.toList()), "\n");
   }
 
   /**
@@ -203,56 +180,72 @@ public class CachedFeaturegroupController {
    * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
    * and the MySQL table (online feature data)
    *
-   * @param featuregroupDTO DTO of the featuregroup to preview
-   * @param featurestore    the feature store where the feature group resides
+   * @param featuregroup    featuregroup for which to fetch the data
    * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
+   * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
+   * @param online          whether to show preview from the online feature store
+   * @param limit           the number of rows to visualize
    * @return A DTO with the first 20 feature rows of the online and offline tables.
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public FeaturegroupPreview getFeaturegroupPreview(
-      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Project project, Users user)
+  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
+                                                    Users user, String partition, boolean online, int limit)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    FeaturegroupPreview featuregroupPreview = new FeaturegroupPreview();
-
-    List<RowValueQueryResult> offlinePreview =
-        getOfflineFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
-
-    featuregroupPreview.setOfflineFeaturegroupPreview(offlinePreview);
-    if(settings.isOnlineFeaturestore() && ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineFeaturegroupEnabled()){
-      List<RowValueQueryResult> onlinePreview =
-        onlineFeaturegroupController.getOnlineFeaturegroupPreview(
-          ((CachedFeaturegroupDTO) featuregroupDTO).getOnlineFeaturegroupDTO(), user, featurestore);
-      featuregroupPreview.setOnlineFeaturegroupPreview(onlinePreview);
+    if (online && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
+    } else if (online) {
+      return onlineFeaturegroupController.getOnlineFeaturegroupPreview(featuregroup, project, user, limit);
+    } else {
+      return getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
-    return featuregroupPreview;
   }
   
   /**
    * Previews the offline data of a given featuregroup by doing a SELECT LIMIT query on the Hive Table
    *
-   * @param featuregroupDTO DTO of the featuregroup to preview
-   * @param featurestore    the feature store where the feature group resides
+   * @param featuregroup    the featuregroup to fetch
    * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
+   * @param limit           number of sample to fetch
    * @return list of feature-rows from the Hive table where the featuregroup is stored
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public List<RowValueQueryResult> getOfflineFeaturegroupPreview(FeaturegroupDTO featuregroupDTO,
-                                                                 Featurestore featurestore, Project project, Users user)
+  public FeaturegroupPreview getOfflineFeaturegroupPreview(Featuregroup featuregroup, Project project,
+                                                           Users user, String partition, int limit)
       throws FeaturestoreException, HopsSecurityException, SQLException {
-    String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
-    String query = "SELECT * FROM " + tbl + " LIMIT 20";
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
+
+    String where = getWhereCondition(partition);
+    String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
+
+    // This is not great, but at the same time the query runs as the user.
+    String query = "SELECT * FROM " + tbl + " " + where + " LIMIT " + limit;
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     try {
       return executeReadHiveQuery(query, db, project, user);
     } catch(Exception e) {
       return executeReadHiveQuery(query, db, project, user);
     }
+  }
+
+  public String getWhereCondition(String partition) {
+    if (Strings.isNullOrEmpty(partition)) {
+      // user didn't ask for a specific partition
+      return "";
+    }
+
+    // partition names are separated by /, so we should replace with " AND "
+    // column=VALUE/column=VALUE
+    String[] splits = partition.split("/");
+    List<String> escapedSplits = new ArrayList<>();
+    for (String split : splits) {
+      escapedSplits.add(split.replaceFirst("=", "='") + "'");
+    }
+    return "WHERE " + StringUtils.join(escapedSplits, " AND ");
   }
 
   /**
@@ -273,7 +266,7 @@ public class CachedFeaturegroupController {
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
     
     //Create Hive Table for Offline Cached Feature Group
-    createHiveFeaturegroup(cachedFeaturegroupDTO, featurestore, user, hiveFeatureStr, tableName);
+    createHiveFeaturegroup(featurestore, user, hiveFeatureStr, tableName);
   
     //Create MySQL Table for Online Cached Feature Group
     OnlineFeaturegroup onlineFeaturegroup = null;
@@ -294,7 +287,6 @@ public class CachedFeaturegroupController {
   /**
    * Creates Hive Database for an offline feature group
    *
-   * @param cachedFeaturegroupDTO the user input data to use when creating the offline cached feature group
    * @param featurestore featurestore the featurestore that the cached featuregroup belongs to
    * @param user user the user making the request
    * @param featureStr DDL string
@@ -303,8 +295,7 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    * @throws HopsSecurityException
    */
-  private void createHiveFeaturegroup(CachedFeaturegroupDTO cachedFeaturegroupDTO, Featurestore featurestore,
-    Users user, String featureStr, String tableName)
+  private void createHiveFeaturegroup(Featurestore featurestore, Users user, String featureStr, String tableName)
     throws FeaturestoreException, SQLException, HopsSecurityException {
     //Create Hive Table
     String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
@@ -371,21 +362,18 @@ public class CachedFeaturegroupController {
   /**
    * Gets the SQL schema that was used to create the Hive table for a featuregroup
    *
-   * @param featuregroupDTO DTO of the featuregroup
+   * @param featuregroup    featuregroup
    * @param project         the project of the user making the request
    * @param user            the user making the request
-   * @param featurestore    the featurestore where the featuregroup resides
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  private List<RowValueQueryResult> getSQLSchemaForFeaturegroup(
-      FeaturegroupDTO featuregroupDTO,
-      Project project, Users user, Featurestore featurestore)
+  private FeaturegroupPreview getSQLSchemaForFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    String tbl = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
+    String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
     String query = "SHOW CREATE TABLE " + tbl;
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
     return executeReadHiveQuery(query, db, project, user);
   }
 
@@ -456,13 +444,11 @@ public class CachedFeaturegroupController {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
       if (e.getMessage().toLowerCase().contains("permission denied")){
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
-      }
-      else{
+            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
+            e.getMessage(), e);
+      } else{
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_UPDATE_STATEMENT_ERROR, Level.SEVERE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query,
+            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
             e.getMessage(), e);
       }
     } finally {
@@ -480,22 +466,34 @@ public class CachedFeaturegroupController {
    * @return list of parsed rows
    * @throws SQLException
    */
-  public List<RowValueQueryResult> parseResultset(ResultSet rs) throws SQLException {
+  public FeaturegroupPreview parseResultset(ResultSet rs) throws SQLException {
     ResultSetMetaData rsmd = rs.getMetaData();
-    int columnsNumber = rsmd.getColumnCount();
-    List<RowValueQueryResult> rows = new ArrayList<>();
+    FeaturegroupPreview featuregroupPreview = new FeaturegroupPreview();
+
     while (rs.next()) {
-      List<ColumnValueQueryResult> columnValues = new ArrayList<>();
-      for (int i = 1; i <= columnsNumber; i++) {
-        String columnName = rsmd.getColumnName(i);
+      FeaturegroupPreview.Row row = new FeaturegroupPreview.Row();
+
+      for (int i = 1; i <= rsmd.getColumnCount(); i++) {
         Object columnValue = rs.getObject(i);
-        String columnStrValue = (columnValue == null ? null : columnValue.toString());
-        ColumnValueQueryResult featuredataDTO = new ColumnValueQueryResult(columnName, columnStrValue);
-        columnValues.add(featuredataDTO);
+        row.addValue(new Pair<>(parseColumnLabel(rsmd.getColumnLabel(i)),
+            columnValue == null ? null : columnValue.toString()));
       }
-      rows.add(new RowValueQueryResult(columnValues));
+      featuregroupPreview.addRow(row);
     }
-    return rows;
+
+    return featuregroupPreview;
+  }
+
+  /**
+   * Column labels contain the table name as well. Remove it
+   * @param columnLabel
+   * @return
+   */
+  private String parseColumnLabel(String columnLabel) {
+    if (columnLabel.contains(".")) {
+      return columnLabel.split("\\.")[1];
+    }
+    return columnLabel;
   }
 
   /**
@@ -511,34 +509,33 @@ public class CachedFeaturegroupController {
    * @throws HopsSecurityException
    * @throws FeaturestoreException
    */
-  private List<RowValueQueryResult> executeReadHiveQuery(
-      String query, String databaseName, Project project, Users user)
+  private FeaturegroupPreview executeReadHiveQuery(String query, String databaseName, Project project, Users user)
       throws SQLException, FeaturestoreException, HopsSecurityException {
     Connection conn = null;
     Statement stmt = null;
-    List<RowValueQueryResult> resultList = null;
     try {
       //Re-create the connection every time since the connection is database and user-specific
       conn = initConnection(databaseName, project, user);
       stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
-      resultList = parseResultset(rs);
+      return parseResultset(rs);
     } catch (SQLException e) {
       //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().toLowerCase().contains("permission denied"))
+      if (e.getMessage().toLowerCase().contains("permission denied")) {
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
-            "project: " + project.getName() +
-                ", hive database: " + databaseName + " hive query: " + query, e.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_READ_QUERY_ERROR, Level.SEVERE,
-          "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
-          e.getMessage(), e);
+            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
+            e.getMessage(), e);
+      } else {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_READ_QUERY_ERROR, Level.SEVERE,
+            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
+            e.getMessage(), e);
+      }
     } finally {
       if (stmt != null) {
         stmt.close();
       }
       closeConnection(conn, user, project);
     }
-    return resultList;
   }
 
   /**

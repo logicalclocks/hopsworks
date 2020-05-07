@@ -16,56 +16,53 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import org.javatuples.Pair;
+
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DTO containing a feature group preview (offline and online)
- */
-@XmlRootElement
-@XmlType(propOrder = {"offlineFeaturegroupPreview", "onlineFeaturegroupPreview"})
 public class FeaturegroupPreview {
-  
-  private List<RowValueQueryResult> offlineFeaturegroupPreview;
-  private List<RowValueQueryResult> onlineFeaturegroupPreview;
-  
+
+  public static class Row {
+    private List<Pair<String, String>> values = new ArrayList<>();
+
+    public Row() {
+    }
+
+    public void addValue(Pair<String, String> value) {
+      values.add(value);
+    }
+
+    public List<Pair<String, String>> getValues() {
+      return values;
+    }
+
+    public void setValues(List<Pair<String, String>> values) {
+      this.values = values;
+    }
+  }
+
+  private List<Row> preview = new ArrayList<>();
+
   public FeaturegroupPreview() {
   }
-  
-  public FeaturegroupPreview(
-    List<RowValueQueryResult> offlineFeaturegroupPreview,
-    List<RowValueQueryResult> onlineFeaturegroupPreview) {
-    this.offlineFeaturegroupPreview = offlineFeaturegroupPreview;
-    this.onlineFeaturegroupPreview = onlineFeaturegroupPreview;
+
+  public void addRow(Row row) {
+    preview.add(row);
   }
-  
-  @XmlElement
-  public List<RowValueQueryResult> getOfflineFeaturegroupPreview() {
-    return offlineFeaturegroupPreview;
+
+  public List<Row> getPreview() {
+    return preview;
   }
-  
-  public void setOfflineFeaturegroupPreview(
-    List<RowValueQueryResult> offlineFeaturegroupPreview) {
-    this.offlineFeaturegroupPreview = offlineFeaturegroupPreview;
+
+  public void setPreview(List<Row> preview) {
+    this.preview = preview;
   }
-  
-  @XmlElement
-  public List<RowValueQueryResult> getOnlineFeaturegroupPreview() {
-    return onlineFeaturegroupPreview;
-  }
-  
-  public void setOnlineFeaturegroupPreview(
-    List<RowValueQueryResult> onlineFeaturegroupPreview) {
-    this.onlineFeaturegroupPreview = onlineFeaturegroupPreview;
-  }
-  
+
   @Override
   public String toString() {
     return "FeaturegroupPreview{" +
-      "offlineFeaturegroupPreview=" + offlineFeaturegroupPreview +
-      ", onlineFeaturegroupPreview=" + onlineFeaturegroupPreview +
-      '}';
+        "preview=" + preview +
+        '}';
   }
 }

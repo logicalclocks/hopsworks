@@ -620,7 +620,7 @@ describe "On #{ENV['OS']}" do
           get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/doesnotexists?version=1"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
-          expect_status(422)
+          expect_status(400)
         end
 
         it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do
@@ -726,7 +726,7 @@ describe "On #{ENV['OS']}" do
               get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/schema"
           expect_status(200)
           parsed_json = JSON.parse(result)
-          expect(parsed_json['columns'][0]['value']).to start_with "CREATE TABLE"
+          expect(parsed_json['offlineSchema']).to start_with "CREATE TABLE"
         end
 
         it "should be able to get a data preview of a shared feature group" do
@@ -933,34 +933,68 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
-        it "should be able to preview a online cached featuregroup in the featurestore" do
+        it "should be able to preview a offline featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           featuregroup_id = parsed_json["id"]
-          preview_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview"
-          get preview_featuregroup_endpoint
-          parsed_json = JSON.parse(response.body)
-          expect(parsed_json.key?("offlineFeaturegroupPreview")).to be true
-          expect(parsed_json.key?("onlineFeaturegroupPreview")).to be true
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=offline"
           expect_status(200)
+        end
+
+        it "should be able to get a specific partition" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_cached_featuregroup_with_partition(project.id, featurestore_id)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=offline&partition=testfeature2=1"
+          expect_status(200)
+        end
+
+        it "should be able to preview a online featuregroup in the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online"
+          expect_status(200)
+        end
+
+        it "should be able to limit the number of rows in a preview" do
+          project = create_project_by_name_existing_user("online_fs")
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, featuregroup_name: 'online_fg', online:true)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          featuregroup_id = parsed_json["id"]
+
+          # add sample ros
+          OnlineFg.create(testfeature: 1).save
+          OnlineFg.create(testfeature: 2).save
+
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online&limit=1"
+          expect_status(200)
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json['items'].length).to eql 1
         end
 
         it "should be able to get the MySQL schema of a cached online featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id, online:true)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           featuregroup_id = parsed_json["id"]
-          get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/schema"
-          get get_featuregroup_schema_endpoint
-          parsed_json = JSON.parse(response.body)
-          expect(parsed_json.key?("columns")).to be true
-          expect(parsed_json["columns"].length == 2) # length should be two since there should be Hive Schema, AND MySQL Schema
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/schema"
           expect_status(200)
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json.key?("onlineSchema")).to be true
         end
 
         it "should be able to delete a cached online featuregroup from the featurestore" do

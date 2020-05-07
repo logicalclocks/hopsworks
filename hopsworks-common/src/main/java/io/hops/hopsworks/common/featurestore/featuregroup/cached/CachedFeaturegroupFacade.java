@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Partitions;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -27,6 +28,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.List;
@@ -254,4 +256,17 @@ public class CachedFeaturegroupFacade extends AbstractFacade<CachedFeaturegroup>
     return cachedFeaturegroup;
   }
 
+  public List<Partitions> getHiveTablePartitions(Long hiveTableId, Integer limit, Integer offset) {
+    Query q = em.createNamedQuery("Partitions.findByTblId", Partitions.class)
+        .setParameter("tblId", hiveTableId);
+
+    if (offset != null && offset > 0) {
+      q.setFirstResult(offset);
+    }
+    if (limit != null && limit > 0) {
+      q.setMaxResults(limit);
+    }
+
+    return q.getResultList();
+  }
 }

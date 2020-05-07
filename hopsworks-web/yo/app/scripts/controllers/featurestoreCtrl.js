@@ -97,6 +97,9 @@ angular.module('hopsWorksApp')
             self.trainingDatasetType = ""
             self.isEnterprise = ""
 
+            // UI 
+            self.showPreview = false;
+            self.previewFg = null;
 
             self.featurestoreSelectedTab = 0;
             self.selectedTrainingDataset = undefined;
@@ -1101,6 +1104,22 @@ angular.module('hopsWorksApp')
                     function (success) {
                     }, function (error) {
                     });
+            };
+
+            /**
+             * Show preview of a featuregroup
+             */
+            self.togglePreview = function(featuregroup) {
+                self.showPreview = !self.showPreview;
+                self.previewFg = featuregroup;
+            };
+
+            /**
+             * Close preview 
+             */
+            self.closePreview = function() {
+                self.showPreview = false;
+                self.previewFg = null;
             };
 
             /**

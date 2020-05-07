@@ -52,6 +52,8 @@ angular.module('hopsWorksApp')
             self.onlineSample = []
             self.attachedTags = [];
 
+            self.featurestoreCtrl = null;
+
             /**
              * Get featuregroup tags
              */
@@ -152,68 +154,6 @@ angular.module('hopsWorksApp')
                 return codeStr
             };
 
-            /**
-             * Fetches a preview of the feature group from Hopsworks
-             */
-            self.fetchSample = function () {
-                if(self.sampleWorking){
-                    return
-                }
-                self.sampleWorking = true
-                FeaturestoreService.getFeaturegroupSample(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
-                    function (success) {
-                        self.sampleWorking = false;
-                        if(success.data.offlineFeaturegroupPreview != null) {
-                            var preProcessedOfflineSample = self.preprocessSample(success.data.offlineFeaturegroupPreview);
-                            self.offlineSample = preProcessedOfflineSample[0]
-                            self.offlineSampleColumns = preProcessedOfflineSample[1]
-                        }
-                        if(success.data.onlineFeaturegroupPreview != null) {
-                            var preProcessedOnlineSample = self.preprocessSample(success.data.onlineFeaturegroupPreview);
-                            self.onlineSample = preProcessedOnlineSample[0]
-                            self.onlineSampleColumns = preProcessedOnlineSample[1]
-                        }
-                    }, function (error) {
-                        self.sampleWorking = false;
-                        growl.error(error.data.errorMsg, {title: 'Failed to fetch data sample', ttl: 5000});
-                    });
-            };
-
-            /**
-             * Function for preprocessing the sample returned from the backend before visualizing it to the user
-             *
-             * @param rawSample the sample returned by the backend
-             */
-            self.preprocessSample = function (rawSample) {
-                var columns = []
-                var samples = []
-                var sampleRow;
-                var i;
-                var j;
-                if(rawSample.length > 0){
-                    for (i = 0; i < rawSample[0].columns.length; i++) {
-                        columns.push(self.removeTableNameFromColName(rawSample[0].columns[i].name))
-                    }
-                }
-                for (i = 0; i < rawSample.length; i++) {
-                    sampleRow = {}
-                    for (j = 0; j < rawSample[i].columns.length; j++) {
-                        sampleRow[self.removeTableNameFromColName(rawSample[i].columns[j].name)] = rawSample[i].columns[j].value
-                    }
-                    samples.push(sampleRow)
-                }
-                return [samples, columns]
-            }
-
-            /**
-             * Previews are prepended with table name and a dot. Remove this prefix to make the UI more readable
-             *
-             * @param colName the colName to preprocess
-             * @returns truncated colName
-             */
-            self.removeTableNameFromColName = function(colName) {
-                return colName.replace(self.selectedFeaturegroup.name + "_" + self.selectedFeaturegroup.version + ".", "")
-            }
 
             /**
              * Fetch schema from Hive by making a REST call to Hopsworks
@@ -227,9 +167,9 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getFeaturegroupSchema(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
                     function (success) {
                         self.schemaWorking = false;
-                        self.offlineSchema = success.data.columns[0].value;
+                        self.offlineSchema = success.data.offlineSchema;
                         if(self.selectedFeaturegroup.onlineFeaturegroupEnabled){
-                            self.onlineSchema = success.data.columns[1].value;
+                            self.onlineSchema = success.data.onlineSchema
                         }
                     }, function (error) {
                         growl.error(error.data.errorMsg, {title: 'Failed to fetch featuregroup schema', ttl: 5000});
@@ -286,7 +226,7 @@ angular.module('hopsWorksApp')
             /**
              * Initialization function
              */
-            self.view = function (projectId, projectName, featurestore, featuregroups, settings, toggle) {
+            self.view = function (featurestoreCtrl, featuregroups, toggle) {
 
                 if(toggle) {
                     self.toggle(featuregroups.versionToGroups[featuregroups.activeVersion]);
@@ -294,12 +234,13 @@ angular.module('hopsWorksApp')
 
                 self.selectedFeaturegroup = featuregroups.versionToGroups[featuregroups.activeVersion]
 
-                self.projectId = projectId;
-                self.projectName = projectName;
-                self.featurestore = featurestore;
+                self.featurestoreCtrl = featurestoreCtrl;
+                self.projectId = featurestoreCtrl.projectId;
+                self.projectName = featurestoreCtrl.projectName;
+                self.featurestore = featurestoreCtrl.featurestore;
                 self.featuregroups = featuregroups;
                 self.activeVersion = featuregroups.activeVersion;
-                self.settings = settings;
+                self.settings = featurestoreCtrl.settings;
 
                 self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
                 self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
@@ -313,7 +254,6 @@ angular.module('hopsWorksApp')
                     self.featuregroupType = "CACHED";
                     self.fetchSchema();
                     self.fetchSize();
-                    self.fetchSample();
                     self.fetchTags();
                 }
 
@@ -391,6 +331,13 @@ angular.module('hopsWorksApp')
                 StorageService.store(self.projectId + "_featuregroup_version", self.selectedFeaturegroup.version);
                 self.goToUrl("newfeaturegroup")
             };
+
+            self.preview = function() {
+                // Close tab before showing the new section of the page
+                self.tgState = false;
+                /// call featurestoreCtrl to show the preview
+                self.featurestoreCtrl.togglePreview(self.selectedFeaturegroup);
+            }
 
             /**
              * Called when the view-featuregroup-statistics button is pressed

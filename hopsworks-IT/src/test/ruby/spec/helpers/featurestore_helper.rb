@@ -45,9 +45,9 @@ module FeaturestoreHelper
               name: "testfeature",
               description: "testfeaturedescription",
               primary: true,
-              onlineType: nil,
+              onlineType: "INT",
               partition: false
-          }
+          },
       ]
       if online
         features[0]['onlineType'] = "INT(11)"

@@ -24,7 +24,10 @@
                 <div ng-include="'views/search/search.html'"></div>
             </div>
         </div>
-        <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
+        <div ng-if="featurestoreCtrl.showPreview" class="content-wrapper">
+            <div ng-include="'views/featuregroupPreview.html'"></div>
+        </div>
+        <div ng-if="!mainCtrl.showSearchPage && !featurestoreCtrl.showPreview" class="content-wrapper">
             <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
@@ -105,7 +108,7 @@
                                 <tbody class="table-hover">
                                 <tr dir-paginate="featuregroup in featurestoreCtrl.featuregroupsDictList | orderBy :featurestoreCtrl.featuregroupsSortFn:featurestoreCtrl.featuregroupsReverse | dateRangeFilterFeaturegroups : featurestoreCtrl.featuregroupsFromDate : featurestoreCtrl.featuregroupsToDate | filter:featurestoreCtrl.fgFilter:false | itemsPerPage:featurestoreCtrl.featuregroupsPageSize"
                                     pagination-id="featuregroupstable" class="fs-table"
-                                    ng-click="featuregroupViewInfoCtrl.view(featurestoreCtrl.projectId, featurestoreCtrl.projectName, featurestoreCtrl.featurestore, featuregroup, featurestoreCtrl.settings, true); $event.stopPropagation();"
+                                    ng-click="featuregroupViewInfoCtrl.view(featurestoreCtrl, featuregroup, true); $event.stopPropagation();"
                                     ng-class="{'active':(featuregroup.versionToGroups[featuregroup.activeVersion].id===featuregroupViewInfoCtrl.selectedFeaturegroup.id) && featuregroupViewInfoCtrl.tgState}">
                                     <td class="fs-table">{{featuregroup.name}}</td>
                                     <td class="fs-table">

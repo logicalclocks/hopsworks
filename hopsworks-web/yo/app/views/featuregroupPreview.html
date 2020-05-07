@@ -1,0 +1,113 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  -->
+<div ng-controller="FeaturegroupPreviewCtrl as featuregroupPreviewCtrl">
+    <div ng-init="featuregroupPreviewCtrl.fetchPreview(featurestoreCtrl.projectId, featurestoreCtrl.featurestore, featurestoreCtrl.previewFg)"></div>
+
+    <div ng-if="featuregroupPreviewCtrl.loading" class="loadingwrap" style="z-index: 105">
+        <div class="loading-content">
+            <div class="loader-in-wrap"></div>
+            {{featuregroupPreviewCtrl.loadingText}}
+        </div>
+    </div>
+
+    <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
+                  ng-click="featurestoreCtrl.closePreview()"
+                  uib-tooltip="Clear state and go back to Feature Store main page."> </span>
+
+    <div class="row">
+        <div class="col-sm-9" style="margin-top: 0px;">
+            <h2 style="margin-top: 0px;">Feature Group Preview</h2>
+        </div>
+        <div class="col-sm-9 col-md-9 col-lg-9" style="margin-top: 0px;">
+            <div class="col-sm-1 col-md-1 col-lg-1">
+                <h4 style="margin-top: 5px;">Name:</h4>
+            </div>
+            <div class="col-sm-6 col-md-6 col-lg-6">
+                <h4 style="margin-top: 5px;">{{featurestoreCtrl.previewFg.name}}</h4>
+            </div>
+        </div>
+        <div class="col-sm-9 col-md-9 col-lg-9" style="margin-top: 0px;">
+            <div class="col-sm-1 col-md-1 col-lg-1">
+                <h4 style="margin-top: 5px;">Version:</h4>
+            </div>
+            <div class="col-sm-6 col-md-6 col-lg-6">
+                <h4 style="margin-top: 5px;">{{featurestoreCtrl.previewFg.version}}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row form-inline" style="margin-top: 10px;">
+        <div class="col-sm-2 col-md-2 col-lg-2 form-group">
+            <span style="margin-right: 10px;">Rows: </span>
+            <input type="number" min="1"
+                   max="100"
+                   ng-model-options="{debounce: 500}"
+                   class="form-control" ng-model="featuregroupPreviewCtrl.limit"
+                   ng-change="featuregroupPreviewCtrl.refreshPreview()"
+                   style="width:80px">
+        </div>
+
+        <div class="col-sm-2 col-md-2 col-lg-2 form-group" 
+             style="margin-top: 10px;"
+             ng-if="featuregroupPreviewCtrl.fg.onlineFeaturegroupEnabled === true">
+            <span style="margin-right: 10px;">Storage: </span>
+            <label class="radio-inline"><input type="radio" 
+                                                name="type"
+                                                value="offline"
+                                                ng-model="featuregroupPreviewCtrl.storageType"
+                                                ng-change="featuregroupPreviewCtrl.refreshPreview()" checked />
+                                                Offline
+            </label>
+            <label class="radio-inline"><input type="radio" 
+                                                name="type"
+                                                value="online"
+                                                ng-model="featuregroupPreviewCtrl.storageType"
+                                                ng-change="featuregroupPreviewCtrl.refreshPreview()" />
+                                                Online
+            </label>
+        </div>
+
+        <div class="col-sm-4 col-md-4 col-lg-4 form-group"
+                 ng-if="featuregroupPreviewCtrl.partitions.length > 1">
+                <span style="margin-right: 10px;">Partitions: </span>
+                <select ng-model="featuregroupPreviewCtrl.partitionSelected" 
+                        class="form-control"
+                        ng-change="featuregroupPreviewCtrl.refreshPreview()" 
+                        style="z-index: 1;" id="selectPartitions">
+                    <option ng-repeat="partition in featuregroupPreviewCtrl.partitions">{{partition}}</option>
+                </select>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto; margin-top: 20px;">
+        <table class="table table-hover">
+            <thead style="border:none; display: block;">
+                <th style="min-width: 180px; max-width: 180px;" 
+                    ng-repeat="col in featuregroupPreviewCtrl.columns"
+                    uib-tooltip="{{col}}">
+                    {{col | strLimit:20: '...' }}
+                </th>
+            </thead>
+            <tbody style="display: block; overflow-y: auto; overflow-x:hidden; max-height: 650;">
+                <tr ng-repeat="row in featuregroupPreviewCtrl.rows">
+                    <td style="min-width: 180px; max-width: 180px;" ng-repeat="col in featuregroupPreviewCtrl.columns">
+                        {{row[col] | strLimit:20: '...' }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

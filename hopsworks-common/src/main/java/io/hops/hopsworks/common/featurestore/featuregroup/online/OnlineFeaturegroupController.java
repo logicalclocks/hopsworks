@@ -17,11 +17,13 @@
 package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
@@ -35,6 +37,7 @@ import java.util.List;
  * Class controlling the interaction with the online_feature_group table and required business logic
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class OnlineFeaturegroupController {
   @EJB
   private OnlineFeaturegroupFacade onlineFeaturegroupFacade;
@@ -48,7 +51,6 @@ public class OnlineFeaturegroupController {
    * @param tableName name of the MySQL table where the online feature group data is stored
    * @return Entity of the created online feature group
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private OnlineFeaturegroup persistOnlineFeaturegroupMetadata(String dbName, String tableName) {
     OnlineFeaturegroup onlineFeaturegroup = new OnlineFeaturegroup();
     onlineFeaturegroup.setDbName(dbName);
@@ -66,7 +68,6 @@ public class OnlineFeaturegroupController {
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void dropMySQLTable(
     OnlineFeaturegroup onlineFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
     FeaturestoreException {
@@ -84,7 +85,6 @@ public class OnlineFeaturegroupController {
    * @param onlineFeaturegroup the online featuregroup
    * @return the deleted entity
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnlineFeaturegroup removeOnlineFeaturegroupMetadata(OnlineFeaturegroup onlineFeaturegroup){
     onlineFeaturegroupFacade.remove(onlineFeaturegroup);
     return onlineFeaturegroup;
@@ -99,7 +99,6 @@ public class OnlineFeaturegroupController {
    * @param tableName name of the table to create
    * @return the created entity
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnlineFeaturegroup createMySQLTable(Featurestore featurestore,
     Users user, String featureStr, String tableName) throws FeaturestoreException, SQLException {
     String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
@@ -114,7 +113,6 @@ public class OnlineFeaturegroupController {
    * @param onlineFeaturegroup the online featuregroup to convert
    * @return a DTO representation of the online feature group
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public OnlineFeaturegroupDTO convertOnlineFeaturegroupToDTO(OnlineFeaturegroup onlineFeaturegroup){
     OnlineFeaturegroupDTO onlineFeaturegroupDTO = new OnlineFeaturegroupDTO(onlineFeaturegroup);
     onlineFeaturegroupDTO.setTableType(
@@ -132,35 +130,28 @@ public class OnlineFeaturegroupController {
    * @param onlineFeaturegroup the online featuregroup to get type information for
    * @return a list of Feature DTOs with the type information
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
     return onlineFeaturestoreController.getOnlineFeaturegroupFeatures(onlineFeaturegroup);
   }
-  
-  /**
-   * Gets the SQL schema of an online feature group
-   *
-   * @param onlineFeaturegroupDTO the online featuregroup to get the SQL schema of
-   * @return a String with the "SHOW CREATE TABLE" result
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public String getOnlineFeaturegroupSchema(OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
-    return onlineFeaturestoreController.getOnlineFeaturegroupSchema(onlineFeaturegroupDTO);
-  }
-  
+
   /**
    * Previews the contents of a online feature group (runs SELECT * LIMIT 20)
    *
-   * @param onlineFeaturegroupDTO the online featuregroup to get the SQL schema of
    * @return the preview result
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<RowValueQueryResult> getOnlineFeaturegroupPreview(OnlineFeaturegroupDTO onlineFeaturegroupDTO,
-                                                                Users user, Featurestore featurestore)
+  public FeaturegroupPreview getOnlineFeaturegroupPreview(Featuregroup featuregroup, Project project,
+                                                          Users user, int limit)
       throws FeaturestoreException, SQLException {
-    return onlineFeaturestoreController.getOnlineFeaturegroupPreview(onlineFeaturegroupDTO, user, featurestore);
+    String tblName = featuregroup.getName() + "_" + featuregroup.getVersion();
+    String query = "SELECT * FROM " + tblName + " LIMIT " + limit;
+    String db = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
+    try {
+      return onlineFeaturestoreController.executeReadJDBCQuery(query, db, project, user);
+    } catch(Exception e) {
+      return onlineFeaturestoreController.executeReadJDBCQuery(query, db, project, user);
+    }
   }
   
 }
