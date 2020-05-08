@@ -166,10 +166,9 @@
       </li>
 
       <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'"
-          ng-show="projectCtrl.cloak" id="metadataTab">
+          ng-show="projectCtrl.cloak" id="metadataTab" ng-if="mainCtrl.ShowMetadataDesigner">
         <a>
-          Metadata Designer<span
-            class="sub_icon fa fa-edit fa-lg pull-right"></span>
+          Metadata Designer<span class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>
       <br>
