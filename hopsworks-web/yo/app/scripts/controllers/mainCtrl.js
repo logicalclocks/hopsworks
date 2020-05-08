@@ -551,4 +551,16 @@ angular.module('hopsWorksApp')
             };
             getVersions();
 
+            self.ShowMetadataDesigner = true;
+
+            var getMetadataDesignerVar = function () {
+                VariablesService.getVariable('enable_metadata_designer')
+                    .then(function (success) {
+                        self.ShowMetadataDesigner = success.data.successMessage == 'true';
+                    }, function (error) {
+                        console.log("Failed to get enable_metadata_designer");
+                    });
+            };
+            getMetadataDesignerVar();
+
           }]);
