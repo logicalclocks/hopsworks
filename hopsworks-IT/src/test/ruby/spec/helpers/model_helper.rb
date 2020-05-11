@@ -27,29 +27,14 @@ module ModelHelper
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/export_model.ipynb",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
-                        "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+                        "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
     end
 
-    job_conf = {
-      "type":"sparkJobConfiguration",
-      "appName":"#{job_name}",
-      "amQueue":"default",
-      "amMemory":1024,
-      "amVCores":1,
-      "jobType":"PYSPARK",
-      "appPath":"hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb",
-      "mainClass":"org.apache.spark.deploy.PythonRunner",
-      "spark.executor.instances":1,
-      "spark.executor.cores":1,
-      "spark.executor.memory":1500,
-      "spark.executor.gpus":0,
-      "spark.dynamicAllocation.enabled": true,
-      "spark.dynamicAllocation.minExecutors":1,
-      "spark.dynamicAllocation.maxExecutors":1,
-      "spark.dynamicAllocation.initialExecutors":1
-    }
+    job_config = get_spark_default_py_config(project, job_name, "ipynb")
+    job_config["amMemory"] = 2500
+    job_config["spark.executor.memory"] = 2000
 
-    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_config
     expect_status(201)
   end
 
