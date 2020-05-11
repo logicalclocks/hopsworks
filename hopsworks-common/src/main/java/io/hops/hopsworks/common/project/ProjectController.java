@@ -183,6 +183,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -1648,10 +1649,10 @@ public class ProjectController {
   private void removeProjectInt(Project project, List<HdfsUsers> usersToClean,
       List<HdfsGroups> groupsToClean, List<Future<?>> projectCreationFutures,
       boolean decreaseCreatedProj, Users owner)
-      throws IOException, InterruptedException, HopsSecurityException,
-      ServiceException, ProjectException,
-      GenericException, TensorBoardException, FeaturestoreException,
-      ElasticException {
+    throws IOException, InterruptedException, HopsSecurityException,
+    ServiceException, ProjectException,
+    GenericException, TensorBoardException, FeaturestoreException,
+    ElasticException, TimeoutException, ExecutionException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfs.getDfsOps();
@@ -1805,7 +1806,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  private void removeKafkaTopics(Project project) {
+  private void removeKafkaTopics(Project project) throws InterruptedException, ExecutionException, TimeoutException {
     List<ProjectTopics> topics = projectTopicsFacade.findTopicsByProject(project);
   
     List<String> topicNameList = topics.stream()

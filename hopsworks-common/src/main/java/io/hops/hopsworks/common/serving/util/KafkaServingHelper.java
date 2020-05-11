@@ -75,7 +75,7 @@ public class KafkaServingHelper {
    */
   public void setupKafkaServingTopic(Project project, ServingWrapper servingWrapper,
                                      Serving newDbServing, Serving oldDbServing)
-      throws KafkaException, ProjectException, UserException, ServingException,
+    throws KafkaException, ProjectException, UserException, ServingException,
     InterruptedException, ExecutionException {
 
     if (servingWrapper.getKafkaTopicDTO() != null &&
