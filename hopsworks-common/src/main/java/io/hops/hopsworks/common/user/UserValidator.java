@@ -57,16 +57,13 @@ public class UserValidator {
 
   @EJB
   private UserFacade userBean;
-
+  
   public static final int PASSWORD_MIN_LENGTH = 6;
   public static final int TEMP_PASSWORD_LENGTH = 8;
   public static final int PASSWORD_MAX_LENGTH = 255;
-  private static final String PASSWORD_PATTERN
-          = "(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).*$";
-  private static final String EMAIL_PATTERN
-          = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)"
-          + "*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]"
-          + "*[a-z0-9])?";
+  private static final String PASSWORD_PATTERN = "(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).*$";
+  private static final String EMAIL_PATTERN = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)"
+    + "*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
 
   public boolean isValidEmail(String email) throws UserException {
     if (Strings.isNullOrEmpty(email)) {
