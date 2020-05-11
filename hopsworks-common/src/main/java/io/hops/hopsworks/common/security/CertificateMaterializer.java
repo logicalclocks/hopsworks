@@ -1309,13 +1309,15 @@ public class CertificateMaterializer {
         Map<String, LocalFileRemover> materialRemovers = fileRemovers.get(key);
         if (materialRemovers != null) {
           materialRemovers.remove(materializationDirectory);
+          boolean noMoreRef = false;
           if (materialRemovers.isEmpty()) {
             fileRemovers.remove(key);
-          }
+            noMoreRef=true;
+          } 
         
           // No more references to that crypto material, wipe out password
           Bag materialBag = materializedCerts.get(key);
-          if (materialBag != null && materialBag.isEmpty()) {
+          if (noMoreRef && materialBag != null && materialBag.isEmpty()) {
             materializedCerts.remove(key);
             CryptoMaterial material = materialCache.remove(key);
             if (material != null) {
