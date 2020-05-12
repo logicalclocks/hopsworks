@@ -160,7 +160,7 @@ public class LibraryInstaller {
         .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     try {
@@ -184,7 +184,7 @@ public class LibraryInstaller {
         .addCommand("delete")
         .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -238,7 +238,7 @@ public class LibraryInstaller {
         .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     try {
@@ -286,7 +286,7 @@ public class LibraryInstaller {
         .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     try {
@@ -311,7 +311,7 @@ public class LibraryInstaller {
         .addCommand("list")
         .addCommand(imageName)
         .redirectErrorStream(true)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     try {
@@ -339,7 +339,7 @@ public class LibraryInstaller {
         .addCommand("export")
         .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), true))
         .redirectErrorStream(true)
-        .setWaitTimeout(60L, TimeUnit.SECONDS)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
 
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);

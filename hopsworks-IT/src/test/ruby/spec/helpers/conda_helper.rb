@@ -62,6 +62,7 @@ module CondaHelper
     registry = Variables.find_by(id: "docker_registry_name")
     registry_port = Variables.find_by(id: "docker_registry_port")
     image_name = registry.value + ":" + registry_port.value + "/python" + python_version.gsub(".","")
+    system ("docker pull " + image_name + "> /dev/null 2>&1")
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 
