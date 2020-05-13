@@ -26,6 +26,8 @@ import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.NotImplementedException;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.EJB;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -33,7 +35,11 @@ import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 @Singleton
@@ -61,12 +67,32 @@ public class ServiceDiscoveryController {
       return this.name;
     }
   }
-  
+
+  private static final Logger LOG = Logger.getLogger(ServiceDiscoveryController.class.getName());
   private static final String CONSUL_SERVICE_TEMPLATE = "%s.service.%s";
-  
+
+  private final Map<Type, ServiceDiscoveryClient> clients = new HashMap<>(1);
+
   @EJB
   private Settings settings;
-  
+
+  @PostConstruct
+  public void init() {
+    try {
+      ServiceDiscoveryClient dnsClient = createClient(Type.DNS);
+      clients.put(Type.DNS, dnsClient);
+    } catch (ServiceDiscoveryException ex) {
+      LOG.log(Level.SEVERE, "Failed to initialize Service Discovery client", ex);
+    }
+  }
+
+  @PreDestroy
+  public void tearDown() {
+    for (Map.Entry<Type, ServiceDiscoveryClient> client : clients.entrySet()) {
+      client.getValue().close();
+    }
+  }
+
   @Lock(LockType.READ)
   public String constructServiceFQDN(HopsworksService service) {
     String serviceName = service.getServiceName();
@@ -80,13 +106,7 @@ public class ServiceDiscoveryController {
   public Stream<Service> getService(Type resolverType, ServiceQuery serviceQuery)
       throws ServiceDiscoveryException {
     ServiceDiscoveryClient client = getClient(resolverType);
-    try {
-      return client.getService(serviceQuery);
-    } finally {
-      if (client != null) {
-        client.close();
-      }
-    }
+    return client.getService(serviceQuery);
   }
   
   @Lock(LockType.READ)
@@ -95,8 +115,17 @@ public class ServiceDiscoveryController {
     Optional<Service> serviceOpt = getService(Type.DNS, serviceQuery).findAny();
     return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
   }
-  
+
   private ServiceDiscoveryClient getClient(Type type) throws ServiceDiscoveryException {
+    ServiceDiscoveryClient client = clients.get(type);
+    if (client != null) {
+      return client;
+    }
+    throw new ServiceDiscoveryException("Could not find initialized Service Discovery client of type " + type
+            + " Was it initialized correctly?");
+  }
+  
+  private ServiceDiscoveryClient createClient(Type type) throws ServiceDiscoveryException {
     switch (type) {
       case DNS:
         return new Builder(type).build();
