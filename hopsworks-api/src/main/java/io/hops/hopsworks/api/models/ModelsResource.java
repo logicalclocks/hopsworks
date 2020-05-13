@@ -27,6 +27,7 @@ import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -134,7 +135,7 @@ public class ModelsResource {
       @Context HttpServletRequest req,
       @Context UriInfo uriInfo,
       @Context SecurityContext sc) throws DatasetException, ModelsException, JobException, ServiceException,
-      PythonException {
+    PythonException, MetadataException {
     if (modelDTO == null) {
       throw new IllegalArgumentException("Model summary not provided");
     }
@@ -145,7 +146,7 @@ public class ModelsResource {
     modelDTO.setEnvironment(environmentController.exportEnv(project, user,
             Settings.HOPS_MODELS_DATASET + "/" + modelDTO.getName() + "/"
                 + modelDTO.getVersion()));
-    modelsController.attachModel(project, realName, modelDTO);
+    modelsController.attachModel(project, user, realName, modelDTO);
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(id);
     return Response.created(builder.build()).entity(modelDTO).build();
   }

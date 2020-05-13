@@ -34,11 +34,20 @@ module Helper
     return x
   end
 
-  def expect_status_details(expected_status)
+  def expect_status_details(expected_status, error_code: nil)
     if response.code == resolve_status(204, response.code)
-      expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code}"
+      expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code}"
     else
-      expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and body:#{json_body}"
+      json_result = JSON.parse(response.body) rescue nil
+      if json_result
+        expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code} and body:#{json_result}"
+        if error_code
+          expect(json_result["errorCode"]).not_to be_nil, "expected error code:#{error_code}, found none"
+          expect(json_result["errorCode"]).to eq(error_code), "expected error code:#{error_code}, found:#{json_result["errorCode"]},"
+        end
+      else
+        expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and no/malfromed body"
+      end
     end
   end
 

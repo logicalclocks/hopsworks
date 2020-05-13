@@ -19,6 +19,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
 import io.hops.hopsworks.common.featurestore.xattr.dto.TrainingDatasetXAttrDTO;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
+import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
@@ -65,6 +68,8 @@ public class HopsFSProvenanceController {
   private Settings settings;
   @EJB
   private HopsworksJAXBContext converter;
+  @EJB
+  private XAttrsController xattrCtrl;
   
   /**
    * To be used on projects/datasets - only these have a provenance core xattr
@@ -75,12 +80,12 @@ public class HopsFSProvenanceController {
   private ProvCoreDTO getProvCoreXAttr(String path, DistributedFileSystemOps udfso) throws ProvenanceException {
     byte[] provTypeB;
     try {
-      provTypeB = udfso.getXAttr(path, ProvXAttrs.PROV_XATTR_CORE);
+      provTypeB = xattrCtrl.getProvXAttr(udfso, path, ProvXAttrs.PROV_XATTR_CORE_VAL);
       if(provTypeB == null) {
         return null;
       }
       return converter.unmarshal(new String(provTypeB), ProvCoreDTO.class);
-    } catch (IOException | GenericException e) {
+    } catch (GenericException | DatasetException | MetadataException e) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
         "hopsfs - get xattr - prov core - error", "hopsfs - get xattr - prov core - error", e);
     }
@@ -90,8 +95,8 @@ public class HopsFSProvenanceController {
     throws ProvenanceException {
     try {
       String provType = converter.marshal(provCore);
-      udfso.upsertXAttr(path, ProvXAttrs.PROV_XATTR_CORE, provType.getBytes());
-    } catch (IOException | GenericException e) {
+      xattrCtrl.upsertProvXAttr(udfso, path, ProvXAttrs.PROV_XATTR_CORE_VAL, provType.getBytes());
+    } catch (GenericException | DatasetException | MetadataException e) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
         "hopsfs - set xattr - prov core - error", "hopsfs - set xattr - prov core - error", e);
     }
@@ -248,8 +253,8 @@ public class HopsFSProvenanceController {
             featuregroup.getCreated(), featuregroup.getCreator());
           xattrVal = converter.marshal(fg).getBytes();
         }
-        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(), xattrVal);
-      } catch (IOException | GenericException e) {
+        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (GenericException | MetadataException | DatasetException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
       }
@@ -281,8 +286,8 @@ public class HopsFSProvenanceController {
             trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
           xattrVal = converter.marshal(td).getBytes();
         }
-        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(), xattrVal);
-      } catch (IOException | GenericException e) {
+        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (GenericException | MetadataException | DatasetException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - training dataset - error", "hopsfs - set xattr - training dataset - error", e);
       }

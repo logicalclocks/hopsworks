@@ -33,6 +33,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ExperimentsException;
 import io.hops.hopsworks.exceptions.InvalidQueryException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -63,6 +64,7 @@ public class ExperimentsBuilder {
 
   public static final String EXPERIMENT_SUMMARY_XATTR_NAME = "experiment_summary";
   public static final String EXPERIMENT_MODEL_XATTR_NAME = "experiment_model";
+  public static final String EXPERIMENT_APP_ID_XATTR_NAME = "app_id";
 
   private static final Logger LOGGER = Logger.getLogger(ExperimentsBuilder.class.getName());
 
@@ -112,7 +114,7 @@ public class ExperimentsBuilder {
   }
 
   //Build collection
-  public ExperimentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project)
+  public ExperimentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user)
       throws ExperimentsException {
     ExperimentDTO dto = new ExperimentDTO();
     uri(dto, uriInfo, project);
@@ -130,14 +132,14 @@ public class ExperimentsBuilder {
           dto.setCount(fileState.getCount());
           if (experiments != null && !experiments.isEmpty()) {
             for (ProvStateElastic fileProvStateHit : experiments) {
-              ExperimentDTO experimentDTO = build(uriInfo, resourceRequest, project, fileProvStateHit);
+              ExperimentDTO experimentDTO = build(uriInfo, resourceRequest, project, user, fileProvStateHit);
               if (experimentDTO != null) {
                 dto.addItem(experimentDTO);
               }
             }
           }
         }
-      } catch (ExperimentsException | DatasetException | ProvenanceException e) {
+      } catch (ExperimentsException | DatasetException | ProvenanceException | MetadataException e) {
         if (e instanceof ProvenanceException && ProvHelper.missingMappingForField((ProvenanceException) e)) {
           LOGGER.log(Level.WARNING, "Could not find elastic mapping for experiments query", e);
           return dto;
@@ -167,9 +169,9 @@ public class ExperimentsBuilder {
   }
 
   //Build specific
-  public ExperimentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
+  public ExperimentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
                              ProvStateElastic fileProvenanceHit) throws ExperimentsException, DatasetException,
-      ProvenanceException {
+    ProvenanceException, MetadataException {
 
     ExperimentDTO experimentDTO = new ExperimentDTO();
     uri(experimentDTO, uriInfo, project, fileProvenanceHit);
@@ -202,7 +204,7 @@ public class ExperimentsBuilder {
         experimentDTO.setFinished(experimentSummary.getFinished());
 
         if(updateNeeded) {
-          experimentsController.attachExperiment(fileProvenanceHit.getMlId(), project,
+          experimentsController.attachExperiment(fileProvenanceHit.getMlId(), project, user,
               experimentSummary.getUserFullName(), experimentSummary, ExperimentDTO.XAttrSetFlag.REPLACE);
         }
 

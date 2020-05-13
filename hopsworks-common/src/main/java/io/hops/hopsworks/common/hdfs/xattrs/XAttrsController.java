@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -45,7 +46,8 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class XAttrsController {
 
-  private static String XATTR_USER_NAMESPACE = "user.";
+  private final static String XATTR_USER_NAMESPACE = "user.";
+  private final static String XATTR_PROV_NAMESPACE = "provenance.";
 
   @EJB
   private InodeController inodeController;
@@ -77,12 +79,13 @@ public class XAttrsController {
           RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
     }
     String metadata = metaJSON.getString(name);
-    if (metadata.length() > 13500 || name.length() > 255) {
+    if (metadata.length() > Settings.HOPSFS_XATTR_VALUE_MAX_SIZE
+      || name.length() > Settings.HOPSFS_XATTR_NAME_MAX_SIZE) {
       throw new MetadataException(
           RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
     }
 
-    boolean created = getXAttr(project, user, inodePath, name) == null;
+    boolean created = getXAttr(project, user, inodePath, XATTR_USER_NAMESPACE, name) == null;
 
     addXAttrInt(project, user, inodePath, name, metadata);
 
@@ -91,12 +94,11 @@ public class XAttrsController {
 
   public Map<String, String> getXAttrs(Project project, Users user, String inodePath,
                                        String name) throws DatasetException, MetadataException{
-    Map<String, String> result = new HashMap<>();;
+    Map<String, String> result = new HashMap<>();
     if(name == null || name.isEmpty()){
       result = getXAttrs(project, user, inodePath);
     }else{
-      String metadata = getXAttr(project, user, inodePath,
-          name);
+      String metadata = getXAttr(project, user, inodePath, XATTR_USER_NAMESPACE, name);
       if(metadata != null){
         result.put(name, metadata);
       }
@@ -110,25 +112,32 @@ public class XAttrsController {
     if(name == null || name.isEmpty())
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
 
-    boolean found = getXAttr(project, user, inodePath,
-        name) != null;
+    boolean found = getXAttr(project, user, inodePath, XATTR_USER_NAMESPACE, name) != null;
     if(found){
       removeXAttrInt(project, user, inodePath, name);
     }
     return found;
   }
 
-  private void addXAttrInt(Project project, Users user, String inodePath,
-                           String name, String metadataJson)
-      throws DatasetException, MetadataException {
+  private void addXAttrInt(Project project, Users user, String inodePath, String name, String metadataJson)
+    throws DatasetException, MetadataException {
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
     try {
-      udfso.setXAttr(new Path(path), getXAttrName(name),
-          metadataJson.getBytes(Charsets.UTF_8));
-    } catch (IOException e) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
-          Level.SEVERE, path, e.getMessage(), e);
+      addXAttrInt(udfso, path, XATTR_USER_NAMESPACE, name, metadataJson.getBytes(Charsets.UTF_8));
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+  
+  private void removeXAttrInt(Project project, Users user, String inodePath, String name)
+    throws MetadataException, DatasetException {
+    String path = validatePath(inodePath);
+    DistributedFileSystemOps udfso = getDFS(project, user);
+    try {
+      removeXAttrInt(udfso, path, XATTR_USER_NAMESPACE, name);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
@@ -136,43 +145,51 @@ public class XAttrsController {
     }
   }
 
-  private void removeXAttrInt(Project project, Users user, String inodePath,
-                              String name) throws MetadataException, DatasetException {
+  private String getXAttr(Project project, Users user, String inodePath, String namespace, String name)
+    throws DatasetException, MetadataException{
     String path = validatePath(inodePath);
     DistributedFileSystemOps udfso = getDFS(project, user);
     try {
-      udfso.removeXAttr(new Path(path), getXAttrName(name));
-    } catch (IOException e) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
-          Level.SEVERE, path, e.getMessage(), e);
-    } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
-
-  private String getXAttr(Project project, Users user, String inodePath,
-                          String name) throws DatasetException, MetadataException{
-    String path = validatePath(inodePath);
-    DistributedFileSystemOps udfso = getDFS(project, user);
-    try {
-      byte[] value = udfso.getXAttr(new Path(path), getXAttrName(name));
+      byte[] value = getXAttrInt(udfso, path, namespace, name);
       if(value != null) {
         return new String(value, Charsets.UTF_8);
       }
-      return null;
-    } catch (IOException e) {
-      if(e.getMessage().contains("At least one of the attributes provided was" +
-          " not found.")){
-        return null;
-      }
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
-          Level.SEVERE, path, e.getMessage(), e);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
+    }
+    return null;
+  }
+  
+  private byte[] getXAttrInt(DistributedFileSystemOps udfso, String path, String namespace, String name)
+    throws MetadataException {
+    try {
+      return udfso.getXAttr(new Path(path), getXAttrName(namespace, name));
+    } catch (IOException e) {
+      if(e.getMessage().contains("At least one of the attributes provided was not found.")) {
+        return null;
+      }
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
+    }
+  }
+  
+  private void addXAttrInt(DistributedFileSystemOps udfso, String path, String namespace, String name, byte[] value)
+    throws MetadataException {
+    try {
+      udfso.setXAttr(new Path(path), getXAttrName(namespace, name), value);
+    } catch (IOException e) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
+    }
+  }
+  
+  private void removeXAttrInt(DistributedFileSystemOps udfso, String path, String namespace, String name)
+    throws MetadataException {
+    try {
+      udfso.removeXAttr(new Path(path), getXAttrName(namespace, name));
+    } catch (IOException e) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR,
+        Level.SEVERE, path, e.getMessage(), e);
     }
   }
 
@@ -226,8 +243,46 @@ public class XAttrsController {
     return dfs.getDfsOps(hdfsUserName);
   }
 
-  private String getXAttrName(String name) {
-    return XATTR_USER_NAMESPACE + name;
+  private String getXAttrName(String namespace, String name) {
+    return namespace + name;
   }
-
+  
+  // provenance
+  public byte[] getProvXAttr(DistributedFileSystemOps udfso, String inodePath, String name)
+    throws DatasetException, MetadataException {
+    String path = validatePath(inodePath);
+    return getXAttrInt(udfso, path, XATTR_PROV_NAMESPACE, name);
+  }
+  
+  public boolean upsertProvXAttr(Project project, Users user, String inodePath, String name, byte[] value)
+    throws MetadataException, DatasetException {
+    DistributedFileSystemOps udfso = getDFS(project, user);
+    try {
+      return upsertProvXAttr(udfso, inodePath, name, value);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+  
+  public boolean upsertProvXAttr(DistributedFileSystemOps udfso, String inodePath, String name, byte[] value)
+    throws MetadataException, DatasetException {
+    if (name == null || name.isEmpty()) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
+    }
+    if (value.length > Settings.HOPSFS_XATTR_VALUE_MAX_SIZE || name.length() > Settings.HOPSFS_XATTR_NAME_MAX_SIZE) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
+    }
+    String path = validatePath(inodePath);
+    boolean hasPrevious = (getXAttrInt(udfso, path, XATTR_PROV_NAMESPACE, name) != null);
+    addXAttrInt(udfso, path, XATTR_PROV_NAMESPACE, name, value);
+    return hasPrevious;
+  }
+  
+  public void removeProvXAttr(DistributedFileSystemOps udfso, String inodePath, String name)
+    throws DatasetException, MetadataException {
+    String path = validatePath(inodePath);
+    removeXAttrInt(udfso, path, XATTR_PROV_NAMESPACE, name);
+  }
 }

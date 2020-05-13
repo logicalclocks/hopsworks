@@ -29,9 +29,8 @@ import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ExperimentsException;
-import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -109,7 +108,8 @@ public class ExperimentsResource {
     resourceRequest.setFilter(experimentsBeanParam.getFilter());
     resourceRequest.setSort(experimentsBeanParam.getSortBySet());
     resourceRequest.setExpansions(experimentsBeanParam.getExpansions().getResources());
-    ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project);
+    Users user = jwtHelper.getUserPrincipal(sc);
+    ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user);
     return Response.ok().entity(dto).build();
   }
 
@@ -123,12 +123,13 @@ public class ExperimentsResource {
       @PathParam("id") String id,
       @Context UriInfo uriInfo,
       @BeanParam ExperimentsBeanParam experimentsBeanParam, @Context SecurityContext sc)
-      throws ExperimentsException, DatasetException, ProvenanceException, ElasticException {
+    throws ExperimentsException, DatasetException, ProvenanceException, MetadataException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setExpansions(experimentsBeanParam.getExpansions().getResources());
     ProvStateElastic fileState = experimentsController.getExperiment(project, id);
+    Users user = jwtHelper.getUserPrincipal(sc);
     if(fileState != null) {
-      ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, fileState);
+      ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user, fileState);
       return Response.ok().entity(dto).build();
     } else {
       throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_NOT_FOUND, Level.FINE);
@@ -150,7 +151,7 @@ public class ExperimentsResource {
       @Context HttpServletRequest req,
       @Context UriInfo uriInfo,
       @Context SecurityContext sc)
-      throws DatasetException, ServiceException, JobException, ProvenanceException, PythonException {
+    throws DatasetException, ServiceException, ProvenanceException, PythonException, MetadataException {
     if (experimentSummary == null && model == null) {
       throw new IllegalArgumentException("Experiment configuration or model was not provided");
     }
@@ -168,9 +169,9 @@ public class ExperimentsResource {
           LOGGER.log(Level.SEVERE, "Could not version notebook " + e.getMessage());
         }
       }
-      experimentsController.attachExperiment(id, project, usersFullName, experimentSummary, xAttrSetFlag);
+      experimentsController.attachExperiment(id, project, user, usersFullName, experimentSummary, xAttrSetFlag);
     } else {
-      experimentsController.attachModel(id, project, model, xAttrSetFlag);
+      experimentsController.attachModel(id, project, user, model);
     }
     UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(id);
     if(xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.CREATE)) {
