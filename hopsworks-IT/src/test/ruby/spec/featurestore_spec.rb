@@ -415,6 +415,15 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
         end
 
+        it "should set the feature group permissions to be the same as for the feature store db" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id)
+          path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+          ds = get_dataset_stat_checked(@project, path, "&type=FEATURESTORE")
+          expect(ds[:attributes][:permission]).to eql("rwxrwx--T")
+        end
+
         it "should not be able to add a cached offline featuregroup to the featurestore with a invalid hive table name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -551,7 +560,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
         end
 
-        it "should be able to get a feature group based on name and version" do 
+        it "should be able to get a feature group based on name and version" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
 
@@ -582,7 +591,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0]["version"]).to eq 2
         end
 
-        it "should be able to get a list of feature group versions based on name" do 
+        it "should be able to get a list of feature group versions based on name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
 
@@ -596,7 +605,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
 
-          # Get the list  
+          # Get the list
           get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}"
           get get_featuregroup_endpoint
           parsed_json = JSON.parse(response.body)
@@ -604,7 +613,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.size).to eq 2
         end
 
-        it "should fail to get a feature store by name that does not exists" do 
+        it "should fail to get a feature store by name that does not exists" do
           # Get the first version
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -1288,9 +1297,9 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector, name: training_dataset_name, version: 2)
           expect_status(201)
 
-          # Get the list  
+          # Get the list
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}"
-          get get_training_datasets_endpoint 
+          get get_training_datasets_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
           expect(parsed_json.size).to eq 2
@@ -1315,7 +1324,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json[0]['name']).to eq training_dataset_name
 
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_name}?version=2"
-          get get_training_datasets_endpoint 
+          get get_training_datasets_endpoint
           expect_status(200)
           parsed_json = JSON.parse(response.body)
           expect(parsed_json[0]['version']).to be 2
@@ -1327,7 +1336,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
-          get get_training_datasets_endpoint 
+          get get_training_datasets_endpoint
           expect_status(400)
         end
 
