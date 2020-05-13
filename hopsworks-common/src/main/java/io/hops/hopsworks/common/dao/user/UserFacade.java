@@ -348,6 +348,9 @@ public class UserFacade extends AbstractFacade<Users> {
    * @return The user with given email, or null if no such user exists.
    */
   public Users findByEmail(String email) {
+    if (email == null || email.isEmpty()) {
+      return null;
+    }
     try {
       return em.createNamedQuery("Users.findByEmail", Users.class).setParameter("email", email.toLowerCase())
         .getSingleResult();
