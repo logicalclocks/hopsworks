@@ -187,7 +187,7 @@ public class JupyterJWTManager {
         continue;
       }
       
-      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       
       Path tokenFile = constructTokenFilePath(jupyterSettings);
       String token = null;
