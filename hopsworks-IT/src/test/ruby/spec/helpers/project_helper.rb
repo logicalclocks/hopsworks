@@ -213,6 +213,10 @@ module ProjectHelper
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
+    Project.where("projectname LIKE ?", 'online_fs').each{|project|
+      hydra.queue clean_test_project(project)
+    }
+
     Project.where("projectname LIKE ?", 'project\_%').each{|project|
       hydra.queue clean_test_project(project)
     }

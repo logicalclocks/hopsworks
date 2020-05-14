@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,31 +14,39 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.featuregroup.cached;
+package io.hops.hopsworks.api.featurestore.featuregroup;
 
-import javax.xml.bind.annotation.XmlElement;
+import io.hops.hopsworks.common.api.RestDTO;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-import java.util.List;
 
-/**
- * DTO containing a row query result in String format
- * using jaxb.
- */
 @XmlRootElement
-@XmlType(propOrder = {"columns"})
-public class RowValueQueryResult {
+public class PartitionDTO extends RestDTO<PartitionDTO>  {
 
-  private List<ColumnValueQueryResult> columns;
+  private Long partitionId;
+  private String partitionName;
 
-  public RowValueQueryResult(){}
-
-  public RowValueQueryResult(List<ColumnValueQueryResult> columns) {
-    this.columns = columns;
+  public PartitionDTO() {
   }
 
-  @XmlElement
-  public List<ColumnValueQueryResult> getColumns() {
-    return columns;
+  public PartitionDTO(Long partitionId, String partitionName) {
+    this.partitionId = partitionId;
+    this.partitionName = partitionName;
+  }
+
+  public Long getPartitionId() {
+    return partitionId;
+  }
+
+  public void setPartitionId(Long partitionId) {
+    this.partitionId = partitionId;
+  }
+
+  public String getPartitionName() {
+    return partitionName;
+  }
+
+  public void setPartitionName(String partitionName) {
+    this.partitionName = partitionName;
   }
 }

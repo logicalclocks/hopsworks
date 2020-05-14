@@ -1448,7 +1448,11 @@ public class RESTCodes {
     ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE(99, "Illegal training dataset split percentage",
       Response.Status.BAD_REQUEST),
     TAG_NOT_ALLOWED(100, "The provided tag is not allowed", Response.Status.BAD_REQUEST),
-    TAG_NOT_FOUND(101, "The provided tag is not attached", Response.Status.NOT_FOUND);
+    TAG_NOT_FOUND(101, "The provided tag is not attached", Response.Status.NOT_FOUND),
+    FEATUREGROUP_NOT_ONLINE(102, "The feature group is not available online", Response.Status.BAD_REQUEST),
+    FEATUREGROUP_ONDEMAND_NO_PARTS(103, "Partitions not available for on demand feature group",
+        Response.Status.BAD_REQUEST);
+
 
     private int code;
     private String message;

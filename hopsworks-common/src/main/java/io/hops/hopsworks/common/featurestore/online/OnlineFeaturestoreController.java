@@ -24,7 +24,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
@@ -34,6 +34,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -62,6 +63,7 @@ import java.util.logging.Logger;
  * business logic.
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
 public class OnlineFeaturestoreController {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreController.class.getName());
@@ -107,7 +109,6 @@ public class OnlineFeaturestoreController {
    * @return conn the JDBC connection
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private Connection initConnection(String databaseName, Project project, Users user) throws FeaturestoreException {
     String jdbcString = "";
     String dbUsername = onlineDbUsername(project, user);
@@ -142,7 +143,6 @@ public class OnlineFeaturestoreController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void executeUpdateJDBCQuery(String query, String databaseName, Project project, Users user)
     throws FeaturestoreException, SQLException {
     //Re-create the connection every time since the connection is database and user-specific
@@ -176,30 +176,26 @@ public class OnlineFeaturestoreController {
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  private List<RowValueQueryResult> executeReadJDBCQuery(
-    String query, String databaseName, Project project, Users user)
+  public FeaturegroupPreview executeReadJDBCQuery(String query, String databaseName, Project project, Users user)
     throws SQLException, FeaturestoreException {
     Connection conn = null;
     Statement stmt = null;
-    List<RowValueQueryResult> resultList = null;
     try {
       //Re-create the connection every time since the connection is database and user-specific
       conn = initConnection(databaseName, project, user);
       stmt = conn.createStatement();
       ResultSet rs = stmt.executeQuery(query);
-      resultList = cachedFeaturegroupController.parseResultset(rs);
+      return cachedFeaturegroupController.parseResultset(rs);
     } catch (SQLException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.MYSQL_JDBC_READ_QUERY_ERROR, Level.SEVERE,
-        "project: " + project.getName() + ", mysql database: " + databaseName + " jdbc query: " + query,
-        e.getMessage(), e);
+          "project: " + project.getName() + ", mysql database: " + databaseName + " jdbc query: " + query,
+          e.getMessage(), e);
     } finally {
       if (stmt != null) {
         stmt.close();
       }
       closeConnection(conn);
     }
-    return resultList;
   }
   
   /**
@@ -208,7 +204,6 @@ public class OnlineFeaturestoreController {
    * @param onlineFeaturegroup the online featuregroup to get type information for
    * @return a list of Feature DTOs with the type information
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
     return onlineFeaturestoreFacade.getMySQLFeatures(onlineFeaturegroup.getTableName(),
         onlineFeaturegroup.getDbName().toLowerCase());
@@ -219,7 +214,6 @@ public class OnlineFeaturestoreController {
    *
    * @param conn the JDBC connection
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private void closeConnection(Connection conn) {
     try {
       if (conn != null) {
@@ -238,7 +232,6 @@ public class OnlineFeaturestoreController {
    * @param featurestore the featurestore metadata entity
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void setupOnlineFeaturestore(Project project, Users user, Featurestore featurestore)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
@@ -266,7 +259,6 @@ public class OnlineFeaturestoreController {
    * @param project the project of the Hopsworks user
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatabaseUser(Users user, Project project) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
@@ -294,7 +286,6 @@ public class OnlineFeaturestoreController {
    * @return the password
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private String createOnlineFeaturestoreUserSecret(String dbuser, Users user, Project project)
     throws FeaturestoreException {
     String onlineFsPw = generateRandomUserPw();
@@ -315,7 +306,6 @@ public class OnlineFeaturestoreController {
    * @param user the user
    * @return a string representing the online database name
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public String onlineDbUsername(Project project, Users user) {
     return onlineDbUsername(project.getName(), user.getUsername());
   }
@@ -338,7 +328,6 @@ public class OnlineFeaturestoreController {
    * @param user username
    * @return the mysql username for the online featuer store
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private String onlineDbUsername(String project, String user) {
     String username = project + "_" + user;
     if (username.length() > FeaturestoreConstants.ONLINE_FEATURESTORE_USERNAME_MAX_LENGTH) {
@@ -354,7 +343,6 @@ public class OnlineFeaturestoreController {
    * @param user the user to be added
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateUserOnlineFeatureStoreDB(Project project, Users user, Featurestore featurestore)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(getOnlineFeaturestoreDbName(project))) {
@@ -388,7 +376,6 @@ public class OnlineFeaturestoreController {
    * @param db the database-name
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void addOnlineFeatureStoreDB(String db) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
@@ -409,7 +396,6 @@ public class OnlineFeaturestoreController {
    * @param project the project of the user making the request
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeOnlineFeatureStore(Project project) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(getOnlineFeaturestoreDbName(project))) {
       //Nothing to remove
@@ -452,7 +438,6 @@ public class OnlineFeaturestoreController {
    * @param user the user to remove
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeOnlineFeaturestoreUser(Project project, Users user) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       //Nothing to remove
@@ -488,7 +473,6 @@ public class OnlineFeaturestoreController {
    * @param dbName the name of the database
    * @return the size in MB
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Double getDbSize(String dbName) {
     Double dbSize = onlineFeaturestoreFacade.getDbSize(dbName);
     if(dbSize == null){
@@ -503,7 +487,6 @@ public class OnlineFeaturestoreController {
    * @param onlineFeaturegroupDTO metadata about the online featuregroup
    * @return the size in MB
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Double getTblSize(OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
     return onlineFeaturestoreFacade.getTblSize(onlineFeaturegroupDTO.getTableName(),
         onlineFeaturegroupDTO.getDbName().toLowerCase());
@@ -512,34 +495,12 @@ public class OnlineFeaturestoreController {
   /**
    * Gets the SQL schema of an online feature group
    *
-   * @param onlineFeaturegroup the online featuregroup to get the SQL schema of
+   * @param featuregroup the online featuregroup to get the SQL schema of
    * @return a String with the "SHOW CREATE TABLE" result
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public String getOnlineFeaturegroupSchema(OnlineFeaturegroupDTO onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLSchema(onlineFeaturegroup.getTableName(),
-        onlineFeaturegroup.getDbName().toLowerCase());
-  }
-  
-  /**
-   * Gets a preview of an online feature group (select * from tbl LIMIT 20)
-   *
-   * @param onlineFeaturegroup the online featuregroup to preview
-   * @return a preview of 20 rows in the table
-   * @throws FeaturestoreException
-   * @throws SQLException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public List<RowValueQueryResult> getOnlineFeaturegroupPreview(OnlineFeaturegroupDTO onlineFeaturegroup, Users user,
-    Featurestore featurestore ) throws FeaturestoreException, SQLException {
-    String tbl = onlineFeaturegroup.getTableName();
-    String query = "SELECT * FROM " + tbl + " LIMIT 20";
-    String db = onlineFeaturegroup.getDbName().toLowerCase();
-    try {
-      return executeReadJDBCQuery(query, db, featurestore.getProject(), user);
-    } catch(Exception e) {
-      return executeReadJDBCQuery(query, db, featurestore.getProject(), user);
-    }
+  public String getOnlineFeaturegroupSchema(Featuregroup featuregroup) {
+    return onlineFeaturestoreFacade.getMySQLSchema(featuregroup.getName() + "_" + featuregroup.getVersion(),
+        getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
   }
   
   /**
@@ -548,7 +509,6 @@ public class OnlineFeaturestoreController {
    * @param onlineFeaturegroup the online featuregroup to get the table type of
    * @return the table type
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public String getOnlineFeaturegroupTableType(OnlineFeaturegroupDTO onlineFeaturegroup) {
     return onlineFeaturestoreFacade.getMySQLTableType(onlineFeaturegroup.getTableName(),
       onlineFeaturegroup.getDbName().toLowerCase());
@@ -560,7 +520,6 @@ public class OnlineFeaturestoreController {
    * @param onlineFeaturegroup the online featuregroup to get the number of rows of
    * @return the number of rows in the table
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Integer getOnlineFeaturegroupTableRows(OnlineFeaturegroupDTO onlineFeaturegroup) {
     return onlineFeaturestoreFacade.getMySQLTableRows(onlineFeaturegroup.getTableName(),
       onlineFeaturegroup.getDbName().toLowerCase());
@@ -571,7 +530,6 @@ public class OnlineFeaturestoreController {
    *
    * @return String password
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   private String generateRandomUserPw() {
     return RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
   }
@@ -583,7 +541,6 @@ public class OnlineFeaturestoreController {
    * @param dbName the name of the database
    * @return true or false depending on if the database exists or not
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Boolean checkIfDatabaseExists(String dbName) {
     return onlineFeaturestoreFacade.checkIfDatabaseExists(dbName);
   }

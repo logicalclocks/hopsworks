@@ -174,9 +174,28 @@ angular.module('hopsWorksApp')
                  * @param featuregroup the featuregroup to preview
                  * @returns {HttpPromise}
                  */
-                getFeaturegroupSample: function(projectId, featurestore, featuregroup) {
+                getFeaturegroupSample: function(projectId, featurestore, featuregroup, storageType, limit, partition) {
+                    var partitionParam = "";
+                    if (partition != null) {
+                        partitionParam = "&partition=" + encodeURIComponent(partition);
+                    }
+
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/preview");
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/preview?storage=" +
+                        storageType + "&limit=" + limit + partitionParam);
+                },
+
+                /**
+                 * GET request to retrieve the partitions of a feature group 
+                 * @param projectId 
+                 * @param featurestore 
+                 * @param featuregroup 
+                 * @param storageType 
+                 * @param limit 
+                 */
+                getFeaturegroupPartitions: function(projectId, featurestore, featuregroup) {
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/partitions");
                 },
 
                 getFeaturegroupTags: function(projectId, featurestore, featuregroup) {
