@@ -684,8 +684,12 @@ public class ProjectController {
     DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
+      boolean sticky = true;
+      if(ds.getName().equals(Settings.BaseDataset.RESOURCES.getName())){
+        sticky = false;
+      }
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, Provenance.Type.DISABLED.dto, true, true, dfso);
+          getDescription(), -1, Provenance.Type.DISABLED.dto, sticky, true, dfso);
 
       Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
 
