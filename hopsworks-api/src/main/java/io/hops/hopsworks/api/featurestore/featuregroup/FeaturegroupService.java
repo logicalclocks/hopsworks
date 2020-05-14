@@ -35,7 +35,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.RowValueQueryResult;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -44,6 +43,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -53,6 +53,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -109,6 +110,10 @@ public class FeaturegroupService {
   private TagsBuilder tagBuilder;
   @Inject
   private FeaturegroupTagControllerIface tagController;
+  @Inject
+  private FeatureGroupPreviewResource featureGroupPreviewResource;
+  @Inject
+  private FeatureGroupPartitionResource featureGroupPartitionResource;
   
   private Project project;
   private Featurestore featurestore;
@@ -214,7 +219,8 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
-                                  @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc) {
+                                  @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
+      throws FeaturestoreException {
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
         featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
@@ -242,7 +248,8 @@ public class FeaturegroupService {
   public Response getFeatureGroup(@ApiParam(value = "Name of the feature group", required = true)
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
-                                  @QueryParam("version") Integer version, @Context SecurityContext sc) {
+                                  @QueryParam("version") Integer version, @Context SecurityContext sc)
+      throws FeaturestoreException{
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
@@ -300,43 +307,6 @@ public class FeaturegroupService {
     }
   }
 
-  /**
-   * Endpoint for retrieving a preview of a featuregroup with a specified id in a specified featurestore
-   *
-   * @param featuregroupId id of the featuregroup
-   * @return JSON representation of SELECT * from featuregroup LIMIT 20 on online and offline feature tables
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @GET
-  @Path("/{featuregroupId}/preview")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Preview feature data of a featuregroup",
-      response = FeaturegroupPreview.class,
-      responseContainer = "List")
-  public Response getFeatureGroupPreview(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
-    verifyIdProvided(featuregroupId);
-    Users user = jWTHelper.getUserPrincipal(sc);
-    try {
-      FeaturegroupDTO featuregroupDTO =
-          featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-      FeaturegroupPreview featuresPreview =
-          featuregroupController.getFeaturegroupPreview(featuregroupDTO, featurestore, project, user);
-      GenericEntity<FeaturegroupPreview> featuresdataGeneric =
-          new GenericEntity<FeaturegroupPreview>(featuresPreview) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuresdataGeneric).build();
-    } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP.getMessage(), e);
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_PREVIEW_FEATUREGROUP, Level.SEVERE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", featuregroupId: " + featuregroupId, e.getMessage(), e);
-    }
-  }
 
   /**
    * Endpoint for retrieving the SQL create schema of a featuregroup with a specified id in a specified featurestore
@@ -352,23 +322,18 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get the SQL schema of a featuregroup",
-      response = RowValueQueryResult.class)
-  public Response getFeatureGroupSchema(
-      @Context SecurityContext sc,
-      @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
+  @ApiOperation(value = "Get the SQL schema of a featuregroup", response = FeaturegroupPreview.class)
+  public Response getFeatureGroupSchema(@Context SecurityContext sc,
+      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
+      throws FeaturestoreException, HopsSecurityException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     try {
-      FeaturegroupDTO featuregroupDTO =
-          featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-      RowValueQueryResult schema = featuregroupController.getDDLSchema(featuregroupDTO, featurestore, project, user);
-      GenericEntity<RowValueQueryResult> schemaGeneric = new GenericEntity<RowValueQueryResult>(schema) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(schemaGeneric).build();
+      Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
+      Pair<String, String> schemas = featuregroupController.getDDLSchema(featuregroup, project, user);
+      SchemaDTO schemaDTO = new SchemaDTO(schemas.getValue0(), schemas.getValue1());
+      return Response.ok().entity(schemaDTO).build();
     } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE,
-          RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA.getMessage(), e);
       throw new FeaturestoreException(
           RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
@@ -689,6 +654,25 @@ public class FeaturegroupService {
 
     return Response.noContent().build();
   }
-  
+
+  @Path("/{featuregroupId}/preview")
+  public FeatureGroupPreviewResource getFeatureGroupPreview(
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
+      throws FeaturestoreException {
+    FeatureGroupPreviewResource fgPreviewResource = featureGroupPreviewResource.setProject(project);
+    fgPreviewResource.setFeaturestore(featurestore);
+    fgPreviewResource.setFeatureGroupId(featuregroupId);
+    return fgPreviewResource;
+  }
+
+  @Path("/{featuregroupId}/partitions")
+  public FeatureGroupPartitionResource getFeatureGroupPartitions(
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
+      throws FeaturestoreException {
+    FeatureGroupPartitionResource partitionResource = featureGroupPartitionResource.setProject(project);
+    partitionResource.setFeaturestore(featurestore);
+    partitionResource.setFeatureGroupId(featuregroupId);
+    return partitionResource;
+  }
 }
 

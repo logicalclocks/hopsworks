@@ -330,6 +330,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
   private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
+  private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
 
   //Elastic OpenDistro
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -349,7 +350,7 @@ public class Settings implements Serializable {
       "cloud_events_endpoint";
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY=
       "cloud_events_endpoint_api_key";
-  
+
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -725,6 +726,8 @@ public class Settings implements Serializable {
   
       CLOUD_EVENTS_ENDPOINT_API_KEY =
           setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY, CLOUD_EVENTS_ENDPOINT_API_KEY);
+
+      FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
       
       populateProvenanceCache();
       
@@ -3709,6 +3712,12 @@ public class Settings implements Serializable {
   public synchronized String getCloudEventsEndPointAPIKey() {
     checkCache();
     return CLOUD_EVENTS_ENDPOINT_API_KEY;
+  }
+
+  private int FG_PREVIEW_LIMIT = 100;
+  public synchronized int getFGPreviewLimit() {
+    checkCache();
+    return FG_PREVIEW_LIMIT;
   }
 
   public static final String FEATURESTORE_INDEX = "featurestore";

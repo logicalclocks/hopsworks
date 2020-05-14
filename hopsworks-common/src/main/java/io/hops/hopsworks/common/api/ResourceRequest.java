@@ -165,6 +165,8 @@ public class ResourceRequest {
     XATTRS,
     FEATURESTORES,
     FEATUREGROUPS,
+    PREVIEW,
+    PARTITIONS,
     EXPERIMENTS,
     TENSORBOARD,
     RESULTS,

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,37 +14,29 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.featuregroup.cached;
+package io.hops.hopsworks.api.featurestore.featuregroup;
 
-import javax.xml.bind.annotation.XmlElement;
+import io.hops.hopsworks.common.api.RestDTO;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import java.util.List;
 
-/**
- * DTO containing a column query result in String format
- * using jaxb.
- */
 @XmlRootElement
-@XmlType(propOrder = {"name", "value"})
-public class ColumnValueQueryResult {
+public class PreviewDTO extends RestDTO<PreviewDTO> {
 
-  private String name;
-  private String value;
+  private List<ColumnDTO> row;
 
-  public ColumnValueQueryResult(){}
+  public PreviewDTO() {}
 
-  public ColumnValueQueryResult(String name, String value) {
-    this.name = name;
-    this.value = value;
+  public PreviewDTO(List<ColumnDTO> row) {
+    this.row = row;
   }
 
-  @XmlElement
-  public String getName() {
-    return name;
+  public List<ColumnDTO> getRow() {
+    return row;
   }
 
-  @XmlElement
-  public String getValue() {
-    return value;
+  public void setRow(List<ColumnDTO> row) {
+    this.row = row;
   }
 }
