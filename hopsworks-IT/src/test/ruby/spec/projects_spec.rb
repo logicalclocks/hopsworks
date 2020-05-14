@@ -332,22 +332,24 @@ describe "On #{ENV['OS']}" do
         it "should delete and recreate featurestore tour" do
           project = create_project_tour("featurestore")
           job_name = "featurestore_tour_job"
-          wait_for_execution do
+          wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")
             execution_id = json_body[:items][0][:id]
             stop_execution(project[:id], job_name, execution_id)
             get_execution(project[:id], job_name, execution_id)
-            json_body[:state].eql? "KILLED"
+            { 'success' => (json_body[:state].eql? "KILLED"), 'msg' => "expected:KILLED, found:#{json_body[:state]}" }
           end
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           delete_project(project)
           project = create_project_tour("featurestore")
-          wait_for_execution do
+          wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")
             execution_id = json_body[:items][0][:id]
             stop_execution(project[:id], job_name, execution_id)
             get_execution(project[:id], job_name, execution_id)
-            json_body[:state].eql? "KILLED"
+            { 'success' => (json_body[:state].eql? "KILLED"), 'msg' => "expected:KILLED, found:#{json_body[:state]}" }
           end
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           delete_project(project)
         end
       end
