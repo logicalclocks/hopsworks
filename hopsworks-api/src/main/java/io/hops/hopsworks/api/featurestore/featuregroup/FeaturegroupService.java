@@ -656,6 +656,7 @@ public class FeaturegroupService {
   }
 
   @Path("/{featuregroupId}/preview")
+  @Logged(logLevel = LogLevel.OFF)
   public FeatureGroupPreviewResource getFeatureGroupPreview(
       @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException {
@@ -666,6 +667,7 @@ public class FeaturegroupService {
   }
 
   @Path("/{featuregroupId}/partitions")
+  @Logged(logLevel = LogLevel.OFF)
   public FeatureGroupPartitionResource getFeatureGroupPartitions(
       @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException {
