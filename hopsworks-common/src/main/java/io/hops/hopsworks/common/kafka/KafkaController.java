@@ -189,7 +189,12 @@ public class KafkaController {
      * topic (with the same name) create operation fails.
      */
     //remove from zookeeper
-    hopsKafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
+    try {
+      hopsKafkaAdminClient.deleteTopics(Collections.singleton(pt.getTopicName()));
+    } catch (Exception e) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_DELETION_FAILED, Level.WARNING,
+        "topic: " + pt.getTopicName());
+    }
   }
   
   public List<TopicDTO> findTopicsByProject(Project project) {
@@ -240,44 +245,61 @@ public class KafkaController {
     return pt;
   }
   
-  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
-    return hopsKafkaAdminClient.listTopics().names().thenApply((set) -> {
-      if (set.contains(topicDTO.getName())) {
-        return null;
-      } else {
-        NewTopic newTopic =
-          new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-        return hopsKafkaAdminClient.createTopics(Collections.singleton(newTopic));
-      }
-    });
+  private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) throws KafkaException {
+    try {
+      return hopsKafkaAdminClient.listTopics().names().thenApply(
+        set -> {
+          if (set.contains(topicDTO.getName())) {
+            return null;
+          } else {
+            NewTopic newTopic =
+              new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+            try {
+              return hopsKafkaAdminClient.createTopics(Collections.singleton(newTopic));
+            } catch (Exception e) {
+              LOGGER.log(Level.WARNING, e.getMessage(), e);
+              return null;
+            }
+          }
+        });
+    } catch (Exception e) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING,
+        "Could not fetch topics: ", e.getMessage(), e);
+    }
   }
   
-  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
-    return hopsKafkaAdminClient.describeTopics(Collections.singleton(topicName))
-      .all()
-      .thenApply((map) -> map.getOrDefault(topicName, null))
-      .thenApply((td) -> {
-        if (td != null) {
-          List<PartitionDetailsDTO> partitionDetails = new ArrayList<>();
-          List<TopicPartitionInfo> partitions = td.partitions();
-          for (TopicPartitionInfo partition : partitions) {
-            int id = partition.partition();
-            List<String> replicas = partition.replicas()
-              .stream()
-              .map(Node::host)
-              .collect(Collectors.toList());
-            List<String> inSyncReplicas = partition.isr()
-              .stream()
-              .map(Node::host)
-              .collect(Collectors.toList());
-            partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
+  private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName)
+    throws KafkaException {
+    try {
+      return hopsKafkaAdminClient.describeTopics(Collections.singleton(topicName))
+        .all()
+        .thenApply((map) -> map.getOrDefault(topicName, null))
+        .thenApply((td) -> {
+          if (td != null) {
+            List<PartitionDetailsDTO> partitionDetails = new ArrayList<>();
+            List<TopicPartitionInfo> partitions = td.partitions();
+            for (TopicPartitionInfo partition : partitions) {
+              int id = partition.partition();
+              List<String> replicas = partition.replicas()
+                .stream()
+                .map(Node::host)
+                .collect(Collectors.toList());
+              List<String> inSyncReplicas = partition.isr()
+                .stream()
+                .map(Node::host)
+                .collect(Collectors.toList());
+              partitionDetails.add(new PartitionDetailsDTO(id, partition.leader().host(), replicas, inSyncReplicas));
+            }
+            partitionDetails.sort(Comparator.comparing(PartitionDetailsDTO::getId));
+            return partitionDetails;
+          } else {
+            return Collections.emptyList();
           }
-          partitionDetails.sort(Comparator.comparing(PartitionDetailsDTO::getId));
-          return partitionDetails;
-        } else {
-          return Collections.emptyList();
-        }
-      });
+        });
+    } catch (Exception e) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, "topic: " + topicName,
+        null, e);
+    }
   }
   
   public KafkaFuture<List<PartitionDetailsDTO>> getTopicDetails (Project project, String topicName) throws

@@ -695,7 +695,12 @@ public class RESTCodes {
     SCHEMA_VERSION_NOT_FOUND(18, "Specified version of the schema not found", Response.Status.NOT_FOUND),
     PROJECT_IS_NOT_THE_OWNER_OF_THE_TOPIC(19, "Specified project is not the owner of the topic",
       Response.Status.BAD_REQUEST),
-    ACL_FOR_ANY_USER(20, "Cannot create an ACL for user with email '*'", Response.Status.BAD_REQUEST);
+    ACL_FOR_ANY_USER(20, "Cannot create an ACL for user with email '*'", Response.Status.BAD_REQUEST),
+    KAFKA_UNAVAILABLE(21, "Kafka is temporarily unavailable. Please try again later",
+      Response.Status.SERVICE_UNAVAILABLE),
+    TOPIC_DELETION_FAILED(22, "Could not delete Kafka topics.", Response.Status.INTERNAL_SERVER_ERROR),
+    TOPIC_FETCH_FAILED(23, "Could note fetch topic details.", Response.Status.INTERNAL_SERVER_ERROR),
+    TOPIC_CREATION_FAILED(24, "Could not create topic.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;
