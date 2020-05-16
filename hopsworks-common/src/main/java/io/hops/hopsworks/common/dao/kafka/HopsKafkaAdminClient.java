@@ -40,6 +40,7 @@ import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.Set;
@@ -90,6 +91,13 @@ public class HopsKafkaAdminClient {
   }
   
   private void initClient() {
+    if (adminClient != null) {
+      try {
+        adminClient.close(Duration.ofSeconds(3));
+      } catch (Exception e) {
+        LOG.log(Level.WARNING, "Could not close adminClient, will continue with initialization", e);
+      }
+    }
     Properties props = new Properties();
     Set<String> brokers = kafkaBrokers.getKafkaBrokers();
     //Keep only INTERNAL protocol brokers
@@ -133,7 +141,7 @@ public class HopsKafkaAdminClient {
     try {
       getAdminClient();
     } catch (Exception e) {
-      LOG.log(Level.SEVERE, "Kafka cluster is unavailable", e);
+      LOG.log(Level.WARNING, "Kafka cluster is unavailable", e);
     }
   }
 }
