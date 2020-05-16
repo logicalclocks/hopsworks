@@ -50,10 +50,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Stateless(name = "HopsFSProvenanceController")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopsFSProvenanceController {
+  private static final Logger LOGGER = Logger.getLogger(HopsFSProvenanceController.class.getName());
+  
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -237,8 +240,15 @@ public class HopsFSProvenanceController {
         + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
       FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
       try {
-        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(),
-          converter.marshal(fg).getBytes());
+        byte[] xattrVal = converter.marshal(fg).getBytes();
+        if(xattrVal.length > 13500) {
+          LOGGER.log(Level.INFO,
+            "xattr is too large to attach - featuregroup:{0} will not have features attached", path);
+          fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
+            featuregroup.getCreated(), featuregroup.getCreator());
+          xattrVal = converter.marshal(fg).getBytes();
+        }
+        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(), xattrVal);
       } catch (IOException | GenericException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
@@ -251,7 +261,7 @@ public class HopsFSProvenanceController {
   }
   
   public void trainingDatasetAttachXAttr(Users user, Project project, String path,
-    io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO trainingDatasetDTO)
+    TrainingDatasetDTO trainingDatasetDTO)
     throws ProvenanceException {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
@@ -263,8 +273,15 @@ public class HopsFSProvenanceController {
         td.setFeatures(featuresDTO);
       }
       try {
-        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(),
-          converter.marshal(td).getBytes());
+        byte[] xattrVal = converter.marshal(td).getBytes();
+        if(xattrVal.length > 13500) {
+          LOGGER.log(Level.INFO,
+            "xattr is too large to attach - trainingdataset:{0} will not have features attached", path);
+          td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
+            trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
+          xattrVal = converter.marshal(td).getBytes();
+        }
+        udfso.upsertXAttr(path, FeaturestoreXAttrsConstants.getFeaturestoreXAttrKey(), xattrVal);
       } catch (IOException | GenericException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - training dataset - error", "hopsfs - set xattr - training dataset - error", e);
