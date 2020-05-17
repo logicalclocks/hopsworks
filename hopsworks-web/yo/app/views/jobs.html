@@ -249,12 +249,15 @@
                                       ng-show="jobsCtrl.executionsPagination[job.name].sort === 'progress'"
                                       ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
                             </th>
-                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'state')" style="width: 15%">
-                              State
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'state')" style="width: 9%">State
                               <span class="glyphicon sort-icon"
                                     ng-show="jobsCtrl.executionsPagination[job.name].sort === 'state'"
                                     ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span>
                             </th>
+                            <th ng-click="jobsCtrl.sortExecutions(job.name, 'finalstatus')" style="width:6%">Status
+                              <span class="glyphicon sort-icon"
+                                    ng-show="jobsCtrl.executionsPagination[job.name].sort === 'finalstatus'"
+                                    ng-class="{'glyphicon-chevron-up':!jobsCtrl.executionsPagination[job.name].reverse,'glyphicon-chevron-down':jobsCtrl.executionsPagination[job.name].reverse}"></span></th>
                             <th ng-click="jobsCtrl.sortExecutions(job.name, 'duration')" style="width: 5%">Duration
                                 <span class="glyphicon sort-icon"
                                       ng-show="jobsCtrl.executionsPagination[job.name].sort === 'duration'"
@@ -356,8 +359,28 @@
                               {{jobsCtrl.toTitleCase(execution.state)}}
                             </span>
                             </td>
-
-
+                            <td>
+                            <span
+                                    ng-if="execution.finalStatus===undefined || execution.finalStatus === 'UNDEFINED'"
+                                    style="color: #0066bb ">
+                              --
+                            </span>
+                              <span
+                                      ng-if="execution.finalStatus === 'SUCCEEDED'"
+                                      style="color: #00A000 ">
+                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
+                            </span>
+                              <span
+                                      ng-if="execution.finalStatus === 'FAILED'"
+                                      style="color: #880000 ">
+                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
+                            </span>
+                              <span
+                                      ng-if="execution.finalStatus === 'KILLED'"
+                                      style="color: #880000 ">
+                              {{jobsCtrl.toTitleCase(execution.finalStatus)}}
+                            </span>
+                            </td>
                             <td>
                               {{convertMS(execution.duration)}}
                             </td>
