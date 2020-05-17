@@ -264,6 +264,55 @@ describe "On #{ENV['OS']}" do
       expect(global_featurestore_search("TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
       expect(global_featurestore_search("TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to be >= 5
     end
+
+    context "same project" do
+      before :all do
+        with_valid_project
+      end
+      it "create large featuregroup & training dataset - searchable (except features)" do
+        project = get_project
+        epipe_wait_on_mutations
+
+        featurestore_id = get_featurestore_id(project[:id])
+        fg_name = "cat_567890"
+        fg_description = "bird_67890"
+        fg_features = Array.new(1400) do |i|
+          {
+              type: "INT",
+              name: "dog_567890_#{i}",
+              description: "dog_567890",
+              primary: false
+          }
+        end
+        fg_features[0] = {
+            type: "INT",
+            name: "dog_567890_0",
+            description: "dog_567890",
+            primary: true
+        }
+        create_cached_featuregroup_checked(project[:id], featurestore_id, fg_name, features: fg_features, featuregroup_description: fg_description)
+        epipe_wait_on_mutations
+        expected_hits1 = [{'name' => fg_name, 'highlight' => "name", 'parent_project' => project[:projectname]}]
+        project_search_test(project, "cat", "featuregroup", expected_hits1)
+        expected_hits2 = [{'name' => fg_name, 'highlight' => "description", 'parent_project' => project[:projectname]}]
+        project_search_test(project, "bird", "featuregroup", expected_hits2)
+        project_search_test(project, "dog", "featuregroup", [])
+
+        td_name = "cat_567890"
+        td_description = "bird_67890"
+        td_features = Array.new(1400) do |i|
+          { name:  fg_features[i][:name], featuregroup: fg_name, version: 1, type: "INT", description: "dog_567890"}
+        end
+        connector = get_hopsfs_training_datasets_connector(project[:projectname])
+        create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, td_name, features: td_features, description: td_description)
+        epipe_wait_on_mutations
+        expected_hits3 = [{'name' => td_name, 'highlight' => 'name', 'parent_project' => project[:projectname]}]
+        project_search_test(project, "cat", "trainingdataset", expected_hits3)
+        expected_hits4 = [{'name' => td_name, 'highlight' => 'description', 'parent_project' => project[:projectname]}]
+        project_search_test(project, "bird", "trainingdataset", expected_hits4)
+        project_search_test(project, "dog", "trainingdataset", [])
+      end
+    end
   end
 end
 
