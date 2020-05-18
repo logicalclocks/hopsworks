@@ -599,6 +599,90 @@ describe "On #{ENV['OS']}" do
           readme_parsed = JSON.parse(readme)
           expect(readme_parsed['preview']).not_to be_nil
         end
+        it "should share training dataset when sharing requested feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          get_dataset_stat(@project, featurestore, "&type=FEATURESTORE")
+          ds = json_body
+          request_dataset_access(project, ds[:attributes][:id])
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+        end
+        it "should share training dataset when accepting non requested feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+        end
+        it "should not share training dataset when sharing non requested feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(400)
+        end
+        it "should accept pending training dataset when accepting feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, trainingDataset, project[:projectname], "&type=DATASET")
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+        end
+        it "should ignore shared training dataset when accepting feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, trainingDataset, project[:projectname], "&type=DATASET")
+          accept_dataset(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", "&type=FEATURESTORE")
+          expect_status(204)
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+        end
+        it "should unshare training dataset when unsharing feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+          unshare_from(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(400)
+          expect_json(errorCode: 110011)
+        end
+        it "should unshare training dataset when deleting feature store" do
+          projectname = "project_#{short_random_id}"
+          project = create_project_by_name(projectname)
+          featurestore = "#{@project[:projectname].downcase}_featurestore.db"
+          trainingDataset =  "#{@project[:projectname]}_Training_Datasets"
+          share_dataset(@project, featurestore, project[:projectname], "&type=FEATURESTORE")
+          accept_dataset(project, "#{@project[:projectname]}::#{featurestore}", "&type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(200)
+          delete_dataset(project, "#{@project[:projectname]}::#{featurestore}", "?type=FEATURESTORE")
+          get_dataset_stat(project, "#{@project[:projectname]}::#{trainingDataset}", "&type=DATASET")
+          expect_status(400)
+        end
       end
       context 'delete' do
         before :each do

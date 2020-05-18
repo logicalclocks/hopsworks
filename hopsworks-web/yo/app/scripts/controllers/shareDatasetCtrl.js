@@ -47,6 +47,7 @@ angular.module('hopsWorksApp')
             self.targetProject = null;
             self.pId = $routeParams.projectID;
             self.loading = true;
+            self.dsType = dsType;
             var dataSetService = DataSetService(self.pId);
             var defaultPermissions = 'OWNER_ONLY';
 

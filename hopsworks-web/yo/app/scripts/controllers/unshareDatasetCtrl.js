@@ -49,6 +49,7 @@ angular.module('hopsWorksApp')
             self.loading = true;
             self.datasetPath = datasetPath;
             self.selectedProjects = [];
+            self.dsType = dsType;
             var dataSetService = DataSetService(self.pId);
 
             dataSetService.getDatasetStat(self.datasetPath).then(
