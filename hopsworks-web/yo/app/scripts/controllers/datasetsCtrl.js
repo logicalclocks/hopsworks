@@ -743,13 +743,26 @@ angular.module('hopsWorksApp')
                 });
             };
 
+            var getAssociatedTrainingDataset = function (sharedFeaturestoreName) {
+                var fsName = sharedFeaturestoreName;
+                var index = fsName.indexOf(SHARED_DATASET_SEPARATOR);
+                return fsName.substring(0, index + SHARED_DATASET_SEPARATOR.length) + TRAINING_DATASET_NAME;
+            }
+
             /**
              * Delete the dataset with the given path.
              * @param {type} fileName
              * @returns {undefined}
              */
             self.deleteDataset = function (dataset) {
-                ModalService.confirm('md', 'Confirm', getDeleteWarnMsg(dataset)).then(function (success) {
+                var msg = getDeleteWarnMsg(dataset);
+                if (dataset.datasetType === 'FEATURESTORE' && dataset.shared && dataset.accepted) {
+                    var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
+                    var tsName = getAssociatedTrainingDataset(fsName);
+                    msg += '<br><br><i class="fa fa-info-circle text-info"></i> ' +
+                        'Deleting <strong>' + fsName + '</strong> will also delete <strong>' + tsName + '</strong> if it exists.';
+                }
+                ModalService.confirm('md', 'Confirm', msg).then(function (success) {
                    removeFile(dataset);
                 });
             };
@@ -979,7 +992,14 @@ angular.module('hopsWorksApp')
                 $rootScope.parentDS = dataset;
                 $location.path($location.path() + '/' + dataset.name + '/');
               } else {
-                ModalService.confirmShare('sm', 'Accept Shared Dataset?', 'Do you want to accept this dataset and add it to this project?')
+                var msg = 'Do you want to accept this dataset and add it to this project?';
+                if (dataset.datasetType === 'FEATURESTORE') {
+                    var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
+                    var tsName = getAssociatedTrainingDataset(fsName);
+                    msg += '<br><i class="fa fa-info-circle text-info"></i> ' +
+                        'Accepting this shared dataset will also add ' + tsName + ' to this project.';
+                }
+                ModalService.confirmShare('md', 'Accept Shared Dataset?', msg)
                   .then(function (success) {
                       dataSetService.accept(dataset.attributes.path, dataset.datasetType).then(
                       function (success) {

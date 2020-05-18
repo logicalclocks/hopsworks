@@ -300,7 +300,8 @@ public class RESTCodes {
     DATASET_REQUEST_ERROR(49, "Could not send dataset request", Response.Status.INTERNAL_SERVER_ERROR),
     DATASET_ACCESS_PERMISSION_DENIED(50, "Permission denied.", Response.Status.FORBIDDEN),
     PATH_ENCODING_NOT_SUPPORTED(51, "Unsupported encoding.", Response.Status.BAD_REQUEST),
-    ATTACH_XATTR_ERROR(52, "Failed to attach Xattr.", Response.Status.INTERNAL_SERVER_ERROR);
+    ATTACH_XATTR_ERROR(52, "Failed to attach Xattr.", Response.Status.INTERNAL_SERVER_ERROR),
+    TARGET_PROJECT_NOT_FOUND(53, "Target project not found.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;

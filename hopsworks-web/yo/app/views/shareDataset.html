@@ -91,6 +91,10 @@
                         </div>
                     <p></p>
                 </div>
+                    <p ng-if="shareDatasetCtrl.dsType === 'FEATURESTORE'" class="text-warning">
+                        <i class="fa fa-warning"></i>
+                        Sharing a Featurestore will also make Training Dataset accessible for the project.
+                    </p>
                 </div>
             </fieldset>
             <fieldset>

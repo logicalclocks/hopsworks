@@ -436,7 +436,11 @@ angular.module('hopsWorksApp')
                 $rootScope.parentDS = dataset;
                 $location.path($location.path() + '/' + dataset.name + '/');
               } else {
-                ModalService.confirmShare('sm', 'Accept Shared Dataset?', 'Do you want to accept this dataset and add it to this project?')
+                  var msg = 'Do you want to accept this dataset and add it to this project?';
+                  if (dataset.datasetType === 'FEATURESTORE') {
+                      msg = msg + '<br> This will also accept and add the Training Dataset to this project.'
+                  }
+                  ModalService.confirmShare('sm', 'Accept Shared Dataset?', msg)
                         .then(function (success) {
                           DataSetService(self.projectId).acceptDataset(dataset.id).then(
                                   function (success) {

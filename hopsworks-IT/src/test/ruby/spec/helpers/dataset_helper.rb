@@ -362,6 +362,10 @@ module DatasetHelper
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=unshare#{datasetType}"
   end
 
+  def unshare_from(project, path, target, datasetType)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=unshare&target_project=#{target}#{datasetType}"
+  end
+
   def get_download_token(project, path, datasetType)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/token/#{path}#{datasetType}"
   end
