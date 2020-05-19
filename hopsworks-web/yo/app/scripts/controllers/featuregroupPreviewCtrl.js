@@ -53,12 +53,12 @@
             self.columns = [];
             self.rows = [];
 
-            partitionName = null;
+            var partitionName = null;
             if (self.partitionSelected != "ALL PARTITIONS") {
                 partitionName = self.partitionSelected;
             }
 
-            limit = 20;
+            var limit = 20;
             if (self.limit !== undefined && self.limit != null) {
                 limit = self.limit;
             } else {
@@ -80,16 +80,16 @@
         };
 
         self.processData = function(data) {
-            rawSample = data.items;
+            var rawSample = data.items;
 
             if(rawSample.length > 0){
-                for (i = 0; i < rawSample[0].row.length; i++) {
+                for (var i = 0; i < rawSample[0].row.length; i++) {
                     self.columns.push(rawSample[0].row[i].columnName)
                 }
             }
-            for (i = 0; i < rawSample.length; i++) {
-                sampleRow = {}
-                for (j = 0; j < rawSample[i].row.length; j++) {
+            for (var i = 0; i < rawSample.length; i++) {
+                var sampleRow = {}
+                for (var j = 0; j < rawSample[i].row.length; j++) {
                     sampleRow[rawSample[i].row[j].columnName] = rawSample[i].row[j].columnValue
                 }
                 self.rows.push(sampleRow)
