@@ -108,14 +108,12 @@ public class CertificatesController {
   private final static String KEY_ALGORITHM = "RSA";
   private final static String SIGNATURE_ALGORITHM = "SHA256withRSA";
   private final static String CERTIFICATE_TYPE = "X.509";
-  private final static int KEY_SIZE = 1024;
+  private final static int KEY_SIZE = 2048;
 
   @EJB
   private CertsFacade certsFacade;
   @EJB
   private CertificatesMgmService certificatesMgmService;
-  @EJB
-  private Settings settings;
   @Inject
   @Any
   private Instance<CertificateHandler> certificateHandlers;
