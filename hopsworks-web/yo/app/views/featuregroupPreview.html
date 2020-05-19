@@ -61,7 +61,7 @@
         </div>
 
         <div class="col-sm-2 col-md-2 col-lg-2 form-group" 
-             style="margin-top: 10px;"
+             style="margin-top: 5px;"
              ng-if="featuregroupPreviewCtrl.fg.onlineFeaturegroupEnabled === true">
             <span style="margin-right: 10px;">Storage: </span>
             <label class="radio-inline"><input type="radio" 
@@ -81,7 +81,8 @@
         </div>
 
         <div class="col-sm-4 col-md-4 col-lg-4 form-group"
-                 ng-if="featuregroupPreviewCtrl.partitions.length > 1">
+                 ng-if="featuregroupPreviewCtrl.partitions.length > 1 && 
+                 featuregroupPreviewCtrl.storageType === 'offline'">
                 <span style="margin-right: 10px;">Partitions: </span>
                 <select ng-model="featuregroupPreviewCtrl.partitionSelected" 
                         class="form-control"
