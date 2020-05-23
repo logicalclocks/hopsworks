@@ -197,21 +197,17 @@ module ProvStateHelper
     end
   end 
 
-  def get_ml_asset_in_project(project, ml_type, with_app_state, expected, debug)
+  def get_ml_asset_in_project(project, ml_type, with_app_state, expected)
     resource = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states"
     query_params = "?filter_by=ML_TYPE:#{ml_type}"
     if with_app_state
       query_params = query_params + "&expand=APP"
     end
-    if(debug)
-      pp "#{resource}#{query_params}"
-    end
+    pp "#{resource}#{query_params}" if defined?(@debugOpt) && @debugOpt == true
     result = get "#{resource}#{query_params}"
     expect_status(200)
     parsed_result = JSON.parse(result)
-    if(debug)
-      pp parsed_result
-    end
+    pp parsed_result if defined?(@debugOpt) && @debugOpt == true
     expect(parsed_result["items"].length).to eq expected
     expect(parsed_result["count"]).to eq expected
     parsed_result

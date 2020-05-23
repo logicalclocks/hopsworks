@@ -17,6 +17,23 @@ module EpipeHelper
   def epipe_stop
     execute_remotely ENV['EPIPE_HOST'], "sudo systemctl stop epipe"
   end
+  def epipe_stop_restart
+    begin
+      epipe_stop
+      yield
+    ensure
+      epipe_restart_checked
+    end
+  end
+
+  def epipe_restart_checked
+    epipe_restart
+    #if necessary wait (1+2)s - on vms it can sometimes be a slow process - in general 1s will be enough
+    sleep(1) unless is_epipe_active
+    sleep(2) unless is_epipe_active
+    epipe_active
+  end
+
   def epipe_restart
     execute_remotely ENV['EPIPE_HOST'], "sudo systemctl restart epipe"
   end
@@ -45,9 +62,7 @@ module EpipeHelper
         break
       else
         pp "WARNING - #{result["msg"]}"
-        epipe_restart
-        sleep(1)
-        epipe_active
+        epipe_restart_checked
       end
     end
     pending_mutations = HDFSMetadataLog.count
@@ -56,7 +71,7 @@ module EpipeHelper
     sleep(3)
   end
 
-  def epipe_wait_on_provenance(repeat=3)
+  def epipe_wait_on_provenance(repeat=3, with_restart: true)
     repeat.times do
       #check FileProv log table
       result = wait_for_me_time(30) do
@@ -81,11 +96,11 @@ module EpipeHelper
       if result["success"] == true
         break
       else
-        #restart epipe and try waiting again
-        pp "WARNING - #{result["msg"]}"
-        epipe_restart
-        sleep(1)
-        epipe_active
+        if with_restart
+          #restart epipe and try waiting again
+          pp "WARNING - #{result["msg"]}"
+          epipe_restart_checked
+        end
       end
     end
     pending_prov = FileProv.count
