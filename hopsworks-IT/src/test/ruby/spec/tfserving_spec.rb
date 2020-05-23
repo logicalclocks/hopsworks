@@ -278,21 +278,11 @@ describe "On #{ENV['OS']}" do
         sleep(30)
 
         # Check that the logs are written in the elastic index.
-        begin
-          Airborne.configure do |config|
-            config.base_url = ''
-          end
+        elastic_rest do
           response = elastic_get "#{@project[:projectname].downcase}_serving*/_search?q=modelname:#{@serving[:name]}"
           index = response.body
-        rescue
-          p "Tfserving spec: Error calling elastic_get #{$!}"
-        else
           parsed_index = JSON.parse(index)
           expect(parsed_index['hits']['total']['value']).to be > 0
-        ensure
-          Airborne.configure do |config|
-            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-          end
         end
       end
 
