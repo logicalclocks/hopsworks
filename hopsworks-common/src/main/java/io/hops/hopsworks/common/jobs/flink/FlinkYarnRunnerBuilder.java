@@ -104,7 +104,8 @@ public class FlinkYarnRunnerBuilder {
   }
 
   YarnRunner getYarnRunner(Project project, String jobUser, DistributedFileSystemOps dfsClient,
-    YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings, String kafkaBrokersString)
+                           YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings,
+                           String kafkaBrokersString, String hopsworksRestEndpoint)
       throws IOException {
 
     String stagingPath = File.separator + "Projects" + File.separator + project.getName() + File.separator
@@ -131,7 +132,7 @@ public class FlinkYarnRunnerBuilder {
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
       .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, null, extraJavaOptions,
-          kafkaBrokersString);
+          kafkaBrokersString, hopsworksRestEndpoint);
   
     //Parse properties from Spark config file
     Yaml yaml = new Yaml();
@@ -154,12 +155,8 @@ public class FlinkYarnRunnerBuilder {
                  .createClusterSpecification();
     
     cluster.setLocalJarPath(new Path(settings.getLocalFlinkJarPath()));
-    // Glassfish domain truststore
-    cluster.addHopsLocalResources(Settings.DOMAIN_CA_TRUSTSTORE, settings.getGlassfishTrustStoreHdfs());
-    // Add HopsUtil
-//    cluster.addHopsLocalResources("hops-util.jar", settings.getHopsUtilHdfsPath());
-  
     cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings, true),settings.getDockerMounts());
+
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);
     builder.setFlinkCluster(cluster);

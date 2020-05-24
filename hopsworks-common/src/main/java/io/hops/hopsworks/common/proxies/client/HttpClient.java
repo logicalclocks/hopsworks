@@ -16,6 +16,9 @@
 
 package io.hops.hopsworks.common.proxies.client;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
@@ -56,6 +59,8 @@ public class HttpClient {
   
   @EJB
   private Settings settings;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   private PoolingHttpClientConnectionManager connectionManager;
   private CloseableHttpClient client;
@@ -69,8 +74,10 @@ public class HttpClient {
           .setConnectionManager(connectionManager)
           .setKeepAliveStrategy((httpResponse, httpContext) -> settings.getConnectionKeepAliveTimeout() * 1000)
           .build();
-      host = HttpHost.create(settings.getRestEndpoint());
-    } catch (IOException | GeneralSecurityException ex) {
+      Service hopsworksService = serviceDiscoveryController.
+          getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+      host = new HttpHost(hopsworksService.getName(), hopsworksService.getPort(), "HTTPS");
+    } catch (IOException | GeneralSecurityException | ServiceDiscoveryException ex) {
       throw new RuntimeException(ex);
     }
   }

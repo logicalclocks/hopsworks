@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.api.dela;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.api.dela.dto.InodeIdDTO;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
@@ -49,6 +50,7 @@ import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.common.util.Settings;
@@ -66,6 +68,7 @@ import io.hops.hopsworks.dela.old_dto.TorrentId;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -127,6 +130,8 @@ public class DelaProjectService {
   private JWTHelper jWTHelper;
   @EJB
   private KafkaBrokers kafkaBrokers;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   private Project project;
   private Integer projectId;
@@ -248,7 +253,8 @@ public class DelaProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response downloadDatasetKafka(@Context HttpServletRequest req, @Context SecurityContext sc,
-    @PathParam("publicDSId") String publicDSId, HopsworksTransferDTO.Download downloadDTO) throws DelaException {
+    @PathParam("publicDSId") String publicDSId, HopsworksTransferDTO.Download downloadDTO)
+      throws DelaException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Dataset dataset = getDatasetByPublicId(publicDSId);
 
@@ -258,7 +264,15 @@ public class DelaProjectService {
       new DelaException(RESTCodes.DelaErrorCode.MISCONFIGURED, Level.WARNING, DelaException.Source.KAFKA,
               "Could not find any active Kafka broker"));
 
-    String restEndpoint = settings.getRestEndpoint();
+    String restEndpoint;
+    try {
+      restEndpoint = "https://" + serviceDiscoveryController
+          .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+          "Could not find Hopsworks service");
+    }
+
     String keyStore = certPath + "/keystore.jks";
     String trustStore = certPath + "/truststore.jks";
     KafkaEndpoint kafkaEndpoint = new KafkaEndpoint(brokerEndpoint, restEndpoint, settings.getDELA_DOMAIN(),

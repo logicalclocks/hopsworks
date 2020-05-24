@@ -165,14 +165,6 @@ public class HopsUtils {
     return project + HdfsUsersController.USER_NAME_DELIMITER + user + "__cert.key";
   }
   
-  public static void copyProjectUserCerts(Project project, String username,
-                                          String localTmpDir, String remoteTmpDir, CertificateMaterializer
-      certMat, boolean isRpcTlsEnabled) {
-    copyProjectUserCerts(project, username, localTmpDir, remoteTmpDir,
-        null, null, null, null, null, null, certMat, isRpcTlsEnabled);
-  }
-
-
   /**
    * Remote user certificates materialized both from the local
    * filesystem and from HDFS
@@ -258,17 +250,14 @@ public class HopsUtils {
    * @param jobType
    * @param dfso
    * @param projectLocalResources
-   * @param jobSystemProperties
-   * @param flinkCertsDir
    * @param applicationId
    */
   public static void copyProjectUserCerts(Project project, String username,
-      String localTmpDir, String remoteTmpDir, JobType jobType,
-      DistributedFileSystemOps dfso,
-      List<LocalResourceDTO> projectLocalResources,
-      Map<String, String> jobSystemProperties,
-      String flinkCertsDir, String applicationId, CertificateMaterializer
-      certMat, boolean isRpcTlsEnabled) {
+                                          String localTmpDir, String remoteTmpDir, JobType jobType,
+                                          DistributedFileSystemOps dfso,
+                                          List<LocalResourceDTO> projectLocalResources,
+                                          String applicationId,
+                                          CertificateMaterializer certMat) {
   
     // Let the Certificate Materializer handle the certificates
     UserCerts userCert = new UserCerts(project.getName(), username);

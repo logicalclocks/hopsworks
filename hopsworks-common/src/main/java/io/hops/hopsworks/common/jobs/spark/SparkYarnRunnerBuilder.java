@@ -113,10 +113,10 @@ public class SparkYarnRunnerBuilder {
    * @return The YarnRunner instance to launch the Spark job on Yarn.
    * @throws IOException If creation failed.
    */
-  public YarnRunner getYarnRunner(Project project,
-      String jobUser, AsynchronousJobExecutor services,
-      final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
-      Settings settings, String kafkaBrokersString) throws IOException {
+  public YarnRunner getYarnRunner(Project project, String jobUser, AsynchronousJobExecutor services,
+                                  final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
+                                  Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint)
+      throws IOException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -192,7 +192,7 @@ public class SparkYarnRunnerBuilder {
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, tfLibraryPath, extraJavaOptions, kafkaBrokersString));
+            jobUser, tfLibraryPath, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);

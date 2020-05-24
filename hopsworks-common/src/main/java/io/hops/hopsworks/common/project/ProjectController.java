@@ -78,7 +78,6 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.kafka.KafkaController;
-import io.hops.hopsworks.common.kafka.SchemasController;
 import io.hops.hopsworks.common.kafka.SubjectsCompatibilityController;
 import io.hops.hopsworks.common.kafka.SubjectsController;
 import io.hops.hopsworks.common.message.MessageController;
@@ -169,7 +168,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -286,8 +284,6 @@ public class ProjectController {
   private TopicAclsFacade topicAclsFacade;
   @EJB
   private SubjectsController subjectsController;
-  @EJB
-  private SchemasController schemasController;
   @EJB
   private HopsFSProvenanceController fsProvController;
 
@@ -2358,10 +2354,10 @@ public class ProjectController {
   }
 
   public String addTourFilesToProject(String username, Project project,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
-    TourProjectType projectType, ProvTypeDTO metaStatus)
-    throws DatasetException, HopsSecurityException, ProjectException,
-    JobException, GenericException, ServiceException, UnsupportedEncodingException {
+                                      DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
+                                      TourProjectType projectType, ProvTypeDTO metaStatus)
+      throws DatasetException, HopsSecurityException, ProjectException,
+      JobException, GenericException, ServiceException {
     String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {
