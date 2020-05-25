@@ -38,9 +38,9 @@ public interface JupyterManager {
   
   void waitForStartup(Project project, Users user) throws TimeoutException;
   
-  void stopOrphanedJupyterServer(Long pid, Integer port) throws ServiceException;
+  void stopOrphanedJupyterServer(String cid, Integer port) throws ServiceException;
   
-  void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, Long pid,
+  void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath, String cid,
     Integer port) throws ServiceException;
   
   void projectCleanup(Project project);
