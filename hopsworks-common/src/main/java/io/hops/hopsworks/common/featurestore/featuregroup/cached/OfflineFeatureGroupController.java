@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -152,6 +153,12 @@ public class OfflineFeatureGroupController {
             dbName + "_" + tableName + "_" + featureDTO.getName() + "_pk",
             false, false, false));
       }
+    }
+
+    // TODO(Fabio): HOPSWORKS-1655 removes this requirement and the test
+    if (primaryKeys.isEmpty()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.FINE,
+          "No primary key specified");
     }
 
     sendMetastoreCreate(table, primaryKeys, project, user);
