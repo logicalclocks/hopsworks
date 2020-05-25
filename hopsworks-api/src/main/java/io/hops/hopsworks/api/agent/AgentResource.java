@@ -43,7 +43,6 @@ import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -142,28 +141,8 @@ public class AgentResource {
           .build());
     }
     
-    final List<CondaCommandView> condaCommands = new ArrayList<>(hbReply.getCondaCommands().size());
-    final CondaCommandView.Builder ccvBuilder = new CondaCommandView.Builder();
-    for (CondaCommands cc : hbReply.getCondaCommands()) {
-      condaCommands.add(ccvBuilder.reset()
-          .setCondaOp(cc.getOp())
-          .setUser(cc.getUser())
-          .setProject(cc.getProj())
-          .setCommandId(cc.getId())
-          .setArguments(cc.getArg())
-          .setStatus(cc.getStatus())
-          .setVersion(cc.getVersion())
-          .setChannelUrl(cc.getChannelUrl())
-          .setInstallType(cc.getInstallType())
-          .setLib(cc.getLib())
-          .setEnvironmentYml(cc.getEnvironmentYml())
-          .setInstallJupyter(cc.getInstallJupyter())
-          .build());
-    }
-    
     final AgentView agentReply = new AgentView();
     agentReply.setSystemCommands(systemCommands);
-    agentReply.setCondaCommands(condaCommands);
     return agentReply;
   }
   

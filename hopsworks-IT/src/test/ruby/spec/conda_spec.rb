@@ -125,17 +125,17 @@ describe "On #{ENV['OS']}" do
           it 'enable anaconda' do
             @project = create_env_and_update_project(@project, python_version)
 
-            if not conda_exists
+            if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
             # There should be no CondaCommands in the database
-            expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
+            expect(CondaCommands.find_by(docker_image: @project[:projectname].downcase)).to be nil
 
             # Install a library to create the new environment
-            install_library(@project[:id], python_version, 'requests', 'conda', '2.20.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', 'CPU', conda_channel)
             expect_status(201)
             es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
 
@@ -145,14 +145,14 @@ describe "On #{ENV['OS']}" do
             expect(json_body[:count]).to be <= num_hosts
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
 
             get_env_commands(@project[:id], python_version)
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            expect(check_if_env_exists_locally(@project[:projectname])).to be true
+            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be true
 
             begin
               Airborne.configure do |config|
@@ -287,25 +287,22 @@ describe "On #{ENV['OS']}" do
           it 'should fail to install same library with upper and lower case variation' do
             @project = create_env_and_update_project(@project, python_version)
             install_library(@project[:id], python_version, 'scipy', 'pip', '1.2.2', 'ALL', conda_channel)
-            expect_status(201)
-            install_library(@project[:id], python_version, 'scipy', 'pip', '1.2.2', 'ALL', conda_channel)
-            expect_status(409)
+            expect_status(409) #scipy is in the base env
             install_library(@project[:id], python_version, 'SCIPY', 'pip', '1.2.2', 'ALL', conda_channel)
             expect_status(409)
           end
 
           it 'install libraries' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', 'ALL', conda_channel)
             expect_status(201)
 
             get_library_commands(@project[:id], python_version, 'imageio')
             expect_status(200)
-            expect(json_body[:count]).to be > 0
-            expect(json_body[:count]).to be <= num_hosts
+            expect(json_body[:count]).to be == 1
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
 
             get_library_commands(@project[:id], python_version, 'imageio')
@@ -316,7 +313,7 @@ describe "On #{ENV['OS']}" do
             expect_status(201)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
           end
 
@@ -338,7 +335,7 @@ describe "On #{ENV['OS']}" do
             expect(hops_library[:machine]).to eq ("ALL")
             expect(hops_library[:packageManager]).to eq ("PIP")
 
-            expect(imageio_library[:machine]).to eq("CPU")
+            expect(imageio_library[:machine]).to eq("ALL")
             expect(imageio_library[:packageManager]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.2.0")
 
@@ -350,7 +347,7 @@ describe "On #{ENV['OS']}" do
             expect_status(204)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
           end
 
@@ -360,7 +357,7 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
           end
 
@@ -370,58 +367,42 @@ describe "On #{ENV['OS']}" do
             expect_status(204)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
 
-            begin
-              Airborne.configure do |config|
-                config.base_url = ''
-              end
-              # Elasticsearch index should have been deleted
-              index_name = "#{@project[:projectname]}_kagent-*"
-              response = elastic_get "_cat/indices/#{index_name}"
-            rescue
-              p "Conda spec: Error calling elastic_get #{$!}"
-            else
-              expect(response.body).to eq("")
-            ensure
-              Airborne.configure do |config|
-                config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-              end
-            end
-
-            if not conda_exists
+            if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
-            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
           end
 
           it 'destroy anaconda should not delete base environments' do
             create_env(@project, python_version)
             expect_status(201)
-            if not conda_exists
+            if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_env_exists_locally(@project[:projectname])).to be false
+            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
 
             delete_env(@project[:id], python_version)
             expect_status(204)
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
             expect(check_if_env_exists_locally("python36")).to be true
           end
 
           it 'create environment from yml' do
+            skip "The feature is temporary removed"
             delete_env(@project[:id], python_version)
             upload_yml
             create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", nil, nil, true)
             expect_status(201)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
 
             @project = get_project_by_name(@project[:projectname])
@@ -429,7 +410,8 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'GC stale Conda env' do
-            if not conda_exists
+            skip "will be reimplemented shortly"
+            if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
 
@@ -437,7 +419,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], python_version)
 
             wait_for do
-              CondaCommands.find_by(proj: @project[:projectname]).nil?
+              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
             end
 
             # Create a second project with Anaconda enabled
@@ -449,9 +431,9 @@ describe "On #{ENV['OS']}" do
             install_library(project2[:id], python_version, 'paramiko', 'conda', '2.4.2', 'CPU', conda_channel)
             expect_status(201)
             wait_for do
-              CondaCommands.find_by(proj: project2[:projectname]).nil?
+              CondaCommands.find_by(docker_image: project2[:projectname].downcase).nil?
             end
-            expect(check_if_env_exists_locally(project2[:projectname])).to be true
+            expect(check_if_env_exists_locally(project2[:projectname].downcase)).to be true
 
             # Disable Anaconda for project2 directly in the database
             # so it does not send a command to kagent
@@ -461,16 +443,16 @@ describe "On #{ENV['OS']}" do
             tmp_proj.save
 
             wait_for do
-              CondaCommands.find_by(proj: project2[:projectname]).nil?
+              CondaCommands.find_by(docker_image: project2[:projectname].downcase).nil?
             end
 
             trigger_conda_gc
 
             wait_for do
-              check_if_env_exists_locally(project2[:projectname]) == false
+              check_if_env_exists_locally(project2[:projectname].downcase) == false
             end
 
-            expect(check_if_env_exists_locally(project2[:projectname])).to be false
+            expect(check_if_env_exists_locally(project2[:projectname].downcase)).to be false
           end
         end
       end
@@ -508,7 +490,7 @@ describe "On #{ENV['OS']}" do
             skip "Multi vm setup."
           end
 
-          expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
+          expect(CondaCommands.find_by(docker_image: @project[:projectname]).downcase).to be nil
         end
 
         it 'should create an environment on the other machines - multi vm' do
@@ -549,73 +531,5 @@ describe "On #{ENV['OS']}" do
       end
     end
 
-    describe "#Library installation not executed on non-conda hosts" do
-      context 'with admin rights' do
-        before :all do
-          with_valid_project
-        end
-
-        it 'should create an environment ' do
-          @project = create_env_and_update_project(@project, python_version)
-        end
-
-        it 'should be able to disable conda on a host' do
-          with_admin_session
-          if num_hosts > 1
-            # In case we have multi vms disable the one on which Hopsworks is not running
-            admin_create_update_cluster_node("hopsworks1.logicalclocks.com", {condaEnabled: "false"})
-          else
-            admin_create_update_cluster_node("hopsworks0.logicalclocks.com", {condaEnabled: "false"})
-          end
-          expect_status(204)
-        end
-
-        it 'should fail to install a library' do
-          create_session(@user[:email], "Pass123")
-          @project = create_env_and_update_project(@project, python_version)
-          install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', 'CPU', conda_channel)
-          if num_hosts == 1
-            #  If single VM there are no hosts on which to install the library. Hopsworks returns 412
-            expect_status(503)
-          else
-            # If it is a multi vm there are hosts to install the library.
-            expect_status(201)
-          end
-        end
-
-        it 'should not have created any conda_commands in the db' do
-          if num_hosts == 1
-            # For single vm, there should not be any command in the db
-            expect(CondaCommands.find_by(proj: @project[:projectname])).to be nil
-          else
-            # For multi vm setup there should be (num_hosts - 1) * 2 commands.
-            # For each library installation there will be one command for the
-            # environment creation and one for the installation.
-            expect(CondaCommands.where(proj: @project[:projectname]).count).to eq((num_hosts - 1) * 2)
-          end
-        end
-
-        it 'should be able to re-enable conda on a host' do
-          with_admin_session
-          if num_hosts > 1
-            # In case we have multi vms disable the one on which Hopsworks is not running
-            admin_create_update_cluster_node("hopsworks1.logicalclocks.com", {condaEnabled: "true"})
-          else
-            admin_create_update_cluster_node("hopsworks0.logicalclocks.com", {condaEnabled: "true"})
-          end
-          expect_status(204)
-        end
-
-        it 'should be able to install a library' do
-          create_session(@user[:email], "Pass123")
-          @project = create_env_and_update_project(@project, python_version)
-          install_library(@project[:id], python_version, 'dropbox', 'conda', '9.0.0', 'CPU', conda_channel)
-          expect_status(201)
-
-          # Check that the command has been register into the table and it will be eventually sent to the agent
-          expect(CondaCommands.find_by(proj: @project[:projectname])).not_to be nil
-        end
-      end
-    end
   end
 end

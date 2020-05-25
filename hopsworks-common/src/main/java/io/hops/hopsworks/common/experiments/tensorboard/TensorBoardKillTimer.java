@@ -30,7 +30,6 @@ import javax.ejb.Startup;
 import javax.ejb.Timer;
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Calendar;
 import java.util.Collection;
@@ -87,22 +86,21 @@ public class TensorBoardKillTimer {
         for (File currentTbDir : tbDir.listFiles()) {
           for (File possiblePidFile : currentTbDir.listFiles()) {
             if (possiblePidFile.getName().endsWith(".pid")) {
-              String pidContents = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
-              BigInteger pid = BigInteger.valueOf(Long.parseLong(pidContents));
+              String cid = com.google.common.io.Files.readFirstLine(possiblePidFile, Charset.defaultCharset());
 
-              if (pid != null) {
+              if (cid != null) {
                 // do not kill TBs which are in the DB
                 boolean tbExists = false;
                 for (TensorBoard tb : TBs) {
-                  if (tb.getPid().equals(pid)) {
+                  if (tb.getCid().equals(cid)) {
                     tbExists = true;
                   }
                 }
 
                 if (!tbExists) {
                   LOGGER.log(Level.WARNING, "Detected a stray TensorBoard with pid "
-                          + pid.toString() + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
-                  tensorBoardProcessMgr.killTensorBoard(pid);
+                          + cid + " in directory " + currentTbDir.getAbsolutePath() + ", cleaning up...");
+                  tensorBoardProcessMgr.killTensorBoard(cid);
                   tensorBoardProcessMgr.removeTensorBoardDirectory(currentTbDir.getAbsolutePath());
                 }
               }

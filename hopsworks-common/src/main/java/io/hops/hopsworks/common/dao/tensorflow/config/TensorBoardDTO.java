@@ -22,7 +22,6 @@ import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -31,7 +30,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class TensorBoardDTO extends RestDTO<TensorBoardDTO> {
 
   @JsonIgnore
-  private BigInteger pid;
+  private String cid;
 
   private String endpoint;
 
@@ -50,19 +49,19 @@ public class TensorBoardDTO extends RestDTO<TensorBoardDTO> {
   }
 
   public TensorBoardDTO(TensorBoard tensorBoard) {
-    this.pid = tensorBoard.getPid();
+    this.cid = tensorBoard.getCid();
     this.endpoint = tensorBoard.getEndpoint();
     this.mlId = tensorBoard.getMlId();
     this.lastAccessed = tensorBoard.getLastAccessed();
     this.hdfsLogdir = tensorBoard.getHdfsLogdir();
   }
 
-  public BigInteger getPid() {
-    return pid;
+  public String getCid() {
+    return cid;
   }
 
-  public void setPid(BigInteger pid) {
-    this.pid = pid;
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
   public String getEndpoint() {

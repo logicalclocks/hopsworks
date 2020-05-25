@@ -37,6 +37,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -107,6 +108,17 @@ public class EnvironmentCommandsResource {
   public Response delete(@Context SecurityContext sc) throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
     commandsController.deleteCommands(project);
+    return Response.noContent().build();
+  }
+  
+  @ApiOperation(value = "Update commands for this environment")
+  @PUT
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws PythonException {
+    environmentController.checkCondaEnabled(project, pythonVersion);
+    commandsController.retryFailedCondaEnvOps(project);
     return Response.noContent().build();
   }
 }

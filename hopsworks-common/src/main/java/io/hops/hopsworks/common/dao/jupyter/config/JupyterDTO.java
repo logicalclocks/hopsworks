@@ -51,7 +51,7 @@ public class JupyterDTO {
 
   private int port=0;
   private String token="";
-  private long pid=0;
+  private String cid="";
   private String hostIp="";
   private String secret="";
   private String certificatesDir;
@@ -59,10 +59,10 @@ public class JupyterDTO {
   public JupyterDTO() {
   }
 
-  public JupyterDTO(int port, String token, long pid, String secret, String certificatesDir) {
+  public JupyterDTO(int port, String token, String cid, String secret, String certificatesDir) {
     this.port = port;
     this.token = token;
-    this.pid = pid;
+    this.cid = cid;
     this.secret = secret;
     try {
       this.hostIp = InetAddress.getLocalHost().getHostAddress();
@@ -80,12 +80,12 @@ public class JupyterDTO {
     this.hostIp = host;
   }
   
-  public long getPid() {
-    return pid;
+  public String getCid() {
+    return cid;
   }
 
-  public void setPid(long pid) {
-    this.pid = pid;
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
   public int getPort() {

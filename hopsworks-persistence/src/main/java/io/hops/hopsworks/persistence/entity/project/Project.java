@@ -78,6 +78,8 @@ import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.Activity;
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.JoinTable;
@@ -458,6 +460,16 @@ public class Project implements Serializable {
   public Collection<PythonDep> getPythonDepCollection() {
     return pythonDepCollection;
   }
+  
+  @XmlTransient
+  @JsonIgnore
+  public Map<String, PythonDep> getPythonDepMap() {
+    Map<String, PythonDep> map = new HashMap<>();
+    for(PythonDep dep : pythonDepCollection){
+      map.put(dep.getDependency(), dep);
+    }
+    return map;
+  }
 
   @XmlTransient
   @JsonIgnore
@@ -532,7 +544,7 @@ public class Project implements Serializable {
   public void setKafkaMaxNumTopics(Integer kafkaMaxNumTopics) {
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
   }
-
+  
   @Override
   public String toString() {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id

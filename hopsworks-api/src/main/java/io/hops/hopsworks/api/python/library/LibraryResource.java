@@ -155,7 +155,7 @@ public class LibraryResource {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion);
-    if (settings.getPreinstalledPythonLibraryNames().contains(library)) {
+    if (settings.getUnmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
     }
@@ -199,7 +199,7 @@ public class LibraryResource {
     switch (packageManager) {
       case PIP:
         //indicate that the library comes from the distribution published in PyPi
-        channel = "PyPi";
+        channel = "pypi";
         break;
       case CONDA:
         if(channel == null) {

@@ -108,7 +108,7 @@ public class LibraryCommandsResource {
   public Response update(@PathParam("library") String library, @Context UriInfo uriInfo, @Context SecurityContext sc)
     throws PythonException {
     environmentController.checkCondaEnabled(project, pythonVersion);
-    commandsController.retryFailedCondaOps(project, library);
+    commandsController.retryFailedCondaLibraryOps(project, library);
     return Response.noContent().build();
   }
   

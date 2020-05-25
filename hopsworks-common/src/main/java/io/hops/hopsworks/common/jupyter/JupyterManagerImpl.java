@@ -91,10 +91,10 @@ public abstract class JupyterManagerImpl implements JupyterManager {
 
   public abstract void waitForStartup(Project project, Users user) throws TimeoutException;
   
-  public abstract void stopOrphanedJupyterServer(Long pid, Integer port) throws ServiceException;
+  public abstract void stopOrphanedJupyterServer(String cid, Integer port) throws ServiceException;
   
   public abstract void stopJupyterServer(Project project, Users user, String hdfsUsername, String jupyterHomePath,
-    Long pid, Integer port) throws ServiceException;
+    String cid, Integer port) throws ServiceException;
   
   public abstract void projectCleanup(Project project);
   

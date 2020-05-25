@@ -98,10 +98,12 @@ public class LibraryController {
   
   public void addPythonDepsForProject(Project proj, Collection<PythonDep> pythonDeps) {
     // proj.setPythonDepCollection(pythonDeps); will overwrite any dep already in proj.
+    Collection<PythonDep> depsInProj = new ArrayList<>(proj.getPythonDepCollection());
     for (PythonDep dep : pythonDeps) {
-      proj.getPythonDepCollection().remove(dep);
-      proj.getPythonDepCollection().add(dep);
+      depsInProj.remove(dep);
+      depsInProj.add(dep);
     }
+    proj.setPythonDepCollection(depsInProj);
     projectFacade.update(proj);
   }
   

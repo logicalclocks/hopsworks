@@ -49,7 +49,9 @@ angular.module('hopsWorksApp')
             self.pipResultsMsg = "";
 
             self.exporting = false;
-            self.kibanaUI = "";
+            self.errorMessage = "";
+            self.errorArtifact = "";
+            self.errorOp = "";
             self.showLogs = false;
 
             $scope.sortType = 'preinstalled';
@@ -167,7 +169,7 @@ angular.module('hopsWorksApp')
             };
 
             self.getMachineCount = function (row) {
-                return typeof row.machine !== 'undefined'? self.machines[row.machine] : self.machines['ALL'];
+                return 1;
             };
 
             self.getStatus = function (row) {
@@ -400,30 +402,16 @@ angular.module('hopsWorksApp')
                 var projectName = UtilsService.getProjectName();
                 var op = condaCommand.commands.items[0].op;
                 var artifact = ""
-                var artifact_version = ""
                 if (condaCommand.type == 'environmentDTO') {
                    artifact = projectName;
-                   artifact_version = condaCommand.pythonVersion;
                 } else {
                    artifact = condaCommand.library;
-                   artifact_version = condaCommand.version;
                 }
 
-                ElasticService.getJwtToken(self.projectId).then(
-                  function (success) {
-                   var kibanaUrl = success.data.kibanaUrl;
-                   self.kibanaUI = kibanaUrl + "projectId=" + self.projectId
-                                     + "#/discover?_g=()&_a=(columns:!(operation,artifact,artifact_version,return_code),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,"
-                                     + "index:'"+ projectName.toLowerCase() +"_kagent-*',key:operation,negate:!f,params:(query:" + op +"),type:phrase,"
-                                     + "value:" + op + "),query:(match:(operation:(query:"+ op +",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,"
-                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',key:artifact,negate:!f,params:(query:"+ artifact +"),type:phrase,"
-                                     + "value:"+ artifact +"),query:(match:(artifact:(query:"+ artifact +",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,"
-                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',key:artifact_version,negate:!f,params:(query:'" + artifact_version + "'),type:phrase,value:'" + artifact_version + "'),query:(match:(artifact_version:(query:'" + artifact_version + "',type:phrase))))),"
-                                     + "index:'"+ projectName.toLowerCase() + "_kagent-*',interval:auto,query:(language:kuery,query:''),sort:!(_score,desc))";
-                    self.showLogs = true;
-                  }, function (error) {
-                    showErrorGrowl(error);
-                 });
+                self.errorMessage = condaCommand.commands.items[0].errorMessage.replace(/(\n)/gm,"<br>");
+                self.errorArtifact = artifact
+                self.errorOp = op;
+                self.showLogs = true;
             };
 
             self.showMainUI = function() {
@@ -486,8 +474,23 @@ angular.module('hopsWorksApp')
                         //The user changed their mind.
                     });
             };
+            
+            self.retryFailedCondaEnvOp = function (row) {
+                self.isRetryingFailedCondaOps = true;
+                PythonService.retryEnvironmentCommand(self.projectId, self.pythonVersion).then(
+                    function (success) {
+                        self.isRetryingFailedCondaOps = false;
+                        self.getInstalled();
+                        growl.success("Retried failed conda ops for this project.", {title: 'Done', ttl: 3000
+                        });
+                    },
+                    function (error) {
+                        self.isRetryingFailedCondaOps = false;
+                        showErrorGrowl(error);
+                    });
+            };
 
-            self.retryFailedCondaOp = function (row) {
+            self.retryFailedCondaLibraryOp = function (row) {
                 self.isRetryingFailedCondaOps = true;
                 PythonService.retryInstallLibrary(self.projectId, self.pythonVersion, row.library).then(
                     function (success) {
@@ -614,7 +617,7 @@ angular.module('hopsWorksApp')
                     };
                 } else {
                     var data = {
-                        "channelUrl": "PyPi",
+                        "channelUrl": "pypi",
                         "installType": installType,
                         "machineType": machineType,
                         "lib": lib,

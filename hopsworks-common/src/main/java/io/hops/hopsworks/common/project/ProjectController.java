@@ -143,6 +143,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -444,16 +445,14 @@ public class ProjectController {
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
       }
   
-      if (environmentController.condaEnabledHosts()) {
-        try {
-          environmentController.createEnv(project, project.getOwner(), "3.6");//TODO: use variables for version
-        } catch (PythonException | EJBException ex) {
-          cleanup(project, sessionId, projectCreationFutures);
-          throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
+      try {
+        environmentController.createEnv(project, project.getOwner(), "3.6", true);//TODO: use variables for version
+      } catch (PythonException | EJBException ex) {
+        cleanup(project, sessionId, projectCreationFutures);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
             "project: " + projectName, ex.getMessage(), ex);
-        }
-        LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
       }
+      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (env): {0}", System.currentTimeMillis() - startTime);
 
       logProject(project, OperationType.Add);
 
@@ -685,8 +684,12 @@ public class ProjectController {
     DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
+      boolean sticky = true;
+      if(ds.getName().equals(Settings.BaseDataset.RESOURCES.getName())){
+        sticky = false;
+      }
       datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, Provenance.Type.DISABLED.dto, true, true, dfso);
+          getDescription(), -1, Provenance.Type.DISABLED.dto, sticky, true, dfso);
 
       Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
 
@@ -2186,7 +2189,7 @@ public class ProjectController {
 
       JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
       if (jupyterProject != null) {
-        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getPid(),
+        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getCid(),
           jupyterProject.getPort());
       }
 
@@ -2599,8 +2602,8 @@ public class ProjectController {
     certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
     CertificateMaterializer.CryptoMaterial material = certificateMaterializer.getUserMaterial(user.getUsername(),
       project.getName());
-    String keyStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getKeyStore().array());
-    String trustStore = org.apache.commons.net.util.Base64.encodeBase64String(material.getTrustStore().array());
+    String keyStore = Base64.encodeBase64String(material.getKeyStore().array());
+    String trustStore = Base64.encodeBase64String(material.getTrustStore().array());
     String certPwd = new String(material.getPassword());
     return new AccessCredentialsDTO("jks", keyStore, trustStore, certPwd);
   }

@@ -53,7 +53,7 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LocalhostServingController implements ServingController {
 
-  public static final Integer PID_STOPPED = -2;
+  public static final String CID_STOPPED = "stopped";
   public static final String SERVING_DIRS = "/serving/";
 
   @EJB
@@ -240,7 +240,7 @@ public class LocalhostServingController implements ServingController {
 
       UUID uuid = UUID.randomUUID();
       serving.setLocalDir(uuid.toString());
-      serving.setLocalPid(PID_STOPPED);
+      serving.setCid(CID_STOPPED);
       serving.setInstances(1);
 
       // Setup the Kafka topic for logging
@@ -321,13 +321,13 @@ public class LocalhostServingController implements ServingController {
 
   private ServingStatusEnum getServingStatus(Serving serving) {
     // Compute status
-    if (serving.getLocalPid().equals(PID_STOPPED) && serving.getLockIP() == null) {
+    if (serving.getCid().equals(CID_STOPPED) && serving.getLockIP() == null) {
       // The Pid is not in the database, and nobody has the lock, the instance is stopped
       return ServingStatusEnum.STOPPED;
-    } else if (serving.getLocalPid().equals(PID_STOPPED)) {
+    } else if (serving.getCid().equals(CID_STOPPED)) {
       // The Pid is -1, but someone has the lock, the instance is starting
       return ServingStatusEnum.STARTING;
-    } else if (!serving.getLocalPid().equals(PID_STOPPED) && serving.getLockIP() == null){
+    } else if (!serving.getCid().equals(CID_STOPPED) && serving.getLockIP() == null){
       // The Pid is in the database and nobody as the lock. Instance is running
       return ServingStatusEnum.RUNNING;
     } else {

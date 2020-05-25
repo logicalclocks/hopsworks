@@ -39,15 +39,15 @@
 
 package io.hops.hopsworks.persistence.entity.util;
 
+import io.hops.hadoop.shaded.org.apache.commons.text.StringEscapeUtils;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 
 public class FormatUtils {
 
@@ -119,7 +119,7 @@ public class FormatUtils {
   }
 
   public static String stdoutToHtml(String text) {
-    String html = StringEscapeUtils.escapeHtml(text);
+    String html = StringEscapeUtils.escapeHtml4(text);
     html = html.replaceAll("\n", "<br>");
     html = html.replaceAll("\t", StringUtils.repeat("&nbsp;", 8));
     html = html.replaceAll(" ", StringUtils.repeat("&nbsp;", 1));

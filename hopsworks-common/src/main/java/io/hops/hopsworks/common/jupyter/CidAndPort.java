@@ -18,12 +18,12 @@ package io.hops.hopsworks.common.jupyter;
 
 import java.util.Objects;
 
-public class PidAndPort {
-  Long pid;
+public class CidAndPort {
+  String cid;
   Integer port;
 
-  public PidAndPort(Long pid, Integer port) {
-    this.pid = pid;
+  public CidAndPort(String cid, Integer port) {
+    this.cid = cid;
     this.port = port;
   }
 
@@ -35,13 +35,13 @@ public class PidAndPort {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PidAndPort that = (PidAndPort) o;
-    return Objects.equals(pid, that.pid) &&
+    CidAndPort that = (CidAndPort) o;
+    return Objects.equals(cid, that.cid) &&
       Objects.equals(port, that.port);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pid, port);
+    return Objects.hash(cid, port);
   }
 }

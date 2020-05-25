@@ -116,7 +116,7 @@ public class TensorBoardController {
     tensorBoardPK.setProjectId(project.getId());
     tensorBoardPK.setUserId(user.getUid());
     newTensorBoard.setTensorBoardPK(tensorBoardPK);
-    newTensorBoard.setPid(tensorBoardDTO.getPid());
+    newTensorBoard.setCid(tensorBoardDTO.getCid());
     newTensorBoard.setEndpoint(tensorBoardDTO.getEndpoint());
     newTensorBoard.setHdfsUserId(hdfsUser.getId());
     newTensorBoard.setMlId(mlId);

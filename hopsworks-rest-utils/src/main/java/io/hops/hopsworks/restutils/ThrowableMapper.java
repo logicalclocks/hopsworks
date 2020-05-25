@@ -23,7 +23,6 @@ import io.hops.hopsworks.exceptions.ResourceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import org.apache.hadoop.security.AccessControlException;
-
 import javax.ejb.AccessLocalException;
 import javax.ejb.EJBException;
 import javax.persistence.PersistenceException;
@@ -57,7 +56,7 @@ public abstract class ThrowableMapper implements ExceptionMapper<Throwable> {
       return handleSecurityException((SecurityException) ex);
     } else if (ex instanceof LoginException) {
       return handleLoginException((LoginException) ex);
-    } else if (ex instanceof org.apache.hadoop.security.AccessControlException) {
+    } else if (ex instanceof AccessControlException) {
       return handleAccessControlException((org.apache.hadoop.security.AccessControlException) ex);
     } else if (ex instanceof AccessLocalException) {
       return handleAccessLocalException((AccessLocalException) ex);

@@ -103,7 +103,7 @@ public class JupyterJWTManager {
     }
   });
   
-  private final HashMap<PidAndPort, JupyterJWT> pidAndPortToJWT = new HashMap<>();
+  private final HashMap<CidAndPort, JupyterJWT> pidAndPortToJWT = new HashMap<>();
 
   @EJB
   private Settings settings;
@@ -147,7 +147,7 @@ public class JupyterJWTManager {
     pidAndPortToJWT.put(jupyterJWT.pidAndPort, jupyterJWT);
   }
 
-  private void removeToken(PidAndPort pidAndPort) {
+  private void removeToken(CidAndPort pidAndPort) {
     JupyterJWT jupyterJWT = pidAndPortToJWT.remove(pidAndPort);
     jupyterJWTs.remove(jupyterJWT);
   }
@@ -192,7 +192,7 @@ public class JupyterJWTManager {
       Path tokenFile = constructTokenFilePath(jupyterSettings);
       String token = null;
       JupyterJWT jupyterJWT = null;
-      PidAndPort pidAndPort = new PidAndPort(jupyterProject.getPid(), jupyterProject.getPort());
+      CidAndPort pidAndPort = new CidAndPort(jupyterProject.getCid(), jupyterProject.getPort());
       try {
         token = FileUtils.readFileToString(tokenFile.toFile());
         DecodedJWT decodedJWT = jwtController.verifyToken(token, settings.getJWTIssuer());
@@ -257,13 +257,13 @@ public class JupyterJWTManager {
   
   @Lock(LockType.WRITE)
   @AccessTimeout(value = 2000)
-  public void materializeJWT(Users user, Project project, JupyterSettings jupyterSettings, Long pid,
+  public void materializeJWT(Users user, Project project, JupyterSettings jupyterSettings, String cid,
       Integer port, String[] audience) throws ServiceException {
     MaterializedJWTID materialID = new MaterializedJWTID(project.getId(), user.getUid(),
       MaterializedJWTID.USAGE.JUPYTER);
     if (!materializedJWTFacade.exists(materialID)) {
       LocalDateTime expirationDate = LocalDateTime.now().plus(settings.getJWTLifetimeMs(), ChronoUnit.MILLIS);
-      JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate, new PidAndPort(pid, port));
+      JupyterJWT jupyterJWT = new JupyterJWT(project, user, expirationDate, new CidAndPort(cid, port));
       try {
         String[] roles = usersController.getUserRoles(user).toArray(new String[1]);
         MaterializedJWT materializedJWT = new MaterializedJWT(materialID);
@@ -359,11 +359,11 @@ public class JupyterJWTManager {
 
   @Lock(LockType.WRITE)
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void cleanJWT(Long pid, Integer port) {
-    Optional<JupyterJWT> optional = Optional.ofNullable(pidAndPortToJWT.get(new PidAndPort(pid, port)));
+  public void cleanJWT(String cid, Integer port) {
+    Optional<JupyterJWT> optional = Optional.ofNullable(pidAndPortToJWT.get(new CidAndPort(cid, port)));
 
     if (!optional.isPresent()) {
-      LOG.log(WARNING, "JupyterJWT not found for pid " + pid + " and port " + port);
+      LOG.log(WARNING, "JupyterJWT not found for cid " + cid + " and port " + port);
       return;
     }
 

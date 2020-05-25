@@ -55,7 +55,7 @@
         </dependency>
         <dependency>
             <groupId>io.hops</groupId>
-            <artifactId>hadoop-common</artifactId>
+            <artifactId>hadoop-client-api</artifactId>
             <version>${hops.version}</version>
             <exclusions>
                 <exclusion>

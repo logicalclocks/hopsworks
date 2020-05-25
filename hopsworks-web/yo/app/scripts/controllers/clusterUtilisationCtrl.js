@@ -55,7 +55,6 @@ angular.module('hopsWorksApp')
             self.allocatedMB = 0.0;
             self.availableGPUs = 0;
             self.allocatedGPUs = 0;
-            self.reservedGPUs = 0;
             self.gpusPercent = 0;
             self.progressBarClass = 'progress-bar-success';
             self.gpuBarClass = 'progress-bar-success';
@@ -74,18 +73,27 @@ angular.module('hopsWorksApp')
             var getClusterUtilisation = function () {
                 ClusterUtilService.getYarnMetrics().then(
                       function (success) {
-                        self.allocatedGPUs = success.data.clusterMetrics.allocatedGPUs;
-                        self.reservedGPUs = success.data.clusterMetrics.reservedGPUs;
-                        self.availableGPUs = success.data.clusterMetrics.availableGPUs;
-                        var totalGpus = self.availableGPUs + self.allocatedGPUs;
-                        if (self.availableGPUs > 0 && self.reservedGPUs == 0) {
+                        var resourceInfo = success.data.clusterMetrics.totalUsedResourcesAcrossPartition.resourceInformations.resourceInformation;
+                        resourceInfo.forEach(function(item, index, array) {
+                          if(item.name=="yarn.io/gpu"){
+                           self.allocatedGPUs = item.value; 
+                          }
+                        });
+                        resourceInfo = success.data.clusterMetrics.totalClusterResourcesAcrossPartition.resourceInformations.resourceInformation;
+                        resourceInfo.forEach(function(item, index, array) {
+                          if(item.name=="yarn.io/gpu"){
+                           self.availableGPUs = item.value; 
+                          }
+                        });
+                        self.gpusPercent = (self.allocatedGPUs/self.availableGPUs)*100;
+                        if (self.gpusPercent < 70) {
                           self.gpuBarClass = 'progress-bar-success';
-                        } else if (self.availableGPUs > 0 ) {
+                        } else if (self.gpusPercent < 100 ) {
                           self.gpuBarClass = 'progress-bar-warning';
                         } else {
                           self.gpuBarClass = 'progress-bar-danger';
                         }
-                        self.gpusPercent = (self.allocatedGPUs/totalGpus)*100;
+                        
                         
                         self.allocatedVCores = success.data.clusterMetrics.allocatedVirtualCores;
                         self.availableVCores = success.data.clusterMetrics.availableVirtualCores;
