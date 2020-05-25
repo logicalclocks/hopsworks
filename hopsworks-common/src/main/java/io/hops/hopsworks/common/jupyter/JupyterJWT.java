@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 public final class JupyterJWT extends ServiceJWT {
-  public final PidAndPort pidAndPort;
+  public final CidAndPort pidAndPort;
   public Path tokenFile;
   
   public JupyterJWT(JupyterJWT jupyterJWT) {
@@ -32,7 +32,7 @@ public final class JupyterJWT extends ServiceJWT {
     this.tokenFile = jupyterJWT.tokenFile;
   }
   
-  public JupyterJWT(Project project, Users user, LocalDateTime expiration, PidAndPort pidAndPort) {
+  public JupyterJWT(Project project, Users user, LocalDateTime expiration, CidAndPort pidAndPort) {
     super(project, user, expiration);
     this.pidAndPort = pidAndPort;
   }

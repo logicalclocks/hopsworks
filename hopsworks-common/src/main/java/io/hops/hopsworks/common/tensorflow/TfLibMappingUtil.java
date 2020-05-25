@@ -30,8 +30,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * This code is here as it should be used both for PySpark apps running TensorFlow in both Jupyter and Jobs to set the
@@ -109,24 +107,6 @@ public class TfLibMappingUtil {
               .orElse(null);
     } else if(command.getOp().compareTo(CondaOp.CREATE) == 0) {
       return tfLibMappingFacade.findByTfVersion(settings.getTensorflowVersion());
-    } else if(command.getOp().compareTo(CondaOp.YML) == 0) {
-      String envYml = command.getEnvironmentYml();
-
-      Pattern tfPattern = Pattern.compile("(tensorflow==\\d*.\\d*.\\d*)");
-      Matcher tfMatcher = tfPattern.matcher(envYml);
-
-      if(tfMatcher.find()) {
-        String [] libVersionPair = tfMatcher.group(0).split("==");
-        return tfLibMappingFacade.findByTfVersion(libVersionPair[1]);
-      }
-
-      Pattern tfRocmPattern = Pattern.compile("(tensorflow-rocm==\\d*.\\d*.\\d*)");
-      Matcher tfRocmMatcher = tfRocmPattern.matcher(envYml);
-
-      if(tfRocmMatcher.find()) {
-        String [] libVersionPair = tfRocmMatcher.group(0).split("==");
-        return tfLibMappingFacade.findByTfVersion(libVersionPair[1]);
-      }
     }
     return null;
   }

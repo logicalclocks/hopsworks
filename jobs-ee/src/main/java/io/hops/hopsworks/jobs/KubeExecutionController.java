@@ -11,18 +11,19 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
-import io.fabric8.kubernetes.api.model.Job;
-import io.fabric8.kubernetes.api.model.JobBuilder;
-import io.fabric8.kubernetes.api.model.JobSpec;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.kubernetes.api.model.batch.JobBuilder;
+import io.fabric8.kubernetes.api.model.batch.JobSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
@@ -38,6 +39,7 @@ import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -85,7 +87,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private static final String SEPARATOR = "-";
   private static final String ANACONDA = "anaconda";
   private static final String CERTS = "certs";
-  private static final String HADOOP = "hadoop";
+  private static final String HADOOP_CONF = "hadoopconf";
   private static final String PYTHON = "python";
   private static final String PYTHON_NVIDIA = "python_nvidia";
   private static final String PYTHON_PREFIX = PYTHON + SEPARATOR;
@@ -117,6 +119,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private DistributedFsService dfs;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private ProjectUtils projectUtils;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -274,7 +278,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     filebeatEnv.put("PROJECT", project.getName().toLowerCase());
     
     List<Container> containers = buildContainers(secretsDir, certificatesDir, flinkConfDir, resourceRequirements,
-      jobEnv, filebeatEnv);
+      jobEnv, filebeatEnv, project);
   
     //Selector is disabled due to https://github.com/kubernetes/kubernetes/issues/26202 and
     // changing api spec resulted in https://github.com/kubernetes/website/issues/2325
@@ -295,7 +299,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             "job-type", PYTHON,
             "deployment-type", "job"))
           .build())
-      .withSpec(buildPodSpec(secretsName, kubeProjectUser, anacondaEnv, containers))
+      .withSpec(buildPodSpec(secretsName, kubeProjectUser, containers))
       .build());
     
     Job job = new JobBuilder()
@@ -312,18 +316,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return job;
   }
   
-  private PodSpec buildPodSpec(String secretsName, String kubeProjectUser, String anacondaEnv,
-    List<Container> containers) {
+  private PodSpec buildPodSpec(String secretsName, String kubeProjectUser, List<Container> containers) {
     return new PodSpecBuilder()
       .withContainers(containers)
       .withVolumes(
-        new VolumeBuilder()
-          .withName(ANACONDA)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(anacondaEnv)
-              .build())
-          .build(),
         new VolumeBuilder()
           .withName(CERTS)
           .withSecret(
@@ -332,10 +328,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
               .build())
           .build(),
         new VolumeBuilder()
-          .withName(HADOOP)
+          .withName(HADOOP_CONF)
           .withHostPath(
             new HostPathVolumeSourceBuilder()
-              .withPath(settings.getHadoopSymbolicLinkDir())
+              .withPath(settings.getHadoopSymbolicLinkDir()+ "/etc/hadoop")
               .build())
           .build(),
         new VolumeBuilder()
@@ -368,7 +364,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
   
   private List<Container> buildContainers(String secretDir, String certificatesDir, String flinkConfDir,
-    ResourceRequirements resourceRequirements, Map<String, String> jobEnv, Map<String, String> filebeatEnv) {
+    ResourceRequirements resourceRequirements, Map<String, String> jobEnv, Map<String, String> filebeatEnv,
+    Project project) {
   
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
@@ -379,26 +376,22 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     //Add Job container
     containers.add(new ContainerBuilder()
       .withName(PYTHON)
-      .withImage(settings.getKubeRegistry() + "/" + getDockerImageName(resourceRequirements) + ":"
-        + settings.getPythonImgVersion())
+      .withImage(projectUtils.getFullDockerImageName(project, true))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withResources(resourceRequirements)
+      .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
       .withEnv(kubeClientService.getEnvVars(jobEnv))
+      .withCommand("python-exec.sh")
       .withVolumeMounts(
-        new VolumeMountBuilder()
-          .withName(ANACONDA)
-          .withReadOnly(true)
-          .withMountPath("/srv/hops/anaconda/env")
-          .build(),
         new VolumeMountBuilder()
           .withName(CERTS)
           .withReadOnly(true)
           .withMountPath(certificatesDir)
           .build(),
         new VolumeMountBuilder()
-          .withName(HADOOP)
+          .withName(HADOOP_CONF)
           .withReadOnly(true)
-          .withMountPath("/srv/hops/hadoop")
+          .withMountPath("/srv/hops/hadoop/etc/hadoop")
           .build(),
         new VolumeMountBuilder()
           .withName(JWT)
@@ -420,7 +413,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-      .withImage(settings.getKubeRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+      .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
       .withVolumeMounts(logMount)
@@ -428,17 +421,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     
     return containers;
   }
-  
-  private String getDockerImageName(ResourceRequirements resourceRequirements) {
-    if (resourceRequirements.getLimits().containsKey("nvidia.com/gpu")) {
-      int requestedGPUs = Double.valueOf(resourceRequirements.getLimits().get("nvidia.com/gpu").getAmount()).intValue();
-      if (requestedGPUs > 0) {
-        return PYTHON_NVIDIA;
-      }
-    }
-    return PYTHON;
-  }
-  
+    
   private Optional<Exception> runCatchAndLog(Runnable runnable, String errorMessage,
     Optional<Exception> previousError) {
     try {

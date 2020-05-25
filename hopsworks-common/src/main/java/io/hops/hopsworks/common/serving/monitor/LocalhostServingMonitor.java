@@ -44,8 +44,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.hops.hopsworks.common.serving.LocalhostServingController.PID_STOPPED;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
 
 /**
  * This singleton iterates over the running Serving instances and checks whether
@@ -111,8 +111,8 @@ public class LocalhostServingMonitor {
             builder.addCommand(sklearnScript);
           }
           ProcessDescriptor processDescriptor = builder.addCommand("alive")
-              .addCommand(String.valueOf(dbServing.getLocalPid()))
-              .addCommand(dbServing.getLocalDir())
+              .addCommand(dbServing.getProject().getName().toLowerCase())
+              .addCommand(dbServing.getName())
               .ignoreOutErrStreams(true)
               .build();
 
@@ -133,8 +133,9 @@ public class LocalhostServingMonitor {
                 builder.addCommand(sklearnScript);
               }
               processDescriptor = builder.addCommand("kill")
-                  .addCommand(String.valueOf(dbServing.getLocalPid()))
-                  .addCommand(String.valueOf(dbServing.getLocalPort()))
+                  .addCommand(dbServing.getCid())
+                  .addCommand(dbServing.getName())
+                  .addCommand(dbServing.getProject().getName().toLowerCase())
                   .addCommand(secretDir.toString())
                   .ignoreOutErrStreams(true)
                   .build();
@@ -143,7 +144,7 @@ public class LocalhostServingMonitor {
               osProcessExecutor.execute(processDescriptor);
 
               // If the process succeeded to delete the localDir update the db
-              dbServing.setLocalPid(PID_STOPPED);
+              dbServing.setCid(CID_STOPPED);
               dbServing.setLocalPort(-1);
               servingFacade.updateDbObject(dbServing, dbServing.getProject());
             }

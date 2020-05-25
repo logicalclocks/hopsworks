@@ -60,20 +60,33 @@ public class ProjectUtils {
     }
     return false;
   }
-  
-  public String getCurrentCondaEnvironment(Project project) {
-    String condaEnv = project.getName();
     
-    if (project.getConda() && !project.getCondaEnv()) {
+  public String getFullDockerImageName(Project project, boolean canBeDefault){
+    return getFullDockerImageName(project, settings, canBeDefault);
+  }
+  
+  public static String getFullDockerImageName(Project project, Settings settings, boolean canBeDefault){
+    String imageName = getDockerImageName(project, canBeDefault);
+    return settings.getRegistry() + "/" + imageName;
+  }
+  
+  public static String getDockerImageName(Project project, boolean canBeDefault){
+    String imageName = project.getName().toLowerCase();
+    
+    if (project.getConda() && !project.getCondaEnv() && canBeDefault) {
       if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
-        condaEnv = "python36";
+        imageName = "python36";
       } else {
         throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
       }
-    }
-    return condaEnv;
+    }    
+    return imageName;
   }
-
+  
+  public String getFullDockerImageName(String imageName){
+    return settings.getRegistry() + "/" + imageName;
+  }
+  
   public String getCurrentCondaBaseEnvironment(Project project) {
     if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
       return "python36";

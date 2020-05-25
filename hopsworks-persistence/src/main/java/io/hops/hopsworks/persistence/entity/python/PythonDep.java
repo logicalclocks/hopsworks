@@ -86,7 +86,10 @@ import org.codehaus.jackson.annotate.JsonIgnore;
                   "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType "),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
-          = "SELECT p FROM PythonDep p WHERE p.version = :version")})
+          = "SELECT p FROM PythonDep p WHERE p.version = :version"),
+  @NamedQuery(name = "PythonDep.findBaseEnv",
+      query
+      = "SELECT p FROM PythonDep p WHERE p.baseEnv = :baseEnv")})
 public class PythonDep implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -125,6 +128,9 @@ public class PythonDep implements Serializable {
   @Column(name = "machine_type")
   @Enumerated(EnumType.ORDINAL)
   private MachineType machineType;
+  
+  @Column(name = "base_env")
+  private String baseEnv;
 
   public PythonDep() {
   }
@@ -156,7 +162,15 @@ public class PythonDep implements Serializable {
   public void setVersion(String version) {
     this.version = version;
   }
+  
+  public void setBaseEnv(String baseEnv){
+    this.baseEnv = baseEnv;
+  }
 
+  public String getBaseEnv(){
+    return baseEnv;
+  }
+  
   @XmlTransient
   @JsonIgnore
   public Collection<Project> getProjectCollection() {
@@ -194,11 +208,11 @@ public class PythonDep implements Serializable {
   public boolean isPreinstalled() {
     return preinstalled;
   }
-
+  
   public void setPreinstalled(boolean preinstalled) {
     this.preinstalled = preinstalled;
   }
-
+  
   @Override
   public int hashCode() {
     int hash = 0;

@@ -289,7 +289,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TRUSTSTORE_KEY = "kube_truststore_key";
   private static final String VARIABLE_KUBE_KEYSTORE_PATH = "kube_keystore_path";
   private static final String VARIABLE_KUBE_KEYSTORE_KEY = "kube_keystore_key";
-  private static final String VARIABLE_KUBE_REGISTRY = "kube_registry";
   private static final String VARIABLE_KUBE_PULL_POLICY = "kube_img_pull_policy";
   private static final String VARIABLE_KUBE_MAX_SERVING = "kube_max_serving_instances";
   private static final String VARIABLE_KUBE_API_MAX_ATTEMPTS = "kube_api_max_attempts";
@@ -303,8 +302,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
-  private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
-  private static final String VARIABLE_KUBE_PYTHON_IMG_VERSION = "kube_python_img_version";
 
   /*
    * -------------------- Jupyter ---------------
@@ -351,6 +348,13 @@ public class Settings implements Serializable {
   private static final String VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY=
       "cloud_events_endpoint_api_key";
 
+  /*-----------------------Yarn Docker------------------------*/
+  private final static String VARIABLE_YARN_RUNTIME = "yarn_runtime";
+  private final static String VARIABLE_DOCKER_MOUNTS = "docker_mounts";
+  private final static String VARIABLE_DOCKER_REGISTRY_NAME = "docker_registry_name";
+  private final static String VARIABLE_DOCKER_REGISTRY_PORT = "docker_registry_port";
+  private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
+  
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -645,8 +649,8 @@ public class Settings implements Serializable {
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
       PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES), ",");
-      PREINSTALLED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
-          setStrVar(VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES, DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES),
+      UNMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES),
           ",");
 
       SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
@@ -666,14 +670,11 @@ public class Settings implements Serializable {
       KUBE_TRUSTSTORE_KEY = setStrVar(VARIABLE_KUBE_TRUSTSTORE_KEY, KUBE_TRUSTSTORE_KEY);
       KUBE_KEYSTORE_PATH = setStrVar(VARIABLE_KUBE_KEYSTORE_PATH, KUBE_KEYSTORE_PATH);
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
-      KUBE_REGISTRY = setStrVar(VARIABLE_KUBE_REGISTRY, KUBE_REGISTRY);
       KUBE_PULL_POLICY = setStrVar(VARIABLE_KUBE_PULL_POLICY, KUBE_PULL_POLICY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
       KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
       KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
-      KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
-      KUBE_PYTHON_IMG_VERSION = setVar(VARIABLE_KUBE_PYTHON_IMG_VERSION, KUBE_PYTHON_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
@@ -729,6 +730,11 @@ public class Settings implements Serializable {
 
       FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
       
+      YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
+      DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
+      DOCKER_REGISTRY_NAME = setStrVar(VARIABLE_DOCKER_REGISTRY_NAME, DOCKER_REGISTRY_NAME);
+      DOCKER_REGISTRY_PORT = setIntVar(VARIABLE_DOCKER_REGISTRY_PORT, DOCKER_REGISTRY_PORT);
+      YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
       populateProvenanceCache();
       
       CLIENT_PATH = setStrVar(VARIABLE_CLIENT_PATH, CLIENT_PATH);
@@ -825,6 +831,8 @@ public class Settings implements Serializable {
 
   private String SPARK_DIR = "/srv/hops/spark";
   public static final String SPARK_EXAMPLES_DIR = "/examples/jars";
+  
+  public static final String CONVERSION_DIR = "/ipython_conversions/";
 
   public static final String SPARK_NUMBER_EXECUTORS_ENV
       = "spark.executor.instances";
@@ -873,8 +881,6 @@ public class Settings implements Serializable {
   public static final String SPARK_BLACKLIST_KILL_BLACKLISTED_EXECUTORS =
     "spark.blacklist.killBlacklistedExecutors";
   public static final String SPARK_TASK_MAX_FAILURES = "spark.task.maxFailures";
-  public static final String SPARK_YARN_APPMASTER_ENV = "spark.yarn.appMasterEnv.";
-  public static final String SPARK_EXECUTOR_ENV = "spark.executorEnv.";
 
   //PySpark properties
   public static final String SPARK_APP_NAME_ENV = "spark.app.name";
@@ -911,6 +917,33 @@ public class Settings implements Serializable {
   
   public static final long PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS = 60000;
 
+  public static final String SPARK_YARN_APPMASTER_ENV = "spark.yarn.appMasterEnv.";
+  public static final String SPARK_EXECUTOR_ENV = "spark.executorEnv.";
+
+  public static final String SPARK_YARN_APPMASTER_SPARK_USER = SPARK_YARN_APPMASTER_ENV + "SPARK_USER";
+  public static final String SPARK_YARN_APPMASTER_YARN_MODE = SPARK_YARN_APPMASTER_ENV + "SPARK_YARN_MODE";
+  public static final String SPARK_YARN_APPMASTER_YARN_STAGING_DIR = SPARK_YARN_APPMASTER_ENV 
+      + "SPARK_YARN_STAGING_DIR";
+  public static final String SPARK_YARN_APPMASTER_CUDA_DEVICES = SPARK_YARN_APPMASTER_ENV + "CUDA_VISIBLE_DEVICES";
+  public static final String SPARK_YARN_APPMASTER_HIP_DEVICES = SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES";
+  public static final String SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS = SPARK_YARN_APPMASTER_ENV + "EXECUTOR_GPUS";
+  public static final String SPARK_YARN_APPMASTER_LIBHDFS_OPTS = SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS";
+
+  public static final String SPARK_EXECUTOR_SPARK_USER = SPARK_EXECUTOR_ENV + "SPARK_USER";
+  public static final String SPARK_EXECUTOR_ENV_EXECUTOR_GPUS = SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS";
+  public static final String SPARK_EXECUTOR_LIBHDFS_OPTS = SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS";
+
+  //docker
+  public static final String SPARK_YARN_APPMASTER_CONTAINER_RUNTIME = SPARK_YARN_APPMASTER_ENV
+      + "YARN_CONTAINER_RUNTIME_TYPE";
+  public static final String SPARK_YARN_APPMASTER_DOCKER_IMAGE = SPARK_YARN_APPMASTER_ENV
+      + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
+  public static final String SPARK_YARN_APPMASTER_DOCKER_MOUNTS = SPARK_YARN_APPMASTER_ENV
+      + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
+  public static final String SPARK_EXECUTOR_CONTAINER_RUNTIME = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_TYPE";
+  public static final String SPARK_EXECUTOR_DOCKER_IMAGE = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
+  public static final String SPARK_EXECUTOR_DOCKER_MOUNTS = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
+  
   //Hive config
   public static final String HIVE_SITE = "hive-site.xml";
 
@@ -1688,7 +1721,7 @@ public class Settings implements Serializable {
     return ANACONDA_USER;
   }
 
-  private String ANACONDA_DIR = "/srv/hops/anaconda/anaconda";
+  private String ANACONDA_DIR = "/srv/hops/anaconda";
 
   public synchronized String getAnacondaDir() {
     checkCache();
@@ -1702,6 +1735,7 @@ public class Settings implements Serializable {
     return CUDA_DIR;
   }
 
+  private String condaEnvName = "theenv";
   /**
    * Constructs the path to the project environment in Anaconda
    *
@@ -1709,14 +1743,15 @@ public class Settings implements Serializable {
    * @return conda dir
    */
   public String getAnacondaProjectDir(Project project) {
-    String condaEnv = projectUtils.getCurrentCondaEnvironment(project);
-    return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnv;
+    return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnvName;
   }
   
   //TODO(Theofilos): Used by Flink. Will be removed as part of refactoring *YarnRunnerBuilders.
   public String getCurrentCondaEnvironment(Project project) {
-    return projectUtils.getCurrentCondaEnvironment(project);
+    return condaEnvName;
   }
+  
+  
   
   
   private Boolean ANACONDA_ENABLED = true;
@@ -3052,15 +3087,15 @@ public class Settings implements Serializable {
   }
 
   // Libraries we preinstalled users should not mess with
-  private Set<String> PREINSTALLED_PYTHON_LIBRARY_NAMES;
-  private static final String VARIABLE_PREINSTALLED_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
-  private static final String DEFAULT_PREINSTALLED_PYTHON_LIBRARY_NAMES =
+  private Set<String> UNMUTABLE_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
+  private static final String DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES = 
       "tensorflow, pydoop, pyspark, tensorboard, jupyterlab, sparkmagic, hdfscontents, pyjks, hops-apache-beam, " +
           "pyopenssl";
 
-  public synchronized Set<String> getPreinstalledPythonLibraryNames() {
+  public synchronized Set<String> getUnmutablePythonLibraryNames() {
     checkCache();
-    return PREINSTALLED_PYTHON_LIBRARY_NAMES;
+    return UNMUTABLE_PYTHON_LIBRARY_NAMES;
   }
 
   private String HOPSWORKS_VERSION;
@@ -3295,13 +3330,6 @@ public class Settings implements Serializable {
     return KUBE_KEYSTORE_KEY;
   }
 
-  private String KUBE_REGISTRY = "registry.docker-registry.svc.cluster.local";
-
-  public synchronized String getKubeRegistry() {
-    checkCache();
-    return KUBE_REGISTRY;
-  }
-
   private String KUBE_PULL_POLICY = "Always";
   public synchronized String getKubeImagePullPolicy() {
     checkCache();
@@ -3344,18 +3372,6 @@ public class Settings implements Serializable {
   public synchronized Boolean isOnlineFeaturestore() {
     checkCache();
     return ONLINE_FEATURESTORE;
-  }
-
-  private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
-  public synchronized String getJupyterImgVersion() {
-    checkCache();
-    return KUBE_JUPYTER_IMG_VERSION;
-  }
-  
-  private String KUBE_PYTHON_IMG_VERSION = "1.3.0";
-  public synchronized String getPythonImgVersion() {
-    checkCache();
-    return KUBE_PYTHON_IMG_VERSION;
   }
 
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
@@ -3722,4 +3738,49 @@ public class Settings implements Serializable {
 
   public static final String FEATURESTORE_INDEX = "featurestore";
   public static final String FEATURESTORE_PROJECT_ID_FIELD = "project_id";
+
+  //-----------------------------YARN DOCKER-------------------------------------------------//
+  private static String YARN_RUNTIME = "docker";
+  
+  public synchronized String getYarnRuntime(){
+    checkCache();
+    return YARN_RUNTIME;
+  }
+  
+  private static String DOCKER_MOUNTS = 
+      "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/flink";
+  
+  public synchronized String getDockerMounts(){
+    checkCache();
+    String result = "";
+    for(String mountPoint: DOCKER_MOUNTS.split(",")){
+      result += mountPoint + ":" + mountPoint + ":ro,";
+    }
+    return result.substring(0, result.length() - 1);
+  }
+  
+  private String DOCKER_REGISTRY_NAME = "localhost";
+  
+  public String getRegistryName(){
+    checkCache();
+    return DOCKER_REGISTRY_NAME;
+  }
+  
+  private int DOCKER_REGISTRY_PORT = 4443;
+  
+  public int getRegistryPort(){
+    checkCache();
+    return DOCKER_REGISTRY_PORT;
+  }
+  
+  public String getRegistry() {
+    return getRegistryName() + ":" + getRegistryPort();
+  }
+
+  private long YARN_APP_UID = 1235L;
+  public long getYarnAppUID() {
+    checkCache();
+    return YARN_APP_UID;
+  }
+  //-----------------------------END YARN DOCKER-------------------------------------------------//
 }

@@ -83,15 +83,15 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "JupyterProject.findByToken",
           query
           = "SELECT j FROM JupyterProject j WHERE j.token = :token"),
-  @NamedQuery(name = "JupyterProject.findByPid",
+  @NamedQuery(name = "JupyterProject.findByCid",
           query
-          = "SELECT j FROM JupyterProject j WHERE j.pid = :pid")})
+          = "SELECT j FROM JupyterProject j WHERE j.cid = :cid")})
 public class JupyterProject implements Serializable {
 
   @Basic(optional = false)
   @NotNull
-  @Column(name = "pid")
-  private long pid;
+  @Column(name = "cid")
+  private String cid;
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -138,7 +138,7 @@ public class JupyterProject implements Serializable {
   }
 
   public JupyterProject(Project project, String secret, Integer port,
-                        int hdfsUserId, String hostIp, String token, Long pid, Date expires) {
+                        int hdfsUserId, String hostIp, String token, String cid, Date expires) {
     this.projectId = project;
     this.secret = secret;
     this.port = port;
@@ -146,7 +146,7 @@ public class JupyterProject implements Serializable {
     this.created = new Date();
     this.expires = expires;
     this.token = token;
-    this.pid = pid;
+    this.cid = cid;
   }
 
   public String getSecret() {
@@ -240,12 +240,12 @@ public class JupyterProject implements Serializable {
             + " ]";
   }
 
-  public long getPid() {
-    return pid;
+  public String getCid() {
+    return cid;
   }
 
-  public void setPid(long pid) {
-    this.pid = pid;
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
 

@@ -8,12 +8,11 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.Job;
-import io.fabric8.kubernetes.api.model.JobCondition;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.QuantityBuilder;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
@@ -21,9 +20,11 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentStatus;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
+import io.fabric8.kubernetes.api.model.batch.Job;
+import io.fabric8.kubernetes.api.model.batch.JobCondition;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -261,7 +262,7 @@ public class KubeClientService {
   @Asynchronous
   public void deleteDeployment(String namespace, ObjectMeta deploymentMetadata)
     throws KubernetesClientException{
-    client.extensions().deployments().inNamespace(namespace)
+    client.apps().deployments().inNamespace(namespace)
       .delete(new DeploymentBuilder().withMetadata(deploymentMetadata).build());
   }
 
@@ -291,7 +292,7 @@ public class KubeClientService {
   @Asynchronous
   public void deleteJob(String namespace, String kubeJobName) throws KubernetesClientException {
     try {
-      boolean deleted = client.extensions().jobs().inNamespace(namespace).withName(kubeJobName).delete();
+      boolean deleted = client.batch().jobs().inNamespace(namespace).withName(kubeJobName).delete();
       LOGGER.info("Deleted job: " + kubeJobName + ", status: " + deleted);
     } catch (KubernetesClientException ex){
       if(ex.getStatus().getCode() == 500) {
@@ -308,20 +309,20 @@ public class KubeClientService {
   
   @Asynchronous
   private void stopJob(String namespace, String kubeJobName) throws KubernetesClientException{
-    Job job = client.extensions().jobs().inNamespace(namespace).withName(kubeJobName).get();
+    Job job = client.batch().jobs().inNamespace(namespace).withName(kubeJobName).get();
     if(job.getStatus().getConditions().isEmpty()){
       JobCondition condition = new JobCondition();
       condition.setType("Failed");
       job.getStatus().getConditions().add(condition);
     }
     job.getStatus().getConditions().get(0).setType("Failed");
-    client.extensions().jobs().inNamespace(namespace).withName(kubeJobName).replace(job);
+    client.batch().jobs().inNamespace(namespace).withName(kubeJobName).replace(job);
     LOGGER.info("Stopped job: " + kubeJobName);
   }
 
   
   public List<Job> getJobs(){
-    return client.extensions().jobs().inAnyNamespace().list().getItems();
+    return client.batch().jobs().inAnyNamespace().list().getItems();
   }
   
   
@@ -329,7 +330,7 @@ public class KubeClientService {
   public void createOrReplaceDeployment(Project project, Deployment deployment)
       throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
-    client.extensions().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment);
+    client.apps().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment);
   }
 
   @Asynchronous
@@ -341,7 +342,7 @@ public class KubeClientService {
   public void createJob(Project project, Job job)
     throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
-    client.extensions().jobs().inNamespace(kubeProjectNs).create(job);
+    client.batch().jobs().inNamespace(kubeProjectNs).create(job);
   }
   
   public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
@@ -373,7 +374,7 @@ public class KubeClientService {
       throws KubernetesClientException{
     String kubeProjectNs = getKubeProjectName(project);
 
-    Deployment deployment = client.extensions().deployments().inNamespace(kubeProjectNs)
+    Deployment deployment = client.apps().deployments().inNamespace(kubeProjectNs)
         .withName(deploymentName).get();
     return deployment == null ? null : deployment.getStatus();
   }
@@ -483,28 +484,28 @@ public class KubeClientService {
   }
   
   public ResourceRequirements buildResourceRequirements(DockerJobConfiguration dockerConfig) throws ServiceException {
-    
+
     if(dockerConfig.getMemory() > settings.getKubeDockerMaxMemoryAllocation()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum memory "
-        + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
+          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxMemoryAllocation() + "MB");
     } else if(dockerConfig.getCores() > settings.getKubeDockerMaxCoresAllocation()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum cores "
-        + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
+          + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxCoresAllocation() + " cores");
     } else if(dockerConfig.getGpus() > settings.getKubeDockerMaxGpusAllocation()) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.FINE, "Exceeded maximum gpus "
         + "allocation allowed for Jupyter Notebook server: " + settings.getKubeDockerMaxGpusAllocation() + " gpus");
     }
-    
+
     ResourceRequirementsBuilder resources = new ResourceRequirementsBuilder();
     resources
-      .addToLimits("memory", new QuantityBuilder().withAmount(dockerConfig.getMemory() + "Mi").build())
-      .addToLimits("cpu", new QuantityBuilder().withAmount(
-        Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build());
-    
+        .addToLimits("memory", new Quantity(dockerConfig.getMemory() + "Mi"))
+        .addToLimits("cpu", new QuantityBuilder().withAmount(
+            Double.toString(dockerConfig.getCores() * settings.getKubeDockerCoresFraction())).build());
+
     int requestedGPUs = dockerConfig.getGpus();
     if(requestedGPUs > 0) {
       resources.addToLimits("nvidia.com/gpu", new QuantityBuilder()
-        .withAmount(Double.toString(dockerConfig.getGpus())).build());
+          .withAmount(Double.toString(dockerConfig.getGpus())).build());
     }
     return resources.build();
   }

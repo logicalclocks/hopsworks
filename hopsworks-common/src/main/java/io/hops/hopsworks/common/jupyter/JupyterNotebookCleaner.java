@@ -113,7 +113,7 @@ public class JupyterNotebookCleaner {
               Users user = usersFacade.findByUsername(hdfsUser.getUsername());
               LOGGER.log(Level.FINE, "Shutting down expired notebook for hdfs user " + hdfsUser.getName());
               jupyterController.shutdown(jp.getProjectId(), hdfsUser.getName(), user,
-                  jp.getSecret(), jp.getPid(), jp.getPort());
+                  jp.getSecret(), jp.getCid(), jp.getPort());
             } catch (Exception e) {
               LOGGER.log(Level.SEVERE, "Failed to cleanup notebook with port " + jp.getPort(), e);
             }

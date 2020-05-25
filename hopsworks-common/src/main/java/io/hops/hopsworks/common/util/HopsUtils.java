@@ -56,7 +56,6 @@ import io.hops.hopsworks.common.util.templates.OverwriteConfigReplacementPolicy;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
@@ -83,6 +82,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Utility methods.

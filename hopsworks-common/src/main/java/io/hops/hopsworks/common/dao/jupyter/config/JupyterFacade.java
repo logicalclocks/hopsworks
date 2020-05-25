@@ -158,8 +158,8 @@ public class JupyterFacade {
 
   public JupyterProject saveServer(String host,
       Project project, String secretConfig, int port,
-      int hdfsUserId, String token, long pid, Date expires) {
-    JupyterProject jp = new JupyterProject(project, secretConfig, port, hdfsUserId, host, token, pid, expires);
+      int hdfsUserId, String token, String cid, Date expires) {
+    JupyterProject jp = new JupyterProject(project, secretConfig, port, hdfsUserId, host, token, cid, expires);
     persist(jp);
     return jp;
   }
