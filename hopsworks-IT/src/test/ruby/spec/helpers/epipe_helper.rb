@@ -32,7 +32,6 @@ module EpipeHelper
   end
 
   def epipe_wait_on_mutations(repeat=3)
-    epipe_active
     repeat.times do
       result = wait_for_me_time(30) do
         pending_mutations = HDFSMetadataLog.count
@@ -58,7 +57,6 @@ module EpipeHelper
   end
 
   def epipe_wait_on_provenance(repeat=3)
-    epipe_active
     repeat.times do
       #check FileProv log table
       result = wait_for_me_time(30) do
