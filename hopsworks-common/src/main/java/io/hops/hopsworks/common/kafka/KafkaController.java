@@ -93,6 +93,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -133,7 +135,7 @@ public class KafkaController {
   private KafkaBrokers kafkaBrokers;
   
   public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
-    ProjectException, UserException, InterruptedException, ExecutionException {
+    ProjectException, UserException {
     
     if (topicDto == null) {
       throw new IllegalArgumentException("topicDto was not provided.");
@@ -205,8 +207,7 @@ public class KafkaController {
     return topics;
   }
   
-  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto)
-    throws KafkaException, InterruptedException, ExecutionException {
+  public ProjectTopics createTopicInProject(Project project, TopicDTO topicDto) throws KafkaException {
     
     Subjects schema =
       subjectsFacade.findSubjectByNameAndVersion(project, topicDto.getSchemaName(), topicDto.getSchemaVersion())
@@ -214,11 +215,17 @@ public class KafkaController {
           new KafkaException(RESTCodes.KafkaErrorCode.SCHEMA_NOT_FOUND, Level.FINE, "topic: " + topicDto.getName()));
     
     // create the topic in kafka
-    if (createTopicInKafka(topicDto).get() == null) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
-        "topic name: " + topicDto.getName());
+    try {
+      if (createTopicInKafka(topicDto).get(3000, TimeUnit.MILLISECONDS) == null) {
+        throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_ALREADY_EXISTS_IN_ZOOKEEPER, Level.INFO,
+          "topic name: " + topicDto.getName());
+      }
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      throw new KafkaException(
+        RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, "Topic name: " + topicDto.getName(), e.getMessage(),
+        e);
     }
-    
+  
     /*
      * What is the possibility of the program failing here? The topic is created
      * on
@@ -241,15 +248,21 @@ public class KafkaController {
   }
   
   private KafkaFuture<CreateTopicsResult> createTopicInKafka(TopicDTO topicDTO) {
-    return hopsKafkaAdminClient.listTopics().names().thenApply((set) -> {
-      if (set.contains(topicDTO.getName())) {
-        return null;
-      } else {
-        NewTopic newTopic =
-          new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
-        return hopsKafkaAdminClient.createTopics(Collections.singleton(newTopic));
-      }
-    });
+    return hopsKafkaAdminClient.listTopics().names().thenApply(
+      set -> {
+        if (set.contains(topicDTO.getName())) {
+          return null;
+        } else {
+          NewTopic newTopic =
+            new NewTopic(topicDTO.getName(), topicDTO.getNumOfPartitions(), topicDTO.getNumOfReplicas().shortValue());
+          try {
+            return hopsKafkaAdminClient.createTopics(Collections.singleton(newTopic));
+          } catch (Exception e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e);
+            return null;
+          }
+        }
+      });
   }
   
   private KafkaFuture<List<PartitionDetailsDTO>> getTopicDetailsFromKafkaCluster(String topicName) {
