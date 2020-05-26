@@ -121,8 +121,10 @@ angular.module('hopsWorksApp')
             self.checkIfPythonEnabled = function () {
               VariablesService.isKubernetes()
                   .then(function (success) {
-                    self.isPythonEnabled = true;
-                    self.getDockerMaxAllocation();
+                    if (success.data.successMessage === 'true') {
+                      self.isPythonEnabled = true;
+                      self.getDockerMaxAllocation();
+                    }
                   }, function (error) {
                   });
             };
