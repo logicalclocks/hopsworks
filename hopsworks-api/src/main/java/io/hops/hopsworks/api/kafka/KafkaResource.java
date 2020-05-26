@@ -97,7 +97,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
 @RequestScoped
@@ -161,8 +160,7 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo, @Context SecurityContext sc)
-    throws KafkaException, ProjectException, UserException,
-      InterruptedException, ExecutionException {
+    throws KafkaException, ProjectException, UserException {
     kafkaController.createTopic(project, topicDto, uriInfo);
     URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
     topicDto.setHref(uri);
@@ -187,8 +185,7 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getTopic(@Context UriInfo uriInfo, @PathParam("topic") String topicName, @Context SecurityContext sc)
-    throws KafkaException, InterruptedException, ExecutionException {
-    
+    throws KafkaException {
     PartitionDetailsDTO dto = topicsBuilder.buildTopicDetails(uriInfo, project, topicName);
     return Response.ok().entity(dto).build();
   }

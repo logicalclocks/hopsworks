@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.kafka.KafkaController;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -38,6 +39,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import static io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade.TopicsFilters;
@@ -113,14 +117,20 @@ public class TopicsBuilder extends CollectionsBuilder<TopicDTO> {
   }
   
   public PartitionDetailsDTO buildTopicDetails(UriInfo uriInfo, Project project, String topicName)
-    throws KafkaException, InterruptedException, ExecutionException {
+    throws KafkaException {
     
     PartitionDetailsDTO dto = new PartitionDetailsDTO();
     dto.setHref(topicUri(uriInfo, project, topicName).build());
-    List<PartitionDetailsDTO> list = kafkaController.getTopicDetails(project, topicName).get();
-    dto.setCount(Integer.toUnsignedLong(list.size()));
-    list.forEach(dto::addItem);
-    return dto;
+    try {
+      List<PartitionDetailsDTO> list =
+        kafkaController.getTopicDetails(project, topicName).get(3000, TimeUnit.MILLISECONDS);
+      dto.setCount(Integer.toUnsignedLong(list.size()));
+      list.forEach(dto::addItem);
+      return dto;
+    } catch (InterruptedException | ExecutionException | TimeoutException e){
+      throw new KafkaException(
+        RESTCodes.KafkaErrorCode.TOPIC_FETCH_FAILED, Level.WARNING, "Topic name: " + topicName, e.getMessage(), e);
+    }
   }
   
   public SharedProjectDTO buildSharedProject(UriInfo uriInfo, Project project, String topicName) {
