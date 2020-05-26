@@ -70,8 +70,9 @@ public class AirflowDagFacade {
     List<AirflowDag> dags = new ArrayList<>();
     PreparedStatement stmt = null;
     ResultSet dagsRS = null;
+    Connection connection = null;
     try {
-      Connection connection = airflowDataSource.getConnection();
+      connection = airflowDataSource.getConnection();
       stmt = connection.prepareStatement(DAGS_STATUS_QUERY);
       stmt.setString(1, owner);
       dagsRS = stmt.executeQuery();
@@ -91,6 +92,10 @@ public class AirflowDagFacade {
       } catch (SQLException ex) {
         // Just log them, can't do much about them here
         LOGGER.log(Level.WARNING, "Could not release resources", ex);
+      } finally {
+        if (connection != null) {
+          connection.close();
+        }
       }
     }
   }
@@ -99,8 +104,9 @@ public class AirflowDagFacade {
     List<AirflowDag> dags = new ArrayList<>();
     PreparedStatement stmt = null;
     ResultSet dagsRS = null;
+    Connection connection = null;
     try {
-      Connection connection = airflowDataSource.getConnection();
+      connection = airflowDataSource.getConnection();
       stmt = connection.prepareStatement(GET_ALL_DAGS_WITH_LIMIT_QUERY);
       stmt.setInt(1, limit);
       dagsRS = stmt.executeQuery();
@@ -120,6 +126,10 @@ public class AirflowDagFacade {
       } catch (SQLException ex) {
         // Just log them, can't do much about them here
         LOGGER.log(Level.WARNING, "Could not release resources", ex);
+      } finally {
+        if (connection != null) {
+          connection.close();
+        }
       }
     }
   }
