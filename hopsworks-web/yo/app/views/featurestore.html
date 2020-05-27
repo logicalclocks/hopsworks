@@ -28,7 +28,7 @@
             <div ng-include="'views/featuregroupPreview.html'"></div>
         </div>
         <div ng-if="!mainCtrl.showSearchPage && !featurestoreCtrl.showPreview" class="content-wrapper">
-            <h3 id="projectBread" style="background: white; border-bottom: none"></h3>
+            <h3 id="projectBread" style="border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
                     <div class="loader-in-wrap"></div>
@@ -525,6 +525,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-4">
+                                <div class="fs_card card">
                                 <div id="quotaChart"
                                      ng-if="featurestoreCtrl.featurestoreHdfsQuota() != null"
                                      style="margin-left:150px">
@@ -535,6 +536,7 @@
                                         {{featurestoreCtrl.featurestoreHdfsUsage()}} of
                                         {{featurestoreCtrl.featurestoreHdfsQuota()}} used (Offline Feature Store quota).
                                     </small>
+                                </div>
                                 </div>
                             </div>
                         </div>

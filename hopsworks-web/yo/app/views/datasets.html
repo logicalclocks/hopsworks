@@ -51,7 +51,7 @@
               <div ng-include="'views/search/search.html'"></div>
             </div>
           </div>
-          <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="background-color: white; overflow: hidden;" ng-controller="DelaClientCtrl as delaClientCtrl">
+          <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper" style="overflow: hidden;" ng-controller="DelaClientCtrl as delaClientCtrl">
             <div growl reference="4" class="pull-right" ></div>
             <h3 id="datasetsHeader" class="breadcrumb">
               <div layout="row" ng-init="active = 'all'" style="display: block;">
