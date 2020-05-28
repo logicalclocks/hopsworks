@@ -58,17 +58,18 @@
         </div>
     </div>
     <div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitAvailable">
-        <label class="control-label col-sm-3" for="baseDirCommunity" uib-tooltip='Project relative path to use as Jupyter base path'>Base Directory: </label>
+        <label class="control-label col-sm-3" for="baseDir" uib-tooltip='Dataset to set as base directory for Jupyter'>Base Directory: </label>
         <div class="col-sm-4">
-            <select class="form-control" id="baseDirCommunity" ng-model="jupyterCtrl.jupyterSettings.baseDir">
-                <option value="/">/</option>
-                <option value="/Jupyter/">/Jupyter/</option>
+            <select id="baseDir" class="form-control" ng-model="jupyterCtrl.selected" ng-change="jupyterCtrl.changeBaseDir()"required>
+                <option ng-selected="jupyterCtrl.selected.id === dir.id"
+                        ng-repeat="dir in jupyterCtrl.dirs"
+                        ng-value="dir">{{dir.name}}</option>
             </select>
         </div>
-        <div class="row" ng-show="jupyterCtrl.jupyterSettings.baseDir === '/'">
+        <div class="row" ng-if="jupyterCtrl.selected.warning">
             <div class="col-md-2 jupyter-left"></div>
             <div class="col-md-9 pull-right" style="font-weight: bold; color: orange;">
-                &nbsp You can only create notebooks inside a dataset - not in the '/' (root) directory.
+                &nbsp {{jupyterCtrl.selected.warning}}
             </div>
         </div>
     </div>

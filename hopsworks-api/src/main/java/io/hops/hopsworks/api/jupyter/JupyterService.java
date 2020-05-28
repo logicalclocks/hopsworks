@@ -243,7 +243,7 @@ public class JupyterService {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     String loggedinemail = user.getEmail();
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(projectId, loggedinemail);
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, loggedinemail);
     if (js.getProject() == null) {
       js.setProject(project);
     }
@@ -452,7 +452,7 @@ public class JupyterService {
           "Jupyter server is not running",
           "Jupyter server for Hopsworks user: " + projectUser + " is not running");
     }
-    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
     RepositoryStatus status = NullJupyterNbVCSController.EMPTY_REPOSITORY_STATUS;
     if (jupyterSettings.isGitBackend()) {
       status = jupyterNbVCSController.status(jupyterProject, jupyterSettings);
