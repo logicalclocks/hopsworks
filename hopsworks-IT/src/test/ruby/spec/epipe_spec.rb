@@ -24,7 +24,9 @@ describe "On #{ENV['OS']}" do
     before :all do
       @project1 = create_project
       epipe_restart_checked unless is_epipe_active
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
     end
     after :each do
       epipe_restart_checked unless is_epipe_active
@@ -43,7 +45,8 @@ describe "On #{ENV['OS']}" do
                         i_parent_name:td[:inode_name], io_user_name:"", i_xattr_name:"", io_logical_time_batch:1,
                         io_timestamp_batch:123456789, ds_logical_time: td_i[:logical_time])
         end
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
       end
     end
 
@@ -60,7 +63,8 @@ describe "On #{ENV['OS']}" do
                         i_parent_name:td[:inode_name], io_user_name:"", i_xattr_name:"", io_logical_time_batch:1,
                         io_timestamp_batch:123456789, ds_logical_time: td_i[:logical_time])
         end
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
       end
     end
 
@@ -77,7 +81,8 @@ describe "On #{ENV['OS']}" do
                         i_parent_name:td[:inode_name], io_user_name:"", i_xattr_name:"test", io_logical_time_batch:1,
                         io_timestamp_batch:123456789, ds_logical_time: td_i[:logical_time])
         end
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
       end
     end
   end

@@ -63,7 +63,9 @@ describe "On #{ENV['OS']}" do
   end
 
   after :all do
-    epipe_wait_on_provenance
+    wait_result = epipe_wait_on_provenance(repeat: 5)
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
+
     project_index_cleanup(@email)
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)
     clean_all_test_projects
@@ -71,14 +73,17 @@ describe "On #{ENV['OS']}" do
 
   describe 'test provenance auxiliary mechanisms' do
     it 'index cleaning' do
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
       project_index_cleanup(@email)
     end
   end
 
   describe 'provenance state - 2 projects' do
     before :all do
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       project_index_cleanup(@email)
       # pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
@@ -93,7 +98,8 @@ describe "On #{ENV['OS']}" do
       delete_project(@project2)
       @project2 = nil
 
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
       project_index_cleanup(@email)
     end
 
@@ -101,7 +107,8 @@ describe "On #{ENV['OS']}" do
       describe 'group' do
         before :each do
           # pp "check epipe"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           # pp "create not experiment dir"
           prov_create_experiment(@project1, @not_experiment_name)
@@ -110,12 +117,14 @@ describe "On #{ENV['OS']}" do
         after :each do
           # pp "delete not experiment"
           prov_delete_experiment(@project1, @not_experiment_name)
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
 
         it 'not experiment in Experiments' do
           # pp "check not experiment"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "EXPERIMENT", false, 0)
         end
       end
@@ -123,7 +132,8 @@ describe "On #{ENV['OS']}" do
       describe 'group' do
         before :each do
           # pp "check epipe"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           # pp "create experiments"
           prov_create_experiment(@project1, @experiment_app1_name1)
@@ -138,7 +148,9 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project2, @experiment_app3_name1)
 
           # pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           get_ml_asset_in_project(@project1, "EXPERIMENT", false, 0)
           get_ml_asset_in_project(@project2, "EXPERIMENT", false, 0)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id(@experiment_app1_name1), false)
@@ -146,7 +158,9 @@ describe "On #{ENV['OS']}" do
 
         it 'simple experiments' do
           # pp "check experiments"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           result1 = get_ml_asset_in_project(@project1, "EXPERIMENT", false, 2)["items"]
           prov_check_asset_with_id(result1, prov_experiment_id(@experiment_app1_name1))
           prov_check_asset_with_id(result1, prov_experiment_id(@experiment_app2_name1))
@@ -172,12 +186,14 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app2_name1)
 
           # pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "EXPERIMENT", true, 0)
         end
 
         it 'experiment with app states' do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               exp_setup
@@ -198,7 +214,9 @@ describe "On #{ENV['OS']}" do
               prov_add_app_states1(@app1_id, user_name)
               prov_add_app_states2(@app2_id, user_name)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
+
             # pp "check experiment"
             result1 = get_ml_asset_in_project(@project1, "EXPERIMENT", true, 3)["items"]
             prov_check_experiment3(result1, prov_experiment_id(@experiment_app1_name1), "RUNNING")
@@ -216,13 +234,16 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app1_name1)
 
           # pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "EXPERIMENT", false, 0)
         end
 
         it 'experiment with xattr add, update and delete' do
           # pp "stop epipe"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -234,7 +255,9 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(experiment_record[0], "xattr_key_1", "xattr_value_1_updated", "XATTR_UPDATE", 4)
             prov_add_xattr(experiment_record[0], "xattr_key_2", "", "XATTR_DELETE", 5)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           # pp "check experiment"
           result1 = get_ml_asset_in_project(@project1, "EXPERIMENT", false, 1)["items"]
           #pp result1
@@ -251,7 +274,9 @@ describe "On #{ENV['OS']}" do
     describe "models" do
       describe 'group' do
         before :each do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           # pp "create models"
           prov_create_model(@project1, @model1_name)
           prov_create_model_version(@project1, @model1_name, @model_version1)
@@ -269,7 +294,9 @@ describe "On #{ENV['OS']}" do
           prov_delete_model(@project2, @model1_name)
 
           # pp "check hopscleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           get_ml_asset_in_project(@project1, "MODEL", false, 0)
           get_ml_asset_in_project(@project2, "MODEL", false, 0)
           check_no_ml_asset_by_id(@project1, "MODEL", prov_model_id(@model1_name, @model_version2), false)
@@ -277,7 +304,9 @@ describe "On #{ENV['OS']}" do
 
         it 'simple models' do
           # pp "check models"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           result1 = get_ml_asset_in_project(@project1, "MODEL", false, 3)["items"]
           prov_check_asset_with_id(result1, prov_model_id(@model1_name, @model_version1))
           prov_check_asset_with_id(result1, prov_model_id(@model1_name, @model_version2))
@@ -294,7 +323,9 @@ describe "On #{ENV['OS']}" do
     describe 'training datasets' do
       describe 'group' do
         before :each do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           # pp "create training datasets"
           prov_create_td(@project1, @td1_name, @td_version1)
           prov_create_td(@project1, @td1_name, @td_version2)
@@ -310,14 +341,18 @@ describe "On #{ENV['OS']}" do
           prov_delete_td(@project2, @td1_name, @td_version1)
 
         #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           get_ml_asset_in_project(@project1, "TRAINING_DATASET", false, 0)
           get_ml_asset_in_project(@project2, "TRAINING_DATASET", false, 0)
           check_no_ml_asset_by_id(@project1, "TRAINING_DATASET", prov_td_id(@td1_name, @td_version1), false)
         end
         it 'simple training datasets' do
         #pp "check training datasets"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           result1 = get_ml_asset_in_project(@project1, "TRAINING_DATASET", false, 3)["items"]
           prov_check_asset_with_id(result1, prov_td_id(@td1_name, @td_version1))
           prov_check_asset_with_id(result1, prov_td_id(@td1_name, @td_version2))
@@ -345,12 +380,15 @@ describe "On #{ENV['OS']}" do
           prov_delete_td(@project1, @td2_name, @td_version1)
           prov_delete_td(@project2, @td2_name, @td_version1)
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           get_ml_asset_in_project(@project1, "TRAINING_DATASET", false, 0)
         end
 
         it "training dataset with simple xattr count"  do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               td_setup
@@ -370,7 +408,8 @@ describe "On #{ENV['OS']}" do
               expect(td_record4.length).to eq 1
               prov_add_xattr(td_record4[0], "key", "val2", "XATTR_ADD", 1)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "check training dataset"
             get_ml_asset_by_xattr_count(@project1, "TRAINING_DATASET", "key", "val1", 2)
@@ -382,7 +421,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "training dataset with nested xattr count" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               td_setup
@@ -405,7 +445,8 @@ describe "On #{ENV['OS']}" do
               expect(td_record4.length).to eq 1
               prov_add_xattr(td_record4[0], "features", JSON[xattr2Json], "XATTR_ADD", 1)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "check training dataset"
             get_ml_asset_by_xattr_count(@project1, "TRAINING_DATASET", "features.value", "val1", 2)
@@ -421,7 +462,9 @@ describe "On #{ENV['OS']}" do
 
   describe 'provenance state - 1 project' do
     before :all do
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       project_index_cleanup(@email)
     #pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
@@ -431,7 +474,8 @@ describe "On #{ENV['OS']}" do
     #pp "delete projects"
       delete_project(@project1)
       @project1 = nil
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
       project_index_cleanup(@email)
     end
 
@@ -441,12 +485,14 @@ describe "On #{ENV['OS']}" do
           #pp "cleanup hops"
           prov_delete_experiment(@project1, @experiment_app1_name1)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "EXPERIMENT", false, 0)
         end
 
         it 'experiment with xattr' do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -455,7 +501,8 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(experimentRecord[0], "xattr_key_1", "xattr_value_1", "XATTR_ADD", 1)
             prov_add_xattr(experimentRecord[0], "xattr_key_2", "xattr_value_2", "XATTR_ADD", 2)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment"
           result1 = get_ml_asset_in_project(@project1, "EXPERIMENT", false, 1)["items"]
@@ -473,7 +520,8 @@ describe "On #{ENV['OS']}" do
           app_id = @app1_id
           experiment = @experiment_app1_name1
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(project, experiment)
 
@@ -483,7 +531,8 @@ describe "On #{ENV['OS']}" do
             expect(experimentRecord.length).to eq 1
             attach_app_id_xattr(project, experimentRecord[0][:inode_id], app_id)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment"
           result1 = get_ml_asset_in_project(project, "EXPERIMENT", true, 1)["items"]
@@ -514,7 +563,9 @@ describe "On #{ENV['OS']}" do
     describe 'file state' do
       describe 'group' do
         def exp_setup()
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           # pp "create experiments - pagination"
           prov_create_experiment(@project1, "#{@app1_id}_1")
           prov_create_experiment(@project1, "#{@app1_id}_2")
@@ -526,7 +577,8 @@ describe "On #{ENV['OS']}" do
           prov_create_experiment(@project1, "#{@app1_id}_8")
           prov_create_experiment(@project1, "#{@app1_id}_9")
           prov_create_experiment(@project1, "#{@app1_id}_10")
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
         end
 
         def exp_cleanup()
@@ -543,7 +595,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, "#{@app1_id}_10")
 
           #pp "check cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id(@experiment_app1_name1), false)
         end
 
@@ -576,7 +629,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app2_name1)
 
         #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           experiment_id1 = prov_experiment_id(@experiment_app1_name1)
           experiment_id2 = prov_experiment_id(@experiment_app2_name1)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id1, false)
@@ -584,7 +638,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "search by like file name" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check - ok - search result"
           experiment1_id = prov_experiment_id(@experiment_app1_name1)
@@ -636,7 +691,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, prov_experiment_id("#{@app1_id}_5"))
 
         #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id("#{@app1_id}_1"), false)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id("#{@app1_id}_2"), false)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id("#{@app1_id}_3"), false)
@@ -645,7 +701,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it 'timestamp range query' do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check file history"
           exp1 = get_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id("#{@app1_id}_1"), false)
@@ -670,7 +727,10 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app1_name1)
           prov_delete_experiment(@project1, @experiment_app1_name2)
           prov_delete_experiment(@project1, @experiment_app1_name3)
-          epipe_wait_on_provenance
+
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           experiment_id1 = prov_experiment_id(@experiment_app1_name1)
           experiment_id2 = prov_experiment_id(@experiment_app1_name2)
           experiment_id3 = prov_experiment_id(@experiment_app1_name3)
@@ -680,7 +740,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "search by like xattr 2" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               exp_setup
@@ -697,7 +758,8 @@ describe "On #{ENV['OS']}" do
               expect(experiment_record3.length).to eq 1
               prov_add_xattr(experiment_record3[0], "config", JSON[@xattrV8], "XATTR_ADD", 1)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "check not json - ok - search result"
             experiment1_id = prov_experiment_id(@experiment_app1_name1)
@@ -727,7 +789,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app2_name1)
           prov_delete_experiment(@project1, @experiment_app1_name2)
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           experiment_id1 = prov_experiment_id(@experiment_app1_name1)
           experiment_id2 = prov_experiment_id(@experiment_app2_name1)
           experiment_id3 = prov_experiment_id(@experiment_app1_name2)
@@ -737,7 +800,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "search by like xattr" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               exp_setup
@@ -755,7 +819,8 @@ describe "On #{ENV['OS']}" do
               prov_add_xattr(experiment_record3[0], "test_xattr", @xattrV7, "XATTR_ADD", 1)
               prov_add_xattr(experiment_record3[0], "config", JSON[@xattrV8], "XATTR_ADD", 2)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "check not json - ok - search result"
             experiment1_id = prov_experiment_id(@experiment_app1_name1)
@@ -799,13 +864,16 @@ describe "On #{ENV['OS']}" do
           #pp "cleanup hops"
           prov_delete_experiment(@project1, @experiment_app1_name1)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
         end
 
         it "search by xattr" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -816,7 +884,8 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(experiment_record[0], "test_xattr4", @xattrV4, "XATTR_ADD", 3)
             prov_add_xattr(experiment_record[0], "test_xattr5", JSON[@xattrV5], "XATTR_ADD", 4)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check simple json - ok - search result"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
@@ -874,7 +943,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "not json xattr" do
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -882,7 +952,8 @@ describe "On #{ENV['OS']}" do
             expect(experiment_record.length).to eq 1
             prov_add_xattr(experiment_record[0], "test_xattr_string", @xattrV4, "XATTR_ADD", 1)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
@@ -905,7 +976,8 @@ describe "On #{ENV['OS']}" do
           #pp "cleanup hops"
           prov_delete_experiment(@project1, @experiment_app1_name1)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
         end
@@ -913,7 +985,8 @@ describe "On #{ENV['OS']}" do
         it "array xattr" do
           xattr_key = "test_xattr_json_1"
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -921,7 +994,8 @@ describe "On #{ENV['OS']}" do
             expect(experiment_record.length).to eq 1
             prov_add_xattr(experiment_record[0], xattr_key, @xattrV3, "XATTR_ADD", 1)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
@@ -939,7 +1013,8 @@ describe "On #{ENV['OS']}" do
         it "update xattr" do
           xattr_key = "test_update_xattr"
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -948,7 +1023,8 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(experiment_record[0], xattr_key, JSON[@xattrV1], "XATTR_ADD", 1)
             prov_add_xattr(experiment_record[0], xattr_key, JSON[@xattrV2], "XATTR_UPDATE", 2)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
@@ -966,7 +1042,8 @@ describe "On #{ENV['OS']}" do
         it "experiment add xattr" do
           xattr_key = "test_add_xattr"
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_experiment(@project1, @experiment_app1_name1)
 
@@ -974,7 +1051,8 @@ describe "On #{ENV['OS']}" do
             expect(experiment_record.length).to eq 1
             prov_add_xattr(experiment_record[0], xattr_key, JSON[@xattrV1], "XATTR_ADD", 1)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
@@ -1002,7 +1080,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app2_name1)
 
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           experiment1_id = prov_experiment_id(@experiment_app1_name1)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", experiment1_id, false)
           experiment2_id = prov_experiment_id(@experiment_app2_name1)
@@ -1011,7 +1090,8 @@ describe "On #{ENV['OS']}" do
 
         it "delete xattr" do
           xattr_key = "test_delete_xattr"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               exp_setup
@@ -1027,7 +1107,8 @@ describe "On #{ENV['OS']}" do
               prov_add_xattr(experiment2_record[0], xattr_key, JSON[@xattrV2], "XATTR_UPDATE", 2)
               prov_add_xattr(experiment2_record[0], xattr_key, "", "XATTR_DELETE", 3)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "check experiment dataset"
             experiment1_id = prov_experiment_id(@experiment_app1_name1)
@@ -1054,7 +1135,8 @@ describe "On #{ENV['OS']}" do
           #pp "cleanup hops"
           prov_delete_td(@project1, @td1_name, @td_version1)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "TRAINING_DATASET", false, 0)
         end
 
@@ -1062,7 +1144,8 @@ describe "On #{ENV['OS']}" do
           xattr_key1 = "test_xattr_add_td_1"
           xattr_key2 = "test_xattr_add_td_2"
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_td(@project1, @td1_name, @td_version1)
 
@@ -1071,7 +1154,8 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(td_record[0], xattr_key1, "xattr_value_1", "XATTR_ADD", 1)
             prov_add_xattr(td_record[0], xattr_key2, "xattr_value_2", "XATTR_ADD", 2)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check training dataset"
           result1 = get_ml_asset_in_project(@project1, "TRAINING_DATASET", false, 1)["items"]
@@ -1089,7 +1173,8 @@ describe "On #{ENV['OS']}" do
           #pp "cleanup hops"
           prov_delete_model(@project1, @model1_name)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           get_ml_asset_in_project(@project1, "MODEL", false, 0)
         end
 
@@ -1097,7 +1182,8 @@ describe "On #{ENV['OS']}" do
           xattr_key1 = "test_xattr_add_m_1"
           xattr_key2 = "test_xattr_add_m_2"
 
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           epipe_stop_restart do
             prov_create_model(@project1, @model1_name)
 
@@ -1107,7 +1193,8 @@ describe "On #{ENV['OS']}" do
             prov_add_xattr(modelRecord[0], xattr_key1, "xattr_value_1", "XATTR_ADD", 1)
             prov_add_xattr(modelRecord[0], xattr_key2, "xattr_value_2", "XATTR_ADD", 2)
           end
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
           #pp "check model"
           result1 = get_ml_asset_in_project(@project1, "MODEL", false, 1)["items"]
@@ -1133,7 +1220,8 @@ describe "On #{ENV['OS']}" do
           prov_delete_experiment(@project1, @experiment_app2_name1)
           prov_delete_experiment(@project1, @experiment_app3_name1)
           #pp "check hops cleanup"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id(@experiment_app1_name1), false)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id(@experiment_app2_name1), false)
           check_no_ml_asset_by_id(@project1, "EXPERIMENT", prov_experiment_id(@experiment_app3_name1), false)
@@ -1142,7 +1230,8 @@ describe "On #{ENV['OS']}" do
         it 'filter by - has xattr' do
           xattr_key1 = "filter_by_has_xattr_1"
           xattr_key2 = "filter_by_has_xattr_2"
-          epipe_wait_on_provenance
+          wait_result = epipe_wait_on_provenance(repeat: 5)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
           begin
             epipe_stop_restart do
               exp_setup
@@ -1157,7 +1246,8 @@ describe "On #{ENV['OS']}" do
               xattr_val = "some value"
               prov_add_xattr(experiment_record[0], xattr_key2, xattr_val, "XATTR_ADD", 1)
             end
-            epipe_wait_on_provenance
+            wait_result = epipe_wait_on_provenance(repeat: 5)
+            expect(wait_result["success"]).to be(true), wait_result["msg"]
 
             #pp "query with filter by - has xattr"
             query = "#{ENV['HOPSWORKS_API']}/project/#{@project1[:id]}/provenance/states?filter_by_has_xattr=#{xattr_key1}"
@@ -1176,7 +1266,8 @@ describe "On #{ENV['OS']}" do
 
   describe 'provenance state - new project for each test' do
     before :all do
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
       project_index_cleanup(@email)
     #pp "create project: #{@project1_name}"
       @project1 = create_project_by_name(@project1_name)
@@ -1186,14 +1277,16 @@ describe "On #{ENV['OS']}" do
     #pp "delete projects"
       delete_project(@project1)
       @project1 = nil
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
       project_index_cleanup(@email)
     end
 
     describe 'group' do
       before :each do
       #pp "check epipe"
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
         prov_create_experiment(@project1, @experiment_app1_name1)
       end
 
@@ -1202,7 +1295,8 @@ describe "On #{ENV['OS']}" do
         prov_delete_experiment(@project1,  @experiment_app1_name1)
 
       #pp "check hops cleanup"
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
         get_ml_asset_in_project(@project1, "EXPERIMENT", false, 0)
       end
 
@@ -1217,7 +1311,8 @@ describe "On #{ENV['OS']}" do
         prov_add_xattr(experiment_record[0], "xattr_long", 24, "XATTR_ADD", 2)
 
       #pp "restart epipe"
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       #pp "check mapping"
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/index/mapping"
@@ -1238,7 +1333,8 @@ describe "On #{ENV['OS']}" do
         prov_add_xattr(experiment_record[0], "xattr_json", JSON[jsonVal], "XATTR_ADD", 3)
 
       #pp "restart epipe"
-        epipe_wait_on_provenance
+        wait_result = epipe_wait_on_provenance(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       #pp "check mapping"
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/index/mapping"
@@ -1282,7 +1378,9 @@ describe "On #{ENV['OS']}" do
 
   describe 'provenance state - cleanup' do
     it 'one project cleanup' do
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       project1 = create_project_by_name(@project1_name)
       project2 = create_project_by_name(@project2_name)
       delete_project(project1)

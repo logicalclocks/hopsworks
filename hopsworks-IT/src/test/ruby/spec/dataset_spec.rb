@@ -49,7 +49,6 @@ describe "On #{ENV['OS']}" do
   describe 'dataset' do
     before(:all) {
       setVar("download_allowed", "true")
-      @debugOpt = true
     }
     after(:all) {
       clean_projects

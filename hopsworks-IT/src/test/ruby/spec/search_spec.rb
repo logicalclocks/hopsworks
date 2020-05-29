@@ -82,13 +82,17 @@ describe "On #{ENV['OS']}" do
 
     it "local search featuregroup, training datasets with name, features, xattr" do
       #make sure epipe is free of work
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       with_valid_session
       project1 = create_project
       fgs1 = featuregroups_setup(project1)
       tds1 = trainingdataset_setup(project1)
       #search
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => "name", 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[3], 'highlight' => "features", 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[5], 'highlight' => "description", 'parent_project' => project1[:projectname]}]
@@ -103,7 +107,9 @@ describe "On #{ENV['OS']}" do
 
     it "local search featuregroup, training datasets with name, features, xattr with shared training datasets" do
       #make sure epipe is free of work
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       with_valid_session
       project1 = create_project
       project2 = create_project
@@ -117,7 +123,9 @@ describe "On #{ENV['OS']}" do
       tds1 = trainingdataset_setup(project1)
       tds2 = trainingdataset_setup(project2)
       #search
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => 'name', 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[3], 'highlight' => 'features', 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[5], 'highlight' => "description", 'parent_project' => project1[:projectname]}]
@@ -152,7 +160,8 @@ describe "On #{ENV['OS']}" do
 
     it "global search featuregroup, training datasets with name, features, xattr" do
       #make sure epipe is free of work
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       with_valid_session
       project1 = create_project
@@ -162,7 +171,9 @@ describe "On #{ENV['OS']}" do
       tds1 = trainingdataset_setup(project1)
       tds2 = trainingdataset_setup(project2)
 
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => 'name', 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[3], 'highlight' => 'features', 'parent_project' => project1[:projectname]},
                         {'name' => fgs1[5], 'highlight' => "description", 'parent_project' => project1[:projectname]},
@@ -184,7 +195,9 @@ describe "On #{ENV['OS']}" do
 
     it "accessor projects for search result items" do
       #make sure epipe is free of work
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       with_valid_session
       user1_email = @user["email"]
       project1 = create_project
@@ -213,7 +226,10 @@ describe "On #{ENV['OS']}" do
       share_dataset_checked(project3, featurestore3_name, project2[:projectname], "FEATURESTORE")
 
       create_session(user1_email, "Pass123")
-      epipe_wait_on_mutations
+
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       #have access to the featurestore both from parent(project1) and shared project(project2) (user1)
       expected_hits1 = [{'name' => fg1_name, 'highlight' => 'name', 'parent_project' => project1[:projectname], 'access_projects' => 2}]
       global_search_test("dog", "featuregroup", expected_hits1)
@@ -228,7 +244,9 @@ describe "On #{ENV['OS']}" do
 
     it 'featurestore pagination' do
       #make sure epipe is free of work
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       with_valid_session
       project1 = create_project
 
@@ -248,7 +266,9 @@ describe "On #{ENV['OS']}" do
         create_hopsfs_training_dataset_checked(project1[:id], featurestore_id, connector, td_name)
       end
 
-      epipe_wait_on_mutations
+      wait_result = epipe_wait_on_mutations(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       #local search
       local_featurestore_search(project1, "FEATUREGROUP", "dog")
       local_featurestore_search(project1, "FEATUREGROUP", "dog", from:0, size:10)
@@ -271,7 +291,9 @@ describe "On #{ENV['OS']}" do
       end
       it "create large featuregroup & training dataset - searchable (except features)" do
         project = get_project
-        epipe_wait_on_mutations
+
+        wait_result = epipe_wait_on_mutations(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
 
         featurestore_id = get_featurestore_id(project[:id])
         fg_name = "cat_567890"
@@ -291,7 +313,10 @@ describe "On #{ENV['OS']}" do
             primary: true
         }
         create_cached_featuregroup_checked(project[:id], featurestore_id, fg_name, features: fg_features, featuregroup_description: fg_description)
-        epipe_wait_on_mutations
+
+        wait_result = epipe_wait_on_mutations(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
         expected_hits1 = [{'name' => fg_name, 'highlight' => "name", 'parent_project' => project[:projectname]}]
         project_search_test(project, "cat", "featuregroup", expected_hits1)
         expected_hits2 = [{'name' => fg_name, 'highlight' => "description", 'parent_project' => project[:projectname]}]
@@ -305,7 +330,10 @@ describe "On #{ENV['OS']}" do
         end
         connector = get_hopsfs_training_datasets_connector(project[:projectname])
         create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, td_name, features: td_features, description: td_description)
-        epipe_wait_on_mutations
+
+        wait_result = epipe_wait_on_mutations(repeat: 5)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
         expected_hits3 = [{'name' => td_name, 'highlight' => 'name', 'parent_project' => project[:projectname]}]
         project_search_test(project, "cat", "trainingdataset", expected_hits3)
         expected_hits4 = [{'name' => td_name, 'highlight' => 'description', 'parent_project' => project[:projectname]}]
