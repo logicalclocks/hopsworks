@@ -64,13 +64,12 @@ public class FlinkJob extends YarnJob {
     FlinkJob.class.getName());
   private FlinkYarnRunnerBuilder flinkBuilder;
   
-  FlinkJob(Jobs job, AsynchronousJobExecutor services,
-    Users user, String jobUser,
-    Settings settings) {
-    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings);
+  FlinkJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser,
+           Settings settings, String kafkaBrokersString) {
+    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings, kafkaBrokersString);
+
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
-      throw new IllegalArgumentException(
-        "Job must contain a FlinkJobConfiguration object. Received: "
+      throw new IllegalArgumentException("Job must contain a FlinkJobConfiguration object. Received: "
           + job.getJobConfig().getClass());
     }
   }
