@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import org.apache.calcite.sql.JoinType;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,6 +62,7 @@ public class TestConstructorController {
   public void setup() {
     fs = new Featurestore();
     fs.setHiveDbId(1l);
+    fs.setProject(new Project("test_proj"));
     fg1 = new Featuregroup(1);
     fg1.setName("fg1");
     fg1.setVersion(1);
@@ -173,8 +175,8 @@ public class TestConstructorController {
     on.add(new FeatureDTO("ft1"));
     on.add(new FeatureDTO("ft2"));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     Join join = constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
     Assert.assertEquals(2, join.getOn().size());
@@ -194,8 +196,8 @@ public class TestConstructorController {
     List<FeatureDTO> on = new ArrayList<>();
     on.add(new FeatureDTO("ft1"));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(FeaturestoreException.class);
     constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
@@ -214,8 +216,8 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1","project_fs1", fg2, "fg1", availableRight, availableRight);
 
     Join join = constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
     Assert.assertEquals(1, join.getLeftOn().size());
@@ -235,8 +237,8 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"), new FeatureDTO("additional"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft3"));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
@@ -256,8 +258,8 @@ public class TestConstructorController {
     List<FeatureDTO> leftOn = Arrays.asList(new FeatureDTO("fg1_ft3"));
     List<FeatureDTO> rightOn = Arrays.asList(new FeatureDTO("fg2_ft1"));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
@@ -273,8 +275,8 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", true));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
     Assert.assertEquals(1, join.getOn().size());
@@ -294,8 +296,8 @@ public class TestConstructorController {
     availableRight.add(new FeatureDTO("ft2", "Float", "", true));
     availableRight.add(new FeatureDTO("ft3", "Integer", "", true));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     Join join = constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
     Assert.assertEquals(2, join.getOn().size());
@@ -311,8 +313,8 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "String", "", false));
 
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", fg2, "fg1", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(FeaturestoreException.class);
     constructorController.extractPrimaryKeysJoin(leftQuery, rightQuery, JoinType.INNER);
@@ -325,9 +327,21 @@ public class TestConstructorController {
     List<FeatureDTO> availableLeft = new ArrayList<>();
     availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
 
-    Query singleSideQuery = new Query("fs1", fg1, "fg0", availableLeft, availableLeft);
-    String query = constructorController.generateSQL(singleSideQuery).replace("\n", " ");
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, false).replace("\n", " ");
     Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg0", query);
+  }
+
+  @Test
+  public void testSingleSideSQLQueryOnline() {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<FeatureDTO> availableLeft = new ArrayList<>();
+    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+
+    Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
+    String query = constructorController.generateSQL(singleSideQuery, true).replace("\n", " ");
+    Assert.assertEquals("SELECT fg0.ft1 FROM project_fs1.fg1_1 fg0", query);
   }
 
   @Test
@@ -340,14 +354,34 @@ public class TestConstructorController {
     List<FeatureDTO> availableRight = new ArrayList<>();
     availableRight.add(new FeatureDTO("ft1", "Integer", "", "fg1", true));
 
-    Query rightQuery = new Query("fs1", fg2, "fg0", availableRight, availableRight);
-    Query leftQuery = new Query("fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
     leftQuery.setJoins(Arrays.asList(join));
 
-    String query = constructorController.generateSQL(leftQuery).replace("\n", " ");
+    String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
     Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg1 INNER JOIN " +
         "fs1.fg2_1 fg0 ON fg1.ft1 = fg0.ft1", query);
+  }
+
+  @Test
+  public void testSingleJoinSQLQueryOnline() {
+    ConstructorController constructorController = new ConstructorController();
+
+    List<FeatureDTO> availableLeft = new ArrayList<>();
+    availableLeft.add(new FeatureDTO("ft1", "String", "", "fg0", true));
+
+    List<FeatureDTO> availableRight = new ArrayList<>();
+    availableRight.add(new FeatureDTO("ft1", "Integer", "", "fg1", true));
+
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
+    Query leftQuery = new Query("fs1", "project_fs2", fg1, "fg1", availableLeft, availableLeft);
+    Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    String query = constructorController.generateSQL(leftQuery, true).replace("\n", " ");
+    Assert.assertEquals("SELECT fg0.ft1 FROM project_fs2.fg1_1 fg1 INNER JOIN " +
+        "project_fs1.fg2_1 fg0 ON fg1.ft1 = fg0.ft1", query);
   }
 
   @Test
@@ -363,14 +397,14 @@ public class TestConstructorController {
     List<FeatureDTO> availableThird = new ArrayList<>();
     availableThird.add(new FeatureDTO("ft1", "Integer", "", "fg2", true));
 
-    Query thirdQuery = new Query("fs1", fg3,"fg2", availableThird, availableThird);
-    Query secondQuery = new Query("fs1", fg2, "fg1", availableSecond , availableSecond);
-    Query leftQuery = new Query("fs1", fg1, "fg0", availableLeft, availableLeft);
+    Query thirdQuery = new Query("fs1", "project_fs1", fg3,"fg2", availableThird, availableThird);
+    Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     Join join = new Join(leftQuery, secondQuery, availableLeft, availableSecond, JoinType.INNER);
     Join secondJoin = new Join(leftQuery, thirdQuery, availableLeft, JoinType.INNER);
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
-    String query = constructorController.generateSQL(leftQuery).replace("\n", " ");
+    String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
     Assert.assertEquals("SELECT fg0.ft1, fg1.ft2 " +
         "FROM fs1.fg1_1 fg0 " +
         "INNER JOIN fs1.fg2_1 fg1 ON fg0.ft1 = fg1.ft2 " +

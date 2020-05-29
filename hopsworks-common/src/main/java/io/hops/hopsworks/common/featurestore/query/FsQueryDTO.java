@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.api.featurestore;
+package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.api.RestDTO;
 
@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class FsQueryDTO extends RestDTO<FsQueryDTO> {
   private String query;
+  private String queryOnline;
 
   public String getQuery() {
     return query;
@@ -30,5 +31,13 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
 
   public void setQuery(String query) {
     this.query = query;
+  }
+
+  public String getQueryOnline() {
+    return queryOnline;
+  }
+
+  public void setQueryOnline(String queryOnline) {
+    this.queryOnline = queryOnline;
   }
 }

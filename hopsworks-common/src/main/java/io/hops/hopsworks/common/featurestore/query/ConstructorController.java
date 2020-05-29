@@ -71,10 +71,14 @@ public class ConstructorController {
     this.featuregroupFacade = featuregroupFacade;
   }
 
-  public String construct(QueryDTO queryDTO) throws FeaturestoreException {
+  public FsQueryDTO construct(QueryDTO queryDTO) throws FeaturestoreException {
     Query query = convertQueryDTO(queryDTO, 0);
     // Generate SQL
-    return generateSQL(query);
+    FsQueryDTO fsQueryDTO = new FsQueryDTO();
+    fsQueryDTO.setQuery(generateSQL(query, false));
+    fsQueryDTO.setQueryOnline(generateSQL(query,true));
+
+    return fsQueryDTO;
   }
 
   /**
@@ -88,10 +92,11 @@ public class ConstructorController {
     String fgAs = generateAs(fgId++);
 
     String featureStore = featurestoreFacade.getHiveDbName(fg.getFeaturestore().getHiveDbId());
+    String projectName = fg.getFeaturestore().getProject().getName();
     List<FeatureDTO> availableFeatures = featuregroupController.getFeatures(fg);
     List<FeatureDTO> requestedFeatures = validateFeatures(fg, fgAs, queryDTO.getLeftFeatures(), availableFeatures);
 
-    Query query = new Query(featureStore, fg, fgAs, requestedFeatures, availableFeatures);
+    Query query = new Query(featureStore, projectName, fg, fgAs, requestedFeatures, availableFeatures);
     // If there are any join, recursively conver the Join's QueryDTO into the internal Query representation
     if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
       query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId));
@@ -308,7 +313,7 @@ public class ConstructorController {
    * @param query
    * @return
    */
-  public String generateSQL(Query query) {
+  public String generateSQL(Query query, boolean online) {
     // remove duplicated join columns
     if (query.getJoins() != null) {
       removeDuplicateColumns(query);
@@ -323,10 +328,10 @@ public class ConstructorController {
     SqlNode joinNode = null;
     if (query.getJoins() == null || query.getJoins().isEmpty()) {
       // If there are no joins just set `from featuregroup`
-      joinNode = generateTableNode(query);
+      joinNode = generateTableNode(query, online);
     } else {
       // If there are joins generate the join list with the respective conditions
-      joinNode = buildJoinNode(query, query.getJoins().size() - 1);
+      joinNode = buildJoinNode(query, query.getJoins().size() - 1, online);
     }
 
     // Assemble the query
@@ -341,15 +346,15 @@ public class ConstructorController {
    * @param i
    * @return
    */
-  private SqlNode buildJoinNode(Query query, int i) {
+  private SqlNode buildJoinNode(Query query, int i, boolean online) {
     if (i < 0) {
       // No more joins to read build the node for the query itself.
-      return generateTableNode(query);
+      return generateTableNode(query, online);
     } else {
-      return new SqlJoin(SqlParserPos.ZERO, buildJoinNode(query, i-1),
+      return new SqlJoin(SqlParserPos.ZERO, buildJoinNode(query, i-1, online),
           SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
           SqlLiteral.createSymbol(query.getJoins().get(i).getJoinType(), SqlParserPos.ZERO),
-          generateTableNode(query.getJoins().get(i).getRightQuery()),
+          generateTableNode(query.getJoins().get(i).getRightQuery(), online),
           SqlLiteral.createSymbol(JoinConditionType.ON, SqlParserPos.ZERO),
           query.getJoins().get(i).getCondition());
     }
@@ -370,9 +375,14 @@ public class ConstructorController {
    * @param query
    * @return
    */
-  private SqlNode generateTableNode(Query query) {
+  private SqlNode generateTableNode(Query query, boolean online) {
     List<String> tableIdentifierStr = new ArrayList<>();
-    tableIdentifierStr.add(query.getFeatureStore());
+    if (online) {
+      tableIdentifierStr.add(query.getProject());
+    } else {
+      tableIdentifierStr.add(query.getFeatureStore());
+    }
+
     tableIdentifierStr.add(query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion());
 
     SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
