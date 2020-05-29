@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService', 'DataSetService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService, DataSetService) {
 
             var self = this;
             self.loading = false;
@@ -65,20 +65,12 @@ angular.module('hopsWorksApp')
             self.opsStatus = {};
             self.pythonVersion;
 
+            var dataSetService = DataSetService(self.projectId);
+
             self.hasDockerMemory = false;
             self.maxDockerMemory = 1024;
             self.hasDockerCores = false;
             self.maxDockerCores = 1;
-
-            self.dirs = [{
-                id: 1,
-                name: '/'
-            }, {
-                id: 2,
-                name: '/Jupyter/'
-            }];
-            self.selected = self.dirs[1];
-
 
             self.shutdownLevelSelected;
             self.timeLeftInMinutes = 0;
@@ -173,7 +165,12 @@ angular.module('hopsWorksApp')
 
 
             self.changeBaseDir = function() {
-                self.jupyterSettings.baseDir = self.selected.name;
+                if(self.selected.name.includes('::')) {
+                    var datasetSplit = self.selected.name.split('::');
+                    self.jupyterSettings.baseDir = '/Projects/' + datasetSplit[0] + '/' + datasetSplit[1];
+                } else {
+                    self.jupyterSettings.baseDir = '/Projects/' + self.jupyterSettings.project.name + self.selected.name;
+                }
             };
 
             window.onfocus = function() {
@@ -369,11 +366,51 @@ angular.module('hopsWorksApp')
                         $scope.settings = self.jupyterSettings;
                         $scope.jobConfig = self.jupyterSettings.jobConfig;
                         self.projectName = self.jupyterSettings.project.name;
-                        for(var i = 0; i < self.dirs.length; i++) {
-                          if(self.jupyterSettings.baseDir === self.dirs[i].name) {
-                            self.selected = self.dirs[i];
-                          }
-                        }
+
+                        dataSetService.getAllDatasets(undefined, 0, 1000, ['name:asc'], ['shared:true', 'accepted:true'], "DATASET")
+                          .then(function (success) {
+                              self.dirs = [{
+                                  id: 1,
+                                  name: '/',
+                                  warning: 'You can only create notebooks inside a dataset - not in the / (root) directory.'
+                              }, {
+                                  id: 2,
+                                  name: '/Jupyter'
+                              }];
+
+                              if(success.data.items) {
+                                for(var i = 0; i < success.data.items.length; i++) {
+                                  var sharedDataset = {id: 3 + i, name: success.data.items[i].name};
+                                  self.dirs.push({id: 3 + i, name: success.data.items[i].name});
+                                }
+                              }
+                              if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/') {
+                                //If started Jupyter from Project root folder
+                                self.selected = self.dirs[0];
+                              } else if(self.jupyterSettings.baseDir === '/Projects/' + self.jupyterSettings.project.name + '/Jupyter') {
+                                //If started Jupyter from Project Jupyter folder
+                                self.selected = self.dirs[1];
+                              } else {
+                                //If started Jupyter in a dataset shared with Project
+                                var foundSharedDataset = false;
+                                for(var y = 2; y < self.dirs.length; y++) {
+                                  var datasetSplit = self.dirs[y].name.split('::');
+                                  if(self.jupyterSettings.baseDir === '/Projects/' + datasetSplit[0] + '/' + datasetSplit[1]) {
+                                    self.selected = self.dirs[y];
+                                    foundSharedDataset = true;
+                                    break;
+                                  }
+                                }
+                                //If previously selected shared dataset is no longer shared with the project default to Jupyter dataset
+                                if(!foundSharedDataset) {
+                                    self.selected = self.dirs[1];
+                                    self.changeBaseDir();
+                                }
+                              }
+                          }, function (error) {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
+                        });
+
 
                         if (self.jupyterSettings.shutdownLevel <= "6") {
                             self.shutdownLevelSelected = self.shutdown_levels[0];

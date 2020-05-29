@@ -14,11 +14,16 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module JupyterHelper
-  def start_jupyter(project, expected_status=200, shutdownLevel=6)
+  def start_jupyter(project, expected_status=200, shutdownLevel=6, baseDir=nil)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/settings"
     expect_status(200)
 
     settings = json_body
+
+    if !baseDir.nil?
+        settings[:baseDir] = baseDir
+    end
+
     settings[:distributionStrategy] = ""
     settings[:shutdownLevel] = shutdownLevel
     staging_dir = settings[:privateDir]
@@ -33,5 +38,9 @@ module JupyterHelper
   def stop_jupyter(project)
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/stop"
     expect_status(200)
+  end
+
+  def list_content(port, token)
+    get "#{ENV['HOPSWORKS_BASE_API']}jupyter/#{port}/api/contents?token=#{token}"
   end
 end

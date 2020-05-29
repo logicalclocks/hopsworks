@@ -117,7 +117,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(@project, 200, 0)
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=0)
 
         # There is a potential race condition here if the timer runs just before this call
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
@@ -136,7 +136,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
-        secret_dir, staging_dir, settings = start_jupyter(@project, 200, 6)
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
         expect_status(200)
@@ -150,6 +150,39 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
 
         json_body[:minutesUntilExpiration].should be < initial_minutes_left
+      end
+
+      it "should be able to start from a shared dataset" do
+
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
+        expect_status(201)
+
+        projectname = "project_#{short_random_id}"
+        project = create_project_by_name(projectname)
+
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_experiment.ipynb",
+                                "/Projects/#{projectname}/Jupyter/shared_notebook.ipynb", @user[:username],
+                                "#{projectname}__Resources", 750, "#{projectname}")
+
+        dsname = "Jupyter"
+        share_dataset(project, dsname, @project[:projectname], "")
+        expect_status(204)
+
+        accept_dataset(@project, "/Projects/#{projectname}/#{dsname}", "&type=DATASET")
+        expect_status(204)
+
+        secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir="/Projects/#{project[:projectname]}/#{dsname}")
+
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/running"
+        expect_status(200)
+
+        # List all notebooks and files in Jupyter
+        list_content(json_body[:port], json_body[:token])
+        expect_status(200)
+
+        notebook = json_body[:content].detect { |content| content[:path] == "shared_notebook.ipynb" }
+        expect(notebook).not_to be nil
+
       end
 
       it "should convert .ipynb file to .py file" do
