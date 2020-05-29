@@ -132,8 +132,9 @@ public class FlinkController {
     try {
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
-        flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
-          hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings));
+        flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () ->
+            new FlinkJob(job, submitter, user, hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
+                settings, kafkaBrokers.getKafkaBrokersString()));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

@@ -62,10 +62,9 @@ public class SparkJob extends YarnJob {
   private static final Logger LOG = Logger.getLogger(SparkJob.class.getName());
   private SparkYarnRunnerBuilder runnerbuilder;
 
-  SparkJob(Jobs job, AsynchronousJobExecutor services,
-    Users user, final String hadoopDir,
-    String jobUser, Settings settings) {
-    super(job, services, user, jobUser, hadoopDir, settings);
+  SparkJob(Jobs job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
+           String jobUser, Settings settings, String kafkaBrokersString) {
+    super(job, services, user, jobUser, hadoopDir, settings, kafkaBrokersString);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
