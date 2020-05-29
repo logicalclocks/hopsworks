@@ -93,15 +93,15 @@ public abstract class YarnJob extends HopsJob {
    * @throws IllegalArgumentException If the Jobs does not contain a
  YarnJobConfiguration object.
    */
-  public YarnJob(Jobs job, AsynchronousJobExecutor services,
-      Users user, String jobUser, String hadoopDir,
-      Settings settings) {
+  public YarnJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser,
+                 String hadoopDir, Settings settings, String kafkaBrokersString) {
     super(job, services, user, hadoopDir);
+
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
-      throw new IllegalArgumentException(
-          "Job must be a YarnJobConfiguration object. Received class: "
+      throw new IllegalArgumentException("Job must be a YarnJobConfiguration object. Received class: "
           + job.getJobConfig().getClass());
     }
+
     LOG.log(Level.INFO, "Instantiating Yarn job as user: {0}", hdfsUser);
     this.jobSystemProperties = new HashMap<>();
     this.projectLocalResources = new ArrayList<>();

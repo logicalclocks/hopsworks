@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -96,6 +97,8 @@ public class SparkController {
   private JupyterController jupyterController;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private KafkaBrokers kafkaBrokers;
 
   /**
    * Start the Spark job as the given user.
@@ -136,14 +139,9 @@ public class SparkController {
     try {
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
-        sparkjob = proxyUser.doAs(new PrivilegedExceptionAction<SparkJob>() {
-          @Override
-          public SparkJob run() {
-            return new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
-              job.getProject().getName() + "__"
-                + user.getUsername(), settings);
-          }
-        });
+        sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
+            new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
+                hdfsUsersBean.getHdfsUserName(job.getProject(), user), settings, kafkaBrokers.getKafkaBrokersString()));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
