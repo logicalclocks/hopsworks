@@ -209,7 +209,7 @@ public class JupyterController {
     // This method also removes the corresponding row for the Notebook process in the JupyterProject table.
     try {
       JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
-      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
       // If we fail to start Jupyter server, then we call this shutdown to clean up
       // Do some sanity check before using jupyter settings
       if (jupyterProject != null && jupyterSettings != null) {
@@ -271,7 +271,7 @@ public class JupyterController {
   public void updateExpirationDate(Project project, Users user, JupyterSettings jupyterSettings) {
 
     //Save the current shutdown level
-    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project.getId(), user.getEmail());
+    JupyterSettings js = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
     js.setShutdownLevel(jupyterSettings.getShutdownLevel());
     jupyterSettingsFacade.update(js);
 

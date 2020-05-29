@@ -132,7 +132,7 @@ public class JupyterSettings implements Serializable {
   @Size(min = 1,
           max = 255)
   @Column(name = "base_dir")
-  private String baseDir = "/Jupyter/";
+  private String baseDir;
 
   @Column(name = "job_config")
   @Convert(converter = JupyterConfigurationConverter.class)
