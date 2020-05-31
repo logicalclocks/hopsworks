@@ -387,9 +387,8 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  public void dropMySQLFeaturegroup(
-    CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
-    FeaturestoreException {
+  public void dropMySQLFeaturegroup(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore, Users user)
+      throws SQLException, FeaturestoreException {
     if(settings.isOnlineFeaturestore() && cachedFeaturegroup.getOnlineFeaturegroup() != null){
       onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), featurestore, user);
     }

@@ -171,7 +171,7 @@ public class OfflineFeatureGroupController {
       client.create_table_with_constraints(table, primaryKeys, null, null, null, null, null);
     } catch (TException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
-          "Error creating feature group in the Hive Metastore", e.getMessage(), e);
+          "Error creating feature group in the Hive Metastore: " + e.getMessage(), e.getMessage(), e);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       if (client != null) {
@@ -192,7 +192,7 @@ public class OfflineFeatureGroupController {
       client.send_drop_table(dbName, tableName, true);
     } catch (TException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
-          "Error creating feature group in the Hive Metastore", e.getMessage(), e);
+          "Error dropping feature group in the Hive Metastore: " +  e.getMessage(), e.getMessage(), e);
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
       if (client != null) {
@@ -242,7 +242,9 @@ public class OfflineFeatureGroupController {
       client = new ThriftHiveMetastore.Client(protocol);
 
       // Open transport
-      transport.open();
+      if (!transport.isOpen()) {
+        transport.open();
+      }
 
       // Set the UGI on the metastore side
       client.set_ugi(hdfsUsername, new ArrayList<>());
