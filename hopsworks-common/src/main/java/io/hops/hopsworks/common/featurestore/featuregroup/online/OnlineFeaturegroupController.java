@@ -69,18 +69,16 @@ public class OnlineFeaturegroupController {
    * Drops an online feature group, both the data-table in the database and the metadata record
    *
    * @param onlineFeaturegroup the online featuregroup to delete
-   * @param featurestore the featurestore where the online featuregroup resides
+   * @param project
    * @param user the user making the request
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  public void dropMySQLTable(
-    OnlineFeaturegroup onlineFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
+  public void dropMySQLTable(OnlineFeaturegroup onlineFeaturegroup, Project project, Users user) throws SQLException,
     FeaturestoreException {
     //Drop data table
     String query = "DROP TABLE " + onlineFeaturegroup.getTableName() + ";";
-    onlineFeaturestoreController.executeUpdateJDBCQuery(query, onlineFeaturegroup.getDbName(),
-      featurestore.getProject(), user);
+    onlineFeaturestoreController.executeUpdateJDBCQuery(query, onlineFeaturegroup.getDbName(), project, user);
     //Drop metadata
     removeOnlineFeaturegroupMetadata(onlineFeaturegroup);
   }

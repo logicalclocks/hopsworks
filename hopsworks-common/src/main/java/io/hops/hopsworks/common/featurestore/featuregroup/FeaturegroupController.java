@@ -390,7 +390,7 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Users user) throws FeaturestoreException, SQLException {
+    Project project, Users user) throws FeaturestoreException, SQLException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
@@ -399,7 +399,7 @@ public class FeaturegroupController {
           + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to a feature serving operation on a " +
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
-    cachedFeaturegroupController.disableFeaturegroupOnline(featurestore, featuregroup, user);
+    cachedFeaturegroupController.disableFeaturegroupOnline(featuregroup, project, user);
     return convertFeaturegrouptoDTO(featuregroup);
   }
 
@@ -536,7 +536,7 @@ public class FeaturegroupController {
           throws SQLException, FeaturestoreException, ServiceException, IOException {
     Optional<Featuregroup> featuregroup = getFeaturegroupByDTO(featurestore, featuregroupDTO);
     if (featuregroup.isPresent()) {
-      return Optional.of(deleteFeaturegroup(featurestore, featuregroup.get(), project, user));
+      return Optional.of(deleteFeaturegroup(featuregroup.get(), project, user));
     }
     return Optional.empty();
   }
@@ -544,7 +544,6 @@ public class FeaturegroupController {
 
   /**
    * Deletes a featuregroup with a particular id or name from a featurestore
-   * @param featurestore
    * @param featuregroup
    * @param project
    * @param user
@@ -554,8 +553,7 @@ public class FeaturegroupController {
    * @throws ServiceException
    * @throws IOException
    */
-  public FeaturegroupDTO deleteFeaturegroup(Featurestore featurestore, Featuregroup featuregroup,
-                                            Project project, Users user)
+  public FeaturegroupDTO deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws SQLException, FeaturestoreException, ServiceException, IOException {
     FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
     switch (featuregroup.getFeaturegroupType()) {
@@ -563,7 +561,7 @@ public class FeaturegroupController {
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
-        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), featurestore, user);
+        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table

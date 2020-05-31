@@ -440,7 +440,8 @@ public class FeaturegroupService {
     }
     if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-      updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+      updatedFeaturegroupDTO =
+          featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
     if(updateStatsSettings) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);

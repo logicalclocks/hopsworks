@@ -377,20 +377,20 @@ public class CachedFeaturegroupController {
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
     offlineFeatureGroupController.dropFeatureGroup(db, tableName, project, user);
   }
-  
+
   /**
    * Drops a online feature group in MySQL database
    *
    * @param cachedFeaturegroup a cached feature group
-   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param project
    * @param user            the user making the request
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  public void dropMySQLFeaturegroup(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore, Users user)
+  public void dropMySQLFeaturegroup(CachedFeaturegroup cachedFeaturegroup, Project project, Users user)
       throws SQLException, FeaturestoreException {
     if(settings.isOnlineFeaturestore() && cachedFeaturegroup.getOnlineFeaturegroup() != null){
-      onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), featurestore, user);
+      onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), project, user);
     }
   }
 
@@ -574,22 +574,21 @@ public class CachedFeaturegroupController {
   /**
    * Update a cached featuregroup that currently supports online feature serving, and disable it (drop MySQL db)
    *
-   * @param featurestore the featurestore where the featuregroup resides
    * @param featuregroup the featuregroup entity to update
+   * @param project
    * @param user the user making the request
    * @return a DTO of the updated featuregroup
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO disableFeaturegroupOnline(
-    Featurestore featurestore, Featuregroup featuregroup, Users user)
+  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
     if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(project))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
         "administrator.");
@@ -597,7 +596,7 @@ public class CachedFeaturegroupController {
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     if(cachedFeaturegroup.getOnlineFeaturegroup() != null) {
       //Drop MySQL Table for Online Feature Group
-      dropMySQLFeaturegroup(cachedFeaturegroup, featurestore, user);
+      dropMySQLFeaturegroup(cachedFeaturegroup, project, user);
     }
     return convertCachedFeaturegroupToDTO(featuregroup);
   }
