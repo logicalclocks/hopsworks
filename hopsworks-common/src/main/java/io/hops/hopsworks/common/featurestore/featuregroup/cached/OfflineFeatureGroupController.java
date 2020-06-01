@@ -67,7 +67,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OfflineFeatureGroupController {
 
-  private final static Logger logger = Logger.getLogger(OfflineFeatureGroupController.class.getName());
+  private final static Logger LOGGER = Logger.getLogger(OfflineFeatureGroupController.class.getName());
 
   @EJB
   private FeaturestoreController featurestoreController;
@@ -178,7 +178,7 @@ public class OfflineFeatureGroupController {
         try {
           client.shutdown();
         } catch (TException e) {
-          logger.log(Level.SEVERE, "Error closing Metastore connection", e);
+          LOGGER.log(Level.SEVERE, "Error closing Metastore connection", e);
         }
       }
     }
@@ -189,7 +189,7 @@ public class OfflineFeatureGroupController {
     ThriftHiveMetastore.Client client = null;
     try {
       client = openMetastoreClient(project, user);
-      client.send_drop_table(dbName, tableName, true);
+      client.drop_table(dbName, tableName, true);
     } catch (TException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "Error dropping feature group in the Hive Metastore: " +  e.getMessage(), e.getMessage(), e);
@@ -199,7 +199,7 @@ public class OfflineFeatureGroupController {
         try {
           client.shutdown();
         } catch (TException e) {
-          logger.log(Level.SEVERE, "Error closing Metastore connection", e);
+          LOGGER.log(Level.SEVERE, "Error closing Metastore connection", e);
         }
       }
     }
