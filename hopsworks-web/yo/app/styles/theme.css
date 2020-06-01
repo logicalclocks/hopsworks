@@ -20,7 +20,8 @@
     --hopsworks-sidebar-color: #1d1d1b;
     --hopsworks-primary-color: #1eb182;
     --hopsworks-secondary-color: #f7bb38;
-    --hopsworks-danger-color: #f7bb38;
+    --hopsworks-danger-color: rgb(247, 61, 69);
+    --hopsworks-info-color: rgb(2, 46, 69);
 }
 
 html {
@@ -109,6 +110,39 @@ fieldset[disabled]
 .btn-success.focus {
     background-color: var(--hopsworks-primary-color);
     border-color: var(--hopsworks-primary-color);
+}
+
+.btn-info, .btn-info.active {
+    background-color: var(--hopsworks-info-color);
+    border-color: var(--hopsworks-info-color);
+}
+
+.btn-info:hover,
+.btn-info:active,
+.btn-info:visited,
+.btn-info:focus,
+.btn-info.active:hover,
+.btn-info.active:active,
+.btn-info.active:visited,
+.btn-info.active:focus {
+    background-color: var(--hopsworks-info-color);
+    border-color: var(--hopsworks-info-color);
+    opacity: 0.65;
+}
+
+.btn-info.disabled:hover,
+.btn-info[disabled]:hover,
+fieldset[disabled]
+.btn-info:hover,
+.btn-info.disabled:focus,
+.btn-info[disabled]:focus,
+fieldset[disabled] .btn-info:focus,
+.btn-info.disabled.focus,
+.btn-info[disabled].focus,
+fieldset[disabled]
+.btn-info.focus {
+    background-color: var(--hopsworks-info-color);
+    border-color: var(--hopsworks-info-color);
 }
 
 .btn-danger, .btn-danger.active {
