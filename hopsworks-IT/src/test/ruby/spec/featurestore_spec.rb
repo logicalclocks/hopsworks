@@ -547,7 +547,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["features"].first["description"] == "").to be true
         end
 
-        it "should be able to add a offline cached featuregroup with ' and ; in the description'" do
+        it "should be able to add an offline cached featuregroup with ' and ; in the description'" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
