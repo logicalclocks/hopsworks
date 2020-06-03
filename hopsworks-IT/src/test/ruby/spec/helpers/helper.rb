@@ -34,19 +34,27 @@ module Helper
     return x
   end
 
+  #modified variant of expect_status where we print a mode detailed error msg
+  #and we also have the ability to check for hopsworks error_code
   def expect_status_details(expected_status, error_code: nil)
+    #204 doesn't have a response body - treat differently
     if response.code == resolve_status(204, response.code)
+      #print the usual expected/found msg
       expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code}"
     else
+      #set as nil in case we cannot parse the body
       json_result = JSON.parse(response.body) rescue nil
       if json_result
+        #print the usual expected/found msg but also the full response body for more details
         expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code} and body:#{json_result}"
+        #if hopsworks error code - check
         if error_code
           expect(json_result["errorCode"]).not_to be_nil, "expected error code:#{error_code}, found none"
           expect(json_result["errorCode"]).to eq(error_code), "expected error code:#{error_code}, found:#{json_result["errorCode"]},"
         end
       else
-        expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and no/malfromed body"
+        #couldn't pare the body print only the usual expected/found msg
+        expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and no/malformed body"
       end
     end
   end
