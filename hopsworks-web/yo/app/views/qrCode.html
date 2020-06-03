@@ -48,8 +48,10 @@
         <div class="panel-body"  >
           <div class="row">
             <div class="col-md-offset-1 col-md-5"  style="margin-top: 20px;">
-              <h1 ng-if="regCtrl.mode === 'register'" class="text-center">Four steps, and you're there...</h1>
-              <h1 ng-if="regCtrl.mode === 'profile'" class="text-center">Three steps, and you're there...</h1>
+              <h1 id="two_factor_four_steps" ng-if="regCtrl.mode === 'register'" class="text-center">Four steps, and
+                you're there...</h1>
+              <h1 id="two_factor_three_steps" ng-if="regCtrl.mode === 'profile'" class="text-center">Three steps, and
+                you're there...</h1>
             </div>
             <div class="col-md-4">
               <img id="qr_code_img" alt="QR example" src="images/qrExample.png" style="width: 100%"/>             
