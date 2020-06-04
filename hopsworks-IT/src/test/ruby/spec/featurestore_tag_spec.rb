@@ -3,6 +3,9 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  after :all do
+    clean_all_test_projects
+  end
   describe "Feature store tag" do
     context 'without authentication' do
       before :all do
@@ -118,7 +121,6 @@ describe "On #{ENV['OS']}" do
             add_featuregroup_tag(project.id, featurestore_id, parsed_json["id"], "doesnotexist", value: "abc123")
             expect_status(400)
         end
-
       end
 
       context "training datasets" do
@@ -252,6 +254,55 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             tags_json = JSON.parse(json_result)
             expect(tags_json["items"]).to eq(nil)
+        end
+      end
+
+      context "large tags" do
+        before :all do
+          with_admin_session
+          14.times do |i|
+            createFeatureStoreTag("tag_#{i}", "STRING")
+          end
+          reset_session
+          with_valid_project
+        end
+
+        after :all do
+          clean_all_test_projects
+          with_admin_session
+          14.times do |i|
+            deleteFeatureStoreTag("tag_#{i}")
+          end
+          reset_session
+        end
+
+        it "should not be able to attach huge tags to featuregroup" do
+          project = get_project
+          fs_id = get_featurestore_id(project[:id])
+          json_result, fg_name = create_cached_featuregroup(project[:id], fs_id)
+          fg_json = JSON.parse(json_result)
+          tag_val = "x" * 1000
+          add_featuregroup_tag_checked(project[:id], fs_id, fg_json["id"], "tag_#{0}", value: tag_val)
+          12.times do |i|
+            update_featuregroup_tag_checked(project[:id], fs_id, fg_json["id"], "tag_#{(i+1)}", value: tag_val)
+          end
+          add_featuregroup_tag(project[:id], fs_id, fg_json["id"], "tag_13", value: tag_val)
+          expect_status_details(400, error_code:180005)
+        end
+
+        it "should not be able to attach huge tags to training dataset" do
+          project = get_project
+          fs_id = get_featurestore_id(project[:id])
+          connector = get_hopsfs_training_datasets_connector(project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project[:id], fs_id, connector)
+          td_json = JSON.parse(json_result)
+          tag_val = "x" * 1000
+          add_training_dataset_tag_checked(project[:id], fs_id, td_json["id"], "tag_#{0}", value: tag_val)
+          12.times do |i|
+            update_training_dataset_tag_checked(project[:id], fs_id, td_json["id"], "tag_#{(i+1)}", value: tag_val)
+          end
+          add_training_dataset_tag(project[:id], fs_id, td_json["id"], "tag_13", value: tag_val)
+          expect_status_details(400, error_code:180005)
         end
       end
     end

@@ -44,10 +44,10 @@ describe "On #{ENV['OS']}" do
           execution_id = json_body[:id]
 
           # Wait for execution to complete
-          wait_for_execution(4000) do
+          wait_for_me_time(4000) do
             get_execution(project.id, get_python_it_tests_job_name("3.6"), execution_id)
             execution_dto = JSON.parse(response.body)
-            not is_execution_active(execution_dto)
+            { 'success' => (not is_execution_active(execution_dto)) }
           end
 
           # Check that the execution completed successfully

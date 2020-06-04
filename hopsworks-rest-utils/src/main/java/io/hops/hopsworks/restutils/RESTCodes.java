@@ -351,7 +351,8 @@ public class RESTCodes {
     METADATA_MISSING_FIELD(6, "Metadata missing attributed name.",
         Response.Status.BAD_REQUEST),
     METADATA_ERROR(7, "Error while processing the extended metadata.",
-        Response.Status.INTERNAL_SERVER_ERROR);
+        Response.Status.INTERNAL_SERVER_ERROR),
+    METADATA_ILLEGAL_NAME(8, "Metadata name is illegal.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

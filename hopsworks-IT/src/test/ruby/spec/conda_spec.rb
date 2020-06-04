@@ -154,21 +154,11 @@ describe "On #{ENV['OS']}" do
 
             expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be true
 
-            begin
-              Airborne.configure do |config|
-                config.base_url = ''
-              end
+            elastic_rest do
               # Elasticsearch index should have been created for this project
               index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
               elastic_head "#{index_name}"
-            rescue
-              p "Conda spec: Error calling elastic_head #{$!}"
-            else
               expect_status(200)
-            ensure
-              Airborne.configure do |config|
-                config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
-              end
             end
           end
 

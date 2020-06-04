@@ -17,7 +17,7 @@ package io.hops.hopsworks.common.provenance.core;
 
 public class ProvXAttrs {
   public static final String PROV_XATTR = "provenance";
-  public static final String PROV_XATTR_CORE = PROV_XATTR + ".core";
+  public static final String PROV_XATTR_CORE_VAL = "core";
   public static final String PROV_CORE_TYPE_KEY = "prov_type";
   public static final String PROV_CORE_PROJECT_IID_KEY = "project_iid";
   public static final String PROV_CORE_META_STATUS_KEY = "meta_status";
