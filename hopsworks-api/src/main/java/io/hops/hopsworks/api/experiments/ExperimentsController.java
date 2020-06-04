@@ -19,8 +19,8 @@ package io.hops.hopsworks.api.experiments;
 import io.hops.hopsworks.api.experiments.dto.ExperimentDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -31,6 +31,7 @@ import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -39,7 +40,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.parquet.Strings;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -55,7 +55,6 @@ import javax.xml.bind.Marshaller;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,15 +72,13 @@ public class ExperimentsController {
   @EJB
   private JobController jobController;
   @EJB
-  private DistributedFsService dfsService;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
   private JupyterController jupyterController;
+  @EJB
+  private XAttrsController xattrCtrl;
 
-
-  public void attachExperiment(String id, Project project, String usersFullName, ExperimentDTO experimentSummary,
-                               ExperimentDTO.XAttrSetFlag xAttrSetFlag) throws DatasetException, ProvenanceException {
+  public void attachExperiment(String id, Project project, Users user,
+    String usersFullName, ExperimentDTO experimentSummary, ExperimentDTO.XAttrSetFlag xAttrSetFlag)
+    throws DatasetException, ProvenanceException, MetadataException {
 
     experimentSummary.setUserFullName(usersFullName);
     String experimentPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
@@ -94,18 +91,16 @@ public class ExperimentsController {
         experimentSummary.setFinished(fileState.getCreateTime() + experimentSummary.getDuration());
       }
     }
-
-    DistributedFileSystemOps dfso = null;
+  
+    if(!Strings.isNullOrEmpty(experimentSummary.getAppId()) &&
+        xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.CREATE)) {
+      byte[] appIdBytes = experimentSummary.getAppId().getBytes(StandardCharsets.UTF_8);
+      xattrCtrl.upsertProvXAttr(project, user, experimentPath,
+        ExperimentsBuilder.EXPERIMENT_APP_ID_XATTR_NAME, appIdBytes);
+    }
+  
+    byte[] experiment;
     try {
-      dfso = dfs.getDfsOps();
-      if(!Strings.isNullOrEmpty(experimentSummary.getAppId()) &&
-          xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.CREATE)) {
-        byte[] appIdBytes = experimentSummary.getAppId().getBytes(StandardCharsets.UTF_8);
-        EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-        flags.add(XAttrSetFlag.CREATE);
-        dfso.setXAttr(experimentPath, "provenance.app_id", appIdBytes, flags);
-      }
-
       JAXBContext sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {ExperimentDTO.class},
           null);
       Marshaller marshaller = sparkJAXBContext.createMarshaller();
@@ -113,45 +108,23 @@ public class ExperimentsController {
       marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
       StringWriter sw = new StringWriter();
       marshaller.marshal(experimentSummary, sw);
-      byte[] experiment = sw.toString().getBytes(StandardCharsets.UTF_8);
-
-      EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-      flags.add(XAttrSetFlag.valueOf(xAttrSetFlag.name()));
-
-      dfso.setXAttr(experimentPath, "provenance." +
-          ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME, experiment, flags);
-
-    } catch(IOException | JAXBException ex) {
+      experiment = sw.toString().getBytes(StandardCharsets.UTF_8);
+    } catch(JAXBException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.ATTACH_XATTR_ERROR, Level.SEVERE,
-          "path: " + experimentPath, ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
-      }
+        "path: " + experimentPath, ex.getMessage(), ex);
     }
+
+    xattrCtrl.upsertProvXAttr(project, user, experimentPath,
+      ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME, experiment);
   }
 
-  public void attachModel(String id, Project project, String model,
-                               ExperimentDTO.XAttrSetFlag xAttrSetFlag)
-      throws DatasetException {
+  public void attachModel(String id, Project project, Users user, String model)
+    throws DatasetException, MetadataException {
     String experimentPath = Utils.getProjectPath(project.getName()) +
         Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
-    DistributedFileSystemOps dfso = null;
-    try {
-      byte[] experiment = model.getBytes(StandardCharsets.UTF_8);
-      dfso = dfs.getDfsOps();
-      EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-      flags.add(XAttrSetFlag.valueOf(xAttrSetFlag.name()));
-      dfso.setXAttr(experimentPath, "provenance." +
-          ExperimentsBuilder.EXPERIMENT_MODEL_XATTR_NAME, experiment, flags);
-    } catch(IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.ATTACH_XATTR_ERROR, Level.SEVERE,
-          "path: " + experimentPath, ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
-      }
-    }
+    byte[] experiment = model.getBytes(StandardCharsets.UTF_8);
+    xattrCtrl.upsertProvXAttr(project, user, experimentPath,
+        ExperimentsBuilder.EXPERIMENT_MODEL_XATTR_NAME, experiment);
   }
 
   public void delete(String id, Project project, String hdfsUser) throws DatasetException {

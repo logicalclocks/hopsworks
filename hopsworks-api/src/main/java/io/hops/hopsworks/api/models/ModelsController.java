@@ -17,9 +17,8 @@
 package io.hops.hopsworks.api.models;
 
 import io.hops.hopsworks.api.models.dto.ModelDTO;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -30,6 +29,7 @@ import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -39,7 +39,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.parquet.Strings;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
@@ -53,10 +52,8 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,26 +65,24 @@ public class ModelsController {
   private static final Logger LOGGER = Logger.getLogger(ModelsController.class.getName());
 
   @EJB
-  private DistributedFsService dfs;
-  @EJB
   private ProvStateController provenanceController;
   @EJB
   private JobController jobController;
   @EJB
   private JupyterController jupyterController;
+  @EJB
+  private XAttrsController xattrCtrl;
 
-  public void attachModel(Project project, String userFullName, ModelDTO modelDTO)
-      throws DatasetException, ModelsException {
+  public void attachModel(Project project, Users user, String userFullName, ModelDTO modelDTO)
+    throws DatasetException, ModelsException, MetadataException {
 
     modelDTO.setUserFullName(userFullName);
 
     String modelPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_MODELS_DATASET + "/" +
         modelDTO.getName() + "/" + modelDTO.getVersion();
-
-    DistributedFileSystemOps dfso = null;
+  
+    byte[] model;
     try {
-      dfso = dfs.getDfsOps();
-
       JAXBContext sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {ModelDTO.class},
           null);
       Marshaller marshaller = sparkJAXBContext.createMarshaller();
@@ -101,21 +96,12 @@ public class ModelsController {
         modelSummaryStr = castMetricsToDouble(modelSummaryStr);
       }
 
-      byte[] model = modelSummaryStr.getBytes(StandardCharsets.UTF_8);
-
-      EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-      flags.add((XAttrSetFlag.CREATE));
-
-      dfso.setXAttr(modelPath, "provenance." + ModelsBuilder.MODEL_SUMMARY_XATTR_NAME, model, flags);
-
-    } catch(IOException | JAXBException ex) {
+      model = modelSummaryStr.getBytes(StandardCharsets.UTF_8);
+    } catch(JAXBException ex) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.ATTACH_XATTR_ERROR, Level.SEVERE,
-          "path: " + modelPath, ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
-      }
+        "path: " + modelPath, ex.getMessage(), ex);
     }
+    xattrCtrl.upsertProvXAttr(project, user, modelPath, ModelsBuilder.MODEL_SUMMARY_XATTR_NAME, model);
   }
 
   public ProvStateElastic getModel(Project project, String mlId) throws ProvenanceException {

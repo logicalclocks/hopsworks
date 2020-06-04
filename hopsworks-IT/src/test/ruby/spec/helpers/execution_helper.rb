@@ -38,41 +38,33 @@ module ExecutionHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/log/#{type}"
   end
 
-  def wait_for_execution(timeout=360)
-    start = Time.now
-    x = yield
-    until x
-      if Time.now - start > timeout
-        raise "Timed out waiting for Job to finish. Timeout #{timeout} sec"
-      end
-      sleep(1)
-      x = yield
-    end
-  end
-
   def wait_for_execution_active(project_id, job_name, execution_id, expected_active_state, appOrExecId)
     id = ''
-    wait_for_execution do
+    wait_result = wait_for_me_time do
       get_execution(project_id, job_name, execution_id)
       if appOrExecId.eql? 'id'
         id = json_body[:id]
       else
         id = json_body[:appId]
       end
-      (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
+      found_state = (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
+      { 'success' => found_state, 'msg' => "expected:#{expected_active_state} found:#{json_body[:state]}" }
     end
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
     expect(id).not_to be_nil
     id
   end
 
   def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state)
-    wait_for_execution do
+    wait_result = wait_for_me_time do
       get_execution(project_id, job_name, execution_id)
       unless is_execution_active(json_body)
         expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
       end
-      json_body[:state].eql? expected_end_state
+      found_state = json_body[:state].eql? expected_end_state
+      { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}" }
     end
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
   end
 
   def find_executions(job_id)

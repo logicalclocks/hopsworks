@@ -37,7 +37,9 @@ describe "On #{ENV['OS']}" do
 
     it 'featurestore - training dataset with features' do
       with_valid_session
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       project1 = create_project
       job_name = "prov_training_dataset"
       src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux"
@@ -62,7 +64,9 @@ describe "On #{ENV['OS']}" do
       get_featuregroup(project1[:id], featurestore_id, "test_houses_sold_featuregroup", 1)
       get_trainingdataset(project1[:id], featurestore_id, "predict_house_sold_for_dataset", 1)
 
-      epipe_wait_on_provenance
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
       query = "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/provenance/states?filter_by=ML_TYPE:FEATURE"
       pp "#{query}" if defined?(@debugOpt) && @debugOpt
       result = get "#{query}"

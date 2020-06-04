@@ -54,6 +54,32 @@ module ElasticHelper
     Net::HTTP.start(uri.hostname, uri.port, req_options) do |http| http.request(request) end
   end
 
+  def elastic_delete(path)
+    uri = URI.parse("https://#{ENV['ELASTIC_API']}/#{path}")
+    request = Net::HTTP::Delete.new(uri)
+    request.basic_auth("#{ENV['ELASTIC_USER']}", "#{ENV['ELASTIC_PASS']}")
+
+    req_options = {
+        use_ssl: uri.scheme == "https",
+        verify_mode: OpenSSL::SSL::VERIFY_NONE,
+    }
+
+    Net::HTTP.start(uri.hostname, uri.port, req_options) do |http| http.request(request) end
+  end
+
+  def elastic_rest
+    begin
+      Airborne.configure do |config|
+        config.base_url = ''
+      end
+      yield
+    ensure
+      Airborne.configure do |config|
+        config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+      end
+    end
+  end
+
   def check_index_not_found(response)
     expect(response.status).to eq(401)
     body = JSON.parse(response.body)

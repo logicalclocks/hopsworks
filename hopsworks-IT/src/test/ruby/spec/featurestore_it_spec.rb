@@ -68,10 +68,10 @@ describe "On #{ENV['OS']}" do
         execution = parsed_json["items"][0]
 
         # Wait for execution to complete
-        wait_for_execution(2000) do
+        wait_for_me_time(2000) do
           get_execution(project.id, get_featurestore_tour_job_name, execution["id"])
           execution_dto = JSON.parse(response.body)
-          not is_execution_active(execution_dto)
+          { 'success' => (not is_execution_active(execution_dto)) }
         end
 
         # Check that the execution completed successfully

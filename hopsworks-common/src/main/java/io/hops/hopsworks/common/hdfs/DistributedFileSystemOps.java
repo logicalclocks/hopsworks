@@ -50,7 +50,6 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.Map;
-import java.util.EnumSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,7 +63,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
@@ -268,82 +266,6 @@ public class DistributedFileSystemOps {
    */
   public FileStatus getFileStatus(Path location) throws IOException {
     return dfs.getFileStatus(location);
-  }
-
-  /**
-   * Attach XAttr to file or directory in the given path
-   *
-   * @param path
-   * @return
-   * @throws IOException
-   */
-  public void setXAttr(String path, String name, byte[] value, EnumSet<XAttrSetFlag> flag) throws IOException {
-    Path hdfsPath = new Path(path);
-    dfs.setXAttr(hdfsPath, name, value, flag);
-  }
-  
-  /**
-   * Insert new XAttr value attached to file or directory in the given path
-   *
-   * @param path
-   * @return
-   * @throws IOException
-   */
-  public void insertXAttr(String path, String name, byte[] value) throws IOException {
-    Path hdfsPath = new Path(path);
-    insertXAttr(hdfsPath, name, value);
-  }
-  
-  public void insertXAttr(Path path, String name, byte[] value) throws IOException {
-    EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-    flags.add(XAttrSetFlag.CREATE);
-    dfs.setXAttr(path, name, value, flags);
-  }
-  
-  /**
-   * Insert or update XAttr value attached to file or directory in the given path
-   *
-   * @param path
-   * @return
-   * @throws IOException
-   */
-  public void upsertXAttr(String path, String name, byte[] value) throws IOException {
-    Path hdfsPath = new Path(path);
-    upsertXAttr(hdfsPath, name, value);
-  }
-  
-  public void upsertXAttr(Path path, String name, byte[] value) throws IOException {
-    EnumSet<XAttrSetFlag> flags = EnumSet.noneOf(XAttrSetFlag.class);
-    if(dfs.getXAttr(path, name) != null) {
-      flags.add(XAttrSetFlag.REPLACE);
-    } else {
-      flags.add(XAttrSetFlag.CREATE);
-    }
-    dfs.setXAttr(path, name, value, flags);
-  }
-  
-  /**
-   * Read XAttr attached to file or directory in the given path
-   *
-   * @param path
-   * @return xattr value as byte array
-   * @throws IOException
-   */
-  public byte[] getXAttr(String path, String name) throws IOException {
-    Path hdfsPath = new Path(path);
-    return getXAttr(hdfsPath, name);
-  }
-  
-  /**
-   * Remove XAttr attached to file or directory in the given path
-   *
-   * @param path
-   * @return
-   * @throws IOException
-   */
-  public void removeXAttr(String path, String name) throws IOException {
-    Path hdfsPath = new Path(path);
-    dfs.removeXAttr(hdfsPath, name);
   }
 
   /**

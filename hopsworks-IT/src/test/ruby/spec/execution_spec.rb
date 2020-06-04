@@ -155,10 +155,11 @@ describe "On #{ENV['OS']}" do
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
               #wait for log aggregation
-              wait_for_execution do
+              wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                json_body[:log] != "No log available"
+                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
               end
+              expect(wait_result["success"]).to be(true), wait_result["msg"]
 
               #get out log
               get_execution_log(@project[:id], $job_name_4, execution_id, "out")
@@ -166,10 +167,11 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:log]).to be_present
 
               #wait for log aggregation
-              wait_for_execution do
+              wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "err")
-                json_body[:log] != "No log available"
+                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for err log aggregation" }
               end
+              expect(wait_result["success"]).to be(true), wait_result["msg"]
 
               #get err log
               get_execution_log(@project[:id], $job_name_4, execution_id, "err")
@@ -187,10 +189,11 @@ describe "On #{ENV['OS']}" do
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
               #wait for log aggregation
-              wait_for_execution(60) do
+              wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                json_body[:log] != "No log available"
+                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
               end
+              expect(wait_result["success"]).to be(true), wait_result["msg"]
 
               #get out log
               get_execution_log(@project[:id], $job_name_4, execution_id, "out")
