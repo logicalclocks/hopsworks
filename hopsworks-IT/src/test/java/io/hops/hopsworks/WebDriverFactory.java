@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
@@ -42,14 +43,13 @@ public class WebDriverFactory {
   
   private static final Logger LOGGER = Logger.getLogger(WebDriverFactory.class.getName());
   private static final String GECKODRIVER_VERSION = "0.26.0";
-  private static final String CHROMEDRIVER_VERSION = "81.0.4044.69";
   private static final String GECKODRIVER = "geckodriver";
   private static final String CHROMEDRIVER = "chromedriver";
   private static final String GECKODRIVER_URL = "https://github.com/mozilla/geckodriver/releases/download/v"
     + GECKODRIVER_VERSION + "/geckodriver-v" + GECKODRIVER_VERSION + "-";
-  private static final String CHROMEDRIVER_URL = "https://chromedriver.storage.googleapis.com/" + CHROMEDRIVER_VERSION
-    + "/chromedriver_";
-  private static final int SUPPORTED_CHROME_VERSION = 81;
+  private static final String CHROME_API = "https://chromedriver.storage.googleapis.com/";
+  private static final String CHROMEDRIVER_URL = CHROME_API + "VERSION/chromedriver_";
+  private static final String CHROME_DRIVER_VERSION_URL =  CHROME_API + "LATEST_RELEASE_";
   private static final int SUPPORTED_FIREFOX_VERSION = 60;
   private static final String BROWSER_ENV = "BROWSER";
   private static final String BROWSER_UI_ENV = "HEADLESS";
@@ -94,7 +94,7 @@ public class WebDriverFactory {
 
     if (driver == null) {
       throw new IllegalStateException("No web driver found. Check your browser versions. Supported versions are:"
-        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION + " and Chrome >= " + SUPPORTED_CHROME_VERSION);
+        + " Firefox >= " + SUPPORTED_FIREFOX_VERSION);
     }
 
     String url;
@@ -108,6 +108,32 @@ public class WebDriverFactory {
     driver.get(url);
     driver.manage().window().maximize();
     return driver;
+  }
+  
+  public static String getChromeMajorVersion(String version) {
+    if (null != version && !version.isEmpty()) {
+      int endIndex = version.lastIndexOf(".");
+      if (endIndex != -1) {
+        return version.substring(0, endIndex);
+      }
+    }
+    return null;
+  }
+  
+  public static String getDriverVersion(String versionUrl) {
+    String i;
+    URL url;
+    try {
+      url = new URL(versionUrl);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
+    try (BufferedReader read = new BufferedReader(new InputStreamReader(url.openStream()))) {
+      i = read.readLine();
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+    return i;
   }
 
   public static void downloadDrivers(String downloadPath) {
@@ -127,10 +153,11 @@ public class WebDriverFactory {
     String firefoxVersionStr = getVersionString(firefoxVersionCmd);
     String chromeVersionStr = getVersionString(chromeVersionCmd);
     int firefoxVersion = getVersion(firefoxVersionStr);
-    int chromeVersion = getVersion(chromeVersionStr);
-    if (chromeVersion >= SUPPORTED_CHROME_VERSION) {
+    if (chromeVersionStr != null && !chromeVersionStr.isEmpty()) {
       File chromeDriver = new File(downloadPath + CHROMEDRIVER);
       File chromeDriverZip = new File(downloadPath + CHROMEDRIVER + ".zip");
+      chromeDriverUrl = chromeDriverUrl.replaceFirst("VERSION", getDriverVersion(CHROME_DRIVER_VERSION_URL +
+        getChromeMajorVersion(chromeVersionStr)));
       downloadDriver(chromeDriver, chromeDriverZip, new File(downloadPath), chromeDriverUrl);
     }
     if (firefoxVersion >= SUPPORTED_FIREFOX_VERSION) {
