@@ -3361,18 +3361,6 @@ public class Settings implements Serializable {
     return ONLINE_FEATURESTORE_TS;
   }
 
-  private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
-  public synchronized String getJupyterImgVersion() {
-    checkCache();
-    return KUBE_JUPYTER_IMG_VERSION;
-  }
-  
-  private String KUBE_PYTHON_IMG_VERSION = "1.3.0";
-  public synchronized String getPythonImgVersion() {
-    checkCache();
-    return KUBE_PYTHON_IMG_VERSION;
-  }
-
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
   public synchronized Integer getKubeDockerMaxMemoryAllocation() {
     checkCache();
