@@ -301,8 +301,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
-  private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
-  private static final String VARIABLE_KUBE_PYTHON_IMG_VERSION = "kube_python_img_version";
 
   /*
    * -------------------- Jupyter ---------------
@@ -329,6 +327,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
+  private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
+
+  private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
 
   //Elastic OpenDistro
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -672,8 +673,6 @@ public class Settings implements Serializable {
       KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
       KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
-      KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
-      KUBE_PYTHON_IMG_VERSION = setVar(VARIABLE_KUBE_PYTHON_IMG_VERSION, KUBE_PYTHON_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
@@ -703,7 +702,8 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
-  
+      ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
+
       KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
           KIBANA_HTTPS_ENABELED);
   
@@ -724,6 +724,7 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY, CLOUD_EVENTS_ENDPOINT_API_KEY);
 
       FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
+      HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
       
 
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
@@ -3350,16 +3351,10 @@ public class Settings implements Serializable {
     return ONLINE_FEATURESTORE;
   }
 
-  private String KUBE_JUPYTER_IMG_VERSION = "0.10.0";
-  public synchronized String getJupyterImgVersion() {
+  private String ONLINE_FEATURESTORE_TS = "";
+  public synchronized String getOnlineFeatureStoreTableSpace() {
     checkCache();
-    return KUBE_JUPYTER_IMG_VERSION;
-  }
-  
-  private String KUBE_PYTHON_IMG_VERSION = "1.3.0";
-  public synchronized String getPythonImgVersion() {
-    checkCache();
-    return KUBE_PYTHON_IMG_VERSION;
+    return ONLINE_FEATURESTORE_TS;
   }
 
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
@@ -3524,6 +3519,12 @@ public class Settings implements Serializable {
   public synchronized int getMaggyCleanupInterval() {
     checkCache();
     return MAGGY_CLEANUP_INTERVAL;
+  }
+
+  private String HIVE_CONF_PATH = "/srv/hops/apache-hive/conf/hive-site.xml";
+  public synchronized String getHiveConfPath() {
+    checkCache();
+    return HIVE_CONF_PATH;
   }
 
   public String getHiveSiteSparkHdfsPath() {

@@ -88,9 +88,11 @@ public class FeatureGroupPreviewResource {
       throws FeaturestoreException, HopsSecurityException {
     Users user = jwtHelper.getUserPrincipal(sc);
 
-    if (featureGroupPreviewBeanParam.getLimit() < 0  ||
-        featureGroupPreviewBeanParam.getLimit() > settings.getFGPreviewLimit()) {
-      throw new IllegalArgumentException("Row limit should be lower than: " + settings.getFGPreviewLimit());
+    if (featureGroupPreviewBeanParam.getLimit() != null && (
+        featureGroupPreviewBeanParam.getLimit() < 0  ||
+        featureGroupPreviewBeanParam.getLimit() > settings.getFGPreviewLimit())) {
+      throw new IllegalArgumentException(
+          "Row limit should greater than 0 and lower than: " + settings.getFGPreviewLimit());
     }
 
     PreviewDTO previewDTO = previewBuilder.build(uriInfo, user, project, featuregroup,

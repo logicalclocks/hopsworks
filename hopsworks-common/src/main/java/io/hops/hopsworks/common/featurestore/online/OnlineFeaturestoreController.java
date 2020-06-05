@@ -177,7 +177,7 @@ public class OnlineFeaturestoreController {
    * @throws FeaturestoreException
    */
   public FeaturegroupPreview executeReadJDBCQuery(String query, String databaseName, Project project, Users user)
-    throws SQLException, FeaturestoreException {
+      throws SQLException, FeaturestoreException {
     Connection conn = null;
     Statement stmt = null;
     try {

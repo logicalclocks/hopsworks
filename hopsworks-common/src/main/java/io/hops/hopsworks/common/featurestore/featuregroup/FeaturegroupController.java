@@ -38,6 +38,7 @@ import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -56,6 +57,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -121,12 +123,13 @@ public class FeaturegroupController {
    * @throws HopsSecurityException
    * @throws SQLException
    */
-  public FeaturegroupDTO clearFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
-    throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
+  public FeaturegroupDTO clearFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+                                           Project project, Users user)
+      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
     switch (featuregroupDTO.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user);
-        return createFeaturegroup(featurestore, featuregroupDTO, user);
+        deleteFeaturegroupIfExists(featurestore, featuregroupDTO, project, user);
+        return createFeaturegroup(featurestore, featuregroupDTO, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
@@ -139,19 +142,23 @@ public class FeaturegroupController {
     }
   }
 
+
   /**
    * Creates a new feature group in a featurestore
-   *
-   * @param featurestore    the featurestore where the new feature group will be created
-   * @param featuregroupDTO input data about the feature group to create
-   * @param user            the user making the request
-   * @return a DTO representation of the created feature group
+   * @param featurestore
+   * @param featuregroupDTO
+   * @param project
+   * @param user
+   * @return
    * @throws FeaturestoreException
-   * @throws HopsSecurityException
    * @throws SQLException
+   * @throws ProvenanceException
+   * @throws IOException
+   * @throws ServiceException
    */
-  public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
-    throws FeaturestoreException, HopsSecurityException, SQLException, ProvenanceException {
+  public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+                                            Project project, Users user)
+      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
 
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(featuregroupDTO);
@@ -172,7 +179,7 @@ public class FeaturegroupController {
     switch (featuregroupDTO.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
-          (CachedFeaturegroupDTO) featuregroupDTO, user);
+          (CachedFeaturegroupDTO) featuregroupDTO, project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         onDemandFeaturegroup =
@@ -359,7 +366,8 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Users user) throws FeaturestoreException, SQLException {
+                                                  Project project, Users user)
+      throws FeaturestoreException, SQLException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
@@ -369,7 +377,7 @@ public class FeaturegroupController {
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
     cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, ((CachedFeaturegroupDTO) featuregroupDTO),
-      featuregroup, user);
+      featuregroup, project, user);
     return convertFeaturegrouptoDTO(featuregroup);
   }
   
@@ -382,7 +390,7 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Users user) throws FeaturestoreException, SQLException {
+    Project project, Users user) throws FeaturestoreException, SQLException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
@@ -391,7 +399,7 @@ public class FeaturegroupController {
           + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to a feature serving operation on a " +
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
-    cachedFeaturegroupController.disableFeaturegroupOnline(featurestore, featuregroup, user);
+    cachedFeaturegroupController.disableFeaturegroupOnline(featuregroup, project, user);
     return convertFeaturegrouptoDTO(featuregroup);
   }
 
@@ -509,46 +517,51 @@ public class FeaturegroupController {
     }).findFirst();
   }
 
+
   /**
    * Deletes a featuregroup with a particular id or name from a featurestore
-   *
-   * @param featurestore    the featurestore that the featuregroup belongs to
-   * @param featuregroupDTO DTO representation of the feature group to delete
-   * @param user            the user making the request
-   * @return JSON/XML DTO of the deleted featuregroup
+   * @param featurestore
+   * @param featuregroupDTO
+   * @param project
+   * @param user
+   * @return
    * @throws SQLException
    * @throws FeaturestoreException
-   * @throws HopsSecurityException
+   * @throws ServiceException
+   * @throws IOException
    */
-  public Optional<FeaturegroupDTO> deleteFeaturegroupIfExists(
-      Featurestore featurestore, FeaturegroupDTO featuregroupDTO, Users user)
-          throws SQLException, FeaturestoreException, HopsSecurityException {
+  public Optional<FeaturegroupDTO> deleteFeaturegroupIfExists(Featurestore featurestore,
+                                                              FeaturegroupDTO featuregroupDTO, Project project,
+                                                              Users user)
+          throws SQLException, FeaturestoreException, ServiceException, IOException {
     Optional<Featuregroup> featuregroup = getFeaturegroupByDTO(featurestore, featuregroupDTO);
     if (featuregroup.isPresent()) {
-      return Optional.of(deleteFeaturegroup(featurestore, featuregroup.get(), user));
+      return Optional.of(deleteFeaturegroup(featuregroup.get(), project, user));
     }
     return Optional.empty();
   }
 
+
   /**
    * Deletes a featuregroup with a particular id or name from a featurestore
-   *
-   * @param featurestore    the featurestore that the featuregroup belongs to
-   * @param user            the user making the request
-   * @return JSON/XML DTO of the deleted featuregroup
+   * @param featuregroup
+   * @param project
+   * @param user
+   * @return
    * @throws SQLException
    * @throws FeaturestoreException
-   * @throws HopsSecurityException
+   * @throws ServiceException
+   * @throws IOException
    */
-  public FeaturegroupDTO deleteFeaturegroup(Featurestore featurestore, Featuregroup featuregroup, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
+  public FeaturegroupDTO deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+      throws SQLException, FeaturestoreException, ServiceException, IOException {
     FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
-        cachedFeaturegroupController.dropHiveFeaturegroup(convertedFeaturegroupDTO, featurestore, user);
+        cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
-        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), featurestore, user);
+        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table

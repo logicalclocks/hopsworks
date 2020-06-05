@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
@@ -77,6 +78,8 @@ public class CachedFeaturegroupController {
   private OnlineFeaturegroupController onlineFeaturegroupController;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private OfflineFeatureGroupController offlineFeatureGroupController;
   @EJB
   private HiveController hiveController;
 
@@ -257,24 +260,30 @@ public class CachedFeaturegroupController {
    * @return the created entity
    */
   public CachedFeaturegroup createCachedFeaturegroup(
-      Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Users user)
-    throws FeaturestoreException, HopsSecurityException, SQLException {
+      Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
+    throws FeaturestoreException, ServiceException, IOException, SQLException {
+
+    List<FeatureDTO> primaryKeys = cachedFeaturegroupDTO.getFeatures().stream()
+        .filter(FeatureDTO::getPrimary).collect(Collectors.toList());
+    for (FeatureDTO primaryKey : primaryKeys) {
+      if(primaryKey.getPartition()){
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.FINE,
+            "The primary key column: " + primaryKey.getName() + " was specified as a partition column, which is not " +
+            "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
+      }
+    }
 
     //Prepare DDL statement
-    String hiveFeatureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
-      cachedFeaturegroupDTO.getDescription(), false);
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    
-    //Create Hive Table for Offline Cached Feature Group
-    createHiveFeaturegroup(featurestore, user, hiveFeatureStr, tableName);
-  
+
+    offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
+        cachedFeaturegroupDTO.getFeatures(), project, user);
+
     //Create MySQL Table for Online Cached Feature Group
     OnlineFeaturegroup onlineFeaturegroup = null;
     if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineFeaturegroupEnabled()){
-      String mySQLFeatureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
-        cachedFeaturegroupDTO.getDescription(), true);
-      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, user, mySQLFeatureStr,
-        tableName);
+      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
+          cachedFeaturegroupDTO.getFeatures(), project, user);
     }
     
     //Get HiveTblId of the newly created table from the metastore
@@ -284,30 +293,6 @@ public class CachedFeaturegroupController {
     return persistCachedFeaturegroupMetadata(hiveTblId, onlineFeaturegroup);
   }
   
-  /**
-   * Creates Hive Database for an offline feature group
-   *
-   * @param featurestore featurestore the featurestore that the cached featuregroup belongs to
-   * @param user user the user making the request
-   * @param featureStr DDL string
-   * @param tableName name of the table to create
-   * @throws FeaturestoreException
-   * @throws SQLException
-   * @throws HopsSecurityException
-   */
-  private void createHiveFeaturegroup(Featurestore featurestore, Users user, String featureStr, String tableName)
-    throws FeaturestoreException, SQLException, HopsSecurityException {
-    //Create Hive Table
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
-    String query = "CREATE TABLE " + db + ".`" + tableName + "` " +
-      featureStr + "STORED AS " + settings.getFeaturestoreDbDefaultStorageFormat();
-    try{
-      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
-    } catch(Exception e) { //Retry once
-      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
-    }
-  }
-
   /**
    * Converts a CachedFeaturegroup entity into a DTO representation
    *
@@ -378,84 +363,34 @@ public class CachedFeaturegroupController {
   }
 
   /**
-   * Runs a DROP TABLE statement on a featuregroup of a featurestore hive DB
-   *
-   * @param featuregroupDTO  information about the featuregroup to delete
-   * @param user             the user making the request
-   * @param featurestore     the featurestore where the featuregroup resides
-   * @throws SQLException
+   * Drop a feature group
+   * @param featuregroup
+   * @param project
+   * @param user
    * @throws FeaturestoreException
-   * @throws HopsSecurityException
+   * @throws IOException
+   * @throws ServiceException
    */
-  public void dropHiveFeaturegroup(
-      FeaturegroupDTO featuregroupDTO, Featurestore featurestore, Users user) throws SQLException,
-      FeaturestoreException, HopsSecurityException {
-    String db = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
-    String tableName = getTblName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
-    String query = "DROP TABLE IF EXISTS `" + tableName + "`";
-    try {
-      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
-    } catch (Exception e) { //Retry once
-      executeUpdateHiveQuery(query, db, featurestore.getProject(), user);
-    }
+  public void dropHiveFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, IOException, ServiceException {
+    String db = featurestoreController.getOfflineFeaturestoreDbName(featuregroup.getFeaturestore().getProject());
+    String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
+    offlineFeatureGroupController.dropFeatureGroup(db, tableName, project, user);
   }
-  
+
   /**
    * Drops a online feature group in MySQL database
    *
    * @param cachedFeaturegroup a cached feature group
-   * @param featurestore    the featurestore that the featuregroup belongs to
+   * @param project
    * @param user            the user making the request
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  public void dropMySQLFeaturegroup(
-    CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore, Users user) throws SQLException,
-    FeaturestoreException {
+  public void dropMySQLFeaturegroup(CachedFeaturegroup cachedFeaturegroup, Project project, Users user)
+      throws SQLException, FeaturestoreException {
     if(settings.isOnlineFeaturestore() && cachedFeaturegroup.getOnlineFeaturegroup() != null){
-      onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), featurestore, user);
-    }
-  }
-  
-
-  /**
-   * Opens a JDBC connection to HS2 using the given database and project-user and then executes an update
-   * SQL query
-   *
-   * @param query        the update query
-   * @param databaseName the name of the Hive database
-   * @param project      the project of the user making the request
-   * @param user         the user making the request
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  private void executeUpdateHiveQuery(String query, String databaseName, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    //Re-create the connection every time since the connection is database and user-specific
-    Statement stmt = null;
-    Connection conn = null;
-    try {
-      conn = initConnection(databaseName, project, user);
-      // Create database
-      stmt = conn.createStatement();
-      stmt.executeUpdate(query);
-    } catch (SQLException e) {
-      //Hive throws a generic HiveSQLException not a specific AuthorizationException
-      if (e.getMessage().toLowerCase().contains("permission denied")){
-        throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.FINE,
-            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
-            e.getMessage(), e);
-      } else{
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HIVE_UPDATE_STATEMENT_ERROR, Level.SEVERE,
-            "project: " + project.getName() + ", hive database: " + databaseName + " hive query: " + query,
-            e.getMessage(), e);
-      }
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-      closeConnection(conn, user, project);
+      onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), project, user);
     }
   }
 
@@ -557,109 +492,7 @@ public class CachedFeaturegroupController {
     }
   }
 
-  /**
-   * Returns a String with Columns from a JSON featuregroup
-   * that can be used for a HiveQL CREATE TABLE statement or MySQL
-   *
-   * @param features list of featureDTOs
-   * @param featuregroupDoc description of the featuregroup
-   * @param mysqlTable whether the DDL is to be used for Hive or MYSQL
-   * @return feature schema string for creating hive or MYSQL table
-   */
-  public String makeCreateTableColumnsStr(List<FeatureDTO> features, String featuregroupDoc, Boolean mysqlTable)
-      throws FeaturestoreException {
-    StringBuilder schemaStringBuilder = new StringBuilder();
-    StringBuilder partitionStringBuilder = new StringBuilder();
-    if(features.isEmpty()) {
-      schemaStringBuilder.append("(`temp` int COMMENT 'placeholder') " +
-          "COMMENT '");
-      schemaStringBuilder.append(featuregroupDoc);
-      schemaStringBuilder.append("' ");
-      return schemaStringBuilder.toString();
-    }
-    List<FeatureDTO> primaryKeys = features.stream().filter(f -> f.getPrimary()).collect(Collectors.toList());
-    if(primaryKeys.isEmpty()){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.SEVERE,
-          "Out of the " + features.size() + " features provided, none is marked as primary");
-    }
-    for (FeatureDTO primaryKey :primaryKeys) {
-      if(primaryKey.getPartition()){
-        LOGGER.fine("The primary key column: " + primaryKey.getName() +
-          " was specified as a partition column, which is not " +
-          "allowed. Primary key columns can not be partitioned; Ignoring this partition request.");
-      }
-    }
-    schemaStringBuilder.append("(");
-    int numPartitions = features.stream().filter(f -> f.getPartition()).collect(Collectors.toList()).size();
-    partitionStringBuilder.append("PARTITIONED BY (");
-    Boolean firstPartition = true;
-    for (int i = 0; i < features.size(); i++) {
-      FeatureDTO feature = features.get(i);
-      if(!feature.getPartition() || feature.getPrimary()){
-        schemaStringBuilder.append("`");
-        schemaStringBuilder.append(feature.getName());
-        schemaStringBuilder.append("` ");
-        if(!mysqlTable){
-          schemaStringBuilder.append(feature.getType());
-        } else {
-          schemaStringBuilder.append(feature.getOnlineType());
-        }
-        if (!Strings.isNullOrEmpty(feature.getDescription())) {
-          schemaStringBuilder.append(" COMMENT '");
-          schemaStringBuilder.append(feature.getDescription());
-          schemaStringBuilder.append("'");
-        }
-        schemaStringBuilder.append(", ");
-      } else {
-        if(!firstPartition){
-          partitionStringBuilder.append(",");
-        } else {
-          firstPartition = false;
-        }
-        partitionStringBuilder.append("`");
-        partitionStringBuilder.append(feature.getName());
-        partitionStringBuilder.append("` ");
-        if(!mysqlTable){
-          partitionStringBuilder.append(feature.getType());
-        } else {
-          partitionStringBuilder.append(feature.getOnlineType());
-        }
-        if (!Strings.isNullOrEmpty(feature.getDescription())) {
-          partitionStringBuilder.append(" COMMENT '");
-          partitionStringBuilder.append(feature.getDescription());
-          partitionStringBuilder.append("'");
-        }
-      }
-      if (i == features.size() - 1){
-        Boolean firstPrimary = true;
-        schemaStringBuilder.append("PRIMARY KEY (");
-        for (int j = 0; j < primaryKeys.size(); j++) {
-          if(!firstPrimary){
-            schemaStringBuilder.append(",");
-          } else {
-            firstPrimary = false;
-          }
-          schemaStringBuilder.append("`");
-          schemaStringBuilder.append(primaryKeys.get(j).getName());
-          schemaStringBuilder.append("` ");
-        }
-        if(!mysqlTable){
-          schemaStringBuilder.append(") DISABLE NOVALIDATE) COMMENT '");
-        } else {
-          schemaStringBuilder.append(")) COMMENT '");
-        }
-        schemaStringBuilder.append(featuregroupDoc);
-        schemaStringBuilder.append("' ");
-        if(numPartitions > 0 && !mysqlTable){
-          partitionStringBuilder.append(")");
-          schemaStringBuilder.append(" ");
-          schemaStringBuilder.append(partitionStringBuilder.toString());
-        }
-      }
-    }
-    return schemaStringBuilder.toString();
-  }
-  
+
   /**
    * Synchronizes an already created Hive table with the Feature Store metadata
    *
@@ -710,9 +543,9 @@ public class CachedFeaturegroupController {
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO enableFeaturegroupOnline(
-    Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO,
-    Featuregroup featuregroup, Users user)
+  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore,
+                                                  CachedFeaturegroupDTO cachedFeaturegroupDTO,
+                                                  Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
@@ -727,11 +560,9 @@ public class CachedFeaturegroupController {
     //Create MySQL Table for Online Feature Group
     OnlineFeaturegroup onlineFeaturegroup = null;
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() == null) {
-      String mySQLFeatureStr = makeCreateTableColumnsStr(cachedFeaturegroupDTO.getFeatures(),
-        cachedFeaturegroupDTO.getDescription(), true);
-      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, user, mySQLFeatureStr,
-        tableName);
+    if(featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() == null) {
+      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
+          cachedFeaturegroupDTO.getFeatures(), project, user);
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     //Set foreign key of the cached feature group to the new online feature group
@@ -743,30 +574,29 @@ public class CachedFeaturegroupController {
   /**
    * Update a cached featuregroup that currently supports online feature serving, and disable it (drop MySQL db)
    *
-   * @param featurestore the featurestore where the featuregroup resides
    * @param featuregroup the featuregroup entity to update
+   * @param project
    * @param user the user making the request
    * @return a DTO of the updated featuregroup
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO disableFeaturegroupOnline(
-    Featurestore featurestore, Featuregroup featuregroup, Users user)
+  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
     throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
     if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(project))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
         "administrator.");
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
+    if(cachedFeaturegroup.getOnlineFeaturegroup() != null) {
       //Drop MySQL Table for Online Feature Group
-      dropMySQLFeaturegroup(cachedFeaturegroup, featurestore, user);
+      dropMySQLFeaturegroup(cachedFeaturegroup, project, user);
     }
     return convertCachedFeaturegroupToDTO(featuregroup);
   }
