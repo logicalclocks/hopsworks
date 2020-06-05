@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -28,6 +27,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.Charsets;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.ipc.RemoteException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -79,11 +79,6 @@ public class XAttrsController {
           RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
     }
     String metadata = metaJSON.getString(name);
-    if (metadata.length() > Settings.HOPSFS_XATTR_VALUE_MAX_SIZE
-      || name.length() > Settings.HOPSFS_XATTR_NAME_MAX_SIZE) {
-      throw new MetadataException(
-          RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
-    }
 
     boolean created = getXAttr(project, user, inodePath, XATTR_USER_NAMESPACE, name) == null;
 
@@ -166,10 +161,17 @@ public class XAttrsController {
     throws MetadataException {
     try {
       return udfso.getXAttr(new Path(path), getXAttrName(namespace, name));
-    } catch (IOException e) {
-      if(e.getMessage().contains("At least one of the attributes provided was not found.")) {
+    } catch (RemoteException e) {
+      if(e.getClassName().equals("io.hops.exception.StorageException")
+        && e.getMessage().startsWith("com.mysql.clusterj.ClusterJUserException: Data length")) {
+        throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE, e);
+      }
+      if(e.getClassName().equals("java.io.IOException")
+        && e.getMessage().startsWith("At least one of the attributes provided was not found.")) {
         return null;
       }
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
+    } catch (IOException e) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
     }
   }
@@ -178,6 +180,13 @@ public class XAttrsController {
     throws MetadataException {
     try {
       udfso.setXAttr(new Path(path), getXAttrName(namespace, name), value);
+    } catch(RemoteException e) {
+      if(e.getClassName().equals("org.apache.hadoop.HadoopIllegalArgumentException")
+        && e.getMessage().startsWith("The XAttr value is too big.")) {
+        throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE, e);
+      } else {
+        throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
+      }
     } catch (IOException e) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
     }
@@ -270,9 +279,6 @@ public class XAttrsController {
     throws MetadataException, DatasetException {
     if (name == null || name.isEmpty()) {
       throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
-    }
-    if (value.length > Settings.HOPSFS_XATTR_VALUE_MAX_SIZE || name.length() > Settings.HOPSFS_XATTR_NAME_MAX_SIZE) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE);
     }
     String path = validatePath(inodePath);
     boolean hasPrevious = (getXAttrInt(udfso, path, XATTR_PROV_NAMESPACE, name) != null);

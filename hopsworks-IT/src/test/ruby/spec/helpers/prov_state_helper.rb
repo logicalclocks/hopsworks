@@ -153,7 +153,7 @@ module ProvStateHelper
 #     pp xattrRecord
     xattr_record.save!
 
-    FileProvXAttr.create(inode_id: xattr_record["inode_id"], namespace: 5, name: xattr_name, inode_logical_time: xattr_record["io_logical_time"], value: xattr_value)
+    FileProvXAttr.create(inode_id: xattr_record["inode_id"], namespace: 5, name: xattr_name, inode_logical_time: xattr_record["io_logical_time"], value: xattr_value, num_parts: 1, index: 0)
   end
 
   def prov_add_app_states1(app_id, user)
