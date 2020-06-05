@@ -301,8 +301,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
   private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
   private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
-  private static final String VARIABLE_KUBE_JUPYTER_IMG_VERSION = "kube_jupyter_img_version";
-  private static final String VARIABLE_KUBE_PYTHON_IMG_VERSION = "kube_python_img_version";
 
   /*
    * -------------------- Jupyter ---------------
@@ -675,8 +673,6 @@ public class Settings implements Serializable {
       KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
       KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
       KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
-      KUBE_JUPYTER_IMG_VERSION = setVar(VARIABLE_KUBE_JUPYTER_IMG_VERSION, KUBE_JUPYTER_IMG_VERSION);
-      KUBE_PYTHON_IMG_VERSION = setVar(VARIABLE_KUBE_PYTHON_IMG_VERSION, KUBE_PYTHON_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
