@@ -30,6 +30,7 @@ import java.util.List;
 public class Query {
   private List<FeatureDTO> features;
   private String featureStore;
+  private String project;
   private Featuregroup featuregroup;
   private String as;
   private List<FeatureDTO> availableFeatures;
@@ -46,9 +47,10 @@ public class Query {
     this.featuregroup = featuregroup;
   }
 
-  public Query(String featureStore, Featuregroup featuregroup, String as,
+  public Query(String featureStore, String project, Featuregroup featuregroup, String as,
                List<FeatureDTO> features, List<FeatureDTO> availableFeatures) {
     this.featureStore = featureStore;
+    this.project = project;
     this.featuregroup = featuregroup;
     this.as = as;
     this.features = features;
@@ -73,6 +75,14 @@ public class Query {
 
   public Featuregroup getFeaturegroup() {
     return featuregroup;
+  }
+
+  public String getProject() {
+    return project;
+  }
+
+  public void setProject(String project) {
+    this.project = project;
   }
 
   public void setFeaturegroup(Featuregroup featuregroup) {
