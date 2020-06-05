@@ -19,7 +19,7 @@ package io.hops.hopsworks.api.featurestore;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.common.featurestore.query.ConstructorController;
+import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -47,8 +47,6 @@ import javax.ws.rs.core.UriInfo;
 public class FsQueryConstructorResource {
 
   @EJB
-  private ConstructorController constructorController;
-  @EJB
   private FsQueryBuilder fsQueryBuilder;
 
   private Project project;
@@ -73,15 +71,13 @@ public class FsQueryConstructorResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Construct the SQL query to join the requested features",
-      response = FsQueryDTO.class)
+  @ApiOperation(value = "Construct the SQL query to join the requested features", response = FsQueryDTO.class)
   public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
                                  QueryDTO queryDto) throws FeaturestoreException {
     if (queryDto == null) {
       throw new IllegalArgumentException("Please submit a query to construct");
     }
-    String query = constructorController.construct(queryDto);
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, query);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, queryDto);
     return Response.ok().entity(fsQueryDTO).build();
   }
 }

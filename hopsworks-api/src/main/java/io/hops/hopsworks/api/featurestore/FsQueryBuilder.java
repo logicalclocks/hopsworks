@@ -17,29 +17,36 @@
 package io.hops.hopsworks.api.featurestore;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.featurestore.query.ConstructorController;
+import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
+import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FsQueryBuilder {
 
-  private FsQueryDTO uri(FsQueryDTO dto, UriInfo uriInfo, Project project) {
-    dto.setHref(uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+  @EJB
+  private ConstructorController constructorController;
+
+  private URI uri(UriInfo uriInfo, Project project) {
+    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
         .path(Integer.toString(project.getId()))
         .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
-        .path(ResourceRequest.Name.QUERY.toString().toLowerCase()).build());
-    return dto;
+        .path(ResourceRequest.Name.QUERY.toString().toLowerCase()).build();
   }
 
-  public FsQueryDTO build(UriInfo uriInfo, Project project, String query) {
-    FsQueryDTO dto = new FsQueryDTO();
-    uri(dto, uriInfo, project);
-    dto.setQuery(query);
+  public FsQueryDTO build(UriInfo uriInfo, Project project, QueryDTO queryDTO) throws FeaturestoreException {
+    FsQueryDTO dto = constructorController.construct(queryDTO);
+    dto.setHref(uri(uriInfo, project));
     return dto;
   }
 }
