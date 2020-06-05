@@ -547,6 +547,31 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["features"].first["description"] == "").to be true
         end
 
+        it "should be able to add an offline cached featuregroup with ' and ; in the description'" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          features = [
+              {
+                  type: "INT",
+                  name: "test_feature",
+                  description: "this description contains ' and ;'",
+                  primary: true,
+                  onlineType: nil,
+                  partition: false
+              }
+          ]
+          json_result, featuregroup_name =
+              create_cached_featuregroup(project.id, featurestore_id,
+                                         features:features,
+                                         featuregroup_description:"this description contains ' and ;'%*")
+
+              parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["description"]).to eql("this description contains ' and ;'%*")
+          expect(parsed_json["features"].length).to be 1
+          expect(parsed_json["features"].first["description"]).to eql("this description contains ' and ;'")
+        end
+
         it "should be able to preview a offline cached featuregroup in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)

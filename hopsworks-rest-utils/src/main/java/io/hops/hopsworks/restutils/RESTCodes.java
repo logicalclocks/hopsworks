@@ -581,7 +581,9 @@ public class RESTCodes {
     SERVICE_NOT_FOUND(48, "Service not found", Response.Status.NOT_FOUND),
     ACTION_FORBIDDEN(49, "Action forbidden", Response.Status.BAD_REQUEST),
     VARIABLE_NOT_FOUND(50, "Requested variable not found", Response.Status.NOT_FOUND),
-    DOCKER_IMAGE_CREATION_ERROR(51, "Error while creating the docker image", Response.Status.INTERNAL_SERVER_ERROR);
+    DOCKER_IMAGE_CREATION_ERROR(51, "Error while creating the docker image", Response.Status.INTERNAL_SERVER_ERROR),
+    METASTORE_CONNECTION_ERROR(52, "Error opening connection with the Hive metastore",
+        Response.Status.INTERNAL_SERVER_ERROR);
 
 
     private Integer code;

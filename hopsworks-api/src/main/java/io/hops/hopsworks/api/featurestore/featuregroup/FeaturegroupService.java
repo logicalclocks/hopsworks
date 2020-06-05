@@ -41,6 +41,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -77,6 +78,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -179,7 +181,7 @@ public class FeaturegroupService {
   @ApiOperation(value = "Create feature group in a featurestore",
       response = FeaturegroupDTO.class)
   public Response createFeaturegroup(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, HopsSecurityException {
+      throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
@@ -190,14 +192,13 @@ public class FeaturegroupService {
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId());
       }
       FeaturegroupDTO createdFeaturegroup = featuregroupController.createFeaturegroup(featurestore, featuregroupDTO,
-        user);
+        project, user);
       activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroup.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(createdFeaturegroup) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-    } catch (SQLException | ProvenanceException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP.getMessage(), e);
+    } catch (SQLException | IOException | ProvenanceException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId(), e.getMessage(), e);
     }
@@ -280,8 +281,9 @@ public class FeaturegroupService {
   @ApiOperation(value = "Delete specific featuregroup from a specific featurestore",
       response = FeaturegroupDTO.class)
   public Response deleteFeatureGroup(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
+      @Context SecurityContext sc,
+      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
+      throws FeaturestoreException, ServiceException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
@@ -292,15 +294,14 @@ public class FeaturegroupService {
       featuregroupDTO = new FeaturegroupDTO();
       featuregroupDTO.setId(featuregroupId);
       featuregroupDTO = featuregroupController
-        .deleteFeaturegroupIfExists(featurestore, featuregroupDTO, user)
+        .deleteFeaturegroupIfExists(featurestore, featuregroupDTO, project, user)
         .orElseGet(null);
       activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
           project, user, ActivityFlag.SERVICE);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric =
           new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP.getMessage(), e);
+    } catch (SQLException | IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -359,27 +360,27 @@ public class FeaturegroupService {
   @POST
   @Path("/{featuregroupId}/clear")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Delete featuregroup contents",
       response = FeaturegroupDTO.class)
   public Response deleteFeaturegroupContents(
-      @Context SecurityContext sc, @ApiParam(value = "Id of the featuregroup", required = true)
-      @PathParam("featuregroupId") Integer featuregroupId) throws FeaturestoreException, HopsSecurityException {
+      @Context SecurityContext sc,
+      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
+  throws FeaturestoreException, ServiceException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
-    FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featuregroupId);
+    FeaturegroupDTO oldFeaturegroupDTO =
+        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
     featurestoreUtils.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
     try {
-      FeaturegroupDTO newFeaturegroupDTO = featuregroupController.clearFeaturegroup(featurestore, oldFeaturegroupDTO,
-          user);
+      FeaturegroupDTO newFeaturegroupDTO =
+          featuregroupController.clearFeaturegroup(featurestore, oldFeaturegroupDTO, project, user);
       GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
       return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
-    } catch (SQLException | ProvenanceException e) {
-      LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP.getMessage(), e);
+    } catch (SQLException | IOException | ProvenanceException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
@@ -439,11 +440,13 @@ public class FeaturegroupService {
     if(enableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         !((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
       featuregroupDTO.setDescription(oldFeaturegroupDTO.getDescription());
-      updatedFeaturegroupDTO = featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+      updatedFeaturegroupDTO =
+          featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
     if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-      updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, user);
+      updatedFeaturegroupDTO =
+          featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
     if(updateStatsSettings) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);

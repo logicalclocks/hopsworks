@@ -328,6 +328,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
+  private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
+
+  private static final String VARIABLE_HIVE_CONF_PATH = "hive_conf_path";
 
   //Elastic OpenDistro
   private static final String VARIABLE_ELASTIC_OPENDISTRO_SECURITY_ENABLED = "elastic_opendistro_security_enabled";
@@ -708,7 +711,8 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
       FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
-  
+      ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
+
       KIBANA_HTTPS_ENABELED = setBoolVar(VARIABLE_KIBANA_HTTPS_ENABLED,
           KIBANA_HTTPS_ENABELED);
   
@@ -729,6 +733,7 @@ public class Settings implements Serializable {
           setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT_API_KEY, CLOUD_EVENTS_ENDPOINT_API_KEY);
 
       FG_PREVIEW_LIMIT = setIntVar(VARIABLE_FG_PREVIEW_LIMIT, FG_PREVIEW_LIMIT);
+      HIVE_CONF_PATH = setStrVar(VARIABLE_HIVE_CONF_PATH, HIVE_CONF_PATH);
       
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
@@ -3374,6 +3379,12 @@ public class Settings implements Serializable {
     return ONLINE_FEATURESTORE;
   }
 
+  private String ONLINE_FEATURESTORE_TS = "";
+  public synchronized String getOnlineFeatureStoreTableSpace() {
+    checkCache();
+    return ONLINE_FEATURESTORE_TS;
+  }
+
   private Integer KUBE_DOCKER_MAX_MEMORY_ALLOCATION = 8192;
   public synchronized Integer getKubeDockerMaxMemoryAllocation() {
     checkCache();
@@ -3542,6 +3553,12 @@ public class Settings implements Serializable {
   public synchronized int getMaggyCleanupInterval() {
     checkCache();
     return MAGGY_CLEANUP_INTERVAL;
+  }
+
+  private String HIVE_CONF_PATH = "/srv/hops/apache-hive/conf/hive-site.xml";
+  public synchronized String getHiveConfPath() {
+    checkCache();
+    return HIVE_CONF_PATH;
   }
 
   public String getHiveSiteSparkHdfsPath() {

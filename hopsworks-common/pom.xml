@@ -322,6 +322,25 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>io.hops.hive</groupId>
+      <artifactId>hive-standalone-metastore</artifactId>
+      <version>${hive.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>bijection-avro_2.12</artifactId>
       <version>0.9.6</version>
