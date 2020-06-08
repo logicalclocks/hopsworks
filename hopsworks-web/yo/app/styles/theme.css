@@ -145,39 +145,6 @@ fieldset[disabled]
     border-color: var(--hopsworks-info-color);
 }
 
-.btn-danger, .btn-danger.active {
-    background-color: var(--hopsworks-danger-color);
-    border-color: var(--hopsworks-danger-color);
-}
-
-.btn-danger:hover,
-.btn-danger:active,
-.btn-danger:visited,
-.btn-danger:focus,
-.btn-danger.active:hover,
-.btn-danger.active:active,
-.btn-danger.active:visited,
-.btn-danger.active:focus {
-    background-color: var(--hopsworks-danger-color);
-    border-color: var(--hopsworks-danger-color);
-    opacity: 0.65;
-}
-
-.btn-danger.disabled:hover,
-.btn-danger[disabled]:hover,
-fieldset[disabled]
-.btn-danger:hover,
-.btn-danger.disabled:focus,
-.btn-danger[disabled]:focus,
-fieldset[disabled] .btn-danger:focus,
-.btn-danger.disabled.focus,
-.btn-danger[disabled].focus,
-fieldset[disabled]
-.btn-danger.focus {
-    background-color: var(--hopsworks-danger-color);
-    border-color: var(--hopsworks-danger-color);
-}
-
 nav.navbar-sics {
     background: var(--hopsworks-header-color);
 }
