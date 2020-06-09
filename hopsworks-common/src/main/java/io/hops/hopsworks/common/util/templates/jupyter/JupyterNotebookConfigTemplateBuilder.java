@@ -36,6 +36,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String allowOrigin;
   private Long wsPingInterval;
   private String apiKey;
+  private String gitBackend;
   private String flinkConfDirectory;
   private Boolean requestsVerify;
   private String domainCATruststorePem;
@@ -188,6 +189,15 @@ public class JupyterNotebookConfigTemplateBuilder {
   
   public JupyterNotebookConfigTemplateBuilder setApiKey(String apiKey) {
     this.apiKey = apiKey;
+    return this;
+  }
+  
+  public String getGitBackend() {
+    return gitBackend;
+  }
+  
+  public JupyterNotebookConfigTemplateBuilder setGitBackend(String gitBackend) {
+    this.gitBackend = gitBackend;
     return this;
   }
   

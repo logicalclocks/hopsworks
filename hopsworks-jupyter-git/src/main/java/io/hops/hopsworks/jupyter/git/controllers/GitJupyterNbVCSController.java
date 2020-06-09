@@ -15,11 +15,13 @@ import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jupyter.git.controllers.qualifiers.GitHubQualifier;
+import io.hops.hopsworks.jupyter.git.controllers.qualifiers.GitLabQualifier;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitConfigResponse;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitResponse;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitStatusResponse;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.egit.github.core.client.RequestException;
@@ -58,7 +60,8 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
   private static final String BRANCH_REMOTE_REFS_TEMPLATE = "refs/heads/%s";
   
   private enum REMOTE_SERVICE {
-    GITHUB("github.com", new GitHubQualifier());
+    GITHUB("github", new GitHubQualifier()),
+    GITLAB("gitlab", new GitLabQualifier());
     
     private String uniqueServiceIdentifier;
     private AnnotationLiteral annotation;
@@ -98,17 +101,17 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
   }
   
   @Override
-  public Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI) throws ServiceException {
+  public Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException {
     if (Strings.isNullOrEmpty(remoteURI)) {
       return Collections.emptySet();
     }
     try {
-      String repoName = getRepositoryName(remoteURI);
-      REMOTE_SERVICE remoteService = getRemoteServiceType(remoteURI);
+      REMOTE_SERVICE remoteService = REMOTE_SERVICE.valueOf(gitBackend.name());
       Instance<RemoteGitClient> clientInstance = remoteRepoClient.select(remoteService.annotation);
       check4instance(clientInstance, "Remote repository client");
       SecretPlaintext apiKey = secretsController.get(user, apiKeyName);
-      return clientInstance.get().fetchBranches(apiKey, repoName);
+      return clientInstance.get().fetchBranches(apiKey, remoteURI);
     } catch (IOException ex) {
       Level loggingLevel;
       // If it's a bad request, don't log it as severe
@@ -173,7 +176,7 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
       return new RepositoryStatus.UnmodifiableRepositoryStatus();
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.WARNING,
-          ex.getMessage(), ex.getMessage(), ex);
+          "Failed to clone repository.", ex.getMessage(), ex);
     }
   }
   
@@ -202,7 +205,7 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
       return status;
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.WARNING,
-          ex.getMessage(), ex.getMessage(), ex);
+          "Failed to get status of repository.", ex.getMessage(), ex);
     }
   }
   
@@ -255,7 +258,7 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
               " " + response.getMessage());
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.WARNING,
-          ex.getMessage(), ex.getMessage(), ex);
+          "Failed to pull from repository.", ex.getMessage(), ex);
     }
   }
   
@@ -332,7 +335,7 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
       return status(jupyterProject, jupyterSettings);
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.WARNING,
-          ex.getMessage(), ex.getMessage(), ex);
+          "Failed to push to repository.", ex.getMessage(), ex);
     }
   }
   
@@ -348,20 +351,6 @@ public class GitJupyterNbVCSController implements JupyterNbVCSController {
     Matcher matcher = REPO_ATTRS.matcher(remoteURI);
     if (matcher.matches()) {
       return matcher.group("repository");
-    }
-    throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
-  }
-  
-  private REMOTE_SERVICE getRemoteServiceType(String remoteURI) {
-    Matcher matcher = REPO_ATTRS.matcher(remoteURI);
-    if (matcher.matches()) {
-      String remoteService = matcher.group("type");
-      for (REMOTE_SERVICE remote_service : REMOTE_SERVICE.values()) {
-        if (remoteService.toLowerCase().equals(remote_service.uniqueServiceIdentifier)) {
-          return remote_service;
-        }
-      }
-      throw new UnsupportedOperationException("Could not find type of: " + remoteService);
     }
     throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
   }

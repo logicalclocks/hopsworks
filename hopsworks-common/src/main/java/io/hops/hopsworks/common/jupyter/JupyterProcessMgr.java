@@ -39,8 +39,6 @@
 
 package io.hops.hopsworks.common.jupyter;
 
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -106,10 +104,6 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
   @EJB
   private Settings settings;
   @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private HdfsLeDescriptorsFacade hdfsLeFacade;
-  @EJB
   private JupyterFacade jupyterFacade;
   @EJB
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
@@ -173,7 +167,6 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
           .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
           .setWaitTimeout(20L, TimeUnit.SECONDS)
           .build();
-
 
       String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {

@@ -1,14 +1,13 @@
 /*
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  */
-
-package io.hops.hopsworks.jupyter.git.controllers.github;
+package io.hops.hopsworks.jupyter.git.controllers.gitlab;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.eclipse.egit.github.core.client.GitHubClient;
+import org.gitlab4j.api.GitLabApi;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Lock;
@@ -21,9 +20,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Singleton
-public class ClientCache {
-  private static final Logger LOG = Logger.getLogger(ClientCache.class.getName());
-  private Cache<String, GitHubClient> cache;
+public class GLClientCache {
+  private static final Logger LOG = Logger.getLogger(GLClientCache.class.getName());
+  private Cache<String, GitLabApi> cache;
   
   @PostConstruct
   public void init() {
@@ -34,19 +33,18 @@ public class ClientCache {
   }
   
   @Lock(LockType.READ)
-  public GitHubClient getClient(String hostUrl, String apiKey) throws ServiceException {
+  public GitLabApi getClient(String hostUrl, String authToken) throws ServiceException {
     try {
-      return cache.get(apiKey, new Callable<GitHubClient>() {
+      return cache.get(authToken, new Callable<GitLabApi>() {
         @Override
-        public GitHubClient call() throws Exception {
-          GitHubClient client = new GitHubClient(hostUrl);
-          client.setOAuth2Token(apiKey);
-          return client;
+        public GitLabApi call() throws Exception {
+          GitLabApi gitLabApi = new GitLabApi(hostUrl, authToken);
+          return gitLabApi;
         }
       });
     } catch (ExecutionException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE,
-          "Could not create GitHub client", "Could not create GitHub client in cache!", ex);
+          "Could not create GitLab client", "Could not create GitLab client in cache!", ex);
     }
   }
 }

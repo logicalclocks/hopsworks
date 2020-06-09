@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -33,6 +35,8 @@ import java.util.logging.Logger;
 public class GHClient implements RemoteGitClient {
   private static final Logger LOG = Logger.getLogger(GHClient.class.getName());
   
+  private static final Pattern REPO_ATTRS = Pattern.compile("http(s)?://(?<type>.+)/(?<username>.+)/(?<repository>"
+    + ".+)\\.git");
   @EJB
   private ClientCache clientCache;
   
@@ -47,9 +51,9 @@ public class GHClient implements RemoteGitClient {
    */
   @Override
   public Set<String> fetchBranches(SecretPlaintext apiKey, String repository) throws ServiceException, IOException {
-    GitHubClient client = clientCache.getClient(apiKey.getPlaintext());
+    GitHubClient client = clientCache.getClient(getHost(repository), apiKey.getPlaintext());
     RepositoryService repositoryService = getRepositoryService(client);
-    Repository repo = getRepository(repository, repositoryService);
+    Repository repo = getRepository(getRepositoryName(repository), repositoryService);
     List<RepositoryBranch> branches = getBranches(repo, repositoryService);
     Set<String> flatBranches = new LinkedHashSet<>(branches.size());
     flatBranches.add(repo.getMasterBranch());
@@ -81,5 +85,25 @@ public class GHClient implements RemoteGitClient {
     }
     throw new ServiceException(RESTCodes.ServiceErrorCode.GIT_COMMAND_FAILURE, Level.SEVERE,
         "Could not find remote repository " + repository + " on GitHub");
+  }
+  
+  private String getRepositoryName(String remoteURI) {
+    Matcher matcher = REPO_ATTRS.matcher(remoteURI);
+    if (matcher.matches()) {
+      return matcher.group("repository");
+    }
+    throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
+  }
+  
+  private String getHost(String remoteURI) {
+    Matcher matcher = REPO_ATTRS.matcher(remoteURI);
+    if (matcher.matches()) {
+      String hostName = matcher.group("type");
+      if ("github.com".equals(hostName)) {
+        hostName = "api." + hostName;
+      }
+      return hostName;
+    }
+    throw new IllegalArgumentException("Could not parse remote URI: " + remoteURI);
   }
 }

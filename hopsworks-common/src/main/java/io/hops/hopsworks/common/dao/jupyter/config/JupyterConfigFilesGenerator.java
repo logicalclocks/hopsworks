@@ -218,8 +218,10 @@ public class JupyterConfigFilesGenerator {
 
     String remoteGitURL = "";
     String apiKey = "";
+    String gitBackend = "";
     if (js.isGitBackend() && js.getGitConfig() != null) {
       remoteGitURL = js.getGitConfig().getRemoteGitURL();
+      gitBackend = js.getGitConfig().getGitBackend().name();
       apiKey = jupyterNbVCSController.getGitApiKey(hdfsUser, js.getGitConfig().getApiKeyName());
     }
     JupyterContentsManager jcm = jupyterNbVCSController.getJupyterContentsManagerClass(remoteGitURL);
@@ -241,6 +243,7 @@ public class JupyterConfigFilesGenerator {
         .setAllowOrigin(allowOrigin)
         .setWsPingInterval(settings.getJupyterWSPingInterval())
         .setApiKey(apiKey)
+        .setGitBackend(gitBackend)
         .setFlinkConfDirectory(settings.getFlinkConfDir())
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststorePem(settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM)

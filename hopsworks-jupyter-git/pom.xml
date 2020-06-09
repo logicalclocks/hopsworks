@@ -59,6 +59,13 @@
     </dependency>
 
     <dependency>
+      <groupId>org.gitlab4j</groupId>
+      <artifactId>gitlab4j-api</artifactId>
+      <version>4.10.14</version>
+      <!-- 4.10.15 Switched to the jakarta version of the activation and servlet dependencies. -->
+    </dependency>
+
+    <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
       <version>7.0</version>
