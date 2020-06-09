@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -45,7 +46,8 @@ public class NullJupyterNbVCSController implements JupyterNbVCSController {
   }
   
   @Override
-  public Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI) throws ServiceException {
+  public Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException {
     return Collections.emptySet();
   }
   

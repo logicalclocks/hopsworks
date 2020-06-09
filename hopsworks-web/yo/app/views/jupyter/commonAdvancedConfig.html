@@ -17,7 +17,7 @@
  -->
 <div class="form-group" ng-if="!jupyterCtrl.jupyterSettings.gitBackend && sparkConfigCtrl.isJupyter">
     <label class="control-label col-sm-3" for="baseDir" uib-tooltip='Dataset to set as base directory for Jupyter'>Base Directory: </label>
-    <div class="col-sm-4">
+    <div class="col-sm-4 jupyter-left">
         <select id="baseDir" class="form-control" ng-model="jupyterCtrl.selected" ng-change="jupyterCtrl.changeBaseDir()"required>
             <option ng-selected="jupyterCtrl.selected.id === dir.id"
                     ng-repeat="dir in jupyterCtrl.dirs"

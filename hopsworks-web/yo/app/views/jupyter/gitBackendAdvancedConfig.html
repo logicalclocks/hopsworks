@@ -19,24 +19,39 @@
 <div ng-if="jupyterCtrl.jupyterSettings.gitAvailable">
     <div class="form-group">
         <label class="control-label col-sm-3" for="enableGit"
-               uib-tooltip="Clone notebooks from a remote Git repository.">
-            Enable Git: </label>
-        <div class="col-sm-6">
-            <md-switch id="enableGit" class="md-primary"
-                       aria-label="Git"
-                       style="margin: 0px"
-                       ng-click="jupyterCtrl.loadThirdPartyApiKeys()"
-                       ng-model="jupyterCtrl.jupyterSettings.gitBackend">
-                {{ jupyterCtrl.jupyterSettings.gitBackend? 'ON' : 'OFF' }}
-            </md-switch>
+               uib-tooltip="Clone notebooks from a remote Git repository.">Git: </label>
+        <div class="col-sm-6 jupyter-left">
+            <div id="enableGit" class="btn-group" role="group" aria-label="...">
+                <button type="button" class="btn"
+                        ng-class="{'btn-default': jupyterCtrl.jupyterSettings.gitBackend, 'btn-primary': !jupyterCtrl.jupyterSettings.gitBackend}"
+                        ng-click="jupyterCtrl.jupyterSettings.gitConfig.gitBackend = undefined; jupyterCtrl.jupyterSettings.gitBackend = false">Disable{{!jupyterCtrl.jupyterSettings.gitBackend? 'd': ''}}</button>
+                <button type="button" class="btn"
+                        ng-class="{'btn-default': jupyterCtrl.jupyterSettings.gitConfig.gitBackend !== 'GITHUB', 'btn-primary': jupyterCtrl.jupyterSettings.gitConfig.gitBackend === 'GITHUB'}"
+                        ng-click="jupyterCtrl.jupyterSettings.gitConfig.gitBackend = 'GITHUB'; jupyterCtrl.loadThirdPartyApiKeys()">GitHub</button>
+                <button type="button" class="btn"
+                        ng-class="{'btn-default': jupyterCtrl.jupyterSettings.gitConfig.gitBackend !== 'GITLAB', 'btn-primary': jupyterCtrl.jupyterSettings.gitConfig.gitBackend === 'GITLAB'}"
+                        ng-click="jupyterCtrl.jupyterSettings.gitConfig.gitBackend = 'GITLAB'; jupyterCtrl.loadThirdPartyApiKeys()">GitLab</button>
+            </div>
         </div>
     </div>
-    <div class="form-group" ng-if="jupyterCtrl.jupyterSettings.gitBackend">
-        <label class="control-label col-sm-3" for="git-url" uib-tooltip="Full URL to remote Git repository.">GitHub repository URL: </label>
+    <div class="form-group" ng-if="jupyterCtrl.jupyterSettings.gitConfig.gitBackend === 'GITHUB'">
+        <label class="control-label col-sm-3" for="github-url"
+               uib-tooltip="Full URL to remote Git repository.">GitHub repository URL: </label>
         <div class="col-sm-6" ng-class="(jupyterCtrl.git_error === 'URI_SYNTAX_ERROR') ? 'jupyter-left has-error' : 'jupyter-left'">
-            <input type="text" class="form-control" id="git-url"
+            <input type="text" class="form-control" id="github-url"
                    ng-model="jupyterCtrl.jupyterSettings.gitConfig.remoteGitURL"
                    placeholder="https://github.com/organization/repo.git"
+                   ng-change="jupyterCtrl.getRemoteGitBranches()"
+                   ng-model-options="{debounce: 500}">
+        </div>
+    </div>
+    <div class="form-group" ng-if="jupyterCtrl.jupyterSettings.gitConfig.gitBackend === 'GITLAB'">
+        <label class="control-label col-sm-3" for="gitlab-url"
+               uib-tooltip="Full URL to remote Git repository.">GitLab project URL: </label>
+        <div class="col-sm-6" ng-class="(jupyterCtrl.git_error === 'URI_SYNTAX_ERROR') ? 'jupyter-left has-error' : 'jupyter-left'">
+            <input type="text" class="form-control" id="gitlab-url"
+                   ng-model="jupyterCtrl.jupyterSettings.gitConfig.remoteGitURL"
+                   placeholder="https://gitlab.com/organization/project.git"
                    ng-change="jupyterCtrl.getRemoteGitBranches()"
                    ng-model-options="{debounce: 500}">
         </div>
@@ -45,8 +60,7 @@
         <div class="col-sm-4 pull-left"></div>
         <div ng-show="jupyterCtrl.git_error === 'URI_SYNTAX_ERROR'" class="col-sm-4 pull-left"
              style="font-weight: bold; color: orange;">
-            <i class="fa fa-warning" style="color:orange;"></i>&nbsp;Could not parse repository URL, it should be like
-            https://github.com/organization/repo.git
+            <i class="fa fa-warning" style="color:orange;"></i>&nbsp;Could not parse URL.
         </div>
     </div>
     <div class="form-group" ng-if="jupyterCtrl.jupyterSettings.gitBackend">
@@ -80,7 +94,7 @@
         <label class="control-label col-sm-3" for="auto_pull"
                uib-tooltip="Automatically pull from Base branch on Jupyter startup">
             Auto pull on startup: </label>
-        <div class="col-sm-6">
+        <div class="col-sm-6 jupyter-left">
             <md-switch id="auto_pull" class="md-primary"
                        aria-label="Auto pull"
                        style="margin: 0px"
@@ -94,7 +108,7 @@
         <label class="control-label col-sm-3" for="auto_push"
                uib-tooltip="Automatically commit to Head and push any changes to remote Git repository on Jupyter Notebook server shutdown">
             Auto push on shutdown: </label>
-        <div class="col-sm-6">
+        <div class="col-sm-6 jupyter-left">
             <md-switch id="auto_push" class="md-primary"
                        aria-label="Auto pull"
                        style="margin: 0px"
@@ -107,9 +121,9 @@
         <label class="control-label col-sm-3" for="base_branch"
                uib-tooltip="Base branch to pull from. If not set it will pull from repository's default branch.">
             Base branch: </label>
-        <div class="col-sm-6">
+        <div class="col-sm-6 jupyter-left">
             <ui-select id="base_branch" ng-model="jupyterCtrl.jupyterSettings.gitConfig.baseBranch" theme="bootstrap"
-                       style="z-index:2" ;>
+                       style="z-index:1">
                 <ui-select-match placeholder="Select branch...">
                     <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.baseBranch"></span>
                 </ui-select-match>
@@ -125,9 +139,9 @@
                uib-tooltip="Branch to save modifications. If not set it will commit changes to repository's default branch.">
             <i ng-show="jupyterCtrl.gitWorking" style="margin-top: 2px" class="fa fa-spinner fa-spin"></i>Head branch:
         </label>
-        <div class="col-sm-6" ng-if="jupyterCtrl.gitNewHeadBranchPressed == false">
+        <div class="col-sm-6 jupyter-left" ng-if="jupyterCtrl.gitNewHeadBranchPressed == false">
             <ui-select id="head_branch" ng-model="jupyterCtrl.jupyterSettings.gitConfig.headBranch" theme="bootstrap"
-                       style="z-index:1" ;>
+                       style="z-index:0">
                 <ui-select-match placeholder="Select branch...">
                     <span ng-bind="jupyterCtrl.jupyterSettings.gitConfig.headBranch"></span>
                 </ui-select-match>
