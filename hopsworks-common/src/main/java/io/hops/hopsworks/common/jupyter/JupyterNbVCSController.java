@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.ServiceException;
 
@@ -25,13 +26,20 @@ import java.util.Set;
 
 public interface JupyterNbVCSController {
   boolean isGitAvailable();
+  
   JupyterContentsManager getJupyterContentsManagerClass(String remoteURI) throws ServiceException;
-  Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI) throws ServiceException;
+  
+  Set<String> getRemoteBranches(Users user, String apiKeyName, String remoteURI, GitBackend gitBackend)
+    throws ServiceException;
+  
   String getGitApiKey(String hdfsUser, String apiKeyName) throws ServiceException;
   
   RepositoryStatus init(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  
   RepositoryStatus status(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  
   RepositoryStatus pull(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws ServiceException;
+  
   RepositoryStatus push(JupyterProject jupyterProject, JupyterSettings jupyterSettings, Users user)
-      throws ServiceException;
+    throws ServiceException;
 }

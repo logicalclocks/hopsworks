@@ -329,7 +329,9 @@ angular.module('hopsWorksApp')
                         self.git_api_key = api_key
                     }
                 }
+                self.jupyterSettings.gitBackend = true;
                 var repoConf = {
+                    gitBackend: self.jupyterSettings.gitConfig.gitBackend,
                     remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
                     keyName: self.jupyterSettings.gitConfig.apiKeyName
                 };
@@ -447,6 +449,7 @@ angular.module('hopsWorksApp')
                                             }
                                         }
                                         var repoConf = {
+                                            gitBackend: self.jupyterSettings.gitConfig.gitBackend,
                                             remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
                                             keyName: self.jupyterSettings.gitConfig.apiKeyName
                                         };
@@ -545,6 +548,7 @@ angular.module('hopsWorksApp')
                 if(self.git_api_key && self.git_api_key.name) {
                     self.jupyterSettings.gitConfig.apiKeyName = self.git_api_key.name
                     var repoConf = {
+                        gitBackend: self.jupyterSettings.gitConfig.gitBackend,
                         remoteURI: self.jupyterSettings.gitConfig.remoteGitURL,
                         keyName: self.jupyterSettings.gitConfig.apiKeyName
                     };

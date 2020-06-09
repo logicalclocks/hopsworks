@@ -33,6 +33,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String allowOrigin;
   private final Long wsPingInterval;
   private final String apiKey;
+  private final String gitBackend;
   private final String flinkConfDirectory;
   private final Boolean requestsVerify;
   private final String domainCATruststorePem;
@@ -53,6 +54,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.allowOrigin = builder.getAllowOrigin();
     this.wsPingInterval = builder.getWsPingInterval();
     this.apiKey = builder.getApiKey();
+    this.gitBackend = builder.getGitBackend();
     this.flinkConfDirectory = builder.getFlinkConfDirectory();
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststorePem = builder.getDomainCATruststorePem();
@@ -109,6 +111,10 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   
   public String getApiKey() {
     return apiKey;
+  }
+  
+  public String getGitBackend() {
+    return gitBackend;
   }
   
   public String getFlinkConfDirectory() {

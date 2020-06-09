@@ -76,6 +76,7 @@ import io.hops.hopsworks.persistence.entity.jobs.quota.YarnProjectsQuota;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterMode;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.jupyter.config.GitConfig;
 import io.hops.hopsworks.persistence.entity.project.PaymentType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -340,11 +341,17 @@ public class JupyterService {
         certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
         jupyterManager.waitForStartup(project, hopsworksUser);
       } catch (ServiceException | TimeoutException ex) {
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+        if (dto != null) {
+          jupyterController
+            .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+        }
         throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, Level.SEVERE, ex.getMessage(),
             null, ex);
       } catch (IOException ex) {
-        jupyterController.shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+        if (dto != null) {
+          jupyterController
+            .shutdownQuietly(project, hdfsUser, hopsworksUser, configSecret, dto.getCid(), dto.getPort());
+        }
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_MATERIALIZATION_ERROR, Level.SEVERE,
           ex.getMessage(), null, ex);
       } finally {
@@ -419,10 +426,10 @@ public class JupyterService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getRemoteGitBranches(@QueryParam("remoteURI") String remoteURI,
-      @QueryParam("keyName") String apiKeyName, @Context SecurityContext sc)
-      throws ServiceException {
+    @QueryParam("keyName") String apiKeyName, @QueryParam("gitBackend") GitBackend gitBackend,
+    @Context SecurityContext sc) throws ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Set<String> remoteBranches = jupyterNbVCSController.getRemoteBranches(user, apiKeyName, remoteURI);
+    Set<String> remoteBranches = jupyterNbVCSController.getRemoteBranches(user, apiKeyName, remoteURI, gitBackend);
     GitConfig config = new GitConfig();
     config.setBranches(remoteBranches);
     return Response.ok(config).build();

@@ -235,3 +235,8 @@ textarea.form-control {
   background-color: rgba(0,0,0,.03);
   padding: 0px;
 }
+
+.form-control.ui-select-search {
+  height: unset;
+  width: 93%;
+}
