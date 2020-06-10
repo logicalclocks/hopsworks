@@ -20,23 +20,14 @@ import io.hops.hopsworks.common.admin.services.HostServicesController;
 import io.hops.hopsworks.common.dao.command.HeartbeatReplyDTO;
 import io.hops.hopsworks.common.dao.command.SystemCommandFacade;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
-import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.hosts.HostsController;
-import io.hops.hopsworks.common.python.commands.CommandsController;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.python.library.LibraryController;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.CommandStatus;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -63,30 +54,15 @@ public class AgentController {
   @EJB
   private Settings settings;
   @EJB
-  private HostServicesFacade hostServicesFacade;
-  @EJB
-  private CondaCommandFacade condaCommandFacade;
-  @EJB
-  private CommandsController commandsController;
-  @EJB
   private LibraryFacade libraryFacade;
   @EJB
-  private LibraryController libraryController;
-  @EJB
-  private EnvironmentController environmentController;
-  @EJB
-  private ProjectFacade projectFacade;
-  @EJB
   private SystemCommandFacade systemCommandFacade;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
   @EJB
   private AgentLivenessMonitor agentLivenessMonitor;
   @EJB
   private HostsController hostsController;
   @EJB
   private HostServicesController hostServicesController;
-
 
   public void register(String hostId, String password) throws ServiceException {
     Hosts host = hostsController.findByHostname(hostId);
@@ -144,7 +120,7 @@ public class AgentController {
     response.setSystemCommands(newSystemCommands);
   }
 
-  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) throws ServiceException {
+  private void updateHostMetrics(final Hosts host, final AgentHeartbeatDTO heartbeat) {
     host.setLastHeartbeat(new Date().getTime());
     host.setNumGpus(heartbeat.numGpus);
     host.setPrivateIp(heartbeat.privateIp);
@@ -164,12 +140,10 @@ public class AgentController {
   /**
    * For each library in the conda environment figure out if it should be marked as unmutable.
    *
-   * @param condaListStr
-   * @param pyDepsInDB
+   * @param pyDepsInImage
    * @return
    */
-  public Collection<PythonDep> persistAndMarkUnmutable(Collection<PythonDep> pyDepsInImage)
-      throws ServiceException {
+  public Collection<PythonDep> persistAndMarkUnmutable(Collection<PythonDep> pyDepsInImage) {
     Collection<PythonDep> deps = new ArrayList();
 
     for (PythonDep dep: pyDepsInImage) {
@@ -177,8 +151,8 @@ public class AgentController {
       String libraryName = dep.getDependency();
 
       if (settings.getUnmutablePythonLibraryNames().contains(libraryName)) {
-        PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), MachineType.ALL,
-          dep.getInstallType(), libraryName, dep.getVersion(), true, true, dep.getBaseEnv());
+        PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), libraryName,
+            dep.getVersion(), true, true, dep.getBaseEnv());
         deps.add(pyDep);
       } else {
         PythonDep pyDep = libraryFacade.getOrCreateDep(dep);
@@ -222,14 +196,12 @@ public class AgentController {
     private final String privateIp;
     private final List<AgentServiceDTO> services;
     private final List<SystemCommand> systemCommands;
-    private final List<CondaCommands> condaCommands;
-    private final List<String> condaReport;
     private final Boolean recover;
 
     public AgentHeartbeatDTO(final String hostId, final Long agentTime, final Integer numGpus,
                              final Long memoryCapacity, final Integer cores, final String privateIp,
                              final List<AgentServiceDTO> services, final List<SystemCommand> systemCommands,
-                             final List<CondaCommands> condaCommands, final List<String> condaReport, Boolean recover) {
+                             Boolean recover) {
       this.hostId = hostId;
       this.agentTime = agentTime;
       this.numGpus = numGpus;
@@ -238,8 +210,6 @@ public class AgentController {
       this.privateIp = privateIp;
       this.services = services;
       this.systemCommands = systemCommands;
-      this.condaCommands = condaCommands;
-      this.condaReport = condaReport;
       this.recover = recover;
     }
 
@@ -273,10 +243,6 @@ public class AgentController {
 
     public List<SystemCommand> getSystemCommands() {
       return systemCommands;
-    }
-
-    public List<CondaCommands> getCondaCommands() {
-      return condaCommands;
     }
 
     public Boolean getRecover() {
@@ -320,25 +286,12 @@ public class AgentController {
     @Override
     public int compare(T t, T t1) {
 
-      if ((t instanceof CondaCommands) && (t1 instanceof CondaCommands)) {
-        return condaCommandCompare((CondaCommands) t, (CondaCommands) t1);
-      } else if ((t instanceof SystemCommand) && (t1 instanceof SystemCommand)) {
+      if ((t instanceof SystemCommand) && (t1 instanceof SystemCommand)) {
         return systemCommandCompare((SystemCommand) t, (SystemCommand) t1);
       } else {
         return 0;
       }
     }
-
-    private int condaCommandCompare(final CondaCommands t, final CondaCommands t1) {
-      if (t.getId() > t1.getId()) {
-        return 1;
-      } else if (t.getId() < t1.getId()) {
-        return -1;
-      } else {
-        return 0;
-      }
-    }
-
     private int systemCommandCompare(final SystemCommand t, final SystemCommand t1) {
       if (t.getId() > t1.getId()) {
         return 1;

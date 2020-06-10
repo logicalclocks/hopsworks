@@ -147,8 +147,6 @@ public class LibraryBuilder {
       dto.setVersion(dep.getVersion());
       dto.setChannel(dep.getRepoUrl().getUrl());
       dto.setPackageManager(LibraryDTO.PackageManager.valueOf(dep.getInstallType().name()));
-      //dto.setStatus(dep.getStatus());
-      dto.setMachine(dep.getMachineType());
       dto.setPreinstalled(Boolean.toString(dep.isPreinstalled()));
       dto.setCommands(commandBuilder.buildItems(uriInfo, resourceRequest.get(ResourceRequest.Name.COMMANDS), project,
         dep.getDependency()));

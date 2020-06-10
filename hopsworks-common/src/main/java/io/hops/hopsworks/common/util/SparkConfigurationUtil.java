@@ -139,7 +139,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HADOOP_VERSION", settings.getHadoopVersion(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HOPSWORKS_VERSION", settings.getHopsworksVersion(), HopsUtils.IGNORE);
-    addToSparkEnvironment(sparkProps, "CUDA_VERSION", settings.getCudaVersion(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "TENSORFLOW_VERSION", settings.getTensorflowVersion(), HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "KAFKA_VERSION", settings.getKafkaVersion(),HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SPARK_VERSION", settings.getSparkVersion(), HopsUtils.IGNORE);

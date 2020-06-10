@@ -63,12 +63,6 @@ import org.codehaus.jackson.annotate.JsonIgnore;
 @Table(name = "hosts", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "Hosts.findByCondaEnabled",
-        query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true"),
-  @NamedQuery(name = "Hosts.findByCondaEnabledGpu",
-          query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus > 0"),
-  @NamedQuery(name = "Hosts.findByCondaEnabledCpu",
-        query = "SELECT h FROM Hosts h WHERE h.condaEnabled = true AND h.numGpus = 0"),
   @NamedQuery(name = "Hosts.findByHostname",
           query = "SELECT h FROM Hosts h WHERE h.hostname = :hostname"),
   @NamedQuery(name = "Hosts.findByHostIp",
@@ -124,9 +118,6 @@ public class Hosts implements Serializable {
 
   @Column(name = "registered")
   private Boolean registered;
-
-  @Column(name = "conda_enabled")
-  private Boolean condaEnabled;
 
   @OneToMany(mappedBy = "host")
   private Collection<HostServices> hostServices;
@@ -220,14 +211,6 @@ public class Hosts implements Serializable {
   
   public void setRegistered(Boolean registered) {
     this.registered = registered;
-  }
-  
-  public Boolean getCondaEnabled() {
-    return condaEnabled;
-  }
-  
-  public void setCondaEnabled(Boolean condaEnabled) {
-    this.condaEnabled = condaEnabled;
   }
   
   @JsonIgnore

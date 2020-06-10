@@ -21,9 +21,9 @@
 angular.module('hopsWorksApp')
     .controller('PythonCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonService',
         'ModalService', '$interval', '$mdDialog', 'UtilsService',
-        'VariablesService', 'MachineTypeService', 'ElasticService',
+        'VariablesService', 'ElasticService',
         function ($scope, $route, $routeParams, growl, $location, PythonService, ModalService, $interval, $mdDialog,
-                  UtilsService, VariablesService, MachineTypeService, ElasticService) {
+                  UtilsService, VariablesService, ElasticService) {
 
 
             var self = this;
@@ -81,16 +81,9 @@ angular.module('hopsWorksApp')
 
             self.condaSelectedLibs = {};
             self.pipSelectedLibs = {};
-
-            self.machineTypeALL = true;
-            self.machineTypeCPU = false;
-            self.machineTypeGPU = false;
-            self.machineTypeVal = "ALL"
-
             self.environmentTypes = {};
 
             self.environmentYmlDef = {};
-            self.machines = {};
 
             self.pipSelectedLib = {
                 "channelUrl": self.condaChannel,
@@ -122,42 +115,6 @@ angular.module('hopsWorksApp')
             var showErrorGrowl = function (error) {
                 var errorMsg = typeof error.data.usrMsg !== 'undefined'? error.data.usrMsg : '';
                 growl.error(errorMsg, {title: error.data.errorMsg, ttl: 10000});
-            };
-
-            //bit ugly code but some custom behaviour was needed to fix the checkboxes:
-            //1. unchecking GPU/CPU should default to ALL
-            //2. it should not be possible to uncheck the ALL option
-            self.select = function (machineType) {
-                // you selected CPU only
-                if (self.machineTypeCPU === false && machineType === "CPU") {
-                    self.machineTypeVal = "CPU";
-                    self.machineTypeCPU = true;
-                    self.machineTypeGPU = false;
-                    self.machineTypeALL = false;
-                    // you selected GPU only
-                } else if (self.machineTypeGPU === false && machineType === "GPU") {
-                    self.machineTypeVal = "GPU";
-                    self.machineTypeCPU = false;
-                    self.machineTypeGPU = true;
-                    self.machineTypeALL = false;
-                    // you unchecked CPU
-                } else if (self.machineTypeCPU === true && machineType === "CPU") {
-                    self.machineTypeVal = "ALL";
-                    self.machineTypeCPU = false;
-                    self.machineTypeGPU = false;
-                    self.machineTypeALL = true;
-                    // you unchecked GPU
-                } else if (self.machineTypeGPU === true && machineType === "GPU") {
-                    self.machineTypeVal = "ALL";
-                    self.machineTypeCPU = false;
-                    self.machineTypeGPU = false;
-                    self.machineTypeALL = true;
-                } else {
-                    self.machineTypeVal = "ALL";
-                    self.machineTypeCPU = false;
-                    self.machineTypeGPU = false;
-                    self.machineTypeALL = true;
-                }
             };
 
             self.progress = function () {
@@ -298,18 +255,6 @@ angular.module('hopsWorksApp')
                     function (error) {
                         self.enabled = false;
                     });
-                MachineTypeService.machineTypes().then(
-                    function (success) {
-                        var environmentTypesDTO = success.data.items;
-                        var i;
-                        for (i = 0; i < environmentTypesDTO.length; i++) {
-                            self.environmentTypes[environmentTypesDTO[i].machineType] = environmentTypesDTO[i].numMachines > 0;
-                            self.machines[environmentTypesDTO[i].machineType] = environmentTypesDTO[i].numMachines;
-                        }
-                    },
-                    function (error) {
-                        showErrorGrowl(error);
-                    });
             };
             self.init();
 
@@ -424,7 +369,7 @@ angular.module('hopsWorksApp')
                 PythonService.exportEnvironment(self.projectId).then(
                     function (success) {
                         self.exporting = false;
-                        growl.success("Exporting environment operation ongoing. Check your Resources dataset for the .yml file(s) once the operation is finished.", {
+                        growl.success("Exporting environment operation ongoing. Check your Resources dataset for the .yml file once the operation is finished.", {
                             title: 'Export Ongoing...',
                             ttl: 10000
                         });
@@ -468,7 +413,6 @@ angular.module('hopsWorksApp')
                                 self.enabling = false;
                                 showErrorGrowl(error);
                             });
-
                     },
                     function (error) {
                         //The user changed their mind.
@@ -539,7 +483,6 @@ angular.module('hopsWorksApp')
                                     "installing": false
                                 };
                             }
-
                         },
                         function (error) {
                             self.pipSearching = false;
@@ -582,7 +525,6 @@ angular.module('hopsWorksApp')
                                     "installing": false
                                 };
                             }
-
                         },
                         function (error) {
                             self.condaSearching = false;
@@ -593,12 +535,10 @@ angular.module('hopsWorksApp')
                                 showErrorGrowl(error);
                             }
                         });
-
                 }
-
             };
 
-            self.install = function (lib, installType, machineType, version) {
+            self.install = function (lib, installType, version) {
                 if (version === undefined || version === null || version.length === 0 || version.toUpperCase() === "NONE") {
                     growl.error("Select a version to install from the dropdown list", {
                         title: 'Error',
@@ -611,7 +551,6 @@ angular.module('hopsWorksApp')
                     var data = {
                         "channelUrl": self.condaChannel,
                         "installType": installType,
-                        "machineType": machineType,
                         "lib": lib,
                         "version": version
                     };
@@ -619,7 +558,6 @@ angular.module('hopsWorksApp')
                     var data = {
                         "channelUrl": "pypi",
                         "installType": installType,
-                        "machineType": machineType,
                         "lib": lib,
                         "version": version
                     };
@@ -677,35 +615,5 @@ angular.module('hopsWorksApp')
                         showErrorGrowl(error);
                     });
             };
-
-
-            self.upgrade = function (condaChannel, machineType, installType, lib, version) {
-                self.upgrading[lib] = true;
-                growl.success("VAL: " + machineType, {
-                    title: 'ERROR',
-                    ttl: 3000
-                });
-                var data = {
-                    "channelUrl": condaChannel,
-                    "installType": installType,
-                    "machineType": machineType,
-                    "lib": lib,
-                    "version": version
-                };
-                PythonService.upgrade(self.projectId, data).then(
-                    function (success) {
-                        growl.success("Sending command to update: " + lib, {
-                            title: 'Updating',
-                            ttl: 3000
-                        });
-                        self.getInstalled();
-                        self.upgrading[lib] = false;
-                    },
-                    function (error) {
-                        self.upgrading[lib] = false;
-                        showErrorGrowl(error);
-                    });
-            };
-
         }
     ]);

@@ -245,6 +245,7 @@ public class JupyterConfigFilesGenerator {
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststorePem(settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM)
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
+        .setAnacondaEnvironment(settings.getAnacondaProjectDir(project))
         .build();
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("conf", template);

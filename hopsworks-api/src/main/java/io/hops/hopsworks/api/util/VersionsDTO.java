@@ -96,7 +96,6 @@ public class VersionsDTO {
     versions.add(new Version("elastic", settings.getElasticVersion()));
     versions.add(new Version("drelephant", settings.getDrelephantVersion()));
     versions.add(new Version("tensorflow", settings.getTensorflowVersion()));
-    versions.add(new Version("cuda", settings.getCudaVersion()));
     versions.add(new Version("hopsworks", settings.getHopsworksVersion()));
   }
 

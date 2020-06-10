@@ -81,10 +81,6 @@ public class HostsController {
       throw new IllegalArgumentException("Host ip was not provided");
     }
     
-    if (updateNode.getCondaEnabled() == null) {
-      updateNode.setCondaEnabled(false);
-    }
-    
     if (updateNode.getNumGpus() == null) {
       updateNode.setNumGpus(0);
     }
@@ -93,7 +89,6 @@ public class HostsController {
     Hosts finalNode = new Hosts();
     finalNode.setHostname(updateNode.getHostname());
     finalNode.setHostIp(updateNode.getHostIp());
-    finalNode.setCondaEnabled(updateNode.getCondaEnabled());
     finalNode.setNumGpus(updateNode.getNumGpus());
     hostsFacade.save(finalNode);
     URI uri = uriInfo.getBaseUriBuilder()
@@ -118,10 +113,6 @@ public class HostsController {
   
     if (updateNode.getAgentPassword() != null && !updateNode.getAgentPassword().isEmpty()) {
       storedNode.setAgentPassword(updateNode.getAgentPassword());
-    }
-  
-    if (updateNode.getCondaEnabled() != null) {
-      storedNode.setCondaEnabled(updateNode.getCondaEnabled());
     }
     hostsFacade.update(storedNode);
     return Response.noContent().build();

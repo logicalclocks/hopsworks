@@ -30,17 +30,13 @@ import io.hops.hopsworks.common.python.library.LibraryController;
 import io.hops.hopsworks.common.python.library.LibraryInstaller;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.exceptions.ElasticException;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
-import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -52,8 +48,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,17 +92,13 @@ public class EnvironmentController {
 
   private static final Logger LOGGER = Logger.getLogger(EnvironmentController.class.getName());
   
-  private static final DateTimeFormatter ELASTIC_INDEX_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-  
   public void checkCondaEnabled(Project project, String pythonVersion) throws PythonException {
     if (!project.getConda() || !pythonVersion.equals(project.getPythonVersion())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
   }
   
-  public void checkCondaEnvExists(Project project, Users user)
-      throws ServiceException, ProjectException, PythonException,
-      ElasticException {
+  public void checkCondaEnvExists(Project project, Users user) throws PythonException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
@@ -133,8 +123,8 @@ public class EnvironmentController {
     libraryController.addPythonDepsForProject(project, defaultEnvDeps);
   }
   
-  private Collection<PythonDep> createProjectInDb(Project project, Users user, String pythonVersion,
-    MachineType machineType, String environmentYml, Boolean installJupyter) throws ServiceException {
+  private Collection<PythonDep> createProjectInDb(Project project, String pythonVersion,
+    String environmentYml, Boolean installJupyter) throws ServiceException {
     
     if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
       compareToIgnoreCase("3.5") != 0 && pythonVersion.
@@ -160,25 +150,11 @@ public class EnvironmentController {
     project.setCondaEnv(condaEnv);
     projectFacade.mergeProject(project);
   }
-
-
-  private List<Hosts> validateCondaHosts(MachineType machineType) throws ServiceException {
-    List<Hosts> hosts = hostsFacade.getCondaHosts(machineType);
-    if (hosts.isEmpty()) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_NODES_UNAVAILABLE, Level.WARNING);
-    }
-    return hosts;
-  }
-  
-  public boolean condaEnabledHosts() {
-    List<Hosts> hosts = hostsFacade.getCondaHosts(MachineType.ALL);
-    return !hosts.isEmpty();
-  }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void copyOnWriteCondaEnv(Project project, Users user) throws ServiceException {
+  public void copyOnWriteCondaEnv(Project project, Users user) {
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, user,
-      project.getPythonVersion(), MachineType.ALL, null, false, false);
+      project.getPythonVersion(), null, false);
     setCondaEnv(project, true);
   }
   
@@ -186,14 +162,12 @@ public class EnvironmentController {
    *
    * @param proj
    */
-  public void removeEnvironment(Project proj, Users user)
-      throws ServiceException, ElasticException {
+  public void removeEnvironment(Project proj, Users user) {
     commandsController.deleteCommandsForProject(proj);
     if (proj.getCondaEnv()) {
       condaEnvironmentRemove(proj, user);
       setCondaEnv(proj, false);
     }
-    deleteKibanaIndex(proj);
     removePythonForProject(proj);
   }
 
@@ -206,22 +180,19 @@ public class EnvironmentController {
    * @param arg
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, Users user,
-      String arg, MachineType machineType, String environmentYml,
-      Boolean installJupyter, boolean singleHost)
-      throws ServiceException {
+      String arg, String environmentYml,Boolean installJupyter) {
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
-        user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, machineType,
-        proj, pythonVersion, "", "defaults", new Date(), arg, environmentYml, installJupyter,
-        projectUtils.getDockerImageName(proj, true));
+        user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj, pythonVersion, "", "defaults",
+        new Date(), arg, environmentYml, installJupyter, projectUtils.getDockerImageName(proj, true));
     condaCommandFacade.save(cc);
   }
   
-  private void condaEnvironmentRemove(Project proj, Users user) throws ServiceException {
+  private void condaEnvironmentRemove(Project proj, Users user) {
     condaEnvironmentOp(CondaOp.REMOVE, "", proj, user,
-      "", MachineType.ALL, null, false, false);
+      "", null, false);
   }
     
   public CondaCommands getOngoingEnvCreation(Project proj) {
@@ -257,7 +228,7 @@ public class EnvironmentController {
   }
     
   public String[] exportEnv(Project project, Users user, String projectRelativeExportPath)
-      throws PythonException, ServiceException {
+      throws PythonException {
     if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
@@ -267,17 +238,17 @@ public class EnvironmentController {
     long exportTime = date.getTime();
     String ymlPath = projectRelativeExportPath + "/" + "environment_" + exportTime + ".yml";
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonVersion(), project, user,
-        ymlPath, MachineType.CPU, null, false, true);
+        ymlPath,  null, false);
     String[] result = {ymlPath};
     return result;
   }
   
   public void createEnv(Project project, Users user, String version, boolean createBaseEnv) throws PythonException,
-      ServiceException, ProjectException {
+      ServiceException {
     if (project.getConda() || project.getCondaEnv()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
-    createProjectInDb(project, user, version, MachineType.ALL, null, false);
+    createProjectInDb(project, version, null, false);
     project.setPythonVersion(version);
     projectFacade.update(project);
     synchronizeDependencies(project, createBaseEnv);
@@ -321,26 +292,6 @@ public class EnvironmentController {
         dfs.closeDfsClient(udfso);
       }
     }
-  }
-
-  public void createKibanaIndex(Project project, Users user)
-      throws ServiceException,
-      ProjectException, ElasticException {
-    String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN.replace("*",
-        LocalDateTime.now().format(ELASTIC_INDEX_FORMATTER));
-    if (!elasticController.indexExists(indexName)) {
-      elasticController.createIndex(indexName);
-    }
-    // Kibana index pattern for conda commands logs
-    elasticController.createIndexPattern(project, user,
-            project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN);
-  }
-
-  private void deleteKibanaIndex(Project project)
-      throws ElasticException {
-    String indexName = project.getName().toLowerCase() + Settings.ELASTIC_KAGENT_INDEX_PATTERN;
-    elasticController.deleteIndex(indexName);
-    elasticController.deleteIndexPattern(project, indexName);
   }
   
   public void uploadYmlInProject(Project project, Users user, String environmentYml, String relativePath)

@@ -392,15 +392,6 @@ describe "On #{ENV['OS']}" do
         expect(res).to eq(expected)
       end
 
-      it "filters by conda_enabled" do
-        filter = "?sort_by=id:asc&filter_by=conda_enabled:true"
-        admin_get_all_cluster_nodes(filter)
-        res = json_body[:items].map {|h| h[:id]}
-        admin_get_all_cluster_nodes()
-        expected = json_body[:items].select{|h| h[:condaEnabled] == true}.map {|h| h[:id]}.sort
-        expect(res).to eq(expected)
-      end
-
       it "should get only limit=x nodes" do
         admin_get_all_cluster_nodes()
         count = json_body[:count]

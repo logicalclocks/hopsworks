@@ -107,7 +107,7 @@ describe "On #{ENV['OS']}" do
             if !@project[:python_version].nil? and !@project[:python_version].empty?
               delete_env(@project[:id], python_version)
             end
-            install_library(@project[:id], python_version, 'requests', 'conda', '2.20.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'requests', 'conda', '2.20.0', conda_channel)
             expect_status(404)
           end
 
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
             expect(CondaCommands.find_by(docker_image: @project[:projectname].downcase)).to be nil
 
             # Install a library to create the new environment
-            install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', conda_channel)
             expect_status(201)
             es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
 
@@ -227,64 +227,58 @@ describe "On #{ENV['OS']}" do
 
           it 'should fail to install library if package manager not set' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', '', '9.0.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', '', '9.0.0', conda_channel)
             expect_status(400)
           end
 
           it 'should fail to install library if version not set' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda', '', 'CPU', conda_channel)
-            expect_status(400)
-          end
-
-          it 'should fail to install library if machine type not set' do
-            @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda', '9.0.0', '', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'conda', '', conda_channel)
             expect_status(400)
           end
 
           it 'should fail to install library if env version wrong' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version_2, 'dropbox', 'conda', '9.0.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version_2, 'dropbox', 'conda', '9.0.0', conda_channel)
             expect_status(404)
           end
 
           it 'should fail to install library if library contains forbidden chars url encoded' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, '%26%20touch%20%2Ftmp%2Ftest', 'conda', '9.0.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, '%26%20touch%20%2Ftmp%2Ftest', 'conda', '9.0.0', conda_channel)
             expect_status(422)
           end
 
           it 'should fail to install library if version number contains forbidden chars' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda', 'rm -rf *', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'conda', 'rm -rf *', conda_channel)
             expect_status(422)
           end
 
           it 'should fail to install library if conda channel contains forbidden chars' do
             @project = create_env_and_update_project(@project, python_version)
             install_library(@project[:id], python_version, 'dropbox', 'conda',
-                            '9.0.0', 'CPU', 'https%3A%2F%2Fhello.com%2F%20%26test')
+                            '9.0.0', 'https%3A%2F%2Fhello.com%2F%20%26test')
             expect_status(422)
           end
 
           it 'should fail if you try to use another package manager' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'cargo', '9.0.0', 'CPU', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'cargo', '9.0.0', conda_channel)
             expect_status(404)
           end
 
           it 'should fail to install same library with upper and lower case variation' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'scipy', 'pip', '1.2.2', 'ALL', conda_channel)
+            install_library(@project[:id], python_version, 'scipy', 'pip', '1.2.2', conda_channel)
             expect_status(409) #scipy is in the base env
-            install_library(@project[:id], python_version, 'SCIPY', 'pip', '1.2.2', 'ALL', conda_channel)
+            install_library(@project[:id], python_version, 'SCIPY', 'pip', '1.2.2', conda_channel)
             expect_status(409)
           end
 
           it 'install libraries' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', 'ALL', conda_channel)
+            install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', conda_channel)
             expect_status(201)
 
             get_library_commands(@project[:id], python_version, 'imageio')
@@ -299,7 +293,7 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', 'ALL', conda_channel)
+            install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', conda_channel)
             expect_status(201)
 
             wait_for do
@@ -316,16 +310,11 @@ describe "On #{ENV['OS']}" do
             hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
 
-            expect(tensorflow_library[:machine]).to eq ("ALL")
-
-            expect(tflearn_library[:machine]).to eq ("ALL")
             expect(tflearn_library[:packageManager]).to eq ("PIP")
             expect(tflearn_library[:version]).to eq ("0.3.2")
 
-            expect(hops_library[:machine]).to eq ("ALL")
             expect(hops_library[:packageManager]).to eq ("PIP")
 
-            expect(imageio_library[:machine]).to eq("ALL")
             expect(imageio_library[:packageManager]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.2.0")
 
@@ -418,7 +407,7 @@ describe "On #{ENV['OS']}" do
             expect_status(201)
 
             # Install a library to create the new environment
-            install_library(project2[:id], python_version, 'paramiko', 'conda', '2.4.2', 'CPU', conda_channel)
+            install_library(project2[:id], python_version, 'paramiko', 'conda', '2.4.2', conda_channel)
             expect_status(201)
             wait_for do
               CondaCommands.find_by(docker_image: project2[:projectname].downcase).nil?
@@ -447,79 +436,5 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
-
-    describe "#Creation not executed on non-conda hosts" do
-      context 'with admin rights' do
-        before :each do
-          with_valid_project
-        end
-
-        it 'should be able to disable conda on a host' do
-          with_admin_session
-          if num_hosts > 1
-            # In case we have multi vms disable the one on which Hopsworks is not running
-            admin_create_update_cluster_node("hopsworks1.logicalclocks.com", {condaEnabled: "false"})
-          else
-            admin_create_update_cluster_node("hopsworks0.logicalclocks.com", {condaEnabled: "false"})
-          end
-          expect_status(204)
-        end
-
-        it 'should fail to create an environment on the local machine - single vm' do
-          if num_hosts > 1
-            skip "Multi vm setup."
-          end
-
-          create_session(@user[:email], "Pass123")
-          create_env(@project, python_version)
-          expect_status(503)
-        end
-
-        it 'should not have created any conda_commands in the db - single vm' do
-          if num_hosts > 1
-            skip "Multi vm setup."
-          end
-
-          expect(CondaCommands.find_by(docker_image: @project[:projectname]).downcase).to be nil
-        end
-
-        it 'should create an environment on the other machines - multi vm' do
-          if num_hosts == 1
-            skip "Single vm setup"
-          end
-
-          create_session(@user[:email], "Pass123")
-          create_env(@project, python_version)
-          expect_status(201)
-        end
-
-        it 'should delete the environment from the other machines - multi vm' do
-          if num_hosts == 1
-            skip "Singe vm setup"
-          end
-
-          delete_env(@project[:id], python_version)
-          expect_status(204)
-        end
-
-        it 'should be able to re-enable conda on a host' do
-          with_admin_session
-          if num_hosts > 1
-            # In case we have multi vms disable the one on which Hopsworks is not running
-            admin_create_update_cluster_node("hopsworks1.logicalclocks.com", {condaEnabled: "true"})
-          else
-            admin_create_update_cluster_node("hopsworks0.logicalclocks.com", {condaEnabled: "true"})
-          end
-          expect_status(204)
-        end
-
-        it 'should be able to create an environment' do
-          create_session(@user[:email], "Pass123")
-          create_env(@project, python_version)
-          expect_status(201)
-        end
-      end
-    end
-
   end
 end

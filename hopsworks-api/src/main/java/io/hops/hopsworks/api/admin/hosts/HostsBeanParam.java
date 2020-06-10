@@ -34,8 +34,7 @@ public class HostsBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=hostname:hopsworks0&registered:true",
     allowableValues = "filter_by=hostname:hopsworks0.com,filter_by=host_ip:192.168.1.1," +
-      "filter_by=public_ip:192.168.1.1,filter_by=private_ip:192.168.1.1,filter_by=registered:true," +
-      "filter_by=conda_enabled:true",
+      "filter_by=public_ip:192.168.1.1,filter_by=private_ip:192.168.1.1,filter_by=registered:true",
     allowMultiple = true)
   private Set<FilterBy> filter;
 

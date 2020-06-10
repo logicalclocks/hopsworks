@@ -35,7 +35,6 @@ public class HostsDTO extends RestDTO<HostsDTO> implements Serializable {
   private Long memoryCapacity;
   private Integer numGpus;
   private Boolean registered;
-  private Boolean condaEnabled;
   
   public HostsDTO() {
   }
@@ -68,12 +67,7 @@ public class HostsDTO extends RestDTO<HostsDTO> implements Serializable {
     if (host.getRegistered() != null) {
       this.registered = host.getRegistered();
     }
-    if (host.getCondaEnabled() != null) {
-      this.condaEnabled = host.getCondaEnabled();
-    }
   }
-  
-  
   
   public Integer getId() {
     return id;
@@ -161,13 +155,5 @@ public class HostsDTO extends RestDTO<HostsDTO> implements Serializable {
   
   public void setRegistered(Boolean registered) {
     this.registered = registered;
-  }
-  
-  public Boolean getCondaEnabled() {
-    return condaEnabled;
-  }
-  
-  public void setCondaEnabled(Boolean condaEnabled) {
-    this.condaEnabled = condaEnabled;
   }
 }

@@ -173,13 +173,6 @@ public class CondaCommands implements Serializable {
   private CondaInstallType installType;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-          max = 52)
-  @Column(name = "machine_type")
-  @Enumerated(EnumType.STRING)
-  private MachineType machineType;
-  @Basic(optional = false)
-  @NotNull
   @Column(name = "created")
   @Temporal(TemporalType.TIMESTAMP)
   private Date created;
@@ -202,8 +195,7 @@ public class CondaCommands implements Serializable {
   }
 
   public CondaCommands(String user, Users userId, CondaOp op,
-                       CondaStatus status, CondaInstallType installType,
-                       MachineType machineType, Project project, String lib, String version,
+                       CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
                        String dockerImage) {
     if (op  == null || user == null || project == null) { 
@@ -215,7 +207,6 @@ public class CondaCommands implements Serializable {
     this.projectId = project;
     this.status = status;
     this.installType = installType;
-    this.machineType = machineType;
     this.created = created;
     this.channelUrl = channelUrl;
     this.lib = lib;
@@ -315,14 +306,6 @@ public class CondaCommands implements Serializable {
     this.installType = installType;
   }
 
-  public MachineType getMachineType() {
-    return machineType;
-  }
-
-  public void setMachineType(MachineType machineType) {
-    this.machineType = machineType;
-  }
-
   public String getEnvironmentYml() {
     return environmentYml;
   }
@@ -379,8 +362,8 @@ public class CondaCommands implements Serializable {
   @Override
   public String toString() {
     return "[ id=" + id + ", proj=" + projectId.getName()  + ", op=" + op + ", installType=" + installType 
-        + ", hostType=" + machineType + ", lib=" + lib + ", version=" + version + ", arg=" + arg 
-        + ", channel=" + channelUrl + ", errorMsg=" + errorMsg + " ]";
+        + ", lib=" + lib + ", version=" + version + ", arg=" + arg
+        + ", channel=" + channelUrl + "]";
   }
 
   public Users getUserId() {
