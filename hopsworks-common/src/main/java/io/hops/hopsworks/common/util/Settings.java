@@ -938,6 +938,10 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_CONTAINER_RUNTIME = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_TYPE";
   public static final String SPARK_EXECUTOR_DOCKER_IMAGE = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
   public static final String SPARK_EXECUTOR_DOCKER_MOUNTS = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
+
+  //nccl
+  public static final String NCCL_SOCKET_NTHREADS = "NCCL_SOCKET_NTHREADS";
+  public static final String NCCL_NSOCKS_PERTHREAD = "NCCL_NSOCKS_PERTHREAD";
   
   //Hive config
   public static final String HIVE_SITE = "hive-site.xml";

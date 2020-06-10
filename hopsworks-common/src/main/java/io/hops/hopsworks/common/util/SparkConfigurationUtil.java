@@ -236,6 +236,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
               String.valueOf(sparkJobConfiguration.getDynamicAllocationMaxExecutors() +
                 sparkJobConfiguration.getNumPs())));
         }
+        //These values were set based on:
+        //https://docs.nvidia.com/deeplearning/nccl/archives/nccl_256/nccl-developer-guide/docs/env.html
+        addToSparkEnvironment(sparkProps, "NCCL_SOCKET_NTHREADS", "2", HopsUtils.OVERWRITE);
+        addToSparkEnvironment(sparkProps, "NCCL_NSOCKS_PERTHREAD", "8", HopsUtils.OVERWRITE);
+
       } else if(experimentType == ExperimentType.PARALLEL_EXPERIMENTS) {
         sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
           new ConfigProperty(
