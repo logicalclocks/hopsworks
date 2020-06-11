@@ -206,17 +206,22 @@ public class LibraryInstaller {
     writer.newLine();
     writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()));
     writer.newLine();
+    writer.write("ENV C_INCLUDE_PATH=" + settings.getAnacondaProjectDir(cc.getProjectId()) + "/include");
+    writer.newLine();
+    writer.write("ENV CPLUS_INCLUDE_PATH=" + settings.getAnacondaProjectDir(cc.getProjectId()) + "/include");
+    writer.newLine();
     writer.write(
         "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
             + " --mount=type=bind,source=.pip,target=/root/.pip ");
     switch (cc.getInstallType()) {
       case CONDA:
-        writer.write("/srv/hops/anaconda/bin/conda install -y -n theenv -c " + cc.getChannelUrl() + " " + cc.
+        writer.write(settings.getAnacondaDir() + "/bin/conda install -y -n " +
+            settings.getCurrentCondaEnvironment(cc.getProjectId()) + " -c " + cc.getChannelUrl() + " " + cc.
             getLib() + "=" + cc.getVersion());
         break;
       case PIP:
-        writer.write("/srv/hops/anaconda/envs/theenv/bin/pip install --upgrade " + cc.getLib() + "==" + cc.
-            getVersion());
+        writer.write(settings.getAnacondaProjectDir(cc.getProjectId()) + "/bin/pip install --upgrade " +
+            cc.getLib() + "==" + cc.getVersion());
         break;
       case ENVIRONMENT:
       default:
@@ -261,10 +266,12 @@ public class LibraryInstaller {
     writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()) + "\n");
     switch (cc.getInstallType()) {
       case CONDA:
-        writer.write("RUN /srv/hops/anaconda/bin/conda remove -y -n theenv " + cc.getLib() + "\n");
+        writer.write("RUN " + settings.getAnacondaDir() + "/bin/conda remove -y -n " +
+            settings.getCurrentCondaEnvironment(cc.getProjectId()) + " " + cc.getLib() + "\n");
         break;
       case PIP:
-        writer.write("RUN /srv/hops/anaconda/envs/theenv/bin/pip uninstall -y " + cc.getLib() + "\n");
+        writer.write("RUN " + settings.getAnacondaProjectDir(cc.getProjectId()) + "/bin/pip uninstall -y " +
+            cc.getLib() + "\n");
         break;
       case ENVIRONMENT:
       default:
