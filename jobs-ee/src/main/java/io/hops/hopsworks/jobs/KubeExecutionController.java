@@ -85,11 +85,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private static final Logger LOGGER = Logger.getLogger(KubeExecutionController.class.getName());
   
   private static final String SEPARATOR = "-";
-  private static final String ANACONDA = "anaconda";
   private static final String CERTS = "certs";
   private static final String HADOOP_CONF = "hadoopconf";
   private static final String PYTHON = "python";
-  private static final String PYTHON_NVIDIA = "python_nvidia";
   private static final String PYTHON_PREFIX = PYTHON + SEPARATOR;
   
   private static final String JWT = "jwt";
@@ -230,7 +228,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     jobEnv.put("ELASTIC_ENDPOINT", settings.getElasticRESTEndpoint());
     jobEnv.put("HADOOP_VERSION", settings.getHadoopVersion());
     jobEnv.put("HOPSWORKS_VERSION", settings.getHopsworksVersion());
-    jobEnv.put("CUDA_VERSION", settings.getCudaVersion());
     jobEnv.put("TENSORFLOW_VERSION", settings.getTensorflowVersion());
     jobEnv.put("KAFKA_VERSION", settings.getKafkaVersion());
     jobEnv.put("SPARK_VERSION", settings.getSparkVersion());

@@ -40,12 +40,9 @@ package io.hops.hopsworks.admin.maintenance;
 
 import io.hops.hopsworks.common.agent.AgentLivenessMonitor;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
-import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.ProcessDescriptor;
-import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.RemoteCommandResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -63,16 +60,13 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
 import javax.faces.context.FacesContext;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -94,8 +88,6 @@ public class NodesBean implements Serializable {
   @EJB
   private OSProcessExecutor osProcessExecutor;
   @EJB
-  private CondaCommandFacade condaCommandsFacade;
-  @EJB
   private HostsController hostsController;
 
 
@@ -110,71 +102,6 @@ public class NodesBean implements Serializable {
 
   private String output;
   private Future<String> future;
-
-  class CondaTask implements Callable<String> {
-
-    private final Logger logger = Logger.getLogger(getClass().getSimpleName());
-
-    private final FacesContext context;
-    private final String hostname;
-
-    public CondaTask(FacesContext context, String hostname) {
-      this.context = context;
-      this.hostname = hostname;
-    }
-
-    public String getHostname() {
-      return hostname;
-    }
-
-    @Override
-    public String call() {
-      FacesMessage message;
-      String output = "";
-      try {
-
-        String prog = settings.getHopsworksDomainDir() + "/bin/anaconda-rsync.sh";
-        int exitValue;
-        Integer id = 1;
-  
-        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-            .addCommand(prog)
-            .addCommand(this.hostname)
-            .redirectErrorStream(true)
-            .setWaitTimeout(10L, TimeUnit.MINUTES)
-            .build();
-        
-        try {
-          ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
-          exitValue = processResult.getExitCode();
-          if (exitValue == 0) {
-            output = "SUCCESS. \r\n" + processResult.getStdout();
-          } else {
-            if (processResult.processExited()) {
-              output = "FAILED. \r\n" + processResult.getStdout();
-            } else {
-              output = "Process TIMED-OUT. \r\n" + processResult.getStdout();
-            }
-          }
-        } catch (IOException ex) {
-          logger.log(Level.SEVERE, "Problem zipping anaconda libraries for synchronization: {0}", ex.toString());
-          exitValue = -2;
-        }
-        
-        if (exitValue != 0) {
-          MessagesController.addInfoMessage("Problem with synchronizing Anaconda libraries to host: " + hostname, null);
-        } else {
-          MessagesController.addInfoMessage("Succes: synchronized Anaconda libraries with host: " + hostname, null);
-        }
-
-      } catch (Exception e) {
-        output = "Error.";
-        message = new FacesMessage(FacesMessage.SEVERITY_FATAL,
-            "Communication Error", e.toString());
-      }
-      return output;
-    }
-  }
 
   public NodesBean() {
     dialogOptions = new HashMap<>(3);
@@ -231,24 +158,15 @@ public class NodesBean implements Serializable {
       storedHost.setPrivateIp(host.getPrivateIp());
       storedHost.setAgentPassword(host.getAgentPassword());
       storedHost.setRegistered(host.getRegistered());
-      storedHost.setCondaEnabled(host.getCondaEnabled());
       hostsFacade.update(storedHost);
       MessagesController.addInfoMessage("Updated host");
       logger.log(Level.FINE, "Updated Host with ID: " + host.getHostname() + " Hostname: " + host.getHostIp()
-          + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp()
-          + " Conda Enabled: " + host.getCondaEnabled());
+          + " Public IP: " + host.getPublicIp() + " Private IP: " + host.getPrivateIp());
     }
   }
 
   public void dialogAddNewNode() {
     RequestContext.getCurrentInstance().openDialog("addNewNodeDialog", dialogOptions, null);
-  }
-
-  public void rsyncAnacondaLibs(String hostname) {
-
-    CondaTask condaTask = new CondaTask(FacesContext.getCurrentInstance(), hostname);
-    this.future = executorService.submit(condaTask);
-
   }
 
   public void typedNewNodeDetails() {
@@ -273,7 +191,6 @@ public class NodesBean implements Serializable {
         Hosts newNode = new Hosts();
         newNode.setHostname(newHostname);
         newNode.setHostIp(newNodeHostIp);
-        newNode.setCondaEnabled(false);
         allNodes.add(newNode);
         hostsFacade.update(newNode);
         logger.log(Level.INFO, "Added new cluster node with ID " + newNode.getHostname());

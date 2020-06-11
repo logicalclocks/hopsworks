@@ -31,7 +31,6 @@ public class HostDTO implements Serializable {
   private Long memoryCapacity;
   private Integer numGpus;
   private Boolean registered;
-  private Boolean condaEnabled;
   
   public HostDTO() {
   }
@@ -123,12 +122,5 @@ public class HostDTO implements Serializable {
   public void setRegistered(Boolean registered) {
     this.registered = registered;
   }
-  
-  public Boolean getCondaEnabled() {
-    return condaEnabled;
-  }
-  
-  public void setCondaEnabled(Boolean condaEnabled) {
-    this.condaEnabled = condaEnabled;
-  }
+
 }

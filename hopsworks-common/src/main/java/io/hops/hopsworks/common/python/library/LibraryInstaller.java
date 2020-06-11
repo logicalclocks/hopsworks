@@ -30,7 +30,6 @@ import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 import java.io.BufferedWriter;
@@ -124,15 +123,13 @@ public class LibraryInstaller {
           } catch (Throwable ex) {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.FAILED, cc.getInstallType(), cc.getMachineType(),
-                cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getVersion(),
-                cc.getChannelUrl(), ex.toString());
+                cc.getId(), CondaStatus.FAILED, cc.getInstallType(), cc.getArg(), cc.getProjectId(), cc.getUserId(),
+                cc.getOp(), cc.getLib(), cc.getVersion(), cc.getChannelUrl(), ex.toString());
             continue;
           }
           commandsController.updateCondaCommandStatus(
-              cc.getId(), CondaStatus.SUCCESS, cc.getInstallType(), cc.getMachineType(),
-              cc.getArg(), cc.getProjectId(), cc.getUserId(), cc.getOp(), cc.getLib(), cc.getVersion(),
-              cc.getChannelUrl());
+              cc.getId(), CondaStatus.SUCCESS, cc.getInstallType(), cc.getArg(), cc.getProjectId(), cc.getUserId(),
+              cc.getOp(), cc.getLib(), cc.getVersion(), cc.getChannelUrl());
         } catch (ServiceException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId());
         }
@@ -144,7 +141,7 @@ public class LibraryInstaller {
 
   private void createNewImage(CondaCommands cc) throws IOException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
-    baseDir.mkdir();
+    baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
     BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile));
     writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()));
@@ -223,7 +220,7 @@ public class LibraryInstaller {
         break;
       case ENVIRONMENT:
       default:
-        throw new UnsupportedOperationException("instal type unknown: " + cc.getInstallType());
+        throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
     }
 
     writer.close();
@@ -258,7 +255,7 @@ public class LibraryInstaller {
 
   private void uninstallLibrary(CondaCommands cc) throws IOException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
-    baseDir.mkdir();
+    baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
     BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile));
     writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()) + "\n");
@@ -271,7 +268,7 @@ public class LibraryInstaller {
         break;
       case ENVIRONMENT:
       default:
-        throw new UnsupportedOperationException("instal type unknown: " + cc.getInstallType());
+        throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
     }
 
     writer.close();
@@ -370,14 +367,14 @@ public class LibraryInstaller {
         channel = split[3].trim().isEmpty() ? channel : split[3];
       }
 
-      CondaInstallType instalType = CondaInstallType.PIP;
+      CondaInstallType installType = CondaInstallType.PIP;
       if (!(channel.equals("pypi"))) {
-        instalType = CondaInstallType.CONDA;
+        installType = CondaInstallType.CONDA;
       }
       AnacondaRepo repo = libraryFacade.getRepo(channel, true);
       boolean cannotBeRemoved = channel.equals("default") ? true : false;
-      PythonDep pyDep = libraryFacade.getOrCreateDep(repo, MachineType.ALL,
-          instalType, libraryName, version, false, cannotBeRemoved);
+      PythonDep pyDep = libraryFacade.getOrCreateDep(repo, installType, libraryName, version,
+          false, cannotBeRemoved);
       deps.add(pyDep);
     }
     return deps;

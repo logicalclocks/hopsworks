@@ -45,14 +45,13 @@ angular.module('hopsWorksApp')
         function($uibModalInstance, DatasetBrowserService, growl, projectId, regex, errorMsg) {
 
             var self = this;
-
             self.selectedFilePath;
             self.environmentYmlDef = {};
-            self.envMode = "";
             self.isDir = false;
             self.selected = -1;
             self.datasetBrowser = new DatasetBrowserService(projectId, "ALL", 114);
             self.datasetBrowser.getAll();
+
             /**
              * Close the modal dialog.
              * @returns {undefined}
@@ -74,19 +73,12 @@ angular.module('hopsWorksApp')
 
             self.confirmSelection = function(pythonCtrl, isDirectory) {
 
-                var singleMachineType = !(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU']);
-
-                if (singleMachineType && self.environmentYmlDef.allYmlPath === "") {
+                if (self.environmentYmlDef.ymlPath === "") {
                     growl.error("Please select a .yml file for your Anaconda environment.", {
                         title: "No .yml selected",
                         ttl: 15000
                     });
-                } else if (!singleMachineType && (self.environmentYmlDef.cpuYmlPath === "" || self.environmentYmlDef.gpuYmlPath === "")) {
-                    growl.error("Please select a CPU and GPU .yml file for your Anaconda environment.", {
-                        title: "Select .yml files",
-                        ttl: 15000
-                    });
-                } else {
+                }  else {
                     $uibModalInstance.close(self.environmentYmlDef);
                 }
             };
@@ -97,18 +89,8 @@ angular.module('hopsWorksApp')
                     self.datasetBrowser.select(file, index)
                 } else {
                     self.select(file.attributes.path, false);
-                    if (self.envMode === 'CPU') {
-                        self.environmentYmlDef.cpuYmlPath = file.attributes.path;
-                        self.envMode = "";
-                    } else if (self.envMode === 'GPU') {
-                        self.environmentYmlDef.gpuYmlPath = file.attributes.path;
-                        self.envMode = "";
-                    } else if (self.envMode === 'ALL') {
-                        self.environmentYmlDef.allYmlPath = file.attributes.path;
-                        self.envMode = "";
-                    }
+                    self.environmentYmlDef.ymlPath = file.attributes.path;
                 }
             };
-
         }
     ]);

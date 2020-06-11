@@ -21,7 +21,6 @@ import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -183,10 +182,6 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
       case STATUS_NEQ:
         setStatus(filterBy, q);
         break;
-      case MACHINE_TYPE:
-      case MACHINE_TYPE_NEQ:
-        setMachineType(filterBy, q);
-        break;
       case HOST_IN:
       case HOST_NIN:
         setHosts(filterBy, q);
@@ -208,11 +203,6 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
   private void setStatus(AbstractFacade.FilterBy filterBy, Query q) {
     List<CondaStatus> status = getEnumValues(filterBy, CondaStatus.class);
     q.setParameter(filterBy.getField(), status);
-  }
-
-  private void setMachineType(AbstractFacade.FilterBy filterBy, Query q) {
-    List<MachineType> machineTypes = getEnumValues(filterBy, MachineType.class);
-    q.setParameter(filterBy.getField(), machineTypes);
   }
 
   private void setHosts(AbstractFacade.FilterBy filterBy, Query q) {//set name
@@ -269,8 +259,6 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     OP_NEQ("OP_NEQ", "c.op NOT IN :op_neq ", "op_neq", "CREATE"),
     STATUS("STATUS", "c.status IN :status ", "status", "NEW"),
     STATUS_NEQ("STATUS_NEQ", "c.status NOT IN :status_neq ", "status_neq", "NEW"),
-    MACHINE_TYPE("MACHINE_TYPE", "c.machineType IN :machineType ", "machineType", "ALL"),
-    MACHINE_TYPE_NEQ("MACHINE_TYPE_NEQ", "c.machineType NOT IN :machineType_neq ", "machineType_neq", "CPU"),
     HOST_IN("HOST_IN", "c.hostId IN :hostId_in ", "hostId_in", "1"),
     HOST_NIN("HOST_NIN", "c.hostId NOT IN :hostId_nin ", "hostId_nin", "1"),
     HOST_LT("HOST_LT", "c.hostId < :hostId_lt ", "hostId_lt", "2"),

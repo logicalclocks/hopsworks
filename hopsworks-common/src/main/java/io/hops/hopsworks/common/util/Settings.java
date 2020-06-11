@@ -258,7 +258,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_ELASTIC_VERSION = "elastic_version";
   private static final String VARIABLE_DRELEPHANT_VERSION = "drelephant_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
-  private static final String VARIABLE_CUDA_VERSION = "cuda_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   private static final String VARIABLE_HOPS_VERIFICATION_VERSION = "hops_verification_version";
 
@@ -588,7 +587,6 @@ public class Settings implements Serializable {
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
       HOPSWORKS_REST_ENDPOINT = setStrVar(VARIABLE_HOPSWORKS_REST_ENDPOINT,
           HOPSWORKS_REST_ENDPOINT);
-      CUDA_DIR = setDirVar(VARIABLE_CUDA_DIR, CUDA_DIR);
       ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
@@ -644,14 +642,11 @@ public class Settings implements Serializable {
       ELASTIC_VERSION = setStrVar(VARIABLE_ELASTIC_VERSION, ELASTIC_VERSION);
       DRELEPHANT_VERSION = setStrVar(VARIABLE_DRELEPHANT_VERSION, DRELEPHANT_VERSION);
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
-      CUDA_VERSION = setStrVar(VARIABLE_CUDA_VERSION, CUDA_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
       HOPS_VERIFICATION_VERSION = setStrVar(VARIABLE_HOPS_VERIFICATION_VERSION, HOPS_VERIFICATION_VERSION);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
-      PROVIDED_PYTHON_LIBRARY_NAMES = toSetFromCsv(
-          setStrVar(VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES, DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES), ",");
       UNMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
           setStrVar(VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES),
           ",");
@@ -1733,18 +1728,10 @@ public class Settings implements Serializable {
     return ANACONDA_DIR;
   }
 
-  private String CUDA_DIR = "/usr/local/cuda";
-
-  public synchronized String getCudaDir() {
-    checkCache();
-    return CUDA_DIR;
-  }
-
   private String condaEnvName = "theenv";
   /**
    * Constructs the path to the project environment in Anaconda
    *
-   * @param project project
    * @return conda dir
    */
   public String getAnacondaProjectDir(Project project) {
@@ -1755,9 +1742,6 @@ public class Settings implements Serializable {
   public String getCurrentCondaEnvironment(Project project) {
     return condaEnvName;
   }
-  
-  
-  
   
   private Boolean ANACONDA_ENABLED = true;
 
@@ -2003,9 +1987,7 @@ public class Settings implements Serializable {
   public static final String ELASTIC_BEAMSDKWORKER = "beamsdkworker";
   public static final String ELASTIC_LOGS_INDEX_PATTERN = "_" + Settings.ELASTIC_LOGS_INDEX + "-*";
   public static final String ELASTIC_SERVING_INDEX = "serving";
-  public static final String ELASTIC_KAGENT_INDEX = "kagent";
   public static final String ELASTIC_SERVING_INDEX_PATTERN = "_" + ELASTIC_SERVING_INDEX + "-*";
-  public static final String ELASTIC_KAGENT_INDEX_PATTERN = "_" + ELASTIC_KAGENT_INDEX + "-*";
 
   public static final String ELASTIC_BEAMJOBSERVER_INDEX_PATTERN =
     "_" + Settings.ELASTIC_BEAMJOBSERVER + "-*";
@@ -2013,7 +1995,6 @@ public class Settings implements Serializable {
     "_" + Settings.ELASTIC_BEAMSDKWORKER + "-*";
   public static final String ELASTIC_LOG_INDEX_REGEX = ".*_" + ELASTIC_LOGS_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_SERVING_INDEX_REGEX = ".*_" + ELASTIC_SERVING_INDEX+ "-\\d{4}.\\d{2}.\\d{2}";
-  public static final String ELASTIC_KAGENT_INDEX_REGEX = ".*_" + ELASTIC_KAGENT_INDEX + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_BEAMJOBSERVER_INDEX_REGEX =
     ".*_" + ELASTIC_BEAMJOBSERVER + "-\\d{4}.\\d{2}.\\d{2}";
   public static final String ELASTIC_BEAMSDKWORKER_INDEX_REGEX =
@@ -3079,19 +3060,7 @@ public class Settings implements Serializable {
     return new HashSet<>(Splitter.on(separator).trimResults().splitToList(csv));
   }
 
-  // User upgradable libraries we installed for them
-  private Set<String> PROVIDED_PYTHON_LIBRARY_NAMES;
-  private static final String VARIABLE_PROVIDED_PYTHON_LIBRARY_NAMES = "provided_python_lib_names";
-  private static final String DEFAULT_PROVIDED_PYTHON_LIBRARY_NAMES =
-      "hops, pandas, numpy, matplotlib, maggy, tqdm, Flask, scikit-learn, avro, seaborn, confluent-kafka, " +
-          "hops-petastorm, opencv-python, tfx, tensorflow-model-analysis, pytorch, torchvision";
-
-  public synchronized Set<String> getProvidedPythonLibraryNames() {
-    checkCache();
-    return PROVIDED_PYTHON_LIBRARY_NAMES;
-  }
-
-  // Libraries we preinstalled users should not mess with
+  // Libraries that should not be uninstallable
   private Set<String> UNMUTABLE_PYTHON_LIBRARY_NAMES;
   private static final String VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
   private static final String DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES = 
@@ -3108,13 +3077,6 @@ public class Settings implements Serializable {
   public synchronized String getHopsworksVersion() {
     checkCache();
     return HOPSWORKS_VERSION;
-  }
-
-  private String CUDA_VERSION;
-
-  public synchronized String getCudaVersion() {
-    checkCache();
-    return CUDA_VERSION;
   }
 
   private String TENSORFLOW_VERSION;

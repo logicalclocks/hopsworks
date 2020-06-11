@@ -85,12 +85,10 @@ import static java.util.logging.Level.SEVERE;
 @Stateless
 @KubeStereotype
 public class KubeJupyterManager extends JupyterManagerImpl implements JupyterManager {
-  private static final String ANACONDA = "anaconda";
   private static final String CERTS = "certs";
   private static final String CONF = "conf";
   private static final String HADOOP_CONF = "hadoopconf";
   private static final String JUPYTER = "jupyter";
-  private static final String JUPYTER_NVIDIA = "jupyter_nvidia";
   private static final String JWT = "jwt";
   private static final String KERNELS = "kernels";
   private static final String FLINK = "flink";

@@ -157,7 +157,6 @@ public class ResourceRequest {
     PYTHON,
     ENVIRONMENTS,
     COMMANDS,
-    MACHINETYPES,
     LIBRARIES,
     DATASETREQUESTS,
     APIKEY,

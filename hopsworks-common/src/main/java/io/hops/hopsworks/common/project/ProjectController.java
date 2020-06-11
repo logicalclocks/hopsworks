@@ -1612,11 +1612,7 @@ public class ProjectController {
         // try and close all the jupyter jobs
         removeJupyter(project);
 
-        try {
-          removeAnacondaEnv(project);
-        }catch (ElasticException ex){
-          LOGGER.log(Level.WARNING, "Failure while removing conda enviroment ", ex);
-        }
+        removeAnacondaEnv(project);
 
         //kill jobs
         killYarnJobs(project);
@@ -2540,8 +2536,7 @@ public class ProjectController {
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void removeAnacondaEnv(Project project)
-      throws ServiceException, ElasticException {
+  public void removeAnacondaEnv(Project project) {
     environmentController.removeEnvironment(project, project.getOwner());
   }
 

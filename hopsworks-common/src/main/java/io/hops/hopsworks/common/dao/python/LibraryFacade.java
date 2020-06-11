@@ -21,7 +21,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 import java.util.Collection;
@@ -73,18 +72,16 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
   }
 
   public PythonDep getOrCreateDep(PythonDep dep) {
-    return getOrCreateDep(dep.getRepoUrl(), dep.getMachineType(), dep.getInstallType(), dep.getDependency(), dep.
+    return getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), dep.getDependency(), dep.
         getVersion(), true, dep.isPreinstalled(), dep.getBaseEnv());
   }
   
-  public PythonDep getOrCreateDep(AnacondaRepo repo, MachineType machineType,
-                                  CondaInstallType installType,
-                                  String dependency, String version, boolean persist, boolean preinstalled) {
-    return getOrCreateDep(repo, machineType, installType, dependency, version, persist, preinstalled, null);
+  public PythonDep getOrCreateDep(AnacondaRepo repo, CondaInstallType installType, String dependency, String version,
+                                  boolean persist, boolean preinstalled) {
+    return getOrCreateDep(repo, installType, dependency, version, persist, preinstalled, null);
   }
   
-  public PythonDep getOrCreateDep(AnacondaRepo repo, MachineType machineType,
-                                  CondaInstallType installType,
+  public PythonDep getOrCreateDep(AnacondaRepo repo, CondaInstallType installType,
                                   String dependency, String version, boolean persist, boolean preinstalled,
                                   String baseEnv) {
     TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class);
@@ -92,7 +89,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
     deps.setParameter("version", version);
     deps.setParameter("installType", installType);
     deps.setParameter("repoUrl", repo);
-    deps.setParameter("machineType", machineType);
     PythonDep dep = null;
     try {
       dep = deps.getSingleResult();
@@ -103,7 +99,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
       dep.setVersion(version);
       dep.setPreinstalled(preinstalled);
       dep.setInstallType(installType);
-      dep.setMachineType(machineType);
       dep.setBaseEnv(baseEnv);
       if (persist) {
         em.persist(dep);
@@ -164,10 +159,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
       case STATUS_NEQ:
         setStatus(filterBy, q);
         break;
-      case MACHINE_TYPE:
-      case MACHINE_TYPE_NEQ:
-        setMachineType(filterBy, q);
-        break;
       default:
         break;
     }
@@ -182,11 +173,6 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
   private void setStatus(AbstractFacade.FilterBy filterBy, Query q) {
     List<CondaStatus> status = getEnumValues(filterBy, CondaStatus.class);
     q.setParameter(filterBy.getField(), status);
-  }
-
-  private void setMachineType(AbstractFacade.FilterBy filterBy, Query q) {
-    List<MachineType> machineTypes = getEnumValues(filterBy, MachineType.class);
-    q.setParameter(filterBy.getField(), machineTypes);
   }
   
   public enum Sorts {
@@ -230,9 +216,7 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
   public enum Filters {
     PREINSTALLED("PREINSTALLED", "p.preinstalled = :preinstalled ", "preinstalled", "1"),
     STATUS("STATUS", "p.status IN :status ", "status", "NEW"),
-    STATUS_NEQ("STATUS_NEQ", "p.status NOT IN :status_neq ", "status_neq", "NEW"),
-    MACHINE_TYPE("MACHINE_TYPE", "p.machineType IN :machineType ", "machineType", "ALL"),
-    MACHINE_TYPE_NEQ("MACHINE_TYPE_NEQ", "p.machineType NOT IN :machineType_neq ", "machineType_neq", "CPU");
+    STATUS_NEQ("STATUS_NEQ", "p.status NOT IN :status_neq ", "status_neq", "NEW");
 
     private final String value;
     private final String sql;

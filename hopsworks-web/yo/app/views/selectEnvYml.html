@@ -45,44 +45,19 @@
 </div>
 <div class="modal-body" ng-controller="PythonCtrl as pythonCtrl">
 
-  <div class="row" ng-if="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
+  <div class="row">
     <div class="col-md-2">
-      <button id="selectCpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'CPU'">
-          <span>
-            Select CPU .yml </span>
-      </button>
-    </div>
-    <div class="col-md-9 col-md-offset-1">
-
-      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.cpuYmlPath = ''" type="text" class="form-control" id="cpuYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.cpuYmlPath" required/>
-    </div>
-  </div>
-
-  <div class="row" ng-if="!(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
-    <div class="col-md-2">
-      <button id="selectAllYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'ALL'">
+      <button id="selectAllYmlButton" class="btn btn-primary">
           <span>
             Select .yml </span>
       </button>
     </div>
     <div class="col-md-9 col-md-offset-1">
 
-      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.allYmlPath = ''" type="text" class="form-control" id="allYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.allYmlPath" required/>
+      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.ymlPath = ''" type="text" class="form-control" id="allYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.ymlPath" required/>
     </div>
   </div>
 
-  <div class="row" ng-show="(pythonCtrl.environmentTypes['CPU'] && pythonCtrl.environmentTypes['GPU'])">
-    <div class="col-md-2">
-      <button id="selectGpuYmlButton" class="btn btn-primary" ng-click="selectEnvYmlCtrl.envMode = 'GPU'">
-          <span>
-            Select GPU .yml </span>
-      </button>
-    </div>
-    <div class="col-md-9 col-md-offset-1">
-
-      <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath = ''" type="text" class="form-control" id="gpuYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.gpuYmlPath" required/>
-    </div>
-  </div>
   <div>
     <span>
       <label>Install Jupyter:
@@ -98,7 +73,7 @@
             Create environment</span>
   </button>
 
-  <div ng-if="selectEnvYmlCtrl.envMode === 'CPU' || selectEnvYmlCtrl.envMode === 'ALL' || selectEnvYmlCtrl.envMode === 'GPU'" class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
+  <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 
     <div class="table-responsive" style="overflow: hidden;">
       <h4 class="row text-muted" style="margin-bottom: 15px; margin-left: 10px;">

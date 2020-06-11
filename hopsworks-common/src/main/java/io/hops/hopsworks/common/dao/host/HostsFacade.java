@@ -41,7 +41,6 @@ package io.hops.hopsworks.common.dao.host;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
-import io.hops.hopsworks.persistence.entity.python.MachineType;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -49,9 +48,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 
 @Stateless
@@ -109,7 +106,6 @@ public class HostsFacade extends AbstractFacade<Hosts> {
         q.setParameter(filterBy.getField(), filterBy.getParam());
         break;
       case REGISTERED:
-      case CONDA_ENABLED:
         q.setParameter(filterBy.getField(), Boolean.valueOf(filterBy.getParam()));
         break;
       default:
@@ -136,46 +132,6 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     } catch (NoResultException ex) {
       return Optional.empty();
     }
-  }
-
-  public Optional<String> findCPUHost() {
-    List<Hosts> list = em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class)
-      .getResultList();
-    if (list.isEmpty()) {
-      return Optional.empty();
-    }
-    else {
-      return Optional.of(list.get(new Random().nextInt(list.size())))
-        .map(Hosts::getHostname);
-    }
-  }
-
-  public Optional<String> findGPUHost() {
-    List<Hosts> list = em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class)
-      .getResultList();
-    if (list.isEmpty()) {
-      return Optional.empty();
-    }
-    else {
-      return Optional.of(list.get(new Random().nextInt(list.size())))
-        .map(Hosts::getHostname);
-    }
-  }
-
-  public List<Hosts> getCondaHosts(MachineType machineType) {
-    TypedQuery<Hosts> query;
-    switch (machineType) {
-      case CPU:
-        query = em.createNamedQuery("Hosts.findByCondaEnabledCpu", Hosts.class);
-        break;
-      case GPU:
-        query = em.createNamedQuery("Hosts.findByCondaEnabledGpu", Hosts.class);
-        break;
-      default:
-        query = em.createNamedQuery("Hosts.findByCondaEnabled", Hosts.class);
-    }
-
-    return query.getResultList();
   }
 
   public Long countHosts() {
@@ -245,8 +201,7 @@ public class HostsFacade extends AbstractFacade<Hosts> {
     HOST_IP("HOST_IP", " h.hostIp = :hostIp", "hostIp", ""),
     PUBLIC_IP("PUBLIC_IP", " h.publicIp = :publicIp", "publicIp", ""),
     PRIVATE_IP("PRIVATE_IP", " h.privateIp = :privateIp", "privateIp", ""),
-    REGISTERED("REGISTERED", " h.registered = :registered", "registered", "false"),
-    CONDA_ENABLED("CONDA_ENABLED", " h.condaEnabled = :condaEnabled", "condaEnabled", "false");
+    REGISTERED("REGISTERED", " h.registered = :registered", "registered", "false");
   
     private final String value;
     private final String sql;
