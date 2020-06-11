@@ -71,14 +71,14 @@ angular.module('hopsWorksApp')
                   var regReq = {
                     method: 'POST',
                     url: '/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + data.lib +
-                    '?package_manager=' + data.installType + '&version=' + data.version + '&machine=' + data.machineType
+                    '?package_manager=' + data.installType + '&version=' + data.version
                   };
                   return $http(regReq);
                 } else {
                   var regReq = {
                     method: 'POST',
                     url: '/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + data.lib +
-                    '?package_manager=' + data.installType + '&version=' + data.version + '&channel=' + data.channelUrl + '&machine=' + data.machineType
+                    '?package_manager=' + data.installType + '&version=' + data.version + '&channel=' + data.channelUrl
                   };
                   return $http(regReq);
                 }

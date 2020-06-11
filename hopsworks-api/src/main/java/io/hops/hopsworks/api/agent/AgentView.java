@@ -19,7 +19,6 @@ package io.hops.hopsworks.api.agent;
 
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
-import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -52,10 +51,6 @@ public class AgentView {
   private List<ServiceView> services;
   @XmlElement(name = "system-commands")
   private List<SystemCommandView> systemCommands;
-  @XmlElement(name = "conda-commands")
-  private List<CondaCommandView> condaCommands;
-  @XmlElement(name = "conda-report")
-  private List<String> condaReport;
   @XmlElement(name = "recover")
   private Boolean recover;
   
@@ -143,24 +138,6 @@ public class AgentView {
     this.systemCommands = systemCommands;
   }
   
-  @ApiModelProperty(value = "ServiceStatus report of running conda commands")
-  public List<CondaCommandView> getCondaCommands() {
-    return condaCommands;
-  }
-  
-  public void setCondaCommands(List<CondaCommandView> condaCommands) {
-    this.condaCommands = condaCommands;
-  }
-  
-  @ApiModelProperty(value = "List of Anaconda environments to check for garbage collection")
-  public List<String> getCondaReport() {
-    return condaReport;
-  }
-  
-  public void setCondaReport(List<String> condaReport) {
-    this.condaReport = condaReport;
-  }
-  
   @ApiModelProperty(value = "Flag to indicate if kagent needs to recover after a restart")
   private Boolean getRecover() {
     return recover;
@@ -184,11 +161,8 @@ public class AgentView {
         systemCommands.add(scv.toSystemCommand());
       }
     }
-    
-    final List<CondaCommands> condaCommands = new ArrayList<>();
-    
     return new AgentController.AgentHeartbeatDTO(hostId, agentTime, numGpus, memoryCapacity,
-        cores, privateIp, services, systemCommands, condaCommands, condaReport, recover);
+        cores, privateIp, services, systemCommands, recover);
   }
   
   @Override

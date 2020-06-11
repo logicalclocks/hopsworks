@@ -41,6 +41,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private Boolean requestsVerify;
   private String domainCATruststorePem;
   private String serviceDiscoveryDomain = "consul";
+  private String anacondaEnvironment;
   
   private JupyterNotebookConfigTemplateBuilder() {}
   
@@ -236,8 +237,18 @@ public class JupyterNotebookConfigTemplateBuilder {
     this.serviceDiscoveryDomain = serviceDiscoveryDomain;
     return this;
   }
+
+  public String getAnacondaEnvironment() {
+    return anacondaEnvironment;
+  }
+
+  public JupyterNotebookConfigTemplateBuilder setAnacondaEnvironment(String anacondaEnvironment) {
+    this.anacondaEnvironment = anacondaEnvironment;
+    return this;
+  }
   
   public JupyterNotebookConfigTemplate build() {
     return new JupyterNotebookConfigTemplate(this);
   }
+
 }

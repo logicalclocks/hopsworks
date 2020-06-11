@@ -46,49 +46,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @ApiModel(value="EnvironmentYmlDTO")
 public class EnvironmentYmlDTO {
-  
-  private String allYmlPath;
-  private String cpuYmlPath;
-  private String gpuYmlPath;
+
+  private String ymlPath;
   private Boolean installJupyter;
   
   public EnvironmentYmlDTO() {
   }
   
-  public EnvironmentYmlDTO(String allYmlPath, String cpuYmlPath, String gpuYmlPath,
-    Boolean installJupyter) {
-    this.allYmlPath = allYmlPath;
-    this.cpuYmlPath = cpuYmlPath;
-    this.gpuYmlPath = gpuYmlPath;
+  public EnvironmentYmlDTO(String ymlPath, Boolean installJupyter) {
+    this.ymlPath = ymlPath;
     this.installJupyter = installJupyter;
   }
   
-  @ApiModelProperty(value = "Path to a yml with libraries to be installed on all machine types.")
-  public String getAllYmlPath() {
-    return allYmlPath;
+  @ApiModelProperty(value = "Path to a yml with libraries to be installed.")
+  public String getYmlPath() {
+    return ymlPath;
   }
-  
-  public void setAllYmlPath(String allYmlPath) {
-    this.allYmlPath = allYmlPath;
+
+  public void setYmlPath(String ymlPath) {
+    this.ymlPath = ymlPath;
   }
-  
-  @ApiModelProperty(value = "Path to a yml with libraries to be installed on CPU machines.")
-  public String getCpuYmlPath() {
-    return cpuYmlPath;
-  }
-  
-  public void setCpuYmlPath(String cpuYmlPath) {
-    this.cpuYmlPath = cpuYmlPath;
-  }
-  
-  @ApiModelProperty(value = "Path to a yml with libraries to be installed on GPU machines.")
-  public String getGpuYmlPath() {
-    return gpuYmlPath;
-  }
-  
-  public void setGpuYmlPath(String gpuYmlPath) {
-    this.gpuYmlPath = gpuYmlPath;
-  }
+
   
   @ApiModelProperty(value = "Install Jupyter in the environment.")
   public Boolean getInstallJupyter() {
@@ -102,10 +80,9 @@ public class EnvironmentYmlDTO {
   @Override
   public String toString() {
     return "EnvironmentYmlDTO{" +
-      "allYmlPath='" + allYmlPath + '\'' +
-      ", cpuYmlPath='" + cpuYmlPath + '\'' +
-      ", gpuYmlPath='" + gpuYmlPath + '\'' +
+      "ymlPath='" + getYmlPath() + '\'' +
       ", installJupyter=" + installJupyter +
       '}';
   }
+
 }

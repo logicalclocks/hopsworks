@@ -83,7 +83,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
   @NamedQuery(name = "PythonDep.findUniqueDependency",
           query
           = "SELECT p FROM PythonDep p WHERE p.dependency = :dependency AND p.version = :version " +
-                  "AND p.installType = :installType AND p.repoUrl = :repoUrl AND p.machineType = :machineType "),
+                  "AND p.installType = :installType AND p.repoUrl = :repoUrl"),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
           = "SELECT p FROM PythonDep p WHERE p.version = :version"),
@@ -124,10 +124,6 @@ public class PythonDep implements Serializable {
   @Column(name = "install_type")
   @Enumerated(EnumType.ORDINAL)
   private CondaInstallType installType;
-
-  @Column(name = "machine_type")
-  @Enumerated(EnumType.ORDINAL)
-  private MachineType machineType;
   
   @Column(name = "base_env")
   private String baseEnv;
@@ -195,14 +191,6 @@ public class PythonDep implements Serializable {
 
   public CondaInstallType getInstallType() {
     return installType;
-  }
-
-  public void setMachineType(MachineType machineType) {
-    this.machineType = machineType;
-  }
-
-  public MachineType getMachineType() {
-    return machineType;
   }
 
   public boolean isPreinstalled() {

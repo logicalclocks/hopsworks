@@ -71,7 +71,6 @@ public class ElasticCleaner {
       Map<String, Long> indices =
           elasticContoller.getIndices("(" + Settings.ELASTIC_LOG_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_SERVING_INDEX_REGEX
-        + ")|(" + Settings.ELASTIC_KAGENT_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_BEAMJOBSERVER_INDEX_REGEX
         + ")|(" + Settings.ELASTIC_BEAMSDKWORKER_INDEX_REGEX + ")");
       for (String index : indices.keySet()) {

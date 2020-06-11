@@ -18,12 +18,8 @@
 
 package io.hops.hopsworks.kmon.conda;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
-import io.hops.hopsworks.common.python.commands.CommandsController;
-import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.LocalhostServices;
-import io.hops.hopsworks.common.util.OSProcessExecutor;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 
@@ -33,7 +29,6 @@ import javax.faces.application.FacesMessage;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 import javax.faces.context.FacesContext;
-import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,32 +40,20 @@ public class CondaController implements Serializable {
 
   @EJB
   private CondaCommandFacade condaCommandFacade;
-  @EJB
-  private CommandsController commandsController;
-  @EJB
-  private EnvironmentController environmentController;
-  @EJB
-  private Settings settings;
-  @EJB
-  private OSProcessExecutor osProcessExecutor;
 
   private List<CondaCommands> failedCommands;
   private List<CondaCommands> ongoingCommands;
   private List<CondaCommands> newCommands;
 
-  private String output;
-  
-  private String diskUsage = "Press button to calculate.";
-
   private boolean showFailed = true;
   private boolean showNew = true;
   private boolean showOngoing = true;
 
+  private String output;
+
   private static final Logger logger = Logger.getLogger(CondaController.class.getName());
 
-  public CondaController() {
-
-  }
+  public CondaController() {}
 
   @PostConstruct
   public void init() {
@@ -78,27 +61,35 @@ public class CondaController implements Serializable {
     loadCommands();
   }
 
+  public void retryCommand(CondaCommands command) {
+    command.setErrorMsg("");
+    command.setStatus(CondaStatus.NEW);
+    condaCommandFacade.update(command);
+    message("Retrying command");
+    loadCommands();
+  }
+
   public void deleteAllFailedCommands() {
     condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.FAILED);
-    message("deleting all commands with the state 'failed'");
+    message("Deleting all commands with the state 'failed'");
     loadFailedCommands();
   }
 
   public void deleteAllOngoingCommands() {
     condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.ONGOING);
-    message("deleting all commands with the state 'ongoing'");
+    message("Deleting all commands with the state 'ongoing'");
     loadOngoingCommands();
   }
 
   public void deleteAllNewCommands() {
     condaCommandFacade.deleteAllCommandsByStatus(CondaStatus.NEW);
-    message("deleting all commands with the state 'new'");
+    message("Deleting all commands with the state 'new'");
     loadNewCommands();
   }
 
   public void deleteCommand(CondaCommands command) {
     condaCommandFacade.removeCondaCommand(command.getId());
-    message("deleting");
+    message("Deleting command");
     loadCommands();
   }
 
@@ -156,20 +147,6 @@ public class CondaController implements Serializable {
     return newCommands;
   }
 
-  public String getOutput() {
-    if (!isOutput()) {
-      return "No Output to show for command executions.";
-    }
-    return this.output;
-  }
-
-  public boolean isOutput() {
-    if (this.output == null || this.output.isEmpty()) {
-      return false;
-    }
-    return true;
-  }
-
   public boolean isShowFailed() {
     return showFailed;
   }
@@ -208,24 +185,19 @@ public class CondaController implements Serializable {
     FacesContext.getCurrentInstance().addMessage(null, new FacesMessage("Conda Command " + msg));
   }
 
-  public String calculateDiskUsage() {
-    try {
-      diskUsage = LocalhostServices.du(osProcessExecutor, new File(settings.getAnacondaDir()));
-    } catch (Exception e) {
-      logger.warning("Problem calculating disk usage for Anaconda");
-      logger.warning(e.getMessage());
-      message("Error in calculating disk usage for anaconda");
-      diskUsage = "Error calculating disk usage. See Hopsworks logs.";
+  public String getOutput() {
+    if (!isOutput()) {
+      return "No Output to show for command executions.";
     }
-    return diskUsage;
-  }
-  
-  
-  public void cleanupAnaconda() {
+    return this.output;
   }
 
-  public String getDiskUsage() {
-    return diskUsage;
+  public boolean isOutput() {
+    return !Strings.isNullOrEmpty(this.output);
   }
 
+  public void showError(CondaCommands command) {
+    if(!Strings.isNullOrEmpty(command.getErrorMsg()))
+      this.output = command.getErrorMsg();
+  }
 }

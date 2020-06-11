@@ -122,9 +122,9 @@ module CondaHelper
     end
   end
 
-  def create_env_yml(projectId, allYmlPath, cpuYmlPath, gpuYmlPath, installJupyter)
+  def create_env_yml(projectId, ymlPath, installJupyter)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
-         {allYmlPath: allYmlPath, cpuYmlPath: cpuYmlPath, gpuYmlPath: gpuYmlPath, installJupyter: installJupyter}
+         {ymlPath: ymlPath, installJupyter: installJupyter}
   end
 
   def export_env(projectId, version)
@@ -135,8 +135,8 @@ module CondaHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries"
   end
 
-  def install_library(projectId, version, lib, package_manager, lib_version, machine, channel)
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&machine=#{machine}&channel=#{channel}"
+  def install_library(projectId, version, lib, package_manager, lib_version, channel)
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&channel=#{channel}"
   end
 
   def search_library(projectId, version, package_manager, lib, conda_channel="")
