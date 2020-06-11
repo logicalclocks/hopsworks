@@ -3755,7 +3755,4 @@ public class Settings implements Serializable {
   }
   
   //-----------------------------END YARN DOCKER-------------------------------------------------//
-  
-  public static final int HOPSFS_XATTR_VALUE_MAX_SIZE = 13500;
-  public static final int HOPSFS_XATTR_NAME_MAX_SIZE = 255;
 }
