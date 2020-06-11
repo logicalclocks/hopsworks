@@ -26,6 +26,10 @@ public class MetadataException extends RESTException {
     super(code, level);
   }
   
+  public MetadataException(RESTCodes.MetadataErrorCode code, Level level, Throwable throwable) {
+    super(code, level, null, null, throwable);
+  }
+  
   public MetadataException(RESTCodes.MetadataErrorCode code, Level level, String usrMsg) {
     super(code, level, usrMsg);
   }

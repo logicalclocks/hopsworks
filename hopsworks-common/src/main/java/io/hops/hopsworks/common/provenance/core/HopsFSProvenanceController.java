@@ -246,14 +246,20 @@ public class HopsFSProvenanceController {
       FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
       try {
         byte[] xattrVal = converter.marshal(fg).getBytes();
-        if(xattrVal.length > 13500) {
-          LOGGER.log(Level.INFO,
-            "xattr is too large to attach - featuregroup:{0} will not have features attached", path);
-          fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-            featuregroup.getCreated(), featuregroup.getCreator());
-          xattrVal = converter.marshal(fg).getBytes();
+        try{
+          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } catch (MetadataException e) {
+          if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+            LOGGER.log(Level.INFO,
+              "xattr is too large to attach - featuregroup:{0} will not have features attached", path);
+            fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
+              featuregroup.getCreated(), featuregroup.getCreator());
+            xattrVal = converter.marshal(fg).getBytes();
+            xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+          } else {
+            throw e;
+          }
         }
-        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
       } catch (GenericException | MetadataException | DatasetException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
@@ -279,14 +285,20 @@ public class HopsFSProvenanceController {
       }
       try {
         byte[] xattrVal = converter.marshal(td).getBytes();
-        if(xattrVal.length > 13500) {
-          LOGGER.log(Level.INFO,
-            "xattr is too large to attach - trainingdataset:{0} will not have features attached", path);
-          td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
-            trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
-          xattrVal = converter.marshal(td).getBytes();
+        try{
+          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } catch (MetadataException e) {
+          if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+            LOGGER.log(Level.INFO,
+              "xattr is too large to attach - trainingdataset:{0} will not have features attached", path);
+            td = new TrainingDatasetXAttrDTO(trainingDatasetDTO.getFeaturestoreId(),
+              trainingDatasetDTO.getDescription(), trainingDatasetDTO.getCreated(), trainingDatasetDTO.getCreator());
+            xattrVal = converter.marshal(td).getBytes();
+            xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+          } else {
+            throw e;
+          }
         }
-        xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE,xattrVal);
       } catch (GenericException | MetadataException | DatasetException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
           "hopsfs - set xattr - training dataset - error", "hopsfs - set xattr - training dataset - error", e);
