@@ -17,7 +17,6 @@ package io.hops.hopsworks.api.maggy;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.common.dao.maggy.MaggyFacade;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -31,6 +30,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -41,8 +41,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
 @Path("/maggy")
 @Stateless
@@ -52,62 +51,47 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class MaggyService {
   
-  private static final Logger logger = Logger.getLogger(MaggyService.class.getName());
-  @EJB
-  private NoCacheResponse noCacheResponse;
   @EJB
   private MaggyFacade maggyFacade;
   
-  /**
-   * Searches for the Maggy Driver with appId
-   * <p/>
-   *
-   * @param appId
-   * @param req
-   * @return
-   * @throws io.hops.hopsworks.exceptions.ServiceException
-   */
   @GET
   @Path("drivers/{appId}")
-  @ApiOperation(value = "Get a Maggy Driver Endpoint for this YARN appId", response = MaggyDriver.class)
+  @ApiOperation(value = "Get the latest Maggy Driver Endpoint for this YARN appId", response = MaggyDriver.class)
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getDriver( @PathParam("appId") String appId, @Context HttpServletRequest req) throws
-    ServiceException {
-    
-    logger.log(Level.FINE, "REST call from sparkmagic for driver for " + appId);
+  public Response getDriver( @PathParam("appId") String appId, @Context HttpServletRequest req) {
     if (Strings.isNullOrEmpty(appId)) {
       throw new IllegalArgumentException("appId was not provided or was empty");
     }
-    MaggyDriver md = maggyFacade.findByAppId(appId);
-    if (md == null) {
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.NOT_FOUND).build();
+    List<MaggyDriver> md = maggyFacade.findByAppId(appId);
+    if (md == null || md.isEmpty()) {
+      return Response.status(Response.Status.NOT_FOUND).build();
     }
-    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(md) {
-    };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(driver).build();
+    MaggyDriver latest_md = md.get(0);
+    GenericEntity<MaggyDriver> driver = new GenericEntity<MaggyDriver>(latest_md) {};
+    return Response.ok().entity(driver).build();
   }
   
-  /**
-   * <p/>
-   *
-   * @param driver
-   * @return
-   */
   @POST
   @Path("drivers")
   @ApiOperation(value = "Register a Maggy Driver Endpoint for this YARN appId (called by Spark Driver in maggy).")
   @Consumes(MediaType.APPLICATION_JSON)
   public Response register(MaggyDriver driver, @Context SecurityContext sc) throws ServiceException {
-    
-    logger.log(Level.FINE, "REST call from maggy to register the driver: " + driver);
-    
     if (driver == null || driver.getAppId() == null) {
       throw new IllegalArgumentException("Driver was null or had no appId");
     }
-    
     maggyFacade.add(driver);
-    
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
+    return Response.noContent().build();
   }
   
+  @DELETE
+  @Path("drivers/{appId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Deletes all Maggy endpoints associated with an AppId")
+  public Response deleteByAppId(@PathParam("appId") String appId, @Context SecurityContext sc){
+    if (Strings.isNullOrEmpty(appId)) {
+      throw new IllegalArgumentException("appId was not provided or was empty");
+    }
+    maggyFacade.removeByAppId(appId);
+    return Response.noContent().build();
+  }
 }

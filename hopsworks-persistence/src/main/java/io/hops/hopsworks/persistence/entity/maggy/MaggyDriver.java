@@ -33,31 +33,17 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@Table(name = "maggy_driver",
-    catalog = "hopsworks",
-    schema = "")
+@Table(name = "maggy_driver", catalog = "hopsworks", schema = "")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "MaggyDriver.findAll",
-      query = "SELECT m FROM MaggyDriver m")
-  ,
-    @NamedQuery(name = "MaggyDriver.findById",
-      query = "SELECT m FROM MaggyDriver m WHERE m.id = :id")
-  ,
-    @NamedQuery(name = "MaggyDriver.findByAppId",
-      query = "SELECT m FROM MaggyDriver m WHERE m.appId = :appId")
-  ,
-    @NamedQuery(name = "MaggyDriver.findByHostIp",
-      query = "SELECT m FROM MaggyDriver m WHERE m.hostIp = :hostIp")
-  ,
-    @NamedQuery(name = "MaggyDriver.findByPort",
-      query = "SELECT m FROM MaggyDriver m WHERE m.port = :port")
-  ,
-    @NamedQuery(name = "MaggyDriver.findBySecret",
-      query = "SELECT m FROM MaggyDriver m WHERE m.secret = :secret")
-  ,
-    @NamedQuery(name = "MaggyDriver.findByCreated",
-      query = "SELECT m FROM MaggyDriver m WHERE m.created = :created")})
+  @NamedQuery(name = "MaggyDriver.findAll", query = "SELECT m FROM MaggyDriver m"),
+  @NamedQuery(name = "MaggyDriver.findById", query = "SELECT m FROM MaggyDriver m WHERE m.id = :id"),
+  @NamedQuery(name = "MaggyDriver.findByAppId", query = "SELECT m FROM MaggyDriver m WHERE m.appId = :appId ORDER BY " +
+    "m.created DESC"),
+  @NamedQuery(name = "MaggyDriver.findByHostIp", query = "SELECT m FROM MaggyDriver m WHERE m.hostIp = :hostIp"),
+  @NamedQuery(name = "MaggyDriver.findByPort", query = "SELECT m FROM MaggyDriver m WHERE m.port = :port"),
+  @NamedQuery(name = "MaggyDriver.findBySecret", query = "SELECT m FROM MaggyDriver m WHERE m.secret = :secret"),
+  @NamedQuery(name = "MaggyDriver.findByCreated", query = "SELECT m FROM MaggyDriver m WHERE m.created = :created")})
 public class MaggyDriver implements Serializable {
 
   private static final long serialVersionUID = 1L;
