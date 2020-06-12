@@ -12,63 +12,24 @@
   ~
   ~ You should have received a copy of the GNU Affero General Public License along with this program.
   ~ If not, see <https://www.gnu.org/licenses/>.
-  -->
-
-<div class="container-fluid" ng-class="{'main-search': !projectView, 'project-search': projectView}">
-  <div class="row" style="margin-right: 10px; margin-bottom: 5px">
-    <a class="pull-right text-muted" ng-click="mainCtrl.clearSearch()" title="Close search"
-       data-toggle="view-type" role="button" aria-haspopup="true" aria-expanded="false">
-      <span class="glyphicon glyphicon-remove" aria-hidden="true" style="font-size: 20px;"></span></a>
-  </div>
-
-  <div class="loader loader-md" ng-show="mainCtrl.searching"></div>
-  <section class="search-result"
-           ng-if="!mainCtrl.searching && (mainCtrl.searchScope === 'Everything' || mainCtrl.searchScope === 'Feature store' || mainCtrl.searchScope === 'This project')">
-    <div ng-cloak>
-      <md-content style="margin-top: -5px; margin-bottom: -10px">
-        <md-tabs class="md-default" md-center-tabs md-dynamic-height md-selected="mainCtrl.selectedIndex">
-          <md-tab label="Feature group" md-on-select="mainCtrl.selectedIndex = 0"
-                  ng-if="mainCtrl.searchView('featureGroupTab')">
-            <md-content class="md-padding search-result-tab">
-              <div class="md-body-1 result-body">
-                <div ng-include="'views/search/featureGroup.html'"></div>
-              </div>
-            </md-content>
-          </md-tab>
-          <md-tab label="Training dataset" md-on-select="mainCtrl.selectedIndex = 1"
-                  ng-if="mainCtrl.searchView('trainingDatasetTab')">
-            <md-content class="md-padding search-result-tab">
-              <div class="md-body-1 result-body">
-                <div ng-include="'views/search/trainingDataset.html'"></div>
-              </div>
-            </md-content>
-          </md-tab>
-          <md-tab label="Features" md-on-select="mainCtrl.selectedIndex = 2"
-                  ng-if="mainCtrl.searchView('featureTab')">
-            <md-content class="md-padding search-result-tab">
-              <div class="md-body-1 result-body">
-                <div ng-include="'views/search/feature.html'"></div>
-              </div>
-            </md-content>
-          </md-tab>
-          <md-tab label="Others" md-on-select="mainCtrl.selectedIndex = 3"
-                  ng-if="mainCtrl.searchView('othersTab')">
-            <md-content class="search-result-tab">
-              <div class="md-body-1 result-body">
-                <div ng-include="'views/search/others.html'"></div>
-              </div>
-            </md-content>
-          </md-tab>
-        </md-tabs>
-      </md-content>
+  ~
+-->
+<div ng-controller="MainCtrl as mainCtrl" ng-init="mainCtrl.showSearchPage = true">
+    <div ng-include="'nav.html'"></div>
+    <div growl reference="143" class="pull-right" ></div>
+    <div id="search-page" class="search-page container-fluid" ng-if="searchCtrl.searchType === 'global'"
+         ng-class="{'main-search': !projectView, 'project-search': projectView}" style="overflow: hidden">
+        <div ng-include="'views/search/searchView.html'"></div>
     </div>
-  </section>
-  <section class="search-result"
-           ng-if="!mainCtrl.searching && (mainCtrl.searchView('others'))">
-    <div ng-cloak>
-      <div class="md-body-1">
-        <div ng-include="'views/search/others.html'"></div>
-      </div>
+    <div id="search-page-project" class="search-page container-fluid" ng-if="searchCtrl.searchType !== 'global'"
+         ng-controller="ProjectCtrl as projectCtrl"
+         ng-class="{'main-search': !projectView, 'project-search': projectView}" style="overflow: hidden">
+        <div id="wrapper" ng-class="{'toggled': projectCtrl.isClosed}">
+            <div class="overlay" ></div>
+            <div ng-include="'navProject.html'"></div>
+            <section>
+                <div ng-include="'views/search/searchView.html'"></div>
+            </section>
+        </div>
     </div>
-  </section>
 </div>

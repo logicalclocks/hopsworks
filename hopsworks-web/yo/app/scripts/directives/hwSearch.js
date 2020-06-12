@@ -22,7 +22,6 @@ angular.module('hopsWorksApp').directive("hwSearch", function() {
         restrict: 'E',
         scope: {
             scopes: "=",
-            searchTerm: '=',
             projectView: '=',
             searching: '=',
             clickFn: '&'

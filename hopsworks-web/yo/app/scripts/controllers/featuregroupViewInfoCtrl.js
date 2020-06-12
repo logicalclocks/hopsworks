@@ -259,8 +259,40 @@ angular.module('hopsWorksApp')
 
             };
 
+            self.viewSelected = function (projectId, projectName, featurestore, featuregroups, settings, toggle) {
+
+                if(toggle) {
+                    self.toggle(featuregroups.versionToGroups[featuregroups.activeVersion]);
+                }
+
+                self.selectedFeaturegroup = featuregroups.versionToGroups[featuregroups.activeVersion]
+
+                self.projectId = projectId;
+                self.projectName = projectName;
+                self.featurestore = featurestore;
+                self.featuregroups = featuregroups;
+                self.activeVersion = featuregroups.activeVersion;
+                self.settings = settings;
+
+                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
+                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
+                self.pythonCode = self.getPythonCode();
+                self.scalaCode = self.getScalaCode();
+
+                self.featuregroupType = "";
+                if(self.selectedFeaturegroup.featuregroupType === self.onDemandFeaturegroupType){
+                    self.featuregroupType = "ON DEMAND";
+                } else {
+                    self.featuregroupType = "CACHED";
+                    self.fetchSchema();
+                    self.fetchSize();
+                    self.fetchTags();
+                }
+
+            };
+
             $scope.$on('featuregroupSelected', function (event, args) {
-                self.view(args.projectId, args.projectName, args.featurestore, args.featuregroups, args.settings, args.toggle);
+                self.viewSelected(args.projectId, args.projectName, args.featurestore, args.featuregroups, args.settings, args.toggle);
             });
 
             /**

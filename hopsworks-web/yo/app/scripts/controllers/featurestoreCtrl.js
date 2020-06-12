@@ -106,9 +106,9 @@ angular.module('hopsWorksApp')
             self.selectedFeaturegroup = undefined;
             self.selectedFeature = undefined;
             self.queryFeaturestore = $location.search()['featurestore'];
-            self.queryFeaturegroup = $location.search()['featuregroup'];
+            self.queryFeaturegroup = $location.search()['featureGroup'];
             self.queryTrainingDataset = $location.search()['trainingDataset'];
-            self.queryFeature = $location.search()['feature'];
+            self.queryFeature = $location.search()['features'];
             self.queryVersion = $location.search()['version'];
 
 

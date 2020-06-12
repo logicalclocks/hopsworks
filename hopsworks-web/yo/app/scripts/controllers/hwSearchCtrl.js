@@ -17,18 +17,29 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-    .controller('HwSearchCtrl', ['$scope',
-        function($scope) {
+    .controller('HwSearchCtrl', ['$scope', '$location',
+        function($scope, $location) {
             var self = this;
             self.activeSuggestion = 0;
+            self.searchTerm = $location.search()['q'];
+            self.notSent = typeof self.searchTerm === 'undefined';
+            self.searchTermSent = "";
+
+            self.select = function (scope) {
+                self.notSent = false;
+                self.searchTermSent = self.searchTerm;
+                $scope.clickFn({'scope': scope, 'searchTerm': self.searchTerm});
+            };
 
             self.keyUp = function (event) {
                 var code = event.which || event.keyCode || event.charCode;
                 if (angular.equals(code, 13) && !$scope.searching) {
-                    $scope.clickFn({'scope': $scope.scopes[self.activeSuggestion]});
+                    self.select($scope.scopes[self.activeSuggestion]);
                 } else if (angular.equals(code, 27)) {
                     $scope.searchTerm = "";
+                    self.searchTerm = "";
                 }
+                self.notSent = self.searchTermSent !== self.searchTerm;
             };
 
             self.keydown = function (event) {

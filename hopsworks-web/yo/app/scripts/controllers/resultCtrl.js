@@ -12,25 +12,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
 'use strict';
 
-angular.module('hopsWorksApp').directive("featureStoreTable", function() {
-    return {
-        restrict: 'E',
-        scope: {
-            searchTerm: "@",
-            paginationService: "=",
-            name: "@",
-            detailFn: "&"
-        },
-        transclude: {
-            'thead': '?featureStoreTableHead',
-            'sidenav': '?sidenav'
-        },
-        templateUrl: 'views/featureStoreTable.html',
-        controller: 'FeatureStoreTableCtrl as featureStoreTableCtrl'
-    }
-});
+angular.module('hopsWorksApp')
+    .controller('ResultCtrl', ['$scope', function($scope) {
+        var self = this;
+
+        self.close = function () {
+            $scope.closeInfo = true;
+            $scope.onInfoClose();
+        }
+    }]);

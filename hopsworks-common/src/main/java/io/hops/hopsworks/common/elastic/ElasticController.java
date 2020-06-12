@@ -78,6 +78,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -87,6 +88,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
@@ -121,88 +123,91 @@ public class ElasticController {
   private static final Logger LOG = Logger.getLogger(ElasticController.class.getName());
   
 
-  public List<ElasticHit> globalSearch(String searchTerm)
-      throws ServiceException, ElasticException {
+  public SearchHit[] globalSearchHighLevel(String searchTerm) throws ServiceException, ElasticException {
     //some necessary client settings
     RestHighLevelClient client = getClient();
-
+  
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.META_INDEX);
     }
+  
+    LOG.log(Level.FINE, "Found elastic index, now executing the query.");
+  
+    SearchResponse response = executeSearchQuery(client, globalSearchQuery(searchTerm.toLowerCase()));
 
-    LOG.log(Level.INFO, "Found elastic index, now executing the query.");
-    
-    SearchResponse response = executeSearchQuery(client,
-        globalSearchQuery(searchTerm.toLowerCase()));
-    
     if (response.status().getStatus() == 200) {
-      //construct the response
-      List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
-        SearchHit[] hits = response.getHits().getHits();
-
-        for (SearchHit hit : hits) {
-          ElasticHit eHit = new ElasticHit(hit);
-          eHit.setLocalDataset(true);
-          long inode_id = Long.parseLong(hit.getId());
-          Dataset dsl = datasetController.getDatasetByInodeId(inode_id);
-          if (dsl != null  && dsl.isPublicDs()) {
-            Dataset ds = dsl;
-            eHit.setPublicId(ds.getPublicDsId());
-          }
-          elasticHits.add(eHit);
-        }
+        return response.getHits().getHits();
       }
-
-      return elasticHits;
+      return new SearchHit[0];
     }
-    
     //we need to further check the status if it is a problem with
     // elasticsearch rather than a bad query
     throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR,
-        Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
+      Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
-
-  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm)
-      throws ServiceException, ElasticException {
+  
+  public List<ElasticHit> globalSearch(String searchTerm) throws ServiceException, ElasticException {
+    //construct the response
+    List<ElasticHit> elasticHits = new LinkedList<>();
+    SearchHit[] hits = globalSearchHighLevel(searchTerm);
+    for (SearchHit hit : hits) {
+      ElasticHit eHit = new ElasticHit(hit);
+      eHit.setLocalDataset(true);
+      long inode_id = Long.parseLong(hit.getId());
+      Dataset dsl = datasetController.getDatasetByInodeId(inode_id);
+      if (dsl != null && dsl.isPublicDs()) {
+        Dataset ds = dsl;
+        eHit.setPublicId(ds.getPublicDsId());
+      }
+      elasticHits.add(eHit);
+    }
+    return elasticHits;
+  }
+  
+  public SearchHit[] projectSearchHighLevel(Integer projectId, String searchTerm) throws ServiceException,
+    ElasticException {
     RestHighLevelClient client = getClient();
-
+    
     //check if the index are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ELASTIC_INDEX_NOT_FOUND,
         Level.SEVERE, "index: " + Settings.META_INDEX);
     }
     
-    SearchResponse response = executeSearchQuery(client,
-        projectSearchQuery(projectId, searchTerm.toLowerCase()));
-
+    SearchResponse response = executeSearchQuery(client, projectSearchQuery(projectId, searchTerm.toLowerCase()));
     if (response.status().getStatus() == 200) {
-      //construct the response
-      List<ElasticHit> elasticHits = new LinkedList<>();
+      SearchHit[] hits = new SearchHit[0];
       if (response.getHits().getHits().length > 0) {
-        SearchHit[] hits = response.getHits().getHits();
-        ElasticHit eHit;
-        for (SearchHit hit : hits) {
-          eHit = new ElasticHit(hit);
-          eHit.setLocalDataset(true);
-          elasticHits.add(eHit);
-        }
+        hits = response.getHits().getHits();
       }
-
-      projectSearchInSharedDatasets(client, projectId, searchTerm, elasticHits);
-      return elasticHits;
+      projectSearchInSharedDatasets(client, projectId, searchTerm, hits);
+      return hits;
     }
-  
     //we need to further check the status if it is a probelm with
     // elasticsearch rather than a bad query
     throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR,
-        Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
+      Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
-
-  public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
-      throws ServiceException, ElasticException {
+  
+  public List<ElasticHit> projectSearch(Integer projectId, String searchTerm) throws ServiceException,
+    ElasticException {
+    
+    List<ElasticHit> elasticHits = new LinkedList<>();
+    SearchHit[] hits = projectSearchHighLevel(projectId, searchTerm);
+    ElasticHit eHit;
+    for (SearchHit hit : hits) {
+      eHit = new ElasticHit(hit);
+      eHit.setLocalDataset(true);
+      elasticHits.add(eHit);
+    }
+    return elasticHits;
+  }
+  
+  public SearchHit[] datasetSearchHighLevel(Integer projectId, String datasetName, String searchTerm)
+    throws ServiceException, ElasticException {
     RestHighLevelClient client = getClient();
     //check if the indices are up and running
     if (!this.indexExists(client, Settings.META_INDEX)) {
@@ -219,35 +224,34 @@ public class ElasticController {
     } else {
       project = projectFacade.find(projectId);
     }
-
+    
     Dataset dataset = datasetController.getByProjectAndDsName(project,null, dsName);
-
     final long datasetId = dataset.getInodeId();
-    
-    SearchResponse response = executeSearchQuery(client,
-        datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
-    
+    SearchResponse response = executeSearchQuery(client, datasetSearchQuery(datasetId, searchTerm.toLowerCase()));
     if (response.status().getStatus() == 200) {
-      //construct the response
-      List<ElasticHit> elasticHits = new LinkedList<>();
       if (response.getHits().getHits().length > 0) {
-        SearchHit[] hits = response.getHits().getHits();
-        ElasticHit eHit;
-        for (SearchHit hit : hits) {
-          eHit = new ElasticHit(hit);
-          eHit.setLocalDataset(true);
-          elasticHits.add(eHit);
-        }
+        return response.getHits().getHits();
       }
-      return elasticHits;
+      return new SearchHit[0];
     }
-  
     //we need to further check the status if it is a problem with
     // elasticsearch rather than a bad query
     throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR,
-        Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
+      Level.INFO,"Error while executing query, code: "+  response.status().getStatus());
   }
   
+  public List<ElasticHit> datasetSearch(Integer projectId, String datasetName, String searchTerm)
+    throws ServiceException, ElasticException {
+    List<ElasticHit> elasticHits = new LinkedList<>();
+    SearchHit[] hits = datasetSearchHighLevel(projectId, datasetName, searchTerm);
+    ElasticHit eHit;
+    for (SearchHit hit : hits) {
+      eHit = new ElasticHit(hit);
+      eHit.setLocalDataset(true);
+      elasticHits.add(eHit);
+    }
+    return elasticHits;
+  }
   /**
    *
    * @param docType
@@ -541,7 +545,19 @@ public class ElasticController {
   }
   
   private void projectSearchInSharedDatasets(RestHighLevelClient client, Integer projectId,
-      String searchTerm, List<ElasticHit> elasticHits) throws ServiceException {
+    String searchTerm, List<ElasticHit> elasticHits) throws ServiceException {
+    Project project = projectFacade.find(projectId);
+    Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
+    for (DatasetSharedWith ds : datasetSharedWithCollection) {
+      long datasetId = ds.getDataset().getInode().getId();
+      executeProjectSearchQuery(client, searchSpecificDataset(datasetId, searchTerm), elasticHits);
+      executeProjectSearchQuery(client, datasetSearchQuery(datasetId, searchTerm), elasticHits);
+      
+    }
+  }
+  
+  private void projectSearchInSharedDatasets(RestHighLevelClient client, Integer projectId, String searchTerm,
+    SearchHit[] elasticHits) throws ServiceException {
     Project project = projectFacade.find(projectId);
     Collection<DatasetSharedWith> datasetSharedWithCollection = project.getDatasetSharedWithCollection();
     for (DatasetSharedWith ds : datasetSharedWithCollection) {
@@ -550,9 +566,19 @@ public class ElasticController {
       executeProjectSearchQuery(client, datasetSearchQuery(datasetId, searchTerm), elasticHits);
     
     }
-    
   }
-
+  
+  private void executeProjectSearchQuery(RestHighLevelClient client, QueryBuilder query, SearchHit[] elasticHits)
+    throws ServiceException {
+    SearchResponse response = executeSearchQuery(client, query);
+    if (response.status().getStatus() == 200) {
+      if (response.getHits().getHits().length > 0) {
+        SearchHit[] hits = response.getHits().getHits();
+        elasticHits = Stream.concat(Arrays.stream(elasticHits), Arrays.stream(hits)).toArray(SearchHit[]::new);
+      }
+    }
+  }
+  
   private void executeProjectSearchQuery(RestHighLevelClient client, QueryBuilder query,
       List<ElasticHit> elasticHits) throws ServiceException {
     

@@ -61,38 +61,9 @@ angular.module('hopsWorksApp')
             self.email = $cookies.get('email');
             self.emailHash = md5.createHash(self.email || '');
 
-              const searchScopes = {
-                  "datasetCentric": ['This dataset'],
-                  "projectCentric": ['This project', 'Datasets', 'Feature store'],
-                  "global": ['Everything', 'Projects', 'Datasets', 'Feature store']
-              };
-
-            if (!angular.isUndefined($routeParams.datasetName)) {
-              self.searchType = "datasetCentric";
-            } else if (!angular.isUndefined($routeParams.projectID)) {
-              self.searchType = "projectCentric";
-            } else {
-              self.searchType = "global";
-            }
-            self.searchScopes = searchScopes[self.searchType];
-            self.searchScope = self.searchScopes[0];
-
-            self.searchView = function (page) {
-                switch (page) {
-                    case "featureGroupTab":
-                    case "trainingDatasetTab":
-                    case "featureTab":
-                        return self.searchScope === 'Everything' || self.searchScope === 'This project' || self.searchScope === 'Feature store';
-                    case "othersTab":
-                        return self.searchScope === 'Everything' || self.searchScope === 'This project';
-                    case "others":
-                        return self.searchScope === 'Projects' || self.searchScope === 'Datasets' || self.searchScope === 'This dataset';
-                }
-            };
-
-              var checkeIsAdmin = function () {
-              var isAdmin = sessionStorage.getItem("isAdmin");
-              if (isAdmin != 'true' && isAdmin != 'false') {
+            var checkeIsAdmin = function () {
+            var isAdmin = sessionStorage.getItem("isAdmin");
+            if (isAdmin != 'true' && isAdmin != 'false') {
                 AuthService.isAdmin().then(
                   function (success) {
                     sessionStorage.setItem("isAdmin", success.data.data.value);
@@ -213,218 +184,38 @@ angular.module('hopsWorksApp')
             };
 
             self.searchTerm = "";
-            self.searchFor = "";
-            self.searching = false;
-            self.globalClusterBoundary = false;
-
-            self.searchResultPublicSearch = [];
-            self.resultPagesPublicSearch = 0;
-            self.resultItemsPublicSearch = 0;
-            self.selectedIndex = 0;
-            const fsResults = {featuregroups: [], featuregroupsTotal: 0,
-                               trainingdatasets: [], trainingdatasetsTotal: 0,
-                               features: [], featuresTotal: 0};
-
-            var docTypeToResponseObject = function (docType) {
-                return docType.toLowerCase() + 's';
+            const searchScopes = {
+              "datasetCentric": ['This dataset'],
+              "projectCentric": ['This project', 'Datasets', 'Feature store'],
+              "global": ['Everything', 'Projects', 'Datasets', 'Feature store']
             };
 
-            var getFromServer = function (docType, paginationService) {
-              var search;
-              if (self.searchType === "global") {
-                  if (typeof docType !== 'undefined') {
-                      search = ElasticService.globalfeaturestore(self.searchFor, docType,
-                          paginationService.getLimit(), paginationService.getServerOffset());
-                  } else {
-                      search = ElasticService.globalSearch(self.searchFor);
-                  }
-              } else if (self.searchType === "projectCentric") {
-                  if (typeof docType !== 'undefined') {
-                      search = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchFor,
-                          docType, paginationService.getLimit(), paginationService.getServerOffset());
-                  } else {
-                      search = ElasticService.projectSearch($routeParams.projectID, self.searchFor);
-                  }
-              } else if (self.searchType === "datasetCentric") {
-                  search = ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchFor);
-              }
+            if (!angular.isUndefined($routeParams.datasetName)) {
+              self.searchType = "datasetCentric";
+            } else if (!angular.isUndefined($routeParams.projectID)) {
+              self.searchType = "projectCentric";
+            } else {
+              self.searchType = "global";
+            }
+            self.searchScopes = searchScopes[self.searchType];
+            self.searchScope = self.searchScopes[0];
 
-              search.then( function(response) {
-                  var data = response.data;
-                  if (typeof docType !== 'undefined') {
-                      data = data[docTypeToResponseObject(docType)];
-                  }
-                  paginationService.setContent(data);
-              }, function (error) {
-                  var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
-                  growl.error(errorMsg, {title: 'Error', ttl: 5000});
-              });
-            };
-
-            var searchResultGetFromServer = function (paginationService) {
-              //currently not supported for project and dataset search
-              //getFromServer('', paginationService);
-              throw "Unsupported Operation";
-            };
-
-            var featuregroupsSearchResultGetFromServer = function (paginationService) {
-              getFromServer('FEATUREGROUP', paginationService);
-            };
-
-            var trainingdatasetsSearchResultGetFromServer = function (paginationService) {
-              getFromServer('TRAININGDATASET', paginationService);
-            };
-
-            var featureSearchResultGetFromServer = function (start, paginationService) {
-              getFromServer('FEATURE', paginationService);
-            };
-
-            self.searchResult = new PaginationService([], searchResultGetFromServer);
-            self.featuregroupsSearchResult =
-                new PaginationService([], featuregroupsSearchResultGetFromServer, 0, 20, 1, MAX_IN_MEMORY_ITEMS);
-            self.trainingdatasetsSearchResult =
-                new PaginationService([], trainingdatasetsSearchResultGetFromServer, 0, 20, 1, MAX_IN_MEMORY_ITEMS);
-            self.featureSearchResult =
-                new PaginationService([], featureSearchResultGetFromServer, 0, 20, 1, undefined);//get all until
-              // features total is fixed
-
-            self.clearSearch = function () {
-              self.showSearchPage = false;
-              self.searchResult = new PaginationService([], searchResultGetFromServer);
-              self.searchTerm = "";
-            };
-
-            var sendSearchRequest = function(searches, deferred) {
-                var searchHits = {fsResults: fsResults, otherResults: []};
-                $q.all(searches).then( function(response) {
-                    searchHits.otherResults = response.length > 0? response[0].data : [];
-                    searchHits.fsResults = response.length > 1? response[1].data : fsResults;
-                    if (response.length > 2) {
-                        searchHits.otherResults.push(response[2].data);//dela results might take longer so maybe
-                        // should be moved out
-                    }
-                    deferred.resolve(searchHits);
-                }, function (error) {
-                    var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
-                    deferred.reject(errorMsg);
-                });
-            };
-
-            var globalSearch = function(deferred) {
-                var searches = [];
-                if (self.searchScope === self.searchScopes[0]) {
-                    searches[0] = ElasticService.globalSearch(self.searchTerm);
-                    searches[1] = ElasticService.globalfeaturestore(self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
-                } else if (self.searchScope === self.searchScopes[1]) {
-                    searches[0] = ElasticService.globalSearch(self.searchTerm);//project
-                    searches[1] = {data: fsResults};
-                } else if (self.searchScope === self.searchScopes[2]) {
-                    searches[0] = ElasticService.globalSearch(self.searchTerm);//dataset
-                    searches[1] = {data: fsResults};
-                } else if (self.searchScope === self.searchScopes[3]) {
-                    searches[0] = {data: []};
-                    searches[1] = ElasticService.globalfeaturestore(self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
-                }
-                if ($rootScope.isDelaEnabled) {
-                    searches[2] = DelaService.search(self.searchTerm);
-                }
-                sendSearchRequest(searches, deferred);
-            };
-
-            var projectCentricSearch = function(deferred) {
-                var searches = [];
-                if (self.searchScope === self.searchScopes[0]) {
-                    searches[0] = ElasticService.projectSearch($routeParams.projectID, self.searchTerm);
-                    searches[1] = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
-                } else if (self.searchScope === self.searchScopes[1]) {
-                    searches[0] = ElasticService.projectSearch($routeParams.projectID, self.searchTerm);
-                } else if (self.searchScope === self.searchScopes[2]) {
-                    searches[0] = {data: []};
-                    searches[1] = ElasticService.localFeaturestoreSearch($routeParams.projectID, self.searchTerm, 'ALL', MAX_IN_MEMORY_ITEMS, 0);
-                }
-                sendSearchRequest(searches, deferred);
-            };
-
-            var datasetCentric = function(deferred) {
-                var searches = [];
-                searches[0] = ElasticService.datasetSearch($routeParams.projectID, $routeParams.datasetName, self.searchTerm);
-                sendSearchRequest(searches, deferred);
-            };
-
-            var search = function () {
-                const deferred = $q.defer();
-                self.showSearchPage = true;
-                self.searchResult = new PaginationService();
-                self.searchFor = self.searchTerm;//save it for search result pagination
-                if (self.searchType === "global") {
-                    globalSearch(deferred);
-                } else if (self.searchType === "projectCentric") {
-                    projectCentricSearch(deferred);
-                } else if (self.searchType === "datasetCentric") {
-                    datasetCentric(deferred);
-                }
-                return deferred.promise;
-            };
-
-            self.searchInScope = function (scope) {
+            self.searchInScope = function (scope, searchTerm) {
               self.searchScope = scope;
+              self.searchTerm = searchTerm;
               if (self.searchTerm === undefined || self.searchTerm === "" || self.searchTerm === null) {
                   return;
               }
-              self.searching = true;
-              search().then(function (results) {
-                  self.searching = false;
-                  self.searchResult.setContent(results.otherResults);
-                  self.searchResult.setTotal(results.otherResults.length);
-                  self.featuregroupsSearchResult.setContent(results.fsResults.featuregroups);
-                  self.featuregroupsSearchResult.setTotal(results.fsResults.featuregroupsTotal);
-                  self.trainingdatasetsSearchResult.setContent(results.fsResults.trainingdatasets);
-                  self.trainingdatasetsSearchResult.setTotal(results.fsResults.trainingdatasetsTotal);
-                  self.featureSearchResult.setContent(results.fsResults.features);
-                  self.featureSearchResult.setTotal(results.fsResults.featuresTotal);
-
-                  if (self.featuregroupsSearchResult.result.content.length > 0) {
-                      self.selectedIndex = 0;
-                  } else if (self.trainingdatasetsSearchResult.result.content.length > 0) {
-                      self.selectedIndex = 1;
-                  } else if (self.featureSearchResult.result.content.length > 0) {
-                      self.selectedIndex = 2;
-                  } else if (self.searchResult.result.content.length > 0) {
-                      self.selectedIndex = 3;
-                  }
-                  self.searchTerm = '';
-              }, function(error) {
-                  self.searching = false;
-                  growl.error(error, {title: 'Error', ttl: 5000});
-                  self.searchTerm = '';
-              });
-              datePicker();// this will load the function so that the date picker can call it.
-            };
-
-            var datePicker = function () {
-              $(function () {
-                $('[type="datepicker"]').datetimepicker({format: 'DD/MM/YYYY'});
-                $("#datepicker1").on("dp.change", function (e) {
-                  $('#datepicker2').data("DateTimePicker").minDate(e.date);
-                });
-                $("#datepicker2").on("dp.change", function (e) {
-                  $('#datepicker1').data("DateTimePicker").maxDate(e.date);
-                });
-                $("#datepicker3").on("dp.change", function (e) {
-                  $('#datepicker4').data("DateTimePicker").minDate(e.date);
-                });
-                $("#datepicker4").on("dp.change", function (e) {
-                  $('#datepicker3').data("DateTimePicker").maxDate(e.date);
-                });
-              });
-            };
-
-            self.viewType = function (listView) {
-              if (listView) {
-                self.pageSize = 4;
-              } else {
-                self.pageSize = 6;
+              var searchPath = '/search';
+              if (!angular.isUndefined($routeParams.projectID)) {
+                  searchPath = '/project/' + $routeParams.projectID + '/search';
               }
+              if (!angular.isUndefined($routeParams.datasetName)) {
+                  searchPath = '/project/' + $routeParams.projectID + '/datasets/' + $routeParams.datasetName + '/search';
+              }
+              $location.path(searchPath);
+              $location.search('scope', self.searchScope);
+              $location.search('q', self.searchTerm);
             };
 
             $scope.$on("$destroy", function () {
@@ -432,6 +223,7 @@ angular.module('hopsWorksApp')
               //$interval.cancel(getPopularPublicDatasetsInterval);
             });
 
+            //TODO: move to search
             self.downloadPublicDataset = function (result) {
               ModalService.selectProject('md', true, "/[^]*/", "Select a Project as download destination.", true).then(function (success) {
                 var destProj = success.projectId;
@@ -449,78 +241,6 @@ angular.module('hopsWorksApp')
                 });
               }, function (error) {
               });
-            };
-
-            self.viewType = function (listView) {
-              if (listView) {
-                  self.searchResult.pagination.itemsPerPage = 4;
-              } else {
-                  self.searchResult.pagination.itemsPerPage = 9;
-              }
-            };
-
-            self.incrementPage = function () {
-                self.searchResult.pagination.itemsPerPage++;
-            };
-
-            self.decrementPage = function () {
-              if (self.searchResult.pagination.itemsPerPage < 2) {
-                return;
-              }
-                self.searchResult.pagination.itemsPerPage--;
-            };
-
-            self.viewDetail = function (result) {
-              if (result.localDataset) {
-                if (result.type === 'proj') {
-                  ProjectService.getProjectInfo({projectName: result.name}).$promise.then(
-                          function (response) {
-                            ModalService.viewSearchResult('lg', response, result);
-                          }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                  });
-                } else if (result.type === 'ds') {
-                  ProjectService.getDatasetInfo({inodeId: result.id}).$promise.then(
-                          function (response) {
-                            var projects;
-                            ProjectService.query().$promise.then(
-                                    function (success) {
-                                      projects = success;
-                                      ModalService.viewSearchResult('lg', response, result, projects);
-                                    }, function (error) {
-                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                            });
-                          });
-                } else if (result.type === 'inode') {
-                  ProjectService.getInodeInfo({id: $routeParams.projectID, inodeId: result.id}).$promise.then(
-                          function (response) {
-                            var projects;
-                            ProjectService.query().$promise.then(
-                                    function (success) {
-                                      projects = success;
-                                      ModalService.viewSearchResult('lg', response, result, projects);
-                                    }, function (error) {
-                              growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                            });
-                          });
-                }
-              } else {
-                ModalService.viewSearchResult('lg', result, result, null);
-              }
-            };
-
-            self.datasetDetail = function (inodeId) {
-                ProjectService.getDatasetInfo({inodeId: inodeId}).$promise.then(
-                    function (response) {
-                        var projects;
-                        ProjectService.query().$promise.then(
-                            function (success) {
-                                projects = success;
-                                ModalService.requestAccess('md', response, projects);
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, {title: 'Error', ttl: 5000});
-                            });
-                    });
             };
 
             self.versions = [];
