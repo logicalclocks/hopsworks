@@ -183,9 +183,7 @@ public class YarnRunner {
     HopsUtils.copyProjectUserCerts(project, username,
         services.getSettings().getHopsworksTmpCertDir(),
         services.getSettings().getHdfsTmpCertDir(), jobType,
-        dfso, materialResources, systemProperties, services.getSettings().getGlassfishTrustStoreHdfs(),
-        applicationId, services.getCertificateMaterializer(),
-        services.getSettings().getHopsRpcTls());
+        dfso, materialResources, applicationId, services.getCertificateMaterializer());
 
     for (LocalResourceDTO materialDTO : materialResources) {
       amLocalResourcesOnHDFS.put(materialDTO.getName(), materialDTO);
@@ -231,8 +229,7 @@ public class YarnRunner {
 
       // When Hops RPC TLS is enabled, Yarn will take care of application certificate
       if (!services.getSettings().getHopsRpcTls()) {
-        copyUserCertificates(project, jobType, dfso, username,
-            appId.toString());
+        copyUserCertificates(project, jobType, dfso, username, appId.toString());
       }
 
       //Check resource requests and availabilities

@@ -63,8 +63,8 @@ public class SparkJob extends YarnJob {
   private SparkYarnRunnerBuilder runnerbuilder;
 
   SparkJob(Jobs job, AsynchronousJobExecutor services, Users user, final String hadoopDir,
-           String jobUser, Settings settings, String kafkaBrokersString) {
-    super(job, services, user, jobUser, hadoopDir, settings, kafkaBrokersString);
+           String jobUser, Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint) {
+    super(job, services, user, jobUser, hadoopDir, settings, kafkaBrokersString, hopsworksRestEndpoint);
     if (!(job.getJobConfig() instanceof SparkJobConfiguration)) {
       throw new IllegalArgumentException(
           "JobDescription must contain a SparkJobConfiguration object. Received: "
@@ -106,7 +106,8 @@ public class SparkJob extends YarnJob {
       runner = runnerbuilder.
           getYarnRunner(jobs.getProject(),
               jobUser,
-              services, services.getFileOperations(hdfsUser.getUserName()), yarnClient, settings, kafkaBrokersString);
+              services, services.getFileOperations(hdfsUser.getUserName()), yarnClient,
+              settings, kafkaBrokersString, hopsworksRestEndpoint);
     } catch (Exception e) {
       LOG.log(Level.WARNING,
           "Failed to create YarnRunner.", e);

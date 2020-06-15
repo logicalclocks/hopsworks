@@ -136,9 +136,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
-  private static final String VARIABLE_OOZIE_IP = "oozie_ip";
-  private static final String VARIABLE_SPARK_HISTORY_SERVER_IP
-      = "spark_history_server_ip";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
@@ -194,14 +191,10 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
   private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
   private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
-  private static final String VARIABLE_YARN_WEB_UI_IP = "yarn_ui_ip";
-  private static final String VARIABLE_YARN_WEB_UI_PORT = "yarn_ui_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
       = "file_preview_image_size";
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE
       = "file_preview_txt_size";
-  private static final String VARIABLE_HOPSWORKS_REST_ENDPOINT
-      = "hopsworks_endpoint";
   private static final String VARIABLE_HOPS_RPC_TLS = "hops_rpc_tls";
   public static final String ERASURE_CODING_CONFIG = "erasure-coding-site.xml";
 
@@ -551,7 +544,6 @@ public class Settings implements Serializable {
       ELASTIC_LOGS_INDEX_EXPIRATION = setLongVar(VARIABLE_ELASTIC_LOGS_INDEX_EXPIRATION, ELASTIC_LOGS_INDEX_EXPIRATION);
       HOPSWORKS_IP = setIpVar(VARIABLE_HOPSWORKS_IP, HOPSWORKS_IP);
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
-      OOZIE_IP = setIpVar(VARIABLE_OOZIE_IP, OOZIE_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
       DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
@@ -569,8 +561,6 @@ public class Settings implements Serializable {
           KAFKA_DEFAULT_NUM_REPLICAS);
       YARN_DEFAULT_QUOTA = setIntVar(VARIABLE_YARN_DEFAULT_QUOTA,
           YARN_DEFAULT_QUOTA);
-      YARN_WEB_UI_IP = setIpVar(VARIABLE_YARN_WEB_UI_IP, YARN_WEB_UI_IP);
-      YARN_WEB_UI_PORT = setIntVar(VARIABLE_YARN_WEB_UI_PORT, YARN_WEB_UI_PORT);
       HDFS_DEFAULT_QUOTA_MBs = setDirVar(VARIABLE_HDFS_DEFAULT_QUOTA,
           HDFS_DEFAULT_QUOTA_MBs);
       HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
@@ -580,8 +570,6 @@ public class Settings implements Serializable {
       CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
-      HOPSWORKS_REST_ENDPOINT = setStrVar(VARIABLE_HOPSWORKS_REST_ENDPOINT,
-          HOPSWORKS_REST_ENDPOINT);
       ANACONDA_USER = setStrVar(VARIABLE_ANACONDA_USER, ANACONDA_USER);
       ANACONDA_DIR = setDirVar(VARIABLE_ANACONDA_DIR, ANACONDA_DIR);
       ANACONDA_DEFAULT_REPO = setStrVar(VARIABLE_ANACONDA_DEFAULT_REPO, ANACONDA_DEFAULT_REPO);
@@ -1174,14 +1162,6 @@ public class Settings implements Serializable {
     return YARN_DEFAULT_QUOTA;
   }
 
-  private String YARN_WEB_UI_IP = "127.0.0.1";
-  private int YARN_WEB_UI_PORT = 8088;
-
-  public synchronized String getYarnWebUIAddress() {
-    checkCache();
-    return YARN_WEB_UI_IP + ":" + YARN_WEB_UI_PORT;
-  }
-
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
   public synchronized long getHdfsDefaultQuotaInMBs() {
@@ -1582,13 +1562,6 @@ public class Settings implements Serializable {
     return SERVICE_DISCOVERY_DOMAIN;
   }
 
-  // Oozie
-  private String OOZIE_IP = "127.0.0.1";
-
-  public synchronized String getOozieIp() {
-    checkCache();
-    return OOZIE_IP;
-  }
 
   // MapReduce Job History Server
   private String JHS_IP = "127.0.0.1";
@@ -1779,19 +1752,6 @@ public class Settings implements Serializable {
     return KAGENT_LIVENESS_THRESHOLD;
   }
 
-  private String HOPSWORKS_REST_ENDPOINT = "hopsworks0:8181";
-
-  public synchronized String getRestEndpoint() {
-    checkCache();
-
-    if (isLocalHost()) {
-      return "https://localhost:" +
-        HOPSWORKS_REST_ENDPOINT.substring(HOPSWORKS_REST_ENDPOINT.lastIndexOf(":") + 1);
-    }
-
-    return "https://" + HOPSWORKS_REST_ENDPOINT;
-  }
-
   private RESTLogLevel HOPSWORKS_REST_LOG_LEVEL = RESTLogLevel.PROD;
 
   public synchronized RESTLogLevel getHopsworksRESTLogLevel() {
@@ -1939,9 +1899,7 @@ public class Settings implements Serializable {
   public static final String CERT_PASS_SUFFIX = "__cert.key";
   public static final String K_CERTIFICATE = "k_certificate";
   public static final String T_CERTIFICATE = "t_certificate";
-  private static final String CA_TRUSTSTORE_NAME = "cacerts.jks";
-  public static final String DOMAIN_CA_TRUSTSTORE_PEM = "cacerts.pem";
-  public static final String DOMAIN_CA_TRUSTSTORE = "cacerts.jks";
+  public static final String DOMAIN_CA_TRUSTSTORE = "t_certificate";
   //Glassfish truststore, used by hopsutil to initialize https connection to Hopsworks
   public static final String CRYPTO_MATERIAL_PASSWORD = "material_passwd";
 
@@ -2009,13 +1967,6 @@ public class Settings implements Serializable {
     return "/tmp/usercerts/";
   }
 
-  public String getGlassfishTrustStoreHdfs() {
-    return "hdfs:///user/" + getSparkUser() + "/" + CA_TRUSTSTORE_NAME;
-  }
-  
-  public String getGlassfishTrustStore() {
-    return getHopsworksDomainDir() + File.separator + "config" + File.separator + CA_TRUSTSTORE_NAME;
-  }
   //Dataset request subject
   public static final String MESSAGE_DS_REQ_SUBJECT = "Dataset access request.";
 
@@ -2432,11 +2383,6 @@ public class Settings implements Serializable {
   public synchronized String getEmailVerificationEndpoint() {
     checkCache();
     return VERIFICATION_PATH;
-  }
-
-  public synchronized String getVerificationEndpoint() {
-    checkCache();
-    return getRestEndpoint() + "/" + VERIFICATION_PATH;
   }
 
   //Dela START

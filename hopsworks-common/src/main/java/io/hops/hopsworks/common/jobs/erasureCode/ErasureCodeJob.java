@@ -59,9 +59,8 @@ public class ErasureCodeJob extends YarnJob {
 
   public ErasureCodeJob(Jobs job, AsynchronousJobExecutor services,
           Users user, String jobUser, String hadoopDir, Settings settings) {
-  
-    super(job, services, user, jobUser, hadoopDir, settings, null);
-    
+    super(job, services, user, jobUser, hadoopDir, settings,null, null);
+
     if (!(job.getJobConfig() instanceof ErasureCodeJobConfiguration)) {
       throw new IllegalArgumentException(
               "JobDescription must contain an ErasureCodeJobConfiguration object. Received: "
