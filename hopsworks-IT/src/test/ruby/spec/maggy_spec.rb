@@ -15,27 +15,48 @@
 =end
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects}
-  before(:all) do
-    with_valid_session
-  end
-
-  describe "maggyresource" do
-
-    context "#logged in" do
-
-      it "should be able to register" do
-        post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {"appId": "42", "hostIp": "127.0.3.5", "port": 12345,
-        "secret": "magster"}
-        expect_status(200)
+  describe "maggy" do
+    describe "maggy driver registration endpoint" do
+      context "not logged in" do
+        it "should not be able to register a maggy driver" do
+          post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.5", port: 12345,
+                                                         secret: "magster"}
+          expect_status(401)
+        end
       end
+        context "logged in" do
+        before(:all) do
+          with_valid_session
+        end
 
-      it "should be able to get a registered driver" do
-        get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
-        expect_status(200)
-        json_body[:appId].eql? '42'
-        json_body[:hostIp].eql? '127.0.3.5'
-        json_body[:secret].eql? 'magster'
-        json_body[:port].eql? '12345'
+        it "should be able to register a maggy driver" do
+          post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.5", port: 12345,
+                                                         secret: "magster"}
+          expect_status(204)
+        end
+
+        it "should be able to get the latest registered driver" do
+          # Sleep since we sort entities by timestamp, otherwise in tests they get created
+          # in the same millisecond
+          sleep(1)
+          post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.6", port: 54321,
+                                                         secret: "magster"}
+          expect_status(204)
+          get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
+          expect_status(200)
+          parsed_json = JSON.parse(response.body)
+          expect(parsed_json["appId"] == "42").to be true
+          expect(parsed_json["hostIp"] == "127.0.3.6").to be true
+          expect(parsed_json["port"] == 54321).to be true
+          expect(parsed_json["secret"] == "magster").to be true
+        end
+
+        it "should be able to delete all registered drivers for an appId" do
+          delete "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
+          expect_status(204)
+          get "#{ENV['HOPSWORKS_API']}/maggy/drivers/42"
+          expect_status(404)
+        end
       end
     end
   end

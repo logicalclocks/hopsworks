@@ -19,14 +19,10 @@ import io.hops.hopsworks.persistence.entity.maggy.MaggyDriver;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A facade for storing information about Maggy Driver instances running in the cluster.
@@ -37,42 +33,27 @@ public class MaggyFacade {
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
   
-  public MaggyDriver findByAppId(String appId) {
+  public List<MaggyDriver> findByAppId(String appId) {
     TypedQuery<MaggyDriver> query;
-    try {
-      query = em.createNamedQuery("MaggyDriver.findByAppId", MaggyDriver.class).setParameter("appId", appId);
-    } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
-      return null;
-    } catch (Throwable e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
-      e.printStackTrace();
-      return null;
-    }
-    return query.getSingleResult();
+    query = em.createNamedQuery("MaggyDriver.findByAppId", MaggyDriver.class).setParameter("appId", appId);
+    return query.getResultList();
   }
-  
   
   public List<MaggyDriver> getAllDrivers() {
     List<MaggyDriver> res;
-    try {
-      TypedQuery<MaggyDriver> query = em.createNamedQuery("MaggyDriver.findAll", MaggyDriver.class);
-      res = query.getResultList();
-    } catch (EntityNotFoundException | NoResultException e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
-      return null;
-    } catch (Throwable e) {
-      Logger.getLogger(MaggyFacade.class.getName()).log(Level.WARNING, null, e);
-      e.printStackTrace();
-      return null;
-    }
-    return res;
+    TypedQuery<MaggyDriver> query = em.createNamedQuery("MaggyDriver.findAll", MaggyDriver.class);
+    return query.getResultList();
   }
   
   public void remove(MaggyDriver driver) {
     if (driver != null) {
       em.remove(driver);
     }
+  }
+  
+  public void removeByAppId(String appId) {
+    List<MaggyDriver> driversToRemove = findByAppId(appId);
+    driversToRemove.forEach(driver -> em.remove(driver));
   }
   
   public void add(MaggyDriver driver) {
