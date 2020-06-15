@@ -149,9 +149,9 @@
                             <span class="glyphicon glyphicon-refresh" ng-class="{'spin-icon':experimentCtrl.expanding[experiment.id]}" ng-show="experimentCtrl.expanding[experiment.id]" style="margin-top: 3px;"> </span>
                         </td>
                     </tr>
-                    <tr dir-paginate-end>
+                    <tr dir-paginate-end style="background: white">
                         {{experiment.id}}
-                        <td style="padding:5px;" colspan="12">
+                        <td style="padding:0px;" colspan="12">
                             <div ng-if="experimentCtrl.expandExperiment[experiment.id]" class="animate-if" id="{{experiment.id}}">
                                 <table class="table table-hover" style="margin-left: 10px; overflow: scroll; width: 100%; margin: 0 auto;">
                                     <thead style="border:none;">

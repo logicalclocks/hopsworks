@@ -154,7 +154,7 @@
                     Actions
                   </th>
                   </thead>
-                  <tbody class="datasets-jobs-table">
+                  <tbody style="vertical-align: middle">
                     <tr dir-paginate-start="job in jobsCtrl.getJobValues()| itemsPerPage:jobsCtrl.pageSize"
                       pagination-id="jobs_pagination"
                       current-page="jobsCtrl.currentPage"
@@ -225,8 +225,8 @@
                       </td>
                     </tr>
                   <!-- Executions -->
-                  <tr dir-paginate-end>
-                    <td colspan="12">
+                  <tr dir-paginate-end style="background: white">
+                    <td style="padding:0px;" colspan="12">
                       <div
                            ng-if="jobsCtrl.executions.hasOwnProperty(job.name) && !jobsCtrl.executionsEmpty(jobsCtrl.executions[job.name])"
                            class="animate-if"

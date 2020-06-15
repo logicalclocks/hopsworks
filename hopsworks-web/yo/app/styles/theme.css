@@ -112,39 +112,6 @@ fieldset[disabled]
     border-color: var(--hopsworks-primary-color);
 }
 
-.btn-info, .btn-info.active {
-    background-color: var(--hopsworks-info-color);
-    border-color: var(--hopsworks-info-color);
-}
-
-.btn-info:hover,
-.btn-info:active,
-.btn-info:visited,
-.btn-info:focus,
-.btn-info.active:hover,
-.btn-info.active:active,
-.btn-info.active:visited,
-.btn-info.active:focus {
-    background-color: var(--hopsworks-info-color);
-    border-color: var(--hopsworks-info-color);
-    opacity: 0.65;
-}
-
-.btn-info.disabled:hover,
-.btn-info[disabled]:hover,
-fieldset[disabled]
-.btn-info:hover,
-.btn-info.disabled:focus,
-.btn-info[disabled]:focus,
-fieldset[disabled] .btn-info:focus,
-.btn-info.disabled.focus,
-.btn-info[disabled].focus,
-fieldset[disabled]
-.btn-info.focus {
-    background-color: var(--hopsworks-info-color);
-    border-color: var(--hopsworks-info-color);
-}
-
 nav.navbar-sics {
     background: var(--hopsworks-header-color);
 }

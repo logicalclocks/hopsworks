@@ -79,8 +79,8 @@
                             <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)">{{model.created | date:'medium'}}</td>
                             <td data-target="#{{model.name}}" ng-click="modelCtrl.expand(model.name)">{{model.description}} </td>
                         </tr>
-                        <tr dir-paginate-end>
-                            <td colspan="12">
+                        <tr dir-paginate-end style="background: white">
+                            <td style="padding:0px;" colspan="12">
                                 <div ng-if="modelCtrl.expandModel[model.name]" class="animate-if" id="{{model.name}}">
                                     <table class="table" style="border-collapse: collapse;">
                                         <thead>
