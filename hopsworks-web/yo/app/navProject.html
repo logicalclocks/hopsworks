@@ -48,19 +48,19 @@
 
       <li style="background: #1a1a1a;">
         <a href="#!/project/{{projectCtrl.currentProject.projectId}}" class="project-name" id="project_nav_title"
-           title="{{projectCtrl.currentProject.projectName.length > 14 ? projectCtrl.currentProject.projectName:''}}"
-           ng-class="{active: projectCtrl.activeService === 'home'}">
+           title="{{projectCtrl.currentProject.projectName.length > 14 ? projectCtrl.currentProject.projectName:''}}">
           {{projectCtrl.currentProject.projectName}}
         </a>
         <div id="close-sidebar" title="Hide"
              ng-click="projectCtrl.isClosed = !projectCtrl.isClosed">
-          <i class="glyphicon glyphicon-remove" style="font-size: 25px"></i>
+          <i class="glyphicon glyphicon-remove" style="font-size: 20px"></i>
         </div>
       </li>
-      <hr/>
+
       <li ng-click="projectCtrl.goToJupyter()" ng-show="projectCtrl.showJupyter()">
-        <a ng-class="{active: projectCtrl.activeService === 'jupyter'}">
-          Jupyter <i class="pull-right hopsworks-icon hopsworks-icon-jupyter" id="jupyterTab"/>
+        <a>
+          Jupyter <img class="pull-right" style="margin-right:5px" width="30" src="images/jupyter-200x200-bw.png"
+                       id="jupyterTab"/>
           <i uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."
              tooltip-placement="auto right"
              ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.YarnBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>
@@ -68,17 +68,17 @@
       </li>
 
       <li ng-click="projectCtrl.goToJobs()" ng-show="projectCtrl.showJobs()" id="jobsTab">
-        <a ng-class="{active: projectCtrl.activeService === 'jobs' || projectCtrl.activeService === 'newjob'}">
-          Jobs <i class="pull-right hopsworks-icon hopsworks-icon-gear"/>
+        <a>Jobs <span class="sub_icon fa fa-cogs fa-lg pull-right"></span>
           <i uib-tooltip="Orange triangle: jobs are encountering problems. Red means Jobs cannot be run just now."
              tooltip-placement="auto right"
              ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.YarnBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.YarnWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
 
-      <li ng-click="projectCtrl.goToKafka()" ng-show="projectCtrl.showKafka()">
-        <a ng-class="{active: projectCtrl.activeService === 'kafka'}">
-          Kafka <i class="pull-right hopsworks-icon hopsworks-icon-kafka" id="kafkaTab"/>
+      <li ng-click="projectCtrl.goToKafka()"
+          ng-show="projectCtrl.showKafka()">
+        <a>
+          Kafka <img class="pull-right" style="margin-right:15px" height="25" src="images/kafka_logo.png" id="kafkaTab"/>
           <i uib-tooltip="Orange triangle: Kafka is encountering problems. Red means Kafka is down."
              tooltip-placement="auto right"
              ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.KafkaBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.KafkaWarn }" aria-hidden="true" style="margin-top: 3px"></i>
@@ -97,15 +97,14 @@
       </li>
 
       <li ng-click="projectCtrl.goToFeaturestore()" ng-show="projectCtrl.showFeaturestore()" id="featurestoreTab">
-        <a
-                ng-class="{active: projectCtrl.activeService === 'featurestore' || projectCtrl.activeService === 'newfeaturegroup' || projectCtrl.activeService === 'newtrainingdataset' || projectCtrl.activeService === 'newstorageconnector'}">
-          Feature Store<i class="pull-right hopsworks-icon hopsworks-icon-database"/>
+        <a>
+          Feature Store<span class="sub_icon fa fa-database fa-lg pull-right"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToExperiments()" ng-show="projectCtrl.showExperiments()" id="experimentsTab">
-        <a ng-class="{active: projectCtrl.activeService === 'experiments'}">
-          Experiments<i class="pull-right hopsworks-icon hopsworks-icon-experiment"/>
+        <a class="left-right">
+          Experiments<img class="pull-right" style="margin-right:8px" height="27" src="images/experiments.png"/>
           <i uib-tooltip="Experiments service is experiencing issues and is not working properly."
              tooltip-placement="auto right"
              ng-class="{'pull-left fa fa-ban text-danger': (clusterUtilCtrl.ElasticBan || clusterUtilCtrl.EpipeBan || clusterUtilCtrl.HdfsBan)}" aria-hidden="true" style="margin-top: 3px"></i>
@@ -113,66 +112,69 @@
       </li>
 
       <li ng-click="projectCtrl.goToModels()" ng-show="projectCtrl.showModels()" id="modelsTab">
-        <a ng-class="{active: projectCtrl.activeService === 'models'}">
-          Models<i class="pull-right hopsworks-icon hopsworks-icon-model"/>
+        <a class="left-right">
+          Models<img class="pull-right" style="margin-right:11px" height="24" src="images/models.png"/>
           <i uib-tooltip="Models service is experiencing issues and is not working properly."
              tooltip-placement="auto right"
              ng-class="{'pull-left fa fa-ban text-danger': (clusterUtilCtrl.ElasticBan || clusterUtilCtrl.EpipeBan || clusterUtilCtrl.HdfsBan)}" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
 
+
       <li ng-click="projectCtrl.goToServing()" ng-show="projectCtrl.showServing()" id="servingTab">
-        <a ng-class="{active: projectCtrl.activeService === 'serving'}">
+        <a class="left-right">
           Model Serving
-          <i class="pull-right hopsworks-icon hopsworks-icon-serving"/>
+          <img class="pull-right" style="margin-right:8px" height="24" src="images/serving.png"/>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToAirflow()" ng-show="projectCtrl.showAirflow()">
-        <a ng-class="{active: projectCtrl.activeService === 'airflow'}">
-          Airflow<i class="pull-right hopsworks-icon hopsworks-icon-airflow"/>
+        <a>
+          Airflow
+          <img ng-show="projectCtrl.activeService !== 'airflow'" class="pull-right" style="margin-left:10px; margin-right:10px" height="25"
+               src="images/airflow-200x198-bw.png"/>
+          <img ng-show="projectCtrl.activeService === 'airflow'" class="pull-right" style="margin-left:10px; margin-right:10px" height="25"
+               src="images/airflow-200x198.png"/>
         </a>
       </li>
-      <hr/>
-      <li ng-click="projectCtrl.goToDatasets()" ng-show="projectCtrl.cloak" id="datasetsTab">
-        <a ng-class="{active: projectCtrl.activeService === 'datasets'}">
-          Data Sets <i class="pull-right hopsworks-icon hopsworks-icon-folder"/>
+      
+      <li ng-click="projectCtrl.goToDatasets()" style="margin-top:20px; margin-bottom:20px;" ng-show="projectCtrl.cloak" id="datasetsTab">
+        <a>
+          Data Sets <span class="sub_icon fa fa-folder-open fa-lg pull-right"></span>
           <i uib-tooltip="Orange triangle: the filesystem is encountering problems. Red means the filesystem is down."
              tooltip-placement="auto right"
            ng-class="{'pull-left fa fa-ban text-danger': clusterUtilCtrl.HdfsBan, 'pull-left fa fa-exclamation-triangle text-warning': clusterUtilCtrl.HdfsWarn }" aria-hidden="true" style="margin-top: 3px"></i>
         </a>
       </li>
-      <hr/>
+
       <li ng-click="projectCtrl.goToSettings()" ng-show="projectCtrl.cloak">
-        <a ng-class="{active: projectCtrl.activeService === 'settings'}">
-          Settings<i class="pull-right hopsworks-icon hopsworks-icon-dashboard"/>
+        <a>
+          Settings<span class="sub_icon fa fa-dashboard fa-lg pull-right" id="settingsTab"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToPython()" ng-show="projectCtrl.cloak" id="pythonTab">
-        <a ng-class="{active: projectCtrl.activeService === 'python'}">
-          Python<i class="pull-right hopsworks-icon hopsworks-icon-python"/>
+        <a>
+          Python<img class="pull-right" style="margin-right:13px" height="23" src="images/python_logo.png"/>
         </a>
       </li>
 
       <li ng-click="projectCtrl.membersModal()" ng-show="projectCtrl.cloak">
         <a>
-          Members<i class="pull-right hopsworks-icon hopsworks-icon-members"/>
+          Members<span class="sub_icon fa fa-users fa-lg pull-right"></span>
         </a>
       </li>
 
       <li ng-click="projectCtrl.goToMetadataDesigner()" ng-show="projectCtrl.role === 'Data owner'"
           ng-show="projectCtrl.cloak" id="metadataTab" ng-if="mainCtrl.ShowMetadataDesigner">
         <a>
-          Metadata Designer<i class="sub_icon fa fa-2x fa-edit fa-lg pull-right" style="padding: 15px 10px;"></i>
+          Metadata Designer<span class="sub_icon fa fa-edit fa-lg pull-right"></span>
         </a>
       </li>
       <br>
-      <hr/>
       <div>
         <div class="sidebar-nav-static">
-          <small ng-show="clusterUtilCtrl.utilisation >= 0" style="color: #ddd; font-size: 100%;"><em>Cluster
-            Utilization: {{clusterUtilCtrl.utilisation}}%</em></small>
+          <small ng-show="clusterUtilCtrl.utilisation >= 0" style="color: #ddd; font-size: 80%;"><em>Cluster Utilization: {{clusterUtilCtrl.utilisation}}%</em></small>
           <small ng-show="clusterUtilCtrl.utilisation < 0" style="color: #ddd;"><em>Cluster Utilization is unknown</em></small>
           <div class="progress" style="height: 10px;margin-bottom: 1px"
                uib-tooltip="Orange (> 50%): consider allocating less resources for your application.
@@ -207,14 +209,14 @@
     </ul>
     </div>
     <div class="footer navbar-fixed-bottom project-sidebar-footer">
-      <hr>
+      <hr style="border-top: 1px solid #ddd; margin: 20px 2px 0px 2px;">
       <div class="footer-content">
         <ul class="footer-content-list" style="padding-left: 0">
-          <li><a target="_blank" rel="noopener noreferrer" href="https://community.hopsworks.ai">Support
-            <i class="pull-right hopsworks-icon hopsworks-icon-phone"/></a></li>
+          <li><a target="_blank" rel="noopener noreferrer" href="https://community.hopsworks.ai">Support <span
+                  class="sub_icon fa fa-phone fa-lg pull-right"></span></a></li>
           <li><a target="_blank" rel="noopener noreferrer"
                  href="https://hopsworks.readthedocs.io/en/{{mainCtrl.hopsworksDocVersion}}">Documentation
-            <i class="pull-right hopsworks-icon hopsworks-icon-book"/></a></li>
+            <span class="sub_icon fa fa-book fa-lg pull-right"></span></a></li>
         </ul>
       </div>
     </div>
