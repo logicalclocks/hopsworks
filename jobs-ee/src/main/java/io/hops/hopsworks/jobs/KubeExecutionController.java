@@ -7,6 +7,7 @@ package io.hops.hopsworks.jobs;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
@@ -63,6 +64,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -216,9 +218,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
   
   private Job buildJob(String name, String secretsName, String kubeProjectUser, String anacondaEnv,
-    String secretsDir,
-    String certificatesDir, String hadoopUser, String flinkConfDir, String appPath, String args,
-    PythonJobConfiguration pythonJobConfiguration, Execution execution, Project project)
+                       String secretsDir, String certificatesDir, String hadoopUser, String flinkConfDir,
+                       String appPath, String args, PythonJobConfiguration pythonJobConfiguration,
+                       Execution execution, Project project)
       throws ServiceException, ServiceDiscoveryException {
   
     ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(pythonJobConfiguration);
@@ -250,12 +252,15 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     if(!Strings.isNullOrEmpty(kafkaBrokers.getKafkaBrokersString())) {
       jobEnv.put("KAFKA_BROKERS", kafkaBrokers.getKafkaBrokersString());
     }
-    jobEnv.put("REST_ENDPOINT", settings.getRestEndpoint());
+    Service hopsworks =
+        serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+            ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+    jobEnv.put("REST_ENDPOINT", "https://" + hopsworks.getName() + ":" + hopsworks.getPort());
     jobEnv.put(Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python");
     jobEnv.put("HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()));
     jobEnv.put("REQUESTS_VERIFY", String.valueOf(settings.getRequestsVerify()));
-    jobEnv.put( "DOMAIN_CA_TRUSTSTORE_PEM",
-      settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM);
+    jobEnv.put( "DOMAIN_CA_TRUSTSTORE",
+        Paths.get(certificatesDir, hadoopUser + Settings.TRUSTSTORE_SUFFIX).toString());
     jobEnv.put( "SECRETS_DIR", secretsDir);
     jobEnv.put( "CERTS_DIR", certificatesDir);
     jobEnv.put("FLINK_CONF_DIR", flinkConfDir);

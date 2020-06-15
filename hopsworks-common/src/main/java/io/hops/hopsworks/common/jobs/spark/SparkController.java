@@ -40,6 +40,8 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
@@ -99,6 +101,8 @@ public class SparkController {
   private DistributedFsService dfs;
   @EJB
   private KafkaBrokers kafkaBrokers;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   /**
    * Start the Spark job as the given user.
@@ -137,11 +141,16 @@ public class SparkController {
 
     SparkJob sparkjob = null;
     try {
+      // Set Hopsworks consul service domain, don't use the address, use the name
+      String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
+          constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
         sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
             new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
-                hdfsUsersBean.getHdfsUserName(job.getProject(), user), settings, kafkaBrokers.getKafkaBrokersString()));
+                hdfsUsersBean.getHdfsUserName(job.getProject(), user),
+                settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
@@ -149,7 +158,11 @@ public class SparkController {
     } catch (IOException ex) {
       throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR, Level.SEVERE,
         "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
+    } catch (ServiceDiscoveryException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+          "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
+
     if (sparkjob == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
         "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),

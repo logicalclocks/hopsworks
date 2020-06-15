@@ -65,8 +65,9 @@ public class FlinkJob extends YarnJob {
   private FlinkYarnRunnerBuilder flinkBuilder;
   
   FlinkJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser,
-           Settings settings, String kafkaBrokersString) {
-    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings, kafkaBrokersString);
+           Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint) {
+    super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings,
+        kafkaBrokersString, hopsworksRestEndpoint);
 
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException("Job must contain a FlinkJobConfiguration object. Received: "
@@ -89,7 +90,7 @@ public class FlinkJob extends YarnJob {
     try {
       runner = flinkBuilder
         .getYarnRunner(jobs.getProject(), jobUser, services.getFileOperations(hdfsUser.getUserName()),
-          yarnClient, services, settings, kafkaBrokersString);
+          yarnClient, services, settings, kafkaBrokersString, hopsworksRestEndpoint);
       
     } catch (IOException e) {
       LOG.log(Level.SEVERE,

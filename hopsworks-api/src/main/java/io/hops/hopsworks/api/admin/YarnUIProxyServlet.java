@@ -38,10 +38,12 @@
  */
 package io.hops.hopsworks.api.admin;
 
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -111,22 +113,18 @@ public class YarnUIProxyServlet extends ProxyServlet {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private ProjectController projectController;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   protected void initTarget() throws ServletException {
-    // TODO - should get the Kibana URI from Settings.java
-    targetUri = settings.getYarnWebUIAddress();
-    if (!targetUri.contains("http://")) {
-      targetUri = "http://" + targetUri;
-    }
-    if (targetUri == null) {
-      throw new ServletException(P_TARGET_URI + " is required.");
-    }
-    //test it's valid
     try {
+      Service httpRM =
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.HTTP_RESOURCEMANAGER);
+      targetUri = "http://" + httpRM.getName() + ":" + httpRM.getPort();
       targetUriObj = new URI(targetUri);
     } catch (Exception e) {
-      throw new ServletException("Trying to process targetUri init parameter: "
-        + e, e);
+      throw new ServletException("Trying to process targetUri init parameter: " + e, e);
     }
     targetHost = URIUtils.extractHost(targetUriObj);
   }

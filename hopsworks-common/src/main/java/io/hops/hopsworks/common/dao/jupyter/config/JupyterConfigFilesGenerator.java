@@ -215,6 +215,8 @@ public class JupyterConfigFilesGenerator {
         throws IOException, ServiceException, ServiceDiscoveryException {
     Service namenode = serviceDiscoveryController
         .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+    String hopsworksRestEndpoint = "https://" + serviceDiscoveryController
+        .constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
 
     String remoteGitURL = "";
     String apiKey = "";
@@ -230,7 +232,7 @@ public class JupyterConfigFilesGenerator {
         .setNamenodeIp(namenode.getAddress())
         .setNamenodePort(String.valueOf(namenode.getPort()))
         .setContentsManager(jcm.getClassName())
-        .setHopsworksEndpoint(settings.getRestEndpoint())
+        .setHopsworksEndpoint(hopsworksRestEndpoint)
         .setElasticEndpoint(settings.getElasticEndpoint())
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
@@ -246,7 +248,7 @@ public class JupyterConfigFilesGenerator {
         .setGitBackend(gitBackend)
         .setFlinkConfDirectory(settings.getFlinkConfDir())
         .setRequestsVerify(settings.getRequestsVerify())
-        .setDomainCATruststorePem(settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM)
+        .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
         .setAnacondaEnvironment(settings.getAnacondaProjectDir(project))
         .build();
@@ -260,7 +262,7 @@ public class JupyterConfigFilesGenerator {
   }
 
   public void createSparkMagicConfig(Writer out, Project project, JupyterSettings js, String hdfsUser,
-      String confDirPath) throws IOException {
+      String confDirPath) throws IOException, ServiceDiscoveryException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
     
@@ -277,8 +279,13 @@ public class JupyterConfigFilesGenerator {
     finalSparkConfiguration.put(Settings.SPARK_DRIVER_STAGINGDIR_ENV,
       "hdfs:///Projects/" + project.getName() + "/Resources");
 
-    finalSparkConfiguration.putAll(sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration,
-      settings, hdfsUser, tfLdLibraryPath, extraJavaOptions, kafkaBrokers.getKafkaBrokersString()));
+    // Set Hopsworks consul service domain, don't use the address, use the name
+    String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
+        constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+
+    finalSparkConfiguration.putAll(
+        sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser,
+            tfLdLibraryPath, extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());

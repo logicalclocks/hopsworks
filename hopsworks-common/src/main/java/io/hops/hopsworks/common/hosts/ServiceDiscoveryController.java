@@ -57,7 +57,8 @@ public class ServiceDiscoveryController {
     RPC_NAMENODE("rpc.namenode"),
     TF_SERVING_LOGSTASH("tfserving.logstash"),
     SKLEARN_SERVING_LOGSTASH("sklearnserving.logstash"),
-    PYTHON_JOBS_LOGSTASH("pythonjobs.logstash");
+    PYTHON_JOBS_LOGSTASH("pythonjobs.logstash"),
+    HOPSWORKS_APP("hopsworks.glassfish");
   
     private String name;
     HopsworksService(String name) {
@@ -102,7 +103,13 @@ public class ServiceDiscoveryController {
     }
     return String.format(CONSUL_SERVICE_TEMPLATE, serviceName, settings.getServiceDiscoveryDomain());
   }
-  
+
+  @Lock(LockType.READ)
+  public String constructServiceFQDNWithPort(HopsworksService hopsworksService) throws ServiceDiscoveryException {
+    Service service = getAnyAddressOfServiceWithDNS(hopsworksService);
+    return service.getName() + ":" + service.getPort();
+  }
+
   @Lock(LockType.READ)
   public Stream<Service> getService(Type resolverType, ServiceQuery serviceQuery)
       throws ServiceDiscoveryException {

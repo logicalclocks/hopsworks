@@ -114,6 +114,7 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -138,7 +139,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -542,7 +542,7 @@ public class ProjectService {
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
       throws DatasetException,
       GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException, UnsupportedEncodingException, ElasticException, SchemaException,
+      FeaturestoreException, JobException, ElasticException, SchemaException,
       ProvenanceException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));

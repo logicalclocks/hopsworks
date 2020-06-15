@@ -17,6 +17,8 @@
 package io.hops.hopsworks.api.jobs;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -31,12 +33,14 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
@@ -114,6 +118,8 @@ public class JobsResource {
   private JWTHelper jWTHelper;
   @EJB
   private JobsBuilder jobsBuilder;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   private Project project;
   @Logged(logLevel = LogLevel.OFF)
@@ -392,19 +398,22 @@ public class JobsResource {
   @Produces(MediaType.TEXT_PLAIN)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getYarnUI(@PathParam("appId") String appId, @Context SecurityContext sc) throws JobException {
+  public Response getYarnUI(@PathParam("appId") String appId, @Context SecurityContext sc)
+      throws JobException, ServiceException {
     executionController.checkAccessRight(appId, project);
-    
+
     try {
+      Service service =
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.HTTP_RESOURCEMANAGER);
       String yarnUrl = "/hopsworks-api/api/project/" + project.getId() + "/jobs/"
-        + appId + "/prox/" + settings.getYarnWebUIAddress() + "/cluster/app/" + appId;
-      
+        + appId + "/prox/" + service.getName() + ":" + service.getPort() + "/cluster/app/" + appId;
+
       return Response.ok().entity(yarnUrl).build();
-      
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception while getting job ui " + e.getLocalizedMessage(), e);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+          "Could not find YARN Web UI Service");
     }
-    return Response.ok().build();
   }
   
   /**

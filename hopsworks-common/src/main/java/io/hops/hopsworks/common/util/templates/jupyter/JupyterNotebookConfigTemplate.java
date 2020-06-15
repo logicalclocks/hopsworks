@@ -36,7 +36,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final String gitBackend;
   private final String flinkConfDirectory;
   private final Boolean requestsVerify;
-  private final String domainCATruststorePem;
+  private final String domainCATruststore;
   private final String serviceDiscoveryDomain;
   private final String anacondaEnvironment;
   
@@ -58,7 +58,7 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.gitBackend = builder.getGitBackend();
     this.flinkConfDirectory = builder.getFlinkConfDirectory();
     this.requestsVerify = builder.getRequestsVerify();
-    this.domainCATruststorePem = builder.getDomainCATruststorePem();
+    this.domainCATruststore = builder.getDomainCATruststore();
     this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
     this.anacondaEnvironment = builder.getAnacondaEnvironment();
   }
@@ -126,11 +126,11 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   public Boolean getRequestsVerify() {
     return requestsVerify;
   }
-  
-  public String getDomainCATruststorePem() {
-    return domainCATruststorePem;
+
+  public String getDomainCATruststore() {
+    return domainCATruststore;
   }
-  
+
   public String getServiceDiscoveryDomain() {
     return serviceDiscoveryDomain;
   }

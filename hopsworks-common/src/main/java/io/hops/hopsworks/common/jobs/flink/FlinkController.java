@@ -39,6 +39,9 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
@@ -114,9 +117,12 @@ public class FlinkController {
   private InodeController inodeController;
   @EJB
   private KafkaBrokers kafkaBrokers;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   
-  public Execution startJob(final Jobs job, final Users user) throws GenericException, JobException {
+  public Execution startJob(final Jobs job, final Users user)
+      throws GenericException, JobException, ServiceException {
     //First: some parameter checking.
     if (job == null) {
       throw new NullPointerException("Cannot run a null job.");
@@ -126,22 +132,30 @@ public class FlinkController {
       throw new IllegalArgumentException(
         "Job configuration is not a Flink job configuration.");
     }
-    
+
+    // Set Hopsworks consul service domain, don't use the address, use the name
     String username = hdfsUsersBean.getHdfsUserName(job.getProject(), user);
     FlinkJob flinkjob = null;
     try {
+      String hopsworksRestEndpoint = "https://" + serviceDiscoveryController.
+          constructServiceFQDNWithPort(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+
       UserGroupInformation proxyUser = ugiService.getProxyUser(username);
       try {
-        flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () ->
-            new FlinkJob(job, submitter, user, hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()),
-                settings, kafkaBrokers.getKafkaBrokersString()));
+        flinkjob = proxyUser.doAs((PrivilegedExceptionAction<FlinkJob>) () -> new FlinkJob(job, submitter, user,
+            hdfsUsersBean.getHdfsUserName(job.getProject(), job.getCreator()), settings,
+            kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }
     } catch (IOException ex) {
       throw new JobException(RESTCodes.JobErrorCode.PROXY_ERROR, Level.SEVERE,
         "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
+    } catch (ServiceDiscoveryException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+          "job: " + job.getId() + ", user:" + user.getUsername(), ex.getMessage(), ex);
     }
+
     if (flinkjob == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.WARNING,
         "Could not instantiate job with name: " + job.getName() + " and id: " + job.getId(),

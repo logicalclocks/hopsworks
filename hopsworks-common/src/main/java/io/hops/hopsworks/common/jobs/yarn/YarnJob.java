@@ -80,7 +80,8 @@ public abstract class YarnJob extends HopsJob {
   protected final String jobUser;
   protected Settings settings;
   protected String kafkaBrokersString;
-  
+  protected String hopsworksRestEndpoint;
+
   /**
    * Constructor for job interacting with the Kafka service.
    *
@@ -93,8 +94,8 @@ public abstract class YarnJob extends HopsJob {
    * @throws IllegalArgumentException If the Jobs does not contain a
  YarnJobConfiguration object.
    */
-  public YarnJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser,
-                 String hadoopDir, Settings settings, String kafkaBrokersString) {
+  public YarnJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser, String hadoopDir,
+      Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint) {
     super(job, services, user, hadoopDir);
 
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
@@ -108,6 +109,7 @@ public abstract class YarnJob extends HopsJob {
     this.jobUser = jobUser;
     this.settings = settings;
     this.kafkaBrokersString = kafkaBrokersString;
+    this.hopsworksRestEndpoint = hopsworksRestEndpoint;
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {

@@ -39,7 +39,7 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String gitBackend;
   private String flinkConfDirectory;
   private Boolean requestsVerify;
-  private String domainCATruststorePem;
+  private String domainCATruststore;
   private String serviceDiscoveryDomain = "consul";
   private String anacondaEnvironment;
   
@@ -220,12 +220,12 @@ public class JupyterNotebookConfigTemplateBuilder {
     return this;
   }
   
-  public String getDomainCATruststorePem() {
-    return domainCATruststorePem;
+  public String getDomainCATruststore() {
+    return domainCATruststore;
   }
   
-  public JupyterNotebookConfigTemplateBuilder setDomainCATruststorePem(String domainCATruststorePem) {
-    this.domainCATruststorePem = domainCATruststorePem;
+  public JupyterNotebookConfigTemplateBuilder setDomainCATruststore(String domainCATruststore) {
+    this.domainCATruststore = domainCATruststore;
     return this;
   }
   

@@ -33,10 +33,10 @@ import java.util.Map;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                            Settings settings, String hdfsUser,
-                                                            String tfLdLibraryPath, Map<String,
-                                                            String> extraJavaOptions,
-                                                            String kafkaBrokersString) throws IOException {
+                                                    Settings settings, String hdfsUser, String tfLdLibraryPath,
+                                                    Map<String, String> extraJavaOptions,
+                                                    String kafkaBrokersString, String hopsworksRestEndpoint)
+      throws IOException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
@@ -158,7 +158,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     if(!Strings.isNullOrEmpty(kafkaBrokersString)) {
       addToSparkEnvironment(sparkProps, "KAFKA_BROKERS", kafkaBrokersString, HopsUtils.IGNORE);
     }
-    addToSparkEnvironment(sparkProps, "REST_ENDPOINT", settings.getRestEndpoint(), HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "REST_ENDPOINT", hopsworksRestEndpoint, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,
       Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python",
             HopsUtils.IGNORE);
@@ -168,8 +168,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
       HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "REQUESTS_VERIFY", String.valueOf(settings.getRequestsVerify()),
       HopsUtils.IGNORE);
-    addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE_PEM",
-      settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE_PEM, HopsUtils.IGNORE);
+    addToSparkEnvironment(sparkProps, "DOMAIN_CA_TRUSTSTORE", Settings.DOMAIN_CA_TRUSTSTORE, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "SERVICE_DISCOVERY_DOMAIN", settings.getServiceDiscoveryDomain(),
         HopsUtils.IGNORE);
     addLibHdfsOpts(userSparkProperties, settings, sparkProps, sparkJobConfiguration);
@@ -495,7 +494,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     }
 
     extraJavaOptions.put(Settings.JOB_LOG4J_CONFIG, Settings.JOB_LOG4J_PROPERTIES);
-    extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, settings.getRestEndpoint());
+    extraJavaOptions.put(Settings.HOPSWORKS_REST_ENDPOINT_PROPERTY, hopsworksRestEndpoint);
     extraJavaOptions.put(Settings.HOPSUTIL_INSECURE_PROPERTY, String.valueOf(settings.isHopsUtilInsecure()));
     extraJavaOptions.put(Settings.SERVER_TRUSTSTORE_PROPERTY, Settings.SERVER_TRUSTSTORE_PROPERTY);
     extraJavaOptions.put(Settings.HOPSWORKS_ELASTIC_ENDPOINT_PROPERTY, settings.getElasticRESTEndpoint());
@@ -505,8 +504,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     extraJavaOptions.put(Settings.HOPSWORKS_PROJECTUSER_PROPERTY, hdfsUser);
     extraJavaOptions.put(Settings.KAFKA_BROKERADDR_PROPERTY, kafkaBrokersString);
     extraJavaOptions.put(Settings.HOPSWORKS_JOBTYPE_PROPERTY, JobType.SPARK.name());
-    extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY,
-        settings.getSparkConfDir() + File.separator + Settings.DOMAIN_CA_TRUSTSTORE);
+    extraJavaOptions.put(Settings.HOPSWORKS_DOMAIN_CA_TRUSTSTORE_PROPERTY, Settings.DOMAIN_CA_TRUSTSTORE);
     if(jobConfiguration.getAppName() != null) {
       extraJavaOptions.put(Settings.HOPSWORKS_JOBNAME_PROPERTY, jobConfiguration.getAppName());
     }
