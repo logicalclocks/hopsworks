@@ -78,8 +78,7 @@ public class RegistrationHelper {
     gotoRegisterPage(driver);
     registerTest(firstName, lastName, email, password, twoFactor, driver, dbHelper);
     if (twoFactor) {
-      assertEquals("Four steps, and you're there...", driver.findElement(
-        By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Hopsworks'])[2]/following::h1[1]"))
+      assertEquals("Four steps, and you're there...", driver.findElement(By.id("two_factor_four_steps"))
         .getText());
       driver.findElement(By.linkText("Ok")).click();
     } else {
