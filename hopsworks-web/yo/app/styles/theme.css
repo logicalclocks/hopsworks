@@ -1,0 +1,268 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+:root {
+    --hopsworks-bg-color: #f1efee;
+    --hopsworks-border-color: #e7e7e7;
+    --hopsworks-header-color: #000000;
+    --hopsworks-sidebar-color: #1d1d1b;
+    --hopsworks-primary-color: #1eb182;
+    --hopsworks-secondary-color: #f7bb38;
+    --hopsworks-danger-color: rgb(247, 61, 69);
+    --hopsworks-info-color: rgb(2, 46, 69);
+}
+
+html {
+    background-color: var(--hopsworks-bg-color) !important;
+}
+
+body {
+    background-color: var(--hopsworks-bg-color) !important;
+}
+
+.panel-heading {
+    background-color: var(--hopsworks-sidebar-color);
+}
+
+
+.btn-primary, .btn-primary.active {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+}
+
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+    background-color: var(--hopsworks-sidebar-color);
+    border-color: var(--hopsworks-sidebar-color);
+}
+
+.pager {
+    background-color: var(--hopsworks-sidebar-color) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:visited,
+.btn-primary:focus,
+.btn-primary.active:hover,
+.btn-primary.active:active,
+.btn-primary.active:visited,
+.btn-primary.active:focus {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+    opacity: 0.65;
+}
+
+.btn-primary.disabled:hover,
+.btn-primary[disabled]:hover,
+fieldset[disabled]
+.btn-primary:hover,
+.btn-primary.disabled:focus,
+.btn-primary[disabled]:focus,
+fieldset[disabled] .btn-primary:focus,
+.btn-primary.disabled.focus,
+.btn-primary[disabled].focus,
+fieldset[disabled]
+.btn-primary.focus {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+}
+
+.btn-success, .btn-success.active {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+}
+
+.btn-success:hover,
+.btn-success:active,
+.btn-success:visited,
+.btn-success:focus,
+.btn-success.active:hover,
+.btn-success.active:active,
+.btn-success.active:visited,
+.btn-success.active:focus {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+    opacity: 0.65;
+}
+
+.btn-success.disabled:hover,
+.btn-success[disabled]:hover,
+fieldset[disabled]
+.btn-success:hover,
+.btn-success.disabled:focus,
+.btn-success[disabled]:focus,
+fieldset[disabled] .btn-success:focus,
+.btn-success.disabled.focus,
+.btn-success[disabled].focus,
+fieldset[disabled]
+.btn-success.focus {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+}
+
+nav.navbar-sics {
+    background: var(--hopsworks-header-color);
+}
+
+.navbar-default {
+    background-color: var(--hopsworks-bg-color);
+    border-color: var(--hopsworks-border-color);
+}
+
+#sidebar-wrapper {
+    background: var(--hopsworks-sidebar-color);
+}
+
+#show-sidebar {
+    background: var(--hopsworks-sidebar-color);
+}
+
+.content-wrapper >.content-heading, .content-wrapper > h3 {
+    background-color: var(--hopsworks-bg-color);
+}
+
+.project-sidebar-footer {
+    background: var(--hopsworks-sidebar-color);
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    background-color: var(--hopsworks-primary-color);
+    border-color: var(--hopsworks-primary-color);
+}
+
+md-checkbox.md-default-theme:not([disabled]).md-primary.md-checked .md-icon,
+md-checkbox:not([disabled]).md-primary.md-checked .md-icon {
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+.j-panel-heading {
+    background-color: var(--hopsworks-sidebar-color) !important;
+}
+
+.table-hover > tbody > tr:hover {
+    background-color: white;
+}
+
+.table-hover > tbody > tr.highlight {
+    background-color: white;
+}
+
+.sidebar-nav li:before {
+    width: 0px !important;
+}
+
+.sidebar-nav li a:active,
+.sidebar-nav li a:focus,
+.sidebar-nav li.open a:active,
+.sidebar-nav li.open a:focus {
+    background-color: transparent !important;
+}
+
+.sidebar-nav li:hover:before,
+.sidebar-nav li.open:hover:before {
+    width: 0px !important;
+}
+
+.sidebar-nav li:hover:before,
+.sidebar-nav li.open:hover:before {
+    width: 0px !important;
+}
+
+.sidebar-nav li a:hover,
+.sidebar-nav li a.active{
+    color: var(--hopsworks-primary-color)  !important;
+    transition: color 0.5s ease;
+}
+
+.footer-content-list li:before {
+    width: 0px !important;
+}
+
+.footer-content-list li:active:before,
+.footer-content-list li:focus:before,
+.footer-content-list li:hover:before {
+    width: 0px !important;
+}
+
+.footer-content-list li a:hover {
+    color: var(--hopsworks-primary-color)  !important;
+    transition: color 0.5s ease;
+}
+
+.footer-content-list li a:hover span {
+    color: white  !important;
+}
+
+.fs-sidenav .md-tabs.md-default-theme md-ink-bar, md-tabs md-ink-bar {
+    color: var(--hopsworks-primary-color)!important;
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+.ds-sidenav .md-tabs.md-default-theme md-ink-bar, md-tabs md-ink-bar {
+    color: var(--hopsworks-primary-color) !important;
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+.progress-bar-success {
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+md-radio-group:not([disabled]).md-primary .md-on {
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+.modal-header {
+    background-color: var(--hopsworks-sidebar-color) !important;
+    color: #ffffff;
+}
+
+.container .navbar-brand {
+    padding: 2px 5px 0 15px;
+}
+
+.container-fluid .navbar-brand {
+    padding: 2px 25px 0 0px;
+}
+
+.navbar .navbar-nav
+.open .dropdown-menu > li > a:hover,
+.navbar .navbar-nav .open .dropdown-menu > li > a:focus,
+.navbar .navbar-nav .open .dropdown-menu > .active > a,
+.navbar .navbar-nav .open .dropdown-menu > .active > a:hover,
+.navbar .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #fff !important;
+    background-color: var(--hopsworks-primary-color) !important;
+}
+
+#profile-content .breadcrumb {
+    background-color: var(--hopsworks-bg-color) !important;
+}
+
+#profile-content div .row.form-actions {
+    background-color: var(--hopsworks-bg-color) !important;
+}
+
+.c-checkbox input[type="checkbox"]:checked + span,
+.c-checkbox input[type="radio"]:checked + span,
+.c-radio input[type="checkbox"]:checked + span,
+.c-radio input[type="radio"]:checked + span {
+    background-color: var(--hopsworks-primary-color) !important;
+    border-color: var(--hopsworks-primary-color) !important;
+}

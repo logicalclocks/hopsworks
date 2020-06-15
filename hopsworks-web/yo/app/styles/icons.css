@@ -1,0 +1,82 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.hopsworks-icon {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    background-size: cover;
+}
+
+.hopsworks-icon-folder {
+    background-image: url("../images/icons/Folder.svg");
+}
+
+.hopsworks-icon-database {
+    background-image: url("../images/icons/Database.svg");
+}
+
+.hopsworks-icon-jupyter {
+    background-image: url("../images/icons/Jupyter.svg");
+}
+
+.hopsworks-icon-gear {
+    background-image: url("../images/icons/Engine.svg");
+}
+
+.hopsworks-icon-dashboard {
+    background-image: url("../images/icons/Speedometer.svg");
+}
+
+.hopsworks-icon-members {
+    background-image: url("../images/icons/Members.svg");
+}
+
+.hopsworks-icon-folder {
+    background-image: url("../images/icons/Folder.svg");
+}
+
+.hopsworks-icon-model {
+    background-image: url("../images/icons/Models.svg");
+}
+
+.hopsworks-icon-airflow {
+    background-image: url("../images/icons/Airflow.svg");
+}
+
+.hopsworks-icon-serving {
+    background-image: url("../images/icons/Serving.svg");
+}
+
+.hopsworks-icon-kafka {
+    background-image: url("../images/icons/Kafka.svg");
+}
+
+.hopsworks-icon-experiment {
+    background-image: url("../images/icons/Experiments.svg");
+}
+
+.hopsworks-icon-python {
+    background-image: url("../images/icons/Python.svg");
+}
+
+.hopsworks-icon-phone {
+    background-image: url("../images/icons/Phone.svg");
+}
+
+.hopsworks-icon-book {
+    background-image: url("../images/icons/Documentation.svg");
+}

@@ -1,8 +1,8 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export SERVER=vm
+export SERVER=aws
 export LAST="/tmp/deploy-frontend-timestamp"
-user=vagrant
+user=centos
 #run only once
 if [ -f "$LAST" ]
 then
