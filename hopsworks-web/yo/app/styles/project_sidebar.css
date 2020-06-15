@@ -97,7 +97,7 @@
 
 #close-sidebar {
   float: right;
-  margin-top: -25px;
+  margin-top: -40px;
   color: #ddd;
   padding: 10px 21px 10px 10px;
 }
@@ -220,12 +220,6 @@
 .sidebar-nav li:nth-child(13):before {
   background-color: #314190;
 }
-.sidebar-nav li:nth-child(14):before {
-  background-color: #1eb182;
-}
-.sidebar-nav li:nth-child(15):before {
-  background-color: #f7bb38;
-}
 
 .sidebar-nav li:hover:before,
 .sidebar-nav li.open:hover:before {
@@ -343,34 +337,6 @@
   background-color: #ffa43d;
 }
 
-.sidebar-nav li:nth-child(11) a:active,
-.sidebar-nav li:nth-child(11) a:focus,
-.sidebar-nav li:nth-child(11).open a:active,
-.sidebar-nav li:nth-child(11).open a:focus{
-  background-color: #ffa43d;
-}
-
-.sidebar-nav li:nth-child(12) a:active,
-.sidebar-nav li:nth-child(12) a:focus,
-.sidebar-nav li:nth-child(12).open a:active,
-.sidebar-nav li:nth-child(12).open a:focus{
-  background-color: #ffa43d;
-}
-
-.sidebar-nav li:nth-child(13) a:active,
-.sidebar-nav li:nth-child(13) a:focus,
-.sidebar-nav li:nth-child(13).open a:active,
-.sidebar-nav li:nth-child(13).open a:focus{
-  background-color: #ffa43d;
-}
-
-.sidebar-nav li:nth-child(14) a:active,
-.sidebar-nav li:nth-child(14) a:focus,
-.sidebar-nav li:nth-child(14).open a:active,
-.sidebar-nav li:nth-child(14).open a:focus{
-  background-color: #ffa43d;
-}
-
 .sidebar-nav > .sidebar-brand {
   height: 65px;
   font-size: 20px;
@@ -385,24 +351,6 @@
   border: none;
   background-color: #222;
   box-shadow: none;
-}
-
-.sidebar-nav hr {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  border: 0;
-  height: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.project-sidebar-footer hr {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  border: 0;
-  height: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /*-------------------------------*/
@@ -532,7 +480,7 @@
   margin-top: 0; }
 
 .sidebar-nav-static {
-  padding: 15px 15px 2px 15px;
+  padding: 2px 15px 2px 15px;
 }
 
 .status-success{
@@ -618,10 +566,5 @@
   -moz-transition:  width .2s ease-in;
   -ms-transition:  width .2s ease-in;
   transition: width .2s ease-in;
-}
-
-.project-sidebar-footer i,
-.sidebar-nav i {
-  margin-top: -15px;
 }
 

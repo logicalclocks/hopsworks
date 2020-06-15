@@ -90,20 +90,6 @@ angular.module('hopsWorksApp')
             self.selectionProjectTypes = [];
             self.projectId = $routeParams.projectID;
 
-            var setActiveService = function () {
-                var url = $location.url().split('?')[0];
-                var parts = url.split("project/" + self.projectId + "/");
-                if (parts.length < 2) {
-                    self.activeService = "home";
-                } else {
-                    self.activeService = parts[1];
-                    if (self.activeService.indexOf('/') !== -1) {
-                        self.activeService = self.activeService.split('/')[0];
-                    }
-                }
-            };
-            setActiveService();
-
             self.projectFile = {
               description: null,
               id: null,
@@ -303,12 +289,14 @@ angular.module('hopsWorksApp')
 
 
             self.goToHopsworksInstance = function (endpoint, serviceName) {
+              $scope.activeService = serviceName;
               $location.path('http://' + endpoint + '/project/' + self.projectId + '/' + serviceName);
               $location.search('');
             };
 
 
             self.goToUrl = function (serviceName) {
+              $scope.activeService = serviceName;
               $location.path('project/' + self.projectId + '/' + serviceName);
               $location.search('');
             };
