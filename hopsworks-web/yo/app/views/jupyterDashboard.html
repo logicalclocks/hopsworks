@@ -77,13 +77,22 @@
                   </div>
                 </div>
               </div>
-              <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false" id="viewConfig">
-                <button class="btn btn-info btn-md"
+              <div class="col-sm-3 col-md-3 col-lg-3" style="margin-top:-20px;" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===false" id="viewConfig">
+                <button class="btn btn-primary btn-md"
+                        ng-click="jupyterCtrl.showLogs()">
+                  <i class="fa fa-file-text"></i> Logs
+                </button>
+                <button class="btn btn-primary btn-md"
                         ng-click="jupyterCtrl.tgState=false; sparkConfigCtrl.uneditableMode=true; sparkConfigCtrl.setConf()">
                   <i class="fa fa-sliders"></i> View Configuration
                 </button>
               </div>
-              <div class="col-sm-2 col-md-2 col-lg-2" style="margin-top:-20px;" ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===true">
+              <div class="col-sm-4 col-md-4 col-lg-4" style="margin-top:-20px;"
+                   ng-if="jupyterCtrl.ui !== '' && sparkConfigCtrl.uneditableMode===true">
+                <button class="btn btn-primary btn-md"
+                        ng-click="jupyterCtrl.showLogs()">
+                  <i class="fa fa-file-text"></i> Logs
+                </button>
                 <button class="btn btn-primary btn-md" ng-click="jupyterCtrl.tgState=true; sparkConfigCtrl.uneditableMode=false;">
                   <i class="fa fa-share" style="margin-right:5px;"></i>View Notebook Server
                 </button>

@@ -454,13 +454,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   @Override
   public Execution stopExecution(Execution execution) throws JobException {
     Optional<Exception> t = Optional.empty();
-//    t = runCatchAndLog(() -> kubeClientService.deleteExecution(PYTHON_PREFIX, execution),
-//      RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
     // Set state to failed as execution was terminated by user
     t = runCatchAndLog(() -> executionFacade.updateState(execution, JobState.KILLED),
       RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
-//    t = runCatchAndLog(() -> jobsJWTManager.cleanJWT(new ExecutionJWT(execution)),
-//      RESTCodes.JobErrorCode.JOB_STOP_FAILED.getMessage(), t);
     if (t.isPresent()) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_STOP_FAILED, SEVERE,
         "Job: " + execution.getJob().getName() + ", Execution: " + execution.getId(), null, t.get());

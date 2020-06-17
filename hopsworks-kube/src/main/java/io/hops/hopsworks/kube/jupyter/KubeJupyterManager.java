@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
@@ -30,12 +31,12 @@ import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterConfigFilesGenerator;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
@@ -44,9 +45,11 @@ import io.hops.hopsworks.common.dao.jupyter.config.JupyterPaths;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.jupyter.JupyterManagerImpl;
 import io.hops.hopsworks.common.jupyter.TokenGenerator;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemplate;
@@ -69,16 +72,19 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.hops.hopsworks.restutils.RESTCodes.ServiceErrorCode.JUPYTER_STOP_ERROR;
-import java.util.ArrayList;
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.SEVERE;
 
@@ -117,8 +123,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private HdfsLeDescriptorsFacade hdfsLeFacade;
-  @EJB
   private JupyterFacade jupyterFacade;
   @EJB
   private JupyterConfigFilesGenerator jupyterConfigFilesGenerator;
@@ -126,6 +130,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private KubeClientService kubeClientService;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -185,10 +191,13 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           settings.getFlinkConfDir(),
           settings.getSparkConfDir(),
           (DockerJobConfiguration)jupyterSettings.getDockerConfig(),
-          nodePort, jupyterSettings.getMode().getValue(),
-          project);
+          nodePort,
+          jupyterSettings.getMode().getValue(),
+          project,
+          user);
+  
       kubeClientService.createOrReplaceDeployment(project, deployment);
-      
+  
       return new JupyterDTO(nodePort, token, CID, secretConfig, jupyterPaths.getCertificatesDir());
     } catch (KubernetesClientException | IOException | ServiceDiscoveryException e) {
       logger.log(SEVERE, "Failed to start Jupyter notebook on Kubernetes", e);
@@ -197,6 +206,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           stopJupyterServer(project, user, hdfsUser, getJupyterHome(hdfsUser, project, secretDir),
             CID, nodePort);
         } catch (Exception ex) {
+          logger.log(Level.WARNING, "Could not stop jupyter server.", ex);
         }
       });
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_START_ERROR, SEVERE,
@@ -225,14 +235,13 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     return JUPYTER_PREFIX + kubeProjectUsername;
   }
 
-  private Container buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
+  private List<Container> buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
       String secretDir, String certificatesDir, String hdfsUser, String token, String flinkConfDir,
       String sparkConfDir, ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode,
-      Project project) {
+      Project project, Map<String, String> filebeatEnv) {
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
-    String logFile = jupyterPaths.getLogDirPath() + "/" + hdfsUser + "-" + nodePort + ".log";
     List<EnvVar> environment = new ArrayList<>();
     environment.add(new EnvVarBuilder().withName("JUPYTER_PATH").withValue(jupyterHome).build());
     environment.add(new EnvVarBuilder().withName("JUPYTER_DATA_DIR").withValue(jupyterHome).build());
@@ -254,9 +263,14 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("HADOOP_HOME").withValue(hadoopHome).build());
     environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
-
-    
-    return new ContainerBuilder()
+  
+    List<Container> containers = new ArrayList<>();
+    VolumeMount logMount = new VolumeMountBuilder()
+      .withName("logs")
+      .withMountPath("/logs")
+      .build();
+  
+    containers.add(new ContainerBuilder()
       .withName(JUPYTER)
       .withImage(projectUtils.getFullDockerImageName(project, true))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
@@ -304,7 +318,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           .withName(SPARK)
           .withReadOnly(true)
           .withMountPath(sparkConfDir)
-          .build())
+          .build(),
+        logMount)
       .withPorts(
         new ContainerPortBuilder()
           .withContainerPort(LOCAL_PORT)
@@ -312,14 +327,24 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       .withEnv(environment)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
       .withCommand("jupyter-launcher.sh")  
-      .withArgs(Integer.toString(LOCAL_PORT), logFile, token, jupyterMode)
-      .build();
+      .withArgs(Integer.toString(LOCAL_PORT), filebeatEnv.get("LOGPATH"), token, jupyterMode)
+      .build());
+  
+    containers.add(new ContainerBuilder()
+      .withName("filebeat")
+      .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+      .withImagePullPolicy(settings.getKubeImagePullPolicy())
+      .withEnv(kubeClientService.getEnvVars(filebeatEnv))
+      .withVolumeMounts(logMount)
+      .build());
+    
+    return containers;
   }
 
-  private PodSpec buildPodSpec(String kubeProjectUser, Container container) {
-    
+  private PodSpec buildPodSpec(String kubeProjectUser, List<Container> containers) {
+
     return new PodSpecBuilder()
-      .withContainers(container)
+      .withContainers(containers)
       .withVolumes(
           new VolumeBuilder()
           .withName(CERTS)
@@ -369,6 +394,10 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
             new HostPathVolumeSourceBuilder()
               .withPath(settings.getSparkConfDir())
               .build())
+          .build(),
+        new VolumeBuilder()
+          .withName("logs")
+          .withEmptyDir(new EmptyDirVolumeSource())
           .build())
       .build();
   }
@@ -376,12 +405,23 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private Deployment buildDeployment(String name, String kubeProjectUser, JupyterPaths jupyterPaths, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
     String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig, Integer nodePort,
-    String jupyterMode, Project project)
-      throws ServiceException {
+    String jupyterMode, Project project, Users user)
+    throws ServiceException, ServiceDiscoveryException {
 
     ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(dockerConfig);
-    Container container = buildContainer(jupyterPaths, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort, jupyterMode, project);
+  
+    com.logicalclocks.servicediscoverclient.service.Service logstash =
+      serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.JUPYTER_LOGSTASH);
+    String logstashAddr = logstash.getAddress() + ":" + logstash.getPort();
+  
+    Map<String, String> filebeatEnv = new HashMap<>();
+    filebeatEnv.put("LOGPATH", "/logs/" + HopsUtils.getJupyterLogName(hdfsUsersController.getHdfsUserName(project
+      , user), nodePort));
+    filebeatEnv.put("LOGSTASH", logstashAddr);
+  
+    List<Container> containers = buildContainer(jupyterPaths, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
+      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort, jupyterMode, project, filebeatEnv);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()
@@ -401,7 +441,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
                 new ObjectMetaBuilder()
                   .withLabels(ImmutableMap.of(JUPYTER, kubeProjectUser))
                   .build())
-              .withSpec(buildPodSpec(kubeProjectUser, container))
+              .withSpec(buildPodSpec(kubeProjectUser, containers))
             .build())
           .build())
       .build();

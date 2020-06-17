@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -156,7 +157,7 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
           .addCommand(hdfsUser)
           .addCommand(settings.getAnacondaProjectDir(project))
           .addCommand(port.toString())
-          .addCommand(hdfsUser + "-" + port + ".log")
+          .addCommand(HopsUtils.getJupyterLogName(hdfsUser, port))
           .addCommand(secretDir)
           .addCommand(jp.getCertificatesDir())
           .addCommand(hdfsUser)
