@@ -41,9 +41,9 @@
 angular.module('hopsWorksApp')
     .controller('JupyterCtrl', ['$scope', '$routeParams', '$route',
         'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location',
-        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService', 'DataSetService',
+        '$timeout', '$window', '$sce', 'PythonService', 'TourService', 'UserService', 'VariablesService', 'DataSetService', 'ElasticService',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService, DataSetService) {
+            StorageService, $location, $timeout, $window, $sce, PythonService, TourService, UserService, VariablesService, DataSetService, ElasticService) {
 
             var self = this;
             self.loading = false;
@@ -671,6 +671,37 @@ angular.module('hopsWorksApp')
                         stopLoading();
                     }
                 );
+
+            };
+
+            self.showLogs = function(){
+                ElasticService.getJwtToken(self.projectId).then(
+                    function (success) {
+                        var projectName = success.data.projectName;
+                        var kibanaUrl = success.data.kibanaUrl;
+                        UserService.profile().then(
+                            function (success) {
+                                var username = success.data.username;
+                                self.logsUI = kibanaUrl + "projectId=" + self.projectId +
+                                    "#/discover?_g=(filters:!())&_a=(columns:!('@timestamp',log_message),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'" + projectName.toLowerCase()+"_logs-*',key:application,negate:!f,params:(query:" + username + "),type:phrase,value:" + username + "),query:(match:(application:(query:" + username + ",type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'" + projectName.toLowerCase()+"_logs-*',key:jobname,negate:!f,params:(query:nbserver),type:phrase,value:nbserver),query:(match:(jobname:(query:nbserver,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'" + projectName.toLowerCase()+"_logs-*',key:project,negate:!f,params:(query:" + projectName + "),type:phrase,value:" + projectName + "),query:(match:(project:(query:" + projectName + ",type:phrase))))),index:'" + projectName.toLowerCase()+"_logs-*',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))";
+                                $window.open(self.logsUI, '_blank');
+                            }, function (error) {
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                            });
+
+                    }, function (error) {
+
+                        if (typeof error.data.usrMsg !== 'undefined') {
+                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                        } else {
+                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                        }
+                    });
+
 
             };
         }

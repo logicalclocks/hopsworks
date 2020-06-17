@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
         delete_env(@project[:id], '3.6')
       end
 
-      it "should start and stop a notebook server" do
+      it "should start, get logs and stop a notebook server" do
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
@@ -61,6 +61,29 @@ describe "On #{ENV['OS']}" do
         expect(File.file? tstore_file).to be true
         password_file = File.join(path2secret, "#{project_username}__cert.key")
         expect(File.file? password_file).to be true
+
+        # Get logs from elasticsearch
+        # Sleep a bit to make sure that logs are propagated correctly to the index
+        sleep(30)
+
+        # Check that the logs are written in the elastic index.
+        begin
+          Airborne.configure do |config|
+            config.base_url = ''
+          end
+          response = elastic_get "#{@project[:projectname].downcase}_logs*/_search?q=jobname=#{@user[:username]}"
+          index = response.body
+        rescue
+          p "jupyter spec: Error calling elastic_get #{$!}"
+        else
+          parsed_index = JSON.parse(index)
+          expect(parsed_index['hits']['total']['value']).to be > 0
+        ensure
+          Airborne.configure do |config|
+            config.base_url = "https://#{ENV['WEB_HOST']}:#{ENV['WEB_PORT']}"
+          end
+        end
+
 
         stop_jupyter(@project)
 
