@@ -41,11 +41,12 @@ package io.hops.hopsworks.common.security;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.security.HopsUtil;
+import io.hops.security.SuperuserKeystoresLoader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.net.HopsSSLSocketFactory;
-import org.apache.hadoop.security.ssl.FileBasedKeyStoresFactory;
-import org.apache.hadoop.security.ssl.SSLFactory;
+import org.apache.hadoop.security.ssl.X509SecurityMaterial;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
@@ -63,12 +64,9 @@ public class BaseHadoopClientsService {
   private CertificateMaterializer certificateMaterializer;
   @EJB
   protected Settings settings;
-  
-  private Configuration sslConf;
-  private String superKeystorePath;
-  private String superKeystorePassword;
-  private String superTrustStorePath;
-  private String superTrustStorePassword;
+
+  private X509SecurityMaterial securityMaterial;
+  private String materialPassword;
 
   private final Logger LOG = Logger.getLogger(
       BaseHadoopClientsService.class.getName());
@@ -86,40 +84,31 @@ public class BaseHadoopClientsService {
     
     Configuration conf = new Configuration();
     conf.addResource(new Path(coreSite.getAbsolutePath()));
-    
-    sslConf = new Configuration(false);
-    String hadoopConfDir = settings.getHadoopConfDir();
-    File serverSSLConf = new File(hadoopConfDir, conf.get(SSLFactory
-        .SSL_SERVER_CONF_KEY, "ssl-server.xml"));
-    sslConf.addResource(new Path(serverSSLConf.getAbsolutePath()));
-    superKeystorePath = sslConf.get(
-        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-            FileBasedKeyStoresFactory.SSL_KEYSTORE_LOCATION_TPL_KEY));
-    superKeystorePassword = sslConf.get(
-        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-            FileBasedKeyStoresFactory.SSL_KEYSTORE_PASSWORD_TPL_KEY));
-    superTrustStorePath = sslConf.get(
-        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-            FileBasedKeyStoresFactory.SSL_TRUSTSTORE_LOCATION_TPL_KEY));
-    superTrustStorePassword = sslConf.get(
-        FileBasedKeyStoresFactory.resolvePropertyName(SSLFactory.Mode.SERVER,
-            FileBasedKeyStoresFactory.SSL_TRUSTSTORE_PASSWORD_TPL_KEY));
+
+    try {
+      SuperuserKeystoresLoader loader = new SuperuserKeystoresLoader(conf);
+      securityMaterial = loader.loadSuperUserMaterial();
+      materialPassword = HopsUtil.readCryptoMaterialPassword(securityMaterial.getPasswdLocation().toFile());
+    } catch (IOException ex) {
+      LOG.log(Level.SEVERE, "Could not load super user x.509 material", ex);
+      throw new RuntimeException(ex);
+    }
   }
   
   public String getSuperKeystorePath() {
-    return superKeystorePath;
+    return securityMaterial.getKeyStoreLocation().toString();
   }
   
   public String getSuperKeystorePassword() {
-    return superKeystorePassword;
+    return materialPassword;
   }
   
   public String getSuperTrustStorePath() {
-    return superTrustStorePath;
+    return securityMaterial.getTrustStoreLocation().toString();
   }
   
   public String getSuperTrustStorePassword() {
-    return superTrustStorePassword;
+    return materialPassword;
   }
 
   public String getProjectSpecificUserCertPassword(String username) throws CryptoPasswordNotFoundException {

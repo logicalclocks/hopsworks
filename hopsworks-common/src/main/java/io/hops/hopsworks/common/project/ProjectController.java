@@ -832,7 +832,7 @@ public class ProjectController {
       // to postpone waiting for the certificates generation thread when
       // RPC TLS is enabled
       if (dfso == udfso && udfso.getEffectiveUser()
-        .equals(settings.getHdfsSuperUser())) {
+        .equals(dfs.getLoginUser().getUserName())) {
         StringBuilder dsStrBuilder = new StringBuilder();
         dsStrBuilder.append(Utils.getProjectPath(project.getName())).append(datasetName);
         Path dsPath = new Path(dsStrBuilder.toString());
@@ -1775,8 +1775,7 @@ public class ProjectController {
 
   private void changeOwnershipToSuperuser(Path path, DistributedFileSystemOps dfso) throws IOException {
     if (dfso.exists(path.toString())) {
-      dfso.setOwner(path, settings.getHdfsSuperUser(), settings.
-        getHdfsSuperUser());
+      dfso.setOwner(path, dfs.getLoginUser().getUserName(), settings.getHdfsSuperUser());
     }
   }
 
