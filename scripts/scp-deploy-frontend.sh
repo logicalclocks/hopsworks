@@ -1,6 +1,6 @@
 #!/bin/bash
 # Deploy the frontend to the glassfish home directory and run bower
-export SERVER=dev-vm
+export SERVER=vm
 export LAST="/tmp/deploy-frontend-timestamp"
 user=vagrant
 #run only once
