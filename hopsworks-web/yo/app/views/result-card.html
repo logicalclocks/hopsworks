@@ -126,7 +126,7 @@
                 <li ng-if="itemType === 'dataset'">
                     <a ng-click="showReadme({dataset: item});">View README</a>
                 </li>
-                <li ng-if="itemType === 'project'">
+                <li ng-if="itemType === 'project' && item.member === false">
                     <a ng-click="resultCardCtrl.sendJoinRequest(item)">Request to join</a>
                 </li>
                 <li ng-if="itemType !== 'project' && itemType !== 'others'">
