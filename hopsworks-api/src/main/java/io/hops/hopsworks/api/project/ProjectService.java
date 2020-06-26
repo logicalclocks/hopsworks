@@ -527,10 +527,8 @@ public class ProjectService {
   @Path("starterProject/{type}")
   @Produces(MediaType.APPLICATION_JSON)
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
-      throws DatasetException,
-      GenericException, KafkaException, ProjectException, UserException, ServiceException, HopsSecurityException,
-      FeaturestoreException, JobException, ElasticException, SchemaException,
-      ProvenanceException {
+    throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
+    HopsSecurityException, FeaturestoreException, JobException, ElasticException, SchemaException, ProvenanceException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -543,7 +541,6 @@ public class ProjectService {
     String username = usersController.generateUsername(user.getEmail());
     List<String> projectServices = new ArrayList<>();
     //save the project
-    List<String> failedMembers = new ArrayList<>();
 
     TourProjectType demoType = null;
     String readMeMessage = null;
@@ -578,7 +575,7 @@ public class ProjectService {
     DistributedFileSystemOps dfso = null;
     DistributedFileSystemOps udfso = null;
     try {
-      project = projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
+      project = projectController.createProject(projectDTO, user, req.getSession().getId());
       dfso = dfs.getDfsOps();
       username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
@@ -598,8 +595,7 @@ public class ProjectService {
         dfs.closeDfsClient(udfso);
       }
     }
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
-        entity(project).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(project).build();
   }
 
   @POST
@@ -610,8 +606,7 @@ public class ProjectService {
     HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    List<String> failedMembers = null;
-    projectController.createProject(projectDTO, user, failedMembers, req.getSession().getId());
+    projectController.createProject(projectDTO, user, req.getSession().getId());
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     StringBuilder message = new StringBuilder();
@@ -620,9 +615,6 @@ public class ProjectService {
         append(" project(s) left that you can create");
     json.setSuccessMessage(message.toString());
 
-    if (failedMembers != null && !failedMembers.isEmpty()) {
-      json.setFieldErrors(failedMembers);
-    }
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).
         entity(json).build();
   }
