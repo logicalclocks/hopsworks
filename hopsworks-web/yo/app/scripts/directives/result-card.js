@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -15,20 +15,19 @@
  */
 'use strict';
 
-angular.module('hopsWorksApp').directive('fileViewer', function() {
+angular.module('hopsWorksApp').directive('resultCard', function() {
     return {
         restrict: 'E',
         scope: {
-            file: '=',
-            heading: '@',
-            sidenavOpen: '=',
+            itemType: '=',
+            item: '=',
+            searchTerm: '=',
             selected: '=',
-            loading: '=',
-            maximizeBtn: '=',
-            maximized: '=',
-            closeBtn: '=',
-            closed: '='
+            index: '=',
+            select: '&',
+            showReadme: '&'
         },
-        templateUrl:'views/fileViewer.html'
+        templateUrl:'views/result-card.html',
+        controller: 'ResultCardCtrl as resultCardCtrl'
     };
 });

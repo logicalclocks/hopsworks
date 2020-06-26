@@ -1,0 +1,144 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+<div class="search-result-element text-muted" ng-class="{'selected': item === selected}">
+    <div ng-click="select({item: item})">
+        <h4 class="hw-ellipsis">
+            <a ng-click="resultCardCtrl.goto(itemType, item)">
+                <span ng-bind-html="item.name | highlightText:item.highlights.name:searchTerm"></span>
+                <i class="fa fa-link" aria-hidden="true"
+                   ng-if="item.accessProjects.entry.length > 0 || (itemType === 'project' && item.member === true)"
+                   title="Go to"></i>
+                <i class="fa fa-external-link-square" aria-hidden="true"
+                   ng-if="item.accessProjects.entry.length < 1 || (itemType === 'project' && item.member === false)"
+                   title="{{(itemType === 'project' && item.member === false)? 'Request to join' : 'Request access'}}"></i>
+            </a>
+        </h4>
+        <p class="hw-ellipsis">
+            <span ng-bind-html="item.description | highlightText:item.highlights.description:searchTerm"></span>
+        </p>
+        <div class="row" ng-if="itemType === 'featureGroup' || itemType === 'trainingDataset' || itemType === 'features'">
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis"><label>Project: </label>
+                {{item.parentProjectName}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2"><label>Created on: </label> {{item.created | date:'medium'}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-3 hw-ellipsis"><label>Owner: </label>
+                {{item.creator}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis" ng-if="item.tags !== undefined">
+                <label>Tags: </label>
+                {{item.tags}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-3">
+                <span class="hw-ellipsis"
+                     ng-if="resultCardCtrl.showMatch(item.highlights.features)"
+                     uib-tooltip-html="'Features: {{resultCardCtrl.showTitle(item.highlights.features)}}'">
+                    Feature<span class="badge search-result-badge"> {{item.highlights.features.length}}</span>
+                </span>
+                <span class="hw-ellipsis"
+                     ng-if="resultCardCtrl.showMatch(item.highlights.tags)"
+                     uib-tooltip-html="'Tags: {{resultCardCtrl.showTitle(item.highlights.tags)}}'">
+                    Tag<span class="badge search-result-badge"> {{item.highlights.tags.length}}</span>
+                </span>
+                <span class="hw-ellipsis"
+                     ng-if="resultCardCtrl.showMatch(item.highlights.otherXattrs)"
+                     uib-tooltip-html="'Other X atteributes: {{resultCardCtrl.showTitle(item.highlights.otherXattrs)}}'">
+                    OtherXattr<span class="badge search-result-badge">{{item.highlights.otherXattrs.length}}</span>
+                </span>
+            </div>
+        </div>
+        <div class="row" ng-if="itemType === 'project'">
+            <div class="col-sm-12 col-md-6 col-lg-3 hw-ellipsis"><label>Owner: </label>
+                {{item.creator}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2"><label>Created on: </label> {{item.created | date:'medium'}}
+            </div>
+        </div>
+        <div class="row" ng-if="itemType === 'dataset'">
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis"><label>Project: </label>
+                {{item.parentProjectName}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2"><label>Last modified: </label> {{item.modificationTime |
+                date:'medium'}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-3 hw-ellipsis"><label>Owner: </label>
+                {{item.creator}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis"
+                 ng-if="item.size !== undefined && item.size > 0"><label>Size: </label>
+                {{item.size}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2">
+                <span class="hw-ellipsis"
+                      ng-if="resultCardCtrl.showMatch(item.highlights.otherXattrs)"
+                      uib-tooltip-html="'Other X atteributes: {{resultCardCtrl.showTitle(item.highlights.otherXattrs)}}'">
+                    OtherXattr<span class="badge search-result-badge">{{item.highlights.otherXattrs.length}}</span>
+                </span>
+            </div>
+        </div>
+        <div class="row" ng-if="itemType === 'others'">
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis"><label>Parent dataset: </label>
+                {{item.parentDatasetName}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2"><label>Last modified: </label> {{item.modificationTime |
+                date:'medium'}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-3 hw-ellipsis"><label>Owner: </label>
+                {{item.creator}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2 hw-ellipsis"
+                 ng-if="item.size !== undefined && item.size > 0"><label>Size: </label>
+                {{item.size}}
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-2">
+                <span class="hw-ellipsis"
+                      ng-if="resultCardCtrl.showMatch(item.highlights.otherXattrs)"
+                      uib-tooltip-html="'Other X atteributes: {{resultCardCtrl.showTitle(item.highlights.otherXattrs)}}'">
+                    OtherXattr<span class="badge search-result-badge">{{item.highlights.otherXattrs.length}}</span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="search-result-element-footer">
+        <span class="dropup">
+            <button class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                <i class="fa fa-ellipsis-h" aria-hidden="true"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right">
+                <li>
+                    <a ng-click="select({item: item})">Show info</a>
+                </li>
+                <li ng-if="itemType === 'dataset'">
+                    <a ng-click="showReadme({dataset: item});">View README</a>
+                </li>
+                <li ng-if="itemType === 'project' && item.member === false">
+                    <a ng-click="resultCardCtrl.sendJoinRequest(item)">Request to join</a>
+                </li>
+                <li ng-if="itemType !== 'project' && itemType !== 'others'">
+                    <a ng-click="resultCardCtrl.sendAccessRequest(item)">Request access</a>
+                </li>
+                <li ng-if="item.accessProjects.entry.length > 0 || (itemType === 'project' && item.member === true)">
+                    <a ng-click="resultCardCtrl.goto(itemType, item)">Go to</a>
+                </li>
+                <li ng-if="itemType === 'others'">
+                    <a ng-click="resultCardCtrl.goto(itemType, item)">Go to</a>
+                </li>
+            </ul>
+        </span>
+    </div>
+</div>

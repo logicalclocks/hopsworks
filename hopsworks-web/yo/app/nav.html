@@ -94,10 +94,9 @@
         <!--ng-show="showDatasets"-->
         <form class="navbar-form">
           <hw-search scopes="mainCtrl.searchScopes"
-                     search-term="mainCtrl.searchTerm"
                      project-view="projectView"
                      searching="mainCtrl.searching"
-                     click-fn="mainCtrl.searchInScope(scope)">
+                     click-fn="mainCtrl.searchInScope(scope, searchTerm)">
           </hw-search>
         </form>
       </div>

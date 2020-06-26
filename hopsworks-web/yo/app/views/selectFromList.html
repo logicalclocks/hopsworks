@@ -1,0 +1,32 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+
+<div class="modal-header">
+    <button class="close" ng-click="selectFromListCtrl.close()" data-dismiss="modal" aria-hidden="true"
+            type="button">&times;</button>
+    <h2 class="modal-title">{{selectFromListCtrl.msg}}</h2>
+</div>
+<div class="modal-body">
+    <select class="form-control" id="sortBySelect" ng-model="selectFromListCtrl.selected">
+        <option value="" disabled selected>{{selectFromListCtrl.msg}}</option>
+        <option value="{{item.key}}" ng-repeat="item in selectFromListCtrl.list">{{item.value}}</option>
+    </select>
+</div>
+<div class="modal-footer" style="align:center">
+    <button class="btn btn-default" type="button" ng-click="selectFromListCtrl.close()">Cancel</button>
+    <button class="btn btn-primary" type="button" ng-click="selectFromListCtrl.select()">Select</button>
+</div>

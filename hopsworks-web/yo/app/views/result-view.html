@@ -14,11 +14,20 @@
   ~ If not, see <https://www.gnu.org/licenses/>.
   ~
 -->
-<div ng-controller="trainingDatasetViewInfoCtrl as trainingDatasetViewInfoCtrl">
-    <feature-store-table
-            pagination-service="mainCtrl.trainingdatasetsSearchResult"
-            search-term="{{mainCtrl.searchFor}}"
-            name='trainingDataset'
-            detail-fn="mainCtrl.datasetDetail(inodeId)">
-    </feature-store-table>
+<div class="search-result" ng-class="{'full': closeInfo}">
+    <div class="search-result-main-body" ng-transclude="resultBody">
+    </div>
+</div>
+<div class="search-info-nav" ng-class="{'search-info-nav-show': !closeInfo}">
+    <div class="search-info-nav-header text-muted">
+        <div>
+            <h3>{{infoTitle}}</h3>
+            <a class="pull-right text-muted" title="Close"
+               ng-click="resultCtrl.close()"
+               role="button" aria-haspopup="true" aria-expanded="false">
+                <span class="fa fa-times" aria-hidden="true"></span></a>
+        </div>
+    </div>
+    <div class="search-info-nav-body thin-scrollbar text-muted" ng-transclude="infoBody">
+    </div>
 </div>

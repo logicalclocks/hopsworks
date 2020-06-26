@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,22 +13,22 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
+
 'use strict';
 
-angular.module('hopsWorksApp').directive('fileViewer', function() {
-    return {
-        restrict: 'E',
-        scope: {
-            file: '=',
-            heading: '@',
-            sidenavOpen: '=',
-            selected: '=',
-            loading: '=',
-            maximizeBtn: '=',
-            maximized: '=',
-            closeBtn: '=',
-            closed: '='
-        },
-        templateUrl:'views/fileViewer.html'
-    };
-});
+angular.module('hopsWorksApp').controller('SelectFromListCtrl', ['$uibModalInstance', 'msg', 'list',
+    function ($uibModalInstance, msg, list) {
+
+        var self = this;
+        self.msg = msg;
+        self.list = list;
+        self.selected = undefined;
+
+        self.select = function () {
+            $uibModalInstance.close(self.selected);
+        }
+
+        self.close = function () {
+            $uibModalInstance.dismiss('cancel');
+        };
+    }]);
