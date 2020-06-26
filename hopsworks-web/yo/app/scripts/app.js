@@ -169,6 +169,36 @@ angular.module('hopsWorksApp', [
                         templateUrl: 'views/error.html',
                         controller: 'ErrorCtrl as errorCtrl'
                     })
+                    .when('/search', {
+                        templateUrl: 'views/search/search.html',
+                        controller: 'SearchCtrl as searchCtrl',
+                        resolve: {
+                            auth: ['$q','AuthGuardService',
+                                function ($q, AuthGuardService) {
+                                    return AuthGuardService.guardRegister($q);
+                                }]
+                        }
+                    })
+                    .when('/project/:projectID/search', {
+                        templateUrl: 'views/search/search.html',
+                        controller: 'SearchCtrl as searchCtrl',
+                        resolve: {
+                            auth: ['$q','AuthGuardService',
+                                function ($q, AuthGuardService) {
+                                    return AuthGuardService.guardRegister($q);
+                                }]
+                        }
+                    })
+                    .when('/project/:projectID/datasets/:datasetName/:fileName*?/search', {
+                        templateUrl: 'views/search/search.html',
+                        controller: 'SearchCtrl as searchCtrl',
+                        resolve: {
+                            auth: ['$q','AuthGuardService',
+                                function ($q, AuthGuardService) {
+                                    return AuthGuardService.guardRegister($q);
+                                }]
+                        }
+                    })
                    .when('/register', {
                       templateUrl: 'views/register.html',
                       controller: 'RegCtrl as regCtrl',
@@ -576,7 +606,12 @@ angular.module('hopsWorksApp', [
                 if (typeof highlight !== 'undefined') {
                     return text.replace(new RegExp(term, 'gi'), '<span class="highlight-search-result">$&</span>');
                 } else {
-                    return text;
+                    //until dataset and project highlight is fixed
+                    if (text !== undefined && text.toLowerCase().includes(term.toLowerCase())) {
+                        return text.replace(new RegExp(term, 'gi'), '<span class="highlight-search-result">$&</span>');
+                    } else {
+                        return text;
+                    }
                 }
             };
         })

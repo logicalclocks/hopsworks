@@ -1,0 +1,270 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+<div style="background-color: white">
+    <aside>
+        <nav class="search-filter-nav thin-scrollbar">
+            <div class="search-filter-section">
+                <div class="search-filter-title"><span>Filter by</span>
+                    <a ng-click="filterBy = undefined" title="Clear filter">Clear</a>
+                </div>
+                <div><input class="form-control" type="text" placeholder="Filter result" ng-model="filterBy"></div>
+            </div>
+            <div class="search-filter-section">
+                <div class="search-filter-title"><span>Sort by</span>
+                    <a ng-click="sortBy=undefined" title="Clear sort by">Clear</a>
+                </div>
+                <div class="input-group">
+                <span class="input-group-addon" ng-click="reverse = !reverse"
+                      ng-class="{disabled: sortBy === undefined || sortBy === null ||sortBy.length === 0}">
+                    <i class="fa fa-arrow-up" aria-hidden="true" ng-if="!reverse" title="Ascending"></i>
+                    <i class="fa fa-arrow-down" aria-hidden="true" ng-if="reverse" title="Descending"></i>
+                </span>
+                    <select class="form-control" id="sortBySelect" ng-model="sortBy">
+                        <option value="" disabled selected>Sort by</option>
+                        <option value="name">Name</option>
+                        <option value="creator">Owner</option>
+                        <option ng-if="selectedIndex !== 3" value="project">Project</option>
+                        <option ng-if="selectedIndex < 4" value="createdOn">Created on</option>
+                        <option ng-if="selectedIndex > 3" value="modificationTime">Last modified</option>
+                    </select>
+                </div>
+            </div>
+            <div class="search-filter-section">
+                <div class="search-filter-title"><span>Filter by date</span>
+                    <a ng-click="dateFrom = undefined; dateTo = undefined" title="Clear date filter">Clear</a></div>
+                <div>
+                    <md-content flex layout="row" style="margin-top: 10px">
+                        <md-datepicker md-placeholder="From" flex
+                                       md-hide-icons="calendar" ng-model="dateFrom"></md-datepicker>
+                        <md-datepicker md-no-float=""
+                                       md-placeholder="To" flex md-hide-icons="calendar"
+                                       ng-model="dateTo"></md-datepicker>
+                    </md-content>
+                </div>
+            </div>
+            <div class="search-filter-section"
+                 ng-show="false"
+                 ng-if="selectedIndex < 3 && searchCtrl.categories !== undefined && searchCtrl.categories.length > 0">
+                <div class="search-filter-title"><span>Tags</span>
+                    <a ng-click="searchCtrl.clearCategorySelected()" title="Clear category filter">Clear</a>
+                </div>
+                <div class="form-control text-muted" style="display: contents">
+                    <div class="checkbox c-checkbox" ng-repeat="category in searchCtrl.categories">
+                        <label>
+                            <input type="checkbox" ng-model="category.selected">
+                            <span class="fa fa-check"></span>{{category.name}}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </aside>
+    <section>
+        <div class="loader loader-md" ng-show="searchCtrl.searching"></div>
+        <div class="search-main-content" ng-show="!searchCtrl.searching">
+            <result info-title="searchCtrl.selectedType"
+                    close-info="searchCtrl.closeInfo"
+                    on-info-close="searchCtrl.deselect()">
+                <result-body>
+                    <md-content>
+                        <md-tabs md-dynamic-height md-border-bottom md-disable-animation
+                                 md-selected="selectedIndex">
+                            <md-tab ng-if="searchCtrl.searchView('featureGroupTab')">
+                                <md-tab-label>
+                                    Feature Groups
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.featuregroupsSearchResult.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'featureGroup'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.featuregroupsSearchResult"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'created'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'Feature group')"
+                                                     show-readme="undefined"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                            <md-tab ng-if="searchCtrl.searchView('trainingDatasetTab')">
+                                <md-tab-label>
+                                    Training Datasets
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.trainingdatasetsSearchResult.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'trainingDataset'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.trainingdatasetsSearchResult"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'created'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'Training dataset')"
+                                                     show-readme="undefined"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                            <md-tab ng-if="searchCtrl.searchView('featureTab')">
+                                <md-tab-label>
+                                    Features
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.featureSearchResult.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'features'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.featureSearchResult"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'created'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'Features')"
+                                                     show-readme="undefined"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                            <md-tab ng-if="searchCtrl.searchView('projectTab')">
+                                <md-tab-label>
+                                    Project
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.projectResult.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'project'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.projectResult"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'created'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'Project')"
+                                                     show-readme="undefined"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                            <md-tab ng-if="searchCtrl.searchView('datasetTab')">
+                                <md-tab-label>
+                                    Dataset
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.datasetResult.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'dataset'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.datasetResult"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'modificationTime'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'Dataset')"
+                                                     show-readme="searchCtrl.getReadme(dataset)"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                            <md-tab ng-if="searchCtrl.searchView('othersTab')">
+                                <md-tab-label>
+                                    Others
+                                    <span class="badge" style="vertical-align: unset">
+                                    {{searchCtrl.otherResults.pagination.totalItems}}</span>
+                                </md-tab-label>
+                                <md-tab-body>
+                                    <md-content class="md-padding search-result-bg">
+                                        <result-list name="'others'"
+                                                     search-term="searchCtrl.searchTerm"
+                                                     pagination-service="searchCtrl.otherResults"
+                                                     filter-by="filterBy"
+                                                     sort-by="sortBy"
+                                                     reverse="reverse"
+                                                     date-field="'modificationTime'"
+                                                     date-from="dateFrom"
+                                                     date-to="dateTo"
+                                                     selected="searchCtrl.selected"
+                                                     select="searchCtrl.select(item, 'File')"
+                                                     show-readme="undefined"></result-list>
+                                    </md-content>
+                                </md-tab-body>
+                            </md-tab>
+                        </md-tabs>
+                    </md-content>
+                </result-body>
+                <info-body>
+                    <div>
+                        <h4 class="hw-ellipsis">{{searchCtrl.selected.name}}</h4>
+                        <div>
+                            <p>{{searchCtrl.selected.description}}</p>
+                            <br>
+                            <div ng-if="searchCtrl.selected.project !== undefined || searchCtrl.selected.parentProjectName !== undefined">
+                                <label>Project: </label> {{searchCtrl.selected.project}}
+                                {{searchCtrl.selected.parentProjectName}}
+                            </div>
+                            <div><label>Owner: </label>
+                                {{searchCtrl.selected.creator}}
+                            </div>
+                            <div ng-if="searchCtrl.selected.created !== undefined">
+                                <label>Created on: </label> {{searchCtrl.selected.created | date:'medium'}}
+                            </div>
+                            <div ng-if="searchCtrl.selected.modificationTime !== undefined">
+                                <label>Last modified: </label>
+                                {{searchCtrl.selected.modificationTime | date:'medium'}}
+                            </div>
+                            <div ng-if="searchCtrl.selected.tags !== undefined">
+                                <label>Tags: </label> {{searchCtrl.selected.tags}}
+                            </div>
+                            <div ng-if="searchCtrl.selected.size !== undefined && searchCtrl.selected.size > 0">
+                                <label>Size: </label>{{searchCtrl.selected.size}}
+                            </div>
+                        </div>
+                    </div>
+                </info-body>
+            </result>
+        </div>
+    </section>
+</div>
+<div ng-show="!searchCtrl.hideReadme" style="margin-top: 15px; margin-left: -275px; overflow: hidden">
+    <file-viewer selected="true"
+                 heading="README.md"
+                 file="searchCtrl.readme"
+                 sidenav-open="projectCtrl.isClosed"
+                 loading="searchCtrl.gettingReadme"
+                 maximize-btn="false"
+                 maximized="true"
+                 close-btn="true"
+                 closed="searchCtrl.hideReadme"></file-viewer>
+</div>

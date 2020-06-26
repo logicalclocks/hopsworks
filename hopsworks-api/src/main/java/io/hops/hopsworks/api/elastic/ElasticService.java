@@ -45,12 +45,9 @@ import io.hops.hopsworks.api.elastic.featurestore.ElasticFeaturestoreDTO;
 import io.hops.hopsworks.api.elastic.featurestore.ElasticFeaturestoreRequest;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
-import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.ElasticJWTResponseDTO;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
-import io.hops.hopsworks.common.elastic.ElasticController;
-import io.hops.hopsworks.common.elastic.ElasticHit;
 import io.hops.hopsworks.common.elastic.FeaturestoreDocType;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -67,7 +64,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -75,11 +71,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -92,12 +86,10 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ElasticService {
 
-  private static final Logger logger = Logger.getLogger(ElasticService.class.
-          getName());
+  private static final Logger logger = Logger.getLogger(ElasticService.class.getName());
+
   @EJB
-  private NoCacheResponse noCacheResponse;
-  @EJB
-  private ElasticController elasticController;
+  private ElasticHitsBuilder elasticHitsBuilder;
   @EJB
   private JWTHelper jWTHelper;
   @Inject
@@ -108,23 +100,21 @@ public class ElasticService {
    * indices: 'project' and 'dataset'
    * <p/>
    * @param searchTerm
-   * @param req
+   * @param sc
    * @return
    */
   @GET
   @Path("globalsearch/{searchTerm}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response globalSearch(@PathParam("searchTerm") String searchTerm, @Context HttpServletRequest req)
+  public Response globalSearch(@PathParam("searchTerm") String searchTerm, @Context SecurityContext sc)
     throws ServiceException, ElasticException {
 
     if (Strings.isNullOrEmpty(searchTerm)) {
       throw new IllegalArgumentException("searchTerm was not provided or was empty");
     }
-
-    logger.log(Level.INFO, "Local content path {0}", req.getRequestURL().toString());
-    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.
-        globalSearch(searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(searchResults).build();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ElasticHitDTO elasticHitDTO = elasticHitsBuilder.buildElasticHits(searchTerm, user);
+    return Response.ok().entity(elasticHitDTO).build();
   }
 
   /**
@@ -144,10 +134,9 @@ public class ElasticService {
     if (Strings.isNullOrEmpty(searchTerm) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
-
-    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.projectSearch(
-        projectId, searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(searchResults).build();
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ElasticHitDTO elasticHitDTO = elasticHitsBuilder.buildElasticHits(projectId, searchTerm, user);
+    return Response.ok().entity(elasticHitDTO).build();
   }
 
   /**
@@ -172,10 +161,10 @@ public class ElasticService {
     if (Strings.isNullOrEmpty(searchTerm) || Strings.isNullOrEmpty(datasetName) || projectId == null) {
       throw new IllegalArgumentException("One or more required parameters were not provided.");
     }
-
-    GenericEntity<List<ElasticHit>> searchResults = new GenericEntity<List<ElasticHit>>(elasticController.
-                    datasetSearch(projectId, datasetName, searchTerm)) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK). entity(searchResults).build();
+  
+    Users user = jWTHelper.getUserPrincipal(sc);
+    ElasticHitDTO elasticHitDTO = elasticHitsBuilder.buildElasticHits(projectId, datasetName, searchTerm, user);
+    return Response.ok().entity(elasticHitDTO).build();
   }
   
   /**

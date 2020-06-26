@@ -1,0 +1,44 @@
+<!--
+  ~ This file is part of Hopsworks
+  ~ Copyright (C) 2020, Logical Clocks AB. All rights reserved
+  ~
+  ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+  ~ the GNU Affero General Public License as published by the Free Software Foundation,
+  ~ either version 3 of the License, or (at your option) any later version.
+  ~
+  ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+  ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+  ~ PURPOSE.  See the GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License along with this program.
+  ~ If not, see <https://www.gnu.org/licenses/>.
+  ~
+-->
+<div class="search-result-header text-muted thin-scrollbar" ng-show="paginationService.pagination.totalItems > 0">
+    <div style="margin-right: 35px">
+        <span class="hw-ellipsis">Search result for: <strong> {{searchTerm}}</strong>
+        </span>
+    </div>
+    <div>
+        <span>Showing <strong>{{paginationService.result.paginatedContent.length}}</strong> of
+            <strong> {{paginationService.pagination.totalItems}}</strong> results
+        </span>
+        <dir-pagination-controls max-size="5" direction-links="true"
+                                 pagination-id="name"
+                                 on-page-change="paginationService.pageChanged(newPageNumber)">
+        </dir-pagination-controls>
+    </div>
+</div>
+<h3 class="text-muted" ng-show="paginationService.pagination.totalItems < 1">
+    No results found for your search: <strong>{{searchTerm}}</strong>
+</h3>
+<div dir-paginate="item in paginationService.result.paginatedContent | orderBy:sortBy:reverse | filter:filterBy:false | dateRangeFilter:dateField:dateFrom:dateTo | itemsPerPage: 10"
+     pagination-id="name">
+    <result-card item="item"
+                 search-term="searchTerm"
+                 item-type="name"
+                 select="select({item: item})"
+                 index="$index"
+                 selected="selected"
+                 show-readme="showReadme({dataset: item})"></result-card>
+</div>
