@@ -31,21 +31,19 @@ module EpipeHelper
 
   #on slow vms it can take 1-3s for epipe to restart
   #epipe_active expects epipe to be active and will fail if epipe is down
-  def epipe_restart_checked
+  def epipe_restart_checked(msg: "epipe is down")
     epipe_restart
-    #if necessary wait (1+2)s - on vms it can sometimes be a slow process - in general 1s will be enough
-    sleep(1) unless is_epipe_active
-    sleep(2) unless is_epipe_active
-    epipe_active
+    sleep(1)
+    epipe_active(msg: msg)
   end
 
   def epipe_restart
     execute_remotely ENV['EPIPE_HOST'], "sudo systemctl restart epipe"
   end
 
-  def epipe_active
+  def epipe_active(msg: "epipe is down")
     output = execute_remotely ENV['EPIPE_HOST'], "systemctl is-active epipe"
-    expect(output.strip).to eq("active"), "epipe is down"
+    expect(output.strip).to eq("active"), msg
   end
 
   def is_epipe_active
@@ -53,74 +51,56 @@ module EpipeHelper
     output.strip.eql? "active"
   end
 
-  #search especially relies on the hdfs_metadata_logs to be consumed.
-  #we check the log every 1s for <repeat>  * 10s. we try restarting epipe for <repeat> times in case epipe is stuck.
+  #search especially relies on the logs to be consumed.
+  #we check the log every 1s for <repeat>  * wait_time (s).
+  #we try restarting epipe if we think epipe is stuck.
   #if epipe is up and consumed all the logs, this method should not sleep at all and exit on first check
-  def epipe_wait_on_mutations(repeat: 1)
-    result = {}
-    repeat.times do
+  def epipe_wait_on(wait_time: 10, repeat: 1, &log_size)
+    result = (0..repeat).to_a.each_with_object([]) do | _, output |
       #wait returns on success or after timeout
-      result = wait_for_me_time(10) do
-        pending_mutations = HDFSMetadataLog.count
-        if pending_mutations == 0
-          { 'success' => true }
+      result = wait_for_me_time(wait_time) do
+        pending = log_size.call
+        if pending == 0
+          { "success" => true, "pending" => 0 }
         else
-          { 'success' => false, 'msg' => "hdfs_metadata_logs is not being consumed by epipe - pending:#{pending_mutations}" }
+          { "msg" => "logs are not being consumed by epipe - pending:#{pending}", "success" => false, "pending" => pending }
         end
       end
-      #on return we check result - on success(empty log) return
-      if result["success"] == true
-        break
-      else
-        pp "WARNING - #{result["msg"]}"
-        epipe_restart_checked
+      pp "WARNING - #{result["msg"]}" if (result["pending"] > 0)
+      if result["success"] == false
+        pending = log_size.call
+        if (result["pending"] - pending) < 10
+          pp "WARNING - no progress - restarting epipe"
+          epipe_restart
+        end
       end
+      output[0] = result
     end
     #short wait for epipe-elasticsearch propagation
     sleep(3)
+    epipe_active(msg: "epipe is dead")
+    result[0]
+  end
+
+  def epipe_wait_on_mutations(wait_time: 10, repeat: 1)
+    result = epipe_wait_on(wait_time: wait_time, repeat: repeat) do
+      count = HDFSMetadataLog.count
+      count
+    end
     result
   end
 
-  #provenance relies on the hdfs_file_prov_logs and hdfs_app_prov_logs to be consumed by epipe
-  #we check the log every 1s for <repeat>  * 10s. we try restarting epipe for <repeat> times in case epipe is stuck.
-  #if epipe is up and consumed all the logs, this method should not sleep at all and exit on first check
-  def epipe_wait_on_provenance(repeat: 1, with_restart: true)
-    result = {}
-    repeat.times do
-      #wait returns on success or after timeout
-      result = wait_for_me_time(10) do
-        pending_prov = FileProv.count
-        if pending_prov == 0
-          { 'success' => true }
-        else
-          { 'success' => false, 'msg' => "hdfs_file_prov_logs is not being consumed by epipe - pending:#{pending_prov}" }
-        end
-      end
-      #on return we check result - on success(empty file log) we check the app log too
-      if result["success"] == true
-        #wait returns on success or after timeout
-        result = wait_for_me_time(10) do
-          pending_prov = AppProv.count
-          if pending_prov == 0
-            { 'success' => true }
-          else
-            { 'success' => false, 'msg' => "hdfs_app_prov_logs is not being consumed by epipe - pending:#{pending_prov}" }
-          end
-        end
-      end
-      #on return we check result - on success(both logs are empty) return
-      if result["success"] == true
-        break
-      else
-        if with_restart
-          #restart epipe and try waiting again
-          pp "WARNING - #{result["msg"]}"
-          epipe_restart_checked
-        end
+  def epipe_wait_on_provenance(wait_time:10, repeat: 1, with_restart: true)
+    result = epipe_wait_on(wait_time: wait_time, repeat: repeat) do
+      count = FileProv.count
+      count
+    end
+    if result["success"] == true
+      result = epipe_wait_on(wait_time: wait_time, repeat: repeat) do
+        count = AppProv.count
+        count
       end
     end
-    #wait for epipe-elasticsearch propagation
-    sleep(3)
     result
   end
 end

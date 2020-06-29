@@ -63,12 +63,12 @@ describe "On #{ENV['OS']}" do
   end
 
   after :all do
+    clean_all_test_projects
     wait_result = epipe_wait_on_provenance(repeat: 5)
     expect(wait_result["success"]).to be(true), wait_result["msg"]
 
     project_index_cleanup(@email)
     restore_cluster_prov("MIN", "0", @old_provenance_type, @old_provenance_archive_size)
-    clean_all_test_projects
   end
 
   describe 'test provenance auxiliary mechanisms' do
@@ -1413,6 +1413,57 @@ describe "On #{ENV['OS']}" do
         query = "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project1[:id]}/provenance/index/mapping"
         result = get "#{query}"
         expect_status(200)
+      end
+    end
+  end
+
+  context "each test has its own project" do
+    # delete the index that we are trying to write to, in order to make sure epipe doesn't fail if index doesn't exist
+    # this index can be deleted by the cleanup mechanism or by someone else manually. this should not kill epipe
+    def prov_op_no_index(project_index)
+      epipe_stop_restart do
+        #prepare the log with the ops we want to test
+        yield
+        sleep(5)
+        result = FileProv.where("project_name": @project[:projectname])
+        expect(result.length).to be >= 1
+        elastic_rest do
+          #index exists
+          result = elastic_get project_index
+          elastic_status_details(result, 200)
+          #delete index
+          result = elastic_delete project_index
+          elastic_status_details(result, 200)
+          sleep(3)
+          #make sure index is deleted
+          result = elastic_get project_index
+          elastic_status_details(result, 404, error_type: "index_not_found_exception")
+        end
+        expect(is_epipe_active).to be(false), "someone restarted epipe, when it was supposed to be stopped"
+      end
+      #make sure the prepared entries in the log are consumed without killing epipe
+      sleep(2)
+      expect(is_epipe_active).to be(true)
+      epipe_wait_on_provenance(with_restart: false)
+    end
+    it 'should not kill epipe to write to a non existing index' do
+      epipe_restart_checked unless is_epipe_active
+      with_valid_project
+      project_index = "#{get_project_inode(@project)[:id]}__file_prov"
+      pp project_index if defined?(@debugOpt) && @debugOpt
+      epipe_wait_on_provenance(repeat: 5)
+      dataset = nil
+      #create dataset - create view - doesn't kill epipe if index doesn't exists
+      prov_op_no_index(project_index) do
+        dataset = create_dataset_checked
+      end
+      #xattr op and view update by xattr update - doesn't kill epipe if index doesn't exists
+      prov_op_no_index(project_index) do
+        prov_test_add_xattr(@project, dataset[:inode_id], "test_xattr", "test")
+      end
+      #xattr op and view update by xattr remove - doesn't kill epipe if index doesn't exists
+      prov_op_no_index(project_index) do
+        prov_test_remove_xattr(@project, dataset[:inode_id], "test_xattr")
       end
     end
   end
