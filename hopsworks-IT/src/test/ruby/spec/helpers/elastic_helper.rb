@@ -80,9 +80,26 @@ module ElasticHelper
     end
   end
 
-  def check_index_not_found(response)
-    expect(response.status).to eq(401)
-    body = JSON.parse(response.body)
-    expect(body["error"]["type"]).to  eq("index_not_found_exception")
+  #modified variant of expect_status where we print a mode detailed error msg
+  #and we also have the ability to check for hopsworks error_code
+  def elastic_status_details(response, expected_status, error_type: nil)
+    #204 doesn't have a response body - treat differently
+    if response.code == resolve_status(204, response.code)
+      #print the usual expected/found msg
+      expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code}"
+    else
+      parsed_body = JSON.parse(response.body) rescue nil
+      if parsed_body
+        #print the usual expected/found msg but also the full response body for more details
+        expect(response.code).to eq(resolve_status(expected_status, response.code)), "expected rest status:#{expected_status}, found:#{response.code} and body:#{parsed_body}"
+        #if hopsworks error type - check
+        if error_type
+          expect(error_type).to eq(parsed_body["error"]["type"]), "expected error type:#{error_type}, found:#{parsed_body}"
+        end
+      else
+        #couldn't pare the body print only the usual expected/found msg
+        expect(response.code).to eq(resolve_status(expected_status, response.code)), "found code:#{response.code} and malformed body:#{response.body}"
+      end
+    end
   end
 end

@@ -351,4 +351,16 @@ module ProvStateHelper
     expect(response.code).to eq expected_code
     return response
   end
+
+  def prov_test_add_xattr(project, inode_id, xattr_name, xattr_val)
+    pp  "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/xattr?inodeId=#{inode_id}&xattrName=#{xattr_name}&xattrValue=#{xattr_val}" if defined?(@debugOpt) && @debugOpt
+    post "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/xattr?inodeId=#{inode_id}&xattrName=#{xattr_name}&xattrValue=#{xattr_val}"
+    expect_status_details(200)
+  end
+
+  def prov_test_remove_xattr(project, inode_id, xattr_name)
+    pp  "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/xattr?inodeId=#{inode_id}&xattrName=#{xattr_name}" if defined?(@debugOpt) && @debugOpt
+    delete "#{ENV['HOPSWORKS_TESTING']}/test/project/#{project[:id]}/provenance/xattr?inodeId=#{inode_id}&xattrName=#{xattr_name}"
+    expect_status_details(200)
+  end
 end

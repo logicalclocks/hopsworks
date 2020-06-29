@@ -22,6 +22,14 @@ describe "On #{ENV['OS']}" do
     clean_all_test_projects
   end
 
+  context "system cleanup" do
+    it "empty queues" do
+      clean_all_test_projects
+      #make sure epipe is free of work
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 10)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+    end
+  end
   context "featurestore" do
     before(:all) do
       @tag1 = "search_dog"
@@ -79,7 +87,7 @@ describe "On #{ENV['OS']}" do
 
     it "ee project search featuregroup, training datasets with tags" do
       #make sure epipe is free of work
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       with_valid_session
@@ -87,7 +95,7 @@ describe "On #{ENV['OS']}" do
       fgs1 = featuregroups_setup(project1)
       tds1 = trainingdataset_setup(project1)
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => "tags", 'parent_project' => project1[:projectname]},
@@ -102,7 +110,7 @@ describe "On #{ENV['OS']}" do
 
     it "ee project search featuregroup, training datasets with tags with shared training datasets" do
       #make sure epipe is free of work
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       with_valid_session
@@ -118,7 +126,7 @@ describe "On #{ENV['OS']}" do
       tds1 = trainingdataset_setup(project1)
       tds2 = trainingdataset_setup(project2)
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => "tags", 'parent_project' => project1[:projectname]},
@@ -149,7 +157,7 @@ describe "On #{ENV['OS']}" do
 
     it "ee project search - add/update/delete tags" do
       #make sure epipe is free of work
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       with_valid_session
@@ -162,7 +170,7 @@ describe "On #{ENV['OS']}" do
       #add tag - no value - tag search hit
       add_featuregroup_tag_checked(project1[:id], featurestore_id, featuregroup_id, @tag1)
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expected_hits1 = [{'name' => fg_name, 'highlight' => "tags", 'parent_project' => project1[:projectname]}]
@@ -170,7 +178,7 @@ describe "On #{ENV['OS']}" do
       #remove tag
       delete_featuregroup_tag_checked(project1[:id], featurestore_id, featuregroup_id, @tag1)
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expect(local_featurestore_search(project1, "FEATUREGROUP", "dog")["featuregroups"].length).to eq(0)
@@ -185,7 +193,7 @@ describe "On #{ENV['OS']}" do
       #update tag - with value - value is search hit
       update_featuregroup_tag_checked(project1[:id], featurestore_id, featuregroup_id, @tag2, value:"dog")
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expected_hits2 = [{'name' => fg_name, 'highlight' => "tags", 'parent_project' => project1[:projectname]}]
@@ -193,7 +201,7 @@ describe "On #{ENV['OS']}" do
       #update tag - with value - value is no search hit
       update_featuregroup_tag_checked(project1[:id], featurestore_id, featuregroup_id, @tag2, value:"val")
       #search
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expect(local_featurestore_search(project1, "FEATUREGROUP", "dog")["featuregroups"].length).to eq(0)
@@ -201,7 +209,7 @@ describe "On #{ENV['OS']}" do
 
     it "ee global search featuregroup, training datasets with tags" do
       #make sure epipe is free of work
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       with_valid_session
@@ -212,7 +220,7 @@ describe "On #{ENV['OS']}" do
       tds1 = trainingdataset_setup(project1)
       tds2 = trainingdataset_setup(project2)
 
-      wait_result = epipe_wait_on_mutations(repeat: 5)
+      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 2)
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       expected_hits1 = [{'name' => fgs1[1], 'highlight' => "tags", 'parent_project' => project1[:projectname]},
