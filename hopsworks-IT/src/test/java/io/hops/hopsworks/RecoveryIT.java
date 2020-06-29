@@ -61,8 +61,7 @@ public class RecoveryIT {
   // qr code reset
   private final static By QR_CODE_RESET_SUCCESS = By.id("qr-recovery-success-msg");
   private final static By QR_CODE_RESET_ERROR = By.id("qr-recovery-error-msg");
-  private final static By QR_CODE_RESET_VIEW = By.xpath("(.//*[normalize-space(text()) and normalize-space(" +
-    ".)='Hopsworks'])[2]/following::h1[1]");
+  private final static By QR_CODE_RESET_VIEW = By.id("two_factor_four_steps");
   
   
   private final static By ERROR_MSG = By.id("error-msg");
