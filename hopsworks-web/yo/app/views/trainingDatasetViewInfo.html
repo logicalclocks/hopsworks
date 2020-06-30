@@ -131,7 +131,14 @@
                         Location
                     </td>
                     <td class="fs-table">
-                        {{trainingDatasetViewInfoCtrl.selectedTrainingDataset.location}}
+                        <span ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType !== trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
+                            <a ng-click="trainingDatasetViewInfoCtrl.tdLocation()">
+                            {{trainingDatasetViewInfoCtrl.selectedTrainingDataset.location}}
+                            </a>
+                        </span>
+                        <span ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.trainingDatasetType == trainingDatasetViewInfoCtrl.externalTrainingDatasetType">
+                            {{trainingDatasetViewInfoCtrl.selectedTrainingDataset.location}}
+                        </span>
                     </td>
                 </tr>
 

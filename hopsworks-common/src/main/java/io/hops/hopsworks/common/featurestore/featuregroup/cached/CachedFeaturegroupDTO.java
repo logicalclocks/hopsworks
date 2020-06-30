@@ -18,13 +18,11 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupDTO;
-import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
 
 /**
  * DTO containing the human-readable information of a cached feature group in the Hopsworks feature store,
@@ -34,14 +32,9 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
-  private Long hiveTableId;
-  private List<String> hdfsStorePaths;
-  private String inputFormat;
-  private HiveTableType hiveTableType;
-  private Long inodeId;
-  private OnlineFeaturegroupDTO onlineFeaturegroupDTO;
-  private Boolean onlineFeaturegroupEnabled = false;
-
+  private Boolean onlineEnabled = false;
+  private Boolean hudiEnabled = false;
+  private Storage defaultStorage;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -49,84 +42,39 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   
   public CachedFeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup);
-    this.hiveTableId = featuregroup.getCachedFeaturegroup().getHiveTableId();
-    this.onlineFeaturegroupDTO = null;
   }
 
   @XmlElement
-  public Long getHiveTableId() {
-    return hiveTableId;
-  }
-
-  public void setHiveTableId(Long hiveTableId) {
-    this.hiveTableId = hiveTableId;
-  }
-
-  @XmlElement
-  public List<String> getHdfsStorePaths() {
-    return hdfsStorePaths;
-  }
-
-  public void setHdfsStorePaths(List<String> hdfsStorePaths) {
-    this.hdfsStorePaths = hdfsStorePaths;
-  }
-
-  @XmlElement
-  public String getInputFormat() {
-    return inputFormat;
-  }
-
-  public void setInputFormat(String inputFormat) {
-    this.inputFormat = inputFormat;
-  }
-
-  @XmlElement
-  public HiveTableType getHiveTableType() {
-    return hiveTableType;
-  }
-
-  public void setHiveTableType(HiveTableType hiveTableType) {
-    this.hiveTableType = hiveTableType;
+  public Boolean getOnlineEnabled() {
+    return onlineEnabled;
   }
   
-  @XmlElement
-  public Long getInodeId() {
-    return inodeId;
+  public void setOnlineEnabled(Boolean onlineEnabled) {
+    this.onlineEnabled = onlineEnabled;
   }
-  
-  public void setInodeId(Long inodeId) {
-    this.inodeId = inodeId;
+
+  public Storage getDefaultStorage() {
+    return defaultStorage;
   }
-  
-  @XmlElement
-  public OnlineFeaturegroupDTO getOnlineFeaturegroupDTO() {
-    return onlineFeaturegroupDTO;
+
+  public void setDefaultStorage(Storage defaultStorage) {
+    this.defaultStorage = defaultStorage;
   }
-  
-  public void setOnlineFeaturegroupDTO(
-    OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
-    this.onlineFeaturegroupDTO = onlineFeaturegroupDTO;
+
+  public Boolean getHudiEnabled() {
+    return hudiEnabled;
   }
-  
-  @XmlElement
-  public Boolean getOnlineFeaturegroupEnabled() {
-    return onlineFeaturegroupEnabled;
+
+  public void setHudiEnabled(Boolean hudiEnabled) {
+    this.hudiEnabled = hudiEnabled;
   }
-  
-  public void setOnlineFeaturegroupEnabled(Boolean onlineFeaturegroupEnabled) {
-    this.onlineFeaturegroupEnabled = onlineFeaturegroupEnabled;
-  }
-  
+
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
-      "hiveTableId=" + hiveTableId +
-      ", hdfsStorePaths=" + hdfsStorePaths +
-      ", inputFormat='" + inputFormat + '\'' +
-      ", hiveTableType=" + hiveTableType +
-      ", inodeId=" + inodeId +
-      ", onlineFeaturegroupDTO=" + onlineFeaturegroupDTO +
-      ", onlineFeaturegroupEnabled=" + onlineFeaturegroupEnabled +
+      ", onlineEnabled=" + onlineEnabled +
+      ", hudiEnabled =" + hudiEnabled +
+      ", defaultStorage=" + defaultStorage +
       '}';
   }
 }

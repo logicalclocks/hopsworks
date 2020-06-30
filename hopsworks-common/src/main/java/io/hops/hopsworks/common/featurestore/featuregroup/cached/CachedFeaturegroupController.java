@@ -24,7 +24,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.hive.HiveController;
-import io.hops.hopsworks.common.hive.HiveTableType;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
@@ -34,7 +33,11 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveColumns;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveKeyConstraints;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -141,18 +144,17 @@ public class CachedFeaturegroupController {
    * @param project         project from which the user is making the request
    * @param user            the user making the request
    * @return                JSON/XML DTO with the schema
-   * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
-  public Pair<String, String> getDDLSchema(Featuregroup featuregroup, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    String offlineSchema = parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroup, project, user));
-    String onlineSchema = null;
-    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
-      onlineSchema = onlineFeaturestoreController.getOnlineFeaturegroupSchema(featuregroup);
+  public String getDDLSchema(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, HopsSecurityException {
+    try {
+      return parseSqlSchemaResult(getSQLSchemaForFeaturegroup(featuregroup, project, user));
+    } catch (SQLException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA,
+          Level.SEVERE, "Internal error fetching the schema of the feature group", e.getMessage(), e);
     }
-    return new Pair<>(offlineSchema, onlineSchema);
   }
 
   /**
@@ -183,7 +185,7 @@ public class CachedFeaturegroupController {
    * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive Table (offline feature data)
    * and the MySQL table (online feature data)
    *
-   * @param featuregroup    featuregroup for which to fetch the data
+   * @param featuregroup    of the featuregroup to preview
    * @param project         the project the user is operating from, in case of shared feature store
    * @param user            the user making the request
    * @param partition       the selected partition if any as represented in the PARTITIONS_METASTORE
@@ -197,10 +199,10 @@ public class CachedFeaturegroupController {
   public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
                                                     Users user, String partition, boolean online, int limit)
       throws SQLException, FeaturestoreException, HopsSecurityException {
-    if (online && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
+    if (online && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+      return onlineFeaturegroupController.getFeaturegroupPreview(featuregroup, project, user, limit);
     } else if (online) {
-      return onlineFeaturegroupController.getOnlineFeaturegroupPreview(featuregroup, project, user, limit);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_ONLINE, Level.FINE);
     } else {
       return getOfflineFeaturegroupPreview(featuregroup, project, user, partition, limit);
     }
@@ -280,17 +282,20 @@ public class CachedFeaturegroupController {
         cachedFeaturegroupDTO.getFeatures(), project, user);
 
     //Create MySQL Table for Online Cached Feature Group
-    OnlineFeaturegroup onlineFeaturegroup = null;
-    if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineFeaturegroupEnabled()){
-      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
-          cachedFeaturegroupDTO.getFeatures(), project, user);
+    boolean onlineEnabled = false;
+    if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled()){
+      onlineFeaturegroupController
+          .createMySQLTable(featurestore, tableName, cachedFeaturegroupDTO.getFeatures(), project, user);
+      onlineEnabled = true;
     }
     
     //Get HiveTblId of the newly created table from the metastore
-    Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
-    
+    HiveTbls hiveTbls = cachedFeaturegroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP,
+            Level.WARNING, "", "Table created correctly but not in the metastore"));
+
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTblId, onlineFeaturegroup);
+    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getDefaultStorage());
   }
   
   /**
@@ -301,47 +306,61 @@ public class CachedFeaturegroupController {
    */
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup) {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
-    List<FeatureDTO> featureDTOs =
-      cachedFeaturegroupFacade.getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
-    List<String> primaryKeys = cachedFeaturegroupFacade.getHiveTablePrimaryKey(
-      featuregroup.getCachedFeaturegroup().getHiveTableId());
-    if(!featureDTOs.isEmpty() && !primaryKeys.isEmpty()) {
-      featureDTOs.stream().filter(f -> primaryKeys.contains(f.getName())).forEach(f -> f.setPrimary(true));
-    }
-    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null) {
-      List<FeatureDTO> onlineFeatureDTOs =
-        onlineFeaturegroupController.getOnlineFeaturegroupFeatures(
-          featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup());
-      for (FeatureDTO featureDTO: featureDTOs) {
-        for (FeatureDTO onlineFeatureDTO: onlineFeatureDTOs) {
+    HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
+    List<FeatureDTO> featureDTOS = getFeaturesDTO(hiveTable);
+
+    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
+      cachedFeaturegroupDTO.setOnlineEnabled(true);
+      List<FeatureDTO> onlineFeatureDTOs = onlineFeaturegroupController.getFeaturegroupFeatures(featuregroup);
+      for (FeatureDTO featureDTO : featureDTOS) {
+        for (FeatureDTO onlineFeatureDTO : onlineFeatureDTOs) {
           if(featureDTO.getName().equalsIgnoreCase(onlineFeatureDTO.getName())){
             featureDTO.setOnlineType(onlineFeatureDTO.getType());
           }
         }
       }
     }
-    cachedFeaturegroupDTO.setFeatures(featureDTOs);
+    cachedFeaturegroupDTO.setFeatures(featureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
-    List<String> hdfsStorePaths = cachedFeaturegroupFacade.getHiveTableHdfsPaths(
-      featuregroup.getCachedFeaturegroup().getHiveTableId());
-    cachedFeaturegroupDTO.setHdfsStorePaths(hdfsStorePaths);
-    cachedFeaturegroupDTO.setDescription(cachedFeaturegroupFacade.getHiveTableComment(
-        featuregroup.getCachedFeaturegroup().getHiveTableId()));
-    Long inodeId = cachedFeaturegroupFacade.getHiveTableInodeId(featuregroup.getCachedFeaturegroup().getHiveTableId());
-    cachedFeaturegroupDTO.setInodeId(inodeId);
-    HiveTableType hiveTableType = cachedFeaturegroupFacade.getHiveTableType(
-      featuregroup.getCachedFeaturegroup().getHiveTableId());
-    cachedFeaturegroupDTO.setHiveTableType(hiveTableType);
-    String hiveInputFormat = cachedFeaturegroupFacade.getHiveInputFormat(
-      featuregroup.getCachedFeaturegroup().getHiveTableId());
-    cachedFeaturegroupDTO.setInputFormat(hiveInputFormat);
-    cachedFeaturegroupDTO.setLocation(hdfsStorePaths.get(0));
-    if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() != null){
-      cachedFeaturegroupDTO.setOnlineFeaturegroupEnabled(true);
-      cachedFeaturegroupDTO.setOnlineFeaturegroupDTO(onlineFeaturegroupController.convertOnlineFeaturegroupToDTO(
-        featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup()));
-    }
+    cachedFeaturegroupDTO.setDefaultStorage(featuregroup.getCachedFeaturegroup().getDefaultStorage());
+    cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
+            .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
+
+    cachedFeaturegroupDTO.setDescription(hiveTable.getHiveTableParamsCollection().stream()
+        .filter(p -> p.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("COMMENT"))
+        .map(HiveTableParams::getParamValue)
+        .findFirst()
+        .orElse("")
+    );
+
+    cachedFeaturegroupDTO.setLocation(hiveTable.getSdId().getLocation());
     return cachedFeaturegroupDTO;
+  }
+
+  public List<FeatureDTO> getFeaturesDTO(HiveTbls hiveTable) {
+    List<HiveKeyConstraints> primaryKeys = hiveTable.getHiveKeyConstraintsCollection().stream()
+        // 0 is the primary key index
+        .filter(c -> c.getConstraintType() == 0)
+        .collect(Collectors.toList());
+
+    List<FeatureDTO> featureDTOS = new ArrayList<>();
+    // Add all the columns - if there is a primary key constraint, set the primary key flag
+    for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
+      boolean primary = primaryKeys.stream().anyMatch(pk ->
+          pk.getParentCdId().getCdId().equals(hc.getHiveColumnsPK().getCdId()) &&
+              pk.getParentIntegerIdx() == hc.getIntegerIdx());
+
+      featureDTOS.add(new FeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
+          hc.getComment(), primary));
+    }
+
+    // Hive stores the partition columns separately. Add them
+    featureDTOS.addAll(hiveTable.getHivePartitionKeysCollection().stream()
+        .map(pk -> new FeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(), pk.getPkeyType(),
+            pk.getPkeyType(), false, true))
+        .collect(Collectors.toList()));
+
+    return featureDTOS;
   }
 
   /**
@@ -381,16 +400,16 @@ public class CachedFeaturegroupController {
   /**
    * Drops a online feature group in MySQL database
    *
-   * @param cachedFeaturegroup a cached feature group
+   * @param featuregroup    a cached feature group
    * @param project
    * @param user            the user making the request
    * @throws SQLException
    * @throws FeaturestoreException
    */
-  public void dropMySQLFeaturegroup(CachedFeaturegroup cachedFeaturegroup, Project project, Users user)
+  public void dropMySQLFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws SQLException, FeaturestoreException {
-    if(settings.isOnlineFeaturestore() && cachedFeaturegroup.getOnlineFeaturegroup() != null){
-      onlineFeaturegroupController.dropMySQLTable(cachedFeaturegroup.getOnlineFeaturegroup(), project, user);
+    if(settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+      onlineFeaturegroupController.dropMySQLTable(featuregroup, project, user);
     }
   }
 
@@ -492,7 +511,6 @@ public class CachedFeaturegroupController {
     }
   }
 
-
   /**
    * Synchronizes an already created Hive table with the Feature Store metadata
    *
@@ -506,28 +524,27 @@ public class CachedFeaturegroupController {
   
     //Get Hive Table Metadata
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    Long hiveTblId = cachedFeaturegroupFacade.getHiveTableId(tableName, featurestore.getHiveDbId());
-    if(hiveTblId == null){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.SYNC_TABLE_NOT_FOUND, Level.FINE,
+    HiveTbls hiveTbls = cachedFeaturegroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
+        .orElseThrow(() ->new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.SYNC_TABLE_NOT_FOUND, Level.FINE,
         ", tried to sync hive table with name: " + tableName + " with the feature store, but the table was not found " +
-          "in the Hive metastore");
-    }
-  
+          "in the Hive metastore"));
+
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTblId, null);
+    return persistCachedFeaturegroupMetadata(hiveTbls, false, Storage.OFFLINE);
   }
-  
-  
+
   /**
    * Persists metadata of a new cached feature group in the cached_feature_group table
    *
-   * @param hiveTblId the id of the Hive table in the Hive metastore
+   * @param hiveTable the id of the Hive table in the Hive metastore
    * @return Entity of the created cached feature group
    */
-  private CachedFeaturegroup persistCachedFeaturegroupMetadata(Long hiveTblId, OnlineFeaturegroup onlineFeaturegroup) {
+  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable,
+                                                               boolean onlineEnabled, Storage defaultStorage) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
-    cachedFeaturegroup.setHiveTableId(hiveTblId);
-    cachedFeaturegroup.setOnlineFeaturegroup(onlineFeaturegroup);
+    cachedFeaturegroup.setHiveTbls(hiveTable);
+    cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
+    cachedFeaturegroup.setDefaultStorage(defaultStorage);
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     return cachedFeaturegroup;
   }
@@ -536,16 +553,14 @@ public class CachedFeaturegroupController {
    * Update a cached featuregroup that currently does not support online feature serving, to support it.
    *
    * @param featurestore the featurestore where the featuregroup resides
-   * @param cachedFeaturegroupDTO metadata about the online featuregroup to create
    * @param featuregroup the featuregroup entity to update
    * @param user the user making the request
    * @return a DTO of the updated featuregroup
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore,
-                                                  CachedFeaturegroupDTO cachedFeaturegroupDTO,
-                                                  Featuregroup featuregroup, Project project, Users user)
+  public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
+                                                  Project project, Users user)
     throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
@@ -557,16 +572,15 @@ public class CachedFeaturegroupController {
         Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
         "administrator.");
     }
-    //Create MySQL Table for Online Feature Group
-    OnlineFeaturegroup onlineFeaturegroup = null;
-    String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    if(featuregroup.getCachedFeaturegroup().getOnlineFeaturegroup() == null) {
-      onlineFeaturegroup = onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
-          cachedFeaturegroupDTO.getFeatures(), project, user);
-    }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
+    //Create MySQL Table for Online Feature Group
+    String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
+    List<FeatureDTO> features = getFeaturesDTO(cachedFeaturegroup.getHiveTbls());
+    if(!cachedFeaturegroup.isOnlineEnabled()) {
+      onlineFeaturegroupController.createMySQLTable(featurestore, tableName, features, project, user);
+    }
     //Set foreign key of the cached feature group to the new online feature group
-    cachedFeaturegroup.setOnlineFeaturegroup(onlineFeaturegroup);
+    cachedFeaturegroup.setOnlineEnabled(true);
     cachedFeaturegroupFacade.updateMetadata(cachedFeaturegroup);
     return convertCachedFeaturegroupToDTO(featuregroup);
   }
@@ -588,15 +602,17 @@ public class CachedFeaturegroupController {
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
     if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(project))) {
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
         "administrator.");
     }
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    if(cachedFeaturegroup.getOnlineFeaturegroup() != null) {
+    if (cachedFeaturegroup.isOnlineEnabled()) {
       //Drop MySQL Table for Online Feature Group
-      dropMySQLFeaturegroup(cachedFeaturegroup, project, user);
+      dropMySQLFeaturegroup(featuregroup, project, user);
+      cachedFeaturegroup.setOnlineEnabled(false);
+      cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     }
     return convertCachedFeaturegroupToDTO(featuregroup);
   }

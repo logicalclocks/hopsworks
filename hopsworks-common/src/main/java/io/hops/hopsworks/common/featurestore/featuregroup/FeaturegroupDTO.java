@@ -23,7 +23,6 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -45,7 +44,6 @@ import java.util.stream.Collectors;
     @JsonSubTypes.Type(value = OnDemandFeaturegroupDTO.class, name = "OnDemandFeaturegroupDTO")})
 public class FeaturegroupDTO extends FeaturestoreEntityDTO {
 
-  private FeaturegroupType featuregroupType;
   @XmlElement
   private Boolean descStatsEnabled;
   @XmlElement
@@ -71,7 +69,6 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
         featuregroup.getCreator(), featuregroup.getVersion(),
         (List) featuregroup.getStatistics(), (List) featuregroup.getJobs(),
         featuregroup.getId());
-    this.featuregroupType = featuregroup.getFeaturegroupType();
     this.clusterAnalysisEnabled = featuregroup.isClusterAnalysisEnabled();
     this.descStatsEnabled = featuregroup.isDescStatsEnabled();
     this.featCorrEnabled = featuregroup.isFeatCorrEnabled();
@@ -149,19 +146,9 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
     this.corrMethod = corrMethod;
   }
 
-  @XmlElement
-  public FeaturegroupType getFeaturegroupType() {
-    return featuregroupType;
-  }
-  
-  public void setFeaturegroupType(FeaturegroupType featuregroupType) {
-    this.featuregroupType = featuregroupType;
-  }
-  
   @Override
   public String toString() {
     return "FeaturegroupDTO{" +
-      "featuregroupType=" + featuregroupType +
       ", descStatsEnabled=" + descStatsEnabled +
       ", featCorrEnabled=" + featCorrEnabled +
       ", featHistEnabled=" + featHistEnabled +

@@ -322,7 +322,9 @@ public class ConstructorController {
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
     for (FeatureDTO f : collectFeatures(query)) {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
-      selectList.add(new SqlIdentifier(Arrays.asList(f.getFeaturegroup(), f.getName()), SqlParserPos.ZERO));
+      // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
+      selectList.add(new SqlIdentifier(Arrays.asList("`" + f.getFeaturegroup() + "`",
+          "`" + f.getName() + "`"), SqlParserPos.ZERO));
     }
 
     SqlNode joinNode = null;
@@ -378,15 +380,15 @@ public class ConstructorController {
   private SqlNode generateTableNode(Query query, boolean online) {
     List<String> tableIdentifierStr = new ArrayList<>();
     if (online) {
-      tableIdentifierStr.add(query.getProject());
+      tableIdentifierStr.add("`" + query.getProject() + "`");
     } else {
-      tableIdentifierStr.add(query.getFeatureStore());
+      tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
     }
 
-    tableIdentifierStr.add(query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion());
+    tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion() + "`");
 
     SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
-        new SqlIdentifier(query.getAs(), SqlParserPos.ZERO)), SqlParserPos.ZERO);
+        new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO);
 
     return SqlStdOperatorTable.AS.createCall(asNodeList);
   }

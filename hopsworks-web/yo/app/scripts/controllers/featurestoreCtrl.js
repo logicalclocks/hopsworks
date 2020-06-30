@@ -93,7 +93,6 @@ angular.module('hopsWorksApp')
             self.jdbcConnectorType = ""
             self.hopsfsTrainingDatasetType = ""
             self.externalTrainingDatasetType = ""
-            self.featuregroupType = ""
             self.trainingDatasetType = ""
             self.isEnterprise = ""
 
@@ -433,10 +432,7 @@ angular.module('hopsWorksApp')
                         self.hopsfsConnectorType = self.settings.hopsfsConnectorType
                         self.s3ConnectorType = self.settings.s3ConnectorType
                         self.jdbcConnectorType = self.settings.jdbcConnectorType
-                        self.featuregroupType = self.settings.featuregroupType
                         self.trainingDatasetType = self.settings.trainingDatasetType
-                        self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType
-                        self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType
                         self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
                         self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
                         StorageService.store(self.projectId + "_fssettings", success.data);
@@ -714,12 +710,12 @@ angular.module('hopsWorksApp')
                 } else if(self.featuregroupsSortKey == "created"){
                     return featuregroup.versionToGroups[featuregroup.activeVersion].created
                 } else if(self.featuregroupsSortKey == "featuregroupType"){
-                    return featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType
+                    return featuregroup.versionToGroups[featuregroup.activeVersion].type
                 } else if (self.featuregroupsSortKey === "description") {
                     return featuregroup.versionToGroups[featuregroup.activeVersion].description
                 } else if(self.featuregroupsSortKey == "onlineEnabled"){
-                    if(featuregroup.versionToGroups[featuregroup.activeVersion].featuregroupType == self.cachedFeaturegroupType
-                        && featuregroup.versionToGroups[featuregroup.activeVersion].onlineFeaturegroupEnabled){
+                    if(featuregroup.versionToGroups[featuregroup.activeVersion].type === 'cachedFeaturegroupDTO' 
+                        && featuregroup.versionToGroups[featuregroup.activeVersion].onlineEnabled){
                        return "Yes"
                     } else {
                         return "No"

@@ -28,7 +28,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -233,10 +232,8 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
    * @return
    */
   private String getFeaturegroupLocation(Featuregroup featuregroup) {
-
-    List<String> hdfsStorePaths = cachedFeaturegroupFacade.getHiveTableHdfsPaths(
-        featuregroup.getCachedFeaturegroup().getHiveTableId());
-
-    return hdfsStorePaths.get(0);
+    return featuregroup.getCachedFeaturegroup().getHiveTbls()
+        .getSdId()
+        .getLocation();
   }
 }

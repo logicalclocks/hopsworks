@@ -37,7 +37,6 @@ module FeaturestoreHelper
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  default_stats_settings: true, version: 1, featuregroup_description: nil)
     type = "cachedFeaturegroupDTO"
-    featuregroupType = "CACHED_FEATURE_GROUP"
     if features == nil
       features = [
           {
@@ -67,14 +66,8 @@ module FeaturestoreHelper
         description: featuregroup_description,
         version: version,
         type: type,
-        onlineFeaturegroupDTO: nil,
-        featuregroupType: featuregroupType
+        onlineEnabled: online
     }
-    if online
-      json_data['onlineFeaturegroupEnabled'] = true
-    else
-      json_data['onlineFeaturegroupEnabled'] = false
-    end
     unless default_stats_settings
       json_data['numBins'] = 10
       json_data['numClusters'] = 10
@@ -312,7 +305,6 @@ module FeaturestoreHelper
 
   def enable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id, featuregroup_version)
     type = "cachedFeaturegroupDTO"
-    featuregroupType = "CACHED_FEATURE_GROUP"
     enable_featuregroup_online_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?enableOnline=true"
     json_data = {
         name: "",
@@ -329,10 +321,8 @@ module FeaturestoreHelper
         ],
         description: "",
         version: featuregroup_version,
-        onlineFeaturegroupDTO: nil,
-        onlineFeaturegroupEnabled: true,
-        type: type,
-        featuregroupType: featuregroupType
+        onlineEnabled: true,
+        type: type
     }
     json_data = json_data.to_json
     json_result = put enable_featuregroup_online_endpoint, json_data
@@ -341,7 +331,6 @@ module FeaturestoreHelper
 
   def disable_cached_featuregroup_online(project_id, featurestore_id, featuregroup_id, featuregroup_version)
     type = "cachedFeaturegroupDTO"
-    featuregroupType = "CACHED_FEATURE_GROUP"
     disable_featuregroup_online_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?disableOnline=true"
     json_data = {
         name: "",
@@ -349,10 +338,8 @@ module FeaturestoreHelper
         features: [],
         description: "",
         version: featuregroup_version,
-        onlineFeaturegroupDTO: nil,
-        onlineFeaturegroupEnabled: false,
-        type: type,
-        featuregroupType: featuregroupType
+        onlineEnabled: false,
+        type: type
     }
     json_data = json_data.to_json
     json_result = put disable_featuregroup_online_endpoint, json_data

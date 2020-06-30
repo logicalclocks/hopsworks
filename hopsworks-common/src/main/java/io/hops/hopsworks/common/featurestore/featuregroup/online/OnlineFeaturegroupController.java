@@ -21,11 +21,11 @@ import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -33,7 +33,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.math.BigInteger;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,64 +45,44 @@ import java.util.stream.Collectors;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OnlineFeaturegroupController {
-  @EJB
-  private OnlineFeaturegroupFacade onlineFeaturegroupFacade;
+
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
+  private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
+  @EJB
   private Settings settings;
-  
-  /**
-   * Persists metadata of a new online feature group in the online_feature_group table
-   *
-   * @param dbName name of the MySQL database where the online feature group data is stored
-   * @param tableName name of the MySQL table where the online feature group data is stored
-   * @return Entity of the created online feature group
-   */
-  private OnlineFeaturegroup persistOnlineFeaturegroupMetadata(String dbName, String tableName) {
-    OnlineFeaturegroup onlineFeaturegroup = new OnlineFeaturegroup();
-    onlineFeaturegroup.setDbName(dbName);
-    onlineFeaturegroup.setTableName(tableName);
-    onlineFeaturegroupFacade.persist(onlineFeaturegroup);
-    return onlineFeaturegroup;
-  }
-  
-  /**
-   * Drops an online feature group, both the data-table in the database and the metadata record
-   *
-   * @param onlineFeaturegroup the online featuregroup to delete
-   * @param project
-   * @param user the user making the request
-   * @throws SQLException
-   * @throws FeaturestoreException
-   */
-  public void dropMySQLTable(OnlineFeaturegroup onlineFeaturegroup, Project project, Users user) throws SQLException,
+
+  private final static List<String> MYSQL_TYPES = Arrays.asList("INT", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT",
+      "FLOAT", "DOUBLE", "DECIMAL", "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "BLOB", "TEXT",
+      "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT");
+
+  private final static String VARBINARY = "VARBINARY";
+
+      /**
+       * Drops an online feature group, both the data-table in the database and the metadata record
+       *
+       * @param featuregroup featuregroup to delete
+       * @param project
+       * @param user
+       * @throws SQLException
+       * @throws FeaturestoreException
+       */
+  public void dropMySQLTable(Featuregroup featuregroup, Project project, Users user) throws SQLException,
     FeaturestoreException {
     //Drop data table
-    String query = "DROP TABLE " + onlineFeaturegroup.getTableName() + ";";
-    onlineFeaturestoreController.executeUpdateJDBCQuery(query, onlineFeaturegroup.getDbName(), project, user);
-    //Drop metadata
-    removeOnlineFeaturegroupMetadata(onlineFeaturegroup);
+    String query = "DROP TABLE " + featuregroup.getName() + "_" + featuregroup.getVersion() + ";";
+    onlineFeaturestoreController.executeUpdateJDBCQuery(query,
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()),
+        project, user);
   }
   
-  /**
-   * Removes the metadata of an online feature group
-   *
-   * @param onlineFeaturegroup the online featuregroup
-   * @return the deleted entity
-   */
-  public OnlineFeaturegroup removeOnlineFeaturegroupMetadata(OnlineFeaturegroup onlineFeaturegroup){
-    onlineFeaturegroupFacade.remove(onlineFeaturegroup);
-    return onlineFeaturegroup;
-  }
-
-  public OnlineFeaturegroup createMySQLTable(Featurestore featurestore, String tableName, List<FeatureDTO> features,
+  public void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureDTO> features,
                                              Project project, Users user)
       throws FeaturestoreException, SQLException{
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
     String createStatement = buildCreateStatement(dbName, tableName, features);
     onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
-    return persistOnlineFeaturegroupMetadata(dbName, tableName);
   }
 
   private String buildCreateStatement(String dbName, String tableName, List<FeatureDTO> features) {
@@ -109,7 +91,7 @@ public class OnlineFeaturegroupController {
 
     // Add all features
     for (FeatureDTO feature : features) {
-      createStatement.append(feature.getName()).append(" ").append(feature.getOnlineType()).append(",");
+      createStatement.append(feature.getName()).append(" ").append(getOnlineType(feature)).append(",");
     }
 
     // add primary keys
@@ -137,43 +119,35 @@ public class OnlineFeaturegroupController {
 
     return createStatement.toString();
   }
-  
-  /**
-   * Converts a Online Featuregroup entity into a DTO representation
-   *
-   * @param onlineFeaturegroup the online featuregroup to convert
-   * @return a DTO representation of the online feature group
-   */
-  public OnlineFeaturegroupDTO convertOnlineFeaturegroupToDTO(OnlineFeaturegroup onlineFeaturegroup){
-    OnlineFeaturegroupDTO onlineFeaturegroupDTO = new OnlineFeaturegroupDTO(onlineFeaturegroup);
-    onlineFeaturegroupDTO.setTableType(
-      onlineFeaturestoreController.getOnlineFeaturegroupTableType(onlineFeaturegroupDTO));
-    onlineFeaturegroupDTO.setSize(
-      onlineFeaturestoreController.getTblSize(onlineFeaturegroupDTO));
-    onlineFeaturegroupDTO.setTableRows(
-      onlineFeaturestoreController.getOnlineFeaturegroupTableRows(onlineFeaturegroupDTO));
-    return onlineFeaturegroupDTO;
-  }
-  
-  /**
-   * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
-   *
-   * @param onlineFeaturegroup the online featuregroup to get type information for
-   * @return a list of Feature DTOs with the type information
-   */
-  public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
-    return onlineFeaturestoreController.getOnlineFeaturegroupFeatures(onlineFeaturegroup);
+
+  private String getOnlineType(FeatureDTO featureDTO) {
+    if (!Strings.isNullOrEmpty(featureDTO.getOnlineType())) {
+      // TODO(Fabio): Check that it's a valid online type
+      return featureDTO.getOnlineType().toLowerCase();
+    }
+
+    if (MYSQL_TYPES.contains(featureDTO.getType().toUpperCase())) {
+      // Hive type and MySQL type match
+      return featureDTO.getType().toLowerCase();
+    } else if (featureDTO.getType().equalsIgnoreCase("boolean")) {
+      return "tinyint";
+    } else if (featureDTO.getType().equalsIgnoreCase("string")) {
+      return "varchar(1000)";
+    } else {
+      return VARBINARY;
+    }
   }
 
   /**
    * Previews the contents of a online feature group (runs SELECT * LIMIT 20)
    *
+   * @param featuregroup the online featuregroup to get the SQL schema of
    * @return the preview result
    * @throws FeaturestoreException
    * @throws SQLException
    */
-  public FeaturegroupPreview getOnlineFeaturegroupPreview(Featuregroup featuregroup, Project project,
-                                                          Users user, int limit)
+  public FeaturegroupPreview getFeaturegroupPreview(Featuregroup featuregroup, Project project,
+                                                    Users user, int limit)
       throws FeaturestoreException, SQLException {
     String tblName = featuregroup.getName() + "_" + featuregroup.getVersion();
     String query = "SELECT * FROM " + tblName + " LIMIT " + limit;
@@ -184,5 +158,38 @@ public class OnlineFeaturegroupController {
       return onlineFeaturestoreController.executeReadJDBCQuery(query, db, project, user);
     }
   }
-  
+
+  /**
+   * Gets the SQL schema of an online feature group
+   *
+   * @param featuregroup the online featuregroup to get the SQL schema of
+   * @return a String with the "SHOW CREATE TABLE" result
+   */
+  public String getFeaturegroupSchema(Featuregroup featuregroup) {
+    return onlineFeaturestoreFacade.getMySQLSchema(
+        getTblName(featuregroup),
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+  }
+
+  /**
+   * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
+   *
+   * @param featuregroup the online featuregroup to get type information for
+   * @return a list of Feature DTOs with the type information
+   */
+  public List<FeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) {
+    return onlineFeaturestoreFacade.getMySQLFeatures(
+        getTblName(featuregroup),
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+  }
+
+  public BigInteger getFeaturegroupSize(Featuregroup featuregroup) {
+    return onlineFeaturestoreFacade.getTblSize(
+        getTblName(featuregroup),
+        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
+  }
+
+  private String getTblName(Featuregroup featuregroup) {
+    return featuregroup.getName() + "_" + featuregroup.getVersion();
+  }
 }

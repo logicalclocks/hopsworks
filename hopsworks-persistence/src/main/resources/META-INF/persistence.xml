@@ -59,7 +59,6 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset</class>
@@ -143,8 +142,15 @@
     <class>io.hops.hopsworks.persistence.entity.util.Variables</class>
     <class>io.hops.hopsworks.persistence.entity.yarn.YarnContainersLog</class>
 
-    <!-- metastore -->
-    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Partitions</class>
+    <!-- Metastore -->
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveSds</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveColumns</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveCds</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveKeyConstraints</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitionKeys</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions</class>
 
     <!-- Converters -->
     <class>io.hops.hopsworks.persistence.entity.user.cluster.RegistrationStatusConverter</class>

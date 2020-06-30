@@ -33,8 +33,6 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -54,7 +52,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -116,6 +113,8 @@ public class FeaturegroupService {
   private FeatureGroupPreviewResource featureGroupPreviewResource;
   @Inject
   private FeatureGroupPartitionResource featureGroupPartitionResource;
+  @Inject
+  private FeatureGroupDetailsResource featureGroupDetailsResourcee;
   
   private Project project;
   private Featurestore featurestore;
@@ -278,65 +277,19 @@ public class FeaturegroupService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Delete specific featuregroup from a specific featurestore",
-      response = FeaturegroupDTO.class)
-  public Response deleteFeatureGroup(
-      @Context SecurityContext sc,
+  @ApiOperation(value = "Delete specific featuregroup from a specific featurestore")
+  public Response deleteFeatureGroup(@Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException, ServiceException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
-    FeaturegroupDTO featuregroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featuregroupId);
-    featurestoreUtils.verifyUserRole(featuregroupDTO, featurestore, user, project);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
-      featuregroupDTO = new FeaturegroupDTO();
-      featuregroupDTO.setId(featuregroupId);
-      featuregroupDTO = featuregroupController
-        .deleteFeaturegroupIfExists(featurestore, featuregroupDTO, project, user)
-        .orElseGet(null);
-      activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroupDTO.getName(),
-          project, user, ActivityFlag.SERVICE);
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-          new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+      featuregroupController.deleteFeaturegroup(featuregroup, project, user);
+      return Response.ok().build();
     } catch (SQLException | IOException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_FEATUREGROUP, Level.SEVERE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", featuregroupId: " + featuregroupId, e.getMessage(), e);
-    }
-  }
-
-
-  /**
-   * Endpoint for retrieving the SQL create schema of a featuregroup with a specified id in a specified featurestore
-   *
-   * @param featuregroupId id of the featuregroup
-   * @return JSON representation of SELECT * from featuregroup LIMIT 20
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  @GET
-  @Path("/{featuregroupId}/schema")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get the SQL schema of a featuregroup", response = FeaturegroupPreview.class)
-  public Response getFeatureGroupSchema(@Context SecurityContext sc,
-      @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
-      throws FeaturestoreException, HopsSecurityException {
-    verifyIdProvided(featuregroupId);
-    Users user = jWTHelper.getUserPrincipal(sc);
-    try {
-      Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-      Pair<String, String> schemas = featuregroupController.getDDLSchema(featuregroup, project, user);
-      SchemaDTO schemaDTO = new SchemaDTO(schemas.getValue0(), schemas.getValue1());
-      return Response.ok().entity(schemaDTO).build();
-    } catch (SQLException e) {
-      throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.COULD_NOT_FETCH_FEATUREGROUP_SHOW_CREATE_SCHEMA, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", featuregroupId: " + featuregroupId, e.getMessage(), e);
     }
@@ -353,33 +306,26 @@ public class FeaturegroupService {
    * 'overwrite' instead of default mode 'append'
    *
    * @param featuregroupId the id of the featuregroup
-   * @return a JSON representation of the the featuregroup
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    */
   @POST
   @Path("/{featuregroupId}/clear")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Delete featuregroup contents",
-      response = FeaturegroupDTO.class)
-  public Response deleteFeaturegroupContents(
-      @Context SecurityContext sc,
+  @ApiOperation(value = "Delete featuregroup contents")
+  public Response deleteFeaturegroupContents(@Context SecurityContext sc,
       @ApiParam(value = "Id of the featuregroup", required = true) @PathParam("featuregroupId") Integer featuregroupId)
-  throws FeaturestoreException, ServiceException {
+      throws FeaturestoreException, ServiceException {
     verifyIdProvided(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
     //Verify that the user has the data-owner role or is the creator of the featuregroup
-    FeaturegroupDTO oldFeaturegroupDTO =
-        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-    featurestoreUtils.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     try {
-      FeaturegroupDTO newFeaturegroupDTO =
-          featuregroupController.clearFeaturegroup(featurestore, oldFeaturegroupDTO, project, user);
-      GenericEntity<FeaturegroupDTO> featuregroupGeneric = new GenericEntity<FeaturegroupDTO>(newFeaturegroupDTO) {};
-      return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
+      featuregroupController.clearFeaturegroup(featuregroup, project, user);
+      return Response.ok().build();
     } catch (SQLException | IOException | ProvenanceException e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CLEAR_FEATUREGROUP, Level.SEVERE,
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
@@ -427,9 +373,7 @@ public class FeaturegroupService {
     verifyIdProvided(featuregroupId);
     featuregroupDTO.setId(featuregroupId);
     Users user = jWTHelper.getUserPrincipal(sc);
-    FeaturegroupDTO oldFeaturegroupDTO = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featuregroupId);
-    featurestoreUtils.verifyUserRole(oldFeaturegroupDTO, featurestore, user, project);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
@@ -437,16 +381,14 @@ public class FeaturegroupService {
     if(updateStats){
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
     }
-    if(enableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        !((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-      featuregroupDTO.setDescription(oldFeaturegroupDTO.getDescription());
+    if(enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        !featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
       updatedFeaturegroupDTO =
           featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
-    if(disableOnline && oldFeaturegroupDTO.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        ((CachedFeaturegroupDTO) oldFeaturegroupDTO).getOnlineFeaturegroupEnabled()){
-      updatedFeaturegroupDTO =
-          featuregroupController.disableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
+    if(disableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+      updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
     if(updateStatsSettings) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
@@ -454,6 +396,7 @@ public class FeaturegroupService {
     if (updateJob) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(featurestore, featuregroupDTO);
     }
+
     if(updatedFeaturegroupDTO != null) {
       activityFacade.persistActivity(ActivityFacade.EDITED_FEATUREGROUP + updatedFeaturegroupDTO.getName(),
         project, user, ActivityFlag.SERVICE);
@@ -555,8 +498,7 @@ public class FeaturegroupService {
 
     Map<String, String> result = tagController.getAll(project, user, featurestore, featuregroupId);
 
-    ResourceRequest resourceRequest =
-        new ResourceRequest(ResourceRequest.Name.TAGS);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
         featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
 
@@ -585,8 +527,7 @@ public class FeaturegroupService {
 
     Map<String, String> result = tagController.getAll(project, user, featurestore, featuregroupId);
 
-    ResourceRequest resourceRequest =
-        new ResourceRequest(ResourceRequest.Name.TAGS);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
         featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
     return Response.status(Response.Status.OK).entity(dto).build();
@@ -611,8 +552,7 @@ public class FeaturegroupService {
 
     Map<String, String> result = tagController.getSingle(project, user, featurestore, featuregroupId, name);
 
-    ResourceRequest resourceRequest =
-        new ResourceRequest(ResourceRequest.Name.TAGS);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagBuilder.build(uriInfo, resourceRequest, project,
         featurestore.getId(), ResourceRequest.Name.FEATUREGROUPS.name(), featuregroupId, result);
     return Response.status(Response.Status.OK).entity(dto).build();
@@ -656,6 +596,17 @@ public class FeaturegroupService {
     tagController.deleteSingle(project, user, featurestore, featuregroupId, name);
 
     return Response.noContent().build();
+  }
+
+  @Path("/{featuregroupId}/details")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeatureGroupDetailsResource getFeatureGroupDetails(
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
+      throws FeaturestoreException {
+    FeatureGroupDetailsResource fgDetailsResource = featureGroupDetailsResourcee.setProject(project);
+    fgDetailsResource.setFeaturestore(featurestore);
+    fgDetailsResource.setFeatureGroupId(featuregroupId);
+    return fgDetailsResource;
   }
 
   @Path("/{featuregroupId}/preview")

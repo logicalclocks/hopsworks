@@ -20,6 +20,8 @@ import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -31,8 +33,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "PARTITIONS", catalog = "metastore", schema = "")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Partitions.findByTblId", query = "SELECT p FROM Partitions p WHERE p.tableId = :tblId")})
-public class Partitions implements Serializable {
+    @NamedQuery(name = "Partitions.findByTbl", query = "SELECT p FROM HivePartitions p WHERE p.hiveTbls= :tbls")})
+public class HivePartitions implements Serializable {
 
   private static final long serialVersionUID = 1L;
   @Id
@@ -51,17 +53,19 @@ public class Partitions implements Serializable {
   @Size(max = 767)
   @Column(name = "PART_NAME")
   private String partName;
-  @Column(name = "TBL_ID")
-  private Long tableId;
+  @JoinColumn(name = "TBL_ID", referencedColumnName = "TBL_ID",
+      insertable = false, updatable = false)
+  @ManyToOne(optional = false)
+  private HiveTbls hiveTbls;
 
-  public Partitions() {
+  public HivePartitions() {
   }
 
-  public Partitions(Long partId) {
+  public HivePartitions(Long partId) {
     this.partId = partId;
   }
 
-  public Partitions(Long partId, int createTime, int lastAccessTime) {
+  public HivePartitions(Long partId, int createTime, int lastAccessTime) {
     this.partId = partId;
     this.createTime = createTime;
     this.lastAccessTime = lastAccessTime;
@@ -99,12 +103,12 @@ public class Partitions implements Serializable {
     this.partName = partName;
   }
 
-  public Long getTableId() {
-    return tableId;
+  public HiveTbls getHiveTbls() {
+    return hiveTbls;
   }
 
-  public void setTableId(Long tableId) {
-    this.tableId = tableId;
+  public void setHiveTbls(HiveTbls hiveTbls) {
+    this.hiveTbls = hiveTbls;
   }
 
   @Override
@@ -117,10 +121,10 @@ public class Partitions implements Serializable {
   @Override
   public boolean equals(Object object) {
     // TODO: Warning - this method won't work in the case the id fields are not set
-    if (!(object instanceof Partitions)) {
+    if (!(object instanceof HivePartitions)) {
       return false;
     }
-    Partitions other = (Partitions) object;
+    HivePartitions other = (HivePartitions) object;
     if ((this.partId == null && other.partId != null) || (this.partId != null && !this.partId.equals(other.partId))) {
       return false;
     }

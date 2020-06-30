@@ -31,7 +31,6 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.ImportControllerIface;
@@ -292,9 +291,7 @@ public class FeaturestoreService {
         featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
           dbUsername, featurestore, dbName);
       featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
-      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(
-          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject())));
-      featurestoreDTO.setOnlineFeaturestoreType(FeaturestoreConstants.ONLINE_FEATURE_STORE_TYPE);
+      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
       featurestoreDTO.setOnlineEnabled(true);
     }

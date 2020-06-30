@@ -59,20 +59,6 @@ angular.module('hopsWorksApp')
                 return (typeof $scope.addFeatureToBasket !== 'undefined');
             };
 
-            self.viewFgInfo = function(result) {
-                // Wrap the information available in the feature object into an object that 
-                // resembles the feature store object. It won't have all the fields but for the code path
-                // it goes though, these are the only one required.
-                var featurestore = {
-                    'featurestoreId': result.featuregroup.featurestoreId,
-                    'featurestoreName': result.featuregroup.featurestoreName
-                }
-                ModalService.viewFeaturegroupInfo('lg', $scope.projectId, result.featuregroup, featurestore, $scope.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
-            };
-
             self.sortByKey = function(key) {
                 self.sortKey = key;
                 self.reverse = !self.reverse;
