@@ -161,6 +161,18 @@ public class TrainingDatasetController {
                                                   TrainingDatasetDTO trainingDatasetDTO)
       throws FeaturestoreException, ProvenanceException, IOException {
 
+    // if version not provided, get latest and increment
+    if (trainingDatasetDTO.getVersion() == null) {
+      // returns ordered list by desc version
+      List<TrainingDataset> tdPrevious = trainingDatasetFacade.findByNameAndFeaturestoreOrderedDescVersion(
+        trainingDatasetDTO.getName(), featurestore);
+      if (tdPrevious != null && !tdPrevious.isEmpty()) {
+        trainingDatasetDTO.setVersion(tdPrevious.get(0).getVersion() + 1);
+      } else {
+        trainingDatasetDTO.setVersion(1);
+      }
+    }
+
     // Check that training dataset doesn't already exists
     if (trainingDatasetFacade.findByNameVersionAndFeaturestore
         (trainingDatasetDTO.getName(), trainingDatasetDTO.getVersion(), featurestore)
@@ -168,7 +180,10 @@ public class TrainingDatasetController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
           "Training Dataset: " + trainingDatasetDTO.getName() + ", version: " + trainingDatasetDTO.getVersion());
     }
-
+  
+    // Verify input
+    verifyTrainingDatasetInput(trainingDatasetDTO);
+  
     Inode inode = null;
     FeaturestoreHopsfsConnector hopsfsConnector = null;
     FeaturestoreS3Connector s3Connector = null;
@@ -232,13 +247,6 @@ public class TrainingDatasetController {
                                                            Inode inode,
                                                            FeaturestoreS3Connector S3Connector)
       throws FeaturestoreException {
-    // Verify general entity related informatio
-    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
-    // Verify input specific for training dataset
-    verifyTrainingDatasetInput(trainingDatasetDTO, featurestore);
-    // Statistics
-    verifyStatisticsInput(trainingDatasetDTO);
-    
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
     ExternalTrainingDataset externalTrainingDataset = null;
@@ -648,14 +656,16 @@ public class TrainingDatasetController {
    * Verify training dataset specific input
    *
    * @param trainingDatasetDTO the provided user input
-   * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Featurestore featurestore)
+  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO)
     throws FeaturestoreException {
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
     verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
+    verifyStatisticsInput(trainingDatasetDTO);
   }
 }

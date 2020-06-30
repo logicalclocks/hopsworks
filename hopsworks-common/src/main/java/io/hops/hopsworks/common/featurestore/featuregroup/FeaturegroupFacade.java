@@ -96,6 +96,21 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
           .setParameter("name", name)
           .getResultList();
   }
+  
+  /**
+   * Retrieves a list of featuregroups (different versions) given its name and featurestore from the database
+   * ordered by their version number in descending order
+   *
+   * @param name name of the featuregroup
+   * @param featurestore featurestore of the featuregroup
+   * @return a single Featuregroup entity
+   */
+  public List<Featuregroup> findByNameAndFeaturestoreOrderedDescVersion(String name, Featurestore featurestore) {
+    return em.createNamedQuery("Featuregroup.findByFeaturestoreAndNameOrderedByDescVersion", Featuregroup.class)
+      .setParameter("featurestore", featurestore)
+      .setParameter("name", name)
+      .getResultList();
+  }
 
   /**
    * Retrieves a featuregroups given its name, version and feature store

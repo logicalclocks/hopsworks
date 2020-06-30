@@ -102,6 +102,21 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
           .setParameter("name", name)
           .getResultList();
   }
+  
+  /**
+   * Retrieves a list of trainingDataset (different versions) given their name and feature store from the database
+   * ordered by their version number in descending order
+   *
+   * @param name name of the trainingDataset
+   * @param featurestore featurestore of the trainingDataset
+   * @return a single TrainingDataset entity
+   */
+  public List<TrainingDataset> findByNameAndFeaturestoreOrderedDescVersion(String name, Featurestore featurestore) {
+    return em.createNamedQuery("TrainingDataset.findByFeaturestoreAndNameOrderedByDescVersion", TrainingDataset.class)
+      .setParameter("featurestore", featurestore)
+      .setParameter("name", name)
+      .getResultList();
+  }
 
   /**
    * Retrieves a training dataset given its name, version and feature store from the database
