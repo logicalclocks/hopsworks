@@ -16,8 +16,10 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
@@ -43,15 +45,14 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Partitions;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.parquet.Strings;
-import org.javatuples.Pair;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -100,6 +101,8 @@ public class FeaturegroupController {
   private CachedFeaturegroupFacade cachedFeaturegroupFacade;
   @EJB
   private HopsFSProvenanceController fsController;
+  @EJB
+  private ActivityFacade activityFacade;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -115,30 +118,30 @@ public class FeaturegroupController {
   /**
    * Clears the contents of a feature group (obviously only works for cached feature groups)
    *
-   * @param featurestore    the featurestore of the feature group
-   * @param featuregroupDTO data about the featuregroup to clear
+   * @param featuregroup
+   * @param project
    * @param user            the user making the request
    * @return a DTO representation of the cleared feature group
    * @throws FeaturestoreException
    * @throws HopsSecurityException
    * @throws SQLException
    */
-  public FeaturegroupDTO clearFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-                                           Project project, Users user)
+  public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
-    switch (featuregroupDTO.getFeaturegroupType()) {
+    switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        deleteFeaturegroupIfExists(featurestore, featuregroupDTO, project, user);
-        return createFeaturegroup(featurestore, featuregroupDTO, project, user);
+        FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
+        deleteFeaturegroup(featuregroup, project, user);
+        return createFeaturegroup(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
-            Level.FINE, "featuregroupId: " + featuregroupDTO.getId());
+            Level.FINE, "featuregroupId: " + featuregroup.getId());
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
             + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-            + featuregroupDTO.getFeaturegroupType());
+            + featuregroup.getFeaturegroupType());
     }
   }
 
@@ -176,20 +179,12 @@ public class FeaturegroupController {
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
     CachedFeaturegroup cachedFeaturegroup = null;
-    switch (featuregroupDTO.getFeaturegroupType()) {
-      case CACHED_FEATURE_GROUP:
-        cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
+    if (featuregroupDTO instanceof CachedFeaturegroupDTO) {
+      cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
           (CachedFeaturegroupDTO) featuregroupDTO, project, user);
-        break;
-      case ON_DEMAND_FEATURE_GROUP:
-        onDemandFeaturegroup =
+    } else {
+      onDemandFeaturegroup =
           onDemandFeaturegroupController.createOnDemandFeaturegroup((OnDemandFeaturegroupDTO) featuregroupDTO);
-        break;
-      default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-          + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-          + featuregroupDTO.getFeaturegroupType());
     }
     
     //Persist basic feature group metadata
@@ -213,7 +208,7 @@ public class FeaturegroupController {
     
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
     
-    if(FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroupDTO.getFeaturegroupType())) {
+    if(FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroup.getFeaturegroupType())) {
       fsController.featuregroupAttachXAttrs(user, featurestore.getProject(), completeFeaturegroupDTO);
     }
     return completeFeaturegroupDTO;
@@ -376,22 +371,20 @@ public class FeaturegroupController {
           + FeaturegroupType.CACHED_FEATURE_GROUP + ", and the user requested to enable feature serving on a " +
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
-    cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, ((CachedFeaturegroupDTO) featuregroupDTO),
-      featuregroup, project, user);
+    cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
     return convertFeaturegrouptoDTO(featuregroup);
   }
   
   /**
    * Disable online feature serving of a feature group
    *
-   * @param featurestore    the featurestore where the featuregroup resides
-   * @param featuregroupDTO the updated featuregroup metadata
+   * @param featuregroup
+   * @param project
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  public FeaturegroupDTO disableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Project project, Users user) throws FeaturestoreException, SQLException {
-    Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+  public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
+      throws FeaturestoreException, SQLException {
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -491,9 +484,12 @@ public class FeaturegroupController {
    * @param featuregroupDTO DTO representation of the feature group
    * @return
    */
-  public boolean featuregroupExists(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException {
-    return getFeaturegroupByDTO(featurestore, featuregroupDTO).isPresent();
+  public boolean featuregroupExists(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
+    if (!Strings.isNullOrEmpty(featuregroupDTO.getName()) && featuregroupDTO.getVersion() != null) {
+      return featuregroupFacade.findByNameVersionAndFeaturestore(featuregroupDTO.getName(),
+          featuregroupDTO.getVersion(), featurestore).isPresent();
+    }
+    return false;
   }
 
   /**
@@ -517,31 +513,6 @@ public class FeaturegroupController {
     }).findFirst();
   }
 
-
-  /**
-   * Deletes a featuregroup with a particular id or name from a featurestore
-   * @param featurestore
-   * @param featuregroupDTO
-   * @param project
-   * @param user
-   * @return
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws ServiceException
-   * @throws IOException
-   */
-  public Optional<FeaturegroupDTO> deleteFeaturegroupIfExists(Featurestore featurestore,
-                                                              FeaturegroupDTO featuregroupDTO, Project project,
-                                                              Users user)
-          throws SQLException, FeaturestoreException, ServiceException, IOException {
-    Optional<Featuregroup> featuregroup = getFeaturegroupByDTO(featurestore, featuregroupDTO);
-    if (featuregroup.isPresent()) {
-      return Optional.of(deleteFeaturegroup(featuregroup.get(), project, user));
-    }
-    return Optional.empty();
-  }
-
-
   /**
    * Deletes a featuregroup with a particular id or name from a featurestore
    * @param featuregroup
@@ -553,15 +524,14 @@ public class FeaturegroupController {
    * @throws ServiceException
    * @throws IOException
    */
-  public FeaturegroupDTO deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
+  public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
       throws SQLException, FeaturestoreException, ServiceException, IOException {
-    FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
-        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup.getCachedFeaturegroup(), project, user);
+        cachedFeaturegroupController.dropMySQLFeaturegroup(featuregroup, project, user);
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table
@@ -573,16 +543,22 @@ public class FeaturegroupController {
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
             + featuregroup.getFeaturegroupType());
     }
-    return convertedFeaturegroupDTO;
+
+    activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroup.getName(),
+        project, user, ActivityFlag.SERVICE);
   }
 
+
   /**
-   * @param featuregroup    the featuregroup for which to fetch the data
-   * @param project         the project the user is operating from, in case of shared feature store
-   * @param user            the user making the request
-   * @param online          whether or not to retrieve the data from the online feature store
-   * @param limit           number of rows to fetch
-   * @return A DTO object with the first 20 rows of the offline and online feature tables
+   * Previews a given featuregroup by doing a SELECT LIMIT query on the Hive and MySQL Tables
+   *
+   * @param featuregroup
+   * @param project
+   * @param user
+   * @param partition
+   * @param online
+   * @param limit
+   * @return
    * @throws SQLException
    * @throws FeaturestoreException
    * @throws HopsSecurityException
@@ -607,45 +583,17 @@ public class FeaturegroupController {
   }
 
   /**
-   * Executes "SHOW CREATE TABLE" on the hive table of the featuregroup formats it as a string and returns it
-   *
-   * @param featuregroup    the featuregroup to get the schema for
-   * @param project         project from which the user making the request
-   * @param user            the user making the request
-   * @return JSON/XML DTO with the schema
-   * @throws SQLException
-   * @throws FeaturestoreException
-   * @throws HopsSecurityException
-   */
-  public Pair<String, String> getDDLSchema(Featuregroup featuregroup, Project project, Users user)
-      throws SQLException, FeaturestoreException, HopsSecurityException {
-    switch (featuregroup.getFeaturegroupType()) {
-      case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getDDLSchema(featuregroup, project, user);
-      case ON_DEMAND_FEATURE_GROUP:
-        throw new FeaturestoreException(
-            RESTCodes.FeaturestoreErrorCode.CANNOT_FETCH_HIVE_SCHEMA_FOR_ON_DEMAND_FEATUREGROUPS,
-            Level.FINE, "featuregroupId: " + featuregroup.getId());
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
-            ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-            FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-            + featuregroup.getFeaturegroupType());
-    }
-  }
-
-  /**
    * Get a list of partitions for offline feature groups
    * @param featuregroup
    * @return
    * @throws FeaturestoreException in case the feature group is not offline
    */
-  public List<Partitions> getPartitions(Featuregroup featuregroup, Integer offset, Integer limit)
+  public List<HivePartitions> getPartitions(Featuregroup featuregroup, Integer offset, Integer limit)
       throws FeaturestoreException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         return cachedFeaturegroupFacade.getHiveTablePartitions(
-            featuregroup.getCachedFeaturegroup().getHiveTableId(), offset, limit);
+            featuregroup.getCachedFeaturegroup().getHiveTbls(), offset, limit);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_ONDEMAND_NO_PARTS, Level.FINE,
@@ -691,7 +639,7 @@ public class FeaturegroupController {
     List<Featuregroup> featuregroup = featuregroupFacade.findByNameAndFeaturestore(featureGroupName, featurestore);
     if (featuregroup == null || featuregroup.isEmpty()) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND +
-        "feature group name " + featureGroupName);
+        " feature group name " + featureGroupName);
     }
     return featuregroup;
   }
@@ -719,17 +667,9 @@ public class FeaturegroupController {
    * @param featurestore    the feature store to perform the operation against
    * @throws FeaturestoreException
    */
-  private void verifyFeaturegroupType(FeaturegroupDTO featuregroupDTO, Featurestore featurestore)
-    throws FeaturestoreException {
+  private void verifyFeaturegroupType(FeaturegroupDTO featuregroupDTO, Featurestore featurestore) {
     if (featurestore == null) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
-    }
-    if (featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP &&
-        featuregroupDTO.getFeaturegroupType() != FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
-          ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-          + featuregroupDTO.getFeaturegroupType());
     }
     if (featuregroupDTO.getVersion() == null) {
       throw new IllegalArgumentException(
@@ -748,7 +688,12 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO syncHiveTableWithFeaturestore(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
     Users user) throws FeaturestoreException {
-  
+
+    if (featuregroupDTO instanceof OnDemandFeaturegroupDTO) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
+          + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
+    }
+
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(featuregroupDTO);
   
@@ -761,23 +706,10 @@ public class FeaturegroupController {
     //Extract metadata
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-  
-    CachedFeaturegroup cachedFeaturegroup = null;
-    switch (featuregroupDTO.getFeaturegroupType()) {
-      case CACHED_FEATURE_GROUP:
-        cachedFeaturegroup = cachedFeaturegroupController.syncHiveTableWithFeaturestore(featurestore,
-          (CachedFeaturegroupDTO) featuregroupDTO);
-        break;
-      case ON_DEMAND_FEATURE_GROUP:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-          + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
-      default:
-        throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-          + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
-          FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
-          + featuregroupDTO.getFeaturegroupType());
-    }
-  
+
+    CachedFeaturegroup cachedFeaturegroup = cachedFeaturegroupController
+            .syncHiveTableWithFeaturestore(featurestore, (CachedFeaturegroupDTO) featuregroupDTO);
+
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
       cachedFeaturegroup, null);
@@ -816,7 +748,12 @@ public class FeaturegroupController {
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());
-    featuregroup.setFeaturegroupType(featuregroupDTO.getFeaturegroupType());
+
+    featuregroup.setFeaturegroupType(
+        featuregroupDTO instanceof CachedFeaturegroupDTO ?
+            FeaturegroupType.CACHED_FEATURE_GROUP :
+            FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+
     featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
     // check if null to handle old clients and use entity defaults
@@ -825,28 +762,10 @@ public class FeaturegroupController {
     return featuregroup;
   }
 
-  public FeaturegroupDTO getCachedFeaturegroupDTO(Featurestore featurestore,
-      Integer featuregroupId) throws FeaturestoreException {
-    FeaturegroupDTO featuregroupDTO = getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
-
-    if (featuregroupDTO.getFeaturegroupType() != FeaturegroupType.CACHED_FEATURE_GROUP)
-      throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.XATTRS_OPERATIONS_ONLY_SUPPORTED_FOR_CACHED_FEATUREGROUPS,
-          Level.FINE);
-
-    return featuregroupDTO;
-  }
-
   public List<FeatureDTO> getFeatures(Featuregroup featuregroup) {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        List<FeatureDTO> features = cachedFeaturegroupFacade
-            .getHiveFeatures(featuregroup.getCachedFeaturegroup().getHiveTableId());
-        List<String> primaryKeys = cachedFeaturegroupFacade
-            .getHiveTablePrimaryKey(featuregroup.getCachedFeaturegroup().getHiveTableId());
-        features.stream().filter(f -> primaryKeys.contains(f.getName()))
-            .forEach(f -> f.setPrimary(true));
-        return features;
+        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup().getHiveTbls());
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
             .map(f -> new FeatureDTO(f.getName(), f.getType(), f.getPrimary()))

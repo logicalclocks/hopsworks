@@ -29,8 +29,8 @@ import java.util.Date;
  */
 @XmlRootElement
 @XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
-  "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "onlineFeaturestoreType",
-  "onlineFeaturestoreName", "onlineFeaturestoreSize", "offlineFeaturestoreType", "offlineFeaturestoreName",
+  "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "onlineFeaturestoreName",
+  "onlineFeaturestoreSize", "offlineFeaturestoreName",
   "hiveEndpoint", "mysqlServerEndpoint", "onlineEnabled"})
 public class FeaturestoreDTO {
   
@@ -42,10 +42,8 @@ public class FeaturestoreDTO {
   private Integer projectId;
   private String featurestoreDescription;
   private Long inodeId;
-  private String onlineFeaturestoreType;
   private String onlineFeaturestoreName;
   private Double onlineFeaturestoreSize;
-  private String offlineFeaturestoreType;
   private String offlineFeaturestoreName;
   private String hiveEndpoint;
   private String mysqlServerEndpoint;
@@ -63,9 +61,7 @@ public class FeaturestoreDTO {
     this.featurestoreDescription = null;
     this.featurestoreName = null;
     this.inodeId = null;
-    this.onlineFeaturestoreType = null;
     this.onlineFeaturestoreName = null;
-    this.offlineFeaturestoreType = FeaturestoreConstants.OFFLINE_FEATURE_STORE_TYPE;
     this.offlineFeaturestoreName = null;
     this.hiveEndpoint = null;
     this.mysqlServerEndpoint = null;
@@ -130,18 +126,8 @@ public class FeaturestoreDTO {
   }
   
   @XmlElement
-  public String getOnlineFeaturestoreType() {
-    return onlineFeaturestoreType;
-  }
-  
-  @XmlElement
   public String getOnlineFeaturestoreName() {
     return onlineFeaturestoreName;
-  }
-  
-  @XmlElement
-  public String getOfflineFeaturestoreType() {
-    return offlineFeaturestoreType;
   }
   
   @XmlElement
@@ -179,11 +165,7 @@ public class FeaturestoreDTO {
   public void setMysqlServerEndpoint(String mysqlServerEndpoint) {
     this.mysqlServerEndpoint = mysqlServerEndpoint;
   }
-  
-  public void setOnlineFeaturestoreType(String onlineFeaturestoreType) {
-    this.onlineFeaturestoreType = onlineFeaturestoreType;
-  }
-  
+
   public void setOnlineFeaturestoreName(String onlineFeaturestoreName) {
     this.onlineFeaturestoreName = onlineFeaturestoreName;
   }
@@ -208,10 +190,8 @@ public class FeaturestoreDTO {
       ", projectId=" + projectId +
       ", featurestoreDescription='" + featurestoreDescription + '\'' +
       ", inodeId=" + inodeId +
-      ", onlineFeaturestoreType='" + onlineFeaturestoreType + '\'' +
       ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
       ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
-      ", offlineFeaturestoreType='" + offlineFeaturestoreType + '\'' +
       ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
       ", hiveEndpoint='" + hiveEndpoint + '\'' +
       ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +

@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2019, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -12,23 +12,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
- *
  */
 
-'use strict';
+package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
-angular.module('hopsWorksApp').directive("featureList", function() {
-    return {
-        restrict: 'E',
-        scope: {
-            featurestoreCtrl: "=",
-            features: "=",
-            addButton: "=",
-            addFeatureToBasket: '=',
-            featureInBasket: '=',
-            selectedFeature: '='
-        },
-        templateUrl: 'views/featureList.html',
-        controller: 'FeatureListCtrl as featureListCtrl'
-    }
-});
+public enum Storage {
+  OFFLINE,
+  ONLINE,
+  ALL
+}

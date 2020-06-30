@@ -129,7 +129,7 @@
                         filter:{name:featureListCtrl.filter}:false |
                         filter:{version:featureListCtrl.versionFilter}:false)) |
                         itemsPerPage:featureListCtrl.pageSize)"
-                        ng-click="featureViewInfoCtrl.view(projectId, projectName, featurestore, result, settings, featuregroupViewInfoCtrl); $event.stopPropagation();"
+                        ng-click="featureViewInfoCtrl.view(featurestoreCtrl, result, featuregroupViewInfoCtrl); $event.stopPropagation();"
                         ng-class="{'active':featureViewInfoCtrl.isToggled(result)}"
                         class="fs-table">
                     <td class="fs-table">{{result.name}}</td>
@@ -173,7 +173,7 @@
                             <md-tab label="Feature">
                                 <div ng-include="'views/featureViewInfo.html'"></div>
                             </md-tab>
-                            <md-tab label="Feature Group">
+                            <md-tab label="Feature Group" ng-if="featureViewInfoCtrl.featurestoreCtrl != null">
                                 <div ng-include="'views/featuregroupViewInfo.html'"></div>
                             </md-tab>
                         </md-tabs>

@@ -329,7 +329,7 @@ public class TestConstructorController {
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, false).replace("\n", " ");
-    Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg0", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg0`", query);
   }
 
   @Test
@@ -341,7 +341,7 @@ public class TestConstructorController {
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true).replace("\n", " ");
-    Assert.assertEquals("SELECT fg0.ft1 FROM project_fs1.fg1_1 fg0", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs1`.`fg1_1` `fg0`", query);
   }
 
   @Test
@@ -360,8 +360,8 @@ public class TestConstructorController {
     leftQuery.setJoins(Arrays.asList(join));
 
     String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
-    Assert.assertEquals("SELECT fg0.ft1 FROM fs1.fg1_1 fg1 INNER JOIN " +
-        "fs1.fg2_1 fg0 ON fg1.ft1 = fg0.ft1", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `fs1`.`fg1_1` `fg1` INNER JOIN " +
+        "`fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
   }
 
   @Test
@@ -380,8 +380,8 @@ public class TestConstructorController {
     leftQuery.setJoins(Arrays.asList(join));
 
     String query = constructorController.generateSQL(leftQuery, true).replace("\n", " ");
-    Assert.assertEquals("SELECT fg0.ft1 FROM project_fs2.fg1_1 fg1 INNER JOIN " +
-        "project_fs1.fg2_1 fg0 ON fg1.ft1 = fg0.ft1", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1` FROM `project_fs2`.`fg1_1` `fg1` INNER JOIN " +
+        "`project_fs1`.`fg2_1` `fg0` ON `fg1`.`ft1` = `fg0`.`ft1`", query);
   }
 
   @Test
@@ -405,9 +405,9 @@ public class TestConstructorController {
     leftQuery.setJoins(Arrays.asList(join, secondJoin));
 
     String query = constructorController.generateSQL(leftQuery, false).replace("\n", " ");
-    Assert.assertEquals("SELECT fg0.ft1, fg1.ft2 " +
-        "FROM fs1.fg1_1 fg0 " +
-        "INNER JOIN fs1.fg2_1 fg1 ON fg0.ft1 = fg1.ft2 " +
-        "INNER JOIN fs1.fg3_1 fg2 ON fg0.ft1 = fg2.ft1", query);
+    Assert.assertEquals("SELECT `fg0`.`ft1`, `fg1`.`ft2` " +
+        "FROM `fs1`.`fg1_1` `fg0` " +
+        "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
+        "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
   }
 }

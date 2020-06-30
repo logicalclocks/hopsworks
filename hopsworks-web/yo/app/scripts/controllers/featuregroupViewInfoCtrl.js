@@ -36,20 +36,19 @@ angular.module('hopsWorksApp')
             self.activeVersion = null;
             self.featurestore = null;
             self.settings = null;
-            self.sampleWorking = false;
             self.sizeWorking = false;
             self.loadingTags = false;
-            self.size = "Not fetched"
+            self.offlineSize = "N/A"
+            self.onlineSize = "N/A"
             self.offlineSchema ="Not fetched";
             self.onlineSchema = "Not fetched";
+            self.hiveTableType = "N/A";
+            self.inputFormat = "N/A";
             self.pythonCode = ""
             self.scalaCode = ""
-            self.schemaWorking = false;
-            self.sampleWorking = false;
+            self.offlineSchemaWorking= false;
+            self.onlineSchemaWorking= false;
             self.offlineSampleColumns = []
-            self.offlineSample = []
-            self.onlineSampleColumns = []
-            self.onlineSample = []
             self.attachedTags = [];
 
             self.featurestoreCtrl = null;
@@ -156,24 +155,46 @@ angular.module('hopsWorksApp')
 
 
             /**
-             * Fetch schema from Hive by making a REST call to Hopsworks
+             * Fetch offline details from Hive by making a REST call to Hopsworks
              */
-            self.fetchSchema = function () {
+            self.fetchOfflineDetails = function () {
                 if(self.schemaWorking){
+                    return
+                }
+                self.offlineSchemaWorking = true
+
+                FeaturestoreService.getFeaturegroupDetails(self.projectId, self.featurestore, 
+                                                           self.selectedFeaturegroup, "OFFLINE").then(
+                    function (success) {
+                        self.offlineSchemaWorking = false;
+                        self.offlineSchema = success.data.schema;
+                        self.inputFormat = success.data.inputFormat;
+                        self.hiveTableType = success.data.hiveTableType;
+                        self.offlineSize = success.data.size;
+                    }, function (error) {
+                        growl.error(error.data.errorMsg, {title: 'Failed to fetch offline featuregroup details', ttl: 5000});
+                        self.offlineSchemaWorking = false;
+                    });
+            };
+
+            /**
+             * Fetch online details from Hive by making a REST call to Hopsworks
+             */
+            self.fetchOnlineDetails = function () {
+                if(self.onlineSchemaWorking){
                     return
                 }
                 self.schemaWorking = true
 
-                FeaturestoreService.getFeaturegroupSchema(self.projectId, self.featurestore, self.selectedFeaturegroup).then(
+                FeaturestoreService.getFeaturegroupDetails(self.projectId, self.featurestore, 
+                                                           self.selectedFeaturegroup, "ONLINE").then(
                     function (success) {
-                        self.schemaWorking = false;
-                        self.offlineSchema = success.data.offlineSchema;
-                        if(self.selectedFeaturegroup.onlineFeaturegroupEnabled){
-                            self.onlineSchema = success.data.onlineSchema
-                        }
+                        self.onlineSchemaWorking = false;
+                        self.onlineSchema = success.data.schema;
+                        self.onlineSize = success.data.size;
                     }, function (error) {
-                        growl.error(error.data.errorMsg, {title: 'Failed to fetch featuregroup schema', ttl: 5000});
-                        self.schemaWorking = false;
+                        growl.error(error.data.errorMsg, {title: 'Failed to fetch online featuregroup details', ttl: 5000});
+                        self.onlineSchemaWorking = false;
                     });
             };
 
@@ -192,25 +213,6 @@ angular.module('hopsWorksApp')
             self.launchJob = function (jobName) {
                 JobService.setJobFilter(jobName);
                 self.goToUrl("jobs")
-            };
-
-            /**
-             * Send async request to hopsworks to calculate the inode size of the featuregroup
-             * this can potentially be a long running operation if the directory is deeply nested
-             */
-            self.fetchSize = function () {
-                if(self.sizeWorking){
-                    return
-                }
-                self.sizeWorking = true
-                var request = {type: "inode", inodeId: self.selectedFeaturegroup.inodeId};
-                ProjectService.getMoreInodeInfo(request).$promise.then(function (success) {
-                    self.sizeWorking = false;
-                    self.size = self.sizeOnDisk(success.size)
-                }, function (error) {
-                    growl.error(error.data.errorMsg, {title: 'Failed to fetch feature group size', ttl: 5000});
-                    self.sizeWorking = false;
-                });
             };
 
             self.toggle = function(selectedFeatureGroup) {
@@ -242,18 +244,18 @@ angular.module('hopsWorksApp')
                 self.activeVersion = featuregroups.activeVersion;
                 self.settings = featurestoreCtrl.settings;
 
-                self.cachedFeaturegroupType = self.settings.cachedFeaturegroupType;
-                self.onDemandFeaturegroupType = self.settings.onDemandFeaturegroupType;
                 self.pythonCode = self.getPythonCode();
                 self.scalaCode = self.getScalaCode();
 
                 self.featuregroupType = "";
-                if(self.selectedFeaturegroup.featuregroupType === self.onDemandFeaturegroupType){
+                if(self.selectedFeaturegroup.type === 'onDemandFeaturegroupDTO'){
                     self.featuregroupType = "ON DEMAND";
                 } else {
                     self.featuregroupType = "CACHED";
-                    self.fetchSchema();
-                    self.fetchSize();
+                    self.fetchOfflineDetails();
+                    if (self.selectedFeaturegroup.onlineEnabled === true) {
+                        self.fetchOnlineDetails();
+                    }
                     self.fetchTags();
                 }
 
@@ -381,6 +383,21 @@ angular.module('hopsWorksApp')
                     function (success) {
                     }, function (error) {
                     });
+            };
+
+            self.fgLocation = function() {
+                var locationStr = self.selectedFeaturegroup.location;
+                var locationSplits = locationStr.split("/");
+                var datasetLocation = null;
+
+                if (locationStr.includes("apps/hive/warehouse")) {
+                    // need special treatment for the warehouse dirs
+                    datasetLocation = locationSplits.slice(6).join("/");
+                } else { 
+                    // just pass the project path to the dataset
+                    datasetLocation = locationSplits.slice(3).join("/");
+                }
+                $location.path('project/' + self.projectId + '/datasets/' + datasetLocation);
             };
         }]);
 

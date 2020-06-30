@@ -68,16 +68,16 @@ public class OnlineFeaturestoreFacade {
    * @param tableName the name of the table
    * @return the size in MB
    */
-  public Double getTblSize(String tableName, String dbName) {
+  public BigInteger getTblSize(String tableName, String dbName) {
     try {
-      return ((BigDecimal) em.createNativeQuery(
-        "SELECT round(((`TABLES`.`data_length` + `TABLES`.`index_length`) / 1024 / 1024), 2) `size` " +
+      return (BigInteger) em.createNativeQuery(
+        "SELECT (`TABLES`.`data_length` + `TABLES`.`index_length`) `size` " +
           "FROM information_schema.`TABLES` WHERE table_schema=? AND table_name=?;")
         .setParameter(1, dbName)
         .setParameter(2, tableName)
-        .getSingleResult()).doubleValue();
+        .getSingleResult();
     } catch (NoResultException e) {
-      return 0.0;
+      return BigInteger.ZERO;
     }
   }
 
@@ -114,44 +114,6 @@ public class OnlineFeaturestoreFacade {
     List<Object[]> schemaObjects = em.createNativeQuery("SHOW CREATE TABLE `" + db + "`.`" + tableName + "`;")
       .getResultList();
     return (String) schemaObjects.get(0)[1];
-  }
-
-  /**
-   * Gets the type of a MySQL table
-   *
-   * @param tableName name of the table
-   * @param db database where the table resides
-   * @return the table type
-   */
-  public String getMySQLTableType(String tableName, String db) {
-    try {
-      return (String) em.createNativeQuery("SELECT `TABLES`.`TABLE_TYPE` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
-        + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
-        .setParameter(1, tableName)
-        .setParameter(2, db)
-        .getSingleResult();
-    } catch (NoResultException e) {
-      return "-";
-    }
-  }
-
-  /**
-   * Gets the number of rows in a MySQL table
-   *
-   * @param tableName name of the table
-   * @param db database where the table resides
-   * @return the table type
-   */
-  public Integer getMySQLTableRows(String tableName, String db) {
-    try {
-      return ((BigInteger) em.createNativeQuery("SELECT `TABLES`.`TABLE_ROWS` FROM INFORMATION_SCHEMA.`TABLES` WHERE "
-        + "`TABLES`.`table_name`=? AND `TABLES`.`table_schema`=?;")
-        .setParameter(1, tableName)
-        .setParameter(2, db)
-        .getSingleResult()).intValue();
-    } catch (NoResultException e) {
-      return 0;
-    }
   }
 
   /**
@@ -259,10 +221,9 @@ public class OnlineFeaturestoreFacade {
    * @return a list of db-usernames for the database
    */
   public List<String> getDatabaseUsers(String dbName) {
-    List<String> users = em.createNativeQuery("SELECT `User` FROM `mysql`.`user` WHERE `User` LIKE ?")
+    return em.createNativeQuery("SELECT `User` FROM `mysql`.`user` WHERE `User` LIKE ?")
       .setParameter(1, dbName + "_%")
       .getResultList();
-    return users;
   }
 
 
@@ -274,17 +235,11 @@ public class OnlineFeaturestoreFacade {
    */
   public Boolean checkIfDatabaseExists(String dbName) {
     try {
-      String db = (String) em.createNativeQuery("SELECT `SCHEMA_NAME` FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE " +
-        "`SCHEMA_NAME`=?")
+      em.createNativeQuery("SELECT `SCHEMA_NAME` FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE `SCHEMA_NAME`=?")
         .setParameter(1, dbName)
         .getSingleResult();
-      if(db != null){
-        return true;
-      } else {
-        return false;
-      }
-    }
-    catch (NoResultException e) {
+      return true;
+    } catch (NoResultException e) {
       return false;
     }
   }

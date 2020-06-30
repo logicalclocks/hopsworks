@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached;
 
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,7 +25,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -45,44 +42,55 @@ import java.io.Serializable;
     @NamedQuery(name = "CachedFeaturegroup.findById",
         query = "SELECT cachedFg FROM CachedFeaturegroup cachedFg WHERE cachedFg.id = :id")})
 public class CachedFeaturegroup implements Serializable {
+
   private static final long serialVersionUID = 1L;
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @Basic(optional = false)
-  @Column(name = "offline_feature_group")
-  private Long hiveTableId;
-  @JoinColumn(name = "online_feature_group", referencedColumnName = "id")
-  @OneToOne
-  private OnlineFeaturegroup onlineFeaturegroup;
+  @JoinColumn(name = "offline_feature_group", referencedColumnName = "TBL_ID")
+  private HiveTbls hiveTbls;
+  @Column(name = "online_enabled")
+  private boolean onlineEnabled;
+  @Column(name = "default_storage")
+  private Storage defaultStorage;
 
-  public static long getSerialVersionUID() {
-    return serialVersionUID;
+  public CachedFeaturegroup() {}
+
+  public HiveTbls getHiveTbls() {
+    return hiveTbls;
   }
 
-  public Long getHiveTableId() {
-    return hiveTableId;
-  }
-
-  public void setHiveTableId(Long hiveTableId) {
-    this.hiveTableId = hiveTableId;
+  public void setHiveTbls(HiveTbls hiveTbls) {
+    this.hiveTbls = hiveTbls;
   }
 
   public Integer getId() {
     return id;
   }
-  
-  public OnlineFeaturegroup getOnlineFeaturegroup() {
-    return onlineFeaturegroup;
+
+  public void setId(Integer id) {
+    this.id = id;
   }
-  
-  public void setOnlineFeaturegroup(
-    OnlineFeaturegroup onlineFeaturegroup) {
-    this.onlineFeaturegroup = onlineFeaturegroup;
+
+  public boolean isOnlineEnabled() {
+    return onlineEnabled;
   }
-  
+
+  public void setOnlineEnabled(boolean onlineEnabled) {
+    this.onlineEnabled = onlineEnabled;
+  }
+
+  public Storage getDefaultStorage() {
+    return defaultStorage;
+  }
+
+  public void setDefaultStorage(Storage defaultStorage) {
+    this.defaultStorage = defaultStorage;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -90,14 +98,11 @@ public class CachedFeaturegroup implements Serializable {
 
     CachedFeaturegroup that = (CachedFeaturegroup) o;
 
-    if (!id.equals(that.id)) return false;
-    return hiveTableId.equals(that.hiveTableId);
+    return id != null ? id.equals(that.id) : that.id == null;
   }
 
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + hiveTableId.hashCode();
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

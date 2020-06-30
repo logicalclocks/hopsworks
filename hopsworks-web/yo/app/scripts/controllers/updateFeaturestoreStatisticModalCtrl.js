@@ -272,7 +272,7 @@ angular.module('hopsWorksApp')
                         "featCorrEnabled": self.featureCorrelations,
                         "descStatsEnabled": self.descriptiveStats,
                         "featHistEnabled": self.featureHistograms,
-                        "featuregroupType": self.featuregroup.featuregroupType
+                        "type": self.featuregroup.type
                     }
                     FeaturestoreService.updateFeaturegroupStatsSettings(
                         self.projectId, self.featurestore, self.featuregroup.id, settingsJson).then(

@@ -30,7 +30,7 @@
                 <uib-tab index="0" heading="{{newFeaturegroupCtrl.cachedFeaturegroupHeading}}"
                          uib-tooltip="A Feature Group stored and managed in Hopsworks."
                          class="fs-tab"
-                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.cachedFeaturegroupType">
+                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.type === 'cachedFeaturegroupDTO'">
                     <div>
                         <div class="row">
                             <div class="panel-header col-md-12">
@@ -602,7 +602,7 @@
                 <uib-tab index="1" heading="{{newFeaturegroupCtrl.onDemandFeaturegroupHeading}}"
                          uib-tooltip="A Feature Group computed on-demand."
                          class="fs-tab"
-                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.featuregroupType === newFeaturegroupCtrl.onDemandFeaturegroupType"
+                         ng-if="newFeaturegroupCtrl.featuregroupOperation === 'CREATE' || newFeaturegroupCtrl.featuregroup.type === 'onDemandFeaturegroupDTO'"
                 >
                     <div>
                         <div class="row">

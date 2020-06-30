@@ -154,16 +154,18 @@ angular.module('hopsWorksApp')
                 },
 
                 /**
-                 * GET request to get the SQL schema of a featuregroup (SHOW CREATE TABLE)
+                 * GET request to get additional details for the feature group.   
                  *
                  * @param projectId the id of the project
                  * @param featurestore the featurestore where the featuregroup resides
                  * @param featuregroup the featuregroup to get the schema for
+                 * @param storage storage for which to retrieve the details 
                  * @returns {HttpPromise}
                  */
-                getFeaturegroupSchema: function(projectId, featurestore, featuregroup) {
+                getFeaturegroupDetails: function(projectId, featurestore, featuregroup, storage) {
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/schema");
+                        featurestore.featurestoreId + "/featuregroups/" + featuregroup.id 
+                        + "/details?storage=" + storage);
                 },
 
                 /**

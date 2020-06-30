@@ -22,10 +22,8 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -34,8 +32,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.online.OnlineFeaturegroup;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -197,18 +193,7 @@ public class OnlineFeaturestoreController {
       closeConnection(conn);
     }
   }
-  
-  /**
-   * Queries the metadata in MySQL-Cluster to get the schema information of an online feature group
-   *
-   * @param onlineFeaturegroup the online featuregroup to get type information for
-   * @return a list of Feature DTOs with the type information
-   */
-  public List<FeatureDTO> getOnlineFeaturegroupFeatures(OnlineFeaturegroup onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLFeatures(onlineFeaturegroup.getTableName(),
-        onlineFeaturegroup.getDbName().toLowerCase());
-  }
-  
+
   /**
    * Checks if the JDBC connection to MySQL Server is open, and if so closes it.
    *
@@ -470,61 +455,14 @@ public class OnlineFeaturestoreController {
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
    *
-   * @param dbName the name of the database
+   * @param featurestore the feature store for which to compute the online size
    * @return the size in MB
    */
-  public Double getDbSize(String dbName) {
-    Double dbSize = onlineFeaturestoreFacade.getDbSize(dbName);
-    if(dbSize == null){
-      return 0.0;
-    }
-    return dbSize;
+  public Double getDbSize(Featurestore featurestore) {
+    String onlineName = getOnlineFeaturestoreDbName(featurestore.getProject());
+    return onlineFeaturestoreFacade.getDbSize(onlineName);
   }
-  
-  /**
-   * Gets the size of an online featuregroup table (MB).
-   *
-   * @param onlineFeaturegroupDTO metadata about the online featuregroup
-   * @return the size in MB
-   */
-  public Double getTblSize(OnlineFeaturegroupDTO onlineFeaturegroupDTO) {
-    return onlineFeaturestoreFacade.getTblSize(onlineFeaturegroupDTO.getTableName(),
-        onlineFeaturegroupDTO.getDbName().toLowerCase());
-  }
-  
-  /**
-   * Gets the SQL schema of an online feature group
-   *
-   * @param featuregroup the online featuregroup to get the SQL schema of
-   * @return a String with the "SHOW CREATE TABLE" result
-   */
-  public String getOnlineFeaturegroupSchema(Featuregroup featuregroup) {
-    return onlineFeaturestoreFacade.getMySQLSchema(featuregroup.getName() + "_" + featuregroup.getVersion(),
-        getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
-  }
-  
-  /**
-   * Gets the table type of an online feature group
-   *
-   * @param onlineFeaturegroup the online featuregroup to get the table type of
-   * @return the table type
-   */
-  public String getOnlineFeaturegroupTableType(OnlineFeaturegroupDTO onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLTableType(onlineFeaturegroup.getTableName(),
-      onlineFeaturegroup.getDbName().toLowerCase());
-  }
-  
-  /**
-   * Gets the number of rows in an online feature group
-   *
-   * @param onlineFeaturegroup the online featuregroup to get the number of rows of
-   * @return the number of rows in the table
-   */
-  public Integer getOnlineFeaturegroupTableRows(OnlineFeaturegroupDTO onlineFeaturegroup) {
-    return onlineFeaturestoreFacade.getMySQLTableRows(onlineFeaturegroup.getTableName(),
-      onlineFeaturegroup.getDbName().toLowerCase());
-  }
-  
+
   /**
    * Generate random user password for the online featurestore.
    *
@@ -533,8 +471,7 @@ public class OnlineFeaturestoreController {
   private String generateRandomUserPw() {
     return RandomStringUtils.randomAlphabetic(FeaturestoreConstants.ONLINE_FEATURESTORE_PW_LENGTH);
   }
-  
-  
+
   /**
    * Checks if a mysql database exists
    *
@@ -544,5 +481,4 @@ public class OnlineFeaturestoreController {
   public Boolean checkIfDatabaseExists(String dbName) {
     return onlineFeaturestoreFacade.checkIfDatabaseExists(dbName);
   }
-  
 }

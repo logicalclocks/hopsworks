@@ -334,16 +334,11 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
-          expect(parsed_json.key?("inodeId")).to be true
-          expect(parsed_json.key?("inputFormat")).to be true
-          expect(parsed_json.key?("hiveTableId")).to be true
-          expect(parsed_json.key?("hiveTableType")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
-          expect(parsed_json.key?("featuregroupType")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
-          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+          expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         end
 
         it "should be able to add a cached featuregroup with non default statistics settings to the featurestore" do
@@ -354,12 +349,7 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
-          expect(parsed_json.key?("inodeId")).to be true
-          expect(parsed_json.key?("inputFormat")).to be true
-          expect(parsed_json.key?("hiveTableId")).to be true
-          expect(parsed_json.key?("hiveTableType")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
-          expect(parsed_json.key?("featuregroupType")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json.key?("numBins")).to be true
           expect(parsed_json.key?("numClusters")).to be true
@@ -371,7 +361,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("descStatsEnabled")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
-          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+          expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
           expect(parsed_json["numBins"] == 10).to be true
           expect(parsed_json["numClusters"] == 10).to be true
           expect(parsed_json["corrMethod"] == "spearman").to be true
@@ -405,14 +395,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
           expect(parsed_json.key?("name")).to be true
-          expect(parsed_json.key?("inputFormat")).to be true
-          expect(parsed_json.key?("hiveTableId")).to be true
-          expect(parsed_json.key?("hiveTableType")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
-          expect(parsed_json.key?("featuregroupType")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
-          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+          expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         end
 
         it "should set the feature group permissions to be the same as for the feature store db" do
@@ -507,23 +493,19 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270040).to be true
         end
 
-        it "should not be able to add a offline cached featuregroup to the featurestore with invalid hive schema" do
+        it "should be able to add a feature group without primary key" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           features = [
               {
-                  type: "test",
+                  type: "INT",
                   name: "test",
                   description: "--",
                   primary: false
               }
           ]
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json.key?("errorCode")).to be true
-          expect(parsed_json.key?("errorMsg")).to be true
-          expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270017).to be true
+          expect_status(201)
         end
 
 
@@ -655,10 +637,11 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           featuregroup_id = parsed_json["id"]
-          get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/schema"
+          get_featuregroup_schema_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
           get get_featuregroup_schema_endpoint
           parsed_json = JSON.parse(response.body)
           expect_status(200)
+          expect(parsed_json.key?("schema")).to be true
         end
 
         it "should be able to delete a cached featuregroup from the featurestore" do
@@ -670,10 +653,7 @@ describe "On #{ENV['OS']}" do
           featuregroup_id = parsed_json["id"]
           delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
           delete delete_featuregroup_endpoint
-          parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json.key?("id")).to be true
-          expect(parsed_json["id"] == featuregroup_id).to be true
         end
 
         it "should be able to clear the contents of a cached featuregroup in the featurestore" do
@@ -748,10 +728,10 @@ describe "On #{ENV['OS']}" do
 
           # The new member should be able to fetch the schema from Hive
           result =
-              get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/schema"
+              get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/details"
           expect_status(200)
           parsed_json = JSON.parse(result)
-          expect(parsed_json['offlineSchema']).to start_with "CREATE TABLE"
+          expect(parsed_json['schema']).to start_with "CREATE TABLE"
         end
 
         it "should be able to get a data preview of a shared feature group" do
@@ -800,11 +780,10 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("jdbcConnectorName")).to be true
           expect(parsed_json.key?("features")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
-          expect(parsed_json.key?("featuregroupType")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
-          expect(parsed_json["featuregroupType"] == "ON_DEMAND_FEATURE_GROUP").to be true
+          expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
           expect(parsed_json["jdbcConnectorId"] == connector_id).to be true
         end
 
@@ -845,10 +824,7 @@ describe "On #{ENV['OS']}" do
           featuregroup_id = parsed_json["id"]
           delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
           delete delete_featuregroup_endpoint
-          parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json.key?("id")).to be true
-          expect(parsed_json["id"] == featuregroup_id).to be true
         end
 
         it "should be able to update the metadata (description) of an on-demand featuregroup from the featurestore" do
@@ -944,18 +920,12 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
-          expect(parsed_json.key?("inodeId")).to be true
-          expect(parsed_json.key?("inputFormat")).to be true
-          expect(parsed_json.key?("hiveTableId")).to be true
-          expect(parsed_json.key?("hiveTableType")).to be true
           expect(parsed_json.key?("featurestoreName")).to be true
-          expect(parsed_json.key?("featuregroupType")).to be true
-          expect(parsed_json.key?("onlineFeaturegroupEnabled")).to be true
-          expect(parsed_json.key?("onlineFeaturegroupDTO")).to be true
+          expect(parsed_json.key?("onlineEnabled")).to be true
           expect(parsed_json.key?("name")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == featuregroup_name).to be true
-          expect(parsed_json["featuregroupType"] == "CACHED_FEATURE_GROUP").to be true
+          expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         end
 
         it "should be able to preview a offline featuregroup in the featurestore" do
@@ -1016,10 +986,10 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           featuregroup_id = parsed_json["id"]
-          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/schema"
+          get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/details"
           expect_status(200)
           parsed_json = JSON.parse(response.body)
-          expect(parsed_json.key?("onlineSchema")).to be true
+          expect(parsed_json.key?("schema")).to be true
         end
 
         it "should be able to delete a cached online featuregroup from the featurestore" do
@@ -1031,10 +1001,7 @@ describe "On #{ENV['OS']}" do
           featuregroup_id = parsed_json["id"]
           delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
           delete delete_featuregroup_endpoint
-          parsed_json = JSON.parse(response.body)
           expect_status(200)
-          expect(parsed_json.key?("id")).to be true
-          expect(parsed_json["id"] == featuregroup_id).to be true
         end
 
         it "should not be able to update the metadata of a cached online featuregroup from the featurestore" do

@@ -91,7 +91,7 @@ public class OfflineFeatureGroupController {
   private static final String COMMENT = "comment";
   private static final int CONNECTION_TIMEOUT = 600000;
 
-  private enum Formats {
+  public enum Formats {
     ORC("org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
         "org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat",
         "org.apache.hadoop.hive.ql.io.orc.OrcSerde"),
@@ -100,7 +100,10 @@ public class OfflineFeatureGroupController {
         "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"),
     AVRO("org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat",
         "org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat",
-        "org.apache.hadoop.hive.serde2.avro.AvroSerDe");
+        "org.apache.hadoop.hive.serde2.avro.AvroSerDe"),
+    HUDI("org.apache.hudi.hadoop.HoodieParquetInputFormat",
+        "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat",
+        "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe");
 
     private String inputFormat;
     private String outputFormat;
@@ -152,12 +155,6 @@ public class OfflineFeatureGroupController {
             dbName + "_" + tableName + "_" + featureDTO.getName() + "_pk",
             false, false, false));
       }
-    }
-
-    // TODO(Fabio): HOPSWORKS-1655 removes this requirement and the test
-    if (primaryKeys.isEmpty()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.NO_PRIMARY_KEY_SPECIFIED, Level.FINE,
-          "No primary key specified");
     }
 
     sendMetastoreCreate(table, primaryKeys, project, user);
@@ -303,5 +300,6 @@ public class OfflineFeatureGroupController {
     t.getParameters().put(hive_metastoreConstants.TABLE_BUCKETING_VERSION, "2");
     return t;
   }
+
 
 }
