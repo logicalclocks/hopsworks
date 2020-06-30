@@ -60,6 +60,7 @@ import java.net.URISyntaxException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,6 +100,19 @@ public class OIDAuthorizationCodeFlowHelper {
     return oAuthProviderCache.getProviderConfigFromURI(providerURI);
   }
   
+  private Scope getSupportedScope(Set<String> scopesSupported) {
+    Scope scope = new Scope(OpenIdConstant.OPENID_SCOPE, OpenIdConstant.EMAIL_SCOPE, OpenIdConstant.PROFILE_SCOPE);
+    if (scopesSupported == null || scopesSupported.isEmpty()) {
+      return scope;
+    }
+    if (scopesSupported.contains(OpenIdConstant.ROLES_SCOPE)) {
+      scope.add(OpenIdConstant.ROLES_SCOPE);
+    } else if (scopesSupported.contains(OpenIdConstant.GROUPS_SCOPE)) {
+      scope.add(OpenIdConstant.GROUPS_SCOPE);
+    }
+    return scope;
+  }
+  
   /**
    *
    * @param providerName
@@ -113,7 +127,7 @@ public class OIDAuthorizationCodeFlowHelper {
     OpenIdProviderConfig providerConfig = oAuthProviderCache.getProviderConfig(client, false);
     Nonce nonce = new Nonce();
     State state = saveOauthLoginState(client, nonce);
-    Scope scope = new Scope(OpenIdConstant.OPENID_SCOPE, OpenIdConstant.EMAIL_SCOPE, OpenIdConstant.PROFILE_SCOPE);
+    Scope scope = getSupportedScope(providerConfig.getScopesSupported());
     URI redirectURI = new URI(settings.getOauthRedirectUri());
     URI providerURI = new URI(providerConfig.getAuthorizationEndpoint());
     ClientID clientId = new ClientID(client.getClientId());
@@ -159,7 +173,7 @@ public class OIDAuthorizationCodeFlowHelper {
     ClientSecretBasic clientSecretBasic = new ClientSecretBasic(clientId, secret);
     AuthorizationCode authCode = new AuthorizationCode(code);
     URI redirectURI = new URI(settings.getOauthRedirectUri());
-    Scope scope = new Scope(OpenIdConstant.OPENID_SCOPE, OpenIdConstant.EMAIL_SCOPE, OpenIdConstant.PROFILE_SCOPE);
+    Scope scope = getSupportedScope(providerMetadata.getScopesSupported());
     AuthorizationCodeGrant authorizationCodeGrant = new AuthorizationCodeGrant(authCode, redirectURI);
     URI tokenEndpoint = new URI(providerMetadata.getTokenEndpoint());
     TokenRequest tokenReq = new TokenRequest(tokenEndpoint, clientSecretBasic, authorizationCodeGrant, scope);
@@ -322,6 +336,9 @@ public class OIDAuthorizationCodeFlowHelper {
     List<String> groups = new ArrayList<>();
     if (userInfo.toJSONObject().containsKey(OpenIdConstant.GROUPS)) {
       groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.GROUPS));
+    }
+    if (userInfo.toJSONObject().containsKey(OpenIdConstant.ROLES)) {
+      groups.add(userInfo.toJSONObject().getAsString(OpenIdConstant.ROLES));
     }
     remoteUserDTO.setGroups(groups);
     return remoteUserDTO;

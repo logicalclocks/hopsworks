@@ -3,9 +3,11 @@
  */
 package io.hops.hopsworks.remote.user.auth.oauth2;
 
+import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
 import io.hops.hopsworks.common.remote.OAuthHelper;
 import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
+import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -27,6 +29,15 @@ public class OAuthHelperImpl implements OAuthHelper {
   private OAuthController oAuthController;
   @EJB
   private OIDAuthorizationCodeFlowHelper oidAuthorizationCodeFlowHelper;
+  @EJB
+  private OauthClientFacade oauthClientFacade;
+  @EJB
+  private OAuthProviderCache oAuthProviderCache;
+  
+  @Override
+  public boolean oauthAvailable() {
+    return true;
+  }
   
   @Override
   public RemoteUserStateDTO login(String code, String state, boolean consent, String chosenEmail)
@@ -43,6 +54,24 @@ public class OAuthHelperImpl implements OAuthHelper {
   @Override
   public void registerClient(OpenIdProviderConfig openidConf) throws IOException, URISyntaxException {
     throw new UnsupportedOperationException();
+  }
+  
+  @Override
+  public void saveClient(OauthClient oauthClient) {
+    oauthClientFacade.save(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+  }
+  
+  @Override
+  public void updateClient(OauthClient oauthClient) {
+    oauthClientFacade.update(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
+  }
+  
+  @Override
+  public void removeClient(OauthClient oauthClient) {
+    oauthClientFacade.remove(oauthClient);
+    oAuthProviderCache.removeFromCache(oauthClient.getClientId());
   }
   
   @Override

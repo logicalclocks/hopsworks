@@ -283,7 +283,7 @@ public class OAuthClientRegistration implements Serializable {
       OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
         this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
         this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI);
-      oauthClientFacade.save(oauthClient);
+      oAuthHelper.saveClient(oauthClient);
       MessagesController.addInfoMessage("Added new OAuth server.");
       init();
     } catch (Exception e) {
@@ -293,9 +293,12 @@ public class OAuthClientRegistration implements Serializable {
   }
   
   public void onRowEdit(RowEditEvent event) {
+    if (!checkOAuthHelper()) {
+      return;
+    }
     OauthClient oauthClient = (OauthClient) event.getObject();
     try {
-      oauthClientFacade.update(oauthClient);
+      oAuthHelper.updateClient(oauthClient);
       MessagesController.addInfoMessage("Updated OAuth server.");
     } catch (Exception e) {
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
@@ -304,7 +307,7 @@ public class OAuthClientRegistration implements Serializable {
   
   public void delete(OauthClient oauthClient) {
     try {
-      oauthClientFacade.remove(oauthClient);
+      oAuthHelper.removeClient(oauthClient);
       MessagesController.addInfoMessage("Deleted OAuth server.");
       init();
     } catch (Exception e) {

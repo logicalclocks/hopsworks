@@ -58,6 +58,10 @@ public class OAuthProviderCache {
     providerJWKCache.clear();
   }
   
+  public void removeFromCache(String clientId) {
+    providerConfigCache.remove(clientId);
+  }
+  
   /**
    *
    * @param kid
