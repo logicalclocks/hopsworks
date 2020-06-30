@@ -536,7 +536,7 @@ angular.module('hopsWorksApp')
                  function (success) {
                     var kibanaUrl = success.data.kibanaUrl;
                      self.kibanaUI = kibanaUrl + "projectId=" + self.projectId +
-                                        "#/discover?_g=()&_a=(columns:!(modelname,host,log_message,'@timestamp')," +
+                                        "#/discover?_g=()&_a=(columns:!(modelname,log_message,'@timestamp')," +
                                         "index:'" + projectName.toLowerCase() + "_serving-*',interval:auto," +
                                         "query:(language:lucene,query:'modelname:" + serving.name + "'),sort:!('@timestamp',desc))";
                      self.showLogs = true;

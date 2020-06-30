@@ -130,6 +130,9 @@ public class KubeSkLearnServingController {
     List<EnvVar> fileBeatEnv = new ArrayList<>();
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGSTASH").withValue(getLogstashURL()).build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("PROJECT").withValue(project.getName().toLowerCase()).build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("MODEL").withValue(serving.getName().toLowerCase()).build());
+    fileBeatEnv.add(new EnvVarBuilder().withName("SKLEARN").withValue("true").build());
 
     SecretVolumeSource secretVolume = new SecretVolumeSourceBuilder()
         .withSecretName(kubeClientService.getKubeDeploymentName(project, user))
