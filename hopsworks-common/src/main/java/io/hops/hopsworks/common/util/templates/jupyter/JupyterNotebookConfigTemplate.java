@@ -38,7 +38,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
   private final Boolean requestsVerify;
   private final String domainCATruststore;
   private final String serviceDiscoveryDomain;
-  private final String anacondaEnvironment;
   
   public JupyterNotebookConfigTemplate(JupyterNotebookConfigTemplateBuilder builder) {
     super(builder.getHdfsUser(), builder.getHadoopHome(), builder.getProject());
@@ -60,7 +59,6 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
     this.requestsVerify = builder.getRequestsVerify();
     this.domainCATruststore = builder.getDomainCATruststore();
     this.serviceDiscoveryDomain = builder.getServiceDiscoveryDomain();
-    this.anacondaEnvironment = builder.getAnacondaEnvironment();
   }
   
   public String getNamenodeIp() {
@@ -133,9 +131,5 @@ public class JupyterNotebookConfigTemplate extends JupyterTemplate {
 
   public String getServiceDiscoveryDomain() {
     return serviceDiscoveryDomain;
-  }
-
-  public String getAnacondaEnvironment() {
-    return anacondaEnvironment;
   }
 }

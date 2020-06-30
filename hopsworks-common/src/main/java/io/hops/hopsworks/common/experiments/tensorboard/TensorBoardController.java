@@ -27,7 +27,6 @@ import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardDTO;
 import io.hops.hopsworks.common.dao.tensorflow.config.TensorBoardProcessMgr;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.exceptions.TensorBoardException;
 import org.apache.commons.codec.digest.DigestUtils;
 
@@ -54,8 +53,6 @@ public class TensorBoardController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
-  @EJB
-  private TfLibMappingUtil tfLibMappingUtil;
 
   private static final Logger LOGGER = Logger.getLogger(TensorBoardController.class.getName());
 
@@ -101,11 +98,10 @@ public class TensorBoardController {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
 
-    String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
     String tensorBoardDirectory = DigestUtils.sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt()));
 
     tensorBoardDTO = tensorBoardProcessMgr.startTensorBoard(project, user, hdfsUser, tensorBoardLogdir,
-        tfLdLibraryPath, tensorBoardDirectory);
+        tensorBoardDirectory);
     Date lastAccessed = new Date();
     tensorBoardDTO.setMlId(mlId);
     tensorBoardDTO.setLastAccessed(lastAccessed);
