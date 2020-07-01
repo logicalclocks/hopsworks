@@ -136,7 +136,7 @@
           <groupId>mysql</groupId>
           <artifactId>mysql-connector-java</artifactId>
           <scope>test</scope>
-          <version>5.1.6</version>
+          <version>8.0.16</version>
         </dependency>
       </dependencies>
     </profile>
