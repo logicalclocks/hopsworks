@@ -184,6 +184,9 @@ public class XAttrsController {
       if(e.getClassName().equals("org.apache.hadoop.HadoopIllegalArgumentException")
         && e.getMessage().startsWith("The XAttr value is too big.")) {
         throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE, e);
+      } else if(e.getClassName().equals("java.io.IOException")
+        && e.getMessage().startsWith("Cannot add additional XAttr to inode, would exceed limit")) {
+        throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED, Level.FINE, e);
       } else {
         throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_ERROR, Level.SEVERE, path, e.getMessage(), e);
       }

@@ -345,8 +345,7 @@ public class RESTCodes {
     DATASET_TEMPLATE_INFO_MISSING(3, "Template info is missing. Please provide InodeDTO path and templateId.",
         Response.Status.BAD_REQUEST),
     NO_METADATA_EXISTS(4, "No metadata found", Response.Status.BAD_REQUEST),
-    METADATA_MAX_SIZE_EXCEEDED(5, "Metadata is too long. The maximum " +
-        "size for metadata and name is 13500 and 255 characters.",
+    METADATA_MAX_SIZE_EXCEEDED(5, "Metadata is too large",
         Response.Status.BAD_REQUEST),
     METADATA_MISSING_FIELD(6, "Metadata missing attributed name.",
         Response.Status.BAD_REQUEST),
