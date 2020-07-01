@@ -97,7 +97,7 @@ public class TensorBoardProcessMgr {
    * @throws IOException
    */
   public TensorBoardDTO startTensorBoard(Project project, Users user, HdfsUsers hdfsUser, String hdfsLogdir,
-                                         String tfLdLibraryPath, String tensorBoardDirectory)
+                                         String tensorBoardDirectory)
           throws TensorBoardException {
 
     String prog = settings.getSudoersDir() + "/tensorboard.sh";
@@ -153,7 +153,6 @@ public class TensorBoardProcessMgr {
           .addCommand(tbSecretDir)
           .addCommand(port.toString())
           .addCommand(anacondaEnvironmentPath)
-          .addCommand(tfLdLibraryPath)
           .addCommand(projectUtils.getFullDockerImageName(project, true))
           .ignoreOutErrStreams(true)
           .build();

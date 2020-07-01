@@ -187,12 +187,10 @@ public class SparkYarnRunnerBuilder {
       amargs.append(" --primary-py-file ").append(appExecName);
     }
 
-    String tfLibraryPath = services.getTfLibMappingUtil().getTfLdLibraryPath(project);
-
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, tfLibraryPath, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint));
+            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);

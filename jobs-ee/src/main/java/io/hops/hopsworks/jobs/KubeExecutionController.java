@@ -39,7 +39,6 @@ import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.kafka.KafkaBrokers;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jupyter.JupyterController;
-import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
@@ -97,10 +96,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   // Flink is here because of Beam when running Beam portable runner
   private static final String FLINK = "flink";
   private static final String SPARK = "spark";
-  @EJB
-  TfLibMappingUtil tfLibMappingUtil;
-  
-  
+
   @EJB
   private KubeClientService kubeClientService;
   @EJB
@@ -237,10 +233,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     jobEnv.put("HADOOP_HOME", settings.getHadoopSymbolicLinkDir());
     jobEnv.put("HADOOP_HDFS_HOME", settings.getHadoopSymbolicLinkDir());
     jobEnv.put("HADOOP_USER_NAME", hadoopUser);
-    jobEnv.put("LD_LIBRARY_PATH", settings.getJavaHome() +
-      "/jre/lib/amd64/server" + File.pathSeparator + tfLibMappingUtil.getTfLdLibraryPath(project) +
-      settings.getHadoopSymbolicLinkDir() + "/lib/native" + File.pathSeparator + anacondaEnv
-      + "/lib/");
 
     String jobName = execution.getJob().getName();
     String executionId = String.valueOf(execution.getId());

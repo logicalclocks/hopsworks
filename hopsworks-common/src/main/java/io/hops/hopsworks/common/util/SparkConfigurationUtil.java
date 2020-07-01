@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                    Settings settings, String hdfsUser, String tfLdLibraryPath,
+                                                    Settings settings, String hdfsUser,
                                                     Map<String, String> extraJavaOptions,
                                                     String kafkaBrokersString, String hopsworksRestEndpoint)
       throws IOException {
@@ -76,15 +76,9 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 
-    
-    addToSparkEnvironment(sparkProps, "PATH", "{{PWD}}" + File.pathSeparator +
-        settings.getAnacondaProjectDir(project) + "/bin:" + settings.getHadoopSymbolicLinkDir() + "/bin" +
-        ":/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", HopsUtils.APPEND_PATH);
-
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,
       settings.getAnacondaProjectDir(project) + "/bin/python"));
-
 
     //https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     //Needs to be set for CUDA libraries to not initialize GPU context
@@ -147,10 +141,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     addToSparkEnvironment(sparkProps, "HADOOP_HDFS_HOME", settings.getHadoopSymbolicLinkDir(),
             HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HADOOP_USER_NAME", hdfsUser, HopsUtils.IGNORE);
-    addToSparkEnvironment(sparkProps, "LD_LIBRARY_PATH", settings.getJavaHome() +
-      "/jre/lib/amd64/server" + File.pathSeparator + tfLdLibraryPath +
-      settings.getHadoopSymbolicLinkDir() + "/lib/native" + File.pathSeparator + settings.getAnacondaProjectDir(project)
-        + "/lib/", HopsUtils.APPEND_PATH);
+
     if(!Strings.isNullOrEmpty(sparkJobConfiguration.getAppName())) {
       addToSparkEnvironment(sparkProps, "HOPSWORKS_JOB_NAME", sparkJobConfiguration.getAppName(),
               HopsUtils.IGNORE);

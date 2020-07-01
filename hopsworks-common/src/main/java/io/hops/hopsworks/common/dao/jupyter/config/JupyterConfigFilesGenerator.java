@@ -51,7 +51,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.jupyter.JupyterContentsManager;
 import io.hops.hopsworks.common.jupyter.JupyterNbVCSController;
-import io.hops.hopsworks.common.tensorflow.TfLibMappingUtil;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.common.util.TemplateEngine;
@@ -97,8 +96,6 @@ public class JupyterConfigFilesGenerator {
   
   @EJB
   private Settings settings;
-  @EJB
-  private TfLibMappingUtil tfLibMappingUtil;
   @Inject
   private JupyterNbVCSController jupyterNbVCSController;
   @EJB
@@ -250,7 +247,6 @@ public class JupyterConfigFilesGenerator {
         .setRequestsVerify(settings.getRequestsVerify())
         .setDomainCATruststore(Paths.get(certsDir, hdfsUser + Settings.TRUSTSTORE_SUFFIX).toString())
         .setServiceDiscoveryDomain(settings.getServiceDiscoveryDomain())
-        .setAnacondaEnvironment(settings.getAnacondaProjectDir(project))
         .build();
     Map<String, Object> dataModel = new HashMap<>(1);
     dataModel.put("conf", template);
@@ -265,9 +261,6 @@ public class JupyterConfigFilesGenerator {
       String confDirPath) throws IOException, ServiceDiscoveryException {
     
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration) js.getJobConfig();
-    
-    // Get information about which version of TensorFlow the user is running
-    String tfLdLibraryPath = tfLibMappingUtil.getTfLdLibraryPath(project);
   
     SparkConfigurationUtil sparkConfigurationUtil = new SparkConfigurationUtil();
     Map<String, String> extraJavaOptions = new HashMap<>();
@@ -285,7 +278,7 @@ public class JupyterConfigFilesGenerator {
 
     finalSparkConfiguration.putAll(
         sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser,
-            tfLdLibraryPath, extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
+            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());

@@ -28,9 +28,9 @@ import java.util.Map;
 public class FlinkConfigurationUtil extends ConfigurationUtil {
   @Override
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
-                                                    Settings settings, String hdfsUser, String tfLdLibraryPath,
-                                                    Map<String, String> extraJavaOptions,
-                                                    String kafkaBrokersString, String hopsworksRestEndpoint)
+                                                    Settings settings, String hdfsUser, Map<String, String>
+                                                    extraJavaOptions, String kafkaBrokersString,
+                                                    String hopsworksRestEndpoint)
       throws IOException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     
