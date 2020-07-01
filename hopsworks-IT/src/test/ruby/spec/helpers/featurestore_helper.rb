@@ -569,4 +569,18 @@ module FeaturestoreHelper
     pp parsed_result if (defined?(@debugOpt)) && @debugOpt
     parsed_result
   end
+
+  def delete_featuregroup_checked(project_id, featurestore_id, fg_id)
+    delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{fg_id}"
+    pp "delete #{delete_featuregroup_endpoint}" if defined?(@debugOpt) && @debugOpt
+    delete delete_featuregroup_endpoint
+    expect_status_details(200)
+  end
+
+  def delete_trainingdataset_checked(project_id, featurestore_id, td_id)
+    delete_trainingdataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{td_id}"
+    pp "delete #{delete_trainingdataset_endpoint}" if defined?(@debugOpt) && @debugOpt
+    delete delete_trainingdataset_endpoint
+    expect_status_details(200)
+  end
 end

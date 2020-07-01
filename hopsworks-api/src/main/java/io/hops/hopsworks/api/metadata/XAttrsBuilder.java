@@ -22,6 +22,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.util.LinkedList;
 import java.util.Map;
 
 @Stateless
@@ -60,8 +61,11 @@ public class XAttrsBuilder {
   public XAttrDTO build(UriInfo uriInfo, ResourceRequest resourceRequest,
       Project project, String path, Map<String, String> xattrs) {
     XAttrDTO dto = new XAttrDTO();
-    xattrs.forEach((k, v) -> dto.addItem(build(uriInfo, resourceRequest,
-        project, path, k, v)));
+    if(xattrs.isEmpty()) {
+      dto.setItems(new LinkedList<>());
+    } else {
+      xattrs.forEach((k, v) -> dto.addItem(build(uriInfo, resourceRequest, project, path, k, v)));
+    }
     return dto;
   }
 }

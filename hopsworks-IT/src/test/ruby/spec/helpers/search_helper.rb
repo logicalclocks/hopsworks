@@ -81,15 +81,15 @@ module SearchHelper
     match = true
     #base check
     if search_type == "FEATURE"
-      match = match && item["featuregroup"] == expected["name"] &&
-          item["parentProjectName"] == expected["parent_project"] && item["highlights"].key?(expected["highlight"])
+      match = match && item["featuregroup"] == expected[:name] &&
+          item["parentProjectName"] == expected[:parent_project] && item["highlights"].key?(expected[:highlight])
     else
-      match = match && item["name"] == expected["name"] &&
-          item["parentProjectName"] == expected["parent_project"] && item["highlights"].key?(expected["highlight"])
+      match = match && item["name"] == expected[:name] &&
+          item["parentProjectName"] == expected[:parent_project] && item["highlights"].key?(expected[:highlight])
     end
-    if expected.key?("access_projects")
+    if expected.key?(:access_projects)
       match = match && item.key?("accessProjects") &&
-          item["accessProjects"]["entry"].length == expected["access_projects"]
+          item["accessProjects"]["entry"].length == expected[:access_projects]
     end
     match
   end
@@ -114,7 +114,7 @@ module SearchHelper
         if matched_items == items.length
           { 'success' => true }
         else
-          { 'success' => false, 'msg' => error_msg }
+          { 'success' => false, 'msg' => "result items do not match expected" }
         end
       end
     end

@@ -385,12 +385,18 @@ module DatasetHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=listing&expand=inodes#{query}"
   end
 
-  def get_dataset_stat(project, path, datasetType)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}"
+  def get_dataset_stat(project, path, datasetType, expand_inodes: true)
+    if expand_inodes
+      pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}" if defined?(@debugOpt) && @debugOpt
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}"
+    else
+      pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat#{datasetType}" if defined?(@debugOpt) && @debugOpt
+      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat#{datasetType}"
+    end
   end
 
-  def get_dataset_stat_checked(project, path, datasetType)
-    get_dataset_stat(project, path, datasetType)
+  def get_dataset_stat_checked(project, path, datasetType, expand_inodes: true)
+    get_dataset_stat(project, path, datasetType, expand_inodes: expand_inodes)
     expect_status_details(200)
     json_body
   end
