@@ -28,6 +28,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -50,6 +51,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.Map;
+import java.util.logging.Level;
 
 @Logged
 @Api(value = "Extended Attributes Resource")
@@ -74,8 +76,7 @@ public class XAttrsResource {
   }
   
   
-  @ApiOperation( value = "Create or Update an extended attribute for a path."
-      , response = XAttrDTO.class)
+  @ApiOperation( value = "Create or Update an extended attribute for a path.", response = XAttrDTO.class)
   @PUT
   @Path("{path: .+}")
   @Consumes(MediaType.APPLICATION_JSON)
@@ -91,21 +92,18 @@ public class XAttrsResource {
     Users user = jWTHelper.getUserPrincipal(sc);
     
     Response.Status status = Response.Status.OK;
-    if(xattrsController.addXAttr(project, user, path, xattrName,
-        metaObj)){
+    if(xattrsController.addXAttr(project, user, path, xattrName, metaObj)){
       status = Response.Status.CREATED;
     }
     
-    ResourceRequest resourceRequest =
-        new ResourceRequest(ResourceRequest.Name.XATTRS);
-    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project,
-        path, xattrName);
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
+    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, path, xattrName);
     
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder();
     if(status == Response.Status.CREATED) {
+      UriBuilder builder = uriInfo.getAbsolutePathBuilder();
       return Response.created(builder.build()).entity(dto).build();
     } else {
-      return Response.ok(builder.build()).entity(dto).build();
+      return Response.ok().entity(dto).build();
     }
   }
   
@@ -120,18 +118,15 @@ public class XAttrsResource {
       @PathParam("path") String path, @QueryParam("name") String xattrName)
       throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Map<String, String> result = xattrsController.getXAttrs(project, user,
-        path, xattrName);
+    Map<String, String> result = xattrsController.getXAttrs(project, user, path, xattrName);
     
-    Response.Status status = result.isEmpty() ?
-        Response.Status.NOT_FOUND : Response.Status.ACCEPTED;
-    ResourceRequest resourceRequest =
-        new ResourceRequest(ResourceRequest.Name.XATTRS);
-    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project,
-        path, result);
-    return Response.status(status).entity(dto).build();
+    if(xattrName != null & result.isEmpty()) {
+      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
+    }
+    ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
+    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, path, result);
+    return Response.ok().entity(dto).build();
   }
-  
   
   @ApiOperation( value = "Delete the extended attributes attached to a path.")
   @DELETE
@@ -142,12 +137,8 @@ public class XAttrsResource {
   public Response delete(@Context SecurityContext sc,
       @PathParam("path") String path, @QueryParam("name") String xattrName)
       throws DatasetException, MetadataException {
-    
     Users user = jWTHelper.getUserPrincipal(sc);
-    Response.Status status = Response.Status.NOT_FOUND;
-    if(xattrsController.removeXAttr(project, user, path, xattrName)){
-      status = Response.Status.NO_CONTENT;
-    }
-    return Response.status(status).build();
+    xattrsController.removeXAttr(project, user, path, xattrName);
+    return Response.status(Response.Status.NO_CONTENT).build();
   }
 }

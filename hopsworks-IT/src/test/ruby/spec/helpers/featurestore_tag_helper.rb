@@ -80,8 +80,10 @@ module FeatureStoreTagHelper
 
   def add_training_dataset_tag(project_id, featurestore_id, training_dataset_id, name, value: nil)
     if value == nil
+      pp "put #{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/tags/#{name}" if defined?(@debugOpt) && @debugOpt
       put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name
     else
+      pp "put #{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/tags/#{name}?value=#{value}" if defined?(@debugOpt) && @debugOpt
       put "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + name + "?value=" + value
     end
   end
@@ -90,4 +92,8 @@ module FeatureStoreTagHelper
     delete "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets/" + training_dataset_id.to_s + "/tags/" + tag
   end
 
+  def delete_training_dataset_tag_checked(project_id, featurestore_id, training_dataset_id, tag)
+    delete_training_dataset_tag(project_id, featurestore_id, training_dataset_id, tag)
+    expect_status_details(204)
+  end
 end

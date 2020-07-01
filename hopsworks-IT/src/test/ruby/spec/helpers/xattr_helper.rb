@@ -15,15 +15,51 @@
 =end
 module XAttrHelper
   def add_xattr(project, path, xattr_key, xattr_val)
+    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}, #{{xattr_key => xattr_val}.to_json}" if defined?(@debugOpt) && @debugOpt
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}", {xattr_key => xattr_val}.to_json
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}, #{{xattr_key => xattr_val}.to_json}" if defined?(@debugOpt) && @debugOpt == true
+  end
+
+  def add_xattr_checked(project, path, xattr_key, xattr_val)
+    add_xattr(project, path, xattr_key, xattr_val)
     expect_status_details(201)
   end
 
+  def update_xattr_checked(project, path, xattr_key, xattr_val)
+    add_xattr(project, path, xattr_key, xattr_val)
+    expect_status_details(200)
+  end
+
   def get_xattr(project, path, xattr_key)
+    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}" if defined?(@debugOpt) && @debugOpt
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}"
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}"
+    json_body
+  end
+
+  def get_xattr_checked(project, path, xattr_key)
+    get_xattr(project, path, xattr_key)
     expect_status_details(200)
     json_body
+  end
+
+  def get_xattrs(project, path)
+    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}" if defined?(@debugOpt) && @debugOpt
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
+    json_body
+  end
+
+  def get_xattrs_checked(project, path)
+    get_xattrs(project, path)
+    expect_status_details(200)
+    json_body
+  end
+
+  def delete_xattr(project, path, xattr)
+    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr}" if defined?(@debugOpt) && @debugOpt
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr}"
+  end
+
+  def delete_xattr_checked(project, path, xattr)
+    delete_xattr(project, path, xattr)
+    expect_status_details(204)
   end
 end

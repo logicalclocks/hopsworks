@@ -67,7 +67,8 @@ public class TagsResource {
   @GET
   @Path("{name}")
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo, @PathParam("name") String name) {
+  public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo, @PathParam("name") String name)
+    throws FeatureStoreTagException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagsBuilder.build(uriInfo, resourceRequest, name);
     return Response.ok().entity(dto).build();
@@ -77,7 +78,8 @@ public class TagsResource {
   @PUT
   @Path("{name}")
   public Response put(@Context SecurityContext sc, @Context UriInfo uriInfo, @PathParam("name") String name,
-    @QueryParam("name") String newName, @QueryParam("type") TagType type) throws FeatureStoreTagException {
+    @QueryParam("name") String newName, @QueryParam("type") TagType type)
+    throws FeatureStoreTagException {
     featureStoreTagController.update(name, newName, type);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
     TagsDTO dto = tagsBuilder.build(uriInfo, resourceRequest, newName);

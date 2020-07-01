@@ -99,12 +99,11 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
 
     JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
     Map<String, String> tagsMap = new HashMap<>();
-    if(tags.has(tagName)) {
+    if (tags != null && tags.has(tagName)) {
       String tagValue = tags.getString(tagName);
       tagsMap.put(tagName, tagValue);
     } else {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_FOUND,
-          Level.FINE);
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_FOUND, Level.FINE);
     }
 
     return tagsMap;
@@ -140,9 +139,11 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
     JSONObject newTags = new JSONObject();
     if(xattrsMap != null && xattrsMap.size() > 0) {
       JSONObject existingTags = featureStoreTagController.convertToExternalTags(
-          xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-      for (String tagName : existingTags.keySet()) {
-        newTags.put(tagName, existingTags.get(tagName));
+        xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+      if (existingTags != null) {
+        for (String tagName : existingTags.keySet()) {
+          newTags.put(tagName, existingTags.get(tagName));
+        }
       }
     }
     if(value != null) {
@@ -195,13 +196,14 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
 
     JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    if(tags.has(tagName)) {
-      tags.remove(tagName);
-    }
-
     JSONObject newTags = new JSONObject();
-    for(String attachedTag: tags.keySet()) {
-      newTags.put(attachedTag, tags.get(attachedTag));
+    if (tags != null) {
+      if (tags.has(tagName)) {
+        tags.remove(tagName);
+      }
+      for (String attachedTag : tags.keySet()) {
+        newTags.put(attachedTag, tags.get(attachedTag));
+      }
     }
 
     JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(newTags.toString());

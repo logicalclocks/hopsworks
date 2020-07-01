@@ -18,7 +18,9 @@ package io.hops.hopsworks.api.tags;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
+import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -26,6 +28,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -84,8 +87,11 @@ public class FeatureStoreTagsBuilder {
     return dto;
   }
   
-  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String value) {
+  public TagsDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, String value) throws FeatureStoreTagException {
     FeatureStoreTag tag = featureStoreTagFacade.findByName(value);
+    if(tag == null) {
+      throw new FeatureStoreTagException(RESTCodes.FeatureStoreTagErrorCode.TAG_NOT_FOUND, Level.FINE);
+    }
     return buildItemByName(uriInfo, resourceRequest, tag);
   }
   
