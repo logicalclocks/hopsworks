@@ -122,7 +122,6 @@
     <class>io.hops.hopsworks.persistence.entity.security.RemoteMaterialReferences</class>
     <class>io.hops.hopsworks.persistence.entity.serving.Serving</class>
     <class>io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard</class>
-    <class>io.hops.hopsworks.persistence.entity.tensorflow.TfLibMapping</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKeyScope</class>
     <class>io.hops.hopsworks.persistence.entity.user.security.UserGroup</class>

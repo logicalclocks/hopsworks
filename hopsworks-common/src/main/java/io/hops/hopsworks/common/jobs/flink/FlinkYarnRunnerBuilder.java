@@ -131,7 +131,7 @@ public class FlinkYarnRunnerBuilder {
       project.getName().toLowerCase() + "," + job.getName() + "," + job.getId() + "," + YarnRunner.APPID_PLACEHOLDER);
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
-      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, null, extraJavaOptions,
+      .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, extraJavaOptions,
           kafkaBrokersString, hopsworksRestEndpoint);
   
     //Parse properties from Spark config file
