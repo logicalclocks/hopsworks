@@ -59,17 +59,19 @@ import java.util.Objects;
 @Table(name = "training_dataset", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "TrainingDataset.findAll", query = "SELECT td FROM TrainingDataset td"),
-    @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
-    @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
-        "WHERE td.featurestore = :featurestore"),
-    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
-        "WHERE td.featurestore = :featurestore AND td.id = :id"),
-    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
-        query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore " +
-            "AND td.name= :name AND td.version = :version"),
-    @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
-        "WHERE td.featurestore = :featurestore AND td.name = :name")})
+  @NamedQuery(name = "TrainingDataset.findAll", query = "SELECT td FROM TrainingDataset td"),
+  @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
+  @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
+    "WHERE td.featurestore = :featurestore"),
+  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
+    "WHERE td.featurestore = :featurestore AND td.id = :id"),
+  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",
+    query = "SELECT td FROM TrainingDataset td WHERE td.featurestore = :featurestore " +
+      "AND td.name= :name AND td.version = :version"),
+  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndName", query = "SELECT td FROM TrainingDataset td " +
+    "WHERE td.featurestore = :featurestore AND td.name = :name"),
+  @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT td FROM " +
+    "TrainingDataset td WHERE td.featurestore = :featurestore AND td.name = :name ORDER BY td.version DESC")})
 public class TrainingDataset implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id

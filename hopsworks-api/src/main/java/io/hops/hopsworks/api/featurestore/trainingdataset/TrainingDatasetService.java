@@ -25,7 +25,6 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -102,8 +101,6 @@ public class TrainingDatasetService {
   private TagsBuilder tagBuilder;
   @Inject
   private TrainingDatasetTagControllerIface tagController;
-  @EJB
-  private FeaturestoreUtils featurestoreUtils;
 
   private Project project;
   private Featurestore featurestore;

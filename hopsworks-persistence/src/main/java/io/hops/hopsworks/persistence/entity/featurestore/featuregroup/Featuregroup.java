@@ -57,16 +57,18 @@ import java.util.Objects;
 @Table(name = "feature_group", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Featuregroup.findAll", query = "SELECT fg FROM Featuregroup fg"),
-    @NamedQuery(name = "Featuregroup.findById", query = "SELECT fg FROM Featuregroup fg WHERE fg.id = :id"),
-    @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore"),
-    @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
-    @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +
-        "WHERE fg.featurestore = :featurestore AND fg.name = :name AND fg.version = :version"),
-    @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
-    "WHERE fg.featurestore = :featurestore AND fg.name = :name")})
+  @NamedQuery(name = "Featuregroup.findAll", query = "SELECT fg FROM Featuregroup fg"),
+  @NamedQuery(name = "Featuregroup.findById", query = "SELECT fg FROM Featuregroup fg WHERE fg.id = :id"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
+    "WHERE fg.featurestore = :featurestore"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
+    "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +
+    "WHERE fg.featurestore = :featurestore AND fg.name = :name AND fg.version = :version"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndName", query = "SELECT fg FROM Featuregroup fg " +
+    "WHERE fg.featurestore = :featurestore AND fg.name = :name"),
+  @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameOrderedByDescVersion", query = "SELECT fg FROM " +
+    "Featuregroup fg WHERE fg.featurestore = :featurestore AND fg.name = :name ORDER BY fg.version DESC")})
 public class Featuregroup implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
