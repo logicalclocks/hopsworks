@@ -31,7 +31,6 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -97,8 +96,6 @@ public class FeaturegroupService {
   @EJB
   private FeaturegroupController featuregroupController;
   @EJB
-  private FeaturestoreUtils featurestoreUtils;
-  @EJB
   private ActivityFacade activityFacade;
   @EJB
   private JWTHelper jWTHelper;
@@ -111,7 +108,7 @@ public class FeaturegroupService {
   @Inject
   private FeatureGroupPartitionResource featureGroupPartitionResource;
   @Inject
-  private FeatureGroupDetailsResource featureGroupDetailsResourcee;
+  private FeatureGroupDetailsResource featureGroupDetailsResource;
   
   private Project project;
   private Featurestore featurestore;
@@ -425,18 +422,6 @@ public class FeaturegroupService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
-
-  /**
-   * Verify that the version was provided as a path param
-   *
-   * @param featureVersion the feature group version to verify
-   */
-  private void verifyVersionProvided(Integer featureVersion) {
-    if (featureVersion == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
-          FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
-    }
-  }
   
   /**
    * Endpoint for syncing a Hive Table with the Feature Store
@@ -597,7 +582,7 @@ public class FeaturegroupService {
   public FeatureGroupDetailsResource getFeatureGroupDetails(
       @ApiParam(value = "Id of the featuregroup") @PathParam("featuregroupId") Integer featuregroupId)
       throws FeaturestoreException {
-    FeatureGroupDetailsResource fgDetailsResource = featureGroupDetailsResourcee.setProject(project);
+    FeatureGroupDetailsResource fgDetailsResource = featureGroupDetailsResource.setProject(project);
     fgDetailsResource.setFeaturestore(featurestore);
     fgDetailsResource.setFeatureGroupId(featuregroupId);
     return fgDetailsResource;

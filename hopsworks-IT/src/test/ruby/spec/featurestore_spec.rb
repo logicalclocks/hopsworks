@@ -472,6 +472,44 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270091).to be true
         end
 
+        it "should not be able to add a cached offline featuregroup to the featurestore with an invalid version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      version: -1)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270059).to be true
+        end
+
+        it "should be able to add a new cached offline featuregroup without version to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      featuregroup_name: "no_version_fg", version: nil)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["version"] == 1).to be true
+        end
+
+        it "should be able to add a new version of an existing cached offline featuregroup without version to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      featuregroup_name: "no_version_fg_add")
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          # add second version
+          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: nil,
+                                                                      featuregroup_name: "no_version_fg_add", version: nil)
+          parsed_json = JSON.parse(json_result)
+          # version should be incremented to 2
+          expect(parsed_json["version"] == 2).to be true
+        end
+
         it "should not be able to add a offline cached featuregroup to the featurestore with invalid feature name" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
@@ -1133,6 +1171,48 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270057).to be true
+        end
+
+        it "should not be able to add a hopsfs training dataset to the featurestore with an invalid version" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              version: -1)
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270058).to be true
+        end
+
+        it "should be able to add a new hopsfs training dataset without version to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              name: "no_version_td", version: nil)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json["version"] == 1).to be true
+        end
+
+        it "should be able to add a new version of an existing hopsfs training dataset without version to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              name: "no_version_td_add")
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          # add second version
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              name: "no_version_td_add", version: nil)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          # version should be incremented to 2
+          expect(parsed_json["version"] == 2).to be true
         end
 
         it "should be able to add a hopsfs training dataset to the featurestore with splits" do

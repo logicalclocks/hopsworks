@@ -162,15 +162,20 @@ public class FeaturegroupController {
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
       throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
+  
+    // if version not provided, get latest and increment
+    if (featuregroupDTO.getVersion() == null) {
+      // returns ordered list by desc version
+      List<Featuregroup> fgPrevious = featuregroupFacade.findByNameAndFeaturestoreOrderedDescVersion(
+        featuregroupDTO.getName(), featurestore);
+      if (fgPrevious != null && !fgPrevious.isEmpty()) {
+        featuregroupDTO.setVersion(fgPrevious.get(0).getVersion() + 1);
+      } else {
+        featuregroupDTO.setVersion(1);
+      }
+    }
 
-    // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
-
-    //Verify feature group input type
-    verifyFeaturegroupType(featuregroupDTO, featurestore);
-
-    //Verify statistics input (more detailed input verification is delegated to lower level controllers)
-    verifyStatisticsInput(featuregroupDTO);
+    verifyFeatureGroupInput(featuregroupDTO);
 
     //Extract metadata
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
@@ -315,9 +320,6 @@ public class FeaturegroupController {
 
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(featuregroupDTO);
-
-    //Verify feature group input type
-    verifyFeaturegroupType(featuregroupDTO, featurestore);
 
     // Update on-demand feature group metadata
     if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
@@ -487,7 +489,7 @@ public class FeaturegroupController {
   public boolean featuregroupExists(Featurestore featurestore, FeaturegroupDTO featuregroupDTO) {
     if (!Strings.isNullOrEmpty(featuregroupDTO.getName()) && featuregroupDTO.getVersion() != null) {
       return featuregroupFacade.findByNameVersionAndFeaturestore(featuregroupDTO.getName(),
-          featuregroupDTO.getVersion(), featurestore).isPresent();
+        featuregroupDTO.getVersion(), featurestore).isPresent();
     }
     return false;
   }
@@ -659,23 +661,6 @@ public class FeaturegroupController {
         "feature group name: " + featureGroupName + " feature group version: " + version));
   }
 
-
-  /**
-   * Verify user input
-   *
-   * @param featuregroupDTO the provided user input
-   * @param featurestore    the feature store to perform the operation against
-   * @throws FeaturestoreException
-   */
-  private void verifyFeaturegroupType(FeaturegroupDTO featuregroupDTO, Featurestore featurestore) {
-    if (featurestore == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND.getMessage());
-    }
-    if (featuregroupDTO.getVersion() == null) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
-    }
-  }
   
   /**
    * Synchronizes an already created Hive table with the Feature Store metadata
@@ -694,14 +679,7 @@ public class FeaturegroupController {
           + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
     }
 
-    // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
-  
-    //Verify feature group input type
-    verifyFeaturegroupType(featuregroupDTO, featurestore);
-  
-    //Verify statistics input (more detailed input verification is delegated to lower level controllers)
-    verifyStatisticsInput(featuregroupDTO);
+    verifyFeatureGroupInput(featuregroupDTO);
   
     //Extract metadata
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
@@ -772,5 +750,37 @@ public class FeaturegroupController {
             .collect(Collectors.toList());
     }
     return new ArrayList<>();
+  }
+  
+  /**
+   * Verify feature group specific input
+   *
+   * @param featureGroupDTO the provided user input
+   * @throws FeaturestoreException
+   */
+  private void verifyFeatureGroupInput(FeaturegroupDTO featureGroupDTO)
+    throws FeaturestoreException {
+    // Verify general entity related information
+    featurestoreInputValidation.verifyUserInput(featureGroupDTO);
+    verifyFeatureGroupVersion(featureGroupDTO.getVersion());
+    verifyStatisticsInput(featureGroupDTO);
+  }
+  
+  /**
+   * Verify user input feature group version
+   *
+   * @param version the version to verify
+   * @throws FeaturestoreException
+   */
+  private void verifyFeatureGroupVersion(Integer version) throws FeaturestoreException {
+    if (version == null) {
+      throw new IllegalArgumentException(
+        RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_VERSION_NOT_PROVIDED.getMessage());
+    }
+    if(version <= 0) {
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_VERSION, Level.FINE,
+        "version cannot be negative or zero");
+    }
   }
 }
