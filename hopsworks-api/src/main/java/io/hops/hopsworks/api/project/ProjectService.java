@@ -145,6 +145,7 @@ import java.util.logging.Logger;
 @Stateless
 @JWTRequired(acceptedTokens = {Audience.API},
     allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+@ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
 @Produces(MediaType.APPLICATION_JSON)
 @Api(value = "Project Service",
     description = "Project Service")
