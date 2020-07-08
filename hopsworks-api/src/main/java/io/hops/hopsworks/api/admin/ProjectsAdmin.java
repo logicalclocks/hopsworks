@@ -157,19 +157,13 @@ public class ProjectsAdmin {
     if (owner == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "user:" + ownerEmail);
     }
-
-    List<String> failedMembers = null;
-    projectController.createProject(projectDTO, owner, failedMembers, request.getSession().getId());
+    
+    projectController.createProject(projectDTO, owner, request.getSession().getId());
 
     RESTApiJsonResponse response = new RESTApiJsonResponse();
     response.setSuccessMessage(ResponseMessages.PROJECT_CREATED);
 
-    if (failedMembers != null && !failedMembers.isEmpty()) {
-      response.setFieldErrors(failedMembers);
-    }
-
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED)
-        .entity(response).build();
+    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(response).build();
   }
 
   /**
