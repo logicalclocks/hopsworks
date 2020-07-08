@@ -298,15 +298,12 @@ public class ProjectController {
    *
    * @param projectDTO
    * @param owner
-   * @param failedMembers
    * @param sessionId
    * @return
    */
-  public Project createProject(ProjectDTO projectDTO, Users owner,
-    List<String> failedMembers, String sessionId)
-      throws DatasetException, GenericException, KafkaException,
-      ProjectException, UserException, HopsSecurityException,
-      ServiceException, FeaturestoreException, ElasticException, SchemaException {
+  public Project createProject(ProjectDTO projectDTO, Users owner, String sessionId) throws DatasetException,
+    GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
+    FeaturestoreException, ElasticException, SchemaException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -464,24 +461,14 @@ public class ProjectController {
       }
 
       try {
-        //add members of the project
-        failedMembers = new ArrayList<>();
-        failedMembers.addAll(addMembers(project, owner, projectDTO.getProjectTeam()));
-      } catch (KafkaException | UserException | ProjectException | EJBException ex) {
-        cleanup(project, sessionId, projectCreationFutures);
-        throw ex;
-      }
-      LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (members): {0}", System.currentTimeMillis() - startTime);
-
-      try {
         for (Future f : projectCreationFutures) {
           if (f != null) {
             f.get();
           }
         }
       } catch (InterruptedException | ExecutionException ex) {
-        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate "
-          + "generation thread to finish. Will try to cleanup...", ex);
+        LOGGER.log(Level.SEVERE, "Error while waiting for the certificate generation thread to finish. Will try to " +
+          "cleanup...", ex);
         cleanup(project, sessionId, projectCreationFutures);
         throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_CREATION_ERROR, Level.SEVERE);
       }

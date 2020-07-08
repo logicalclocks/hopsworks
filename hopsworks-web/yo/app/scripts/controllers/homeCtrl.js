@@ -186,7 +186,7 @@ angular.module('hopsWorksApp')
                 }, function (error) {
                   if (typeof error.data !== 'undefined' && typeof error.data.usrMsg !== 'undefined') {
                     growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000});
-                  } else {
+                  } else if (typeof error.data !== 'undefined' && typeof error.data.errorMsg !== 'undefined') {
                     growl.error("", {title: error.data.errorMsg, ttl: 5000});
                   }
               });

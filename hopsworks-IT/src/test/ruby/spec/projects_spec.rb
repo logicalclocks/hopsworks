@@ -85,7 +85,7 @@ describe "On #{ENV['OS']}" do
           expect(logs[:attributes][:permission]).to eq ("rwxrwx--T")
           expect(logs[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
           expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
-          expect(resources[:attributes][:permission]).to eq ("rwxrwx--T")
+          expect(resources[:attributes][:permission]).to eq ("rwxrwx---")
           expect(resources[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
         end
 

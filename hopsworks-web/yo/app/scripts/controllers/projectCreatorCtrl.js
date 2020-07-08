@@ -47,7 +47,6 @@ angular.module('hopsWorksApp')
 
             self.working = false;
             self.loadingUsers = false;
-            self.users = [];
             self.selectedUsers = [];
             self.selectNoChoice = 'Could not find any user...';
             self.user = {
@@ -62,54 +61,19 @@ angular.module('hopsWorksApp')
               self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
               self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'DELA', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             } else {
-		self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
-		self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
+		      self.projectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
+		      self.selectionProjectTypes = ['JOBS', 'KAFKA', 'JUPYTER', 'HIVE', 'SERVING', 'FEATURESTORE', 'AIRFLOW'];
             }
 
             self.projectName = '';
             self.projectDesc = '';
 
             self.regex = /^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$/;
-            
-            var inSelectedUsers = function (email) {
-              var len = self.selectedUsers.length;
-              for (var i = 0; i < len; i++) {
-                if (self.selectedUsers[i].email === email) {
-                  return true;
-                }
-              }
-              return false;
-            };
-            
-            var getUsers = function (query) {
-              self.loadingUsers = true;
-              UserService.profile().then(               
+
+            UserService.profile().then(
                 function (success) {
                   self.user = success.data;
-                  UserService.allValidUsers(query).then(function (success) {
-                      var items = success.data.items;
-                      var countRemoved = 0;
-                      for (var i = items.length -1; i >= 0; i--) {
-                        if (items[i].email === self.user.email || inSelectedUsers(items[i].email)) {
-                          items.splice(i, 1);
-                        }
-                        countRemoved++;
-                        if(countRemoved === self.selectedUsers.length + 1){
-                          break;
-                        }
-                      }
-                      self.users = items;
-                      self.loadingUsers = false;
-                    }, function (error) {
-                      self.errorMsg = error.data.msg;
-                      self.loadingUsers = false;
-                  });
-                },
-                function (error) {
-                  self.errorMsg = error.data.errorMsg;
-                  self.loadingUsers = false;
-              });
-            };
+                });
 
             self.addSelected = function (projectType) {
               var idx = self.selectionProjectTypes.indexOf(projectType);
@@ -124,16 +88,6 @@ angular.module('hopsWorksApp')
               var idx = self.selectionProjectTypes.indexOf(projectType);
               return idx > -1;
             };
-            
-            var getProjectTeams = function () {
-              self.selectedUsers.forEach(function (selected) {
-                var projectTeamPK = {'projectId': "", 'teamMember': ""};
-                var projectTeam = {'projectTeamPK': projectTeamPK};
-                projectTeamPK.teamMember = selected.email;
-                self.projectTeam.push(projectTeam);
-              });
-              return self.projectTeam;
-            };
 
             self.createProject = function () {
               self.working = true;
@@ -142,30 +96,21 @@ angular.module('hopsWorksApp')
                 'description': self.projectDesc,
                 'retentionPeriod': "",
                 'status': 0,
-                'services': self.selectionProjectTypes,
-                'projectTeam': getProjectTeams()
+                'services': self.selectionProjectTypes
               };
               ProjectService.save($scope.newProject).$promise.then(
                       function (success) {
-                        self.working = false;
-                        growl.success(success.successMessage, {title: 'Success', ttl: 2000});
-                        if (success.errorMsg) {
-                          growl.warning(success.errorMsg, {title: 'Error', ttl: 10000});
-                        }
-                        if (typeof success.fieldError !== 'undefined' && success.fieldErrors.length > 0) {
-                          success.fieldErrors.forEach(function (entry) {
-                            growl.warning(entry + ' could not be added', {title: 'Error', ttl: 10000});
-                          });
-                        }
-                        $uibModalInstance.close($scope.newProject);
+                          self.working = false;
+                          growl.success(success.successMessage, {title: 'Success', ttl: 2000});
+                          $uibModalInstance.close($scope.newProject);
                       }, function (error) {
-                      self.working = false;
-                      if (typeof error.data.usrMsg !== 'undefined') {
-                          growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
-                      } else {
-                          growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          self.working = false;
+                          if (typeof error.data.usrMsg !== 'undefined') {
+                              growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
+                          } else {
+                              growl.error("", {title: error.data.errorMsg, ttl: 5000, referenceId: 1});
 
-                      }
+                          }
               });
             };
             

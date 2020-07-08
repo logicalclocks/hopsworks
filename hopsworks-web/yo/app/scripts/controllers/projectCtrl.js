@@ -290,8 +290,8 @@ angular.module('hopsWorksApp')
                                   $route.reload();
                                 }
                               }, function (error) {
-                        self.working = false;
-                        growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
+                                self.working = false;
+                                growl.warning("Error: " + error.data.errorMsg, {title: 'Error', ttl: 5000});
                       }
                       );
             };
