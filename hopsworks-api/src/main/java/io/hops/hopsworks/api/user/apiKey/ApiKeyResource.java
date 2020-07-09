@@ -27,13 +27,16 @@ import io.hops.hopsworks.audit.helper.AuditAction;
 import io.hops.hopsworks.audit.helper.UserIdentifier;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
 import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
 import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -58,10 +61,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Logged
@@ -78,6 +80,8 @@ public class ApiKeyResource {
   private ApiKeyBuilder apikeyBuilder;
   @EJB
   private JWTHelper jwtHelper;
+  @EJB
+  private BbcGroupFacade bbcGroupFacade;
   
   @GET
   @Produces(MediaType.APPLICATION_JSON)
@@ -130,16 +134,17 @@ public class ApiKeyResource {
     @QueryParam("scope") Set<ApiScope> scopes, @Context UriInfo uriInfo, @Context HttpServletRequest req,
     @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc) throws ApiKeyException {
     Users user = jwtHelper.getUserPrincipal(sc);
+    Set<ApiScope> validatedScopes = validateScopes(user, scopes);
     ApiKey apikey;
     switch (action == null ? ApiKeyUpdateAction.ADD : action) {
       case ADD:
-        apikey = apikeyController.addScope(user, name, validateScopes(scopes));
+        apikey = apikeyController.addScope(user, name, validatedScopes);
         break;
       case DELETE:
-        apikey = apikeyController.removeScope(user, name, validateScopes(scopes));
+        apikey = apikeyController.removeScope(user, name, validatedScopes);
         break;
       case UPDATE:
-        apikey = apikeyController.update(user, name, validateScopes(scopes));
+        apikey = apikeyController.update(user, name, validatedScopes);
         break;
       default:
         throw new WebApplicationException("Action need to set a valid action, but found: " + action,
@@ -159,7 +164,8 @@ public class ApiKeyResource {
     @Context UriInfo uriInfo, @AuditTarget(UserIdentifier.REQ) @Context SecurityContext sc,
     @Context HttpServletRequest req) throws ApiKeyException, UserException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    String apiKey = apikeyController.createNewKey(user, name, validateScopes(scopes));
+    Set<ApiScope> validatedScopes = validateScopes(user, scopes);
+    String apiKey = apikeyController.createNewKey(user, name, validatedScopes);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.APIKEY);
     ApiKeyDTO dto = apikeyBuilder.build(uriInfo, resourceRequest, user, name);
     dto.setKey(apiKey);
@@ -196,9 +202,13 @@ public class ApiKeyResource {
   @Produces(MediaType.APPLICATION_JSON)
   @ApiOperation(value = "Get all api key scopes.")
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getScopes(@Context SecurityContext sc) {
-    List<ApiScope> scopes = Arrays.asList(ApiScope.values());
-    GenericEntity<List<ApiScope>> scopeEntity = new GenericEntity<List<ApiScope>>(scopes) {
+  public Response getScopes(@Context SecurityContext sc) throws UserException {
+    Users user = jwtHelper.getUserPrincipal(sc);
+    if (user == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    Set<ApiScope> scopes = getScopesForUser(user);
+    GenericEntity<Set<ApiScope>> scopeEntity = new GenericEntity<Set<ApiScope>>(scopes) {
     };
     return Response.ok().entity(scopeEntity).build();
   }
@@ -213,18 +223,36 @@ public class ApiKeyResource {
   public Response checkSession(@Context SecurityContext sc) {
     return Response.ok().build();
   }
-  
-  private Set<ApiScope> validateScopes(Set<ApiScope> scopes) {
-    Set<ApiScope> apiScopes = new HashSet<>();
+
+  // For a strange reason the Set of user supplied ApiScope(s) is marshalled
+  // to String even though it's a Set of ApiScope. We need to explicitly convert
+  // them to ApiScope
+  private Set<ApiScope> validateScopes(Users user, Set<ApiScope> scopes) throws ApiKeyException {
+    Set<ApiScope> validScopes = getScopesForUser(user);
+    Set<ApiScope> validatedScopes = new HashSet<>(scopes.size());
     for (Object scope : scopes) {
       try {
-        apiScopes.add(ApiScope.fromString((String) scope));
+        ApiScope apiScope = ApiScope.fromString((String) scope);
+        if (!validScopes.contains(apiScope)) {
+          throw new ApiKeyException(RESTCodes.ApiKeyErrorCode.KEY_SCOPE_CONTROL_EXCEPTION, Level.FINE,
+                  "User is not allowed to issue token " + apiScope.name(),
+                  "User " + user.getUsername() + " tried to generate API key with scope " + apiScope
+                          + " but it's role is not allowed to");
+        }
+        validatedScopes.add(apiScope);
       } catch (IllegalArgumentException iae) {
         throw new WebApplicationException("Scope need to set a valid scope, but found: " + scope,
-          Response.Status.NOT_FOUND);
+                Response.Status.NOT_FOUND);
       }
     }
-    return apiScopes;
+    return validatedScopes;
   }
-  
+
+  private Set<ApiScope> getScopesForUser(Users user) {
+    BbcGroup adminGroup = bbcGroupFacade.findByGroupName("HOPS_ADMIN");
+    if (user.getBbcGroupCollection().contains(adminGroup)) {
+      return ApiScope.getAll();
+    }
+    return ApiScope.getUnprivileged();
+  }
 }

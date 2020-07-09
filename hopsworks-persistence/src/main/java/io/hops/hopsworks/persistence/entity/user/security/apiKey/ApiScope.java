@@ -15,16 +15,44 @@
  */
 package io.hops.hopsworks.persistence.entity.user.security.apiKey;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public enum ApiScope {
-  JOB,
-  DATASET_VIEW,
-  DATASET_CREATE,
-  DATASET_DELETE,
-  INFERENCE,
-  FEATURESTORE,
-  PROJECT;
-  
+  JOB(false),
+  DATASET_VIEW(false),
+  DATASET_CREATE(false),
+  DATASET_DELETE(false),
+  INFERENCE(false),
+  FEATURESTORE(false),
+  PROJECT(false),
+  ADMIN(true);
+
+  private final boolean privileged;
+
+  ApiScope(boolean privileged) {
+    this.privileged = privileged;
+  }
+
   public static ApiScope fromString(String param) {
     return valueOf(param.toUpperCase());
+  }
+
+  public static Set<ApiScope> getAll() {
+    return new HashSet<>(Arrays.asList(ApiScope.values()));
+  }
+
+  public static Set<ApiScope> getPrivileged() {
+    return Arrays.stream(ApiScope.values())
+            .filter(as -> as.privileged)
+            .collect(Collectors.toSet());
+  }
+
+  public static Set<ApiScope> getUnprivileged() {
+    return Arrays.stream(ApiScope.values())
+            .filter(as -> !as.privileged)
+            .collect(Collectors.toSet());
   }
 }
