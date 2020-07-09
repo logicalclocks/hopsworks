@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.filter;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.filter.util.HopsworksSecurityContext;
 import io.hops.hopsworks.api.filter.util.Subject;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
@@ -47,6 +48,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static io.hops.hopsworks.jwt.Constants.WWW_AUTHENTICATE_VALUE;
 
 @Provider
 @JWTRequired
@@ -78,7 +81,13 @@ public class AuthFilter extends JWTFilter {
   public boolean preJWTFilter(ContainerRequestContext requestContext) throws IOException {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader != null && authorizationHeader.startsWith(ApiKeyFilter.API_KEY)) {
-      LOGGER.log(Level.FINEST, "{0}found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
+      LOGGER.log(Level.FINEST, "{0} found, leaving JWT interceptor", ApiKeyFilter.API_KEY);
+      if (getApiKeyAnnotation() == null) {
+        requestContext.abortWith(Response.status(Response.Status.UNAUTHORIZED).header(HttpHeaders.WWW_AUTHENTICATE,
+          WWW_AUTHENTICATE_VALUE).entity(responseEntity(Response.Status.UNAUTHORIZED, "Authorization method not " +
+          "supported."))
+          .build());
+      }
       return false;
     }
     return true;
@@ -116,6 +125,14 @@ public class AuthFilter extends JWTFilter {
     JWTRequired classAcceptedTokens = resourceClass.getAnnotation(JWTRequired.class);
     JWTRequired annotation = methodAcceptedTokens != null ? methodAcceptedTokens : classAcceptedTokens;
     return annotation;
+  }
+  
+  private ApiKeyRequired getApiKeyAnnotation() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method method = resourceInfo.getResourceMethod();
+    ApiKeyRequired methodRolesAnnotation = method.getAnnotation(ApiKeyRequired.class);
+    ApiKeyRequired classRolesAnnotation = resourceClass.getAnnotation(ApiKeyRequired.class);
+    return methodRolesAnnotation != null ? methodRolesAnnotation : classRolesAnnotation;
   }
 
   @Override
