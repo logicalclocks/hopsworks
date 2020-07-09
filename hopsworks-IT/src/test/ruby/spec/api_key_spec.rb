@@ -23,6 +23,10 @@ describe "On #{ENV['OS']}" do
     before :all do
       reset_session
     end
+    it "should not allow access to endpoints with no api key annotation" do
+      set_api_key_to_header(@key)
+      test_api_key_on_jwt_endpoint
+    end
     it "should be possible to access session end-point with an api key" do
       set_api_key_to_header(@key)
       get_api_key_session
