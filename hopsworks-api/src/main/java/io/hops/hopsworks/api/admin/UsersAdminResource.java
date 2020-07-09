@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.admin;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
 import io.hops.hopsworks.api.user.UserProfileBuilder;
 import io.hops.hopsworks.api.user.UserProfileDTO;
@@ -29,6 +30,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,6 +55,7 @@ import javax.ws.rs.core.UriInfo;
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN}, allowedUserRoles = {"HOPS_ADMIN"})
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersAdminResource {

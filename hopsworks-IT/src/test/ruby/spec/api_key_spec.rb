@@ -126,6 +126,11 @@ describe "On #{ENV['OS']}" do
       expect_status(200)
       expect(0).to eq(json_body[:count])
     end
+    it "non-admin user should fail to create key with Admin scope" do
+      scopes = %w(JOB ADMIN INFERENCE)
+      create_api_key('fail_2_create', scopes)
+      expect_status(403)
+    end
     it "should access session end-point with jwt and api key" do
       @key = create_api_key('firstKey7')
       get_api_key_session # with jwt
@@ -134,6 +139,19 @@ describe "On #{ENV['OS']}" do
       get_api_key_session # with an api key
       expect_status(200)
       reset_session
+    end
+    context "as admin user" do
+      before :all do
+        with_admin_session
+      end
+      after :all do
+        reset_session
+      end
+      it "should be able to create key with Admin scope" do
+        scopes = %w(JOB ADMIN PROJECT)
+        create_api_key("admin_key_#{Time.now.to_i}", scopes)
+        expect_status(201)
+      end
     end
   end
 end
