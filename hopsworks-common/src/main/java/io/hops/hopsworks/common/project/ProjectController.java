@@ -731,14 +731,14 @@ public class ProjectController {
 
   // Used only during project creation
   private List<Future<?>> addService(Project project, ProjectServiceEnum service,
-    Users user, DistributedFileSystemOps dfso, ProvTypeDTO metaStatus)
+    Users user, DistributedFileSystemOps dfso, ProvTypeDTO projectProvCore)
       throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
       UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
-    return addService(project, service, user, dfso, dfso, metaStatus);
+    return addService(project, service, user, dfso, dfso, projectProvCore);
   }
 
   public List<Future<?>> addService(Project project, ProjectServiceEnum service,
-    Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO metaStatus)
+    Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO projectProvCore)
       throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
       UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
 
@@ -748,36 +748,44 @@ public class ProjectController {
       // Service already enabled for the current project. Nothing to do
       return null;
     }
-
+  
     switch (service) {
       case JUPYTER:
-        addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso, metaStatus);
+        addServiceDataset(project, user, Settings.ServiceDataset.JUPYTER, dfso, udfso,
+          Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           addKibana(project, user);
-          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso, metaStatus);
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.EXPERIMENT));
         }
         break;
       case HIVE:
-        addServiceHive(project, user, dfso);
+        addServiceHive(project, user, dfso, Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.HIVE));
         break;
       case SERVING:
-        futureList.add(addServiceServing(project, user, dfso, udfso, metaStatus));
+        futureList.add(addServiceServing(project, user, dfso, udfso,
+          Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.MODEL)));
         break;
       case JOBS:
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
-          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso, metaStatus);
+          addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.EXPERIMENT));
           addKibana(project, user);
         }
         break;
       case FEATURESTORE:
         //Note: Order matters here. Training Dataset should be created before the Featurestore
-        addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso, metaStatus);
-        addServiceFeaturestore(project, user, dfso, udfso);
-        addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso, metaStatus);
+        addServiceDataset(project, user, Settings.ServiceDataset.TRAININGDATASETS, dfso, udfso,
+          Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.TRAINING_DATASET));
+        addServiceFeaturestore(project, user, dfso,
+          Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.FEATURE));
+        addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso,
+          Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {
-            addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso, metaStatus);
+            addServiceDataset(project, user, Settings.ServiceDataset.EXPERIMENTS, dfso, udfso,
+              Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.EXPERIMENT));
             addKibana(project, user);
           }
         }
@@ -802,7 +810,7 @@ public class ProjectController {
 
   private void addServiceDataset(Project project, Users user,
     Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
-    DistributedFileSystemOps udfso, ProvTypeDTO metaStatus)
+    DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
     throws DatasetException, HopsSecurityException, ProjectException {
     try {
       String datasetName = ds.getName();
@@ -811,7 +819,7 @@ public class ProjectController {
         datasetName = project.getName() + "_" + datasetName;
       }
       datasetController.createDataset(user, project, datasetName, ds.
-        getDescription(), -1, metaStatus, false, true, dfso);
+        getDescription(), -1, datasetProvCore, false, true, dfso);
       datasetController.generateReadme(udfso, datasetName,
         ds.getDescription(), project.getName());
 
@@ -835,10 +843,11 @@ public class ProjectController {
     }
   }
 
-  private void addServiceHive(Project project, Users user, DistributedFileSystemOps dfso) throws ProjectException {
+  private void addServiceHive(Project project, Users user, DistributedFileSystemOps dfso, ProvTypeDTO datasetProvCore)
+    throws ProjectException {
     try {
       hiveController.createDatabase(project.getName(), "Project general-purpose Hive database");
-      hiveController.createDatasetDb(project, user, dfso, project.getName());
+      hiveController.createDatasetDb(project, user, dfso, project.getName(), datasetProvCore);
     } catch (SQLException | IOException | ServiceDiscoveryException ex) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_HIVEDB_CREATE_ERROR, Level.SEVERE,
         "project: " + project.getName(), ex.getMessage(), ex);
@@ -846,16 +855,16 @@ public class ProjectController {
   }
 
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO metaStatus)
+    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
     throws ProjectException, DatasetException, HopsSecurityException,
     UserException, ElasticException, ServiceException, SchemaException, FeaturestoreException, KafkaException {
 
-    addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso, metaStatus);
+    addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso, datasetProvCore);
     elasticController.createIndexPattern(project, user,
         project.getName().toLowerCase() + "_serving-*");
     // If Kafka is not enabled for the project, enable it
     if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-      addService(project, ProjectServiceEnum.KAFKA, user, dfso, udfso, metaStatus);
+      addService(project, ProjectServiceEnum.KAFKA, user, dfso, udfso, datasetProvCore);
     }
     return addServingManager(project);
   }
@@ -900,7 +909,7 @@ public class ProjectController {
    * @param dfso dfso
    */
   private void addServiceFeaturestore(Project project, Users user,
-    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso)
+    DistributedFileSystemOps dfso, ProvTypeDTO datasetProvCore)
     throws FeaturestoreException {
     String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(project);
     try {
@@ -913,7 +922,8 @@ public class ProjectController {
       Featurestore featurestore = featurestoreController.createProjectFeatureStore(project, user, featurestoreName,
         trainingDatasets);
       //Create Hopsworks Dataset of the HiveDb
-      hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore);
+      hiveController.createDatasetDb(project, user, dfso, featurestoreName, DatasetType.FEATURESTORE, featurestore,
+        datasetProvCore);
     } catch (SQLException | IOException | ServiceDiscoveryException ex) {
       LOGGER.log(Level.SEVERE, RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE.getMessage(), ex);
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATURESTORE, Level.SEVERE,
@@ -2341,7 +2351,7 @@ public class ProjectController {
 
   public String addTourFilesToProject(String username, Project project,
                                       DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
-                                      TourProjectType projectType, ProvTypeDTO metaStatus)
+                                      TourProjectType projectType, ProvTypeDTO projectProvCore)
       throws DatasetException, HopsSecurityException, ProjectException,
       JobException, GenericException, ServiceException {
     String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
@@ -2352,7 +2362,9 @@ public class ProjectController {
       switch (projectType) {
         case SPARK:
           datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1, metaStatus, true, true, dfso);
+            "files for guide projects", -1,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
+            true, true, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
           try {
             File dir = new File(exampleDir);
@@ -2382,7 +2394,9 @@ public class ProjectController {
           break;
         case KAFKA:
           datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1, metaStatus, true, true, dfso);
+            "files for guide projects", -1,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
+            true, true, dfso);
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesSparkFilename();
@@ -2402,7 +2416,9 @@ public class ProjectController {
         case DEEP_LEARNING:
           tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
           datasetController.createDataset(user, project, tourFilesDataset,
-            "sample training data for notebooks", -1, metaStatus, true, true, dfso);
+            "sample training data for notebooks", -1,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
+            , true, true, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
             + "/*";
           String DLDataDst = projectPath + Settings.HOPS_DL_TOUR_DATASET;
@@ -2430,7 +2446,9 @@ public class ProjectController {
           break;
         case FEATURESTORE:
           datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1, metaStatus, true, true, dfso);
+            "files for guide projects", -1,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
+            true, true, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesFeaturestoreTourFilename();

@@ -23,7 +23,7 @@ describe "On #{ENV['OS']}" do
     with_valid_session
     @email = @user["email"]
     pp "user email: #{@email}"
-    @debugOpt = false
+    @debugOpt = true
     @project1_name = "prov_proj_#{short_random_id}"
     @project2_name = "prov_proj_#{short_random_id}"
     @app1_id = "application_#{short_random_id}_0001"
@@ -958,13 +958,10 @@ describe "On #{ENV['OS']}" do
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
-          pp experiment if defined?(@debugOpt) && @debugOpt == true
-          prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
+          pp experiment if defined?(@debugOpt) && @debugOpt
+          prov_xattr = experiment["xattrs"]["entry"].select { |e| e["key"] == "test_xattr_string"}
           expect(prov_xattr.length).to eq 1
-          fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
-          test_xattr_field = fixed_json["test_xattr_string"]["raw"]
-          expect(test_xattr_field).to eq @xattrV4
-
+          expect(prov_xattr[0]["value"]).to eq @xattrV4
           exp_cleanup
         end
       end
@@ -1000,12 +997,11 @@ describe "On #{ENV['OS']}" do
           #pp "check experiment dataset"
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
-          pp experiment if defined?(@debugOpt) && @debugOpt == true
-          prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
+          pp experiment if defined?(@debugOpt) && @debugOpt
+          prov_xattr = experiment["xattrs"]["entry"].select { |e| e["key"] == "test_xattr_json_1"}
           expect(prov_xattr.length).to eq 1
           fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
-          test_xattr_field = fixed_json[xattr_key]["value"]
-          expect(test_xattr_field).to eq @xattrV3
+          expect(fixed_json).to eq @xattrV3
 
           exp_cleanup
         end
@@ -1030,11 +1026,11 @@ describe "On #{ENV['OS']}" do
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
           #pp experiment
-          prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
+          pp experiment if defined?(@debugOpt) && @debugOpt
+          prov_xattr = experiment["xattrs"]["entry"].select { |e| e["key"] == "test_update_xattr"}
           expect(prov_xattr.length).to eq 1
           fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
-          test_xattr_field = fixed_json[xattr_key]["value"]
-          expect(test_xattr_field).to eq @xattrV2
+          expect(fixed_json).to eq @xattrV2
 
           exp_cleanup
         end
@@ -1058,11 +1054,11 @@ describe "On #{ENV['OS']}" do
           experiment_id = prov_experiment_id(@experiment_app1_name1)
           experiment = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment_id, false)
           #pp experiment
-          prov_xattr = experiment["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
+          pp experiment if defined?(@debugOpt) && @debugOpt
+          prov_xattr = experiment["xattrs"]["entry"].select { |e| e["key"] == xattr_key}
           expect(prov_xattr.length).to eq 1
           fixed_json = fix_search_xattr_json(prov_xattr[0]["value"], false)
-          test_xattr_field = fixed_json[xattr_key]["value"]
-          expect(test_xattr_field).to eq @xattrV1
+          expect(fixed_json).to eq @xattrV1
 
           exp_cleanup
         end
@@ -1114,16 +1110,16 @@ describe "On #{ENV['OS']}" do
             experiment1_id = prov_experiment_id(@experiment_app1_name1)
             experiment1 = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment1_id, false)
             #pp experiment
-            prov_xattr1 = experiment1["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
-            expect(prov_xattr1.length).to eq 1
-            expect(prov_xattr1[0]["value"]).to eq "{}"
+            pp experiment1 if defined?(@debugOpt) && @debugOpt
+            prov_xattr1 = experiment1["xattrs"]["entry"].select { |e| e["key"] == xattr_key}
+            expect(prov_xattr1.length).to eq 0
 
             experiment2_id = prov_experiment_id(@experiment_app2_name1)
             experiment2 = get_ml_asset_by_id(@project1, "EXPERIMENT", experiment2_id, false)
             #pp experiment
-            prov_xattr2 = experiment2["map"]["entry"].select { |e| e["key"] == "xattr_prov"}
-            expect(prov_xattr2.length).to eq 1
-            expect(prov_xattr2[0]["value"]).to eq "{}"
+            pp experiment2 if defined?(@debugOpt) && @debugOpt
+            prov_xattr2 = experiment2["xattrs"]["entry"].select { |e| e["key"] == xattr_key}
+            expect(prov_xattr2.length).to eq 0
           ensure
             exp_cleanup
           end
@@ -1244,7 +1240,7 @@ describe "On #{ENV['OS']}" do
               experiment_record = prov_get_experiment_record(@project1, @experiment_app2_name1)
               expect(experiment_record.length).to eq 1
               xattr_val = "some value"
-              prov_add_xattr(experiment_record[0], xattr_key2, xattr_val, "XATTR_ADD", 1)
+              prov_add_xattr(experiment_record[0], xattr_key1, xattr_val, "XATTR_ADD", 2)
             end
             wait_result = epipe_wait_on_provenance(repeat: 5)
             expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -1255,7 +1251,8 @@ describe "On #{ENV['OS']}" do
             result = get "#{query}"
             expect_status(200)
             parsed_result = JSON.parse(result)
-            expect(parsed_result.length).to eq 2
+            pp "#{parsed_result}" if defined?(@debugOpt) && @debugOpt
+            expect(parsed_result["count"]).to eq 2
           ensure
             exp_cleanup
           end
@@ -1445,26 +1442,6 @@ describe "On #{ENV['OS']}" do
       sleep(2)
       expect(is_epipe_active).to be(true)
       epipe_wait_on_provenance(with_restart: false)
-    end
-    it 'should not kill epipe to write to a non existing index' do
-      epipe_restart_checked unless is_epipe_active
-      with_valid_project
-      project_index = "#{get_project_inode(@project)[:id]}__file_prov"
-      pp project_index if defined?(@debugOpt) && @debugOpt
-      epipe_wait_on_provenance(repeat: 5)
-      dataset = nil
-      #create dataset - create view - doesn't kill epipe if index doesn't exists
-      prov_op_no_index(project_index) do
-        dataset = create_dataset_checked
-      end
-      #xattr op and view update by xattr update - doesn't kill epipe if index doesn't exists
-      prov_op_no_index(project_index) do
-        prov_test_add_xattr(@project, dataset[:inode_id], "test_xattr", "test")
-      end
-      #xattr op and view update by xattr remove - doesn't kill epipe if index doesn't exists
-      prov_op_no_index(project_index) do
-        prov_test_remove_xattr(@project, dataset[:inode_id], "test_xattr")
-      end
     end
   end
 end

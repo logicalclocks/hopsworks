@@ -22,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.lambdista.util.Try;
 import io.hops.hopsworks.common.provenance.app.ProvAParser;
 import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.Provenance;
@@ -77,6 +78,10 @@ public class ProvAppStateElastic implements Comparator<ProvAppStateElastic> {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING, msg, msg, e);
     }
     return result;
+  }
+  
+  public static Try<ProvAppStateElastic> tryInstance(BasicElasticHit hit) {
+    return Try.apply(() -> instance(hit));
   }
 
   @Override

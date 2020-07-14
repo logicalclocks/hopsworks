@@ -18,22 +18,23 @@ package io.hops.hopsworks.api.provenance;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.provenance.state.ProvFileStateBeanParam;
+import io.hops.hopsworks.api.provenance.state.ProvStateBeanParam;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
-import io.hops.hopsworks.common.provenance.util.dto.WrapperDTO;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -80,6 +81,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Get the Provenance Type of PROJECT/DATASET", response = ProvTypeDTO.class)
   public Response getProvenanceStatus(
     @QueryParam("type") @DefaultValue("PROJECT") TypeOf typeOf,
     @Context SecurityContext sc)
@@ -109,50 +111,43 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
-    @BeanParam ProvFileStateBeanParam params,
+    @BeanParam ProvStateBeanParam params,
     @BeanParam Pagination pagination,
     @Context HttpServletRequest req) throws ProvenanceException {
-    ProvFileStateParamBuilder paramBuilder = new ProvFileStateParamBuilder()
-      .withProjectInodeId(project.getInode().getId())
-      .withQueryParamFileStateFilterBy(params.getFileStateFilterBy())
-      .withQueryParamFileStateSortBy(params.getFileStateSortBy())
-      .withQueryParamExactXAttr(params.getExactXAttrParams())
-      .withQueryParamLikeXAttr(params.getLikeXAttrParams())
-      .filterByHasXAttr(params.getFilterByHasXAttrs())
-      .withQueryParamXAttrSortBy(params.getXattrSortBy())
-      .withQueryParamExpansions(params.getExpansions())
-      .withQueryParamAppExpansionFilter(params.getAppExpansionParams())
-      .withPagination(pagination.getOffset(), pagination.getLimit());
+    ProvStateParamBuilder paramBuilder = new ProvStateParamBuilder()
+      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+      .filterByFields(params.getFileStateFilterBy())
+      .sortByFields(params.getFileStateSortBy())
+      .filterByXAttrs(params.getExactXAttrParams())
+      .filterLikeXAttrs(params.getLikeXAttrParams())
+      .hasXAttrs(params.getFilterByHasXAttrs())
+      .sortByXAttrs(params.getXattrSortBy())
+      .withExpansions(params.getExpansions())
+      .withAppExpansionFilter(params.getAppExpansionParams())
+      .paginate(pagination.getOffset(), pagination.getLimit());
     logger.log(Level.FINE, "Local content path:{0} file state params:{1} ",
       new Object[]{req.getRequestURL().toString(), params});
     return getFileStates(project, paramBuilder, params.getReturnType());
   }
   
   private Response getFileStates(Project project,
-    ProvFileStateParamBuilder params, FileStructReturnType returnType)
+    ProvStateParamBuilder params, FileStructReturnType returnType)
     throws ProvenanceException {
+    ProvStateDTO result;
     switch (returnType) {
-      case LIST:
-        ProvStateListDTO listResult = stateProvCtrl.provFileStateList(project, params);
-        return Response.ok().entity(listResult).build();
-      case COUNT:
-        Long countResult = stateProvCtrl.provFileStateCount(project, params);
-        return Response.ok().entity(new WrapperDTO<>(countResult)).build();
+      case LIST: result = stateProvCtrl.provFileStateList(project, params); break;
+      case COUNT: result = stateProvCtrl.provFileStateCount(project, params); break;
       default:
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
           "return type: " + returnType + " is not managed");
     }
+    return Response.ok().entity(result).build();
   }
   
   public enum FileStructReturnType {
     LIST,
     COUNT;
-  }
-  
-  public enum FileOpsCompactionType {
-    NONE,
-    FILE_COMPACT,
-    FILE_SUMMARY
   }
 }

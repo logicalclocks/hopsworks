@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 import java.util.List;
 import java.util.Set;
 
-public class ProvFileStateBeanParam {
+public class ProvStateBeanParam {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=FILE_NAME:file1",
     allowableValues = "filter_by=PROJECT_I_ID:id1, filter_by=FILE_I_ID:123, " +
@@ -81,7 +81,7 @@ public class ProvFileStateBeanParam {
   @DefaultValue("LIST")
   private ProjectProvenanceResource.FileStructReturnType returnType;
   
-  public ProvFileStateBeanParam(
+  public ProvStateBeanParam(
     @QueryParam("filter_by") Set<String> fileStateParams,
     @QueryParam("sort_by") List<String> fileStateSortBy,
     @QueryParam("xattr_filter_by") Set<String> xAttrParams,

@@ -126,3 +126,4 @@ Backend Dependencies
 * org.rauschig:jarchivelib:jar:0.7.1 [ApacheV2](https://github.com/thrau/jarchivelib/blob/master/LICENSE)
 * org.seleniumhq.selenium:selenium-java:jar:3.14.0 [ApacheV2](https://github.com/SeleniumHQ/selenium/blob/master/LICENSE)
 * org.freemarker:freemarker:jar:2.3.29 [ApacheV2](https://github.com/apache/freemarker/blob/2.3/LICENSE)
+* com.lambdista:try:jar:0.3.1 [ApacheV2] (https://github.com/lambdista/try)

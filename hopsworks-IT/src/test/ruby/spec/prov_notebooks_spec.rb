@@ -35,39 +35,16 @@ describe "On #{ENV['OS']}" do
       app_id
     end
 
-    it 'featurestore - training dataset with features' do
-      with_valid_session
-      wait_result = epipe_wait_on_provenance(repeat: 5)
-      expect(wait_result["success"]).to be(true), wait_result["msg"]
+    #check that the job create the 2 featuregroups and the training dataset
+    def check_job_success(project, fg1_name, fg2_name, td_name)
+      fs_id = get_featurestore_id(project[:id])
+      get_featuregroup(project[:id], fs_id, fg1_name, 1)
+      get_featuregroup(project[:id], fs_id, fg2_name, 1)
+      get_trainingdataset(project[:id], fs_id, td_name, 1)
+    end
 
-      project1 = create_project
-      job_name = "prov_training_dataset"
-      src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux"
-      src = "#{src_dir}/#{job_name}.ipynb"
-      dst = "/Projects/#{project1[:projectname]}/Resources"
-      user = @user[:username]
-      group = "#{project1[:projectname]}__Jupyter"
-      project_name = "#{project1[:projectname]}"
-
-      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
-      copy_from_local(src, dst, user, group, 750, project_name)
-
-      job_config = get_spark_default_py_config(project1, job_name, "ipynb")
-      job_config["amMemory"] = 2048
-      job_config["spark.executor.memory"] = 4096
-      create_sparktour_job(project1, job_name, "ipynb", job_config)
-      expect_status(201)
-      prov_run_job(project1, job_name)
-      #check that the job create the 2 featuregroups and the training dataset
-      featurestore_id = get_featurestore_id(project1[:id])
-      get_featuregroup(project1[:id], featurestore_id, "test_houses_for_sale_featuregroup", 1)
-      get_featuregroup(project1[:id], featurestore_id, "test_houses_sold_featuregroup", 1)
-      get_trainingdataset(project1[:id], featurestore_id, "predict_house_sold_for_dataset", 1)
-
-      wait_result = epipe_wait_on_provenance(repeat: 5)
-      expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-      query = "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/provenance/states?filter_by=ML_TYPE:FEATURE"
+    def check_prov_states(project)
+      query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?filter_by=ML_TYPE:FEATURE"
       pp "#{query}" if defined?(@debugOpt) && @debugOpt
       result = get "#{query}"
       expect_status(200)
@@ -86,7 +63,7 @@ describe "On #{ENV['OS']}" do
       #we expect 5 features in this featuregroup
       expect(fg2["fg_features"].length).to eq 5
 
-      query = "#{ENV['HOPSWORKS_API']}/project/#{project1[:id]}/provenance/states?filter_by=ML_TYPE:TRAINING_DATASET"
+      query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states?filter_by=ML_TYPE:TRAINING_DATASET"
       pp "#{query}" if defined?(@debugOpt) && @debugOpt
       result = get "#{query}"
       expect_status(200)
@@ -98,6 +75,41 @@ describe "On #{ENV['OS']}" do
       td1 = JSON[parsed_result["items"][0]["xattrs"]["entry"][0]["value"]]
       expect(td1["td_features"].length).to eq(1)
       expect(td1["td_features"][0]["fg_features"].length).to eq(5)
+    end
+
+    it 'featurestore - training dataset with features' do
+      with_valid_session
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+      project = create_project
+      job_name = "prov_training_dataset"
+      src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux"
+      src = "#{src_dir}/#{job_name}.ipynb"
+      dst = "/Projects/#{project[:projectname]}/Resources"
+      user = @user[:username]
+      group = "#{project[:projectname]}__Jupyter"
+      project_name = "#{project[:projectname]}"
+
+      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+      copy_from_local(src, dst, user, group, 750, project_name)
+
+      job_config = get_spark_default_py_config(project, job_name, "ipynb")
+      job_config["amMemory"] = 2048
+      job_config["spark.executor.memory"] = 4096
+      create_sparktour_job(project, job_name, "ipynb", job_config)
+      expect_status(201)
+      app_id = prov_run_job(project, job_name)
+
+      fg1_name = "test_houses_for_sale_featuregroup"
+      fg2_name = "test_houses_sold_featuregroup"
+      td_name = "predict_house_sold_for_dataset"
+      check_job_success(project, fg1_name, fg2_name, td_name)
+
+      wait_result = epipe_wait_on_provenance(repeat: 5)
+      expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+      check_prov_states(project)
     end
   end
 end
