@@ -206,10 +206,6 @@ public class LibraryInstaller {
     writer.newLine();
     writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()));
     writer.newLine();
-    writer.write("ENV C_INCLUDE_PATH=" + settings.getAnacondaProjectDir(cc.getProjectId()) + "/include");
-    writer.newLine();
-    writer.write("ENV CPLUS_INCLUDE_PATH=" + settings.getAnacondaProjectDir(cc.getProjectId()) + "/include");
-    writer.newLine();
     writer.write(
         "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
             + " --mount=type=bind,source=.pip,target=/root/.pip ");

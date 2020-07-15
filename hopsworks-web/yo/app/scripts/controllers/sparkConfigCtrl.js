@@ -431,14 +431,10 @@ angular.module('hopsWorksApp')
 
             self.distribution_strategies = [{
                 id: 1,
-                name: 'MIRRORED',
-                displayName: 'Mirrored'
+                name: 'MULTI_WORKER_MIRRORED',
+                displayName: 'MultiWorkerMirrored'
             }, {
                 id: 2,
-                name: 'COLLECTIVE_ALL_REDUCE',
-                displayName: 'CollectiveAllReduce'
-            }, {
-                id: 3,
                 name: 'PARAMETER_SERVER',
                 displayName: 'ParameterServer'
             }];

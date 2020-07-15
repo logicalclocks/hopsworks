@@ -20,7 +20,6 @@ import javax.xml.bind.annotation.XmlEnum;
 
 @XmlEnum
 public enum DistributionStrategy {
-  MIRRORED,
-  PARAMETER_SERVER,
-  COLLECTIVE_ALL_REDUCE
+  MULTI_WORKER_MIRRORED,
+  PARAMETER_SERVER
 }
