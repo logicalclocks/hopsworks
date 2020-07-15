@@ -91,7 +91,7 @@ public class LibrarySearchBuilder {
     LibrarySearchDTO dto = new LibrarySearchDTO();
     uri(dto, uriInfo, library);
     dto.setLibrary(library);
-    HashMap<String, List<LibraryVersionDTO>> libVersions = libraryController.pipSearch(library, project);
+    HashMap<String, List<LibraryVersionDTO>> libVersions = libraryController.pipSearch(library);
     dto.setCount((long) libVersions.size());
     return buildItems(dto, uriInfo, libVersions, project, null);
   }

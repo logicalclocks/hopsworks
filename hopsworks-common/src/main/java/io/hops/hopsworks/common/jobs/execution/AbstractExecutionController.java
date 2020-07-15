@@ -35,6 +35,7 @@ import io.hops.hopsworks.common.jobs.spark.SparkController;
 import io.hops.hopsworks.common.jobs.yarn.YarnExecutionFinalizer;
 import io.hops.hopsworks.common.jobs.yarn.YarnLogUtil;
 import io.hops.hopsworks.common.jobs.yarn.YarnMonitor;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
@@ -158,7 +159,7 @@ public abstract class AbstractExecutionController implements ExecutionController
           ActivityFlag.JOB);
         break;
       case PYSPARK:
-        if(!job.getProject().getConda()){
+        if(!ProjectUtils.isCondaEnabled(job.getProject())){
           throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINEST);
         }
         exec = sparkController.startJob(job, args, user);

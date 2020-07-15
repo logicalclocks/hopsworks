@@ -81,10 +81,10 @@ module CondaHelper
     end
   end
 
-  def check_if_env_exists_locally(env_name)
+  def check_if_img_exists_locally(docker_image_name)
     registry = Variables.find_by(id: "docker_registry_name")
     registry_port = Variables.find_by(id: "docker_registry_port")
-    image_name = registry.value + ":" + registry_port.value + "/" + env_name
+    image_name = registry.value + ":" + registry_port.value + "/" + docker_image_name
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 

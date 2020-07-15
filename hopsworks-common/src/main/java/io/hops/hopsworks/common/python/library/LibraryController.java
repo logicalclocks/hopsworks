@@ -21,7 +21,6 @@ import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
-import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -64,8 +63,6 @@ public class LibraryController {
   @EJB
   private CommandsController commandsController;
   @EJB
-  private ProjectUtils projectUtils;
-  @EJB
   private Settings settings;
   @EJB
   private LibraryFacade libraryFacade;
@@ -85,18 +82,8 @@ public class LibraryController {
       }
     }
   }
-
-  public List<PythonDep> listProject(Project proj) {
-    List<PythonDep> libs = new ArrayList<>();
-    Collection<PythonDep> objs = proj.getPythonDepCollection();
-    if (objs != null) {
-      libs.addAll(objs);
-    }
-    return libs;
-  }
   
   public void addPythonDepsForProject(Project proj, Collection<PythonDep> pythonDeps) {
-    // proj.setPythonDepCollection(pythonDeps); will overwrite any dep already in proj.
     Collection<PythonDep> depsInProj = new ArrayList<>(proj.getPythonDepCollection());
     for (PythonDep dep : pythonDeps) {
       depsInProj.remove(dep);
@@ -121,7 +108,7 @@ public class LibraryController {
   public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
     HashMap<String, List<LibraryVersionDTO>> libVersions = new HashMap<>();
     String prog = settings.getHopsworksDomainDir() + "/bin/condasearch.sh";
-    String[] lines = search(prog, library, null, url);
+    String[] lines = search(prog, library, url);
     String[] libVersion;
     String foundLib = "";
     String foundVersion;
@@ -222,13 +209,12 @@ public class LibraryController {
     return versions;
   }
   
-  public HashMap<String, List<LibraryVersionDTO>> pipSearch(String library, Project project) throws ServiceException {
-    
-    String env = projectUtils.getCurrentCondaBaseEnvironment(project);
+  public HashMap<String, List<LibraryVersionDTO>> pipSearch(String library) throws ServiceException {
+
     HashMap<String, List<LibraryVersionDTO>> versions = new HashMap<>();
     
     String prog = settings.getHopsworksDomainDir() + "/bin/pipsearch.sh";
-    String[] lines = search(prog, library, env, null);
+    String[] lines = search(prog, library, null);
     library = library.toLowerCase();
     String[] lineSplit;
     for (String line : lines) {
@@ -263,17 +249,15 @@ public class LibraryController {
     return versions;
   }
   
-  private String[] search(String program, String library, String env, String url)
+  private String[] search(String program, String library, String url)
     throws ServiceException {
     ProcessDescriptor.Builder pdBuilder = new ProcessDescriptor.Builder();
     pdBuilder.addCommand(program);
     if (url != null && !url.isEmpty()) {
       pdBuilder.addCommand(url);
       pdBuilder.addCommand(library);
-    }
-    if (env != null && !env.isEmpty()) {
+    } else if(library != null && !library.isEmpty()) {
       pdBuilder.addCommand(library);
-      pdBuilder.addCommand(env);
     }
     ProcessResult processResult;
     ProcessDescriptor processDescriptor = pdBuilder.redirectErrorStream(true)

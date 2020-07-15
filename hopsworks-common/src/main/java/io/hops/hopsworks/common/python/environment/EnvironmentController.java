@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -93,22 +92,22 @@ public class EnvironmentController {
   private static final Logger LOGGER = Logger.getLogger(EnvironmentController.class.getName());
   
   public void checkCondaEnabled(Project project, String pythonVersion) throws PythonException {
-    if (!project.getConda() || !pythonVersion.equals(project.getPythonVersion())) {
+    if (!ProjectUtils.isCondaEnabled(project) || !pythonVersion.equals(project.getPythonVersion())) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
   }
   
   public void checkCondaEnvExists(Project project, Users user) throws PythonException {
-    if (!project.getConda()) {
+    if (!ProjectUtils.isCondaEnabled(project)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
-    if (!project.getCondaEnv()) {
-      copyOnWriteCondaEnv(project, user);
+    if (project.getDockerImage().equals(settings.getBaseDockerImage())) {
+      createProjectDockerImage(project, user);
     }
   }
 
   public void synchronizeDependencies(Project project, boolean createBaseEnv) throws ServiceException {
-    String envName = projectUtils.getDockerImageName(project, true);
+    String envName = ProjectUtils.getDockerImageName(project, settings, false);
     Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
     if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
       defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project, true));
@@ -123,52 +122,22 @@ public class EnvironmentController {
     libraryController.addPythonDepsForProject(project, defaultEnvDeps);
   }
   
-  private Collection<PythonDep> createProjectInDb(Project project, String pythonVersion,
-    String environmentYml, Boolean installJupyter) throws ServiceException {
-    
-    if (environmentYml == null && pythonVersion.compareToIgnoreCase("2.7") != 0 && pythonVersion.
-      compareToIgnoreCase("3.5") != 0 && pythonVersion.
-      compareToIgnoreCase("3.6") != 0 && !pythonVersion.contains("X")) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.PYTHON_INVALID_VERSION,
-        Level.INFO, "pythonVersion: " + pythonVersion);
-    }
-    
-    List<PythonDep> all = new ArrayList<>();
-    enableConda(project);
-    return all;
-  }
-  
-  private void enableConda(Project project) {
-    if (project != null) {
-      project.setConda(true);
-      projectFacade.update(project);
-      projectFacade.flushEm();
-    }
-  }
-  
-  private void setCondaEnv(Project project, boolean condaEnv) {
-    project.setCondaEnv(condaEnv);
-    projectFacade.mergeProject(project);
-  }
-  
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void copyOnWriteCondaEnv(Project project, Users user) {
+  public void createProjectDockerImage(Project project, Users user) {
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, user,
       project.getPythonVersion(), null, false);
-    setCondaEnv(project, true);
+    project.setConda(true);
+    project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
+    project.setDockerImage(settings.getBaseDockerImage());
+    projectFacade.update(project);
   }
-  
-  /**
-   *
-   * @param proj
-   */
-  public void removeEnvironment(Project proj, Users user) {
-    commandsController.deleteCommandsForProject(proj);
-    if (proj.getCondaEnv()) {
-      condaEnvironmentRemove(proj, user);
-      setCondaEnv(proj, false);
-    }
-    removePythonForProject(proj);
+
+  public void removeEnvironment(Project project) {
+    commandsController.deleteCommandsForProject(project);
+    project.setPythonDepCollection(new ArrayList<>());
+    project.setConda(false);
+    project.setPythonVersion(null);
+    projectFacade.update(project);
   }
 
   /**
@@ -186,33 +155,13 @@ public class EnvironmentController {
     }
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
         user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj, pythonVersion, "", "defaults",
-        new Date(), arg, environmentYml, installJupyter, projectUtils.getDockerImageName(proj, true));
+        new Date(), arg, environmentYml, installJupyter);
     condaCommandFacade.save(cc);
   }
   
   private void condaEnvironmentRemove(Project proj, Users user) {
     condaEnvironmentOp(CondaOp.REMOVE, "", proj, user,
       "", null, false);
-  }
-    
-  public CondaCommands getOngoingEnvCreation(Project proj) {
-    List<CondaCommands> commands = condaCommandFacade.getCommandsForProject(proj);
-    for (CondaCommands command : commands) {
-      if ((
-          command.getOp().equals(CondaOp.CREATE)) && (command.getStatus().
-        equals(CondaStatus.NEW) ||
-        command.getStatus().equals(CondaStatus.ONGOING))) {
-        return command;
-      }
-    }
-    return null;
-  }
-
-  private void removePythonForProject(Project proj) {
-    proj.setPythonDepCollection(new ArrayList<>());
-    proj.setPythonVersion("");
-    proj.setConda(false);
-    projectFacade.update(proj);
   }
   
   public String findPythonVersion(String ymlFile) throws PythonException {
@@ -229,7 +178,7 @@ public class EnvironmentController {
     
   public String[] exportEnv(Project project, Users user, String projectRelativeExportPath)
       throws PythonException {
-    if (!project.getConda()) {
+    if (!ProjectUtils.isCondaEnabled(project)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
 
@@ -243,13 +192,14 @@ public class EnvironmentController {
     return result;
   }
   
-  public void createEnv(Project project, Users user, String version, boolean createBaseEnv) throws PythonException,
+  public void createEnv(Project project, boolean createBaseEnv) throws PythonException,
       ServiceException {
-    if (project.getConda() || project.getCondaEnv()) {
+    if (ProjectUtils.isCondaEnabled(project)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
-    createProjectInDb(project, version, null, false);
-    project.setPythonVersion(version);
+    project.setConda(true);
+    project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
+    project.setDockerImage(settings.getBaseDockerImage());
     projectFacade.update(project);
     synchronizeDependencies(project, createBaseEnv);
   }

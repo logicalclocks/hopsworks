@@ -107,8 +107,6 @@ import javax.persistence.ManyToMany;
   @NamedQuery(name = "Project.findByInodeId",
       query = "SELECT t FROM Project t WHERE t.inode.inodePK.parentId = :parentid "
       + "AND t.inode.inodePK.name = :name"),
-  @NamedQuery(name = "Project.findAllCondaEnabled",
-      query = "SELECT t FROM Project t where t.conda = true"),
   @NamedQuery(name = "Project.findByNameCaseInsensitive",
       query = "SELECT t FROM Project t where LOWER(t.name) = LOWER(:name)")})
 public class Project implements Serializable {
@@ -119,10 +117,6 @@ public class Project implements Serializable {
   private Boolean archived = false;
   @Column(name = "logs")
   private Boolean logs = false;
-  // conda_env indicates whether the user has customized his/her conda environment by installing/removing a library.
-  // If 'true' the user now has his/her own conda env.
-  @Column(name = "conda_env")
-  private Boolean condaEnv = false;
   @OneToMany(cascade = CascadeType.ALL,
       mappedBy = "project")
   private Collection<ProjectTeam> projectTeamCollection;
@@ -205,6 +199,10 @@ public class Project implements Serializable {
   @Column(name = "last_quota_update")
   @Temporal(TemporalType.TIMESTAMP)
   private Date lastQuotaUpdate;
+
+  @Size(max = 255)
+  @Column(name = "docker_image")
+  private String dockerImage;
 
   @JoinColumns({
     @JoinColumn(name = "inode_pid",
@@ -370,28 +368,12 @@ public class Project implements Serializable {
     return true;
   }
 
-  public Boolean getConda() {
-    return conda;
-  }
-
-  public void setConda(Boolean conda) {
-    this.conda = conda;
-  }
-
   public Boolean getArchived() {
     return archived;
   }
 
   public void setArchived(Boolean archived) {
     this.archived = archived;
-  }
-
-  public Boolean getCondaEnv() {
-    return condaEnv;
-  }
-
-  public void setCondaEnv(Boolean condaEnv) {
-    this.condaEnv = condaEnv;
   }
   
   public Boolean getLogs() {
@@ -549,5 +531,21 @@ public class Project implements Serializable {
   public String toString() {
     return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
         + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
+  }
+
+  public String getDockerImage() {
+    return dockerImage;
+  }
+
+  public void setDockerImage(String dockerImage) {
+    this.dockerImage = dockerImage;
+  }
+
+  public Boolean getConda() {
+    return conda;
+  }
+
+  public void setConda(Boolean conda) {
+    this.conda = conda;
   }
 }
