@@ -184,8 +184,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
           "true"));
       //To avoid deadlock in resource allocation this configuration is needed
       if(experimentType == ExperimentType.DISTRIBUTED_TRAINING) {
-        if(distributionStrategy == DistributionStrategy.COLLECTIVE_ALL_REDUCE ||
-          distributionStrategy == DistributionStrategy.MIRRORED) {
+        if(distributionStrategy == DistributionStrategy.MULTI_WORKER_MIRRORED) {
           sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
             new ConfigProperty(
               Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
@@ -227,8 +226,8 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         }
         //These values were set based on:
         //https://docs.nvidia.com/deeplearning/nccl/archives/nccl_256/nccl-developer-guide/docs/env.html
-        addToSparkEnvironment(sparkProps, "NCCL_SOCKET_NTHREADS", "2", HopsUtils.OVERWRITE);
-        addToSparkEnvironment(sparkProps, "NCCL_NSOCKS_PERTHREAD", "8", HopsUtils.OVERWRITE);
+        addToSparkEnvironment(sparkProps, Settings.NCCL_SOCKET_NTHREADS, "2", HopsUtils.OVERWRITE);
+        addToSparkEnvironment(sparkProps, Settings.NCCL_NSOCKS_PERTHREAD, "8", HopsUtils.OVERWRITE);
 
       } else if(experimentType == ExperimentType.PARALLEL_EXPERIMENTS) {
         sparkProps.put(Settings.SPARK_DYNAMIC_ALLOC_MIN_EXECS_ENV,
