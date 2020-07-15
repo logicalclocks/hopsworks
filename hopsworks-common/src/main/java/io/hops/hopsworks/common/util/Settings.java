@@ -202,7 +202,7 @@ public class Settings implements Serializable {
       = "kafka_num_partitions";
   private static final String VARIABLE_KAFKA_NUM_REPLICAS = "kafka_num_replicas";
   private static final String VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD = "hopsworks_master_password";
-  private static final String VARIABLE_CUDA_DIR = "conda_dir";
+
   private static final String VARIABLE_ANACONDA_USER = "anaconda_user";
   private static final String VARIABLE_ANACONDA_DIR = "anaconda_dir";
   private static final String VARIABLE_ANACONDA_ENABLED = "anaconda_enabled";
@@ -346,6 +346,8 @@ public class Settings implements Serializable {
   /*-----------------------Yarn Docker------------------------*/
   private final static String VARIABLE_YARN_RUNTIME = "yarn_runtime";
   private final static String VARIABLE_DOCKER_MOUNTS = "docker_mounts";
+  private final static String VARIABLE_DOCKER_BASE_IMAGE = "docker_base_image";
+  private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_DOCKER_REGISTRY_NAME = "docker_registry_name";
   private final static String VARIABLE_DOCKER_REGISTRY_PORT = "docker_registry_port";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
@@ -720,6 +722,9 @@ public class Settings implements Serializable {
       
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
+      DOCKER_BASE_IMAGE = setStrVar(VARIABLE_DOCKER_BASE_IMAGE, DOCKER_BASE_IMAGE);
+      DOCKER_BASE_IMAGE_PYTHON_VERSION = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION,
+          DOCKER_BASE_IMAGE_PYTHON_VERSION);
       DOCKER_REGISTRY_NAME = setStrVar(VARIABLE_DOCKER_REGISTRY_NAME, DOCKER_REGISTRY_NAME);
       DOCKER_REGISTRY_PORT = setIntVar(VARIABLE_DOCKER_REGISTRY_PORT, DOCKER_REGISTRY_PORT);
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
@@ -1711,12 +1716,12 @@ public class Settings implements Serializable {
    *
    * @return conda dir
    */
-  public String getAnacondaProjectDir(Project project) {
+  public String getAnacondaProjectDir() {
     return getAnacondaDir() + File.separator + "envs" + File.separator + condaEnvName;
   }
   
   //TODO(Theofilos): Used by Flink. Will be removed as part of refactoring *YarnRunnerBuilders.
-  public String getCurrentCondaEnvironment(Project project) {
+  public String getCurrentCondaEnvironment() {
     return condaEnvName;
   }
   
@@ -3679,13 +3684,27 @@ public class Settings implements Serializable {
   private static String DOCKER_MOUNTS = 
       "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/flink";
   
-  public synchronized String getDockerMounts(){
+  public synchronized String getDockerMounts() {
     checkCache();
     String result = "";
     for(String mountPoint: DOCKER_MOUNTS.split(",")){
       result += mountPoint + ":" + mountPoint + ":ro,";
     }
     return result.substring(0, result.length() - 1);
+  }
+
+  private String DOCKER_BASE_IMAGE = "python36";
+
+  public synchronized String getBaseDockerImage() {
+    checkCache();
+    return DOCKER_BASE_IMAGE + ":" + HOPSWORKS_VERSION;
+  }
+
+  private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.6";
+
+  public synchronized String getDockerBaseImagePythonVersion() {
+    checkCache();
+    return DOCKER_BASE_IMAGE_PYTHON_VERSION;
   }
   
   private String DOCKER_REGISTRY_NAME = "localhost";

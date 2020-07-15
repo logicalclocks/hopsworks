@@ -193,7 +193,7 @@ public class JupyterConfigFilesGenerator {
               .setHdfsUser(hdfsUser)
               .setHadoopHome(settings.getHadoopSymbolicLinkDir())
               .setHadoopVersion(settings.getHadoopVersion())
-              .setAnacondaHome(settings.getAnacondaProjectDir(project))
+              .setAnacondaHome(settings.getAnacondaProjectDir())
               .setSecretDirectory(settings.getStagingDir() + Settings.PRIVATE_DIRS + js.getSecret())
               .setProject(project)
               .setHiveEndpoints(hiveController.getHiveServerInternalEndpoint())

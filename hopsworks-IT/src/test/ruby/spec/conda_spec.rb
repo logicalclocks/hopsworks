@@ -130,9 +130,10 @@ describe "On #{ENV['OS']}" do
             end
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
+            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".0")).to be false
+
             # There should be no CondaCommands in the database
-            expect(CondaCommands.find_by(docker_image: @project[:projectname].downcase)).to be nil
+            expect(CondaCommands.find_by(project_id: @project[:id])).to be nil
 
             # Install a library to create the new environment
             install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', conda_channel)
@@ -145,21 +146,18 @@ describe "On #{ENV['OS']}" do
             expect(json_body[:count]).to be <= num_hosts
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
             get_env_commands(@project[:id], python_version)
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be true
+            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".0")).to be true
+            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".1")).to be true
+            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".2")).to be false
+            expect(check_if_img_exists_locally(@project[:docker_image])).to be true
 
-            elastic_rest do
-              # Elasticsearch index should have been created for this project
-              index_name = "#{@project[:projectname].downcase}_kagent-#{es_index_date_suffix}"
-              elastic_head "#{index_name}"
-              expect_status(200)
-            end
           end
 
           it 'search library (conda)' do
@@ -286,7 +284,7 @@ describe "On #{ENV['OS']}" do
             expect(json_body[:count]).to be == 1
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
             get_library_commands(@project[:id], python_version, 'imageio')
@@ -297,7 +295,7 @@ describe "On #{ENV['OS']}" do
             expect_status(201)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
           end
 
@@ -326,7 +324,7 @@ describe "On #{ENV['OS']}" do
             expect_status(204)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
           end
 
@@ -336,26 +334,27 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
           end
 
           it 'remove env' do
+            skip "will be reimplemented shortly"
             @project = create_env_and_update_project(@project, python_version)
             delete_env(@project[:id], python_version)
             expect_status(204)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
             if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
-            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
+            expect(check_if_img_exists_locally(@project[:docker_image])).to be false
           end
 
-          it 'destroy anaconda should not delete base environments' do
+          it 'destroy anaconda should not delete base docker image' do
             create_env(@project, python_version)
             expect_status(201)
             if not conda_exists(python_version)
@@ -363,14 +362,14 @@ describe "On #{ENV['OS']}" do
             end
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_env_exists_locally(@project[:projectname].downcase)).to be false
+            expect(check_if_img_exists_locally("python36:" + getVar('hopsworks_version').value)).to be true
 
             delete_env(@project[:id], python_version)
             expect_status(204)
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
-            expect(check_if_env_exists_locally("python36")).to be true
+            expect(check_if_img_exists_locally("python36:" + getVar('hopsworks_version').value)).to be true
           end
 
           it 'create environment from yml' do
@@ -381,7 +380,7 @@ describe "On #{ENV['OS']}" do
             expect_status(201)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
             @project = get_project_by_name(@project[:projectname])
@@ -398,7 +397,7 @@ describe "On #{ENV['OS']}" do
             delete_env(@project[:id], python_version)
 
             wait_for do
-              CondaCommands.find_by(docker_image: @project[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: @project[:id]).nil?
             end
 
             # Create a second project with Anaconda enabled
@@ -410,9 +409,9 @@ describe "On #{ENV['OS']}" do
             install_library(project2[:id], python_version, 'paramiko', 'conda', '2.4.2', conda_channel)
             expect_status(201)
             wait_for do
-              CondaCommands.find_by(docker_image: project2[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: project2[:id]).nil?
             end
-            expect(check_if_env_exists_locally(project2[:projectname].downcase)).to be true
+            expect(check_if_img_exists_locally(project2[:docker_image])).to be true
 
             # Disable Anaconda for project2 directly in the database
             # so it does not send a command to kagent
@@ -422,16 +421,16 @@ describe "On #{ENV['OS']}" do
             tmp_proj.save
 
             wait_for do
-              CondaCommands.find_by(docker_image: project2[:projectname].downcase).nil?
+              CondaCommands.find_by(project_id: project2[:id]).nil?
             end
 
             trigger_conda_gc
 
             wait_for do
-              check_if_env_exists_locally(project2[:projectname].downcase) == false
+              check_if_img_exists_locally(project2[:docker_image]) == false
             end
 
-            expect(check_if_env_exists_locally(project2[:projectname].downcase)).to be false
+            expect(check_if_img_exists_locally(project2[:docker_image])).to be false
           end
         end
       end

@@ -64,7 +64,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         Settings.SPARK_YARN_APPMASTER_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, new ConfigProperty(
         Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, true)));
+            settings, false)));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 
@@ -72,13 +72,13 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         Settings.SPARK_EXECUTOR_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_IMAGE, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, true)));
+            settings, false)));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,
-      settings.getAnacondaProjectDir(project) + "/bin/python"));
+      settings.getAnacondaProjectDir() + "/bin/python"));
 
     //https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     //Needs to be set for CUDA libraries to not initialize GPU context
@@ -151,7 +151,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     }
     addToSparkEnvironment(sparkProps, "REST_ENDPOINT", hopsworksRestEndpoint, HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps,
-      Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python",
+      Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir() + "/bin/python",
             HopsUtils.IGNORE);
     addToSparkEnvironment(sparkProps, "HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()),
             HopsUtils.IGNORE);

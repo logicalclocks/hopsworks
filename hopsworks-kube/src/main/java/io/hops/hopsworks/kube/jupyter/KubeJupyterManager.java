@@ -182,7 +182,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           deploymentName,
           kubeProjectUser,
           jupyterPaths,
-          settings.getAnacondaProjectDir(project),
+          settings.getAnacondaProjectDir(),
           pythonKernelName,
           secretDir,
           jupyterPaths.getCertificatesDir(),
@@ -272,7 +272,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
     containers.add(new ContainerBuilder()
       .withName(JUPYTER)
-      .withImage(projectUtils.getFullDockerImageName(project, true))
+      .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withReadinessProbe(
         new ProbeBuilder()

@@ -28,6 +28,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -97,7 +98,7 @@ public class EnvironmentResource {
   }
   
   private ResourceRequest getResourceRequest(EnvironmentExpansionBeanParam expansions) throws PythonException {
-    if (!project.getConda()) {
+    if (!ProjectUtils.isCondaEnabled(project)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ENVIRONMENTS);
@@ -159,7 +160,7 @@ public class EnvironmentResource {
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:
-        environmentController.createEnv(project, user, version, false);
+        environmentController.createEnv(project, false);
         dto = buildEnvDTO(uriInfo,null, version);
         return Response.created(dto.getHref()).entity(dto).build();
       default:
@@ -168,7 +169,7 @@ public class EnvironmentResource {
     }
   }
 
-  @ApiOperation(value = "Remove the python environment with the specified version" + " for this project",
+  @ApiOperation(value = "Remove the python environment with the specified version for this project",
       response = EnvironmentDTO.class)
   @DELETE
   @Path("{version}")
@@ -176,8 +177,7 @@ public class EnvironmentResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@PathParam("version") String version, @Context SecurityContext sc) {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    environmentController.removeEnvironment(project, user);
+    environmentController.removeEnvironment(project);
     return Response.noContent().build();
   }
 

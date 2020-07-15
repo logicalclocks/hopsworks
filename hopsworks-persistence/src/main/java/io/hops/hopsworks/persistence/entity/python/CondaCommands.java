@@ -132,12 +132,6 @@ public class CondaCommands implements Serializable {
   @JoinColumn(name = "user_id", referencedColumnName = "uid")
   @ManyToOne(optional = false)
   private Users userId;
-  @Basic(optional = false)
-  @NotNull
-  @Size(min = 1,
-          max = 255)
-  @Column(name = "docker_image")
-  private String dockerImage;
   @Size(max = 255)
   @Column(name = "channel_url")
   private String channelUrl;
@@ -196,8 +190,7 @@ public class CondaCommands implements Serializable {
 
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
-                       String dockerImage) {
+                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
     }
@@ -214,7 +207,6 @@ public class CondaCommands implements Serializable {
     this.arg = arg;
     this.environmentYml = environmentYml;
     this.installJupyter = installJupyter;
-    this.dockerImage = dockerImage;
   }
 
   public Integer getId() {
@@ -320,14 +312,6 @@ public class CondaCommands implements Serializable {
 
   public void setInstallJupyter(Boolean installJupyter) {
     this.installJupyter = installJupyter;
-  }
-
-  public String getDockerImage() {
-    return dockerImage;
-  }
-
-  public void setDockerImage(String dockerImage) {
-    this.dockerImage = dockerImage;
   }
 
   public String getErrorMsg() {

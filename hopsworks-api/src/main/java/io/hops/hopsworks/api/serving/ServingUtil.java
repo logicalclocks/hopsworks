@@ -21,6 +21,7 @@ import io.hops.hopsworks.common.dao.serving.ServingFacade;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.serving.ServingWrapper;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -116,8 +117,7 @@ public class ServingUtil {
     }
     
     //Check that python environment is activated
-    boolean enabled = project.getConda();
-    if(!enabled){
+    if(!ProjectUtils.isCondaEnabled(project)){
       throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }

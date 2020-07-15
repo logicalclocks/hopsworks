@@ -169,7 +169,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         String kubeProjectUser = kubeClientService.getKubeDeploymentName(job.getProject(), user);
         String secretsName = kubeClientService.getKubeDeploymentName(execution) + JWT_SUFFIX;
         String deploymentName = PYTHON_PREFIX + kubeClientService.getKubeDeploymentName(execution);
-        String anacondaProjectDir = settings.getAnacondaProjectDir(job.getProject());
+        String anacondaProjectDir = settings.getAnacondaProjectDir();
         jobsJWTManager.materializeJWT(user, job.getProject(), execution);
         kubeClientService.createJob(job.getProject(),
           buildJob(
@@ -248,7 +248,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
             ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
     jobEnv.put("REST_ENDPOINT", "https://" + hopsworks.getName() + ":" + hopsworks.getPort());
-    jobEnv.put(Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir(project) + "/bin/python");
+    jobEnv.put(Settings.SPARK_PYSPARK_PYTHON, settings.getAnacondaProjectDir() + "/bin/python");
     jobEnv.put("HOPSWORKS_PROJECT_ID", Integer.toString(project.getId()));
     jobEnv.put("REQUESTS_VERIFY", String.valueOf(settings.getRequestsVerify()));
     jobEnv.put( "DOMAIN_CA_TRUSTSTORE",
@@ -370,7 +370,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     //Add Job container
     containers.add(new ContainerBuilder()
       .withName(PYTHON)
-      .withImage(projectUtils.getFullDockerImageName(project, true))
+      .withImage(projectUtils.getFullDockerImageName(project, false))
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withResources(resourceRequirements)
       .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())

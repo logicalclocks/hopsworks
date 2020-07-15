@@ -60,38 +60,41 @@ public class ProjectUtils {
     }
     return false;
   }
-    
-  public String getFullDockerImageName(Project project, boolean canBeDefault){
-    return getFullDockerImageName(project, settings, canBeDefault);
+
+  public String getFullDockerImageName(Project project, boolean useBase) {
+    return getFullDockerImageName(project, settings, useBase);
   }
   
-  public static String getFullDockerImageName(Project project, Settings settings, boolean canBeDefault){
-    String imageName = getDockerImageName(project, canBeDefault);
+  public static String getFullDockerImageName(Project project, Settings settings, boolean useBase) {
+    String imageName = getDockerImageName(project, settings, useBase);
     return settings.getRegistry() + "/" + imageName;
   }
   
-  public static String getDockerImageName(Project project, boolean canBeDefault){
-    String imageName = project.getName().toLowerCase();
-    
-    if (project.getConda() && !project.getCondaEnv() && canBeDefault) {
-      if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
-        imageName = "python36";
-      } else {
-        throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
-      }
-    }    
-    return imageName;
-  }
-  
-  public String getFullDockerImageName(String imageName){
-    return settings.getRegistry() + "/" + imageName;
-  }
-  
-  public String getCurrentCondaBaseEnvironment(Project project) {
-    if (project.getPythonVersion().compareToIgnoreCase("3.6") == 0) {
-      return "python36";
+  public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
+    if(useBase && isCondaEnabled(project)) {
+      return settings.getBaseDockerImage();
     } else {
-      throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
+      if(!isCondaEnabled(project)) {
+        throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
+      } else {
+        return project.getDockerImage();
+      }
     }
+  }
+  
+  public String getFullDockerImageName(String imageName) {
+    return settings.getRegistry() + "/" + imageName;
+  }
+
+  public static boolean isCondaEnabled(Project project) {
+    return project.getConda();
+  }
+
+  public String getInitialDockerImageName(Project project) {
+    return project.getName().toLowerCase() + ":" + settings.getHopsworksVersion() + ".0";
+  }
+
+  public String getFullBaseImageName() {
+    return settings.getRegistry() + "/" + settings.getBaseDockerImage();
   }
 }

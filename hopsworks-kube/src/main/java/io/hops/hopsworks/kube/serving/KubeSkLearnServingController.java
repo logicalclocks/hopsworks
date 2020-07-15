@@ -149,7 +149,7 @@ public class KubeSkLearnServingController {
         .build();
 
     HostPathVolumeSource pythonEnvHPSource = new HostPathVolumeSourceBuilder()
-        .withPath(settings.getAnacondaProjectDir(project))
+        .withPath(settings.getAnacondaProjectDir())
         .build();
 
     Volume pythonEnv = new VolumeBuilder()

@@ -120,7 +120,7 @@ public class JupyterController {
         .addCommand(prog)
         .addCommand(notebookPath)
         .addCommand(hdfsUsername)
-        .addCommand(settings.getAnacondaProjectDir(project))
+        .addCommand(settings.getAnacondaProjectDir())
         .addCommand(pyPath)
         .addCommand(conversionDir.getAbsolutePath())
         .addCommand(notebookConversion.name())
