@@ -18,6 +18,9 @@ describe "On #{ENV['OS']}" do
   describe "maggy" do
     describe "maggy driver registration endpoint" do
       context "not logged in" do
+        before(:all) do
+          reset_session
+        end
         it "should not be able to register a maggy driver" do
           post "#{ENV['HOPSWORKS_API']}/maggy/drivers", {appId: "42", hostIp: "127.0.3.5", port: 12345,
                                                          secret: "magster"}
