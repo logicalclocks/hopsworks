@@ -267,17 +267,15 @@ public class ProjectFacade extends AbstractFacade<Project> {
     em.merge(project);
   }
 
-  public void enableConda(Project project) {
-    if (project != null) {
-      project.setConda(true);
-    }
-    em.merge(project);
-  }
-
   public void enableLogs(Project project) {
     if (project != null) {
       project.setLogs(true);
     }
+    em.merge(project);
+  }
+
+  public void setDockerImage(Project project, String dockerImage) {
+    project.setDockerImage(dockerImage);
     em.merge(project);
   }
 
@@ -348,15 +346,5 @@ public class ProjectFacade extends AbstractFacade<Project> {
   public void changeKafkaQuota(Project project, int numTopics) {
     project.setKafkaMaxNumTopics(numTopics);
     em.merge(project);
-  }
-  
-  /**
-   * Find all Projects which are Conda enabled
-   *
-   * @return list of Conda enabled projects
-   */
-  public List<Project> findAllCondaEnabled() {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findAllCondaEnabled", Project.class);
-    return query.getResultList();
   }
 }

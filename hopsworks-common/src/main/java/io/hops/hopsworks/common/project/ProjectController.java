@@ -435,12 +435,12 @@ public class ProjectController {
         elasticController.deleteProjectSavedObjects(projectName);
         LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 9 (elastic cleanup): {0}",
             System.currentTimeMillis() - startTime);
-      }catch (ElasticException ex){
+      } catch (ElasticException ex){
         LOGGER.log(Level.FINE, "Error while cleaning old project indices", ex);
       }
   
       try {
-        environmentController.createEnv(project, project.getOwner(), "3.6", true);//TODO: use variables for version
+        environmentController.createEnv(project, true);
       } catch (PythonException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,
@@ -2520,7 +2520,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void removeAnacondaEnv(Project project) {
-    environmentController.removeEnvironment(project, project.getOwner());
+    environmentController.removeEnvironment(project);
   }
 
   @TransactionAttribute(TransactionAttributeType.NEVER)

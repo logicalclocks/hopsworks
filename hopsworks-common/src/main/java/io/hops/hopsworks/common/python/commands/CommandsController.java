@@ -35,12 +35,10 @@ import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -67,9 +65,6 @@ public class CommandsController {
   @EJB
   private ProjectUtils projectUtils;
   
-  @Resource(lookup = "concurrent/kagentExecutorService")
-  ManagedExecutorService kagentExecutorService;
-  
   public void deleteCommands(Project project, String lib) {
     condaCommandFacade.deleteCommandsForLibrary(project, lib);
   }
@@ -78,22 +73,20 @@ public class CommandsController {
     condaCommandFacade.deleteCommandsForEnvironment(project);
   }
   
-  public List<CondaCommands> retryFailedCondaEnvOps(Project project) {
+  public void retryFailedCondaEnvOps(Project project) {
     List<CondaCommands> commands = condaCommandFacade.getFailedEnvCommandsForProject(project);
     for (CondaCommands cc : commands) {
       cc.setStatus(CondaStatus.NEW);
       condaCommandFacade.update(cc);
     }
-    return commands;
   }
     
-  public List<CondaCommands> retryFailedCondaLibraryOps(Project project, String library) {
+  public void retryFailedCondaLibraryOps(Project project, String library) {
     List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
     for (CondaCommands cc : commands) {
       cc.setStatus(CondaStatus.NEW);
       condaCommandFacade.update(cc);
     }
-    return commands;
   }
   
   public void deleteCommandsForProject(Project proj) {
@@ -133,7 +126,7 @@ public class CommandsController {
 
       CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
           CondaStatus.NEW, installType, proj, lib, version, channelUrl,
-          new Date(), "", null, false, projectUtils.getDockerImageName(proj, true));
+          new Date(), "", null, false);
       condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",
@@ -142,17 +135,13 @@ public class CommandsController {
     return dep;
   }
   
-  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
-      CondaInstallType installType, String arg, Project p,
-      Users user, CondaOp opType, String lib, String version, String channel) throws ServiceException {
-    updateCondaCommandStatus(commandId, condaStatus, installType, arg, p, user, opType, lib, version,
-        channel, null);
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg,
+                                       CondaOp opType) throws ServiceException {
+    updateCondaCommandStatus(commandId, condaStatus, arg, opType, null);
   }
   
-  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus,
-    CondaInstallType installType, String arg, Project p,
-      Users user, CondaOp opType, String lib, String version, String channel, String errorMessage) throws
-      ServiceException {
+  public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg, CondaOp opType,
+                                       String errorMessage) throws ServiceException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -163,35 +152,20 @@ public class CommandsController {
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
         if (!CondaOp.isEnvOp(opType)) {
-          Collection<CondaCommands> ongoingCommands = p.getCondaCommandsCollection();
-          boolean finished = true;
-          for (CondaCommands c : ongoingCommands) {
-            if (c.getOp().compareTo(opType) == 0
-              && c.getUserId().getUid().compareTo(user.getUid()) == 0
-              && c.getLib().compareTo(lib) == 0
-              && c.getVersion().compareTo(version) == 0
-              && c.getInstallType().name().compareTo(installType.name()) == 0
-              && c.getChannelUrl().compareTo(channel) == 0) {
-              finished = false;
-              break;
-            }
-          }
-          if (finished) {
-            PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
+          PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
               cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
-            Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+          Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
 
-            if (opType.equals(CondaOp.INSTALL)) {
-              deps.remove(dep);
-              deps.add(dep);
-            } else if (opType.equals(CondaOp.UNINSTALL)) {
-              deps.remove(dep);
-            }
-            cc.getProjectId().setPythonDepCollection(deps);
-            projectFacade.update(cc.getProjectId());
+          if (opType.equals(CondaOp.INSTALL)) {
+            deps.remove(dep);
+            deps.add(dep);
+          } else if (opType.equals(CondaOp.UNINSTALL)) {
+            deps.remove(dep);
           }
+          cc.getProjectId().setPythonDepCollection(deps);
+          projectFacade.update(cc.getProjectId());
         }
-      } else {
+      } else if(condaStatus == CondaStatus.FAILED) {
         cc.setStatus(condaStatus);
         cc.setArg(arg);
         cc.setErrorMsg(errorMessage);

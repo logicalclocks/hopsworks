@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.library;
 
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.python.commands.CommandsController;
@@ -26,6 +27,7 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
@@ -70,6 +72,8 @@ public class LibraryInstaller {
   private ProjectUtils projectUtils;
   @EJB
   private CondaCommandFacade condaCommandFacade;
+  @EJB
+  private ProjectFacade projectFacade;
   @EJB
   private CommandsController commandsController;
   @EJB
@@ -123,13 +127,11 @@ public class LibraryInstaller {
           } catch (Throwable ex) {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
-                cc.getId(), CondaStatus.FAILED, cc.getInstallType(), cc.getArg(), cc.getProjectId(), cc.getUserId(),
-                cc.getOp(), cc.getLib(), cc.getVersion(), cc.getChannelUrl(), ex.toString());
+                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.toString());
             continue;
           }
           commandsController.updateCondaCommandStatus(
-              cc.getId(), CondaStatus.SUCCESS, cc.getInstallType(), cc.getArg(), cc.getProjectId(), cc.getUserId(),
-              cc.getOp(), cc.getLib(), cc.getVersion(), cc.getChannelUrl());
+              cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
         } catch (ServiceException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId());
         }
@@ -144,17 +146,20 @@ public class LibraryInstaller {
     baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
     BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile));
-    writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()));
+    writer.write("FROM " + projectUtils.getFullBaseImageName());
     writer.close();
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
+
+    Project project = cc.getProjectId();
+    String initialDockerImage = projectUtils.getInitialDockerImageName(project);
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
+        .addCommand(settings.getRegistry() + "/" + initialDockerImage)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -166,6 +171,9 @@ public class LibraryInstaller {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
+      } else {
+        project.setDockerImage(initialDockerImage);
+        projectFacade.update(project);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -204,7 +212,7 @@ public class LibraryInstaller {
     BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile));
     writer.write("# syntax=docker/dockerfile:experimental");
     writer.newLine();
-    writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()));
+    writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false));
     writer.newLine();
     writer.write(
         "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
@@ -212,11 +220,11 @@ public class LibraryInstaller {
     switch (cc.getInstallType()) {
       case CONDA:
         writer.write(settings.getAnacondaDir() + "/bin/conda install -y -n " +
-            settings.getCurrentCondaEnvironment(cc.getProjectId()) + " -c " + cc.getChannelUrl() + " " + cc.
+            settings.getCurrentCondaEnvironment() + " -c " + cc.getChannelUrl() + " " + cc.
             getLib() + "=" + cc.getVersion());
         break;
       case PIP:
-        writer.write(settings.getAnacondaProjectDir(cc.getProjectId()) + "/bin/pip install --upgrade " +
+        writer.write(settings.getAnacondaProjectDir() + "/bin/pip install --upgrade " +
             cc.getLib() + "==" + cc.getVersion());
         break;
       case ENVIRONMENT:
@@ -228,12 +236,14 @@ public class LibraryInstaller {
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
+    String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
+
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
+        .addCommand(settings.getRegistry() + "/" + nextDockerImageName)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -245,6 +255,10 @@ public class LibraryInstaller {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
+      } else {
+        Project project = cc.getProjectId();
+        project.setDockerImage(nextDockerImageName);
+        projectFacade.update(project);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -259,14 +273,14 @@ public class LibraryInstaller {
     baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
     BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile));
-    writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getDockerImage()) + "\n");
+    writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false) + "\n");
     switch (cc.getInstallType()) {
       case CONDA:
         writer.write("RUN " + settings.getAnacondaDir() + "/bin/conda remove -y -n " +
-            settings.getCurrentCondaEnvironment(cc.getProjectId()) + " " + cc.getLib() + "\n");
+            settings.getCurrentCondaEnvironment() + " " + cc.getLib() + "\n");
         break;
       case PIP:
-        writer.write("RUN " + settings.getAnacondaProjectDir(cc.getProjectId()) + "/bin/pip uninstall -y " +
+        writer.write("RUN " + settings.getAnacondaProjectDir() + "/bin/pip uninstall -y " +
             cc.getLib() + "\n");
         break;
       case ENVIRONMENT:
@@ -278,12 +292,14 @@ public class LibraryInstaller {
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
+    String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
+
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
+        .addCommand(settings.getRegistry() + "/" + nextDockerImageName)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -295,6 +311,10 @@ public class LibraryInstaller {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
+      } else {
+        Project project = cc.getProjectId();
+        project.setDockerImage(nextDockerImageName);
+        projectFacade.update(project);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -337,7 +357,7 @@ public class LibraryInstaller {
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("export")
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), true))
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
         .redirectErrorStream(true)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
@@ -381,6 +401,14 @@ public class LibraryInstaller {
       deps.add(pyDep);
     }
     return deps;
+  }
+
+  private String getNextDockerImageName(Project project) {
+    String dockerImage = project.getDockerImage();
+    int indexOfLastDigit = dockerImage.lastIndexOf(".");
+    int currentVersion = Integer.parseInt(dockerImage.substring(indexOfLastDigit + 1, dockerImage.length()));
+    int nextVersion = currentVersion + 1;
+    return dockerImage.substring(0, indexOfLastDigit) + "." + nextVersion;
   }
 
   private static class CommandsComparator<T> implements Comparator<T> {
