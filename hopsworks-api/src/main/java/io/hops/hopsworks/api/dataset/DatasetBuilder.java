@@ -17,25 +17,23 @@ package io.hops.hopsworks.api.dataset;
 
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeBuilder;
 import io.hops.hopsworks.api.dataset.inode.attribute.InodeAttributeDTO;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.permission.FsPermission;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -114,15 +112,16 @@ public class DatasetBuilder {
       dto.setSearchable(dataset.isSearchable());
       dto.setDatasetType(dataset.getDsType());
       dto.setShared(dataset.isShared(project));
-      String permission = FsPermission.createImmutable(dataset.getInode().getPermission()).toString();
-      dto.setPermission(DatasetPermissions.fromPermissionString(permission));
+      dto.setPermission(dataset.getPermission());
       dto.setAccepted(true);
       dto.setSharedWith(dataset.getDatasetSharedWithCollection().size());
       if (dto.isShared()) {
         DatasetSharedWith sharedWith = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
-        if (sharedWith != null) {
-          dto.setAccepted(sharedWith.getAccepted());
+        if (sharedWith == null) {
+          throw new IllegalStateException("Shared dataset not found.");
         }
+        dto.setAccepted(sharedWith.getAccepted());
+        dto.setPermission(sharedWith.getPermission());
         dto.setName(dataset.getProject().getName() + Settings.SHARED_FILE_SEPARATOR + dataset.getName());
         dto.setAttributes(inodeAttributeBuilder.build(new InodeAttributeDTO(), resourceRequest, dataset.getInode(),
           null, null));//if shared parent and owner not this project
@@ -149,7 +148,7 @@ public class DatasetBuilder {
       List<DatasetSharedWith> dsSharedWith = datasetSharedWithFacade.findByDataset(dataset);
       List<ProjectDTO> projectDTOS = new ArrayList<>();
       for(DatasetSharedWith datasetSharedWith : dsSharedWith) {
-        projectDTOS.add(new ProjectDTO(datasetSharedWith.getProject()));
+        projectDTOS.add(new ProjectDTO(datasetSharedWith.getProject(), datasetSharedWith.getPermission()));
       }
       dto.setProjectsSharedWith(projectDTOS);
     }

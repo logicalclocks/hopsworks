@@ -58,6 +58,7 @@ import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -126,8 +127,7 @@ public class ProjectMembersService {
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response addMembers(MembersDTO members, @Context SecurityContext sc) throws KafkaException,
     ProjectException, UserException, FeaturestoreException {
 
@@ -170,20 +170,21 @@ public class ProjectMembersService {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateRoleByEmail(@PathParam("email") String email,
-                                    @FormParam("role") String role,
-                                    @Context SecurityContext sc)
-      throws ProjectException, UserException, FeaturestoreException {
+  public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
+      @Context SecurityContext sc) throws ProjectException, UserException, FeaturestoreException, IOException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
     if (email == null) {
       throw new IllegalArgumentException("Email was not provided.");
     }
-    if (role == null) {
+    if (role == null || !ProjectRoleTypes.isAllowedRole(role)) {
       throw new IllegalArgumentException("Role was not provided.");
     }
-    projectController.updateMemberRole(project, user, email, role);
+    if (project.getOwner().getEmail().equals(email)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
+    }
+    projectController.updateMemberRole(project, user, email, ProjectRoleTypes.fromString(role).getRole());
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }

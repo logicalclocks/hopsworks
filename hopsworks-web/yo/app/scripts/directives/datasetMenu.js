@@ -30,6 +30,7 @@ angular.module('hopsWorksApp').directive('datasetMenu', function() {
             detachTemplate: '&',
             showManifest: '&',
             share: '&',
+            sharedWith: '&',
             shareWithCluster: '&',
             shareWithHops: '&',
             unshare: '&',

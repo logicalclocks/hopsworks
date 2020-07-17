@@ -69,6 +69,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String UNSHARED_DATA = " unshared dataset ";
   public static final String NEW_MEMBER = " added a member ";
   public static final String CHANGE_ROLE = " changed the role of ";
+  public static final String CHANGE_DATASET_PERMISSION = " changed dataset permission ";
+  public static final String CHANGE_DATASET_SHARE_PERMISSION = " changed dataset share permission ";
   public static final String REMOVED_MEMBER = " removed team member ";
   public static final String RAN_JOB = " ran a job named ";
   public static final String ADDED_SERVICE = " added new service ";
@@ -90,9 +92,6 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       "with name: ";
   public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for " +
       "the featurestore with name: ";
-  // Flag constants
-  public static final String FLAG_PROJECT = "PROJECT";
-  public static final String FLAG_DATASET = "DATASET";
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;

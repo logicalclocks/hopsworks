@@ -69,6 +69,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -157,21 +158,21 @@ public class DelaWorkerController {
     delaDatasetCtrl.unshareFromHops(project, dataset);
   }
 
-  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException,
-      DatasetException {
+  public void unshareFromHopsAndClean(Project project, Dataset dataset, Users user) throws DelaException, IOException,
+    DatasetException {
     unshareFromHops(project, dataset, user);
-    delaDatasetCtrl.delete(project, dataset);
+    delaDatasetCtrl.delete(project, dataset, user);
   }
   
   public ManifestJSON startDownload(Project project, Users user, HopsworksTransferDTO.Download downloadDTO)
-    throws DelaException, DatasetException, ProvenanceException {
+    throws DelaException, DatasetException, ProvenanceException, IOException {
     delaStateCtrl.checkDelaAvailable();
     Dataset dataset = delaDatasetCtrl.download(project, user, downloadDTO.getPublicDSId(), downloadDTO.getName());
 
     try {
       delaCtrlStartDownload(project, dataset, user, downloadDTO);
     } catch (DelaException tpe) {
-      delaDatasetCtrl.delete(project, dataset);
+      delaDatasetCtrl.delete(project, dataset, user);
       throw tpe;
     }
 

@@ -188,10 +188,10 @@ describe "On #{ENV['OS']}" do
                                 "#{projectname}__Resources", 750, "#{projectname}")
 
         dsname = "Jupyter"
-        share_dataset(project, dsname, @project[:projectname], "")
+        share_dataset(project, dsname, @project[:projectname], permission: "EDITABLE")
         expect_status(204)
 
-        accept_dataset(@project, "/Projects/#{projectname}/#{dsname}", "&type=DATASET")
+        accept_dataset(@project, "/Projects/#{projectname}/#{dsname}", datasetType: "&type=DATASET")
         expect_status(204)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6, baseDir="/Projects/#{project[:projectname]}/#{dsname}")

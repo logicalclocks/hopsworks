@@ -18,8 +18,6 @@ package io.hops.hopsworks.api.dataset;
 import io.hops.hopsworks.api.dataset.inode.InodeBeanParam;
 import io.hops.hopsworks.api.dataset.inode.InodeBuilder;
 import io.hops.hopsworks.api.dataset.inode.InodeDTO;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -32,6 +30,8 @@ import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewMode;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
@@ -43,7 +43,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -60,6 +60,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -167,8 +168,8 @@ public class DatasetResource {
   public Response getByPath(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
     @QueryParam("action") DatasetActions.Get action, @QueryParam("mode") FilePreviewMode mode,
     @BeanParam Pagination pagination, @BeanParam InodeBeanParam inodeBeanParam,
-    @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws DatasetException, ProjectException {
+    @BeanParam DatasetExpansionBeanParam datasetExpansionBeanParam, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws DatasetException, ProjectException {
     Users user = jwtHelper.getUserPrincipal(sc);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
     Project project = this.getProject();
@@ -214,8 +215,8 @@ public class DatasetResource {
     @QueryParam("templateId") Integer templateId, @QueryParam("description") String description,
     @QueryParam("searchable") Boolean searchable, @QueryParam("generate_readme") Boolean generateReadme,
     @QueryParam("destination_path") String destPath, @QueryParam("destination_type") DatasetType destDatasetType,
-    @Context UriInfo uriInfo, @Context SecurityContext sc) throws DatasetException, ProjectException,
-    HopsSecurityException, ProvenanceException {
+    @DefaultValue("READ_ONLY") @QueryParam("permission") DatasetAccessPermission permission, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws DatasetException, ProjectException, HopsSecurityException, ProvenanceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     DatasetPath datasetPath;
     DatasetPath distDatasetPath;
@@ -239,7 +240,7 @@ public class DatasetResource {
         if (datasetPath.isTopLevelDataset()) {
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
             datasetPath.isTopLevelDataset(), templateId, description,
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme);
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
           DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, project, ds, null, null, false);
@@ -248,7 +249,7 @@ public class DatasetResource {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
             datasetPath.isTopLevelDataset(), templateId, description,
-            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme);
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme, permission);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
           InodeDTO dto = inodeBuilder.buildStat(uriInfo, resourceRequest, inode);
@@ -269,7 +270,7 @@ public class DatasetResource {
       case SHARE:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.share(targetProjectName, datasetPath.getFullPath().toString(), project, user);
+        datasetController.share(targetProjectName, datasetPath.getFullPath().toString(), permission, project, user);
         break;
       case ACCEPT:
         checkIfDataOwner(project, user);
@@ -292,18 +293,19 @@ public class DatasetResource {
       case PUBLISH:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.shareWithCluster(project, datasetPath.getDataset(), user, datasetType);
+        datasetController.shareWithCluster(project, datasetPath.getDataset(), user, datasetPath.getFullPath());
         break;
       case UNPUBLISH:
         checkIfDataOwner(project, user);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
-        datasetController.unshareFromCluster(project, datasetPath.getDataset(), user);
+        datasetController.unshareFromCluster(project, datasetPath.getDataset(), user, datasetPath.getFullPath());
         break;
       case IMPORT:
         checkIfDataOwner(project, user);
         Project srcProject = projectController.findProjectByName(targetProjectName);
         datasetPath = datasetHelper.getDatasetPathIfFileExist(srcProject, path, datasetType);
-        datasetController.share(project.getName(), datasetPath.getFullPath().toString(), srcProject, user);
+        datasetController.share(project.getName(), datasetPath.getFullPath().toString(),
+          DatasetAccessPermission.READ_ONLY, srcProject, user);
         break;
       case UNSHARE_ALL:
         checkIfDataOwner(project, user);
@@ -326,24 +328,29 @@ public class DatasetResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_CREATE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response update(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
     @QueryParam("action") DatasetActions.Put action, @QueryParam("description") String description,
-    @QueryParam("permissions") DatasetPermissions datasetPermissions, @Context UriInfo uriInfo,
-    @Context SecurityContext sc) throws DatasetException, ProjectException {
-    DatasetPath datasetPath = datasetHelper.getDatasetPath(this.getProject(), path, datasetType);
+    @DefaultValue("READ_ONLY") @QueryParam("permissions") DatasetAccessPermission datasetPermissions,
+    @QueryParam("target_project") String targetProjectName, @Context UriInfo uriInfo, @Context SecurityContext sc)
+    throws DatasetException, ProjectException {
+    Project project = this.getProject();
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, datasetType);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
     Users user = jwtHelper.getUserPrincipal(sc);
-    Project project = this.getProject();
     DatasetDTO dto;
     switch (action == null ? DatasetActions.Put.DESCRIPTION : action) {
       case PERMISSION:
         checkIfDataOwner(project, user);
-        datasetController.setPermissions(datasetPath.getFullPath(), datasetPath.getDataset(), datasetPermissions,
-          this.getProject(), user);
+        datasetController.updatePermission(datasetPath.getDataset(), datasetPermissions, project, project, user);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
+        break;
+      case SHARE_PERMISSION:
+        checkIfDataOwner(project, user);
+        datasetController.updateSharePermission(datasetPath.getDataset(), datasetPermissions, project, targetProjectName
+          , user);
         dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
         break;
       case DESCRIPTION:
         datasetController.updateDescription(project, user, datasetPath.getDataset(), description);
-        dto = datasetBuilder.build(uriInfo, resourceRequest, this.getProject(), datasetPath.getDataset(), null, null,
-          false);
+        dto = datasetBuilder.build(uriInfo, resourceRequest, project, datasetPath.getDataset(), null, null, false);
         break;
       default:
         throw new WebApplicationException("Action not valid.", Response.Status.NOT_FOUND);

@@ -230,7 +230,7 @@ public class HopsFSProvenanceController {
       return result;
     } finally {
       if (udfso != null) {
-        udfso.close();
+        dfs.closeDfsClient(udfso);
       }
     }
   }

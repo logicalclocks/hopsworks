@@ -58,9 +58,7 @@ public abstract class RestDTO<D> {
   public Boolean isExpand() {
     return expand != null ? expand : false;
   }
-  
-  @XmlTransient
-  @JsonIgnore
+
   public void setExpand(Boolean expand) {
     this.expand = expand;
   }

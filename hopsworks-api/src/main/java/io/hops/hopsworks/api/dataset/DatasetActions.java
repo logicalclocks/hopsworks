@@ -48,6 +48,7 @@ public class DatasetActions {
   
   public enum Put {
     PERMISSION(),
+    SHARE_PERMISSION(),
     DESCRIPTION();
   
     public static Put fromString(String param) {

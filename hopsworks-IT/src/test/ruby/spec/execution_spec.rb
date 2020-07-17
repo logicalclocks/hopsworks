@@ -25,7 +25,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should fail" do
           create_sparktour_job(@project, "demo_job", 'jar', nil)
-          expect_status(401)
+          expect_status_details(401)
           expect_json(errorCode: 200003)
         end
       end
@@ -47,18 +47,18 @@ describe "On #{ENV['OS']}" do
               #start execution
               start_execution(@project[:id], $job_name_1)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
               expect(json_body[:state]).to eq "INITIALIZING"
               #get execution
               get_execution(@project[:id], $job_name_1, json_body[:id])
-              expect_status(200)
+              expect_status_details(200)
               expect(json_body[:id]).to eq(execution_id)
               #wait till it's finished and start second execution
               wait_for_execution_completed(@project[:id], $job_name_1, json_body[:id], "FINISHED")
               #start execution
               start_execution(@project[:id], $job_name_1)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
 
               #get all executions of job
               get_executions(@project[:id], $job_name_1, "")
@@ -73,15 +73,15 @@ describe "On #{ENV['OS']}" do
             it "should start and stop job" do
               $job_name_2 = "demo_job_2_" + type
               create_sparktour_job(@project, $job_name_2, type, nil)
-              expect_status(201)
+              expect_status_details(201)
 
               #start execution
               start_execution(@project[:id], $job_name_2)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
               wait_for_execution_active(@project[:id], $job_name_2, execution_id, "ACCEPTED", "appId")
               stop_execution(@project[:id], $job_name_2, execution_id)
-              expect_status(202)
+              expect_status_details(202)
               wait_for_execution_completed(@project[:id], $job_name_2, execution_id, "KILLED")
             end
             it "should fail to start a spark job with missing spark.yarn.dist.files" do
@@ -92,7 +92,7 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
               start_execution(@project[:id], $job_name_2)
-              expect_status(400)
+              expect_status_details(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.pyFiles" do
               $job_name_2 = "demo_job_2_" + type
@@ -102,7 +102,7 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
               start_execution(@project[:id], $job_name_2)
-              expect_status(400)
+              expect_status_details(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.jars" do
               $job_name_2 = "demo_job_2_" + type
@@ -112,7 +112,7 @@ describe "On #{ENV['OS']}" do
               create_sparktour_job(@project, $job_name_2, type, config)
               #start execution
               start_execution(@project[:id], $job_name_2)
-              expect_status(400)
+              expect_status_details(400)
             end
             it "should fail to start a spark job with missing spark.yarn.dist.archives" do
               $job_name_2 = "demo_job_2_" + type
@@ -123,15 +123,15 @@ describe "On #{ENV['OS']}" do
 
               #start execution
               start_execution(@project[:id], $job_name_2)
-              expect_status(400)
+              expect_status_details(400)
             end
             it "should start two executions in parallel" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type, nil)
               start_execution(@project[:id], $job_name_3)
-              expect_status(201)
+              expect_status_details(201)
               start_execution(@project[:id], $job_name_3)
-              expect_status(201)
+              expect_status_details(201)
             end
             it "should start a job with args 123" do
               $job_name_3 = "demo_job_3_" + type
@@ -139,9 +139,9 @@ describe "On #{ENV['OS']}" do
               args = "123"
               start_execution(@project[:id], $job_name_3, args)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
               get_execution(@project[:id], $job_name_3, execution_id)
-              expect_status(200)
+              expect_status_details(200)
               expect(json_body[:args]).to eq args
             end
             it "should run job and get out and err logs" do
@@ -150,7 +150,7 @@ describe "On #{ENV['OS']}" do
               project = get_project
               start_execution(@project[:id], $job_name_4)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
 
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
@@ -184,7 +184,7 @@ describe "On #{ENV['OS']}" do
 
               start_execution(@project[:id], $job_name_4)
               execution_id = json_body[:id]
-              expect_status(201)
+              expect_status_details(201)
 
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
@@ -461,7 +461,7 @@ describe "On #{ENV['OS']}" do
               get_execution(@project[:id], $job_spark_1, $execution_ids[0])
               submissiontime = json_body[:submissionTime]
               get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_gt:#{submissiontime.gsub('Z','')}.000Z")
-              expect_status(200)
+              expect_status_details(200)
               expect(json_body[:items].count).to eq 2
             end
             it "should get all executions filtered by submissiontime lt" do
@@ -469,7 +469,7 @@ describe "On #{ENV['OS']}" do
               get_execution(@project[:id], $job_spark_1, $execution_ids[1])
               submissiontime = json_body[:submissionTime]
               get_executions(@project[:id], $job_spark_1, "?filter_by=submissiontime_lt:#{submissiontime.gsub('Z','')}.000Z")
-              expect_status(200)
+              expect_status_details(200)
               expect(json_body[:items].count).to eq 1
             end
           end
@@ -492,7 +492,7 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota1", 'jar', nil)
         start_execution(@project[:id], "quota1")
-        expect_status(412)
+        expect_status_details(412)
       end
 
       it 'should not be able to run jobs with negative quota and payment type PREPAID' do
@@ -500,7 +500,7 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota2", 'jar', nil)
         start_execution(@project[:id], "quota2")
-        expect_status(412)
+        expect_status_details(412)
       end
 
       it 'should not kill the running job if the quota goes negative' do
@@ -508,7 +508,7 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "PREPAID")
         create_sparktour_job(@project, "quota3", 'jar', nil)
         start_execution(@project[:id], "quota3")
-        expect_status(201)
+        expect_status_details(201)
         execution_id = json_body[:id]
 
         wait_for_execution_completed(@project[:id], "quota3", execution_id, "FINISHED")
@@ -519,7 +519,7 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota4", 'jar', nil)
         start_execution(@project[:id], "quota4")
-        expect_status(201)
+        expect_status_details(201)
       end
 
       it 'should be able to run jobs with negative quota and payment type NOLIMIT' do
@@ -527,7 +527,7 @@ describe "On #{ENV['OS']}" do
         set_payment_type(@project, "NOLIMIT")
         create_sparktour_job(@project, "quota5", 'jar', nil)
         start_execution(@project[:id], "quota5")
-        expect_status(201)
+        expect_status_details(201)
       end
     end
   end
