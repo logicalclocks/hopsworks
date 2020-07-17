@@ -106,8 +106,7 @@ public class RemoteUserDTO {
 
   @Override
   public String toString() {
-    return "RemoteUserDTO{" + "uuid=" + uuid + ", uid=" + uid + ", givenName=" + givenName + ", surname=" + surname
-        + ", email=" + email + ", groups=" + groups + ", emailVerified=" + emailVerified + '}';
+    return uuid;
   }
 
 }
