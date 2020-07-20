@@ -48,6 +48,10 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH;
   private int s3StorageConnectorSecretkeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
+  private int s3StorageServerEncryptionAlgorithmMaxLength =
+    FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH;
+  private int getS3StorageServerEncryptionKeyMaxLength =
+    FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH;
   private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;

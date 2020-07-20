@@ -60,6 +60,8 @@ public class FeaturestoreS3ConnectorController {
     featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
     featurestoreS3Connector.setSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     featurestoreS3Connector.setFeaturestore(featurestore);
+    featurestoreS3Connector.setServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
+    featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
     featurestoreS3ConnectorFacade.persist(featurestoreS3Connector);
     return new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
   }

@@ -33,6 +33,8 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String accessKey;
   private String secretKey;
   private String bucket;
+  private String serverEncryptionAlgorithm;
+  private String serverEncryptionKey;
   
   public FeaturestoreS3ConnectorDTO() {
     super(null, null, null, null, null);
@@ -45,6 +47,8 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.accessKey = featurestoreS3Connector.getAccessKey();
     this.secretKey = featurestoreS3Connector.getSecretKey();
     this.bucket = featurestoreS3Connector.getBucket();
+    this.serverEncryptionAlgorithm = featurestoreS3Connector.getServerEncryptionAlgorithm();
+    this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();
   }
   
   @XmlElement
@@ -74,12 +78,26 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.bucket = bucket;
   }
 
+  @XmlElement
+  public String getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
+
+  public void setServerEncryptionAlgorithm(String serverEncryptionAlgorithm) {
+    this.serverEncryptionAlgorithm = serverEncryptionAlgorithm;
+  }
+
+  @XmlElement
+  public String getServerEncryptionKey() { return serverEncryptionKey; }
+
+  public void setServerEncryptionKey(String serverEncryptionKey) { this.serverEncryptionKey = serverEncryptionKey; }
+
   @Override
   public String toString() {
     return "FeaturestoreS3ConnectorDTO{" +
-        "accessKey='" + accessKey + '\'' +
-        ", secretKey='" + secretKey + '\'' +
-        ", bucket='" + bucket + '\'' +
-        '}';
+            "accessKey='" + accessKey + '\'' +
+            ", secretKey='" + secretKey + '\'' +
+            ", bucket='" + bucket + '\'' +
+            ", serverEncryptionAlgorithm='" + serverEncryptionAlgorithm + '\'' +
+            ", serverEncryptionKey='" + serverEncryptionKey + '\'' +
+            '}';
   }
 }

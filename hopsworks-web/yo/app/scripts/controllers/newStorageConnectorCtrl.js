@@ -42,6 +42,8 @@ angular.module('hopsWorksApp')
             self.s3Bucket = ""
             self.s3SecretKey = ""
             self.s3AccessKey = ""
+            self.s3ServerEncryptionAlgorithm = ""
+            self.s3ServerEncryptionKey = ""
 
             //State
             self.working = false
@@ -56,8 +58,10 @@ angular.module('hopsWorksApp')
             self.jdbcStorageConnectorConnectionStringMaxLength = self.settings.jdbcStorageConnectorConnectionstringMaxLength
             self.jdbcStorageConnectorArgumentsMaxLength = self.settings.jdbcStorageConnectorArgumentsMaxLength
             self.s3StorageConnectorBucketMaxLength = self.settings.s3StorageConnectorBucketMaxLength
-            self.s3StorageConnectorAccesskeyMaxLength = self.settings.s3StorageConnectorAccesskeyMaxLength;
-            self.s3StorageConnectorSecretkeyMaxLength = self.settings.s3StorageConnectorSecretkeyMaxLength;
+            self.s3StorageConnectorAccesskeyMaxLength = self.settings.s3StorageConnectorAccesskeyMaxLength
+            self.s3StorageConnectorSecretkeyMaxLength = self.settings.s3StorageConnectorSecretkeyMaxLength
+            self.s3ServerEncryptionAlgorithmMaxLength = self.settings.s3ServerEncryptionAlgorithmMaxLength
+            self.s3ServerEncryptionKeyMaxLength = self.settings.s3ServerEncryptionKeyMaxLength
             self.s3IAMRole = self.settings.s3IAMRole;
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.s3ConnectorType = self.settings.s3ConnectorType
@@ -129,6 +133,8 @@ angular.module('hopsWorksApp')
                         self.s3Bucket = self.storageConnector.bucket
                         self.s3SecretKey = self.storageConnector.secretKey
                         self.s3AccessKey = self.storageConnector.accessKey
+                        self.s3ServerEncryptionAlgorithm = self.storageConnector.serverEncryptionAlgorithm
+                        self.s3ServerEncryptionKey = self.storageConnector.serverEncryptionKey
                     }
                     if (self.storageConnector.storageConnectorType === self.hopsfsConnectorType) {
                         self.storageConnectorType = 2
@@ -153,6 +159,8 @@ angular.module('hopsWorksApp')
                 self.storageConnectorS3BucketWrongValue = 1
                 self.storageConnectorS3AccessKeyWrongValue = 1
                 self.storageConnectorS3SecretKeyWrongValue = 1
+                self.storageConnectorS3ServerEncryptionAlgorithmWrongValue = 1
+                self.storageConnectorS3ServerEncryptionKeyWrongValue = 1
                 self.storageConnectorNameNotUnique = 1
                 self.storageConnectorDescriptionWrongValue = 1;
                 self.storageConnectorJdbcStringWrongValue = 1
@@ -239,6 +247,20 @@ angular.module('hopsWorksApp')
 
                     if (self.s3SecretKey && self.s3SecretKey != null
                         && self.s3SecretKey.length > self.s3StorageConnectorSecretkeyMaxLength) {
+                        self.storageConnectorS3SecretKeyWrongValue = -1;
+                        self.wrong_values = -1;
+                        self.storageConnectorConfigWrongValue = -1
+                    }
+
+                    if (self.s3ServerEncryptionAlgorithm && self.s3ServerEncryptionAlgorithm != null
+                        && self.s3ServerEncryptionAlgorithm.length > self.s3ServerEncryptionAlgorithmMaxLength) {
+                        self.storageConnectorS3ServerEncryptionAlgorithmWrongValue = -1;
+                        self.wrong_values = -1;
+                        self.storageConnectorConfigWrongValue = -1
+                    }
+
+                    if (self.s3ServerEncryptionKey && self.s3ServerEncryptionKey != null
+                        && self.s3ServerEncryptionKey.length > self.s3ServerEncryptionKeyMaxLength) {
                         self.storageConnectorS3SecretKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
@@ -340,6 +362,8 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["bucket"] = self.s3Bucket
                     storageConnectorJson["secretKey"] = self.s3SecretKey
                     storageConnectorJson["accessKey"] = self.s3AccessKey
+                    storageConnectorJson["serverEncryptionAlgorithm"] = self.s3ServerEncryptionAlgorithm
+                    storageConnectorJson["serverEncryptionKey"] = self.s3ServerEncryptionKey
                     FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.s3ConnectorType, self.storageConnector.id).then(
                             function (success) {
@@ -404,6 +428,8 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["bucket"] = self.s3Bucket
                     storageConnectorJson["secretKey"] = self.s3SecretKey
                     storageConnectorJson["accessKey"] = self.s3AccessKey
+                    storageConnectorJson["serverEncryptionAlgorithm"] = self.s3ServerEncryptionAlgorithm
+                    storageConnectorJson["serverEncryptionKey"] = self.s3ServerEncryptionKey
                     FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.s3ConnectorType).then(
                             function (success) {
