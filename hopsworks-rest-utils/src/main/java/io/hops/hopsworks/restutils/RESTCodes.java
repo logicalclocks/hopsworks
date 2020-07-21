@@ -58,7 +58,6 @@ public class RESTCodes {
     String getMessage();
 
     int getRange();
-
   }
   public enum ProjectErrorCode implements RESTErrorCode {
 
@@ -1459,7 +1458,15 @@ public class RESTCodes {
     TAG_NOT_FOUND(101, "The provided tag is not attached", Response.Status.NOT_FOUND),
     FEATUREGROUP_NOT_ONLINE(102, "The feature group is not available online", Response.Status.BAD_REQUEST),
     FEATUREGROUP_ONDEMAND_NO_PARTS(103, "Partitions not available for on demand feature group",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM(104, "Illegal server encryption algorithm provided",
+      Response.Status.BAD_REQUEST),
+    ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY(105, "Illegal server encryption key provided",
+      Response.Status.BAD_REQUEST),
+    S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN(106, "IAM role is configured for this instance. AWS " +
+      "server encryption algorithm/key " +
+      "are not allowed\"",
+      Response.Status.BAD_REQUEST);
 
 
     private int code;

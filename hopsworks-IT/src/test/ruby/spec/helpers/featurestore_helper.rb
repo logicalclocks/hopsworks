@@ -153,7 +153,7 @@ module FeaturestoreHelper
     return json_result, jdbc_connector_name
   end
 
-  def create_s3_connector(project_id, featurestore_id, bucket: "test")
+  def create_s3_connector(project_id, featurestore_id, with_encryption: false, bucket: "test")
     type = "featurestoreS3ConnectorDTO"
     storageConnectorType = "S3"
     create_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3"
@@ -167,6 +167,12 @@ module FeaturestoreHelper
         secretKey: "test",
         accessKey: "test"
     }
+
+    if with_encryption
+      json_data.serverEncryptionAlgorithm = "test"
+      json_data.serverEncryptionKey = "test"
+    end
+
     json_data = json_data.to_json
     json_result = post create_s3_connector_endpoint, json_data
     return json_result, s3_connector_name

@@ -147,10 +147,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270037).to be true
         end
 
-        it "should be able to add s3 connector to the featurestore" do
+        it "should be able to add s3 connector to the featurestore without encryption information" do
           project = get_project
+          with_encryption = false
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+              "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -166,10 +168,34 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["bucket"] == "testbucket").to be true
         end
 
+        it "should be able to add s3 connector to the featurestore with encryption information" do
+          project = get_project
+          with_encryption = true
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+              "testbucket")
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json.key?("description")).to be true
+          expect(parsed_json.key?("storageConnectorType")).to be true
+          expect(parsed_json.key?("featurestoreId")).to be true
+          expect(parsed_json.key?("bucket")).to be true
+          expect(parsed_json.key?("secretKey")).to be true
+          expect(parsed_json.key?("accessKey")).to be true
+          expect(parsed_json["name"] == connector_name).to be true
+          expect(parsed_json["storageConnectorType"] == "S3").to be true
+          expect(parsed_json["bucket"] == "testbucket").to be true
+          expect(parsed_json["serverEncryptionAlgorithm"] == "test").to be true
+          expect(parsed_json["serverEncryptionKey"] == "test").to be true
+        end
+
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: nil)
+          with_encryption = false;
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket: nil)
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -226,7 +252,9 @@ describe "On #{ENV['OS']}" do
         it "should be able to delete a s3 connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
+          with_encryption = false
+          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+              "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           connector_id = parsed_json["id"]
@@ -277,11 +305,15 @@ describe "On #{ENV['OS']}" do
         it "should be able to update S3 connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result1, connector_name1 = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
+          with_encryption = true
+          json_result1, connector_name1 = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+              "testbucket")
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           connector_id = parsed_json1["id"]
-          json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id, bucket: "testbucket2")
+
+          json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id, bucket:
+              "testbucket2")
           parsed_json2 = JSON.parse(json_result2)
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
