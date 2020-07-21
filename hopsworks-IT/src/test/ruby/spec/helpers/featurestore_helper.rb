@@ -169,8 +169,8 @@ module FeaturestoreHelper
     }
 
     if with_encryption
-      json_data.serverEncryptionAlgorithm = "test"
-      json_data.serverEncryptionKey = "test"
+      json_data["serverEncryptionAlgorithm"] = "test"
+      json_data["serverEncryptionKey"] = "test"
     end
 
     json_data = json_data.to_json
