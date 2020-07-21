@@ -549,7 +549,8 @@ module FeaturestoreHelper
 
   def with_s3_connector(project_id)
     featurestore_id = get_featurestore_id(project_id)
-    json_result, connector_name = create_s3_connector(project_id, featurestore_id, bucket:"testbucket")
+    json_result, connector_name = create_s3_connector(project_id, featurestore_id, with_encryption:false ,
+                                                      bucket:"testbucket")
     parsed_json = JSON.parse(json_result)
     expect_status(201)
     connector_id = parsed_json["id"]
