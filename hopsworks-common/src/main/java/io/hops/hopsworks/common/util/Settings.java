@@ -572,8 +572,7 @@ public class Settings implements Serializable {
           HDFS_DEFAULT_QUOTA_MBs);
       HDFS_BASE_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_BASE_STORAGE_POLICY, HDFS_BASE_STORAGE_POLICY);
       HDFS_LOG_STORAGE_POLICY = setHdfsStoragePolicy(VARIABLE_HDFS_LOG_STORAGE_POLICY, HDFS_LOG_STORAGE_POLICY);
-      MAX_NUM_PROJ_PER_USER = setDirVar(VARIABLE_MAX_NUM_PROJ_PER_USER,
-          MAX_NUM_PROJ_PER_USER);
+      MAX_NUM_PROJ_PER_USER = setIntVar(VARIABLE_MAX_NUM_PROJ_PER_USER, MAX_NUM_PROJ_PER_USER);
       CLUSTER_CERT = setVar(VARIABLE_CLUSTER_CERT, CLUSTER_CERT);
       FILE_PREVIEW_IMAGE_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_IMAGE_SIZE, 10000000);
       FILE_PREVIEW_TXT_SIZE = setIntVar(VARIABLE_FILE_PREVIEW_TXT_SIZE, 100);
@@ -1231,17 +1230,10 @@ public class Settings implements Serializable {
     return AIRFLOW_WEB_UI_IP + ":" + AIRFLOW_WEB_UI_PORT + "/hopsworks-api/airflow";
   }
 
-  private String MAX_NUM_PROJ_PER_USER = "5";
-
+  private Integer MAX_NUM_PROJ_PER_USER = 5;
   public synchronized Integer getMaxNumProjPerUser() {
     checkCache();
-    int num = 5;
-    try {
-      num = Integer.parseInt(MAX_NUM_PROJ_PER_USER);
-    } catch (NumberFormatException ex) {
-      // should print to log here
-    }
-    return num;
+    return MAX_NUM_PROJ_PER_USER;
   }
 
   private String HADOOP_VERSION = "2.8.2";
