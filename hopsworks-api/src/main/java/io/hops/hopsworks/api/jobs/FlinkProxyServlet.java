@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.jobs;
 
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyFilter;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
@@ -22,9 +23,12 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.jobs.flink.FlinkMasterAddrCache;
+import io.hops.hopsworks.common.user.security.apiKey.ApiKeyController;
+import io.hops.hopsworks.exceptions.ApiKeyException;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiKey;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
 import org.apache.http.client.utils.URIUtils;
 import org.apache.parquet.Strings;
@@ -56,6 +60,8 @@ public class FlinkProxyServlet extends ProxyServlet {
   private ProjectFacade projectFacade;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ApiKeyController apiKeyController;
   
   // A request will come in with the format:
   // hopsworks-api/flink/<yarnappid>
@@ -64,10 +70,27 @@ public class FlinkProxyServlet extends ProxyServlet {
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
     throws ServletException, IOException {
+    Users user;
     if (servletRequest.getUserPrincipal() == null) {
-      servletResponse.sendError(401, "User is not logged in");
-      return;
+      // Check if API key is provided
+      String authorizationHeader = servletRequest.getHeader("Authorization");
+      if (Strings.isNullOrEmpty(authorizationHeader)) {
+        servletResponse.sendError(401, "API key was not provided");
+        return;
+      } else {
+        try {
+          String key = authorizationHeader.substring(ApiKeyFilter.API_KEY.length()).trim();
+          ApiKey apiKey = apiKeyController.getApiKey(key);
+          user = apiKey.getUser();
+        } catch (ApiKeyException e) {
+          servletResponse.sendError(401, "Could not validate API key");
+          return;
+        }
+      }
+    } else {
+      user = userFacade.findByEmail(servletRequest.getUserPrincipal().getName());
     }
+  
     String uri = servletRequest.getRequestURI();
     Pattern appPattern = Pattern.compile("(application_.*?_\\d*)");
     Matcher appMatcher = appPattern.matcher(uri);
@@ -89,7 +112,6 @@ public class FlinkProxyServlet extends ProxyServlet {
         return;
       }
       HdfsUsers hdfsUser = hdfsUsersFacade.findByName(appState.getAppuser());
-      Users user = userFacade.findByEmail(servletRequest.getUserPrincipal().getName());
       if (!projectTeamFacade.isUserMemberOfProject(projectFacade.findByName(hdfsUser.getProject()), user)) {
         servletResponse.sendError(403, "You are not authorized to access this Flink cluster");
       }
