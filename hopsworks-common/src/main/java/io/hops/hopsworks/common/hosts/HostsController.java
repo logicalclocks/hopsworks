@@ -67,11 +67,25 @@ public class HostsController {
     if (optional.isPresent()) {
       return updateExistingClusterNode(optional.get(), updateNode);
     } else {
-      return createNewClusterNode(uriInfo, hostname, updateNode);
+      Hosts finalNode = createNewClusterNode(hostname, updateNode);
+      URI uri = uriInfo.getBaseUriBuilder()
+          .path(ResourceRequest.Name.HOSTS.toString())
+          .path(finalNode.getHostname())
+          .build();
+      return Response.created(uri).entity(finalNode).build();
     }
   }
   
-  private Response createNewClusterNode(UriInfo uriInfo, String hostname, HostDTO updateNode) {
+  public void addOrUpdateClusterNode(String hostname, HostDTO updateNode) {
+    Optional<Hosts> optional = hostsFacade.findByHostname(hostname);
+    if (optional.isPresent()) {
+      updateExistingClusterNode(optional.get(), updateNode);
+    } else {
+      createNewClusterNode(hostname, updateNode);
+    }
+  }
+  
+  private Hosts createNewClusterNode(String hostname, HostDTO updateNode) {
     // Do some sanity check
     if (Strings.isNullOrEmpty(updateNode.getHostname())) {
       throw new IllegalArgumentException("Hostname was not provided");
@@ -91,11 +105,7 @@ public class HostsController {
     finalNode.setHostIp(updateNode.getHostIp());
     finalNode.setNumGpus(updateNode.getNumGpus());
     hostsFacade.save(finalNode);
-    URI uri = uriInfo.getBaseUriBuilder()
-      .path(ResourceRequest.Name.HOSTS.toString())
-      .path(finalNode.getHostname())
-      .build();
-    return Response.created(uri).entity(finalNode).build();
+    return finalNode;
   }
   
   private Response updateExistingClusterNode(Hosts storedNode, HostDTO updateNode) {
