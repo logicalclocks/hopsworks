@@ -23,6 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.client.methods.HttpGet;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -79,6 +80,28 @@ public class CloudClient {
       throw new UserException(RESTCodes.UserErrorCode.PASSWORD_RESET_UNSUCCESSFUL, Level.SEVERE, null,
           ex.getMessage(), ex);
     }
+  }
+  
+  public String sendHeartbeat() throws IOException {
+    if(settings.getCloudEventsEndPoint().equals("")){
+      throw new IOException("Failed to send heartbeat endpoint not set");
+    }
+    URI heartBeatUrl = URI.create(settings.getCloudEventsEndPoint() + "/heartbeat");
+
+    HttpGet request = new HttpGet(heartBeatUrl);
+    request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    request.setHeader("x-api-key", settings.getCloudEventsEndPointAPIKey());
+
+    HttpHost host = new HttpHost(heartBeatUrl.getHost(),
+        heartBeatUrl.getPort(), heartBeatUrl.getScheme());
+    return httpClient.execute(host, request, httpResponse -> {
+      if (httpResponse.getStatusLine().getStatusCode() != 200) {
+        throw new IOException("Failed to send heartbeat, return status: " + httpResponse.getStatusLine().toString());
+      }
+      String json = EntityUtils.toString(httpResponse.getEntity());
+      LOGGER.log(Level.INFO, json);
+      return json;
+    });
   }
   
 }

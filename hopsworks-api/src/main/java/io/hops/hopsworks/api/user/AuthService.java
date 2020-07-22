@@ -57,7 +57,7 @@ import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.user.AuthController;
-import io.hops.hopsworks.common.user.CloudController;
+import io.hops.hopsworks.common.user.CloudUserController;
 import io.hops.hopsworks.common.user.UserStatusValidator;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
@@ -136,7 +136,7 @@ public class AuthService {
   @EJB
   private JWTController jwtController;
   @EJB
-  private CloudController cloudController;
+  private CloudUserController cloudUserController;
   
   @GET
   @Path("session")
@@ -367,7 +367,7 @@ public class AuthService {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     String reqUrl = FormatUtils.getUserURL(req);
     if(settings.isCloud()){
-      cloudController.sendPasswordRecoveryEmailForCloud(email, reqUrl);
+      cloudUserController.sendPasswordRecoveryEmailForCloud(email, reqUrl);
     }else{
       userController.sendPasswordRecoveryEmail(email, securityQuestion, securityAnswer, reqUrl);
     }

@@ -21,7 +21,7 @@ import java.util.logging.Level;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class CloudController {
+public class CloudUserController {
   
   @EJB
   private UserFacade userFacade;

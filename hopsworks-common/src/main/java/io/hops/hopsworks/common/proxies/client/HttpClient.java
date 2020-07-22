@@ -65,7 +65,7 @@ public class HttpClient {
   private PoolingHttpClientConnectionManager connectionManager;
   private CloseableHttpClient client;
   private HttpHost host;
-  
+
   @PostConstruct
   public void init() throws RuntimeException {
     try {
@@ -74,10 +74,7 @@ public class HttpClient {
           .setConnectionManager(connectionManager)
           .setKeepAliveStrategy((httpResponse, httpContext) -> settings.getConnectionKeepAliveTimeout() * 1000)
           .build();
-      Service hopsworksService = serviceDiscoveryController.
-          getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
-      host = new HttpHost(hopsworksService.getName(), hopsworksService.getPort(), "HTTPS");
-    } catch (IOException | GeneralSecurityException | ServiceDiscoveryException ex) {
+    } catch (IOException | GeneralSecurityException ex) {
       throw new RuntimeException(ex);
     }
   }
@@ -117,6 +114,15 @@ public class HttpClient {
   }
   
   public <T> T execute(HttpRequest request, ResponseHandler<T> handler) throws IOException {
+    if(host==null){
+      try {
+        Service hopsworksService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+            ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP);
+        host = new HttpHost(hopsworksService.getName(), hopsworksService.getPort(), "HTTPS");
+      } catch (ServiceDiscoveryException ex) {
+        throw new IOException(ex);
+      }
+    }
     return client.execute(host, request, handler);
   }
   
