@@ -153,7 +153,7 @@ module FeaturestoreHelper
     return json_result, jdbc_connector_name
   end
 
-  def create_s3_connector(project_id, featurestore_id, with_encryption, bucket: "test")
+  def create_s3_connector_without_encryption(project_id, featurestore_id, bucket: "test")
     type = "featurestoreS3ConnectorDTO"
     storageConnectorType = "S3"
     create_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3"
@@ -168,15 +168,41 @@ module FeaturestoreHelper
         accessKey: "test"
     }
 
-    if with_encryption
-      json_data["serverEncryptionAlgorithm"] = "test"
-      json_data["serverEncryptionKey"] = "test"
+    json_data = json_data.to_json
+    json_result = post create_s3_connector_endpoint, json_data
+    return json_result, s3_connector_name
+  end
+
+  def create_s3_connector_with_encryption(project_id, featurestore_id, with_encryption_key, encryption_algorithm,
+                                          encryption_key,
+                                          bucket:
+          "test")
+    type = "featurestoreS3ConnectorDTO"
+    storageConnectorType = "S3"
+    create_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3"
+    s3_connector_name = "s3_connector_#{random_id}"
+    json_data = {
+        name: s3_connector_name,
+        description: "tests3connectordescription",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        bucket: bucket,
+        secretKey: "test",
+        accessKey: "test"
+    }
+
+    if with_encryption_key
+      json_data["serverEncryptionAlgorithm"] = encryption_algorithm
+    else
+      json_data["serverEncryptionAlgorithm"] = encryption_algorithm
+      json_data["serverEncryptionKey"] = encryption_key
     end
 
     json_data = json_data.to_json
     json_result = post create_s3_connector_endpoint, json_data
     return json_result, s3_connector_name
   end
+
 
   def update_s3_connector(project_id, featurestore_id, connector_id, bucket: "test")
     type = "featurestoreS3ConnectorDTO"
@@ -548,9 +574,11 @@ module FeaturestoreHelper
   end
 
   def with_s3_connector(project_id)
+    encryption_algorithm = "AES-256"
+    encryption_key = "Test"
+    with_encryption_key = true;
     featurestore_id = get_featurestore_id(project_id)
-    json_result, connector_name = create_s3_connector(project_id, featurestore_id, with_encryption:false ,
-                                                      bucket:"testbucket")
+    json_result, connector_name = create_s3_connector_with_encryption(project_id, featurestore_id, with_encryption_key, encryption_algorithm, encryption_key, bucket: "testbucket")
     parsed_json = JSON.parse(json_result)
     expect_status(201)
     connector_id = parsed_json["id"]

@@ -27,6 +27,7 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -102,7 +103,12 @@ public class FeaturestoreS3ConnectorController {
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
+        FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(
+          featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
+      if(algorithm.isRequiresKey()){
+        verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      }
       featurestoreS3Connector.setServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
       featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
     }
@@ -261,25 +267,31 @@ public class FeaturestoreS3ConnectorController {
    */
   private void  verifyS3ConnectorServerEncryptionAlgorithm(String serverEncryptionAlgorithm)
     throws FeaturestoreException{
-    if(!Strings.isNullOrEmpty(serverEncryptionAlgorithm) &&
-        serverEncryptionAlgorithm.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH){
+    if(Strings.isNullOrEmpty(serverEncryptionAlgorithm)){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
+        Level.FINE, ", the S3 server encryption algorithm cannot be empty"
+      );
+    }
+    else if(!encryptionAlgorithmExists(serverEncryptionAlgorithm)){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
+        Level.FINE, ", the S3 server encryption algorithm provided does not exist"
+      );
+    }
+    else if(
+      serverEncryptionAlgorithm.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
         Level.FINE, ", the S3 server encryption algorithm should not exceed: " +
         FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH + " characters"
       );
     }
-    else if(!Strings.isNullOrEmpty(serverEncryptionAlgorithm) && settings.isIAMRoleConfigured()){
+    else if(settings.isIAMRoleConfigured()){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN,
         Level.FINE,
         "S3 server encryption algorithm and key are not allowed"
-      );
-    }
-    else if(Strings.isNullOrEmpty(serverEncryptionAlgorithm)){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
-        Level.FINE, ", the S3 server encryption algorithm cannot be empty"
       );
     }
   }
@@ -292,24 +304,23 @@ public class FeaturestoreS3ConnectorController {
    * @throws FeaturestoreException
    */
   private void verifyS3ConnectorServerEncryptionKey(String serverEncryptionKey) throws FeaturestoreException{
-    if(!Strings.isNullOrEmpty(serverEncryptionKey) &&
-      serverEncryptionKey.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY,
-        Level.FINE, ", the S3 server encryption key should not exceed: " +
-        FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH + " characters");
-    }
-    else if(!Strings.isNullOrEmpty(serverEncryptionKey) && settings.isIAMRoleConfigured()){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN,
-        Level.FINE,
-        "S3 server encryption algorithm and key are not allowed"
-      );
-    }
-    else if(Strings.isNullOrEmpty(serverEncryptionKey)){
+    if(Strings.isNullOrEmpty(serverEncryptionKey)){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY,
         Level.FINE,
         "S3 server encryption key cannot be empty"
+      );
+    }
+    else if(serverEncryptionKey.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY,
+        Level.FINE, ", the S3 server encryption key should not exceed: " +
+        FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH + " characters");
+    }
+    else if(settings.isIAMRoleConfigured()){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN,
+        Level.FINE,
+        "S3 server encryption algorithm and key are not allowed"
       );
     }
   }
@@ -334,11 +345,36 @@ public class FeaturestoreS3ConnectorController {
     verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
     verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) &&
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      
+      FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
+        FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(
+          featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
+      
+      if(algorithm.isRequiresKey()){
+        verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      }
     }
+  }
+  
+  /**
+   * Utility function to check if the provided encryption algorithm is exists
+   * @param encryptionAlgorithm
+   * Loops all encryption algorithms defined in FeaturestoresS3ConnectorEncryptionAlgorithm enum
+   * @return boolean
+   */
+  private boolean encryptionAlgorithmExists(String encryptionAlgorithm){
+    boolean algorithmExists = false;
+    List<FeaturestoreS3ConnectorEncryptionAlgorithm> encryptionAlgorithms =
+      Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values());
+    
+    for(FeaturestoreS3ConnectorEncryptionAlgorithm a : encryptionAlgorithms){
+      if(a.getAlgorithm().equals(encryptionAlgorithm)) algorithmExists = true;
+      break;
+    }
+    return algorithmExists;
   }
 
   /**
@@ -352,6 +388,7 @@ public class FeaturestoreS3ConnectorController {
     return s3Connectors.stream().map(s3Connector -> new FeaturestoreS3ConnectorDTO(s3Connector))
         .collect(Collectors.toList());
   }
+  
 
   /**
    * Retrieves a S3 Connector with a particular id from a particular featurestore

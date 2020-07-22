@@ -24,8 +24,8 @@
         <div ng-include="'navProject.html'"></div>
         <div class="content-wrapper">
             <span style="float: right;margin-top: 7px;" class="fa fa-times-circle fa-2x"
-                ng-click="newStorageConnectorCtrl.exitToFeaturestore()"
-                uib-tooltip="Clear state and go back to Feature Store main page."> </span>
+                  ng-click="newStorageConnectorCtrl.exitToFeaturestore()"
+                  uib-tooltip="Clear state and go back to Feature Store main page."> </span>
             <h2 style="margin-bottom: 30px;color:#555"
                 ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
                 Create Storage Connector for Feature Store Data
@@ -43,20 +43,20 @@
                 <div uib-accordion-group class="panel-default" is-open="newStorageConnectorCtrl.accordion1.isOpen">
                     <div uib-accordion-heading>
                         <i class="fa fa-info-circle" tooltip-placement="auto left"
-                            uib-tooltip='The name of the Storage Connector for the Feature Store'></i>
+                           uib-tooltip='The name of the Storage Connector for the Feature Store'></i>
                         <span style="margin-left: 20px">
                             {{newStorageConnectorCtrl.accordion1.title}}
                             {{newStorageConnectorCtrl.accordion1.value}}
                         </span>
                         <span ng-if="newStorageConnectorCtrl.storageConnectorNameWrongValue === -1"
-                            class="glyphicon glyphicon-alert" tooltip-placement="auto left"
-                            uib-tooltip='The provided Storage Connector Name is not valid'
-                            style="margin-left: 10px"></span>
+                              class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                              uib-tooltip='The provided Storage Connector Name is not valid'
+                              style="margin-left: 10px"></span>
                     </div>
                     <input type="text" class="form-control" placeholder="Enter a name for the storage connector"
-                        value="newStorageConnectorCtrl.storageConnectorName"
-                        ng-model="newStorageConnectorCtrl.storageConnectorName"
-                        ng-change="newStorageConnectorCtrl.nameFilledIn()" autofocus>
+                           value="newStorageConnectorCtrl.storageConnectorName"
+                           ng-model="newStorageConnectorCtrl.storageConnectorName"
+                           ng-change="newStorageConnectorCtrl.nameFilledIn()" autofocus>
                     <div ng-if="newStorageConnectorCtrl.storageConnectorNameWrongValue === -1" style="color: red">
                         <p>
                             Storage Connector name shouldn't be empty and can only contain alphanumeric characters and
@@ -74,37 +74,37 @@
                 <div uib-accordion-group class="panel-default" is-open="newStorageConnectorCtrl.accordion2.isOpen">
                     <div uib-accordion-heading>
                         <i class="fa fa-info-circle" tooltip-placement="auto left"
-                            uib-tooltip='The description of the Storage Connector for the Feature Store'></i>
+                           uib-tooltip='The description of the Storage Connector for the Feature Store'></i>
                         <span style="margin-left: 20px">
                             {{newStorageConnectorCtrl.accordion2.title}}
                             {{newStorageConnectorCtrl.accordion2.value}}
                         </span>
                         <span ng-if="newStorageConnectorCtrl.storageConnectorDescriptionWrongValue === -1"
-                            class="glyphicon glyphicon-alert" tooltip-placement="auto left"
-                            uib-tooltip='The provided Storage Connector description is not valid'
-                            style="margin-left: 10px"></span>
+                              class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                              uib-tooltip='The provided Storage Connector description is not valid'
+                              style="margin-left: 10px"></span>
                     </div>
                     <input type="text" class="form-control" placeholder="Enter a description for the storage connector"
-                        value="newStorageConnectorCtrl.storageConnectorDescription"
-                        ng-model="newStorageConnectorCtrl.storageConnectorDescription"
-                        ng-change="newStorageConnectorCtrl.descriptionFilledIn()" autofocus>
+                           value="newStorageConnectorCtrl.storageConnectorDescription"
+                           ng-model="newStorageConnectorCtrl.storageConnectorDescription"
+                           ng-change="newStorageConnectorCtrl.descriptionFilledIn()" autofocus>
                     <div ng-if="newStorageConnectorCtrl.storageConnectorDescriptionWrongValue === -1"
-                        style="color: red">
+                         style="color: red">
                     </div>
                 </div>
 
                 <div uib-accordion-group class="panel-default" is-open="newStorageConnectorCtrl.accordion3.isOpen">
                     <div uib-accordion-heading>
                         <i class="fa fa-info-circle" tooltip-placement="auto left"
-                            uib-tooltip='The description of the Storage Connector for the Feature Store'></i>
+                           uib-tooltip='The description of the Storage Connector for the Feature Store'></i>
                         <span style="margin-left: 20px">
                             {{newStorageConnectorCtrl.accordion3.title}}
                             {{newStorageConnectorCtrl.accordion3.value}}
                         </span>
                         <span ng-if="newStorageConnectorCtrl.storageConnectorConfigWrongValue === -1"
-                            class="glyphicon glyphicon-alert" tooltip-placement="auto left"
-                            uib-tooltip='The provided Storage Connector description is not valid'
-                            style="margin-left: 10px"></span>
+                              class="glyphicon glyphicon-alert" tooltip-placement="auto left"
+                              uib-tooltip='The provided Storage Connector description is not valid'
+                              style="margin-left: 10px"></span>
                     </div>
 
                     <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
@@ -117,40 +117,40 @@
                                         <div style="display: inline-block; vertical-align: top;">
                                             <div class="btn-group btn-group-toggle" data-toggle="buttons">
                                                 <label class="btn btn-default btn-md" id="jdbc_connector_lbl"
-                                                    ng-click="newStorageConnectorCtrl.setStorageConnectorType(0);"
-                                                    ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 0}"
-                                                    style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                       ng-click="newStorageConnectorCtrl.setStorageConnectorType(0);"
+                                                       ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 0}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="JDBC_CONNECTION_BTN"
-                                                        id="JDBC_CONNECTION_BTN">
+                                                           id="JDBC_CONNECTION_BTN">
                                                     JDBC Connector
                                                     <i class="fa fa-info-circle"
-                                                        uib-tooltip="Define a connection to a JDBC connector"
-                                                        tooltip-placement="left" style="margin-left: 10px">
+                                                       uib-tooltip="Define a connection to a JDBC connector"
+                                                       tooltip-placement="left" style="margin-left: 10px">
                                                     </i>
                                                 </label>
                                                 <label class="btn btn-default btn-md" id="s3_connection_lbl"
-                                                    ng-click="newStorageConnectorCtrl.setStorageConnectorType(1);"
-                                                    ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 1}"
-                                                    style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                       ng-click="newStorageConnectorCtrl.setStorageConnectorType(1);"
+                                                       ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 1}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="S3_CONNECTION_BTN"
-                                                        id="S3_CONNECTION_BTN">
+                                                           id="S3_CONNECTION_BTN">
                                                     S3 Connector
                                                     <i class="fa fa-info-circle"
-                                                        uib-tooltip="Define a connection to a S3 connector"
-                                                        tooltip-placement="left" style="margin-left: 10px">
+                                                       uib-tooltip="Define a connection to a S3 connector"
+                                                       tooltip-placement="left" style="margin-left: 10px">
                                                     </i>
                                                 </label>
 
                                                 <label class="btn btn-default btn-md" id="HopsFS_connection_lbl"
-                                                    ng-click="newStorageConnectorCtrl.setStorageConnectorType(2);"
-                                                    ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 2}"
-                                                    style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                       ng-click="newStorageConnectorCtrl.setStorageConnectorType(2);"
+                                                       ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 2}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="HOPSFS_CONNECTION_BTN"
-                                                        id="HopsFS_CONNECTION_BTN">
+                                                           id="HopsFS_CONNECTION_BTN">
                                                     HopsFS Connector
                                                     <i class="fa fa-info-circle"
-                                                        uib-tooltip="Define a HopsFS dataset as a connector for the feature store "
-                                                        tooltip-placement="left" style="margin-left: 10px">
+                                                       uib-tooltip="Define a HopsFS dataset as a connector for the feature store "
+                                                       tooltip-placement="left" style="margin-left: 10px">
                                                     </i>
                                                 </label>
                                             </div>
@@ -173,9 +173,9 @@
                                 </div>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" placeholder="Enter a JDBC connection string"
-                                        ng-model="newStorageConnectorCtrl.jdbcConnectionString">
+                                           ng-model="newStorageConnectorCtrl.jdbcConnectionString">
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorJdbcStringWrongValue === -1"
-                                        style="color: red">
+                                         style="color: red">
                                         <p>
                                             The JDBC connection string should not be empty and should be less than
                                             {{newStorageConnectorCtrl.jdbcStorageConnectorConnectionStringMaxLength}}
@@ -189,22 +189,22 @@
                     </div>
 
                     <div data-ng-repeat="jdbcArgument in newStorageConnectorCtrl.jdbcArguments track by $index"
-                        ng-if="newStorageConnectorCtrl.storageConnectorType === 0">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 0">
                         <div class="view-info">
                             <div class="col-md-12">
                                 <div class="col-sm-12" style="margin-bottom: 20px">
                                     <div class="col-sm-3">
                                         <label class="control-label">JDBC Argument</label>
                                         <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                            uib-tooltip='An argument/parameter to complement the JDBC string at run-time (e.g password field)'
-                                            style="margin-left: 10px"></i>
+                                           uib-tooltip='An argument/parameter to complement the JDBC string at run-time (e.g password field)'
+                                           style="margin-left: 10px"></i>
                                     </div>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control"
-                                            placeholder="Enter the name of the argument" value="{{jdbcArgument}}"
-                                            ng-model="newStorageConnectorCtrl.jdbcArguments[$index]">
+                                               placeholder="Enter the name of the argument" value="{{jdbcArgument}}"
+                                               ng-model="newStorageConnectorCtrl.jdbcArguments[$index]">
                                         <div ng-if="newStorageConnectorCtrl.jdbcArgumentsWrongValue[$index] === -1"
-                                            style="color: red">{{"" +
+                                             style="color: red">{{"" +
                                             "JDBC argument name should not be empty"}}
                                         </div>
                                     </div>
@@ -218,8 +218,8 @@
                                     </div>
                                     <div class="col-sm-9">
                                         <button class="col-sm-2 btn btn-sm btn-danger glyphicon glyphicon-trash"
-                                            uib-tooltip="Remove JDBC Argument"
-                                            ng-click="newStorageConnectorCtrl.removeJdbcArgument($index)">
+                                                uib-tooltip="Remove JDBC Argument"
+                                                ng-click="newStorageConnectorCtrl.removeJdbcArgument($index)">
                                         </button>
                                     </div>
                                 </div>
@@ -232,12 +232,12 @@
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
                                     <button type="button" ng-click="newStorageConnectorCtrl.addJdbcArgument()"
-                                        uib-tooltip="Add an argument/parameter to the JDBC string that can be complemented at
+                                            uib-tooltip="Add an argument/parameter to the JDBC string that can be complemented at
                             runtime (e.g a password or TLS certificate parameter)"
-                                        class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:
+                                            class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:
                             10px">
                                         Add Argument<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
-                                        </i>
+                                    </i>
                                     </button>
                                 </div>
                                 <div class="col-sm-9">
@@ -261,9 +261,9 @@
                                 </div>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" placeholder="Enter an S3 bucket"
-                                        ng-model="newStorageConnectorCtrl.s3Bucket">
+                                           ng-model="newStorageConnectorCtrl.s3Bucket">
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3BucketWrongValue === -1"
-                                        style="color: red">
+                                         style="color: red">
                                         The S3 Bucket should not be empty and should be less than
                                         {{newStorageConnectorCtrl.s3StorageConnectorBucketMaxLength}} characters
                                     </div>
@@ -271,23 +271,41 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info"
-                        ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                        <div class="col-md-12">
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">AWS Access/Secret keys:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='AWS Access/Secret keys' style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-9">
+                                    <md-checkbox class=" row md-primary"
+                                                 ng-click="newStorageConnectorCtrl.toggleAWSAccessSecretKeysInputFields()">
+                                        YES
+                                    </md-checkbox>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
+                         && newStorageConnectorCtrl.s3ServerAndAccessKeys">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
                                     <label class="control-label">S3 Access Key:</label>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip='The S3 access key' style="margin-left: 10px"></i>
+                                       uib-tooltip='The S3 access key' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" placeholder="Enter an S3 access key"
-                                        ng-model="newStorageConnectorCtrl.s3AccessKey">
+                                           ng-model="newStorageConnectorCtrl.s3AccessKey">
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3AccessKeyWrongValue === -1"
-                                        style="color: red">
+                                         style="color: red">
                                         <p>
-                                            The Access Key should not be longer than
+                                            The Access Key should not be empty and longer than
                                             {{newStorageConnectorCtrl.s3StorageConnectorAccesskeyMaxLength}} characters
                                         </p>
                                     </div>
@@ -297,21 +315,22 @@
                     </div>
 
                     <div class="view-info"
-                        ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
+                         && newStorageConnectorCtrl.s3ServerAndAccessKeys">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
                                     <label class="control-label">S3 Secret Key:</label>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip='The S3 secret key' style="margin-left: 10px"></i>
+                                       uib-tooltip='The S3 secret key' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" placeholder="Enter an S3 secret key"
-                                        ng-model="newStorageConnectorCtrl.s3SecretKey">
+                                           ng-model="newStorageConnectorCtrl.s3SecretKey">
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3SecretKeyWrongValue === -1"
-                                        style="color: red">
+                                         style="color: red">
                                         <p>
-                                            The Secret Key should not be longer than
+                                            The Secret Key should not be empty and longer than
                                             {{newStorageConnectorCtrl.s3StorageConnectorSecretkeyMaxLength}}
                                             characters
                                         </p>
@@ -326,19 +345,44 @@
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
-                                    <label class="control-label">S3 Server Encryption Algorithm:</label>
+                                    <label class="control-label">S3 Bucket Encryption:</label>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='The S3 Server Encryption Algorithm' style="margin-left: 10px"></i>
+                                       uib-tooltip='S3 Bucket Encryption' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" placeholder="Enter an S3 Server Encryption Algorithm"
-                                           ng-model="newStorageConnectorCtrl.s3ServerEncryptionAlgorithm">
+                                    <md-checkbox class=" row md-primary"
+                                                 ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionInputFields()" >
+                                        YES
+                                    </md-checkbox>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
+                         && newStorageConnectorCtrl.s3BucketEncryption">
+                        <div class="col-md-12">
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">S3 Server Encryption Algorithm:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                       uib-tooltip='S3 Server Encryption Algorithm' style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-9">
+                                    <md-radio-group ng-model="newStorageConnectorCtrl.s3ServerEncryptionAlgorithm"
+                                                    class="md-primary pull-left">
+                                        <md-radio-button
+                                                ng-repeat="m in newStorageConnectorCtrl.s3ServerEncryptionAlgorithmAlgorithms" ng-value="{{m.algorithm}}"
+                                                         uib-tooltip="{{m.description}}"
+                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey)" checked="false">
+                                            {{m.algorithm}}({{m.description}})
+                                        </md-radio-button>
+                                    </md-radio-group>
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3ServerEncryptionAlgorithmWrongValue === -1"
                                          style="color: red">
                                         <p>
-                                            The S3 server encryption algorithm should not be longer than
-                                            {{newStorageConnectorCtrl.s3ServerEncryptionAlgorithmMaxLength}}
-                                            characters
+                                            Please select encryption algorithm
                                         </p>
                                     </div>
                                 </div>
@@ -347,7 +391,9 @@
                     </div>
 
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
+                         && newStorageConnectorCtrl.s3BucketEncryption
+                         && newStorageConnectorCtrl.s3BucketEncryptionRequiresKey">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -356,13 +402,14 @@
                                        uib-tooltip='The S3 Server Encryption Key' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <input type="text" class="form-control" placeholder="Enter an S3 Server Key"
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter an S3 Server Encryption Key"
                                            ng-model="newStorageConnectorCtrl.s3ServerEncryptionKey">
                                     <div
                                             ng-if="newStorageConnectorCtrl.storageConnectorS3ServerEncryptionKeyWrongValue === -1"
-                                         style="color: red">
+                                            style="color: red">
                                         <p>
-                                            The S3 server encryption key should not be longer than
+                                            The S3 server encryption key should not be empty and longer than
                                             {{newStorageConnectorCtrl.s3ServerEncryptionKeyMaxLength}}
                                             characters
                                         </p>
@@ -378,7 +425,7 @@
                                 <div class="col-sm-3">
                                     <label class="control-label">HopsFS Dataset:</label>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                        uib-tooltip='Select a Dataset in your project' style="margin-left: 10px"></i>
+                                       uib-tooltip='Select a Dataset in your project' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
                                     <ui-select ng-model="newStorageConnectorCtrl.hopsFsDataset" style="z-index: 100">
@@ -390,7 +437,7 @@
                                         </ui-select-choices>
                                     </ui-select>
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorHopsfsDatasetWrongValue === -1"
-                                        style="color: red">
+                                         style="color: red">
                                         <p>
                                             You must select a HopsFS Dataset
                                         </p>
@@ -404,7 +451,7 @@
                 <div uib-accordion-group class="panel-default" is-open="newStorageConnectorCtrl.accordion4.isOpen">
                     <div uib-accordion-heading>
                         <i class="fa fa-info-circle" tooltip-placement="auto left"
-                            uib-tooltip='Create the new Storage Connector'></i>
+                           uib-tooltip='Create the new Storage Connector'></i>
                         <span style="margin-left: 20px">
                             {{newStorageConnectorCtrl.accordion4.title}}
                             {{newStorageConnectorCtrl.accordion4.value}}
@@ -413,22 +460,22 @@
                     <div class="row">
                         <div class="col-sm-1">
                             <button ng-click="newStorageConnectorCtrl.createStorageConnector()"
-                                class="btn btn-default btn-success"
-                                ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
+                                    class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
                                 Create
                                 <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
-                                    class="fa fa-spinner fa-spin pull-right"></i>
+                                   class="fa fa-spinner fa-spin pull-right"></i>
                             </button>
                             <button ng-click="newStorageConnectorCtrl.updateStorageConnector()"
-                                class="btn btn-default btn-success"
-                                ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'">
+                                    class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'">
                                 Update
                                 <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
-                                    class="fa fa-spinner fa-spin pull-right"></i>
+                                   class="fa fa-spinner fa-spin pull-right"></i>
                             </button>
                         </div>
                         <div class="col-sm-4 alert alert-warning" role="alert"
-                            ng-show="newStorageConnectorCtrl.wrong_values === -1">
+                             ng-show="newStorageConnectorCtrl.wrong_values === -1">
                             There are errors in your input configuration, see error messages above.
                         </div>
                         <div class="col-sm-7">

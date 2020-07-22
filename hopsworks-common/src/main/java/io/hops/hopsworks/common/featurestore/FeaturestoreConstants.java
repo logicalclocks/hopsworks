@@ -15,7 +15,6 @@
  */
 
 package io.hops.hopsworks.common.featurestore;
-
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 

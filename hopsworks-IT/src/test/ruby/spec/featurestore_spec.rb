@@ -149,9 +149,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector to the featurestore without encryption information" do
           project = get_project
-          with_encryption = false
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
               "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
@@ -168,12 +167,14 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["bucket"] == "testbucket").to be true
         end
 
-        it "should be able to add s3 connector to the featurestore with encryption information" do
+        it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
           project = get_project
-          with_encryption = true
+          encryption_algorithm = "AWS-KMS"
+          encryption_key = ""
+          with_encryption_key = false;
           featurestore_id = get_featurestore_id(project.id)
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
-              "testbucket")
+          json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
+                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -187,15 +188,38 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == connector_name).to be true
           expect(parsed_json["storageConnectorType"] == "S3").to be true
           expect(parsed_json["bucket"] == "testbucket").to be true
-          expect(parsed_json["serverEncryptionAlgorithm"] == "test").to be true
-          expect(parsed_json["serverEncryptionKey"] == "test").to be true
+          expect(parsed_json["serverEncryptionAlgorithm"] == encryption_algorithm).to be true
+        end
+
+        it "should be able to add s3 connector to the featurestore with encryption algorithm and with encryption key" do
+          project = get_project
+          encryption_algorithm = "AES-256"
+          encryption_key = "Test"
+          with_encryption_key = true;
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
+                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("id")).to be true
+          expect(parsed_json.key?("name")).to be true
+          expect(parsed_json.key?("description")).to be true
+          expect(parsed_json.key?("storageConnectorType")).to be true
+          expect(parsed_json.key?("featurestoreId")).to be true
+          expect(parsed_json.key?("bucket")).to be true
+          expect(parsed_json.key?("secretKey")).to be true
+          expect(parsed_json.key?("accessKey")).to be true
+          expect(parsed_json["name"] == connector_name).to be true
+          expect(parsed_json["storageConnectorType"] == "S3").to be true
+          expect(parsed_json["bucket"] == "testbucket").to be true
+          expect(parsed_json["serverEncryptionAlgorithm"] == encryption_algorithm).to be true
+          expect(parsed_json["serverEncryptionKey"] == encryption_key).to be true
         end
 
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          with_encryption = false;
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket: nil)
+          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket: nil)
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
@@ -253,7 +277,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           with_encryption = false
-          json_result, connector_name = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
+          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, with_encryption, bucket:
               "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
@@ -305,9 +329,13 @@ describe "On #{ENV['OS']}" do
         it "should be able to update S3 connector in the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          with_encryption = true
-          json_result1, connector_name1 = create_s3_connector(project.id, featurestore_id, with_encryption, bucket:
-              "testbucket")
+          encryption_algorithm = "AES-256"
+          encryption_key = ""
+          with_encryption_key = true;
+          featurestore_id = get_featurestore_id(project.id)
+          json_result1, connector_name1 = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
+                                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
           connector_id = parsed_json1["id"]
@@ -1645,7 +1673,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           training_dataset_id = parsed_json1["id"]
-          json_new_connector, _ = create_s3_connector(project.id, featurestore_id)
+          json_new_connector, _ = create_s3_connector_without_encryption(project.id, featurestore_id)
           new_connector = JSON.parse(json_new_connector)
 
           json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id,

@@ -1466,7 +1466,10 @@ public class RESTCodes {
     S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN(106, "IAM role is configured for this instance. AWS " +
       "server encryption algorithm/key " +
       "are not allowed\"",
+      Response.Status.BAD_REQUEST),
+    S3_SERVER_ENCRYPTION_ALGORITHM_DOES_NOT_EXIST(107, "The S3 encryption algorithm does not exist",
       Response.Status.BAD_REQUEST);
+    
 
 
     private int code;
