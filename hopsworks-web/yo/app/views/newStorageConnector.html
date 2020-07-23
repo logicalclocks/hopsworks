@@ -370,12 +370,11 @@
                                        uib-tooltip='S3 Server Encryption Algorithm' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-radio-group ng-model="newStorageConnectorCtrl.s3ServerEncryptionAlgorithm"
-                                                    class="md-primary pull-left">
+                                    <md-radio-group class="md-primary pull-left">
                                         <md-radio-button
                                                 ng-repeat="m in newStorageConnectorCtrl.s3ServerEncryptionAlgorithmAlgorithms" ng-value="{{m.algorithm}}"
                                                          uib-tooltip="{{m.description}}"
-                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey)" checked="false">
+                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey, m.algorithm)" checked="false">
                                             {{m.algorithm}}({{m.description}})
                                         </md-radio-button>
                                     </md-radio-group>

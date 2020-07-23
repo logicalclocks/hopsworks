@@ -541,7 +541,8 @@ angular.module('hopsWorksApp')
             /**
              * Called when the user clicks on the "S3 Bucket Encryption Checkbox"
              */
-            self.toggleS3BucketEncryptionKeyInputField = function (requiresKey) {
+            self.toggleS3BucketEncryptionKeyInputField = function (requiresKey, selectedAlgorithm) {
+                self.s3ServerEncryptionAlgorithm = selectedAlgorithm;
                 if(requiresKey){
                     self.s3BucketEncryptionRequiresKey = true;
                 }

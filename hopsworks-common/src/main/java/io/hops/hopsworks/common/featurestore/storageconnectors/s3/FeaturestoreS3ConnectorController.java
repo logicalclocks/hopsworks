@@ -27,7 +27,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -273,7 +272,8 @@ public class FeaturestoreS3ConnectorController {
         Level.FINE, ", the S3 server encryption algorithm cannot be empty"
       );
     }
-    else if(!encryptionAlgorithmExists(serverEncryptionAlgorithm)){
+    else if(FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(serverEncryptionAlgorithm) ==
+      null){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
         Level.FINE, ", the S3 server encryption algorithm provided does not exist"
@@ -357,24 +357,6 @@ public class FeaturestoreS3ConnectorController {
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
       }
     }
-  }
-  
-  /**
-   * Utility function to check if the provided encryption algorithm is exists
-   * @param encryptionAlgorithm
-   * Loops all encryption algorithms defined in FeaturestoresS3ConnectorEncryptionAlgorithm enum
-   * @return boolean
-   */
-  private boolean encryptionAlgorithmExists(String encryptionAlgorithm){
-    boolean algorithmExists = false;
-    List<FeaturestoreS3ConnectorEncryptionAlgorithm> encryptionAlgorithms =
-      Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values());
-    
-    for(FeaturestoreS3ConnectorEncryptionAlgorithm a : encryptionAlgorithms){
-      if(a.getAlgorithm().equals(encryptionAlgorithm)) algorithmExists = true;
-      break;
-    }
-    return algorithmExists;
   }
 
   /**

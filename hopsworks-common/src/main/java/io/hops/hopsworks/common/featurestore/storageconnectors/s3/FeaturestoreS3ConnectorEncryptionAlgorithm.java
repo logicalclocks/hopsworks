@@ -5,7 +5,6 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -46,17 +45,18 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
     this.requiresKey = requiresKey;
   }
   
+  /**
+   * Searches encryption algorithms by name
+   * @param algorithmName
+   * @return
+   * @throws FeaturestoreException
+   */
   public static FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithmByName(String algorithmName) throws
     FeaturestoreException {
-    FeaturestoreS3ConnectorEncryptionAlgorithm algorithm = null;
-    List<FeaturestoreS3ConnectorEncryptionAlgorithm> encryptionAlgorithms =
-      Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values());
-  
-    for(FeaturestoreS3ConnectorEncryptionAlgorithm a : encryptionAlgorithms){
-      if(a.getAlgorithm().equals(algorithmName)) algorithm = a;
-      break;
-    }
-    
+    FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
+      Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values()).stream().
+        filter(a -> a.getAlgorithm().equals(algorithmName)).findAny().orElse(null);
+ 
     if(algorithm == null){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_SERVER_ENCRYPTION_ALGORITHM_DOES_NOT_EXIST,
         Level.FINE, "Encryption algorithm does not exist");
