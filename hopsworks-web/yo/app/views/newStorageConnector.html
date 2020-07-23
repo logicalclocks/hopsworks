@@ -281,8 +281,9 @@
                                        uib-tooltip='AWS Access/Secret keys' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-checkbox class=" row md-primary"
-                                                 ng-click="newStorageConnectorCtrl.toggleAWSAccessSecretKeysInputFields()">
+                                    <md-checkbox class="row md-primary"
+                                                 ng-click="newStorageConnectorCtrl.toggleAWSAccessSecretKeysInputFields()"
+                                                 ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3ServerAndAccessKeys == true]">
                                         YES
                                     </md-checkbox>
                                 </div>
@@ -350,8 +351,11 @@
                                        uib-tooltip='S3 Bucket Encryption' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-checkbox class=" row md-primary"
-                                                 ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionInputFields()" >
+                                    <md-checkbox
+
+                                            class="row md-primary"
+                                            ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3BucketEncryption == true]"
+                                            ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionInputFields()">
                                         YES
                                     </md-checkbox>
                                 </div>
@@ -370,11 +374,13 @@
                                        uib-tooltip='S3 Server Encryption Algorithm' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-radio-group class="md-primary pull-left">
+                                    <md-radio-group class="md-primary pull-left"
+                                                    ng-model="newStorageConnectorCtrl.s3ServerEncryptionAlgorithm">
                                         <md-radio-button
-                                                ng-repeat="m in newStorageConnectorCtrl.s3ServerEncryptionAlgorithmAlgorithms" ng-value="{{m.algorithm}}"
-                                                         uib-tooltip="{{m.description}}"
-                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey, m.algorithm)" checked="false">
+                                                ng-repeat="m in newStorageConnectorCtrl.s3ServerEncryptionAlgorithmAlgorithms"
+                                                uib-tooltip="{{m.description}}"
+                                                ng-value="m.algorithm"
+                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey, m.algorithm)">
                                             {{m.algorithm}}({{m.description}})
                                         </md-radio-button>
                                     </md-radio-group>

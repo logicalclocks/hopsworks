@@ -79,26 +79,35 @@ public class FeaturestoreS3ConnectorController {
       Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO,
       Integer storageConnectorId) throws FeaturestoreException {
     FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(storageConnectorId, featurestore);
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getName())){
-      verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
-      featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
-    }
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getDescription())){
-      verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
-      featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
-    }
+    
+    verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
+    featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
+  
+  
+    verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
+    featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
+  
+    verifyS3SecreteAndAccessPair(featurestoreS3ConnectorDTO.getAccessKey(), featurestoreS3ConnectorDTO.getSecretKey());
+    
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey())){
       verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
     }
+    else{
+      featurestoreS3Connector.setAccessKey(null);
+    }
+    
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())){
       verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
       featurestoreS3Connector.setSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     }
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getBucket())){
-      verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getBucket());
-      featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
+    else{
+      featurestoreS3Connector.setSecretKey(null);
     }
+  
+    verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
+    featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
+    
     if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
@@ -108,8 +117,15 @@ public class FeaturestoreS3ConnectorController {
       if(algorithm.isRequiresKey()){
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
       }
+      
       featurestoreS3Connector.setServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+  
+      if(algorithm.isRequiresKey()){
+        featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      }
+      else{
+        featurestoreS3Connector.setServerEncryptionKey(null);
+      }
     }
     else{
       featurestoreS3Connector.setServerEncryptionAlgorithm(null);
@@ -119,6 +135,7 @@ public class FeaturestoreS3ConnectorController {
     if(featurestore != null){
       featurestoreS3Connector.setFeaturestore(featurestore);
     }
+    
     FeaturestoreS3Connector updatedFeaturestoreS3Connector =
         featurestoreS3ConnectorFacade.updateS3Connector(featurestoreS3Connector);
     return new FeaturestoreS3ConnectorDTO(updatedFeaturestoreS3Connector);
@@ -342,10 +359,12 @@ public class FeaturestoreS3ConnectorController {
     verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(),featurestore, false);
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
+    
+    verifyS3SecreteAndAccessPair(featurestoreS3ConnectorDTO.getAccessKey(), featurestoreS3ConnectorDTO.getSecretKey());
     verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
     verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) &&
+    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
       
@@ -369,6 +388,22 @@ public class FeaturestoreS3ConnectorController {
     List<FeaturestoreS3Connector> s3Connectors = featurestoreS3ConnectorFacade.findByFeaturestore(featurestore);
     return s3Connectors.stream().map(s3Connector -> new FeaturestoreS3ConnectorDTO(s3Connector))
         .collect(Collectors.toList());
+  }
+  
+  public void verifyS3SecreteAndAccessPair(String accessKey, String secreteKey) throws FeaturestoreException {
+    if(!Strings.isNullOrEmpty(accessKey) &&
+      Strings.isNullOrEmpty(secreteKey)){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY,
+        Level.FINE, "The S3 secret key cannot be empty and must be less than "
+        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH);
+    }
+  
+    if(!Strings.isNullOrEmpty(secreteKey) &&
+      Strings.isNullOrEmpty(accessKey)){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY,
+        Level.FINE, "The S3 access key cannot be empty and must be less than "
+        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH);
+    }
   }
   
 

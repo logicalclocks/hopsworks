@@ -171,10 +171,13 @@ describe "On #{ENV['OS']}" do
           project = get_project
           encryption_algorithm = "AWS-KMS"
           encryption_key = "Test"
+          access_key = "test"
+          secret_key = "test"
           with_encryption_key = false;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+                                                            encryption_algorithm, encryption_key, secret_key,
+                                                                            access_key, bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -195,10 +198,13 @@ describe "On #{ENV['OS']}" do
           project = get_project
           encryption_algorithm = "AWS-KMS"
           encryption_key = "Test"
+          access_key = "test"
+          secret_key = "test"
           with_encryption_key = true;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+                                                            encryption_algorithm, encryption_key,access_key,
+                                                                            secret_key, bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -216,20 +222,44 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["serverEncryptionKey"] == encryption_key).to be true
         end
 
-        it "should be not able to add s3 connector to the featurestore with wrong encryption algorithm do"
+        it "should be not able to add s3 connector to the featurestore with wrong encryption algorithm" do
           project = get_project
           encryption_algorithm = "WRONG-ALGORITHM"
           encryption_key = "Test"
+          access_key = "test"
+          secret_key = "test"
           with_encryption_key = true;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+                                                                            encryption_algorithm, encryption_key,
+                                                                            access_key, secret_key,
+                                                                            bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(400)
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270034).to be true
+          expect(parsed_json["errorCode"] == 270107).to be true
+        end
+
+        it "should be not able to add s3 connector to the featurestore with wrong server key and access key pair" do
+          project = get_project
+          encryption_algorithm = "AWS-KMS"
+          encryption_key = "Test"
+          secret_key = "test"
+          access_key = "test"
+          with_encryption_key = true;
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
+                                                                            encryption_algorithm, encryption_key,
+                                                                            access_key, secret_key,
+                                                                            bucket: "testbucket")
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270107).to be true
         end
 
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
@@ -292,8 +322,7 @@ describe "On #{ENV['OS']}" do
         it "should be able to delete a s3 connector from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          with_encryption = false
-          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, with_encryption, bucket:
+          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
               "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
@@ -347,10 +376,14 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           encryption_algorithm = "AES-256"
           encryption_key = ""
+          access_key = "test"
+          secret_key = "test"
           with_encryption_key = true;
           featurestore_id = get_featurestore_id(project.id)
           json_result1, connector_name1 = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                            encryption_algorithm, encryption_key, bucket: "testbucket")
+                                                                            encryption_algorithm, encryption_key,
+                                                                              access_key, secret_key,
+                                                                              bucket: "testbucket")
 
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)

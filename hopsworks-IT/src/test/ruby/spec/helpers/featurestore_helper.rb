@@ -174,7 +174,7 @@ module FeaturestoreHelper
   end
 
   def create_s3_connector_with_encryption(project_id, featurestore_id, with_encryption_key, encryption_algorithm,
-                                          encryption_key,
+                                          encryption_key, access_key, secret_key,
                                           bucket:
           "test")
     type = "featurestoreS3ConnectorDTO"
@@ -187,15 +187,15 @@ module FeaturestoreHelper
         type: type,
         storageConnectorType: storageConnectorType,
         bucket: bucket,
-        secretKey: "test",
-        accessKey: "test"
+        secretKey: access_key,
+        accessKey: secret_key
     }
 
     if with_encryption_key
       json_data["serverEncryptionAlgorithm"] = encryption_algorithm
+      json_data["serverEncryptionKey"] = encryption_key
     else
       json_data["serverEncryptionAlgorithm"] = encryption_algorithm
-      json_data["serverEncryptionKey"] = encryption_key
     end
 
     json_data = json_data.to_json
@@ -576,9 +576,14 @@ module FeaturestoreHelper
   def with_s3_connector(project_id)
     encryption_algorithm = "AES-256"
     encryption_key = "Test"
+    secret_key = "test"
+    access_key = "test"
     with_encryption_key = true;
     featurestore_id = get_featurestore_id(project_id)
-    json_result, connector_name = create_s3_connector_with_encryption(project_id, featurestore_id, with_encryption_key, encryption_algorithm, encryption_key, bucket: "testbucket")
+    json_result, connector_name = create_s3_connector_with_encryption(project_id, featurestore_id,
+                                                                      with_encryption_key, encryption_algorithm,
+                                                                      encryption_key, access_key, secret_key, bucket:
+                                                                                                        "testbucket")
     parsed_json = JSON.parse(json_result)
     expect_status(201)
     connector_id = parsed_json["id"]
