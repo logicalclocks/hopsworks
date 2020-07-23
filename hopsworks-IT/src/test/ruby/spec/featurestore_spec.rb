@@ -169,11 +169,11 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
           project = get_project
-          encryption_algorithm = "AWS-KMS"
+          encryption_algorithm = "AES-256"
           encryption_key = "Test"
           access_key = "test"
           secret_key = "test"
-          with_encryption_key = false;
+          with_encryption_key = false ;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
                                                             encryption_algorithm, encryption_key, secret_key,
@@ -247,7 +247,7 @@ describe "On #{ENV['OS']}" do
           encryption_algorithm = "AWS-KMS"
           encryption_key = "Test"
           secret_key = "test"
-          access_key = "test"
+          access_key = nil
           with_encryption_key = true;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
@@ -259,7 +259,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270107).to be true
         end
 
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
