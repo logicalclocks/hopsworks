@@ -75,7 +75,7 @@ public class UsersAdminResource {
   @EJB
   private Settings settings;
   
-  @ApiOperation(value = "Get all users profiles.")
+  @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
   @Path("/users")
   @Produces(MediaType.APPLICATION_JSON)
@@ -92,7 +92,7 @@ public class UsersAdminResource {
     return Response.ok().entity(dto).build();
   }
   
-  @ApiOperation(value = "Get user profile specified by id.")
+  @ApiOperation(value = "Get user profile specified by id.", response = UserProfileDTO.class)
   @GET
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -102,7 +102,7 @@ public class UsersAdminResource {
     return Response.ok().entity(dto).build();
   }
   
-  @ApiOperation(value = "Update user profile specified by id.")
+  @ApiOperation(value = "Update user profile specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id: [0-9]*}")
   @Produces(MediaType.APPLICATION_JSON)
@@ -112,14 +112,14 @@ public class UsersAdminResource {
   public Response updateUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id, Users user) throws UserException {
     
-    userProfileBuilder.updateUser(
+    UserProfileDTO  userProfileDTO = userProfileBuilder.updateUser(
       id,
       user);
     
-    return Response.noContent().build();
+    return Response.ok(userProfileDTO).build();
   }
   
-  @ApiOperation(value = "Accept user specified by id.")
+  @ApiOperation(value = "Accept user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/accepted")
   @Produces(MediaType.APPLICATION_JSON)
@@ -128,15 +128,15 @@ public class UsersAdminResource {
     @Audited(type = AuditType.ROLE_AUDIT, action = AuditAction.ROLE_ADDED, message = "Added role")})
   public Response acceptUser(@Context HttpServletRequest req, @Context SecurityContext sc,
     @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id, Users user) throws UserException, ServiceException {
-    
-    userProfileBuilder.acceptUser(
+  
+    UserProfileDTO  userProfileDTO = userProfileBuilder.acceptUser(
       id,
       user);
     
-    return Response.noContent().build();
+    return Response.ok(userProfileDTO).build();
   }
   
-  @ApiOperation(value = "Reject user specified by id.")
+  @ApiOperation(value = "Reject user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/rejected")
   @AuditedList({@Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Rejected " +
@@ -150,7 +150,7 @@ public class UsersAdminResource {
     return Response.noContent().build();
   }
   
-  @ApiOperation(value = "Resend confirmation email to user specified by id.")
+  @ApiOperation(value = "Resend confirmation email to user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/pending")
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Resend confirmation email")
@@ -158,9 +158,8 @@ public class UsersAdminResource {
     @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id)
     throws UserException, ServiceException {
     String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
-    userProfileBuilder.pendUser(linkUrl, id);
-  
-    return Response.noContent().build();
+    UserProfileDTO userProfileDTO = userProfileBuilder.pendUser(linkUrl, id);
+    return Response.ok(userProfileDTO).build();
   }
   
   @ApiOperation(value = "Get all user groups.")
