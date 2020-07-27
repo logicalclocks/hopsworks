@@ -67,6 +67,7 @@ import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
@@ -103,6 +104,8 @@ public class AuthController {
   private SecurityUtils securityUtils;
   @EJB
   private AccountAuditFacade accountAuditFacade;
+  @Inject
+  private PasswordRecovery passwordRecovery;
 
   private void validateUser(Users user) {
     if (user == null) {
@@ -344,27 +347,29 @@ public class AuthController {
    */
   public void sendNewRecoveryValidationKey(Users user, String url, boolean isPassword)
     throws MessagingException, UserException {
+    CredentialsResetToken resetToken = generateResetToken(user, isPassword);
+    passwordRecovery.sendRecoveryNotification(user, url, isPassword, resetToken);
+  }
+
+  private static final long RESET_LINK_IN_HOURS = TimeUnit.HOURS.toMillis(SecurityUtils.RESET_LINK_VALID_FOR_HOUR);
+  public CredentialsResetToken generateResetToken(Users user, boolean isPassword) throws UserException {
     if (user == null) {
       throw new IllegalArgumentException("User not set.");
     }
     if (UserAccountType.REMOTE_ACCOUNT_TYPE.equals(user.getMode())) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
     }
-    String resetToken;
-    long validForHour = TimeUnit.HOURS.toMillis(SecurityUtils.RESET_LINK_VALID_FOR_HOUR);
     //resend the same token exp date > 5min
     if (user.getValidationKey() != null && user.getValidationKeyType() != null && user.getValidationKeyUpdated() != null
-      && user.getValidationKeyType().equals(isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET) &&
-      diffMillis(user.getValidationKeyUpdated()) > TimeUnit.MINUTES.toMillis(5)) {
-      resetToken = user.getValidationKey();
-      validForHour = diffMillis(user.getValidationKeyUpdated());
-    } else {
-      resetToken = securityUtils.generateSecureRandomString();
-      setValidationKey(user, resetToken, isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET);
+            && user.getValidationKeyType().equals(isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET)
+            && diffMillis(user.getValidationKeyUpdated()) > TimeUnit.MINUTES.toMillis(5)) {
+      return CredentialsResetToken.of(user.getValidationKey(), diffMillis(user.getValidationKeyUpdated()));
     }
-    sendRecoveryValidationKey(user, url, securityUtils.urlEncode(resetToken), isPassword, validForHour);
+    String resetToken = securityUtils.generateSecureRandomString();
+    setValidationKey(user, resetToken, isPassword ? ValidationKeyType.PASSWORD : ValidationKeyType.QR_RESET);
+    return CredentialsResetToken.of(resetToken, RESET_LINK_IN_HOURS);
   }
-  
+
   public long diffMillis(Date date) {
     if (date == null) {
       return -1;
@@ -374,17 +379,6 @@ public class AuthController {
     long diff = now.getTime() - date.getTime();
     long diffMs = validForMs - diff;
     return diffMs;
-  }
-  
-  private void sendRecoveryValidationKey(Users user, String url, String resetToken, boolean isPassword, long validFor)
-    throws MessagingException {
-    String subject = UserAccountsEmailMessages.ACCOUNT_MOBILE_RECOVERY_SUBJECT;
-    String msg = UserAccountsEmailMessages.buildQRRecoveryMessage(url, user.getUsername() + resetToken, validFor);
-    if (isPassword) {
-      subject = UserAccountsEmailMessages.ACCOUNT_PASSWORD_RECOVERY_SUBJECT;
-      msg = UserAccountsEmailMessages.buildPasswordRecoveryMessage(url, user.getUsername() + resetToken, validFor);
-    }
-    emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, subject, msg);
   }
 
   /**
@@ -633,5 +627,27 @@ public class AuthController {
       return false;
     }
     return user.getBbcGroupCollection().contains(group);
+  }
+
+  public static class CredentialsResetToken {
+    private final String token;
+    private final long validity;
+
+    public static CredentialsResetToken of(String token, long validity) {
+      return new CredentialsResetToken(token, validity);
+    }
+
+    private CredentialsResetToken(String token, long validity) {
+      this.token = token;
+      this.validity = validity;
+    }
+
+    public String getToken() {
+      return token;
+    }
+
+    public long getValidity() {
+      return validity;
+    }
   }
 }
