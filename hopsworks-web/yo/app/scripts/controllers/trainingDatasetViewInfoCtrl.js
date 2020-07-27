@@ -192,6 +192,14 @@ angular.module('hopsWorksApp')
                 self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
                 self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
 
+                // The location fields contains the scheme + IP if the training dataset
+                // is stored on HopsFS. they clutter the UI and break the redirect.
+                // Here we remove them.
+                if (self.selectedTrainingDataset.trainingDatasetType == self.hopsfsTrainingDatasetType) {
+                    self.selectedTrainingDataset.location = 
+                        "/" + self.selectedTrainingDataset.location.split("/").slice(3).join("/")
+                }
+
                 self.pythonCode = self.getPythonCode();
                 self.scalaCode = self.getScalaCode();
                 self.fetchSize()
