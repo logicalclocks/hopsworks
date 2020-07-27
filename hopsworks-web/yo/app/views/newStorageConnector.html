@@ -204,8 +204,7 @@
                                                placeholder="Enter the name of the argument" value="{{jdbcArgument}}"
                                                ng-model="newStorageConnectorCtrl.jdbcArguments[$index]">
                                         <div ng-if="newStorageConnectorCtrl.jdbcArgumentsWrongValue[$index] === -1"
-                                             style="color: red">{{"" +
-                                            "JDBC argument name should not be empty"}}
+                                             style="color: red">{{"" + "JDBC argument name should not be empty"}}
                                         </div>
                                     </div>
                                 </div>
@@ -284,7 +283,6 @@
                                     <md-checkbox class="row md-primary"
                                                  ng-click="newStorageConnectorCtrl.toggleAWSAccessSecretKeysInputFields()"
                                                  ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3ServerAndAccessKeys == true]">
-                                        YES
                                     </md-checkbox>
                                 </div>
                             </div>
@@ -356,7 +354,6 @@
                                             class="row md-primary"
                                             ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3BucketEncryption == true]"
                                             ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionInputFields()">
-                                        YES
                                     </md-checkbox>
                                 </div>
                             </div>
@@ -381,7 +378,7 @@
                                                 uib-tooltip="{{m.description}}"
                                                 ng-value="m.algorithm"
                                                 ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey, m.algorithm)">
-                                            {{m.algorithm}}({{m.description}})
+                                            {{m.algorithm}}
                                         </md-radio-button>
                                     </md-radio-group>
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3ServerEncryptionAlgorithmWrongValue === -1"
@@ -423,7 +420,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 2">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">

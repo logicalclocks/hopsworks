@@ -53,14 +53,10 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
    */
   public static FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithmByName(String algorithmName) throws
     FeaturestoreException {
-    FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
+    return
       Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values()).stream().
-        filter(a -> a.getAlgorithm().equals(algorithmName)).findAny().orElse(null);
- 
-    if(algorithm == null){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_SERVER_ENCRYPTION_ALGORITHM_DOES_NOT_EXIST,
-        Level.FINE, "Encryption algorithm does not exist");
-    }
-    return algorithm;
+        filter(a -> a.getAlgorithm().equals(algorithmName)).findAny().orElseThrow(() ->
+        new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_SERVER_ENCRYPTION_ALGORITHM_DOES_NOT_EXIST,
+      Level.FINE, "Encryption algorithm does not exist or is not supported"));
   }
 }
