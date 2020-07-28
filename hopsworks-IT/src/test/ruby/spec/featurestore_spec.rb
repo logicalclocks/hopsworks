@@ -149,8 +149,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector to the featurestore without encryption information" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
               "testbucket")
@@ -173,8 +173,8 @@ describe "On #{ENV['OS']}" do
 
         it "should not be able to add s3 connector without providing the access and secret key if the IAM Role is set to false" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
           access_key = nil
           secret_key = nil
@@ -194,8 +194,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector without providing the access and secret key if the IAM Role is set to true" do
           setVar("aws_instance_role", "true")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
           access_key = nil
           secret_key = nil
@@ -222,8 +222,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           encryption_algorithm = "AES256"
           encryption_key = nil
           access_key = "test"
@@ -254,8 +254,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm and with encryption key" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           encryption_algorithm = "SSE_KMS"
           encryption_key = "Test"
           access_key = "test"
@@ -285,8 +285,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be not able to add s3 connector to the featurestore with wrong encryption algorithm" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           encryption_algorithm = "WRONG-ALGORITHM"
           encryption_key = "Test"
           access_key = "test"
@@ -309,8 +309,8 @@ describe "On #{ENV['OS']}" do
 
         it "should be not able to add s3 connector to the featurestore with wrong server key and access key pair" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           encryption_algorithm = "SSE_KMS"
           encryption_key = "Test"
           secret_key = "test"
@@ -332,8 +332,8 @@ describe "On #{ENV['OS']}" do
 
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
           setVar("aws_instance_role", "false")
-          create_session(project[:username], "Pass123")
           project = get_project
+          create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket: nil)
           parsed_json = JSON.parse(json_result)
