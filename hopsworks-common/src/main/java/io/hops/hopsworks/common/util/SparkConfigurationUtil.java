@@ -17,6 +17,8 @@
 package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -35,8 +37,9 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                     Settings settings, String hdfsUser,
                                                     Map<String, String> extraJavaOptions,
-                                                    String kafkaBrokersString, String hopsworksRestEndpoint)
-      throws IOException {
+                                                    String kafkaBrokersString, String hopsworksRestEndpoint,
+                                                    ServiceDiscoveryController serviceDiscoveryController)
+      throws IOException, ServiceDiscoveryException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
@@ -64,7 +67,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         Settings.SPARK_YARN_APPMASTER_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, new ConfigProperty(
         Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, false)));
+            settings, serviceDiscoveryController, false)));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 
@@ -72,7 +75,7 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
         Settings.SPARK_EXECUTOR_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_IMAGE, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, false)));
+            settings, serviceDiscoveryController, false)));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 

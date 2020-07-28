@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.serving.tf;
 
 import com.google.common.io.Files;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
@@ -197,23 +198,28 @@ public class LocalhostTfServingController {
 
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
 
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(script)
-        .addCommand("start")
-        .addCommand(serving.getName())
-        .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
-        .addCommand(String.valueOf(grpcPort))
-        .addCommand(String.valueOf(restPort))
-        .addCommand(secretDir.toString())
-        .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-        .addCommand(serving.isBatchingEnabled() ? "1" : "0")
-        .addCommand(project.getName().toLowerCase())
-        .addCommand(projectUtils.getFullDockerImageName(project, true))
-        .setWaitTimeout(2L, TimeUnit.MINUTES)
-        .ignoreOutErrStreams(false)
-        .build();
-    logger.log(Level.INFO, processDescriptor.toString());
+    ProcessDescriptor processDescriptor;
+    try {
+      processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
+          .addCommand(script)
+          .addCommand("start")
+          .addCommand(serving.getName())
+          .addCommand(Paths.get(serving.getArtifactPath(), serving.getVersion().toString()).toString())
+          .addCommand(String.valueOf(grpcPort))
+          .addCommand(String.valueOf(restPort))
+          .addCommand(secretDir.toString())
+          .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
+          .addCommand(serving.isBatchingEnabled() ? "1" : "0")
+          .addCommand(project.getName().toLowerCase())
+          .addCommand(projectUtils.getFullDockerImageName(project, true))
+          .setWaitTimeout(2L, TimeUnit.MINUTES)
+          .ignoreOutErrStreams(false)
+          .build();
+      logger.log(Level.INFO, processDescriptor.toString());
+    } catch (ServiceDiscoveryException ex) {
+      throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.SEVERE, null, ex.getMessage(), ex);
+    }
 
     // Materialized TLS certificates to be able to read the model
     if (settings.getHopsRpcTls()) {

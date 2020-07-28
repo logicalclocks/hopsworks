@@ -38,6 +38,8 @@
  */
 package io.hops.hopsworks.common.util;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -52,6 +54,9 @@ public class ProjectUtils {
   @EJB
   private Settings settings;
   
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  
   public boolean isReservedProjectName(String projectName) {
     for (String name : settings.getReservedProjectNames()) {
       if (name.equalsIgnoreCase(projectName)) {
@@ -61,13 +66,14 @@ public class ProjectUtils {
     return false;
   }
 
-  public String getFullDockerImageName(Project project, boolean useBase) {
-    return getFullDockerImageName(project, settings, useBase);
+  public String getFullDockerImageName(Project project, boolean useBase) throws ServiceDiscoveryException {
+    return getFullDockerImageName(project, settings, serviceDiscoveryController, useBase);
   }
   
-  public static String getFullDockerImageName(Project project, Settings settings, boolean useBase) {
+  public static String getFullDockerImageName(Project project, Settings settings,
+      ServiceDiscoveryController serviceDiscoveryController, boolean useBase) throws ServiceDiscoveryException {
     String imageName = getDockerImageName(project, settings, useBase);
-    return settings.getRegistry() + "/" + imageName;
+    return getRegistryURL(serviceDiscoveryController) + "/" + imageName;
   }
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
@@ -82,8 +88,20 @@ public class ProjectUtils {
     }
   }
   
-  public String getFullDockerImageName(String imageName) {
-    return settings.getRegistry() + "/" + imageName;
+  public String getFullDockerImageName(String imageName) throws ServiceDiscoveryException {
+    return getRegistryURL(serviceDiscoveryController) + "/" + imageName;
+  }
+
+  public String getRegistryURL() throws
+      ServiceDiscoveryException {
+    return getRegistryURL(serviceDiscoveryController);
+  }
+  
+  public static String getRegistryURL(ServiceDiscoveryController serviceDiscoveryController) throws
+      ServiceDiscoveryException {
+    com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.REGISTRY);
+    return registry.getName() + ":" + registry.getPort();
   }
 
   public static boolean isCondaEnabled(Project project) {
@@ -94,7 +112,7 @@ public class ProjectUtils {
     return project.getName().toLowerCase() + ":" + settings.getHopsworksVersion() + ".0";
   }
 
-  public String getFullBaseImageName() {
-    return settings.getRegistry() + "/" + settings.getBaseDockerImage();
+  public String getFullBaseImageName() throws ServiceDiscoveryException {
+    return getRegistryURL(serviceDiscoveryController) + "/" + settings.getBaseDockerImage();
   }
 }

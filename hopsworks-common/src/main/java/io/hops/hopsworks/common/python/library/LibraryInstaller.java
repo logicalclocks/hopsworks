@@ -16,6 +16,7 @@
 package io.hops.hopsworks.common.python.library;
 
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
 import io.hops.hopsworks.common.python.commands.CommandsController;
@@ -141,7 +142,7 @@ public class LibraryInstaller {
     }
   }
 
-  private void createNewImage(CondaCommands cc) throws IOException {
+  private void createNewImage(CondaCommands cc) throws IOException, ServiceDiscoveryException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
@@ -159,7 +160,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + initialDockerImage)
+        .addCommand(projectUtils.getRegistryURL() + "/" + initialDockerImage)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -180,7 +181,7 @@ public class LibraryInstaller {
     }
   }
 
-  private void deleteImage(CondaCommands cc) throws IOException {
+  private void deleteImage(CondaCommands cc) throws IOException, ServiceDiscoveryException {
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
@@ -200,7 +201,7 @@ public class LibraryInstaller {
     }
   }
 
-  private void installLibrary(CondaCommands cc) throws IOException, ServiceException {
+  private void installLibrary(CondaCommands cc) throws IOException, ServiceException, ServiceDiscoveryException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     File home = new File(System.getProperty("user.home"));
@@ -243,7 +244,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + nextDockerImageName)
+        .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -268,7 +269,7 @@ public class LibraryInstaller {
     libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
   }
 
-  private void uninstallLibrary(CondaCommands cc) throws IOException {
+  private void uninstallLibrary(CondaCommands cc) throws IOException, ServiceDiscoveryException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
@@ -299,7 +300,7 @@ public class LibraryInstaller {
         .addCommand(prog)
         .addCommand("create")
         .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(settings.getRegistry() + "/" + nextDockerImageName)
+        .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
         .redirectErrorStream(true)
         .setCurrentWorkingDirectory(baseDir)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
@@ -349,7 +350,7 @@ public class LibraryInstaller {
     }
   }
 
-  public void exportLibraries(CondaCommands cc) throws IOException, ServiceException {
+  public void exportLibraries(CondaCommands cc) throws IOException, ServiceException, ServiceDiscoveryException {
 
     String prog = settings.getSudoersDir() + "/dockerImage.sh";
 

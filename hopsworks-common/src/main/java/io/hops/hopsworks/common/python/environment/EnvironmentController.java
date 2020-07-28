@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.python.environment;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.agent.AgentController;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -110,7 +111,12 @@ public class EnvironmentController {
     String envName = ProjectUtils.getDockerImageName(project, settings, false);
     Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
     if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
-      defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project, true));
+      try {
+        defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project, true));
+      } catch (ServiceDiscoveryException e) {
+        throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
+            getMessage(), e);
+      }
       if (createBaseEnv) {
         for (PythonDep dep : defaultEnvDeps) {
           dep.setBaseEnv(envName);
