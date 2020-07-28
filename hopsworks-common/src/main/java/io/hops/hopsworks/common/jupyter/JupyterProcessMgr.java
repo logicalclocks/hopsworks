@@ -146,31 +146,30 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
 
     // kill any running servers for this user, clear cached entries
     while (maxTries > 0) {
-
-      // use pidfile to kill any running servers
-      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-          .addCommand("/usr/bin/sudo")
-          .addCommand(prog)
-          .addCommand("start")
-          .addCommand(jp.getNotebookPath())
-          .addCommand(settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion())
-          .addCommand(hdfsUser)
-          .addCommand(settings.getAnacondaProjectDir())
-          .addCommand(port.toString())
-          .addCommand(HopsUtils.getJupyterLogName(hdfsUser, port))
-          .addCommand(secretDir)
-          .addCommand(jp.getCertificatesDir())
-          .addCommand(hdfsUser)
-          .addCommand(token)
-          .addCommand(js.getMode().getValue())
-          .addCommand(projectUtils.getFullDockerImageName(project, false))
-          .redirectErrorStream(true)
-          .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
-          .setWaitTimeout(20L, TimeUnit.SECONDS)
-          .build();
-
-      String pidfile = jp.getRunDirPath() + "/jupyter.pid";
       try {
+        // use pidfile to kill any running servers
+        ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+            .addCommand("/usr/bin/sudo")
+            .addCommand(prog)
+            .addCommand("start")
+            .addCommand(jp.getNotebookPath())
+            .addCommand(settings.getHadoopSymbolicLinkDir() + "-" + settings.getHadoopVersion())
+            .addCommand(hdfsUser)
+            .addCommand(settings.getAnacondaProjectDir())
+            .addCommand(port.toString())
+            .addCommand(HopsUtils.getJupyterLogName(hdfsUser, port))
+            .addCommand(secretDir)
+            .addCommand(jp.getCertificatesDir())
+            .addCommand(hdfsUser)
+            .addCommand(token)
+            .addCommand(js.getMode().getValue())
+            .addCommand(projectUtils.getFullDockerImageName(project, false))
+            .redirectErrorStream(true)
+            .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
+            .setWaitTimeout(20L, TimeUnit.SECONDS)
+            .build();
+
+        String pidfile = jp.getRunDirPath() + "/jupyter.pid";
         ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
         if (processResult.getExitCode() != 0) {
           String errorMsg = "Could not start Jupyter server. Exit code: " + processResult.getExitCode()

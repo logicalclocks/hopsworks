@@ -136,27 +136,29 @@ public class LocalhostSkLearnServingController {
     String script = settings.getSudoersDir() + "/sklearn_serving.sh";
     Integer port = ThreadLocalRandom.current().nextInt(40000, 59999);
     Path secretDir = Paths.get(settings.getStagingDir(), SERVING_DIRS + serving.getLocalDir());
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(script)
-        .addCommand("start")
-        .addCommand(Utils.getFileName(Paths.get(serving.getArtifactPath()).toString()))
-        .addCommand(Paths.get(serving.getArtifactPath()).toString())
-        .addCommand(String.valueOf(port))
-        .addCommand(secretDir.toString())
-        .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
-        .addCommand(project.getName().toLowerCase())
-        .addCommand(settings.getAnacondaProjectDir() + "/bin/python")
-        .addCommand(certificateMaterializer.getUserTransientKeystorePath(project, user))
-        .addCommand(certificateMaterializer.getUserTransientTruststorePath(project, user))
-        .addCommand(certificateMaterializer.getUserTransientPasswordPath(project, user))
-        .addCommand(serving.getName())
-        .addCommand(projectUtils.getFullDockerImageName(project, false))
-        .setWaitTimeout(2L, TimeUnit.MINUTES)
-        .ignoreOutErrStreams(true)
-        .build();
-    logger.log(Level.FINE, processDescriptor.toString());
     try {
+      
+      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
+          .addCommand(script)
+          .addCommand("start")
+          .addCommand(Utils.getFileName(Paths.get(serving.getArtifactPath()).toString()))
+          .addCommand(Paths.get(serving.getArtifactPath()).toString())
+          .addCommand(String.valueOf(port))
+          .addCommand(secretDir.toString())
+          .addCommand(project.getName() + USER_NAME_DELIMITER + user.getUsername())
+          .addCommand(project.getName().toLowerCase())
+          .addCommand(settings.getAnacondaProjectDir() + "/bin/python")
+          .addCommand(certificateMaterializer.getUserTransientKeystorePath(project, user))
+          .addCommand(certificateMaterializer.getUserTransientTruststorePath(project, user))
+          .addCommand(certificateMaterializer.getUserTransientPasswordPath(project, user))
+          .addCommand(serving.getName())
+          .addCommand(projectUtils.getFullDockerImageName(project, false))
+          .setWaitTimeout(2L, TimeUnit.MINUTES)
+          .ignoreOutErrStreams(true)
+          .build();
+      logger.log(Level.FINE, processDescriptor.toString());
+
       // Materialized TLS certificates so that user can read from HDFS inside python script
       certificateMaterializer.materializeCertificatesLocal(user.getUsername(), project.getName());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);

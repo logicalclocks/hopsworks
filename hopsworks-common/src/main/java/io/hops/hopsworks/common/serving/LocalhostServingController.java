@@ -230,7 +230,7 @@ public class LocalhostServingController implements ServingController {
   @Override
   public void createOrUpdate(Project project, Users user, ServingWrapper newServing)
       throws ProjectException, ServingException, KafkaException, UserException,
-    InterruptedException, ExecutionException {
+    InterruptedException, ExecutionException, ServiceException {
     Serving serving = newServing.getServing();
     if (serving.getId() == null) {
       // Create request
