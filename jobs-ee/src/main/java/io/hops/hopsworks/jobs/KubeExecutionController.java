@@ -359,7 +359,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   
   private List<Container> buildContainers(String secretDir, String certificatesDir, String flinkConfDir,
     ResourceRequirements resourceRequirements, Map<String, String> jobEnv, Map<String, String> filebeatEnv,
-    Project project) {
+    Project project) throws ServiceDiscoveryException {
   
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
@@ -407,7 +407,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-      .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+            getKubeFilebeatImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
       .withVolumeMounts(logMount)

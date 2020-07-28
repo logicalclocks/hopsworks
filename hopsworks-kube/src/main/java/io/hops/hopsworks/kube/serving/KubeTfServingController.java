@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -147,7 +148,7 @@ public class KubeTfServingController {
 
     Container tfContainer = new ContainerBuilder()
         .withName("tf-serving")
-        .withImage(settings.getRegistry() + "/tf:" + settings.getKubeTfImgVersion())
+        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/tf:" + settings.getKubeTfImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(tfServingEnv)
         .withVolumeMounts(secretMount, logMount)
@@ -155,7 +156,8 @@ public class KubeTfServingController {
 
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
-        .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+            getKubeFilebeatImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)

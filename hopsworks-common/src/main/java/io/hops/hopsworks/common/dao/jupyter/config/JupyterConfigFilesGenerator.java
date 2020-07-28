@@ -278,7 +278,7 @@ public class JupyterConfigFilesGenerator {
 
     finalSparkConfiguration.putAll(
         sparkConfigurationUtil.setFrameworkProperties(project, sparkJobConfiguration, settings, hdfsUser,
-            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
+            extraJavaOptions, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint, serviceDiscoveryController));
     
     StringBuilder sparkConfBuilder = new StringBuilder();
     ArrayList<String> keys = new ArrayList<>(finalSparkConfiguration.keySet());

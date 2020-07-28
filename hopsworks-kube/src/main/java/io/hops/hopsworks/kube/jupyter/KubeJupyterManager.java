@@ -238,7 +238,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private List<Container> buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
       String secretDir, String certificatesDir, String hdfsUser, String token, String flinkConfDir,
       String sparkConfDir, ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode,
-      Project project, Map<String, String> filebeatEnv) {
+      Project project, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
@@ -332,7 +332,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-      .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+      .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+          getKubeFilebeatImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
       .withVolumeMounts(logMount)
@@ -434,13 +435,13 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
             new LabelSelectorBuilder()
               .addToMatchLabels(JUPYTER, kubeProjectUser)
               .build())
-          .withReplicas(1)
-          .withTemplate(
-            new PodTemplateSpecBuilder()
-              .withMetadata(
-                new ObjectMetaBuilder()
-                  .withLabels(ImmutableMap.of(JUPYTER, kubeProjectUser))
-                  .build())
+                  .withReplicas(1)
+                  .withTemplate(
+                      new PodTemplateSpecBuilder()
+                          .withMetadata(
+                              new ObjectMetaBuilder()
+                                  .withLabels(ImmutableMap.of(JUPYTER, kubeProjectUser))
+                                  .build())
               .withSpec(buildPodSpec(kubeProjectUser, containers))
             .build())
           .build())

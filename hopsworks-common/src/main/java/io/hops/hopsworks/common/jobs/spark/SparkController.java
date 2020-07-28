@@ -150,7 +150,8 @@ public class SparkController {
         sparkjob = proxyUser.doAs((PrivilegedExceptionAction<SparkJob>) () ->
             new SparkJob(job, submitter, user, settings.getHadoopSymbolicLinkDir(),
                 hdfsUsersBean.getHdfsUserName(job.getProject(), user),
-                settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint));
+                settings, kafkaBrokers.getKafkaBrokersString(), hopsworksRestEndpoint,
+            serviceDiscoveryController));
       } catch (InterruptedException ex) {
         LOGGER.log(Level.SEVERE, null, ex);
       }

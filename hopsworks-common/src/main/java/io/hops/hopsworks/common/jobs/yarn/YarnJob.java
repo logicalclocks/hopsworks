@@ -44,6 +44,7 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.YarnJobConfi
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.execution.HopsJob;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
@@ -82,6 +83,8 @@ public abstract class YarnJob extends HopsJob {
   protected String kafkaBrokersString;
   protected String hopsworksRestEndpoint;
 
+  protected ServiceDiscoveryController serviceDiscoveryController;
+  
   /**
    * Constructor for job interacting with the Kafka service.
    *
@@ -95,7 +98,8 @@ public abstract class YarnJob extends HopsJob {
  YarnJobConfiguration object.
    */
   public YarnJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser, String hadoopDir,
-      Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint) {
+      Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
+      ServiceDiscoveryController serviceDiscoveryController) {
     super(job, services, user, hadoopDir);
 
     if (!(job.getJobConfig() instanceof YarnJobConfiguration)) {
@@ -110,6 +114,7 @@ public abstract class YarnJob extends HopsJob {
     this.settings = settings;
     this.kafkaBrokersString = kafkaBrokersString;
     this.hopsworksRestEndpoint = hopsworksRestEndpoint;
+    this.serviceDiscoveryController = serviceDiscoveryController;
   }
 
   public final void setStdOutFinalDestination(String stdOutFinalDestination) {

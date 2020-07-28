@@ -40,7 +40,9 @@
 package io.hops.hopsworks.common.jobs.flink;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnRunner;
 import io.hops.hopsworks.common.util.FlinkConfigurationUtil;
@@ -105,8 +107,9 @@ public class FlinkYarnRunnerBuilder {
 
   YarnRunner getYarnRunner(Project project, String jobUser, DistributedFileSystemOps dfsClient,
                            YarnClient yarnClient, AsynchronousJobExecutor services, Settings settings,
-                           String kafkaBrokersString, String hopsworksRestEndpoint)
-      throws IOException {
+                           String kafkaBrokersString, String hopsworksRestEndpoint,
+                           ServiceDiscoveryController serviceDiscoveryController)
+      throws IOException, ServiceDiscoveryException {
 
     String stagingPath = File.separator + "Projects" + File.separator + project.getName() + File.separator
             + Settings.PROJECT_STAGING_DIR;
@@ -132,7 +135,7 @@ public class FlinkYarnRunnerBuilder {
   
     Map<String, String> finalJobProps = flinkConfigurationUtil
       .setFrameworkProperties(project, job.getJobConfig(), settings, jobUser, extraJavaOptions,
-          kafkaBrokersString, hopsworksRestEndpoint);
+          kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController);
   
     //Parse properties from Spark config file
     Yaml yaml = new Yaml();
@@ -155,7 +158,8 @@ public class FlinkYarnRunnerBuilder {
                  .createClusterSpecification();
     
     cluster.setLocalJarPath(new Path(settings.getLocalFlinkJarPath()));
-    cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings, true), settings.getDockerMounts());
+    cluster.setDocker(ProjectUtils.getFullDockerImageName(project, settings, serviceDiscoveryController, true),
+        settings.getDockerMounts());
 
     builder.setYarnClient(yarnClient);
     builder.setDfsClient(dfsClient);

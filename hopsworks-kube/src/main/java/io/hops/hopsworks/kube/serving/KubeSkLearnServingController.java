@@ -51,6 +51,7 @@ import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -175,7 +176,8 @@ public class KubeSkLearnServingController {
 
     Container skLeanContainer = new ContainerBuilder()
         .withName("sklearn")
-        .withImage(settings.getRegistry() + "/sklearn:" + settings.getKubeSKLearnImgVersion())
+        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/sklearn:" + settings.
+            getKubeSKLearnImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(servingEnv)
         .withVolumeMounts(secretMount, logMount, pythonEnvMount)
@@ -183,7 +185,8 @@ public class KubeSkLearnServingController {
 
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
-        .withImage(settings.getRegistry() + "/filebeat:" + settings.getKubeFilebeatImgVersion())
+        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+            getKubeFilebeatImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)

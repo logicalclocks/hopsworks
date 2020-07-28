@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.util;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 
@@ -26,6 +28,7 @@ public abstract class ConfigurationUtil {
   public abstract Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                              Settings settings, String hdfsUser,
                                                              Map<String, String> extraJavaOptions,
-                                                             String kafkaBrokersString, String hopsworksRestEndpoint)
-      throws IOException;
+                                                             String kafkaBrokersString, String hopsworksRestEndpoint,
+                                                             ServiceDiscoveryController serviceDiscoveryController)
+      throws IOException, ServiceDiscoveryException;
 }

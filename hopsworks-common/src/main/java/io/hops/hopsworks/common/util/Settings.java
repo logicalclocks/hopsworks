@@ -348,8 +348,6 @@ public class Settings implements Serializable {
   private final static String VARIABLE_DOCKER_MOUNTS = "docker_mounts";
   private final static String VARIABLE_DOCKER_BASE_IMAGE = "docker_base_image";
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
-  private final static String VARIABLE_DOCKER_REGISTRY_NAME = "docker_registry_name";
-  private final static String VARIABLE_DOCKER_REGISTRY_PORT = "docker_registry_port";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
   
   private String setVar(String varName, String defaultValue) {
@@ -724,8 +722,6 @@ public class Settings implements Serializable {
       DOCKER_BASE_IMAGE = setStrVar(VARIABLE_DOCKER_BASE_IMAGE, DOCKER_BASE_IMAGE);
       DOCKER_BASE_IMAGE_PYTHON_VERSION = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION,
           DOCKER_BASE_IMAGE_PYTHON_VERSION);
-      DOCKER_REGISTRY_NAME = setStrVar(VARIABLE_DOCKER_REGISTRY_NAME, DOCKER_REGISTRY_NAME);
-      DOCKER_REGISTRY_PORT = setIntVar(VARIABLE_DOCKER_REGISTRY_PORT, DOCKER_REGISTRY_PORT);
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
       populateProvenanceCache();
       
@@ -3697,24 +3693,6 @@ public class Settings implements Serializable {
   public synchronized String getDockerBaseImagePythonVersion() {
     checkCache();
     return DOCKER_BASE_IMAGE_PYTHON_VERSION;
-  }
-  
-  private String DOCKER_REGISTRY_NAME = "localhost";
-  
-  public String getRegistryName(){
-    checkCache();
-    return DOCKER_REGISTRY_NAME;
-  }
-  
-  private int DOCKER_REGISTRY_PORT = 4443;
-  
-  public int getRegistryPort(){
-    checkCache();
-    return DOCKER_REGISTRY_PORT;
-  }
-  
-  public String getRegistry() {
-    return getRegistryName() + ":" + getRegistryPort();
   }
 
   private long YARN_APP_UID = 1235L;
