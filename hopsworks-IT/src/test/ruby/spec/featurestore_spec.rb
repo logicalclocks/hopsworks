@@ -392,7 +392,6 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to delete a s3 connector from the featurestore" do
-          setVar("aws_instance_role", "false")
           project = get_project
           create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
@@ -400,7 +399,6 @@ describe "On #{ENV['OS']}" do
               "testbucket")
           parsed_json = JSON.parse(json_result)
           expect_status(201)
-          setVar("aws_instance_role", "false")
           connector_id = parsed_json["id"]
           delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
           delete delete_connector_endpoint
@@ -453,7 +451,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           create_session(project[:username], "Pass123")
           featurestore_id = get_featurestore_id(project.id)
-          encryption_algorithm = "AES-256"
+          encryption_algorithm = "AES256"
           encryption_key = ""
           access_key = "test"
           secret_key = "test"
@@ -466,12 +464,12 @@ describe "On #{ENV['OS']}" do
 
           parsed_json1 = JSON.parse(json_result1)
           expect_status(201)
-          setVar("aws_instance_role", "false")
           connector_id = parsed_json1["id"]
 
           json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id, bucket:
               "testbucket2")
           parsed_json2 = JSON.parse(json_result2)
+
           expect(parsed_json2.key?("id")).to be true
           expect(parsed_json2.key?("name")).to be true
           expect(parsed_json2.key?("description")).to be true
@@ -483,6 +481,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"] == connector_name2).to be true
           expect(parsed_json2["storageConnectorType"] == "S3").to be true
           expect(parsed_json2["bucket"] == "testbucket2").to be true
+          setVar("aws_instance_role", "false")
         end
 
         it "should be able to update JDBC connector in the featurestore" do
