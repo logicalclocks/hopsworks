@@ -16,13 +16,13 @@
 
 package io.hops.hopsworks.common.featurestore.settings;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
+import javax.json.Json;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,8 +52,6 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH;
   private int s3StorageConnectorSecretkeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
-  private int s3StorageServerEncryptionAlgorithmMaxLength =
-    FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH;
   private int s3StorageServerEncryptionKeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH;
   private boolean s3IAMRole = false;
@@ -81,7 +79,7 @@ public class FeaturestoreClientSettingsDTO {
   private Boolean onlineFeaturestoreEnabled = false;
   private List<String> suggestedMysqlFeatureTypes = FeaturestoreConstants.SUGGESTED_MYSQL_DATA_TYPES;
   private List<String> s3ServerEncryptionAlgorithms;
-  
+
   public FeaturestoreClientSettingsDTO() {
     //For JAXB
   }
@@ -411,15 +409,6 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public int getS3StorageServerEncryptionAlgorithmMaxLength() {
-    return s3StorageServerEncryptionAlgorithmMaxLength;
-  }
-  
-  public void setS3StorageServerEncryptionAlgorithmMaxLength(int s3StorageServerEncryptionAlgorithmMaxLength) {
-    this.s3StorageServerEncryptionAlgorithmMaxLength = s3StorageServerEncryptionAlgorithmMaxLength;
-  }
-  
-  @XmlElement
   public int getS3StorageServerEncryptionKeyMaxLength() {
     return s3StorageServerEncryptionKeyMaxLength;
   }
@@ -429,13 +418,16 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
-  public List<String> getS3ServerEncryptionAlgorithms() throws JsonProcessingException {
-    return Arrays.asList(new ObjectMapper().writeValueAsString(FeaturestoreS3ConnectorEncryptionAlgorithm.AES_256),
-      new ObjectMapper().writeValueAsString(FeaturestoreS3ConnectorEncryptionAlgorithm.AWS_KMS));
-  }
-  
-  public void setS3ServerEncryptionAlgorithms(
-    List<String> s3ServerEncryptionAlgorithms) {
-    this.s3ServerEncryptionAlgorithms = s3ServerEncryptionAlgorithms;
+  public List<String> getS3ServerEncryptionAlgorithms() {
+    List<String> encryptionAlgorithms = new ArrayList<>();
+    Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values()).stream().forEach(algorithm -> {
+      String jsonString = Json.createObjectBuilder()
+        .add("algorithm", algorithm.getAlgorithm())
+        .add("description", algorithm.getDescription())
+        .add("requiresKey", algorithm.isRequiresKey())
+        .add("value", algorithm.name()).build().toString();
+      encryptionAlgorithms.add(jsonString);
+    });
+    return encryptionAlgorithms;
   }
 }

@@ -161,7 +161,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 0">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
@@ -225,7 +224,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 0">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
@@ -249,8 +247,8 @@
                             </p>
                         </div>
                     </div>
-
-                    <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -262,7 +260,7 @@
                                     <input type="text" class="form-control" placeholder="Enter an S3 bucket"
                                            ng-model="newStorageConnectorCtrl.s3Bucket">
                                     <div ng-if="newStorageConnectorCtrl.storageConnectorS3BucketWrongValue === -1"
-                                         style="color: red">
+                                         style="color: #ff0000">
                                         The S3 Bucket should not be empty and should be less than
                                         {{newStorageConnectorCtrl.s3StorageConnectorBucketMaxLength}} characters
                                     </div>
@@ -280,17 +278,14 @@
                                        uib-tooltip='AWS Access/Secret keys' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-checkbox class="row md-primary"
-                                                 ng-click="newStorageConnectorCtrl.toggleAWSAccessSecretKeysInputFields()"
-                                                 ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3ServerAndAccessKeys == true]">
+                                    <md-checkbox class="row md-primary checked">
                                     </md-checkbox>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
-                         && newStorageConnectorCtrl.s3ServerAndAccessKeys">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -312,10 +307,8 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
-                         && newStorageConnectorCtrl.s3ServerAndAccessKeys">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -340,7 +333,7 @@
                     </div>
 
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -350,7 +343,6 @@
                                 </div>
                                 <div class="col-sm-9">
                                     <md-checkbox
-
                                             class="row md-primary"
                                             ng-class="{true: 'md-checked'}[newStorageConnectorCtrl.s3BucketEncryption == true]"
                                             ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionInputFields()">
@@ -361,8 +353,7 @@
                     </div>
 
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
-                         && newStorageConnectorCtrl.s3BucketEncryption">
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && newStorageConnectorCtrl.s3BucketEncryption">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -376,8 +367,8 @@
                                         <md-radio-button
                                                 ng-repeat="m in newStorageConnectorCtrl.s3ServerEncryptionAlgorithmAlgorithms"
                                                 uib-tooltip="{{m.description}}"
-                                                ng-value="m.algorithm"
-                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey, m.algorithm)">
+                                                ng-value="m.value"
+                                                ng-click="newStorageConnectorCtrl.toggleS3BucketEncryptionKeyInputField(m.requiresKey)">
                                             {{m.algorithm}}
                                         </md-radio-button>
                                     </md-radio-group>
@@ -391,10 +382,8 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole
-                         && newStorageConnectorCtrl.s3BucketEncryption
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && newStorageConnectorCtrl.s3BucketEncryption
                          && newStorageConnectorCtrl.s3BucketEncryptionRequiresKey">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">

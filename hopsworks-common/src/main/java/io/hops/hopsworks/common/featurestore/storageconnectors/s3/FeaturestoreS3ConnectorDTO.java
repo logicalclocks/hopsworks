@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -33,7 +34,7 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String accessKey;
   private String secretKey;
   private String bucket;
-  private String serverEncryptionAlgorithm;
+  private FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm;
   private String serverEncryptionKey;
   
   public FeaturestoreS3ConnectorDTO() {
@@ -79,9 +80,9 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   }
 
   @XmlElement
-  public String getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
+  public FeaturestoreS3ConnectorEncryptionAlgorithm getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
 
-  public void setServerEncryptionAlgorithm(String serverEncryptionAlgorithm) {
+  public void setServerEncryptionAlgorithm(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
     this.serverEncryptionAlgorithm = serverEncryptionAlgorithm;
   }
 

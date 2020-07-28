@@ -23,6 +23,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -79,55 +80,33 @@ public class FeaturestoreS3ConnectorController {
       Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO,
       Integer storageConnectorId) throws FeaturestoreException {
     FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(storageConnectorId, featurestore);
+    FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm =
+      featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm();
     
     verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
     featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
-  
-  
+    verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
-  
-    verifyS3SecreteAndAccessPair(featurestoreS3ConnectorDTO.getAccessKey(), featurestoreS3ConnectorDTO.getSecretKey());
-    
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey())){
+    if(settings.isIAMRoleConfigured()){
+      verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
+    } else{
       verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
-      featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
-    }
-    else{
-      featurestoreS3Connector.setAccessKey(null);
-    }
-    
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())){
       verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
+      featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       featurestoreS3Connector.setSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     }
-    else{
-      featurestoreS3Connector.setSecretKey(null);
-    }
-  
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
     featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
-    
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
+    if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
-      verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
-        FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(
-          featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      if(algorithm.isRequiresKey()){
-        verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
-      }
-      
+      verifyS3ConnectorServerEncryptionAlgorithm(serverEncryptionAlgorithm);
       featurestoreS3Connector.setServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-  
-      if(algorithm.isRequiresKey()){
+      if(serverEncryptionAlgorithm.isRequiresKey()){
+        verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
         featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
-      }
-      else{
-        featurestoreS3Connector.setServerEncryptionKey(null);
-      }
-    }
-    else{
+      } else{ featurestoreS3Connector.setServerEncryptionKey(null); }
+    } else{
       featurestoreS3Connector.setServerEncryptionAlgorithm(null);
       featurestoreS3Connector.setServerEncryptionKey(null);
     }
@@ -245,14 +224,14 @@ public class FeaturestoreS3ConnectorController {
    * @throws FeaturestoreException
    */
   private void verifyS3ConnectorAccessKey(String accessKey) throws FeaturestoreException {
-    if(!Strings.isNullOrEmpty(accessKey) &&
-        accessKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
+    if(Strings.isNullOrEmpty(accessKey)){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY,
+        Level.FINE, "The S3 access key cannot be empty and must be less than "
+        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH);
+    }else if(accessKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY, Level.FINE,
           ", the S3 access key should not exceed: " +
             FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH + " characters");
-    } else if (!Strings.isNullOrEmpty(accessKey) && settings.isIAMRoleConfigured()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
-          "S3 access key not allowed");
     }
   }
 
@@ -263,14 +242,14 @@ public class FeaturestoreS3ConnectorController {
    * @throws FeaturestoreException
    */
   private void verifyS3ConnectorSecretKey(String secretKey) throws FeaturestoreException {
-    if(!Strings.isNullOrEmpty(secretKey) &&
-        secretKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
+    if(Strings.isNullOrEmpty(secretKey)){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY,
+        Level.FINE, "The S3 secret key cannot be empty and must be less than "
+        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH);
+    }else if(secretKey.length() > FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY, Level.FINE,
           ", the S3 secret key should not exceed: " +
             FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH + " characters");
-    } else if (!Strings.isNullOrEmpty(secretKey) && settings.isIAMRoleConfigured()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
-          "S3 secret key not allowed");
     }
   }
   
@@ -281,34 +260,13 @@ public class FeaturestoreS3ConnectorController {
    * @param serverEncryptionAlgorithm the input to validate
    * @throws FeaturestoreException
    */
-  private void  verifyS3ConnectorServerEncryptionAlgorithm(String serverEncryptionAlgorithm)
+  private void  verifyS3ConnectorServerEncryptionAlgorithm(
+    FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm)
     throws FeaturestoreException{
-    if(Strings.isNullOrEmpty(serverEncryptionAlgorithm)){
+    if(serverEncryptionAlgorithm == null){
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
-        Level.FINE, ", the S3 server encryption algorithm cannot be empty"
-      );
-    }
-    else if(FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(serverEncryptionAlgorithm) ==
-      null){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
-        Level.FINE, ", the S3 server encryption algorithm provided does not exist"
-      );
-    }
-    else if(
-      serverEncryptionAlgorithm.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
-        Level.FINE, ", the S3 server encryption algorithm should not exceed: " +
-        FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH + " characters"
-      );
-    }
-    else if(settings.isIAMRoleConfigured()){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN,
-        Level.FINE,
-        "S3 server encryption algorithm and key are not allowed"
+        Level.FINE, ", Illegal server encryption algorithm provided"
       );
     }
   }
@@ -327,18 +285,10 @@ public class FeaturestoreS3ConnectorController {
         Level.FINE,
         "S3 server encryption key cannot be empty"
       );
-    }
-    else if(serverEncryptionKey.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH){
+    } else if(serverEncryptionKey.length() > FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY,
         Level.FINE, ", the S3 server encryption key should not exceed: " +
         FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH + " characters");
-    }
-    else if(settings.isIAMRoleConfigured()){
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM_AND_KEY_FORBIDDEN,
-        Level.FINE,
-        "S3 server encryption algorithm and key are not allowed"
-      );
     }
   }
   
@@ -351,7 +301,6 @@ public class FeaturestoreS3ConnectorController {
    */
   private void verifyUserInput(Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO)
     throws FeaturestoreException {
-
     if (featurestoreS3ConnectorDTO == null) {
       throw new IllegalArgumentException("Null input data");
     }
@@ -360,24 +309,40 @@ public class FeaturestoreS3ConnectorController {
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
     
-    verifyS3SecreteAndAccessPair(featurestoreS3ConnectorDTO.getAccessKey(), featurestoreS3ConnectorDTO.getSecretKey());
-    verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
-    verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
-    
-    if(!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm()) ||
+    if(settings.isIAMRoleConfigured()){
+      verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
+    }else{
+      verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
+      verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
+    }
+    if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      
-      FeaturestoreS3ConnectorEncryptionAlgorithm algorithm =
-        FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(
-          featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-      
-      if(algorithm.isRequiresKey()){
+      if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm().isRequiresKey()){
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
+      } else{
+        featurestoreS3ConnectorDTO.setServerEncryptionKey(null);
       }
     }
   }
-
+  
+  /**
+   * If the user has IAM Role configured to true, they cannot provide access and secret keys
+   * @param featurestoreS3ConnectorDTO
+   * @throws FeaturestoreException
+   */
+  private void verifySecretAndAccessKeysForIamRole(FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO)
+    throws FeaturestoreException{
+    if(settings.isIAMRoleConfigured() && (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
+      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey()))){
+      throw new FeaturestoreException(
+        RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN,
+        Level.FINE,
+        "S3 Access Keys are not allowed"
+      );
+    }
+  }
+  
   /**
    * Gets all S3 connectors for a particular featurestore and project
    *
@@ -390,23 +355,6 @@ public class FeaturestoreS3ConnectorController {
         .collect(Collectors.toList());
   }
   
-  public void verifyS3SecreteAndAccessPair(String accessKey, String secreteKey) throws FeaturestoreException {
-    if(!Strings.isNullOrEmpty(accessKey) &&
-      Strings.isNullOrEmpty(secreteKey)){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SECRET_KEY,
-        Level.FINE, "The S3 secret key cannot be empty and must be less than "
-        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH);
-    }
-  
-    if(!Strings.isNullOrEmpty(secreteKey) &&
-      Strings.isNullOrEmpty(accessKey)){
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_ACCESS_KEY,
-        Level.FINE, "The S3 access key cannot be empty and must be less than "
-        + FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH);
-    }
-  }
-  
-
   /**
    * Retrieves a S3 Connector with a particular id from a particular featurestore
    *

@@ -15,6 +15,8 @@
  */
 'use strict';
 
+import fa from "../../../bower_components/moment/dist/locale/fa";
+
 /**
  * Controller for managing the "create new storage connector" page
  */
@@ -36,15 +38,16 @@ angular.module('hopsWorksApp')
             //Input Variables
             self.storageConnectorName = ""
             self.storageConnectorDescription = ""
-            self.storageConnectorType = 0;
-            self.jdbcConnectionString = "";
+            self.storageConnectorType = 0
+            self.jdbcConnectionString = ""
             self.jdbcArguments = []
             self.s3Bucket = ""
             self.s3SecretKey = ""
             self.s3AccessKey = ""
             self.s3ServerEncryptionAlgorithm = ""
             self.s3ServerEncryptionKey = ""
-            self.s3BucketEncryptionRequiresKey = false;
+            self.s3BucketEncryption = false
+            self.s3BucketEncryptionRequiresKey = false
 
             //State
             self.working = false
@@ -117,9 +120,7 @@ angular.module('hopsWorksApp')
              * Perform initialization of variables that require it
              */
             self.initVariables = function () {
-
                 self.s3ServerEncryptionAlgorithmAlgorithms = self.makeArrayOfEncryptionAlgorithms();
-
                 var j = 0;
                 if (self.storageConnectorOperation === "UPDATE") {
                     self.accordion4.title = "Update"
@@ -149,11 +150,6 @@ angular.module('hopsWorksApp')
                         if(self.storageConnector.accessKey){
                             self.s3AccessKey = self.storageConnector.accessKey
                         }
-
-                        if(self.s3AccessKey && self.s3SecretKey){
-                            self.s3ServerAndAccessKeys = true;
-                        }
-
 
                         if(self.storageConnector.serverEncryptionAlgorithm){
                             self.s3BucketEncryption = true;
@@ -265,58 +261,29 @@ angular.module('hopsWorksApp')
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
-                    if (self.s3ServerAndAccessKeys && (self.s3AccessKey === ""
-                        || self.s3AccessKey === null || self.s3AccessKey === undefined)) {
+                    if (!self.s3IAMRole && (self.s3AccessKey === "" || self.s3AccessKey === null
+                        || self.s3AccessKey.length > self.s3StorageConnectorAccesskeyMaxLength)) {
                         self.storageConnectorS3AccessKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
-                    if (self.s3ServerAndAccessKeys && self.s3AccessKey != null && self.s3AccessKey != undefined) {
-                        if(self.s3AccessKey.length > self.s3StorageConnectorAccesskeyMaxLength){
-                            self.storageConnectorS3AccessKeyWrongValue = -1;
-                            self.wrong_values = -1;
-                            self.storageConnectorConfigWrongValue = -1
-                        }
-                    }
-
-                    if (self.s3ServerAndAccessKeys && (self.s3SecretKey === ""
-                        || self.s3SecretKey === null || self.s3SecretKey === undefined)) {
+                    if (!self.s3IAMRole && (self.s3SecretKey === "" || self.s3SecretKey === null
+                        || self.s3SecretKey.length > self.s3StorageConnectorSecretkeyMaxLength )) {
                         self.storageConnectorS3SecretKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
-                    if (self.s3ServerAndAccessKeys && self.s3SecretKey != null && self.s3SecretKey != undefined) {
-                        if(self.s3SecretKey.length > self.s3StorageConnectorSecretkeyMaxLength){
-                            self.storageConnectorS3SecretKeyWrongValue = -1;
-                            self.wrong_values = -1;
-                            self.storageConnectorConfigWrongValue = -1
-                        }
-                    }
-
-                    if (self.s3BucketEncryption
-                        && self.s3ServerEncryptionAlgorithm === "") {
+                    if (self.s3BucketEncryption && self.s3ServerEncryptionAlgorithm === "") {
                         self.storageConnectorS3ServerEncryptionAlgorithmWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
                     if (self.s3BucketEncryption && self.s3BucketEncryptionRequiresKey
                         && (self.s3ServerEncryptionKey === "" || self.s3ServerEncryptionKey === null
                         || self.s3ServerEncryptionKey.length > self.s3ServerEncryptionKeyMaxLength)) {
                         self.storageConnectorS3ServerEncryptionKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
-                    }
-
-                    if (self.s3BucketEncryption && self.s3BucketEncryptionRequiresKey && self.s3ServerEncryptionKey != null && self.s3ServerEncryptionKey != undefined) {
-                        if(self.s3ServerEncryptionKey.length > self.s3ServerEncryptionKeyMaxLength){
-                            self.storageConnectorS3ServerEncryptionKeyWrongValue = -1;
-                            self.wrong_values = -1;
-                            self.storageConnectorConfigWrongValue = -1
-                        }
                     }
                 }
 
@@ -331,7 +298,6 @@ angular.module('hopsWorksApp')
                     }
                 }
             }
-
 
             /**
              * Callback method for when the user filled in the storage connector description. Will then
@@ -411,7 +377,6 @@ angular.module('hopsWorksApp')
                 }
                 if (self.storageConnectorType === 1) {
                     self.resetAccessAndEncryptionProperties()
-
                     storageConnectorJson["type"] = self.s3ConnectorDTOType
                     storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
                     storageConnectorJson["bucket"] = self.s3Bucket
@@ -479,7 +444,6 @@ angular.module('hopsWorksApp')
                 }
                 if (self.storageConnectorType === 1) {
                     self.resetAccessAndEncryptionProperties()
-
                     storageConnectorJson["type"] = self.s3ConnectorDTOType
                     storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
                     storageConnectorJson["bucket"] = self.s3Bucket
@@ -578,13 +542,6 @@ angular.module('hopsWorksApp')
             }
 
             /**
-             * Called when the user clicks on the "AWS Secrete/Access keys checkbox"
-             */
-            self.toggleAWSAccessSecretKeysInputFields = function () {
-                self.s3ServerAndAccessKeys = !self.s3ServerAndAccessKeys;
-            }
-
-            /**
              * Called when the user clicks on the "S3 Bucket Encryption checkbox"
              */
             self.toggleS3BucketEncryptionInputFields = function () {
@@ -594,7 +551,7 @@ angular.module('hopsWorksApp')
             /**
              * Called when the user clicks on the "S3 Bucket Encryption Checkbox"
              */
-            self.toggleS3BucketEncryptionKeyInputField = function (requiresKey, selectedAlgorithm) {
+            self.toggleS3BucketEncryptionKeyInputField = function (requiresKey) {
                 if(requiresKey){
                     self.s3BucketEncryptionRequiresKey = true;
                 }
@@ -607,7 +564,7 @@ angular.module('hopsWorksApp')
              * Resets the values of access key, secrete key, encryption algorithm and encryption key
              */
             self.resetAccessAndEncryptionProperties = function () {
-                if(!self.s3ServerAndAccessKeys){
+                if(self.s3IAMRole){
                     self.s3SecretKey = ""
                     self.s3AccessKey = ""
                 }
@@ -640,7 +597,6 @@ angular.module('hopsWorksApp')
             self.makeArrayOfEncryptionAlgorithms = function () {
                 return self.settings.s3ServerEncryptionAlgorithms.map( function (a) {
                     var algorithm = JSON.parse(a);
-                    algorithm.value = algorithm.algorithm;
                     return algorithm;
                 })
             }
