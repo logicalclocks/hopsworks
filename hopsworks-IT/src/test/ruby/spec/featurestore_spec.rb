@@ -167,29 +167,22 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["bucket"] == "testbucket").to be true
         end
 
-        it "should be able to add s3 connector without providing the access and secret key if the IAM Role is  set to false" do
+        it "should not be able to add s3 connector without providing the access and secret key if the IAM Role is  set to false" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          access_key = "test"
-          secret_key = "test"
-          with_access_and_secret_key = true
-          json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id,
+          access_key = nil
+          secret_key = nil
+          with_access_and_secret_key = false
+          json_result, connector_name = create_s3_connector_with_or_without_access_key_and_secret_key(project.id, featurestore_id,
                                                                                with_access_and_secret_key,
                                                                                access_key, secret_key,
                                                                                bucket: "testbucket")
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
-          expect(parsed_json.key?("id")).to be true
-          expect(parsed_json.key?("name")).to be true
-          expect(parsed_json.key?("description")).to be true
-          expect(parsed_json.key?("storageConnectorType")).to be true
-          expect(parsed_json.key?("featurestoreId")).to be true
-          expect(parsed_json.key?("bucket")).to be true
-          expect(parsed_json["secretKey"] == secret_key).to be true
-          expect(parsed_json["accessKey"] == access_key).to be true
-          expect(parsed_json["name"] == connector_name).to be true
-          expect(parsed_json["storageConnectorType"] == "S3").to be true
-          expect(parsed_json["bucket"] == "testbucket").to be true
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270035 || parsed_json["errorCode"] == 270036).to be true
         end
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
