@@ -148,10 +148,13 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to add s3 connector to the featurestore without encryption information" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
               "testbucket")
+
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json.key?("id")).to be true
@@ -165,6 +168,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["name"] == connector_name).to be true
           expect(parsed_json["storageConnectorType"] == "S3").to be true
           expect(parsed_json["bucket"] == "testbucket").to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should not be able to add s3 connector without providing the access and secret key if the IAM Role is set to false" do
@@ -219,12 +224,14 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           encryption_algorithm = "AES256"
           encryption_key = nil
           access_key = "test"
           secret_key = "test"
-          with_encryption_key = false ;
+          with_encryption_key = false;
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
                                                             encryption_algorithm, encryption_key, secret_key,
@@ -244,9 +251,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["bucket"] == "testbucket").to be true
           expect(parsed_json["serverEncryptionAlgorithm"] == encryption_algorithm).to be true
           expect(parsed_json["serverEncryptionKey"] == nil).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be able to add s3 connector to the featurestore with encryption algorithm and with encryption key" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           encryption_algorithm = "SSE_KMS"
           encryption_key = "Test"
@@ -272,9 +283,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["bucket"] == "testbucket").to be true
           expect(parsed_json["serverEncryptionAlgorithm"] == encryption_algorithm).to be true
           expect(parsed_json["serverEncryptionKey"] == encryption_key).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be not able to add s3 connector to the featurestore with wrong encryption algorithm" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           encryption_algorithm = "WRONG-ALGORITHM"
           encryption_key = "Test"
@@ -292,9 +307,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270104).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be not able to add s3 connector to the featurestore with wrong server key and access key pair" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           encryption_algorithm = "SSE_KMS"
           encryption_key = "Test"
@@ -311,9 +330,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
+          setVar("aws_instance_role", "true")
+          refresh_variables
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket: nil)
@@ -323,6 +346,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270034).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be able to add jdbc connector to the featurestore" do
@@ -371,6 +396,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to delete a s3 connector from the featurestore" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
@@ -384,6 +411,8 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
           expect(parsed_json.key?("id")).to be true
           expect(parsed_json["id"] == connector_id).to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be able to delete a JDBC connector from the featurestore" do
@@ -423,6 +452,8 @@ describe "On #{ENV['OS']}" do
         end
 
         it "should be able to update S3 connector in the featurestore" do
+          setVar("aws_instance_role", "false")
+          refresh_variables
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           encryption_algorithm = "AES-256"
@@ -454,6 +485,8 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2["name"] == connector_name2).to be true
           expect(parsed_json2["storageConnectorType"] == "S3").to be true
           expect(parsed_json2["bucket"] == "testbucket2").to be true
+          setVar("aws_instance_role", "false")
+          refresh_variables
         end
 
         it "should be able to update JDBC connector in the featurestore" do
