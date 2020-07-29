@@ -255,7 +255,7 @@ describe "On #{ENV['OS']}" do
           setVar("aws_instance_role", "false")
           project = get_project
           create_session(project[:username], "Pass123")
-          encryption_algorithm = "SSE_KMS"
+          encryption_algorithm = "SSE-KMS"
           encryption_key = "Test"
           access_key = "test"
           secret_key = "test"
@@ -310,7 +310,7 @@ describe "On #{ENV['OS']}" do
           setVar("aws_instance_role", "false")
           project = get_project
           create_session(project[:username], "Pass123")
-          encryption_algorithm = "SSE_KMS"
+          encryption_algorithm = "SSE-KMS"
           encryption_key = "Test"
           secret_key = "test"
           access_key = nil

@@ -1,9 +1,13 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3;
 
-import com.fasterxml.jackson.annotation.JsonValue;
+import javax.xml.bind.annotation.XmlEnumValue;
+import java.util.Arrays;
+import java.util.Optional;
 
 public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
+  @XmlEnumValue("AES256")
   AES256("AES256", "Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3)", false),
+  @XmlEnumValue("SSE-KMS")
   SSE_KMS("SSE-KMS", "Server-Encryption with AWS KMS-Managed Keys (SSE-KMS)", true);
   
   private String algorithm;
@@ -15,7 +19,6 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
     this.requiresKey = requiresKey;
   }
   
-  @JsonValue
   public String getAlgorithm() {
     return algorithm;
   }
@@ -36,5 +39,23 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
   
   public void setRequiresKey(boolean requiresKey) {
     this.requiresKey = requiresKey;
+  }
+  
+  public static FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithmByName(String s)
+    throws IllegalArgumentException{
+    Optional<FeaturestoreS3ConnectorEncryptionAlgorithm> algorithm =
+      Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values())
+        .stream().filter(a -> a.getAlgorithm().equals(s)).findFirst();
+    
+    if(algorithm.isPresent()){
+      return algorithm.get();
+    } else {
+      throw new IllegalArgumentException("Invalid encryption algorithm name provided");
+    }
+  }
+  
+  @Override
+  public String toString() {
+    return algorithm;
   }
 }

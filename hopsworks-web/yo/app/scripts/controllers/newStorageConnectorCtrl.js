@@ -585,7 +585,7 @@ angular.module('hopsWorksApp')
              */
             self.findEcryptionAlgorithmFromArray = function (algorithm) {
                 return self.s3ServerEncryptionAlgorithmAlgorithms.find(function (a) {
-                    return a.value == algorithm
+                    return a.algorithm == algorithm
                 })
             }
 
@@ -596,6 +596,7 @@ angular.module('hopsWorksApp')
             self.makeArrayOfEncryptionAlgorithms = function () {
                 return self.settings.s3ServerEncryptionAlgorithms.map( function (a) {
                     var algorithm = JSON.parse(a);
+                    algorithm.value = algorithm.algorithm;
                     return algorithm;
                 })
             }

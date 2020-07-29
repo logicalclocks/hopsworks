@@ -425,7 +425,7 @@ public class FeaturestoreClientSettingsDTO {
         .add("algorithm", algorithm.getAlgorithm())
         .add("description", algorithm.getDescription())
         .add("requiresKey", algorithm.isRequiresKey())
-        .add("value", algorithm.name()).build().toString();
+        .build().toString();
       encryptionAlgorithms.add(jsonString);
     });
     return encryptionAlgorithms;
