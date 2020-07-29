@@ -1,5 +1,8 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3;
 
+
+import com.google.common.base.Strings;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
@@ -18,6 +21,9 @@ public class FeaturestoreS3ConnectorEncryptionAlgorithmConverter implements
   
   @Override
   public FeaturestoreS3ConnectorEncryptionAlgorithm convertToEntityAttribute(String s) {
+    if(Strings.isNullOrEmpty(s)){
+      return  null;
+    }
     return FeaturestoreS3ConnectorEncryptionAlgorithm.getEncryptionAlgorithmByName(s);
   }
 }
