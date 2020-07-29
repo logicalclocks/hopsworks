@@ -278,7 +278,9 @@
                                        uib-tooltip='AWS Access/Secret keys' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
-                                    <md-checkbox class="row md-primary checked">
+                                    <md-checkbox class="row md-primary" ng-disabled="true" ng-disabled="true"
+                                                 ng-init="newStorageConnectorCtrl.s3BucketSecretAndAccessKeys=true"
+                                                 ng-model="newStorageConnectorCtrl.s3BucketSecretAndAccessKeys">
                                     </md-checkbox>
                                 </div>
                             </div>

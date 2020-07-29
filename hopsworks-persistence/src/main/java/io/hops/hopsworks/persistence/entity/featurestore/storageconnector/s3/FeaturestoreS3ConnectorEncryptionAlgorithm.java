@@ -1,11 +1,10 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3;
 
-
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
   AES256("AES256", "Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3)", false),
-  SSE_KMS("SSE_KMS", "Server-Encryption with AWS KMS-Managed Keys (SSE-KMS)", true);
+  SSE_KMS("SSE-KMS", "Server-Encryption with AWS KMS-Managed Keys (SSE-KMS)", true);
   
   private String algorithm;
   private String description;

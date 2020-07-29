@@ -15,8 +15,6 @@
  */
 'use strict';
 
-import fa from "../../../bower_components/moment/dist/locale/fa";
-
 /**
  * Controller for managing the "create new storage connector" page
  */
@@ -48,6 +46,7 @@ angular.module('hopsWorksApp')
             self.s3ServerEncryptionKey = ""
             self.s3BucketEncryption = false
             self.s3BucketEncryptionRequiresKey = false
+            self.s3BucketSecretAndAccessKeys = false
 
             //State
             self.working = false
@@ -586,7 +585,7 @@ angular.module('hopsWorksApp')
              */
             self.findEcryptionAlgorithmFromArray = function (algorithm) {
                 return self.s3ServerEncryptionAlgorithmAlgorithms.find(function (a) {
-                    return a.algorithm == algorithm
+                    return a.value == algorithm
                 })
             }
 

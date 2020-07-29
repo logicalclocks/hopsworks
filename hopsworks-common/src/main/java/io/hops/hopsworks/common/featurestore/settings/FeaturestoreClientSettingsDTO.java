@@ -79,7 +79,7 @@ public class FeaturestoreClientSettingsDTO {
   private Boolean onlineFeaturestoreEnabled = false;
   private List<String> suggestedMysqlFeatureTypes = FeaturestoreConstants.SUGGESTED_MYSQL_DATA_TYPES;
   private List<String> s3ServerEncryptionAlgorithms;
-
+  
   public FeaturestoreClientSettingsDTO() {
     //For JAXB
   }
