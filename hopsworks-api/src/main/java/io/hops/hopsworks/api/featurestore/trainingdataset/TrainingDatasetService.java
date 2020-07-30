@@ -36,6 +36,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -135,7 +136,7 @@ public class TrainingDatasetService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the list of training datasets for a featurestore",
       response = TrainingDatasetDTO.class, responseContainer = "List")
-  public Response getAll(@Context SecurityContext sc) {
+  public Response getAll(@Context SecurityContext sc) throws ServiceException {
     List<TrainingDatasetDTO> trainingDatasetDTOs =
         trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     GenericEntity<List<TrainingDatasetDTO>> trainingDatasetsGeneric =
@@ -158,7 +159,7 @@ public class TrainingDatasetService {
   @ApiOperation(value = "Create training dataset for a featurestore",
       response = TrainingDatasetDTO.class)
   public Response create(@Context SecurityContext sc, TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ProvenanceException, IOException  {
+      throws FeaturestoreException, ProvenanceException, IOException, ServiceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for creating a new Training Dataset cannot be null");
     }
@@ -193,7 +194,7 @@ public class TrainingDatasetService {
       response = TrainingDatasetDTO.class)
   public Response getById(@ApiParam(value = "Id of the training dataset", required = true)
       @PathParam("trainingdatasetid") Integer trainingdatasetid, @Context SecurityContext sc)
-    throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
     TrainingDatasetDTO trainingDatasetDTO =
         trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingdatasetid);
@@ -221,7 +222,7 @@ public class TrainingDatasetService {
                                            @PathParam("name") String name,
                                            @ApiParam(value = "Filter by a specific version")
                                            @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     verifyNameProvided(name);
     List<TrainingDatasetDTO> trainingDatasetDTO;
     if (version == null) {
@@ -292,7 +293,8 @@ public class TrainingDatasetService {
                                           @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
                                         @ApiParam(value = "updateStats", example = "true")
                                           @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
-                                        TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException {
+                                        TrainingDatasetDTO trainingDatasetDTO)
+      throws FeaturestoreException, ServiceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
