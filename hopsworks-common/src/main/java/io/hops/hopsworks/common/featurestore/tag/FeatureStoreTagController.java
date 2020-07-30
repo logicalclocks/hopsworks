@@ -18,7 +18,9 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -119,18 +121,16 @@ public class FeatureStoreTagController {
    * Convert {'updated': 'daily', 'jobtype': 'batch'}
    * to [{'key': 'updated', 'value': 'daily'}, {'key': 'jobtype', 'value': 'batch'}]
    *
-   * @param tagsJson
+   * @param externalTags
    * @return
    */
-  public JSONArray convertToInternalTags(String tagsJson) {
-
-    JSONObject tagsObject = new JSONObject(tagsJson);
+  public JSONArray convertToInternalTags(Map<String, String> externalTags) {
     List<JSONObject> tagsList = new ArrayList<>();
-    for(String key: tagsObject.keySet()) {
+    for(Map.Entry<String, String> entry : externalTags.entrySet()) {
       JSONObject tag = new JSONObject();
-      tag.put("key", key);
-      if(!Strings.isNullOrEmpty(tagsObject.getString(key))) {
-        tag.put("value", tagsObject.getString(key));
+      tag.put("key", entry.getKey());
+      if(!Strings.isNullOrEmpty(entry.getValue())) {
+        tag.put("value", entry.getValue());
       }
       tagsList.add(tag);
     }
@@ -145,11 +145,10 @@ public class FeatureStoreTagController {
    * @param tagsJson
    * @return
    */
-  public JSONObject convertToExternalTags(String tagsJson) {
+  public Map<String, String> convertToExternalTags(String tagsJson) {
+    Map<String, String> tagsObject = new HashMap<>();
 
-    JSONObject tagsObject = null;
     if(!Strings.isNullOrEmpty(tagsJson)) {
-      tagsObject = new JSONObject();
       JSONArray tagsArr = new JSONArray(tagsJson);
       for (int i = 0; i < tagsArr.length(); i++) {
         JSONObject currentTag = tagsArr.getJSONObject(i);

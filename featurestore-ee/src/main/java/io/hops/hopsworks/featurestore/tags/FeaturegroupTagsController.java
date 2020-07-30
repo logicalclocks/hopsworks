@@ -5,7 +5,6 @@
 package io.hops.hopsworks.featurestore.tags;
 
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
@@ -39,8 +38,6 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
   @EJB
   private FeaturegroupFacade featuregroupFacade;
   @EJB
-  private CachedFeaturegroupFacade cachedFeaturegroupFacade;
-  @EJB
   private XAttrsController xAttrsController;
   @EJB
   private FeatureStoreTagController featureStoreTagController;
@@ -60,19 +57,9 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = validateFeaturegroup(featuregroupId, featurestore);
-
     String path = getFeaturegroupLocation(featuregroup);
-
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    Map<String, String> tagsMap = new HashMap<>();
-    if(tags != null) {
-      for(String key: tags.keySet()) {
-        tagsMap.put(key, tags.getString(key));
-      }
-    }
-    return tagsMap;
+    return featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
   }
 
   /**
@@ -92,21 +79,19 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = validateFeaturegroup(featuregroupId, featurestore);
-
     String path = getFeaturegroupLocation(featuregroup);
-
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
 
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    Map<String, String> tagsMap = new HashMap<>();
-    if (tags != null && tags.has(tagName)) {
-      String tagValue = tags.getString(tagName);
-      tagsMap.put(tagName, tagValue);
+    Map<String, String> results = new HashMap<>();
+    if (tags != null && tags.containsKey(tagName)) {
+      results.put(tagName, tags.get(tagName));
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_FOUND, Level.FINE);
     }
 
-    return tagsMap;
+    return results;
   }
 
   /**
@@ -127,31 +112,17 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = validateFeaturegroup(featuregroupId, featurestore);
-
     String path = getFeaturegroupLocation(featuregroup);
 
     String tagsJson = new JSONObject().put(tag, value).toString();
-
     featureStoreTagController.validateTags(tagsJson);
 
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    tags.put(tag, value != null ? value : "");
 
-    JSONObject newTags = new JSONObject();
-    if(xattrsMap != null && xattrsMap.size() > 0) {
-      JSONObject existingTags = featureStoreTagController.convertToExternalTags(
-        xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-      if (existingTags != null) {
-        for (String tagName : existingTags.keySet()) {
-          newTags.put(tagName, existingTags.get(tagName));
-        }
-      }
-    }
-    if(value != null) {
-      newTags.put(tag, value);
-    } else {
-      newTags.put(tag, "");
-    }
-    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(newTags.toString());
+    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
     return xAttrsController.addXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS, jsonTagsArr.toString());
   }
 
@@ -167,11 +138,8 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
    */
   public void deleteAll(Project project, Users user, Featurestore featurestore, int featuregroupId)
       throws FeaturestoreException, MetadataException, DatasetException {
-
     Featuregroup featuregroup = validateFeaturegroup(featuregroupId, featurestore);
-
     String path = getFeaturegroupLocation(featuregroup);
-
     xAttrsController.removeXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
   }
 
@@ -190,23 +158,14 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, MetadataException, DatasetException {
 
     Featuregroup featuregroup = validateFeaturegroup(featuregroupId, featurestore);
-
     String path = getFeaturegroupLocation(featuregroup);
 
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    tags.remove(tagName);
 
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    JSONObject newTags = new JSONObject();
-    if (tags != null) {
-      if (tags.has(tagName)) {
-        tags.remove(tagName);
-      }
-      for (String attachedTag : tags.keySet()) {
-        newTags.put(attachedTag, tags.get(attachedTag));
-      }
-    }
-
-    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(newTags.toString());
+    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
     xAttrsController.addXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS, jsonTagsArr.toString());
   }
 

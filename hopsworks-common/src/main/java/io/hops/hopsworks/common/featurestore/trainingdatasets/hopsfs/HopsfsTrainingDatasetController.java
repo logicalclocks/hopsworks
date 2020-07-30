@@ -16,16 +16,24 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
+import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.logging.Level;
 
 /**
  * Class controlling the interaction with the hopsfs_training_dataset table and required business logic
@@ -33,8 +41,11 @@ import javax.ejb.TransactionAttributeType;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class HopsfsTrainingDatasetController {
+
   @EJB
   private InodeController inodeController;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   /**
    * Converts a Hopsfs Training Dataset entity into a DTO representation
@@ -43,9 +54,23 @@ public class HopsfsTrainingDatasetController {
    * @return the converted DTO representation
    */
   public TrainingDatasetDTO convertHopsfsTrainingDatasetToDTO(TrainingDatasetDTO trainingDatasetDTO,
-                                                              TrainingDataset trainingDataset) {
+                                                              TrainingDataset trainingDataset)
+      throws ServiceException {
+
+    Service namenodeService;
+    try {
+      namenodeService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+          ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND,
+          Level.SEVERE, "Could not find namenode service", e.getMessage(), e);
+    }
+
     HopsfsTrainingDataset hopsfsTrainingDataset = trainingDataset.getHopsfsTrainingDataset();
-    trainingDatasetDTO.setLocation(inodeController.getPath(hopsfsTrainingDataset.getInode()));
+
+    trainingDatasetDTO.setLocation(new Path(DistributedFileSystemOps.HOPSFS_SCHEME,
+        namenodeService.getAddress() + ":" + namenodeService.getPort(),
+        inodeController.getPath(hopsfsTrainingDataset.getInode())).toString());
     trainingDatasetDTO.setInodeId(hopsfsTrainingDataset.getInode().getId());
     trainingDatasetDTO.setStorageConnectorId(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getId());
     trainingDatasetDTO.setStorageConnectorName(hopsfsTrainingDataset.getFeaturestoreHopsfsConnector().getName());

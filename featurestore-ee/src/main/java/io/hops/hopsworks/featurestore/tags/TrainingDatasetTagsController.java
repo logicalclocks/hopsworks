@@ -6,15 +6,16 @@ package io.hops.hopsworks.featurestore.tags;
 
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -36,11 +37,13 @@ import java.util.logging.Level;
 public class TrainingDatasetTagsController implements TrainingDatasetTagControllerIface {
 
   @EJB
-  private TrainingDatasetController trainingDatasetController;
+  private TrainingDatasetFacade trainingDatasetFacade;
   @EJB
   private XAttrsController xAttrsController;
   @EJB
   private FeatureStoreTagController featureStoreTagController;
+  @EJB
+  private InodeController inodeController;
 
   /**
    * Get all tags associated with a training dataset
@@ -55,21 +58,9 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
    */
   public Map<String, String> getAll(Project project, Users user, Featurestore featurestore, int trainingDatasetId)
       throws FeaturestoreException, DatasetException, MetadataException {
-
-    TrainingDatasetDTO trainingDatasetDTO = validateTrainingDataset(trainingDatasetId, featurestore);
-
-    String path = trainingDatasetDTO.getLocation();
-
+    String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    Map<String, String> tagsMap = new HashMap<>();
-    if(tags != null) {
-      for(String key: tags.keySet()) {
-        tagsMap.put(key, tags.getString(key));
-      }
-    }
-    return tagsMap;
+    return featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
   }
 
   /**
@@ -88,22 +79,20 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
                                        String tagName)
       throws FeaturestoreException, DatasetException, MetadataException {
 
-    TrainingDatasetDTO trainingDatasetDTO = validateTrainingDataset(trainingDatasetId, featurestore);
-
-    String path = trainingDatasetDTO.getLocation();
-
+    String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
 
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    Map<String, String> tagsMap = new HashMap<>();
-    if(tags != null && tags.has(tagName)) {
-      String tagValue = tags.getString(tagName);
-      tagsMap.put(tagName, tagValue);
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+
+    Map<String, String> results = new HashMap<>();
+    if (tags != null && tags.containsKey(tagName)) {
+      results.put(tagName, tags.get(tagName));
     } else {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_FOUND, Level.FINE);
     }
 
-    return tagsMap;
+    return results;
   }
 
   /**
@@ -123,29 +112,17 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
                                          int trainingDatasetId, String tag, String value)
       throws FeaturestoreException, DatasetException, MetadataException {
 
-    TrainingDatasetDTO trainingDatasetDTO = validateTrainingDataset(trainingDatasetId, featurestore);
-
-    String path = trainingDatasetDTO.getLocation();
+    String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
 
     String tagsJson = new JSONObject().put(tag, value).toString();
     featureStoreTagController.validateTags(tagsJson);
 
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    tags.put(tag, value != null ? value : "");
 
-    JSONObject newTags = new JSONObject();
-    if(xattrsMap != null && xattrsMap.size() > 0) {
-      JSONObject existingTags = featureStoreTagController.convertToExternalTags(
-          xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-      for (String tagName : existingTags.keySet()) {
-        newTags.put(tagName, existingTags.get(tagName));
-      }
-    }
-    if(value != null) {
-      newTags.put(tag, value);
-    } else {
-      newTags.put(tag, "");
-    }
-    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(newTags.toString());
+    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
     return xAttrsController.addXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS, jsonTagsArr.toString());
   }
 
@@ -161,11 +138,7 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
    */
   public void deleteAll(Project project, Users user, Featurestore featurestore, int trainingDatasetId)
       throws FeaturestoreException, MetadataException, DatasetException {
-
-    TrainingDatasetDTO trainingDatasetDTO = validateTrainingDataset(trainingDatasetId, featurestore);
-
-    String path = trainingDatasetDTO.getLocation();
-
+    String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
     xAttrsController.removeXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
   }
 
@@ -184,44 +157,37 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
                            int trainingDatasetId, String tagName)
       throws FeaturestoreException, MetadataException, DatasetException {
 
-    TrainingDatasetDTO trainingDatasetDTO = validateTrainingDataset(trainingDatasetId, featurestore);
-
-    String path = trainingDatasetDTO.getLocation();
+    String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
 
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
 
-    JSONObject tags = featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
-    JSONObject newTags = new JSONObject();
-    if(tags != null) {
-      if(tags.has(tagName)) {
-        tags.remove(tagName);
-      }
-      for (String attachedTag : tags.keySet()) {
-        newTags.put(attachedTag, tags.get(attachedTag));
-      }
-    }
+    Map<String, String> tags =
+        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    tags.remove(tagName);
 
-    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(newTags.toString());
+    JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
     xAttrsController.addXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS, jsonTagsArr.toString());
   }
 
   /**
-   * Validate that training dataset supports XAttrs
+   * Returns the training dataset location, if the training dataset supports Tags (i.e. it's a hopsfs td)
    * @param trainingDatasetId
    * @param featurestore
    * @return
    * @throws FeaturestoreException
    */
-  private TrainingDatasetDTO validateTrainingDataset(int trainingDatasetId, Featurestore featurestore)
+  private String getTrainingDatasetLocation(int trainingDatasetId, Featurestore featurestore)
       throws FeaturestoreException {
-    TrainingDatasetDTO trainingDatasetDTO =
-        trainingDatasetController.getTrainingDatasetWithIdAndFeaturestore(featurestore, trainingDatasetId);
+    TrainingDataset td = trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
+            Level.FINE, "Could not find training dataset with id: " + trainingDatasetId));
 
-    if(!trainingDatasetDTO.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
+    if(!td.getTrainingDatasetType().equals(TrainingDatasetType.HOPSFS_TRAINING_DATASET)) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_ALLOWED,
           Level.FINE, "Tags is only supported for " + TrainingDatasetType.HOPSFS_TRAINING_DATASET);
     }
-    return trainingDatasetDTO;
+
+    return inodeController.getPath(td.getHopsfsTrainingDataset().getInode());
   }
 
 }

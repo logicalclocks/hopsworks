@@ -12,8 +12,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
-import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.util.Settings;
@@ -30,8 +29,6 @@ import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -52,7 +49,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
-  private TrainingDatasetController trainingDatasetController;
+  private TrainingDatasetFacade trainingDatasetFacade;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
@@ -72,7 +69,6 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @param featuregroupsVersionDict
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public void verifyFeatureExistence(List<String> featureList, Featurestore featurestore,
     String featuregroupsVersionDict) throws FeaturestoreException {
     
@@ -134,23 +130,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
       }
     }
   }
-  
-  /**
-   * Verifies if there is a training dataset with the given name and version in the featurestore already.
-   *
-   * @param project
-   * @param featurestore
-   * @param trainingDatasetVersion
-   * @param trainingDataset
-   * @throws FeaturestoreException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public TrainingDatasetDTO verifyDatasetVersion(Project project, Featurestore featurestore, int
-    trainingDatasetVersion, String trainingDataset) throws FeaturestoreException{
-    return trainingDatasetController.getTrainingDatasetByFeaturestoreAndName(project, featurestore, trainingDataset,
-      trainingDatasetVersion);
-  }
-  
+
   /**
    * Validates the job specification to make sure user provided either a feature list or a sql query string.
    *
@@ -159,7 +139,6 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @return
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Boolean validateJobSpecification(List<String> features, String sqlQuery) throws FeaturestoreException {
     if (features == null && sqlQuery == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_MISSPECIFICATION,
@@ -226,7 +205,6 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @param trainingDatasetJobDTO
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
   public Jobs createTrainingDatasetJob(Users user, Project project, TrainingDatasetJobDTO trainingDatasetJobDTO)
     throws FeaturestoreException, JAXBException {
     
@@ -241,23 +219,15 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
       featurestoreName);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
   
-    TrainingDatasetDTO dataset = null;
-    if (!trainingDatasetJobDTO.getOverwrite()) {
-      try {
-        dataset = verifyDatasetVersion(project, featurestore, trainingDatasetJobDTO
-          .getTrainingDatasetVersion(), trainingDatasetJobDTO.getTrainingDataset());
-      } catch (FeaturestoreException e) {
-        // There is no dataset with same name and version, hence just continue
-      }
-      if (dataset != null){
+    if (!trainingDatasetJobDTO.getOverwrite() &&
+        trainingDatasetFacade.findByNameVersionAndFeaturestore(trainingDatasetJobDTO.getTrainingDataset(),
+          trainingDatasetJobDTO.getTrainingDatasetVersion(), featurestore).isPresent()) {
         // There is a dataset with the specified version already
-        throw new FeaturestoreException(
-          RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS,
-          Level.WARNING, String.format("Training dataset %s, version %s exists in %s. Set overwrite to true or " +
-            "increment version", trainingDatasetJobDTO.getTrainingDataset(),
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAININGDATASETJOB_TRAININGDATASET_VERSION_EXISTS,
+          Level.FINE, String.format("Training dataset %s, version %s exists in %s. Set overwrite to true or " +
+              "increment version", trainingDatasetJobDTO.getTrainingDataset(),
           trainingDatasetJobDTO.getTrainingDatasetVersion(),
           featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject())));
-      }
     }
   
     writeUtilArgsToHdfs(user, project, trainingDatasetJobDTO);
