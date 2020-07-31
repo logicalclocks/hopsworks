@@ -64,7 +64,6 @@ import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.experiments.tensorboard.TensorBoardController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -191,8 +190,8 @@ import java.util.stream.Collectors;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class ProjectController {
 
-  private static final Logger LOGGER = Logger.getLogger(ProjectController.class.
-    getName());
+  private static final Logger LOGGER = Logger.getLogger(ProjectController.class.getName());
+
   @EJB
   protected UsersController usersController;
   @EJB
@@ -1887,11 +1886,9 @@ public class ProjectController {
             //if online-featurestore service is enabled in the project, give new member access to it
             if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
                 settings.isOnlineFeaturestore()) {
-              onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(), project);
-              FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-                  featurestoreController.getOfflineFeaturestoreDbName(project));
-              onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, projectTeam.getUser(),
-                  featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
+              Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
+              onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
+                  featurestore, projectTeam.getTeamRole());
             }
 
             // TODO: This should now be a REST call
@@ -2142,8 +2139,8 @@ public class ProjectController {
   }
 
   public void removeMemberFromTeam(Project project, Users user, String toRemoveEmail) throws UserException,
-    ProjectException, ServiceException, IOException, GenericException, JobException, HopsSecurityException,
-    TensorBoardException {
+      ProjectException, ServiceException, IOException, GenericException, JobException, HopsSecurityException,
+      TensorBoardException, FeaturestoreException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
@@ -2201,10 +2198,16 @@ public class ProjectController {
       ycs.closeYarnClient(yarnClientWrapper);
     }
 
+    // Revoke privileges for online feature store
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+      Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
+      onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, user);
+    }
+
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
 
-    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFlag.
-      MEMBER);
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(),
+        user, project, ActivityFlag.MEMBER);
 
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     try {
@@ -2235,8 +2238,8 @@ public class ProjectController {
    * @throws ProjectException
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole) throws
-    UserException, ProjectException {
+  public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole)
+      throws UserException, ProjectException, FeaturestoreException {
     Users projOwner = project.getOwner();
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (projOwner.equals(user)) {
@@ -2252,20 +2255,28 @@ public class ProjectController {
         "project: " + project.getName() + ", user: " + user.getUsername());
       //member not found
     }
-    if (!projectTeam.getTeamRole().equals(newRole)) {
-      projectTeam.setTeamRole(newRole);
-      projectTeam.setTimestamp(new Date());
-      projectTeamFacade.update(projectTeam);
+    if (projectTeam.getTeamRole().equals(newRole)) {
+      //nothing to update
+      return;
+    }
+    projectTeam.setTeamRole(newRole);
+    projectTeam.setTimestamp(new Date());
+    projectTeamFacade.update(projectTeam);
 
-      if (newRole.equals(AllowedRoles.DATA_OWNER)) {
-        hdfsUsersController.addUserToProjectGroup(project, projectTeam);
-      } else {
-        hdfsUsersController.modifyProjectMembership(user, project);
-      }
-
-      logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFlag.MEMBER);
+    if (newRole.equals(AllowedRoles.DATA_OWNER)) {
+      hdfsUsersController.addUserToProjectGroup(project, projectTeam);
+    } else {
+      hdfsUsersController.modifyProjectMembership(user, project);
     }
 
+    // Update privileges for online feature store
+    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
+      Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
+      onlineFeaturestoreController
+          .updateUserOnlineFeatureStoreDB(user, featurestore, newRole);
+    }
+
+    logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFlag.MEMBER);
   }
 
   /**
@@ -2301,18 +2312,6 @@ public class ProjectController {
       }
     }
     return projects;
-  }
-
-  public List<String> findProjectNames() {
-    List<Project> projects = projectFacade.findAll();
-    List<String> projectNames = null;
-    if (projects != null && !projects.isEmpty()) {
-      projectNames = new ArrayList(projects.size());
-      for (Project project : projects) {
-        projectNames.add(project.getName());
-      }
-    }
-    return projectNames;
   }
 
   /**

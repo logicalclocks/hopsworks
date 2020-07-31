@@ -128,9 +128,8 @@ public class FeaturestoreJdbcConnectorController {
       String connectionString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
           "auth=noSasl;ssl=true;twoWay=true;";
       String arguments = "sslTrustStore,trustStorePassword,sslKeyStore,keyStorePassword";
-      String name = databaseName;
       FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
-      featurestoreJdbcConnectorDTO.setName(name);
+      featurestoreJdbcConnectorDTO.setName(databaseName);
       featurestoreJdbcConnectorDTO.setDescription(description);
       featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
       featurestoreJdbcConnectorDTO.setArguments(arguments);
@@ -292,8 +291,7 @@ public class FeaturestoreJdbcConnectorController {
    */
   public List<FeaturestoreStorageConnectorDTO> getJdbcConnectorsForFeaturestore(Featurestore featurestore) {
     List<FeaturestoreJdbcConnector> jdbcConnectors = featurestoreJdbcConnectorFacade.findByFeaturestore(featurestore);
-    return jdbcConnectors.stream().map(jdbcConnector -> new FeaturestoreJdbcConnectorDTO(jdbcConnector))
-        .collect(Collectors.toList());
+    return jdbcConnectors.stream().map(FeaturestoreJdbcConnectorDTO::new).collect(Collectors.toList());
   }
 
   /**

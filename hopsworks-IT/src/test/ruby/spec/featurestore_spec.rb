@@ -942,6 +942,77 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "grant correct permissions for the online feature store" do
+      context 'with valid project and online feature store enabled' do
+        before :all do
+          if getVar("featurestore_online_enabled") == false
+            skip "Online Feature Store not enabled, skip online featurestore tests"
+          end
+          with_valid_project
+        end
+
+        it "should grant all privileges to the project owner" do
+          project = get_project
+          # online fs username are capped to 30 chars
+          online_db_name = "#{project[:projectname]}_#{@user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:project[:projectname], GRANTEE:grantee)
+          # MySQL "grant all privileges" generates 18 rows
+          expect(privileges.length).to eq(18)
+        end
+
+        it "should grant only select privileges to data scientists" do
+          project = get_project
+          user = create_user
+          add_member_to_project(project, user[:email], "Data scientist")
+
+          # online fs username are capped to 30 chars
+          online_db_name = "#{project[:projectname]}_#{user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:project[:projectname], GRANTEE:grantee)
+          expect(privileges.length).to eq(1)
+          granted_privilege = privileges.first
+          expect(granted_privilege[:PRIVILEGE_TYPE]).to eq("SELECT")
+        end
+
+        it "should adjust the privileges if the user is promoted from data scientist to data owner" do
+          project = get_project
+          user = create_user
+          add_member_to_project(project, user[:email], "Data scientist")
+
+          # Promote user
+          change_member_role(project, user[:email], "Data owner")
+
+          # online fs username are capped to 30 chars
+          online_db_name = "#{project[:projectname]}_#{user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:project[:projectname], GRANTEE:grantee)
+
+          # MySQL "grant all privileges" generates 18 rows
+          expect(privileges.length).to eq(18)
+        end
+
+        it "should adjust the privileges if the user is demoted from data owner to data scientist" do
+          project = get_project
+          user = create_user
+          add_member_to_project(project, user[:email], "Data owner")
+
+          # Promote user
+          change_member_role(project, user[:email], "Data scientist")
+
+          # online fs username are capped to 30 chars
+          online_db_name = "#{project[:projectname]}_#{user[:username]}"[0..30]
+          grantee = "'#{online_db_name}'@'%'"
+          privileges = SchemaPrivileges.where(TABLE_SCHEMA:project[:projectname], GRANTEE:grantee)
+
+          # MySQL "grant all privileges" generates 18 rows
+          expect(privileges.length).to eq(1)
+          granted_privilege = privileges.first
+          expect(granted_privilege[:PRIVILEGE_TYPE]).to eq("SELECT")
+        end
+      end
+    end
+
     describe "Create, delete and update operations on online cached featuregroups in a specific featurestore" do
 
       context 'with valid project, featurestore service enabled, and online feature store enabled' do

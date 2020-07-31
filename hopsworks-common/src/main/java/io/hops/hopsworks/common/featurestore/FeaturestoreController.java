@@ -57,7 +57,7 @@ import java.util.stream.Collectors;
  * Class controlling the interaction with the feature_store table and required business logic
  */
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class FeaturestoreController {
   
   @EJB
@@ -102,6 +102,21 @@ public class FeaturestoreController {
       }
       throw ex;
     }
+  }
+
+  /**
+   * Return the feature store for the specific project. not the shared ones.
+   * @param project
+   * @return
+   */
+  public Featurestore getProjectFeaturestore(Project project) throws FeaturestoreException {
+    Collection<Dataset> dsInProject = project.getDatasetCollection();
+    return  dsInProject.stream()
+        .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
+        .map(Dataset::getFeatureStore)
+        .findFirst()
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+            Level.INFO, "Could not find feature store for project: " + project.getName()));
   }
 
   /**
@@ -226,7 +241,7 @@ public class FeaturestoreController {
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     if (settings.isOnlineFeaturestore()) {
-      onlineFeaturestoreController.setupOnlineFeaturestore(project, user, featurestore);
+      onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore);
     }
     return featurestore;
   }

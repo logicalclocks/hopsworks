@@ -28,6 +28,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A facade for the online feature store databases (separate from the Hopsworks databases).
@@ -39,6 +41,9 @@ import java.util.List;
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class OnlineFeaturestoreFacade {
+
+  private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreFacade.class.getName());
+
   @PersistenceContext(unitName = "featurestorePU")
   private EntityManager em;
 
@@ -163,9 +168,10 @@ public class OnlineFeaturestoreFacade {
       // If the grant does not exists, MySQL returns a 1141 error which JPA catches and logs it together with the stack
       // trace, polluting the logs. To avoid this we first query the information_schema to check that the grant exists,
       // if so, we remove it
-      int numGrants = (int) em.createNativeQuery(
+      String grantee = "'" + dbUser + "'@'%'";
+      Long numGrants = (Long) em.createNativeQuery(
           "SELECT COUNT(*) FROM information_schema.SCHEMA_PRIVILEGES WHERE GRANTEE = ? AND TABLE_SCHEMA = ?")
-          .setParameter(1, dbUser)
+          .setParameter(1, grantee)
           .setParameter(2, dbName)
           .getSingleResult();
 
@@ -175,7 +181,7 @@ public class OnlineFeaturestoreFacade {
         em.createNativeQuery("REVOKE ALL PRIVILEGES ON " + dbName + ".* FROM " + dbUser + ";").executeUpdate();
       }
     } catch (Exception e) {
-      //This is fine since it might mean that the user does not have the privileges or does not exist
+      LOGGER.log(Level.SEVERE, "Exception in revoking the privileges", e);
     }
   }
 
