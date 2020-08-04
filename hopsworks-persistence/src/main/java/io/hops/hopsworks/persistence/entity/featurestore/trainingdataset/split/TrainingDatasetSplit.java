@@ -28,6 +28,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
@@ -36,7 +37,8 @@ import java.io.Serializable;
  * An instance of this class represents a row in the database.
  */
 @Entity
-@Table(name = "training_dataset_split", catalog = "hopsworks")
+@Table(name = "training_dataset_split", catalog = "hopsworks", uniqueConstraints={@UniqueConstraint(columnNames={
+  "training_dataset_id", "name"})})
 @XmlRootElement
 @NamedQueries({
   @NamedQuery(name = "TrainingDatasetSplit.findAll", query = "SELECT split FROM TrainingDatasetSplit split"),
