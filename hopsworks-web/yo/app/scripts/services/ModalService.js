@@ -80,6 +80,19 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
+            certsPassword: function (size,  password) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/certsPasswordModal.html',
+                    controller: 'CertsPasswordModalCtrl as certsPasswordModalCtrl',
+                    size: size,
+                    resolve: {
+                        password: function () {
+                            return password;
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
             reportIssueModal: function (size, title, msg, projectId) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/reportIssue.html',
