@@ -39,11 +39,13 @@
 
 package io.hops.hopsworks.common.jobs.flink;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.util.Settings;
@@ -65,9 +67,10 @@ public class FlinkJob extends YarnJob {
   private FlinkYarnRunnerBuilder flinkBuilder;
   
   FlinkJob(Jobs job, AsynchronousJobExecutor services, Users user, String jobUser,
-           Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint) {
+           Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint, 
+           ServiceDiscoveryController serviceDiscoveryController) {
     super(job, services, user, jobUser, settings.getHadoopSymbolicLinkDir(), settings,
-        kafkaBrokersString, hopsworksRestEndpoint);
+        kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController);
 
     if (!(job.getJobConfig() instanceof FlinkJobConfiguration)) {
       throw new IllegalArgumentException("Job must contain a FlinkJobConfiguration object. Received: "
@@ -90,9 +93,9 @@ public class FlinkJob extends YarnJob {
     try {
       runner = flinkBuilder
         .getYarnRunner(jobs.getProject(), jobUser, services.getFileOperations(hdfsUser.getUserName()),
-          yarnClient, services, settings, kafkaBrokersString, hopsworksRestEndpoint);
+          yarnClient, services, settings, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController);
       
-    } catch (IOException e) {
+    } catch (IOException | ServiceDiscoveryException e) {
       LOG.log(Level.SEVERE,
         "Failed to create YarnRunner.", e);
       try {

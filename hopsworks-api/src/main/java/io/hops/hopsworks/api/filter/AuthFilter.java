@@ -104,8 +104,7 @@ public class AuthFilter extends JWTFilter {
     if (rolesAnnotation == null) {
       return null;
     }
-    Set<String> rolesSet = new HashSet<>(Arrays.asList(rolesAnnotation.allowedUserRoles()));
-    return rolesSet;
+    return new HashSet<>(Arrays.asList(rolesAnnotation.allowedUserRoles()));
   }
 
   @Override
@@ -114,8 +113,7 @@ public class AuthFilter extends JWTFilter {
     if (acceptedTokens == null) {
       return null;
     }
-    Set<String> acceptedTokensSet = new HashSet<>(Arrays.asList(acceptedTokens.acceptedTokens()));
-    return acceptedTokensSet;
+    return new HashSet<>(Arrays.asList(acceptedTokens.acceptedTokens()));
   }
   
   private JWTRequired getAnnotation() {
@@ -123,8 +121,7 @@ public class AuthFilter extends JWTFilter {
     Method method = resourceInfo.getResourceMethod();
     JWTRequired methodAcceptedTokens = method.getAnnotation(JWTRequired.class);
     JWTRequired classAcceptedTokens = resourceClass.getAnnotation(JWTRequired.class);
-    JWTRequired annotation = methodAcceptedTokens != null ? methodAcceptedTokens : classAcceptedTokens;
-    return annotation;
+    return methodAcceptedTokens != null ? methodAcceptedTokens : classAcceptedTokens;
   }
   
   private ApiKeyRequired getApiKeyAnnotation() {

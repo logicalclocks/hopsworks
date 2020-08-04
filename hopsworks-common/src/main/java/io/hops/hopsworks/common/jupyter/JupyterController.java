@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.jupyter;
 
 import com.google.common.base.Strings;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jupyter.JupyterSettingsFacade;
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterFacade;
@@ -114,24 +115,24 @@ public class JupyterController {
     notebookPath = notebookPath.replace(" ", "\\ ");
     pyPath = pyPath.replace(" " , "\\ ");
 
-    String prog = settings.getSudoersDir() + "/convert-ipython-notebook.sh";
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand(notebookPath)
-        .addCommand(hdfsUsername)
-        .addCommand(settings.getAnacondaProjectDir())
-        .addCommand(pyPath)
-        .addCommand(conversionDir.getAbsolutePath())
-        .addCommand(notebookConversion.name())
-        .addCommand(projectUtils.getFullDockerImageName(project, true))
-        .setWaitTimeout(60l, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
-        .redirectErrorStream(true)
-        .build();
-
-    LOGGER.log(Level.FINE, processDescriptor.toString());
     HdfsUsers user = hdfsUsersFacade.findByName(hdfsUsername);
-    try {
+    try{
+      String prog = settings.getSudoersDir() + "/convert-ipython-notebook.sh";
+      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
+          .addCommand(prog)
+          .addCommand(notebookPath)
+          .addCommand(hdfsUsername)
+          .addCommand(settings.getAnacondaProjectDir())
+          .addCommand(pyPath)
+          .addCommand(conversionDir.getAbsolutePath())
+          .addCommand(notebookConversion.name())
+          .addCommand(projectUtils.getFullDockerImageName(project, true))
+          .setWaitTimeout(60l, TimeUnit.SECONDS) //on a TLS VM the timeout needs to be greater than 20s
+          .redirectErrorStream(true)
+          .build();
+
+      LOGGER.log(Level.FINE, processDescriptor.toString());
       certificateMaterializer.
           materializeCertificatesLocalCustomDir(user.getUsername(), project.getName(), conversionDir.getAbsolutePath());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -149,7 +150,7 @@ public class JupyterController {
         return renderedNotebookSB.substring(startIndex, stopIndex);
       }
       return null;
-    } catch (IOException ex) {
+    } catch (IOException | ServiceDiscoveryException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.SEVERE, null, ex.getMessage(),
           ex);
     } finally {

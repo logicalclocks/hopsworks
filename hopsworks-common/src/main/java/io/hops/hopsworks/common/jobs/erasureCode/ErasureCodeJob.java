@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.NotFoundException;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.jobs.yarn.YarnJob;
 import io.hops.hopsworks.common.util.Settings;
@@ -58,8 +59,9 @@ public class ErasureCodeJob extends YarnJob {
   private ErasureCodeJobConfiguration jobConfig;
 
   public ErasureCodeJob(Jobs job, AsynchronousJobExecutor services,
-          Users user, String jobUser, String hadoopDir, Settings settings) {
-    super(job, services, user, jobUser, hadoopDir, settings,null, null);
+          Users user, String jobUser, String hadoopDir, Settings settings, 
+          ServiceDiscoveryController serviceDiscoveryController) {
+    super(job, services, user, jobUser, hadoopDir, settings,null, null, serviceDiscoveryController);
 
     if (!(job.getJobConfig() instanceof ErasureCodeJobConfiguration)) {
       throw new IllegalArgumentException(

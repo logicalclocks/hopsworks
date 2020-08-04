@@ -76,6 +76,8 @@ public class DistributedFileSystemOps {
 
   private static final long MB = 1024l * 1024l;
 
+  public static final String HOPSFS_SCHEME = "hopsfs";
+
   private final DistributedFileSystem dfs;
   private Configuration conf;
   private String hadoopConfDir;

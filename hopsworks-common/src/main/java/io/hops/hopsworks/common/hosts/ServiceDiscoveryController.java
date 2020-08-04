@@ -59,8 +59,9 @@ public class ServiceDiscoveryController {
     SKLEARN_SERVING_LOGSTASH("sklearnserving.logstash"),
     PYTHON_JOBS_LOGSTASH("pythonjobs.logstash"),
     HOPSWORKS_APP("hopsworks.glassfish"),
-    JUPYTER_LOGSTASH("jupyter.logstash");
-    
+    JUPYTER_LOGSTASH("jupyter.logstash"),
+    REGISTRY("registry");
+  
     private String name;
     HopsworksService(String name) {
       this.name = name;

@@ -59,9 +59,9 @@ module CondaHelper
   module_function :wait_for
 
   def conda_exists(python_version)
-    registry = Variables.find_by(id: "docker_registry_name")
-    registry_port = Variables.find_by(id: "docker_registry_port")
-    image_name = registry.value + ":" + registry_port.value + "/python" + python_version.gsub(".","")
+    #the registry url and port should not change, if they do fix the tests
+    registry = "registry.service.consul:4443"
+    image_name = registry + "/python" + python_version.gsub(".","")
     system ("docker pull " + image_name + "> /dev/null 2>&1")
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
@@ -82,9 +82,9 @@ module CondaHelper
   end
 
   def check_if_img_exists_locally(docker_image_name)
-    registry = Variables.find_by(id: "docker_registry_name")
-    registry_port = Variables.find_by(id: "docker_registry_port")
-    image_name = registry.value + ":" + registry_port.value + "/" + docker_image_name
+    #the registry url and port should not change, if they do fix the tests
+    registry = "registry.service.consul4443"
+    image_name = registry + "/" + docker_image_name
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
   end
 

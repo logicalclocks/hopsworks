@@ -14,6 +14,8 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 
+require 'uri'
+
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects}
   describe 'featurestore' do
@@ -1333,6 +1335,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["storageConnectorId"] == connector.id).to be true
           expect(parsed_json["features"].length).to be 2
           expect(parsed_json["seed"] == 1234).to be true
+
+
+          # Make sure the location contains the scheme (hopsfs) and the authority
+          uri = URI(parsed_json["location"])
+          expect(uri.scheme).to eql("hopsfs")
+          # If the port is available we can assume that the IP is as well.
+          expect(uri.port).to eql(8020)
         end
 
         it "should not be able to add a hopsfs training dataset to the featurestore with upper case characters" do

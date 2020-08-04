@@ -17,6 +17,7 @@ package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.flink.FlinkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
@@ -30,7 +31,8 @@ public class FlinkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
                                                     Settings settings, String hdfsUser, Map<String, String>
                                                     extraJavaOptions, String kafkaBrokersString,
-                                                    String hopsworksRestEndpoint)
+                                                    String hopsworksRestEndpoint, 
+                                                    ServiceDiscoveryController serviceDiscoveryController)
       throws IOException {
     FlinkJobConfiguration flinkJobConfiguration = (FlinkJobConfiguration) jobConfiguration;
     

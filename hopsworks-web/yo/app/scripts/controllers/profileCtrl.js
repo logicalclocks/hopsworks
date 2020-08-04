@@ -348,7 +348,9 @@ angular.module('hopsWorksApp')
 
             var getScopes = function () {
                 ApiKeyService.getScopes().then(function (success) {
-                    self.keyScopes = success.data;
+                    self.keyScopes = success.data.sort(function(a,b) {
+                      return a.value > b.value;
+                    });
                 }, function (error) {
                 });
             };

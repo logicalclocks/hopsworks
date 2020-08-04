@@ -142,20 +142,20 @@ public class ProjectsAdmin {
       ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
       ServiceException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    if (user == null || !user.getEmail().equals(settings.getAdminEmail())) {
+    if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
           "Unauthorized or unknown user tried to create a Project as another user");
     }
 
-    String ownerEmail = projectDTO.getOwner();
-    if (ownerEmail == null) {
+    String username = projectDTO.getOwner();
+    if (username == null) {
       LOGGER.log(Level.WARNING, "Owner username is null");
       throw new IllegalArgumentException("Owner email cannot be null");
     }
 
-    Users owner = userFacade.findByEmail(ownerEmail);
+    Users owner = userFacade.findByUsername(username);
     if (owner == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "user:" + ownerEmail);
+      throw new UserException(RESTCodes.UserErrorCode.USER_DOES_NOT_EXIST, Level.FINE, "user:" + username);
     }
     
     projectController.createProject(projectDTO, owner, request.getSession().getId());

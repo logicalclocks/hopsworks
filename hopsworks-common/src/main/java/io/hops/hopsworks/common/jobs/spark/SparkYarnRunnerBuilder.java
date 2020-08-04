@@ -38,10 +38,12 @@
  */
 package io.hops.hopsworks.common.jobs.spark;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.jobs.AsynchronousJobExecutor;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.yarn.LocalResourceDTO;
@@ -115,8 +117,9 @@ public class SparkYarnRunnerBuilder {
    */
   public YarnRunner getYarnRunner(Project project, String jobUser, AsynchronousJobExecutor services,
                                   final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
-                                  Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint)
-      throws IOException {
+                                  Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
+                                  ServiceDiscoveryController serviceDiscoveryController)
+      throws IOException, ServiceDiscoveryException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();
@@ -190,7 +193,7 @@ public class SparkYarnRunnerBuilder {
     Map<String, String> finalJobProps = new HashMap<>();
 
     finalJobProps.putAll(sparkConfigurationUtil.setFrameworkProperties(project, job.getJobConfig(), settings,
-            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint));
+            jobUser, extraJavaOptions, kafkaBrokersString, hopsworksRestEndpoint, serviceDiscoveryController));
 
     finalJobProps.put(Settings.SPARK_YARN_APPMASTER_SPARK_USER, jobUser);
     finalJobProps.put(Settings.SPARK_EXECUTOR_SPARK_USER, jobUser);
