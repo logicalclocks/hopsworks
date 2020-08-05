@@ -26,7 +26,7 @@
       xmlns:f="http://xmlns.jcp.org/jsf/core">
 
 <h:head>
-    <title>Hopsworks - OAuth2 client registration</title>
+    <title>Hopsworks - LDAP configuration</title>
     <link rel="icon" type="image/png" href="#{resource['images/hopsworks-logo/HopsIconGreen.png']}"/>
     <link rel="stylesheet" type="text/css" href="#{resource['/css/main.css']}"/>
     <link rel="stylesheet" type="text/css" href="#{resource['/css/theme.css']}"/>
@@ -40,7 +40,7 @@
     <div align="center" class="user-profile">
         <h:form id="ldap-form" style="margin-bottom:20px;">
             <p:growl id="growl" life="2000" showDetail="true"/>
-            <p:panel id="ldap" header="LDAP configuration" toggleable="false" style="margin-bottom:20px">
+            <p:panel id="ldap" header="LDAP configuration" toggleable="true" collapsed="true" style="margin-bottom:20px">
                 <p:panelGrid columns="2">
                     <p:column>
                         <h3 style="color: rgba(0, 0, 0, 0.54);">
@@ -180,10 +180,313 @@
                         </p:inputTextarea>
                     </p:column>
 
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="groupsTarget" value="Groups target: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="groupsTarget" value="#{configureLdap.groupsTarget}">
+                        </p:inputTextarea>
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="groupsSearchFilter" value="Groups search filter: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="groupsSearchFilter" value="#{configureLdap.groupsSearchFilter}">
+                        </p:inputTextarea>
+                    </p:column>
+
+                    <p:column>
+                        <h3 style="color: rgba(0, 0, 0, 0.54);">
+                            <p:outputLabel for="groupMembersSearchFilter" value="Group members search filter: "/>
+                        </h3>
+                    </p:column>
+                    <p:column>
+                        <p:inputTextarea rows="1" cols="30" id="groupMembersSearchFilter" value="#{configureLdap.groupMembersSearchFilter}">
+                        </p:inputTextarea>
+                    </p:column>
+
                 </p:panelGrid>
+                <p:commandButton value="Save" update="ldap-form" icon="ui-icon-check" action="#{configureLdap.save}"/>
             </p:panel>
-            <p:commandButton value="Save" update="ldap-form" icon="ui-icon-check" action="#{configureLdap.save}"/>
+        </h:form>
+        <p:panel id="ldap-group" header="LDAP group to project mapping" toggleable="true" style="margin-bottom:20px">
+            <p:growl id="msg" showDetail="true" escape="false" />
+            <h:form id="searchForm" style="margin-bottom:20px; margin-top: 20px;">
+                <div id="searchGroup" class="ui-inputgroup">
+                    <p:inputText placeholder="ex.(objectCategory=group) to get all" value="#{configureLdap.groupQuery}"/>
+                    <p:commandButton value="Search groups" action="#{configureLdap.getGroups}"
+                                     update=":mappingForm:pickList">
+                    </p:commandButton>
+                </div>
+            </h:form>
+            <h:form id="mappingForm" style="margin-bottom:20px;">
+                <h3 style="margin-top: 0;margin-bottom: 0;">Pick groups to add members from: *</h3>
+                <h:panelGrid id="pickListGrid">
+                    <p:pickList id="pickList" value="#{configureLdap.ldapGroups}" var="ldapGroups" itemLabel="#{ldapGroups}"
+                                itemValue="#{ldapGroups}" validator="#{configureLdap.groupPickListValidator}"
+                                valueChangeListener="#{configureLdap.pickListValueChanged}"
+                                update="dialogForm"/>
+                    <p:message for="pickList" />
+                </h:panelGrid>
+                <br/>
+                <h:panelGrid id="grid" columns="2" cellpadding="5">
+                    <p:column>
+                        <h3 style="margin-top: 0;margin-bottom: 0;">Choose a project to add members to: *</h3>
+                        <p:autoComplete id="project-dd" dropdown="true" value="#{configureLdap.project}"
+                                        completeMethod="#{configureLdap.completeProject}"
+                                        validator="#{configureLdap.projectPickValidator}"/>
+                        <p:message for="project-dd" />
+                    </p:column>
+                    <p:column>
+                        <h3 style="margin-top: 0;margin-bottom: 0;">Choose a role: *</h3>
+                        <p:selectOneMenu id="project-role" value="#{configureLdap.project_role}" required="true">
+                            <f:selectItems value="#{configureLdap.project_roles}"/>
+                        </p:selectOneMenu>
+                        <p:message for="project-role" />
+                    </p:column>
+                </h:panelGrid>
+                <p:commandButton id="groupShow" value="Show users"
+                                 update="grid pickListGrid dialogForm"
+                                 action="#{configureLdap.getMembers}"
+                                 style="margin-top:5px; margin-right: 5px"
+                                 validateClient="true">
+                </p:commandButton>
+                <p:commandButton id="groupSubmit" value="Submit"
+                                 icon="ui-icon-check" action="#{configureLdap.submit}"
+                                 update=":mappingsForm:mapping msg"/>
+            </h:form>
+            <p:dialog header="Confirm group to project mapping" global="true" modal="true" showEffect="fade"
+                      hideEffect="fade"
+                      widgetVar="groupDialog" width="1200">
+                <h:form id="dialogForm">
+                    <h3 style="text-align: left;">Valid users will be added to the selected
+                        project the next time they login.</h3>
+                    <h:panelGrid id="displayGroups" columns="2" styleClass="panelGridLeftAligned">
+                        <h:outputText value="Chosen project: " style="font-weight:bold" />
+                        <h:outputText value="#{configureLdap.project}" />
+                        <h:outputText value="Chosen groups: " style="font-weight:bold" />
+                        <ui:repeat value="#{configureLdap.ldapGroups.target}" var="item">
+                            <h:outputText value="#{item}" style="margin-right:5px" />
+                        </ui:repeat>
+                    </h:panelGrid>
+                    <h:panelGrid id="members" columns="2" cellpadding="10" columnClasses="topAligned">
+                        <p:dataTable var="validMember" value="#{configureLdap.remoteUsersDTO.validRemoteUsers}">
+                            <f:facet name="header">
+                                Valid members
+                            </f:facet>
+
+                            <p:column headerText="Username">
+                                <h:outputText value="#{validMember.uid}" />
+                            </p:column>
+
+                            <p:column headerText="Given name">
+                                <h:outputText value="#{validMember.givenName}" />
+                            </p:column>
+
+                            <p:column headerText="Surname">
+                                <h:outputText value="#{validMember.surname}" />
+                            </p:column>
+
+                            <p:column headerText="Emails">
+                                <h:outputText value="#{validMember.email}" />
+                            </p:column>
+                        </p:dataTable>
+                        <p:dataTable var="invalidMember" value="#{configureLdap.remoteUsersDTO.invalidRemoteUsers}">
+                            <f:facet name="header">
+                                Invalid members
+                            </f:facet>
+
+                            <p:column headerText="Username">
+                                <h:outputText value="#{invalidMember.uid}" />
+                            </p:column>
+
+                            <p:column headerText="Given name">
+                                <h:outputText value="#{invalidMember.givenName}" />
+                            </p:column>
+
+                            <p:column headerText="Surname">
+                                <h:outputText value="#{invalidMember.surname}" />
+                            </p:column>
+
+                            <p:column headerText="Emails">
+                                <h:outputText value="#{invalidMember.email}" />
+                            </p:column>
+                        </p:dataTable>
+                    </h:panelGrid>
+                    <div style="text-align: right;">
+                        <p:commandButton value="Ok" immediate="true" action="#{configureLdap.cancel}"
+                                         icon="ui-icon-closethick" oncomplete="PF('groupDialog').hide()"/>
+                    </div>
+                </h:form>
+            </p:dialog>
+            <h:form id="mappingsForm">
+                <p:dataTable id="mapping" widgetVar="mapping" var="mapping"
+                             value="#{configureLdap.remoteGroupProjectMappings}"
+                             editable="true"
+                             rows="25"
+                             paginator="true"
+                             paginatorPosition="bottom"
+                             paginatorTemplate="{CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks}
+                             {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="15,25,35,45,55"
+                             emptyMessage="No mappings found."
+                             style="margin-bottom:20px">
+                    <f:facet name="header">
+                        LDAP group to project mappings.
+                    </f:facet>
+                    <p:ajax event="rowEdit" listener="#{configureLdap.onRowEdit}"
+                            update="msg"/>
+                    <p:ajax event="rowEditCancel" listener="#{configureLdap.onRowCancel}"
+                            update="msg"/>
+                    <p:column headerText="Group"
+                              filterBy="#{mapping.remoteGroup}"
+                              filterMatchMode="contains"
+                              sortBy="#{mapping.remoteGroup}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{mapping.remoteGroup}"/></f:facet>
+                            <f:facet name="input">
+                                <h:selectOneMenu value="#{mapping.remoteGroup}" style="width:100%">
+                                    <f:selectItems value="#{configureLdap.ldapGroups.source}" var="groups"
+                                                   itemLabel="#{groups}"
+                                                   itemValue="#{groups}"/>
+                                </h:selectOneMenu>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+                    <p:column headerText="Project"
+                              filterBy="#{mapping.project.name}"
+                              filterMatchMode="contains"
+                              sortBy="#{mapping.project.name}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{mapping.project.name}"/></f:facet>
+                            <f:facet name="input">
+                                <h:selectOneMenu value="#{mapping.project.name}" style="width:100%">
+                                    <f:selectItems value="#{configureLdap.allProjects}" var="project"
+                                                   itemLabel="#{project}"
+                                                   itemValue="#{project}"/>
+                                </h:selectOneMenu>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+
+                    <p:column headerText="Role" sortBy="#{mapping.projectRole}">
+                        <p:cellEditor>
+                            <f:facet name="output"><h:outputText value="#{mapping.projectRole}"/></f:facet>
+                            <f:facet name="input">
+                                <h:selectOneMenu value="#{mapping.projectRole}" style="width:100%">
+                                    <f:selectItems value="#{configureLdap.project_roles}" var="role"
+                                                   itemLabel="#{role}"
+                                                   itemValue="#{role}"/>
+                                </h:selectOneMenu>
+                            </f:facet>
+                        </p:cellEditor>
+                    </p:column>
+                    <p:column headerText="Action" style="width: 35px;">
+                        <p:commandButton icon="ui-icon-trash"
+                                         title="Delete mapping"
+                                         action="#{configureLdap.remove(mapping)}"
+                                         update="mapping">
+                            <p:confirm header="Remove mapping"
+                                       message="Are you sure you want to remove this mapping?"
+                                       icon="ui-icon-alert"/>
+                        </p:commandButton>
+                    </p:column>
+                    <p:column style="width:32px">
+                        <p:rowEditor/>
+                    </p:column>
+                </p:dataTable>
+                <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                    <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+                    <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+                </p:confirmDialog>
+            </h:form>
+        </p:panel>
+        <h:form id="syncGroup" >
+            <p:growl id="syncGrowl" life="2000" showDetail="true"/>
+            <p:panel id="sync" header="LDAP Group Synchronization" toggleable="true"
+                     collapsed="#{configureLdap.syncPanelCollapsed}">
+                <p:dataTable id="remoteUsers" var="user" value="#{configureLdap.remoteUsers}"
+                             style="table-layout: fixed"
+                             rowStyleClass="#{user.status == 'DELETED' ? 'remote-user-deleted' : null}"
+                             rows="25"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport}
+                             {FirstPageLink} {PreviousPageLink}
+                             {PageLinks} {NextPageLink} {LastPageLink}
+                             {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,25,50,100,250">
+                    <f:facet name="header">
+                        <p:commandButton id="syncAll" value="Sync all"
+                                         style="margin-top: 5px; float: right;"
+                                         actionListener="#{configureLdap.syncAllRemoteGroups}"
+                                         icon="ui-icon-arrowrefresh-1-w"
+                                         update="remoteUsers :syncGroup:syncGrowl"/>
+                    </f:facet>
+                    <p:column headerText="Id">
+                        <h:outputText value="#{user.uuid}" />
+                    </p:column>
+
+                    <p:column headerText="Email">
+                        <h:outputText value="#{user.uid.email}" />
+                    </p:column>
+
+                    <p:column headerText="First name">
+                        <h:outputText value="#{user.uid.fname}" />
+                    </p:column>
+
+                    <p:column headerText="Last name">
+                        <h:outputText value="#{user.uid.lname}" />
+                    </p:column>
+
+                    <p:column headerText="Action" style="width: 10%">
+                        <p:commandButton id="syncUser" value="Sync"
+                                         widgetVar="syncButton"
+                                         onstart="PF('bui').show()"
+                                         oncomplete="PF('bui').hide()"
+                                         rendered="#{user.status == 'ACTIVE'}"
+                                         actionListener="#{configureLdap.syncRemoteGroup(user.uid)}"
+                                         icon="ui-icon-arrowrefresh-1-w" update="remoteUsers :syncGroup:syncGrowl"/>
+                        <p:commandButton id="remove" value="Remove"
+                                         title="Remove from all projects"
+                                         onstart="PF('bui-remove').show()"
+                                         oncomplete="PF('bui-remove').hide()"
+                                         rendered="#{user.status == 'DELETED'}"
+                                         actionListener="#{configureLdap.deleteRemoteUserFromAllProjects(user.uid)}"
+                                         icon="ui-icon-trash" update="remoteUsers :syncGroup:syncGrowl dialog-form"/>
+                        <p:commandButton id="reactivate" value="Activate"
+                                         title="Reactivate user"
+                                         rendered="#{user.status == 'DEACTIVATED'}"
+                                         actionListener="#{configureLdap.reactivateRemoteUser(user.uid)}"
+                                         icon="ui-icon-check" update="remoteUsers :syncGroup:syncGrowl dialog-form"/>
+                    </p:column>
+                </p:dataTable>
+            </p:panel>
+            <p:blockUI block="sync" trigger="syncGroup:remoteUsers:syncAll" widgetVar="bui">
+                Syncing...
+            </p:blockUI>
+            <p:blockUI block="sync" widgetVar="bui-remove">
+                Removing user from all projects...
+            </p:blockUI>
         </h:form>
     </div>
+    <h:form id="dialog-form">
+        <p:dialog draggable="false" resizable="false" styleClass="requestPopup"
+                  position="left bottom" header="Open sync panel"
+                  visible="#{configureLdap.checkForDeleted()}">
+            <div align="center">
+                There are deleted remote users!<br/>
+                <p:commandButton action="#{configureLdap.openSyncPanel()}"
+                                 value="View deleted"
+                                 styleClass="viewReqButton"
+                                 update="dialog-form :syncGroup:sync">
+                </p:commandButton>
+            </div>
+        </p:dialog>
+    </h:form>
 </h:body>
 </html>
