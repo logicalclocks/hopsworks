@@ -301,7 +301,7 @@ public class FeaturestoreS3ConnectorController {
     
     FeaturestoreS3ConnectorEncryptionAlgorithm encryptionAlgorithm =
       getEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
-    if (featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null){
+    if (encryptionAlgorithm != null){
       if (encryptionAlgorithm.isRequiresKey()) {
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
       } else {
