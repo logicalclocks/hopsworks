@@ -335,7 +335,7 @@ public class FeaturestoreS3ConnectorController {
    * @throws FeaturestoreException
    */
   private FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithm(String s) throws FeaturestoreException {
-    if (s == null) {
+    if (Strings.isNullOrEmpty(s)) {
       return null;
     }
     FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgrithm = null;
