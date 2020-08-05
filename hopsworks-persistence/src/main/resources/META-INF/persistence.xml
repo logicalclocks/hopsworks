@@ -155,7 +155,6 @@
     <class>io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.jupyter.config.JupyterConfigurationConverter</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatisticValueConverter</class>
-    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithmConverter</class>
 
     <exclude-unlisted-classes>true</exclude-unlisted-classes>
     <shared-cache-mode>NONE</shared-cache-mode>

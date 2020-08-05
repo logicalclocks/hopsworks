@@ -20,8 +20,9 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -69,7 +70,7 @@ public class FeaturestoreS3Connector implements Serializable {
   @Column(name = "name")
   private String name;
   @Column(name = "server_encryption_algorithm")
-  @Convert(converter = FeaturestoreS3ConnectorEncryptionAlgorithmConverter.class)
+  @Enumerated(EnumType.ORDINAL)
   private FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm;
   @Column(name = "server_encryption_key")
   private String serverEncryptionKey;
