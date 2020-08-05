@@ -88,6 +88,8 @@ public class FeaturestoreS3ConnectorController {
     verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
+    verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
+    featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
     if(settings.isIAMRoleConfigured()){
       verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
     } else{
@@ -96,8 +98,6 @@ public class FeaturestoreS3ConnectorController {
       featurestoreS3Connector.setAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       featurestoreS3Connector.setSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     }
-    verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
-    featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
     if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null ||
       !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
       verifyS3ConnectorServerEncryptionAlgorithm(serverEncryptionAlgorithm);
@@ -309,20 +309,22 @@ public class FeaturestoreS3ConnectorController {
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
     
-    if(settings.isIAMRoleConfigured()){
+    if (settings.isIAMRoleConfigured()) {
       verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
-    }else{
+    } else {
       verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
     }
-    if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null ||
-      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
+    
+    if (featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null){
       verifyS3ConnectorServerEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
       if(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm().isRequiresKey()){
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
       } else{
         featurestoreS3ConnectorDTO.setServerEncryptionKey(null);
       }
+    } else {
+      featurestoreS3ConnectorDTO.setServerEncryptionKey(null);
     }
   }
   

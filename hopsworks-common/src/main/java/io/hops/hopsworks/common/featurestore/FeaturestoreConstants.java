@@ -42,7 +42,6 @@ public class FeaturestoreConstants {
   public static final int S3_STORAGE_CONNECTOR_BUCKET_MAX_LENGTH = 5000;
   public static final int S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH = 1000;
   public static final int S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH = 1000;
-  public static final int S3_STORAGE_SERVER_ENCRYPTION_ALGORITHM_MAX_LENGTH = 100;
   public static final int S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH = 1000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",

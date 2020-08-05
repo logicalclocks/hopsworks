@@ -13,6 +13,7 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
   private String algorithm;
   private String description;
   private boolean requiresKey;
+  
   FeaturestoreS3ConnectorEncryptionAlgorithm(String algorithm, String description, boolean requiresKey) {
     this.algorithm = algorithm;
     this.description = description;
@@ -41,16 +42,16 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
     this.requiresKey = requiresKey;
   }
   
-  public static FeaturestoreS3ConnectorEncryptionAlgorithm getEncryptionAlgorithmByName(String s)
+  public static FeaturestoreS3ConnectorEncryptionAlgorithm fromString(String s)
     throws IllegalArgumentException{
     Optional<FeaturestoreS3ConnectorEncryptionAlgorithm> algorithm =
       Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values())
         .stream().filter(a -> a.getAlgorithm().equals(s)).findFirst();
     
-    if(algorithm.isPresent()){
+    if (algorithm.isPresent()) {
       return algorithm.get();
     } else {
-      throw new IllegalArgumentException("Invalid encryption algorithm name provided");
+      throw new IllegalArgumentException("Invalid encryption algorithm provided");
     }
   }
   
