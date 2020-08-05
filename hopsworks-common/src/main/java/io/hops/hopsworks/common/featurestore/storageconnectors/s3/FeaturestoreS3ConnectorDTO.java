@@ -34,7 +34,7 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String accessKey;
   private String secretKey;
   private String bucket;
-  private FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm;
+  private String serverEncryptionAlgorithm;
   private String serverEncryptionKey;
   
   public FeaturestoreS3ConnectorDTO() {
@@ -48,8 +48,16 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.accessKey = featurestoreS3Connector.getAccessKey();
     this.secretKey = featurestoreS3Connector.getSecretKey();
     this.bucket = featurestoreS3Connector.getBucket();
-    this.serverEncryptionAlgorithm = featurestoreS3Connector.getServerEncryptionAlgorithm();
+    this.serverEncryptionAlgorithm = getEncryptionAlgorithmName(featurestoreS3Connector.getServerEncryptionAlgorithm());
     this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();
+  }
+  
+  private String getEncryptionAlgorithmName(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
+    if (serverEncryptionAlgorithm == null) {
+      return  null;
+    } else {
+      return serverEncryptionAlgorithm.getAlgorithm();
+    }
   }
   
   @XmlElement
@@ -80,9 +88,9 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   }
 
   @XmlElement
-  public FeaturestoreS3ConnectorEncryptionAlgorithm getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
+  public String getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
 
-  public void setServerEncryptionAlgorithm(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
+  public void setServerEncryptionAlgorithm(String serverEncryptionAlgorithm) {
     this.serverEncryptionAlgorithm = serverEncryptionAlgorithm;
   }
 
