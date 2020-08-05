@@ -707,6 +707,7 @@ angular.module('hopsWorksApp')
                 CertService.downloadProjectCertKrb(self.currentProject.projectId)
                     .then(function (success) {
                         var certs = success.data;
+                        ModalService.certsPassword('sm', certs.password);
                         download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                         download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                     }, function (error) {
@@ -717,6 +718,7 @@ angular.module('hopsWorksApp')
                 CertService.downloadProjectCertOAuth(self.currentProject.projectId)
                     .then(function (success) {
                         var certs = success.data;
+                        ModalService.certsPassword('sm', certs.password);
                         download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                         download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                     }, function (error) {
@@ -731,6 +733,7 @@ angular.module('hopsWorksApp')
                       CertService.downloadProjectCertLdap(self.currentProject.projectId, successPwd)
                         .then(function (success) {
                           var certs = success.data;
+                          ModalService.certsPassword('sm', certs.password);
                           download(atob(certs.kStore), 'keyStore.' + certs.fileExtension);
                           download(atob(certs.tStore), 'trustStore.' + certs.fileExtension);
                         }, function (error) {
