@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
+  @XmlEnumValue("AES256")
   AES256("AES256", "Server-Side Encryption with Amazon S3-Managed Keys (SSE-S3)", false),
+  @XmlEnumValue("SSE-KMS")
   SSE_KMS("SSE-KMS", "Server-Encryption with AWS KMS-Managed Keys (SSE-KMS)", true);
   
   private String algorithm;
@@ -40,7 +42,7 @@ public enum FeaturestoreS3ConnectorEncryptionAlgorithm {
     this.requiresKey = requiresKey;
   }
   
-  public static FeaturestoreS3ConnectorEncryptionAlgorithm fromString(String s)
+  public static FeaturestoreS3ConnectorEncryptionAlgorithm fromValue(String s)
     throws IllegalArgumentException{
     Optional<FeaturestoreS3ConnectorEncryptionAlgorithm> algorithm =
       Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values())

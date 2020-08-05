@@ -24,6 +24,6 @@ public class FeaturestoreS3ConnectorEncryptionAlgorithmConverter implements
     if(Strings.isNullOrEmpty(s)){
       return  null;
     }
-    return FeaturestoreS3ConnectorEncryptionAlgorithm.fromString(s);
+    return FeaturestoreS3ConnectorEncryptionAlgorithm.fromValue(s);
   }
 }
