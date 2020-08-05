@@ -23,7 +23,7 @@ describe "On #{ENV['OS']}" do
     with_valid_session
     @email = @user["email"]
     pp "user email: #{@email}"
-    @debugOpt = true
+    @debugOpt = false
     @project1_name = "prov_proj_#{short_random_id}"
     @project2_name = "prov_proj_#{short_random_id}"
     @app1_id = "application_#{short_random_id}_0001"

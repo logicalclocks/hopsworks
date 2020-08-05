@@ -15,10 +15,11 @@
  */
 package io.hops.hopsworks.api.util;
 
+import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.swagger.annotations.ApiParam;
 import javax.ws.rs.QueryParam;
 
-public class Pagination {
+public class Pagination implements PaginationParams {
 
   @QueryParam("offset")
   @ApiParam(required = false)
@@ -35,6 +36,7 @@ public class Pagination {
     this.limit = limit;
   }
 
+  @Override
   public Integer getOffset() {
     return offset;
   }
@@ -42,7 +44,8 @@ public class Pagination {
   public void setOffset(Integer offset) {
     this.offset = offset;
   }
-
+  
+  @Override
   public Integer getLimit() {
     return limit;
   }
