@@ -17,8 +17,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('CertsPasswordModalCtrl', ['$uibModalInstance', 'password',
-          function ($uibModalInstance, password) {
+        .controller('CertsPasswordModalCtrl', ['$uibModalInstance', 'growl', 'password',
+          function ($uibModalInstance, growl, password) {
 
             var self = this;
             self.password = password;
@@ -29,6 +29,10 @@ angular.module('hopsWorksApp')
 
             self.cancel = function () {
               $uibModalInstance.dismiss('cancel');
+            };
+
+            self.onCopy = function() {
+                growl.success("Copied to clipboard.", {title: 'Success', ttl: 5000});
             };
 
           }]);
