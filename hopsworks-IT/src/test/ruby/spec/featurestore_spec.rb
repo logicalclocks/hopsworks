@@ -1809,6 +1809,30 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["errorCode"] == 270098).to be true
         end
 
+        it "should not be able to add an external training dataset to the featurestore with splits of
+        duplicate split names" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          splits = [
+              {
+                  name: "test_split",
+                  percentage: 0.8
+              },
+              {
+                  name: "test_split",
+                  percentage: 0.2
+              }
+          ]
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                connector_id, splits: splits)
+
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          expect(parsed_json.key?("splits")).to be true
+          expect(parsed_json["splits"].length).to be 2
+        end
+
         it "should be able to delete an external training dataset from the featurestore" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
