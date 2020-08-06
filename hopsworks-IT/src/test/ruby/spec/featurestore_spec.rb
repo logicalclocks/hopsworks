@@ -1828,9 +1828,11 @@ describe "On #{ENV['OS']}" do
                                                                                 connector_id, splits: splits)
 
           parsed_json = JSON.parse(json_result)
-          expect_status(201)
-          expect(parsed_json.key?("splits")).to be true
-          expect(parsed_json["splits"].length).to be 2
+          expect_status(400)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270098).to be true
         end
 
         it "should be able to delete an external training dataset from the featurestore" do
