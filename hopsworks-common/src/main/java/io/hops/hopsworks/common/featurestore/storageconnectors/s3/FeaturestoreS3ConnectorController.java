@@ -106,16 +106,17 @@ public class FeaturestoreS3ConnectorController {
       if(serverEncryptionAlgorithm.isRequiresKey()){
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
         featurestoreS3Connector.setServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
-      } else{ featurestoreS3Connector.setServerEncryptionKey(null); }
-    } else{
+      } else { featurestoreS3Connector.setServerEncryptionKey(null); }
+    } else if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())){
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
+        Level.FINE, ", encryption algorithm not provided");
+    } else {
       featurestoreS3Connector.setServerEncryptionAlgorithm(null);
       featurestoreS3Connector.setServerEncryptionKey(null);
     }
-    
     if(featurestore != null){
       featurestoreS3Connector.setFeaturestore(featurestore);
     }
-    
     FeaturestoreS3Connector updatedFeaturestoreS3Connector =
         featurestoreS3ConnectorFacade.updateS3Connector(featurestoreS3Connector);
     return new FeaturestoreS3ConnectorDTO(updatedFeaturestoreS3Connector);
@@ -307,8 +308,9 @@ public class FeaturestoreS3ConnectorController {
       } else {
         featurestoreS3ConnectorDTO.setServerEncryptionKey(null);
       }
-    } else {
-      featurestoreS3ConnectorDTO.setServerEncryptionKey(null);
+    } else if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getServerEncryptionKey())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM,
+        Level.FINE, ", encryption algorithm not provided");
     }
   }
   

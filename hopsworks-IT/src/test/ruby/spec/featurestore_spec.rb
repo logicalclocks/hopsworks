@@ -284,11 +284,36 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json["serverEncryptionKey"] == encryption_key).to be true
         end
 
-        it "should be not able to add s3 connector to the featurestore with wrong encryption algorithm" do
+        it "should not be able to add s3 connector to the featurestore with wrong encryption algorithm" do
           setVar("aws_instance_role", "false")
           project = get_project
           create_session(project[:username], "Pass123")
           encryption_algorithm = "WRONG-ALGORITHM"
+          encryption_key = "Test"
+          access_key = "test"
+          secret_key = "test"
+          with_encryption_key = true;
+          featurestore_id = get_featurestore_id(project.id)
+          json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
+                                                                            encryption_algorithm, encryption_key,
+                                                                            access_key, secret_key,
+                                                                            bucket: "testbucket")
+          parsed_json = JSON.parse(json_result)
+          expect_status(400)
+          setVar("aws_instance_role", "false")
+          setVar("aws_instance_role", "false")
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 270104).to be true
+        end
+
+        it "should not be able to add s3 connector to the featurestore with encryption key provided but no
+        encryption algorithm" do
+          setVar("aws_instance_role", "false")
+          project = get_project
+          create_session(project[:username], "Pass123")
+          encryption_algorithm = ""
           encryption_key = "Test"
           access_key = "test"
           secret_key = "test"

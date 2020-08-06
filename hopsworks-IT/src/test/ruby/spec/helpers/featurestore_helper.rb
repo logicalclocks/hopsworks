@@ -596,7 +596,7 @@ module FeaturestoreHelper
   end
 
   def with_s3_connector(project_id)
-    encryption_algorithm = "AES-256"
+    encryption_algorithm = "AES256"
     encryption_key = "Test"
     secret_key = "test"
     access_key = "test"
