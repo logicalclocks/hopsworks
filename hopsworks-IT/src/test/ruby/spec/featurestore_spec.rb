@@ -1832,7 +1832,7 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorCode")).to be true
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
-          expect(parsed_json["errorCode"] == 270098).to be true
+          expect(parsed_json["errorCode"] == 270106).to be true
         end
 
         it "should be able to delete an external training dataset from the featurestore" do
