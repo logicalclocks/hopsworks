@@ -131,6 +131,11 @@ module ProjectHelper
     expect_json(successMessage: "One member added successfully")
   end
 
+  def change_member_role(project, member, role)
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{member}", URI.encode_www_form({ role: role}), {content_type: 'application/x-www-form-urlencoded'}
+    expect_status(200)
+  end
+
   def get_all_projects
     projects = Project.find_by(username: "#{@user.email}")
     projects
