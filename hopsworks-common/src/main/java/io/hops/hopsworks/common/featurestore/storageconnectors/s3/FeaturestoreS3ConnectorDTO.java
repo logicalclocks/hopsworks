@@ -45,8 +45,6 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     super(featurestoreS3Connector.getId(), featurestoreS3Connector.getDescription(),
         featurestoreS3Connector.getName(), featurestoreS3Connector.getFeaturestore().getId(),
         FeaturestoreStorageConnectorType.S3);
-    this.accessKey = featurestoreS3Connector.getAccessKey();
-    this.secretKey = featurestoreS3Connector.getSecretKey();
     this.bucket = featurestoreS3Connector.getBucket();
     this.serverEncryptionAlgorithm = getEncryptionAlgorithmName(featurestoreS3Connector.getServerEncryptionAlgorithm());
     this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();

@@ -498,7 +498,7 @@ describe "On #{ENV['OS']}" do
           expect("#{shared_ds[:name]}").to eq("#{@project[:projectname]}::#{@project[:projectname].downcase}.db")
         end
         it "should appear as pending for datasets not requested" do
-          projectname = "project_#{short_random_id}"
+          projectname = "project_#{short_random_id }"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project, dsname)

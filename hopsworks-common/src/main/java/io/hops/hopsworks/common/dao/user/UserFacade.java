@@ -317,7 +317,7 @@ public class UserFacade extends AbstractFacade<Users> {
       return null;
     }
   }
-
+  
   public void persist(Users user) {
     em.persist(user);
   }

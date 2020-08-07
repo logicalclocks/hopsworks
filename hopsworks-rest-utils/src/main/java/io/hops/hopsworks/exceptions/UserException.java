@@ -19,7 +19,6 @@ package io.hops.hopsworks.exceptions;
 
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
-
 import java.util.logging.Level;
 
 public class UserException extends RESTException {

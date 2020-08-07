@@ -27,7 +27,6 @@ import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
-import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.SymmetricEncryptionDescriptor;
 import io.hops.hopsworks.common.security.SymmetricEncryptionService;
@@ -36,7 +35,6 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
-
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -68,8 +66,6 @@ public class SecretsController {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private ProjectController projectController;
-  @EJB
   private ProjectFacade projectFacade;
   
   /**
@@ -83,22 +79,38 @@ public class SecretsController {
    * @param visibilityType Visibility of a Secret. It can be private or shared among members of a project
    * @throws UserException
    */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public void add(Users user, String secretName, String secret, VisibilityType visibilityType,
       Integer projectIdScope) throws UserException {
+    if(secretsFacade.findById(new SecretId(user.getUid(), secretName)) != null) {
+      throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
+        "Secret already exists", "Secret with name " + secretName + " already exists for user " + user.getUsername());
+    }
+    Secret storedSecret = createSecret(user, secretName, secret, visibilityType, projectIdScope);
+    secretsFacade.persist(storedSecret);
+  }
+  
+  /**
+   * validates parameters required to create a secret
+   * @param user
+   * @param secretName
+   * @param secret
+   * @param visibilityType
+   * @param projectIdScope
+   * @throws UserException
+   */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+  public Secret createSecret(Users user, String secretName, String secret, VisibilityType visibilityType,
+    Integer projectIdScope) throws UserException{
     checkIfUserIsNull(user);
     checkIfNameIsNullOrEmpty(secretName);
     if (Strings.isNullOrEmpty(secretName) || Strings.isNullOrEmpty(secret)) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_EMPTY, Level.FINE,
-          "Secret value is either null or empty", "Secret name or value is empty or null");
+        "Secret value is either null or empty", "Secret name or value is empty or null");
     }
     SecretId id = new SecretId(user.getUid(), secretName);
-    Secret storedSecret = secretsFacade.findById(id);
-    if (storedSecret != null) {
-      throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
-          "Secret already exists", "Secret with name " + secretName + " already exists for user " + user.getUsername());
-    }
     try {
-      storedSecret = new Secret(id, encryptSecret(secret), DateUtils.localDateTime2Date(DateUtils.getNow()));
+      Secret storedSecret = new Secret(id, encryptSecret(secret), DateUtils.localDateTime2Date(DateUtils.getNow()));
       storedSecret.setVisibilityType(visibilityType);
       if (visibilityType.equals(VisibilityType.PRIVATE)) {
         // When the user adds secrets without closing the UI modal
@@ -108,18 +120,17 @@ public class SecretsController {
       } else {
         if (projectIdScope == null) {
           throw new UserException(RESTCodes.UserErrorCode.SECRET_EMPTY, Level.FINE,
-              "Secret visibility is PROJECT but there is not Project ID scope",
-              "Project scope for shared secret " + secretName + " is null");
+            "Secret visibility is PROJECT but there is not Project ID scope",
+            "Project scope for shared secret " + secretName + " is null");
         }
         storedSecret.setProjectIdScope(projectIdScope);
       }
-      secretsFacade.persist(storedSecret);
+      return storedSecret;
     } catch (IOException | GeneralSecurityException ex) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_ENCRYPTION_ERROR, Level.SEVERE,
-          "Error encrypting secret", "Could not encrypt Secret " + secretName, ex);
+        "Error encrypting secret", "Could not encrypt Secret " + secretName, ex);
     }
   }
-  
   /**
    * Gets all Secrets' names associated with a user. The actual secret is not
    * returned, nor decrypted.
@@ -144,6 +155,7 @@ public class SecretsController {
    * @param secretName The name of the Secret
    * @throws UserException
    */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public void delete(Users user, String secretName) throws UserException {
     checkIfUserIsNull(user);
     checkIfNameIsNullOrEmpty(secretName);
@@ -178,6 +190,7 @@ public class SecretsController {
    * @return The Secret decrypted along with some metadata
    * @throws UserException
    */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public SecretPlaintext get(Users user, String secretName) throws UserException {
     checkIfUserIsNull(user);
     checkIfNameIsNullOrEmpty(secretName);
@@ -205,6 +218,7 @@ public class SecretsController {
    * @throws ServiceException
    * @throws ProjectException
    */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public SecretPlaintext getShared(Users caller, String ownerUsername, String secretName)
       throws UserException, ServiceException, ProjectException {
     checkIfUserIsNull(caller);
@@ -249,6 +263,7 @@ public class SecretsController {
         }
       }
     }
+    // Check if caller is a member of some shared project
     throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.FINE,
         "Not authorized to access Secret " + secretName,
         "User " + caller.getUsername() + " tried to access shared Secret " + secretName
@@ -328,6 +343,7 @@ public class SecretsController {
    * @throws IOException
    * @throws GeneralSecurityException
    */
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   private byte[] encryptSecret(String secret) throws IOException, GeneralSecurityException {
     String password = certificatesMgmService.getMasterEncryptionPassword();
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()

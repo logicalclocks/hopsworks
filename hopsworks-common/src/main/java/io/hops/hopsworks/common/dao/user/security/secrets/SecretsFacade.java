@@ -64,6 +64,12 @@ public class SecretsFacade {
     }
   }
   
+  //only safe for secrets for s3 connectors because they are unique
+  public Secret findByName(String name) {
+    return entityManager.createNamedQuery("Secret.findByName", Secret.class)
+      .setParameter("name", name).getSingleResult();
+  }
+  
   public void deleteSecretsForUser(Users user) {
     List<Secret> secrets = findAllForUser(user);
     for (Secret secret : secrets) {

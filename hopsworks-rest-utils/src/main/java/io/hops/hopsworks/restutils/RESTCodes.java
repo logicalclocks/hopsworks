@@ -1465,8 +1465,9 @@ public class RESTCodes {
     ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY(105, "Illegal server encryption key provided",
       Response.Status.BAD_REQUEST),
     TRAINING_DATASET_DUPLICATE_SPLIT_NAMES(106, "Duplicate split names in training dataset provided.",
-      Response.Status.BAD_REQUEST);
-    
+      Response.Status.BAD_REQUEST),
+    ERROR_GETTING_S3_CONNECTOR_ACCESS_AND_SECRET_KEY_FROM_SECRET(107, "Could not get access and secret key from the " +
+      "the user secret", Response.Status.INTERNAL_SERVER_ERROR);
     private int code;
     private String message;
     private Response.Status respStatus;
