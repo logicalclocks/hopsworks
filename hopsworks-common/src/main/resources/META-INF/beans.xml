@@ -47,5 +47,6 @@
     <alternatives>
         <stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</stereotype>
         <stereotype>io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype</stereotype>
+        <stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</stereotype>
     </alternatives>
 </beans>

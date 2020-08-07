@@ -75,6 +75,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.validation.ConstraintViolationException;
@@ -116,6 +117,8 @@ public class UsersController {
   private AuthController authController;
   @EJB
   private SecurityUtils securityUtils;
+  @Inject
+  private PasswordRecovery passwordRecovery;
 
   // To send the user the QR code image
   private byte[] qrCode;
@@ -307,9 +310,9 @@ public class UsersController {
   public void sendPasswordRecoveryEmail(String email, String securityQuestion, String securityAnswer,
     String reqUrl) throws UserException, MessagingException {
     Users user = userFacade.findByEmail(email);
-    if (!authController.validateSecurityQAndStatus(user, securityQuestion, securityAnswer)) {
-      throw new UserException(RESTCodes.UserErrorCode.SEC_QA_INCORRECT, Level.FINE);
-    }
+
+    passwordRecovery.validateSecurityQAndStatus(user, securityQuestion, securityAnswer);
+
     authController.sendNewRecoveryValidationKey(user, reqUrl, true);
   }
   
