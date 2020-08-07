@@ -36,8 +36,11 @@ angular.module('hopsWorksApp')
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.jdbcConnectorType = self.settings.jdbcConnectorType
             self.preProcessedArgs = []
-
-
+            self.hasPwd = false;
+            self.showPwd = false;
+            self.DEFAULT_PASSWORD_TEXT = "<SECRETPASSWORD>";
+            self.pwdToShow = self.DEFAULT_PASSWORD_TEXT;
+            self.connectorPwd = "";
             /**
              * PreProcess connector
              */
@@ -49,10 +52,15 @@ angular.module('hopsWorksApp')
                     var newArgs = []
                     for (var j = 0; j < argsList.length; j++) {
                         var argValue = argsList[j].split("=")
-                        newArgs.push({
+                        var argPair = {
                             "name": argValue[0],
                             "value": argValue.length > 1 ? argValue[1] : "DEFAULT"
-                        })
+                        }
+                        newArgs.push(argPair);
+                        if(argPair.name == "password") {
+                            self.hasPwd = true;
+                            self.connectorPwd = argPair.value;
+                        }
                     }
                     self.preProcessedArgs = newArgs
                 }
@@ -71,6 +79,15 @@ angular.module('hopsWorksApp')
             self.close = function () {
                 $uibModalInstance.dismiss('cancel');
             };
+
+            self.showPlainConnectorPassword = function () {
+                self.showPwd = !self.showPwd;
+                if(self.showPwd) {
+                    self.pwdToShow = self.connectorPwd;
+                } else {
+                    self.pwdToShow = self.DEFAULT_PASSWORD_TEXT;
+                }
+            }
 
             self.init()
         }]);

@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +61,22 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
     } catch (ConstraintViolationException cve) {
       LOGGER.log(Level.WARNING, "Could not persist the new JDBC connection", cve);
       throw cve;
+    }
+  }
+
+  /**
+   * Retrieves a jdbc connector by name
+   *
+   * @param connectorName
+   * @return connector if found, null if not found
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public Optional<FeaturestoreJdbcConnector> findByName(String connectorName) {
+    try {
+      return  Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByName",
+              FeaturestoreJdbcConnector.class).setParameter("name", connectorName).getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
 

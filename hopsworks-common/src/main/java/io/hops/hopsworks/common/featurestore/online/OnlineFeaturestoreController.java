@@ -436,7 +436,7 @@ public class OnlineFeaturestoreController {
     }
     String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
     for (FeaturestoreStorageConnectorDTO storageConnector: jdbcConnectors) {
       if (storageConnector.getName().equalsIgnoreCase(connectorName)) {
         featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnector.getId());

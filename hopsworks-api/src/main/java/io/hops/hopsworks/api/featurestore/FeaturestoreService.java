@@ -212,7 +212,7 @@ public class FeaturestoreService {
     featurestoreClientSettingsDTO.setS3IAMRole(settings.isIAMRoleConfigured());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
       new GenericEntity<FeaturestoreClientSettingsDTO>(featurestoreClientSettingsDTO) {
-      };
+    };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featurestoreClientSettingsDTOGeneric)
       .build();
   }
@@ -284,10 +284,8 @@ public class FeaturestoreService {
       && onlineFeaturestoreController.checkIfDatabaseExists(
           onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-      String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
-      onlineFeaturestoreConnector =
-        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-          dbUsername, featurestore, dbName);
+      onlineFeaturestoreConnector = featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user,
+              dbUsername, featurestore);
       featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
       featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
