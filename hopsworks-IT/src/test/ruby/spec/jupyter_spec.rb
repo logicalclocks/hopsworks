@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
 
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_experiment.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_single_experiment.ipynb",
                                 "/Projects/#{projectname}/Jupyter/shared_notebook.ipynb", @user[:username],
                                 "#{projectname}__Resources", 750, "#{projectname}")
 
@@ -210,22 +210,22 @@ describe "On #{ENV['OS']}" do
 
       it "should convert .ipynb file to .py file" do
 
-        copy("/user/hdfs/tensorflow_demo/notebooks/Experiment/Keras/mnist.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/export_model.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
-        notebook_file = json_body[:items].detect { |d| d[:attributes][:name] == "mnist.ipynb" }
+        notebook_file = json_body[:items].detect { |d| d[:attributes][:name] == "export_model.ipynb" }
         expect(notebook_file).to be_present
 
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/mnist.ipynb"
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/export_model.ipynb"
         expect_status(200)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
-        python_file = json_body[:items].detect { |d| d[:attributes][:name] == "mnist.py" }
+        python_file = json_body[:items].detect { |d| d[:attributes][:name] == "export_model.py" }
         expect(python_file).to be_present
       end
     end
