@@ -57,11 +57,6 @@ public class FeaturestoreS3Connector implements Serializable {
   private Integer id;
   @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
   private Featurestore featurestore;
-  @Column(name = "access_key")
-  private String accessKey;
-  @Column(name = "secret_key")
-  private String secretKey;
-  @Basic(optional = false)
   @Column(name = "bucket")
   private String bucket;
   @Column(name = "description")
@@ -93,22 +88,6 @@ public class FeaturestoreS3Connector implements Serializable {
   
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
-  }
-  
-  public String getAccessKey() {
-    return accessKey;
-  }
-  
-  public void setAccessKey(String accessKey) {
-    this.accessKey = accessKey;
-  }
-  
-  public String getSecretKey() {
-    return secretKey;
-  }
-  
-  public void setSecretKey(String secretKey) {
-    this.secretKey = secretKey;
   }
   
   public String getBucket() {
@@ -162,12 +141,6 @@ public class FeaturestoreS3Connector implements Serializable {
     if (!featurestore.equals(that.featurestore)) {
       return false;
     }
-    if (accessKey != null ? !accessKey.equals(that.accessKey) : that.accessKey != null) {
-      return false;
-    }
-    if (secretKey != null ? !secretKey.equals(that.secretKey) : that.secretKey != null) {
-      return false;
-    }
     return bucket.equals(that.bucket);
   }
   
@@ -175,8 +148,6 @@ public class FeaturestoreS3Connector implements Serializable {
   public int hashCode() {
     int result = id.hashCode();
     result = 31 * result + featurestore.hashCode();
-    result = 31 * result + (accessKey != null ? accessKey.hashCode() : 0);
-    result = 31 * result + (secretKey != null ? secretKey.hashCode() : 0);
     result = 31 * result + bucket.hashCode();
     return result;
   }

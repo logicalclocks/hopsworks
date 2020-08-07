@@ -267,6 +267,7 @@ public class FeaturestoreService {
     if (Strings.isNullOrEmpty(featurestoreName)) {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NAME_NOT_PROVIDED.getMessage());
     }
+    Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
@@ -274,14 +275,13 @@ public class FeaturestoreService {
     List<TrainingDatasetDTO> trainingDatasets =
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
-      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
+      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(user, featurestore);
     FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector = null;
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     if(settings.isOnlineFeaturestore()
       && onlineFeaturestoreController.checkIfDatabaseExists(
           onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-      Users user = jWTHelper.getUserPrincipal(sc);
       String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
       String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
       onlineFeaturestoreConnector =

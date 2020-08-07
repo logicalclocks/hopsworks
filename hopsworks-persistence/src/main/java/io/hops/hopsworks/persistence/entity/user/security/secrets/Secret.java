@@ -37,7 +37,7 @@ import java.util.Date;
     @NamedQuery(name = "Secret.findAll",
                 query = "SELECT s FROM Secret s"),
     @NamedQuery(name = "Secret.findByName",
-        query = "SELECT s FROM Secret s WHERE s.id.uid = :uid")
+        query = "SELECT s FROM Secret s WHERE s.id.name = :name")
   })
 public class Secret implements Serializable {
   private static final long serialVersionUID = 1L;

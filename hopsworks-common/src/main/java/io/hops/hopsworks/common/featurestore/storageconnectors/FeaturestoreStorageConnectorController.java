@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
@@ -53,20 +54,25 @@ public class FeaturestoreStorageConnectorController {
   private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
   @EJB
   private SecretsController secretsController;
-
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
    *
+   * @param user the user making the request
    * @param featurestore the featurestore to query
+   * @param user the user making the request
    * @return List of JSON/XML DTOs of the storage connectors
    */
-  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Featurestore featurestore) {
+  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Users user,
+    Featurestore featurestore)
+    throws FeaturestoreException {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
     featurestoreStorageConnectorDTOS.addAll(
         featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore));
     featurestoreStorageConnectorDTOS.addAll(
-        featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(featurestore));
+        featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore));
     featurestoreStorageConnectorDTOS.addAll(featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore));
     return featurestoreStorageConnectorDTOS;
   }
@@ -74,15 +80,17 @@ public class FeaturestoreStorageConnectorController {
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore with a specific type
    *
+   * @param user the user making the request
    * @param featurestore the featurestore to query
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @return List of JSON/XML DTOs of the storage connectors
    */
-  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestoreWithType(
-      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType) {
+  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestoreWithType(Users user,
+    Featurestore featurestore,
+    FeaturestoreStorageConnectorType featurestoreStorageConnectorType) throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(featurestore);
+        return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore);
       case JDBC:
         return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
       case HOPSFS:
@@ -98,17 +106,19 @@ public class FeaturestoreStorageConnectorController {
   /**
    * Returns a DTO of a storage connectors for a featurestore with a specific type and id
    *
+   * @param user the user making the request
    * @param featurestore the featurestore to query
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @param storageConnectorId id of the storage connector
    * @return JSON/XML DTOs of the storage connector
    */
   public FeaturestoreStorageConnectorDTO getStorageConnectorForFeaturestoreWithTypeAndId(
-      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+      Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
       Integer storageConnectorId) throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.getS3ConnectorWithIdAndFeaturestore(featurestore, storageConnectorId);
+        return featurestoreS3ConnectorController.getS3ConnectorWithIdAndFeaturestore(user, featurestore,
+          storageConnectorId);
       case JDBC:
         return featurestoreJdbcConnectorController.getJdbcConnectorWithIdAndFeaturestore(featurestore,
             storageConnectorId);
@@ -126,6 +136,7 @@ public class FeaturestoreStorageConnectorController {
   /**
    * Creates a new Storage Connector of a specific type in a feature store
    *
+   * @param user the user making the request
    * @param featurestore the featurestore to create the new connector
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @param featurestoreStorageConnectorDTO the data to use when creating the storage connector
@@ -133,11 +144,12 @@ public class FeaturestoreStorageConnectorController {
    * @throws FeaturestoreException
    */
   public FeaturestoreStorageConnectorDTO createStorageConnectorWithType(
-      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException {
+    Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException, UserException {
+    validateUser(user, featurestore);
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.createFeaturestoreS3Connector(featurestore,
+        return featurestoreS3ConnectorController.createFeaturestoreS3Connector(user, featurestore,
             (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO);
       case JDBC:
         return featurestoreJdbcConnectorController.createFeaturestoreJdbcConnector(featurestore,
@@ -156,6 +168,7 @@ public class FeaturestoreStorageConnectorController {
   /**
    * Updates an existing Storage Connector of a specific type in a feature store
    *
+   * @param user the user making the request
    * @param featurestore the featurestore where the connector exists
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @param featurestoreStorageConnectorDTO the data to use when updating the storage connector
@@ -163,12 +176,13 @@ public class FeaturestoreStorageConnectorController {
    * @return A JSON/XML DTOs representation of the updated storage connector
    */
   public FeaturestoreStorageConnectorDTO updateStorageConnectorWithType(
-      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+      Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
       FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, Integer storageConnectorId)
-      throws FeaturestoreException {
+    throws FeaturestoreException, UserException {
+    validateUser(user, featurestore);
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.updateFeaturestoreS3Connector(featurestore,
+        return featurestoreS3ConnectorController.updateFeaturestoreS3Connector(user, featurestore,
             (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
       case JDBC:
         return featurestoreJdbcConnectorController.updateFeaturestoreJdbcConnector(featurestore,
@@ -187,15 +201,19 @@ public class FeaturestoreStorageConnectorController {
   /**
    * Deletes a storage connector with a specific type and id in a feature store
    *
+   * @param user the user making the request
    * @param featurestoreStorageConnectorType the type of the storage connector
    * @param storageConnectorId id of the storage connector
+   * @param featurestore
    * @return JSON/XML DTOs of the deleted storage connector
    */
   public FeaturestoreStorageConnectorDTO deleteStorageConnectorWithTypeAndId(
-      FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId) {
+    Users user, FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId,
+    Featurestore featurestore) throws UserException {
+    validateUser(user, featurestore);
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.removeFeaturestoreS3Connector(storageConnectorId);
+        return featurestoreS3ConnectorController.removeFeaturestoreS3Connector(user, storageConnectorId);
       case JDBC:
         return featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnectorId);
       case HOPSFS:
@@ -249,5 +267,18 @@ public class FeaturestoreStorageConnectorController {
     }
     return featurestoreJdbcConnectorDTO;
   }
-
+  
+  /**
+   * Checks if the user is a member of the project to add, edit, and delete a connector
+   * @param user the user making the request
+   * @param featurestore
+   * @throws UserException
+   */
+  private void validateUser(Users user, Featurestore featurestore) throws UserException {
+    if (!projectTeamFacade.isUserMemberOfProject(featurestore.getProject(), user)) {
+      throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.FINE,
+        "Action not allowed. User " + user.getUsername() + " is" +
+          " not member of project ");
+    }
+  }
 }

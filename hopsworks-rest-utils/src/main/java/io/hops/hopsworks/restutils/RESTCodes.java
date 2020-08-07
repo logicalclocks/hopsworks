@@ -1469,8 +1469,9 @@ public class RESTCodes {
     STATISTICS_READ_ERROR(107, "Error reading the statistics", Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_STATISTICS_CONFIG(108, "Illegal statistics config", Response.Status.BAD_REQUEST),
     ERROR_DELETING_STATISTICS(109, "Error deleting the statistics of a feature store entity",
-      Response.Status.INTERNAL_SERVER_ERROR);
-
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_GETTING_S3_CONNECTOR_ACCESS_AND_SECRET_KEY_FROM_SECRET(110, "Could not get access and secret " +
+            "key from the user secret", Response.Status.INTERNAL_SERVER_ERROR);
     private int code;
     private String message;
     private Response.Status respStatus;
