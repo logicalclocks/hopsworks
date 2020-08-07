@@ -148,8 +148,7 @@ public class HdfsUsersController {
       dfso = dfsService.getDfsOps();
       addDataOwnerToProject(dfso, project, member, false);
     } catch (IOException ex) {
-      throw new UserException(RESTCodes.UserErrorCode.CREATE_USER_ERROR, Level.SEVERE,
-          null, ex.getMessage(), ex);
+      throw new UserException(RESTCodes.UserErrorCode.CREATE_USER_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
     } finally {
       if (dfso != null) {
         dfso.close();

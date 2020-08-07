@@ -44,14 +44,9 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.project.MembersDTO;
 import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -63,7 +58,6 @@ import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -98,18 +92,10 @@ public class ProjectMembersService {
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
-  private ProjectServiceFacade projectServiceFacade;
-  @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
-  private Settings settings;
-  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private JWTHelper jWTHelper;
-  @EJB
-  private FeaturestoreController featurestoreController;
-  
+
   private Integer projectId;
 
   public ProjectMembersService() {
@@ -183,11 +169,11 @@ public class ProjectMembersService {
   @Path("/{email}")
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
-  @JWTRequired(acceptedTokens = {Audience.API},
-      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response updateRoleByEmail(@PathParam("email") String email, @FormParam("role") String role,
-      @Context SecurityContext sc) throws ProjectException, UserException, FeaturestoreException {
-
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response updateRoleByEmail(@PathParam("email") String email,
+                                    @FormParam("role") String role,
+                                    @Context SecurityContext sc)
+      throws ProjectException, UserException, FeaturestoreException {
     Project project = projectController.findProjectById(this.projectId);
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -197,20 +183,7 @@ public class ProjectMembersService {
     if (role == null) {
       throw new IllegalArgumentException("Role was not provided.");
     }
-    if (project.getOwner().getEmail().equals(email)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE);
-    }
     projectController.updateMemberRole(project, user, email, role);
-    //Update user-privileges on the online feature store
-    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)
-      && settings.isOnlineFeaturestore()) {
-      Users member = projectTeamFacade.findUserByEmail(email);
-      onlineFeaturestoreController.createDatabaseUser(member, project);
-      FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-        featurestoreController.getOfflineFeaturestoreDbName(project));
-      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(project, member,
-        featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
-    }
     json.setSuccessMessage(ResponseMessages.MEMBER_ROLE_UPDATED);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
@@ -248,12 +221,7 @@ public class ProjectMembersService {
     }
     projectController.removeMemberFromTeam(project, reqUser, email);
 
-    if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
-      Users member = projectTeamFacade.findUserByEmail(email);      
-      onlineFeaturestoreController.removeOnlineFeaturestoreUser(project, member);
-    }
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
   }
-
 }

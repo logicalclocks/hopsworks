@@ -15,13 +15,9 @@
  */
 package io.hops.hopsworks.common.featurestore.online;
 
-import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -34,6 +30,7 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
@@ -59,7 +56,7 @@ import java.util.logging.Logger;
  * business logic.
  */
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class OnlineFeaturestoreController {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreController.class.getName());
@@ -72,15 +69,11 @@ public class OnlineFeaturestoreController {
   @EJB
   private SecretsController secretsController;
   @EJB
-  private ProjectTeamFacade projectTeamFacade;
-  @EJB
   private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
   @EJB
   private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
-  @EJB
-  private FeaturestoreController featurestoreController;
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
@@ -212,46 +205,41 @@ public class OnlineFeaturestoreController {
   /**
    * Sets up the online feature store database for a new project and creating a database-user for the project-owner
    *
-   * @param project the project that should own the online featurestore database
    * @param user the project owner
    * @param featurestore the featurestore metadata entity
    * @throws FeaturestoreException
    */
-  public void setupOnlineFeaturestore(Project project, Users user, Featurestore featurestore)
+  public void setupOnlineFeaturestore(Users user, Featurestore featurestore)
     throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online feature store service is not enabled for this Hopsworks instance");
     }
-    /*
-     * Step 1: Create Database
-     */
-    addOnlineFeatureStoreDB(getOnlineFeaturestoreDbName(project));
-    /*
-     * Step 2: Create database user
-     */
-    createDatabaseUser(user, project);
-    /*
-     * Step 3: Grant user privileges
-     */
-    updateUserOnlineFeatureStoreDB(project, user, featurestore);
+    // Create dataset
+    addOnlineFeatureStoreDB(getOnlineFeaturestoreDbName(featurestore.getProject()));
+
+    // Create project owner database user
+    createDatabaseUser(user, featurestore, ProjectRoleTypes.DATA_OWNER.getRole());
   }
   
   /**
    * Creates a new database user
    *
    * @param user the Hopsworks user
-   * @param project the project of the Hopsworks user
+   * @param featurestore the feature store
    * @throws FeaturestoreException
    */
-  public void createDatabaseUser(Users user, Project project) throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Feature Store is not enabled");
+  public void createDatabaseUser(Users user, Featurestore featurestore, String projectRole)
+      throws FeaturestoreException {
+    String db = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!checkIfDatabaseExists(db)) {
+      // There is no online feature store for this feature store
+      return;
     }
-    String dbUser = onlineDbUsername(project, user);
+
+    String dbUser = onlineDbUsername(featurestore.getProject(), user);
     //Generate random pw
-    String onlineFsPw = createOnlineFeaturestoreUserSecret(dbUser, user, project);
+    String onlineFsPw = createOnlineFeaturestoreUserSecret(dbUser, user, featurestore.getProject());
     //database is the same as the project name
     try {
       onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw);
@@ -260,6 +248,8 @@ public class OnlineFeaturestoreController {
         Level.SEVERE, "An error occurred when trying to create the MySQL database user for an online feature store",
         e.getMessage(), e);
     }
+
+    updateUserOnlineFeatureStoreDB(user, featurestore, projectRole);
   }
   
   /**
@@ -324,34 +314,36 @@ public class OnlineFeaturestoreController {
   /**
    * Updates the user-privileges on the online feature store database
    *
-   * @param project the project of the user
    * @param user the user to be added
+   * @param featurestore the feature store
    * @throws FeaturestoreException
    */
-  public void updateUserOnlineFeatureStoreDB(Project project, Users user, Featurestore featurestore)
+  public void updateUserOnlineFeatureStoreDB(Users user, Featurestore featurestore, String projectRole)
     throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(getOnlineFeaturestoreDbName(project))) {
+    String db = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!settings.isOnlineFeaturestore() || !checkIfDatabaseExists(db)) {
       //Nothing to update
       return;
     }
-    String dbuser = onlineDbUsername(project, user);
-    String db = getOnlineFeaturestoreDbName(project);
+
+    String dbuser = onlineDbUsername(featurestore.getProject(), user);
     onlineFeaturestoreFacade.revokeUserPrivileges(db, dbuser);
     try{
-      if (projectTeamFacade.findCurrentRole(project, user).equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
+      if (projectRole.equals(ProjectRoleTypes.DATA_OWNER.getRole())) {
         onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser);
       } else {
         onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser);
-      }
-      try{
-        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
-      } catch(Exception e) {
-        //If the connector have already been created, skip this step
       }
     } catch(Exception e) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode
         .ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE, "An error occurred when trying to create " +
         "the MySQL database for an online feature store", e.getMessage(), e);
+    }
+
+    try {
+      featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
+    } catch(Exception e) {
+      //If the connector have already been created, skip this step
     }
   }
 
@@ -419,16 +411,18 @@ public class OnlineFeaturestoreController {
   /**
    * Removes a user from a online feature store database in the project
    *
-   * @param project the project that owns the online feature store
+   * @param featurestore the project that owns the online feature store
    * @param user the user to remove
    * @throws FeaturestoreException
    */
-  public void removeOnlineFeaturestoreUser(Project project, Users user) throws FeaturestoreException {
-    if (!settings.isOnlineFeaturestore()) {
+  public void removeOnlineFeaturestoreUser(Featurestore featurestore, Users user) throws FeaturestoreException {
+    String db = getOnlineFeaturestoreDbName(featurestore.getProject());
+    if (!checkIfDatabaseExists(db)) {
       //Nothing to remove
       return;
     }
-    String dbUser = onlineDbUsername(project.getName(), user.getUsername());
+
+    String dbUser = onlineDbUsername(featurestore.getProject().getName(), user.getUsername());
     SecretId id = new SecretId(user.getUid(), dbUser);
     secretsFacade.deleteSecret(id);
     try {
@@ -438,12 +432,9 @@ public class OnlineFeaturestoreController {
         Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
         e.getMessage(), e);
     }
-    FeaturestoreDTO featurestoreDTO = featurestoreController.getFeaturestoreForProjectWithName(project,
-      featurestoreController.getOfflineFeaturestoreDbName(project));
     String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(
-        featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId()));
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
     for (FeaturestoreStorageConnectorDTO storageConnector: jdbcConnectors) {
       if (storageConnector.getName().equalsIgnoreCase(connectorName)) {
         featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnector.getId());
