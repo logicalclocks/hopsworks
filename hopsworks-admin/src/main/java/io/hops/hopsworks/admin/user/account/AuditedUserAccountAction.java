@@ -45,7 +45,7 @@ public class AuditedUserAccountAction {
   private static final Logger LOGGER = Logger.getLogger(AuditedUserAccountAction.class.getName());
   @EJB
   protected UsersController usersController;
-  
+
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.VERIFIED_ACCOUNT, message = "Account email " +
     "verification")
   public void validateKey(@Caller(UserIdentifier.KEY) @AuditTarget(UserIdentifier.KEY) String key,

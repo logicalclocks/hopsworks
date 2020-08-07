@@ -1,33 +1,16 @@
 /*
- * This file is part of Hopsworks
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
- *
- * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- * the GNU Affero General Public License as published by the Free Software Foundation,
- * either version 3 of the License, or (at your option) any later version.
- *
- * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  See the GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License along with this program.
- * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.cloud;
+package io.hops.hopsworks.cloud;
 
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.hosts.HostsController;
-import io.hops.hopsworks.common.util.CloudClient;
-import io.hops.hopsworks.common.util.Settings;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.ejb.DependsOn;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -36,21 +19,20 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Singleton
 @Startup
 @TransactionAttribute(TransactionAttributeType.NEVER)
-@DependsOn("Settings")
 public class CloudManager {
-
   private static final Logger LOG = Logger.getLogger(CloudManager.class.getName());
 
   @Resource
   private TimerService timerService;
-  @EJB
-  private Settings settings;
   @EJB
   private CloudClient cloudClient;
   @EJB
@@ -60,18 +42,17 @@ public class CloudManager {
 
   @PostConstruct
   public void init() {
-    if (settings.isCloud()) {
-      timerService.createIntervalTimer(0, 60000, new TimerConfig("cloud heartbeat", false));
-    }
+    LOG.log(Level.INFO, "Hopsworks@Cloud - Initializing CloudManager");
+    timerService.createIntervalTimer(0, 1000, new TimerConfig("Cloud heartbeat", false));
   }
 
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public void isAlive() {
+  public void heartbeat() {
     try {
       //send heartbeat to hopsworks-cloud
       String json = cloudClient.sendHeartbeat();
-      //parse response 
+      //parse response
       JSONObject message = new JSONObject(json);
       JSONArray array = message.getJSONArray("message");
       List<HostDTO> workers = new ArrayList<>();
@@ -93,5 +74,4 @@ public class CloudManager {
       LOG.log(Level.SEVERE, "failded to send cloud heartbeat", ex);
     }
   }
-
 }

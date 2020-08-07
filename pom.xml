@@ -120,6 +120,15 @@
         <module>hopsworks-testing</module>
       </modules>
     </profile>
+    <profile>
+      <id>hopsworks-cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>hopsworks-cloud</module>
+      </modules>
+    </profile>
   </profiles>
 
   <properties>

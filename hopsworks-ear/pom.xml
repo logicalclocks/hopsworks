@@ -210,5 +210,19 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <id>hopsworks-cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-cloud</artifactId>
+          <version>${project.version}</version>
+          <type>ejb</type>
+        </dependency>
+      </dependencies>
+    </profile>
   </profiles>
 </project>
