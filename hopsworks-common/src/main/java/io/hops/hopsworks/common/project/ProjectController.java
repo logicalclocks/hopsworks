@@ -189,10 +189,7 @@ import java.util.stream.Collectors;
 public class ProjectController {
 
   private static final Logger LOGGER = Logger.getLogger(ProjectController.class.getName());
-<<<<<<< HEAD
 
-=======
->>>>>>> changes for issue#1
   @EJB
   protected UsersController usersController;
   @EJB
@@ -2232,7 +2229,7 @@ public class ProjectController {
     // Revoke privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-      onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, user);
+      onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, userToBeRemoved);
     }
 
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
