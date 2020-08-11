@@ -74,7 +74,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
-import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -686,14 +685,14 @@ public class ProjectService {
   @POST
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("projectId") Integer id, @FormParam("password") String password,
     @Context SecurityContext sc) throws ProjectException, HopsSecurityException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
-    CertsDTO certsDTO = projectController.downloadCert(id, user);
+    AccessCredentialsDTO certsDTO = projectController.credentials(id, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
