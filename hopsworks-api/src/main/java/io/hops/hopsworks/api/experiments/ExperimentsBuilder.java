@@ -24,10 +24,10 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -96,7 +96,7 @@ public class ExperimentsBuilder {
   }
 
   public ExperimentDTO uri(ExperimentDTO dto, UriInfo uriInfo, Project project,
-                           ProvStateElastic fileProvenanceHit) {
+                           ProvStateDTO fileProvenanceHit) {
     dto.setHref(uriInfo.getBaseUriBuilder()
         .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
         .path(Integer.toString(project.getId()))
@@ -125,13 +125,13 @@ public class ExperimentsBuilder {
 
     if(dto.isExpand()) {
       try {
-        ProvFileStateParamBuilder provFilesParamBuilder = buildExperimentProvenanceParams(project, resourceRequest);
-        ProvStateListDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
+        ProvStateParamBuilder provFilesParamBuilder = buildExperimentProvenanceParams(project, resourceRequest);
+        ProvStateDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
         if (fileState != null) {
-          List<ProvStateElastic> experiments = fileState.getItems();
+          List<ProvStateDTO> experiments = fileState.getItems();
           dto.setCount(fileState.getCount());
           if (experiments != null && !experiments.isEmpty()) {
-            for (ProvStateElastic fileProvStateHit : experiments) {
+            for (ProvStateDTO fileProvStateHit : experiments) {
               ExperimentDTO experimentDTO = build(uriInfo, resourceRequest, project, user, fileProvStateHit);
               if (experimentDTO != null) {
                 dto.addItem(experimentDTO);
@@ -153,15 +153,15 @@ public class ExperimentsBuilder {
     return dto;
   }
 
-  private ProvFileStateParamBuilder buildExperimentProvenanceParams(Project project, ResourceRequest resourceRequest)
+  private ProvStateParamBuilder buildExperimentProvenanceParams(Project project, ResourceRequest resourceRequest)
       throws ProvenanceException {
 
-    ProvFileStateParamBuilder provFilesParamBuilder = new ProvFileStateParamBuilder()
-        .withProjectInodeId(project.getInode().getId())
-        .withMlType(Provenance.MLType.EXPERIMENT.name())
-        .withPagination(resourceRequest.getOffset(), resourceRequest.getLimit())
-        .filterByHasXAttr(EXPERIMENT_SUMMARY_XATTR_NAME)
-        .withAppExpansion();
+    ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.EXPERIMENT.name())
+        .hasXAttr(EXPERIMENT_SUMMARY_XATTR_NAME)
+        .withAppExpansion()
+        .paginate(resourceRequest.getOffset(), resourceRequest.getLimit());
 
     buildSortOrder(provFilesParamBuilder, resourceRequest.getSort());
     buildFilter(project, provFilesParamBuilder, resourceRequest.getFilter());
@@ -170,7 +170,7 @@ public class ExperimentsBuilder {
 
   //Build specific
   public ExperimentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Users user,
-                             ProvStateElastic fileProvenanceHit) throws ExperimentsException, DatasetException,
+                             ProvStateDTO fileProvenanceHit) throws ExperimentsException, DatasetException,
     ProvenanceException, MetadataException {
 
     ExperimentDTO experimentDTO = new ExperimentDTO();
@@ -238,7 +238,7 @@ public class ExperimentsBuilder {
     return experimentDTO;
   }
 
-  private void buildFilter(Project project, ProvFileStateParamBuilder provFilesParamBuilder,
+  private void buildFilter(Project project, ProvStateParamBuilder provFilesParamBuilder,
                                             Set<? extends AbstractFacade.FilterBy> filters)
       throws ProvenanceException {
     if(filters != null) {
@@ -246,29 +246,31 @@ public class ExperimentsBuilder {
         if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_LIKE.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(EXPERIMENT_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
-          provFilesParamBuilder.withXAttrsLike(map);
+          provFilesParamBuilder.filterLikeXAttrs(map);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_EQ.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(EXPERIMENT_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
-          provFilesParamBuilder.withXAttrs(map);
+          provFilesParamBuilder.filterByXAttrs(map);
         }else if(filterBy.getParam().compareToIgnoreCase(Filters.DATE_START_LT.name()) == 0) {
-          provFilesParamBuilder.createdBefore(getDate(filterBy.getField(), filterBy.getValue()).getTime());
+          Long timestamp = getDate(filterBy.getField(), filterBy.getValue()).getTime();
+          provFilesParamBuilder.filterByField(ProvStateParser.FieldsPF.CREATE_TIMESTAMP_LT, timestamp);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.DATE_START_GT.name()) == 0) {
-          provFilesParamBuilder.createdAfter(getDate(filterBy.getField(), filterBy.getValue()).getTime());
+          Long timestamp = getDate(filterBy.getField(), filterBy.getValue()).getTime();
+          provFilesParamBuilder.filterByField(ProvStateParser.FieldsPF.CREATE_TIMESTAMP_GT, timestamp);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.USER.name()) == 0) {
           String userId = filterBy.getValue();
           Users user = userFacade.find(Integer.parseInt(userId));
           String hdfsUserStr = hdfsUsersController.getHdfsUserName(project, user);
           HdfsUsers hdfsUsers = hdfsUsersFacade.findByName(hdfsUserStr);
-          provFilesParamBuilder.withUserId(hdfsUsers.getId().toString());
+          provFilesParamBuilder.filterByField(ProvStateParser.FieldsP.USER_ID, hdfsUsers.getId().toString());
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.STATE.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(EXPERIMENT_SUMMARY_XATTR_NAME + ".state", filterBy.getValue());
-          provFilesParamBuilder.withXAttrsLike(map);
+          provFilesParamBuilder.filterLikeXAttrs(map);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.ID_EQ.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(EXPERIMENT_SUMMARY_XATTR_NAME + ".id", filterBy.getValue());
-          provFilesParamBuilder.withXAttrs(map);
+          provFilesParamBuilder.filterByXAttrs(map);
         } else {
           throw new WebApplicationException("Filter by need to set a valid filter parameter, but found: " +
               filterBy.getParam(), Response.Status.NOT_FOUND);
@@ -287,27 +289,27 @@ public class ExperimentsBuilder {
     }
   }
 
-  public void buildSortOrder(ProvFileStateParamBuilder provFilesParamBuilder,
+  public void buildSortOrder(ProvStateParamBuilder provFilesParamBuilder,
                              Set<? extends AbstractFacade.SortBy> sort) {
     if(sort != null) {
       for(AbstractFacade.SortBy sortBy: sort) {
         if(sortBy.getValue().compareToIgnoreCase(SortBy.NAME.name()) == 0) {
-          provFilesParamBuilder.sortBy(EXPERIMENT_SUMMARY_XATTR_NAME + ".name",
+          provFilesParamBuilder.sortByXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".name",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         } else if(sortBy.getValue().compareToIgnoreCase(SortBy.METRIC.name()) == 0) {
-          provFilesParamBuilder.sortBy(EXPERIMENT_SUMMARY_XATTR_NAME + ".metric",
+          provFilesParamBuilder.sortByXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".metric",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         } else if(sortBy.getValue().compareToIgnoreCase(SortBy.USER.name()) == 0) {
-          provFilesParamBuilder.sortBy(EXPERIMENT_SUMMARY_XATTR_NAME + ".userFullName",
+          provFilesParamBuilder.sortByXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".userFullName",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         } else if(sortBy.getValue().compareToIgnoreCase(SortBy.START.name()) == 0) {
-          provFilesParamBuilder.sortBy("create_timestamp",
+          provFilesParamBuilder.sortByField(ProvStateParser.FieldsP.CREATE_TIMESTAMP,
               SortOrder.valueOf(sortBy.getParam().getValue()));
         }  else if(sortBy.getValue().compareToIgnoreCase(SortBy.END.name()) == 0) {
-          provFilesParamBuilder.sortBy(EXPERIMENT_SUMMARY_XATTR_NAME + ".finished",
+          provFilesParamBuilder.sortByXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".finished",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         }  else if(sortBy.getValue().compareToIgnoreCase(SortBy.STATE.name()) == 0) {
-          provFilesParamBuilder.sortBy(EXPERIMENT_SUMMARY_XATTR_NAME + ".state",
+          provFilesParamBuilder.sortByXAttr(EXPERIMENT_SUMMARY_XATTR_NAME + ".state",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         } else {
           throw new WebApplicationException("Sort by need to set a valid sort parameter, but found: " +

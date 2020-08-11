@@ -58,7 +58,10 @@ public class Provenance {
     CREATE,
     DELETE,
     ACCESS_DATA,
-    MODIFY_DATA;
+    MODIFY_DATA,
+    XATTR_ADD,
+    XATTR_UPDATE,
+    XATTR_DELETE;
   }
   public enum MLType {
     FEATURE,
@@ -100,5 +103,26 @@ public class Provenance {
   
   public static String getProjectIndex(Project project) {
     return project.getInode().getId() + Settings.PROV_FILE_INDEX_SUFFIX;
+  }
+  
+  public static ProvTypeDTO getDatasetProvCore(ProvTypeDTO projectProvCore, MLType type) {
+    switch (type) {
+      case FEATURE:
+      case TRAINING_DATASET:
+      case MODEL:
+      case EXPERIMENT:
+        return projectProvCore;
+      case DATASET:
+      case HIVE:
+        if(projectProvCore.getMetaStatus().equals(Type.DISABLED.dto.getMetaStatus())) {
+          return Type.DISABLED.dto;
+        } else {
+          //downgrade any project provenance to META_ENABLED (search only)
+          return Type.META.dto;
+        }
+      case NONE:
+      default:
+        return Type.DISABLED.dto;
+    }
   }
 }

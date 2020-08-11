@@ -25,6 +25,7 @@ import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +42,7 @@ public class ProvParser {
   public interface ElasticField {
   }
   
-  public enum BaseField implements ElasticField {
+  public enum Fields implements ElasticField {
     PROJECT_I_ID,
     DATASET_I_ID,
     PARENT_I_ID,
@@ -98,25 +99,22 @@ public class ProvParser {
       return name().toLowerCase();
     }
     
-    public boolean isMLPart() {
-      switch (this) {
-        case FEATURE_PART:
-        case TRAINING_DATASET_PART:
-        case EXPERIMENT_PART:
-        case MODEL_PART:
-          return true;
-        default: return false;
-      }
-    }
-    
-    public boolean isMLParent() {
+    public DocSubType getPart() {
       switch(this) {
         case FEATURE:
+          return FEATURE_PART;
         case TRAINING_DATASET:
-        case EXPERIMENT:
+          return TRAINING_DATASET_PART;
         case MODEL:
-          return true;
-        default: return false;
+          return MODEL_PART;
+        case EXPERIMENT:
+          return EXPERIMENT_PART;
+        case DATASET:
+          return DATASET_PART;
+        case HIVE:
+          return HIVE_PART;
+        default:
+          return this;
       }
     }
   }
@@ -143,11 +141,12 @@ public class ProvParser {
   
   public enum FilterType {
     EXACT,
+    NOT,
     LIKE,
     RANGE_LT,
     RANGE_LTE,
     RANGE_GT,
-    RANGE_GTE;
+    RANGE_GTE
   }
   
   public interface FilterVal {
@@ -160,7 +159,7 @@ public class ProvParser {
     if(filterType == FilterType.RANGE_GT
       || filterType == FilterType.RANGE_GTE
       || filterType == FilterType.RANGE_LT
-      || filterType == FilterType.RANGE_LTE ) {
+      || filterType == FilterType.RANGE_LTE) {
       filterVal = new FilterValRange();
     } else {
       filterVal = new FilterValInList();
@@ -191,6 +190,10 @@ public class ProvParser {
           case EXACT: {
             String sVal = fieldFilter.getValue1().toString();
             fieldQuery.should(termQuery(fieldFilter.getValue0().elasticFieldName(), sVal));
+          } break;
+          case NOT: {
+            String sVal = fieldFilter.getValue1().toString();
+            fieldQuery.mustNot(termQuery(fieldFilter.getValue0().elasticFieldName(), sVal));
           } break;
           case LIKE: {
             if (fieldFilter.getValue1() instanceof String) {
@@ -359,7 +362,6 @@ public class ProvParser {
     StringJoiner keyj = new StringJoiner(".");
     keyj.add("xattr_prov").add(keyParts[0]).add("value");
     for(int i = 1; i < keyParts.length; i++) keyj.add(keyParts[i]);
-    //    }
     return keyj.toString();
   }
   
@@ -378,14 +380,25 @@ public class ProvParser {
     }
   }
   
-  public static void addToFilters(Map<String, FilterVal> filters, Pair<Field, Object> filter)
+  public static void addToFilters(Map<Field, FilterVal> filters, Pair<Field, Object> fieldVal)
     throws ProvenanceException {
-    FilterVal fieldFilters = filters.get(filter.getValue0().queryFieldName());
+    addToFilters(filters, fieldVal.getValue0(), fieldVal.getValue1());
+  }
+  
+  public static void addToFilters(Map<Field, FilterVal> filters, Field field, Object val)
+    throws ProvenanceException {
+    FilterVal fieldFilters = filters.get(field);
     if(fieldFilters == null) {
-      fieldFilters = ProvParser.filterValInstance(filter.getValue0().filterType());
-      filters.put(filter.getValue0().queryFieldName(), fieldFilters);
+      fieldFilters = ProvParser.filterValInstance(field.filterType());
+      filters.put(field, fieldFilters);
     }
-    fieldFilters.add(filter);
+    if(val instanceof Collection) {
+      for (Object v : (Collection) val) {
+        fieldFilters.add(Pair.with(field, v));
+      }
+    } else {
+      fieldFilters.add(Pair.with(field, val));
+    }
   }
   
   public static void withExpansions(Set<Expansions> expansions, Set<String> params)
@@ -399,30 +412,6 @@ public class ProvParser {
             + EnumSet.allOf(ProvParser.Expansions.class),
           "exception extracting FilterBy param", e);
       }
-    }
-  }
-  
-  public static Provenance.MLType mlTypeParser(ProvParser.DocSubType type) {
-    switch(type) {
-      case DATASET:
-        return Provenance.MLType.DATASET;
-      case HIVE:
-        return Provenance.MLType.HIVE;
-      case FEATURE:
-      case FEATURE_PART:
-        return Provenance.MLType.FEATURE;
-      case TRAINING_DATASET:
-      case TRAINING_DATASET_PART:
-        return Provenance.MLType.TRAINING_DATASET;
-      case EXPERIMENT:
-      case EXPERIMENT_PART:
-        return Provenance.MLType.EXPERIMENT;
-      case MODEL:
-      case MODEL_PART:
-        return Provenance.MLType.MODEL;
-      case NONE:
-      default:
-        return Provenance.MLType.NONE;
     }
   }
 }

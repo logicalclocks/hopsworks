@@ -22,10 +22,10 @@ import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -104,15 +104,15 @@ public class ModelsController {
     xattrCtrl.upsertProvXAttr(project, user, modelPath, ModelsBuilder.MODEL_SUMMARY_XATTR_NAME, model);
   }
 
-  public ProvStateElastic getModel(Project project, String mlId) throws ProvenanceException {
-    ProvFileStateParamBuilder provFilesParamBuilder = new ProvFileStateParamBuilder()
-        .withProjectInodeId(project.getInode().getId())
-        .withMlType(Provenance.MLType.MODEL.name())
-        .withPagination(0, 1)
-        .withMlId(mlId);
-    ProvStateListDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
+  public ProvStateDTO getModel(Project project, String mlId) throws ProvenanceException {
+    ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.MODEL.name())
+        .filterByField(ProvStateParser.FieldsP.ML_ID, mlId)
+        .paginate(0, 1);
+    ProvStateDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
     if (fileState != null) {
-      List<ProvStateElastic> experiments = fileState.getItems();
+      List<ProvStateDTO> experiments = fileState.getItems();
       if (experiments != null && !experiments.isEmpty()) {
         return experiments.iterator().next();
       }

@@ -37,6 +37,7 @@ import io.hops.hopsworks.common.dataset.FilePreviewMode;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -237,11 +238,12 @@ public class DatasetResource {
           //fake shared dataset with :: in dataset name at dataset creation
           throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
         }
-        ProvTypeDTO metaStatus = fsProvenanceController.getMetaStatus(user, project, searchable);
+        ProvTypeDTO projectProvCore = fsProvenanceController.getMetaStatus(user, project, searchable);
         ResourceRequest resourceRequest;
         if (datasetPath.isTopLevelDataset()) {
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-              datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
+            datasetPath.isTopLevelDataset(), templateId, description,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.DATASETS);
           Dataset ds = datasetController.getByProjectAndFullPath(project, datasetPath.getFullPath().toString());
           DatasetDTO dto = datasetBuilder.build(uriInfo, resourceRequest, project, ds, null, null, false);
@@ -249,7 +251,8 @@ public class DatasetResource {
         } else {
           datasetHelper.checkIfDatasetExists(project, datasetPath);
           datasetController.createDirectory(project, user, datasetPath.getFullPath(), datasetPath.getDatasetName(),
-              datasetPath.isTopLevelDataset(), templateId, description, metaStatus, generateReadme);
+            datasetPath.isTopLevelDataset(), templateId, description,
+            Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET), generateReadme);
           resourceRequest = new ResourceRequest(ResourceRequest.Name.INODES);
           Inode inode = inodeController.getInodeAtPath(datasetPath.getFullPath().toString());
           InodeDTO dto = inodeBuilder.buildStat(uriInfo, resourceRequest, inode);

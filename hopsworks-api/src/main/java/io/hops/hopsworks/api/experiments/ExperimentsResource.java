@@ -27,7 +27,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -130,7 +130,7 @@ public class ExperimentsResource {
     throws ExperimentsException, DatasetException, ProvenanceException, MetadataException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXPERIMENTS);
     resourceRequest.setExpansions(experimentsBeanParam.getExpansions().getResources());
-    ProvStateElastic fileState = experimentsController.getExperiment(project, id);
+    ProvStateDTO fileState = experimentsController.getExperiment(project, id);
     Users user = jwtHelper.getUserPrincipal(sc);
     if(fileState != null) {
       ExperimentDTO dto = experimentsBuilder.build(uriInfo, resourceRequest, project, user, fileState);

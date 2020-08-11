@@ -3559,6 +3559,7 @@ public class Settings implements Serializable {
   private Long PROVENANCE_CLEANER_PERIOD = 3600L; //1h in s
   private Long PROVENANCE_ARCHIVE_DELAY = 0l;
   private Integer PROVENANCE_ELASTIC_ARCHIVAL_PAGE_SIZE = 50;
+  public static final Integer PROVENANCE_ELASTIC_PAGE_DEFAULT_SIZE = 1000;
   
   public String getProvFileIndex(Long projectIId) {
     return projectIId.toString() + Settings.PROV_FILE_INDEX_SUFFIX;

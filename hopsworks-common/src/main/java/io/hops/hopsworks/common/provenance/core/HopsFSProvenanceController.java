@@ -177,16 +177,15 @@ public class HopsFSProvenanceController {
     updateDatasetProvType(datasetPath, newProvCore, dfso);
   }
   
-  public void newHiveDatasetProvCore(Project project, String hiveDBPath, DistributedFileSystemOps dfso)
+  public void updateHiveDatasetProvCore(Project project, String hiveDBPath, ProvTypeDTO newProvType,
+    DistributedFileSystemOps dfso)
     throws ProvenanceException {
-    String projectPath = Utils.getProjectPath(project.getName());
-    ProvCoreDTO projectProvCore = getProvCoreXAttr(projectPath, dfso);
-    if(projectProvCore == null) {
-      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.WARNING,
-        "hopsfs - hive db - set meta status error - project without prov core");
+    ProvCoreDTO newProvCore = new ProvCoreDTO(newProvType, project.getInode().getId());
+    ProvCoreDTO currentProvCore = getProvCoreXAttr(hiveDBPath, dfso);
+    if(currentProvCore != null && currentProvCore.getType().equals(newProvType)) {
+      return;
     }
-    ProvCoreDTO datasetProvCore = new ProvCoreDTO(projectProvCore.getType(), project.getInode().getId());
-    updateDatasetProvType(hiveDBPath, datasetProvCore, dfso);
+    updateDatasetProvType(hiveDBPath, newProvCore, dfso);
   }
   
   private void updateDatasetProvType(String datasetPath, ProvCoreDTO provCore, DistributedFileSystemOps dfso)

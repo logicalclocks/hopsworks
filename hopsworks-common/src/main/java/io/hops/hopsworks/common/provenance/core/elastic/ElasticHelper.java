@@ -16,7 +16,7 @@
 package io.hops.hopsworks.common.provenance.core.elastic;
 
 import io.hops.hopsworks.common.provenance.core.ProvParser;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -123,12 +123,12 @@ public class ElasticHelper {
   }
   
   public static  CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> withFileStateOrder(
-    List<Pair<ProvParser.Field, SortOrder>> fileStateSortBy, List<ProvFileStateParamBuilder.SortE> xattrSortBy) {
+    List<Pair<ProvParser.Field, SortOrder>> fileStateSortBy, List<ProvStateParamBuilder.SortE> xattrSortBy) {
     return (SearchRequest sr) -> {
       for (Pair<ProvParser.Field, SortOrder> sb : fileStateSortBy) {
         sr.source().sort(SortBuilders.fieldSort(sb.getValue0().elasticFieldName()).order(sb.getValue1()));
       }
-      for (ProvFileStateParamBuilder.SortE sb : xattrSortBy) {
+      for (ProvStateParamBuilder.SortE sb : xattrSortBy) {
         sr.source().sort(SortBuilders.fieldSort(sb.key).order(sb.order));
       }
       return sr;
@@ -158,9 +158,9 @@ public class ElasticHelper {
   }
   
   public static BoolQueryBuilder filterByBasicFields(BoolQueryBuilder query,
-    Map<String, ProvParser.FilterVal> filters) throws ProvenanceException {
-    for (Map.Entry<String, ProvParser.FilterVal> fieldFilters : filters.entrySet()) {
-      query.must(fieldFilters.getValue().query());
+    Map<ProvParser.Field, ProvParser.FilterVal> filters) throws ProvenanceException {
+    for (ProvParser.FilterVal fieldFilters : filters.values()) {
+      query.must(fieldFilters.query());
     }
     return query;
   }
