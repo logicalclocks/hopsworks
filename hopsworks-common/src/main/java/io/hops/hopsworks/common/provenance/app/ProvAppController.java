@@ -15,11 +15,13 @@
  */
 package io.hops.hopsworks.common.provenance.app;
 
+import com.lambdista.util.Try;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
+import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
+import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
 import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
-import io.hops.hopsworks.common.provenance.core.elastic.ElasticHitsHandler;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateElastic;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
@@ -27,6 +29,7 @@ import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.javatuples.Pair;
@@ -38,6 +41,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
 
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 
@@ -51,7 +55,7 @@ public class ProvAppController {
   private ProvElasticController client;
   
   public Map<String, Map<Provenance.AppState, ProvAppStateElastic>> provAppState(
-    Map<String, ProvParser.FilterVal> appStateFilters)
+    Map<ProvParser.Field, ProvParser.FilterVal> appStateFilters)
     throws ProvenanceException {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper.scrollingSearchRequest(
@@ -59,29 +63,59 @@ public class ProvAppController {
         settings.getElasticDefaultScrollPageSize())
         .andThen(provAppStateQB(appStateFilters));
     SearchRequest request = srF.get();
-    Pair<Long, Map<String, Map<Provenance.AppState, ProvAppStateElastic>>> searchResult;
+    Pair<Long, Try<ElasticAppStatesObj>> searchResult;
     try {
-      searchResult = client.searchScrolling(request, appStateParser());
+      searchResult = client.searchScrolling(request, ElasticAppStatesObj.getHandler());
     } catch (ElasticException e) {
       String msg = "provenance - elastic query problem";
       throw ProvHelper.fromElastic(e, msg, msg + " - app state");
     }
-    return searchResult.getValue1();
+    return ElasticAppStatesObj.checkedResult(searchResult);
   }
   
-  private ElasticHitsHandler<ProvAppStateElastic, Map<String, Map<Provenance.AppState, ProvAppStateElastic>>, ?,
-    ProvenanceException> appStateParser() {
-    return ElasticHitsHandler.instanceBasic(new HashMap<>(),
-      hit -> ProvAppStateElastic.instance(hit),
-      (ProvAppStateElastic item, Map<String, Map<Provenance.AppState, ProvAppStateElastic>> state) -> {
-        Map<Provenance.AppState, ProvAppStateElastic> appStates =
-          state.computeIfAbsent(item.getAppId(), k -> new TreeMap<>());
-        appStates.put(item.getAppState(), item);
-      });
+  /**
+   * Key1 - String - appId
+   * Key2 - Provenance.AppState
+   * Value - ProvAppStateElastic
+   */
+  private static class ElasticAppStatesObj extends HashMap<String, Map<Provenance.AppState, ProvAppStateElastic>> {
+    private static ElasticHits.Merger<ProvAppStateElastic, ElasticAppStatesObj> getMerger() {
+      return (ProvAppStateElastic item, ElasticAppStatesObj states) -> {
+        Map<Provenance.AppState, ProvAppStateElastic> appIdStates
+          = states.computeIfAbsent(item.getAppId(), key -> new TreeMap<>());
+        appIdStates.put(item.getAppState(), item);
+        return Try.apply(() -> states);
+      };
+    }
+  
+    static ElasticHits.Handler<ProvAppStateElastic, ElasticAppStatesObj> getHandler() {
+      ElasticHits.Parser<ProvAppStateElastic> parser
+        = hit -> ProvAppStateElastic.tryInstance(BasicElasticHit.instance(hit));
+      return ElasticHits.handlerBasic(parser, new ElasticAppStatesObj(), getMerger());
+    }
+  
+    /**
+     * Key1 - String - appId
+     * Key2 - Provenance.AppState
+     * Value - ProvAppStateElastic
+     */
+    static Map<String, Map<Provenance.AppState, ProvAppStateElastic>>
+      checkedResult(Pair<Long, Try<ElasticAppStatesObj>> result) throws ProvenanceException {
+      try {
+        return result.getValue1().checkedGet();
+      } catch (Throwable t) {
+        if (t instanceof ProvenanceException) {
+          throw (ProvenanceException) t;
+        } else {
+          throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.INTERNAL_ERROR, Level.INFO, "unhandled error",
+            "unhandled error", t);
+        }
+      }
+    }
   }
   
   private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> provAppStateQB(
-    Map<String, ProvParser.FilterVal> appStateFilters) {
+    Map<ProvParser.Field, ProvParser.FilterVal> appStateFilters) {
     return (SearchRequest sr) -> {
       BoolQueryBuilder query = boolQuery();
       query = ElasticHelper.filterByBasicFields(query, appStateFilters);

@@ -24,10 +24,10 @@ import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.JobException;
@@ -86,7 +86,7 @@ public class ExperimentsController {
     if(xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.REPLACE)
         && experimentSummary.getFinished() == null
         && experimentSummary.getDuration() != null) {
-      ProvStateElastic fileState = getExperiment(project, id);
+      ProvStateDTO fileState = getExperiment(project, id);
       if(fileState != null) {
         experimentSummary.setFinished(fileState.getCreateTime() + experimentSummary.getDuration());
       }
@@ -152,17 +152,17 @@ public class ExperimentsController {
     }
   }
 
-  public ProvStateElastic getExperiment(Project project, String mlId) throws ProvenanceException {
-    ProvFileStateParamBuilder provFilesParamBuilder = new ProvFileStateParamBuilder()
-        .withProjectInodeId(project.getInode().getId())
-        .withMlType(Provenance.MLType.EXPERIMENT.name())
-        .withPagination(0, 1)
+  public ProvStateDTO getExperiment(Project project, String mlId) throws ProvenanceException {
+    ProvStateParamBuilder provFilesParamBuilder = new ProvStateParamBuilder()
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.EXPERIMENT.name())
+        .filterByField(ProvStateParser.FieldsP.ML_ID, mlId)
+        .hasXAttr(ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME)
         .withAppExpansion()
-        .filterByHasXAttr(ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME)
-        .withMlId(mlId);
-    ProvStateListDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
+        .paginate(0, 1);
+    ProvStateDTO fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
     if (fileState != null && fileState.getItems() != null) {
-      List<ProvStateElastic> experiments = fileState.getItems();
+      List<ProvStateDTO> experiments = fileState.getItems();
       if (experiments != null && !experiments.isEmpty()) {
         return experiments.iterator().next();
       }

@@ -78,15 +78,19 @@ module ProvStateHelper
   end
 
   def prov_create_model(project, model_name) 
-    #pp "create model #{model_name} in project #{project[:inode_name]}"
-    models = "Models"
-    prov_create_dir(project, "#{models}/#{model_name}")
+    prov_create_dir(project, "#{prov_model_path(model_name)}")
   end
 
   def prov_create_model_version(project, model_name, model_version) 
-    #pp "create model #{model_name}_#{model_version} in project #{project[:inode_name]}"
-    models = "Models"
-    prov_create_dir(project, "#{models}/#{model_name}/#{model_version}")
+    prov_create_dir(project, "#{prov_model_version_path(model_name, model_version)}")
+  end
+
+  def prov_model_path(model_name)
+    "Models/#{model_name}"
+  end
+
+  def prov_model_version_path(model_name, model_version)
+    "#{prov_model_path(model_name)}/#{model_version}"
   end
 
   def prov_create_td(project, td_name, td_version) 
@@ -134,26 +138,6 @@ module ProvStateHelper
   def prov_get_experiment_record(project, experiment_name) 
     experiment_parent = "Experiments"
     FileProv.where("project_name": project["inode_name"], "i_parent_name": experiment_parent, "i_name": experiment_name)
-  end
-
-  def prov_add_xattr(original, xattr_name, xattr_value, xattr_op, increment)
-#     pp original
-    xattr_record = original.dup
-#     pp xattrRecord
-    xattr_record[:inode_id] = original[:inode_id]
-    xattr_record[:inode_operation] = xattr_op
-    xattr_record[:io_logical_time] = original[:io_logical_time]+increment
-    xattr_record[:io_timestamp] = original[:io_timestamp]+increment
-    xattr_record[:io_app_id] = original[:io_app_id]
-    xattr_record[:io_user_id] = original[:io_user_id]
-#     pp xattrRecord
-    xattr_record["i_xattr_name"] = xattr_name
-    xattr_record["io_logical_time_batch"] = original["io_logical_time_batch"]+increment
-    xattr_record["io_timestamp_batch"] = original["io_timestamp_batch"]+increment
-#     pp xattrRecord
-    xattr_record.save!
-
-    FileProvXAttr.create(inode_id: xattr_record["inode_id"], namespace: 5, name: xattr_name, inode_logical_time: xattr_record["io_logical_time"], value: xattr_value, num_parts: 1, index: 0)
   end
 
   def prov_add_app_states1(app_id, user)
@@ -205,7 +189,7 @@ module ProvStateHelper
     end
     pp "#{resource}#{query_params}" if defined?(@debugOpt) && @debugOpt == true
     result = get "#{resource}#{query_params}"
-    expect_status(200)
+    expect_status_details(200)
     parsed_result = JSON.parse(result)
     pp parsed_result if defined?(@debugOpt) && @debugOpt == true
     expect(parsed_result["items"].length).to eq expected
@@ -295,12 +279,13 @@ module ProvStateHelper
   def get_ml_asset_by_xattr_count(project, ml_type, xattr_key, xattr_val, count)
     resource = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states"
     query_params = "?filter_by=ML_TYPE:#{ml_type}&xattr_filter_by=#{xattr_key}:#{xattr_val}&return_type=COUNT"
-    # pp "#{resource}#{query_params}"
+    pp "#{resource}#{query_params}" if defined?(@debugOpt) && @debugOpt
     result = get "#{resource}#{query_params}"
     expect_status(200)
     parsed_result = JSON.parse(result)
-    expect(parsed_result["result"]["value"]).to eq count
-    parsed_result["result"]
+    pp "#{parsed_result}" if defined?(@debugOpt) && @debugOpt
+    expect(parsed_result["count"]).to eq count
+    parsed_result["count"]
   end
 
   def get_ml_asset_like_xattr(project, ml_type, xattr_key, xattr_val)

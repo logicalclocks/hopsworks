@@ -52,6 +52,7 @@ import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -158,8 +159,8 @@ public class HiveController {
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
-                              String dbName) throws IOException {
-    createDatasetDb(project, user, dfso, dbName, DatasetType.HIVEDB, null);
+                              String dbName, ProvTypeDTO metaStatus) throws IOException {
+    createDatasetDb(project, user, dfso, dbName, DatasetType.HIVEDB, null, metaStatus);
   }
 
   /**
@@ -175,8 +176,8 @@ public class HiveController {
    * @throws IOException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso,
-                               String dbName, DatasetType datasetType, Featurestore featurestore)
+  public void createDatasetDb(Project project, Users user, DistributedFileSystemOps dfso, String dbName,
+    DatasetType datasetType, Featurestore featurestore, ProvTypeDTO metaStatus)
     throws IOException {
     if(datasetType != DatasetType.HIVEDB && datasetType != DatasetType.FEATURESTORE) {
       throw new IllegalArgumentException("Invalid dataset type for hive database");
@@ -201,7 +202,7 @@ public class HiveController {
       final FsPermission fsPermission = FsPermissions.rwxrwx___T;
       dfso.setPermission(dbPath, fsPermission);
   
-      fsProvenanceCtrl.newHiveDatasetProvCore(project, dbPath.toString(), dfso);
+      fsProvenanceCtrl.updateHiveDatasetProvCore(project, dbPath.toString(), metaStatus, dfso);
       datasetController.logDataset(project, dbDataset, OperationType.Add);
       activityFacade.persistActivity(ActivityFacade.NEW_DATA + dbDataset.getName(), project, user,
         ActivityFlag.DATASET);

@@ -382,12 +382,13 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def create_hopsfs_training_dataset_checked(project_id, featurestore_id, connector, training_dataset_name, features: nil , description: nil)
-    pp "create training dataset:#{training_dataset_name}" if defined?(@debugOpt) && @debugOpt == true
-    json_result, training_dataset_name_aux = create_hopsfs_training_dataset(project_id, featurestore_id, connector, name:training_dataset_name, features: features, description: description)
+  def create_hopsfs_training_dataset_checked(project_id, featurestore_id, connector, name: nil, features: nil , description: nil)
+    json_result, name_aux = create_hopsfs_training_dataset(project_id, featurestore_id, connector, name:name, features: features, description: description)
+    pp "create training dataset:#{name_aux}" if defined?(@debugOpt) && @debugOpt
     expect_status_details(201)
     parsed_json = JSON.parse(json_result, :symbolize_names => true)
-    parsed_json
+    pp parsed_json if defined?(@debugOpt) && @debugOpt
+    return parsed_json, name_aux
   end
 
   def create_hopsfs_training_dataset(project_id, featurestore_id, hopsfs_connector, name:nil, data_format: nil,

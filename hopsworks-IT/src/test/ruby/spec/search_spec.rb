@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
   context "featurestore" do
 
     def featuregroups_setup(project)
-      fgs = Array.new(6)
+      fgs = Array.new
       featurestore_id = get_featurestore_id(project[:id])
 
       fgs[0] = {}
@@ -66,26 +66,30 @@ describe "On #{ENV['OS']}" do
     end
 
     def trainingdataset_setup(project)
-      tds = Array.new(4)
+      tds = Array.new
       featurestore_id = get_featurestore_id(project[:id])
       connector = get_hopsfs_training_datasets_connector(project[:projectname])
       tds[0] = {}
       tds[0][:name] = "td_animal1"
-      tds[0][:id] = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, tds[0][:name])[:id]
+      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[0][:name])
+      tds[0][:id] = td_json[:id]
       tds[1] = {}
       tds[1][:name] = "td_dog1"
-      tds[1][:id] = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, tds[1][:name])[:id]
+      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[1][:name])
+      tds[1][:id] = td_json[:id]
       tds[2] = {}
       tds[2][:name] = "td_something3"
       td3_features = [
           { name: "dog", featuregroup: "fg", version: 1, type: "INT", description: "testfeaturedescription"},
           { name: "feature2", featuregroup: "fg", version: 1, type: "INT", description: "testfeaturedescription"}
       ]
-      tds[2][:id] = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, tds[2][:name], features: td3_features)[:id]
+      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[2][:name], features: td3_features)
+      tds[2][:id] = td_json[:id]
       tds[3] = {}
       tds[3][:name] = "td_something4"
       td3_description = "some description about a dog"
-      tds[3][:id] = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, tds[3][:name], description: td3_description)[:id]
+      td_json, _ = create_hopsfs_training_dataset_checked(project[:id], featurestore_id, connector, name: tds[3][:name], description: td3_description)
+      tds[3][:id] = td_json[:id]
       # TODO add featuregroup name to search
       tds
     end
@@ -163,23 +167,50 @@ describe "On #{ENV['OS']}" do
           fg_features = get_fg_features(fg_size, f_prefix1: @feature_keyword1, f_prefix2: @feature_keyword2)
           td_features = get_td_features(@fg_name, fg_features)
           create_cached_featuregroup_checked(@project[:id], @featurestore_id, @fg_name, features: fg_features, featuregroup_description: @description)
-          create_hopsfs_training_dataset_checked(@project[:id], @featurestore_id, @connector, @td_name, features: td_features, description: @description)
+          create_hopsfs_training_dataset_checked(@project[:id], @featurestore_id, @connector, name: @td_name, features: td_features, description: @description)
           xattr_num_parts("#{@fg_name}_1")
           xattr_num_parts("#{@td_name}_1")
         end
       end
 
-      def featurestore_search_test(size)
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
+      def cleanup_fg(project, fg_id)
+        featurestore_id = get_featurestore_id(project[:id])
+        delete_featuregroup_checked(project[:id], featurestore_id, fg_id) if defined?(fg_id) && !fg_id.nil?
+      end
 
-        begin
+      def cleanup_td(project, td_id)
+        featurestore_id = get_featurestore_id(project[:id])
+        delete_trainingdataset_checked(project[:id], featurestore_id, td_id) if defined?(td_id) && !td_id.nil?
+      end
+
+      def cleanup(project, fgs, tds)
+        featurestore_id = get_featurestore_id(project[:id])
+        fgs.each do |fg|
+          delete_featuregroup_checked(project[:id], featurestore_id, fg[:id])
+        end if defined?(fgs) && !fgs.nil?
+        tds.each do |td|
+          delete_trainingdataset_checked(project[:id], featurestore_id, td[:id])
+        end if defined?(tds) && !tds.nil?
+      end
+
+      context 'group' do
+        after :each do
+          cleanup_fg(@project, @fg_id)
+          cleanup_td(@project, @td_id)
+        end
+
+        def featurestore_search_test(size)
+          featurestore_id = get_featurestore_id(@project[:id])
+
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+
           #setup
           fg_features = get_fg_features(size, f_prefix1: @feature_keyword1, f_prefix2: @feature_keyword2)
-          fg_id = create_cached_featuregroup_checked(@project[:id], @featurestore_id, @fg_name, features: fg_features, featuregroup_description: @description)
+          @fg_id = create_cached_featuregroup_checked(@project[:id], featurestore_id, @fg_name, features: fg_features, featuregroup_description: @description)
           td_features = get_td_features(@fg_name, fg_features)
-          td_result = create_hopsfs_training_dataset_checked(@project[:id], @featurestore_id, @connector, @td_name, features: td_features, description: @description)
-          td_id = td_result[:id]
+          td_json, _ = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, @connector, name: @td_name, features: td_features, description: @description)
+          @td_id = td_json[:id]
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           #search
@@ -198,82 +229,75 @@ describe "On #{ENV['OS']}" do
           expected_hits6 = [{:name => @td_name, :highlight => 'features', :parent_project => @project[:projectname]}]
           project_search_test(@project, @feature_keyword1, "trainingdataset", expected_hits6)
           project_search_test(@project, @feature_keyword2, "trainingdataset", expected_hits6)
-        ensure
-          delete_featuregroup_checked(@project[:id], @featurestore_id, fg_id) if defined?(fg_id)
-          delete_trainingdataset_checked(@project[:id], @featurestore_id, td_id) if defined?(td_id)
+        end
+
+        it "create small featuregroup & training dataset - searchable (with features)" do
+          featurestore_search_test(@FEATURE_SIZE_1)
+        end
+
+        it "create large1 featuregroup & training dataset - searchable (with features)" do
+          featurestore_search_test(@FEATURE_SIZE_2)
+        end
+
+        it "create large2 featuregroup & training dataset - searchable (with features)" do
+          featurestore_search_test(@FEATURE_SIZE_3)
         end
       end
 
-      it "create small featuregroup & training dataset - searchable (with features)" do
-        featurestore_search_test(@FEATURE_SIZE_1)
-      end
+      context 'group' do
+        after :each do
+          cleanup(@project, @fgs, @tds)
+        end
 
-      it "create large1 featuregroup & training dataset - searchable (with features)" do
-        featurestore_search_test(@FEATURE_SIZE_2)
-      end
+        it "local search featuregroup, training datasets with name, features, xattr" do
+          #make sure epipe is free of work
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-      it "create large2 featuregroup & training dataset - searchable (with features)" do
-        featurestore_search_test(@FEATURE_SIZE_3)
-      end
-
-      it "local search featuregroup, training datasets with name, features, xattr" do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-        begin
-          fgs = featuregroups_setup(@project)
-          tds = trainingdataset_setup(@project)
+          @fgs = featuregroups_setup(@project)
+          @tds = trainingdataset_setup(@project)
           #search
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          expected_hits1 = [{:name => fgs[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
-                            {:name => fgs[3][:name], :highlight => "features", :parent_project => @project[:projectname]},
-                            {:name => fgs[5][:name], :highlight => "description", :parent_project => @project[:projectname]}]
+          expected_hits1 = [{:name => @fgs[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
+                            {:name => @fgs[3][:name], :highlight => "features", :parent_project => @project[:projectname]},
+                            {:name => @fgs[5][:name], :highlight => "description", :parent_project => @project[:projectname]}]
           project_search_test(@project, "dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => tds[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
-                            {:name => tds[2][:name], :highlight => "features", :parent_project => @project[:projectname]},
-                            {:name => tds[3][:name], :highlight => "description", :parent_project => @project[:projectname]}]
+          expected_hits2 = [{:name => @tds[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
+                            {:name => @tds[2][:name], :highlight => "features", :parent_project => @project[:projectname]},
+                            {:name => @tds[3][:name], :highlight => "description", :parent_project => @project[:projectname]}]
           project_search_test(@project, "dog", "trainingdataset", expected_hits2)
-          expected_hits3 = [{:name => fgs[3][:name], :highlight => "name", :parent_project => @project[:projectname]}]
+          expected_hits3 = [{:name => @fgs[3][:name], :highlight => "name", :parent_project => @project[:projectname]}]
           project_search_test(@project, "dog", "feature", expected_hits3)
-        ensure
-          fgs.each do |fg|
-            delete_featuregroup_checked(@project[:id], @featurestore_id, fg[:id]) if defined?(fg[:id])
-          end
-          tds.each do |td|
-            delete_trainingdataset_checked(@project[:id], @featurestore_id, td[:id]) if defined?(td[:id])
-          end
         end
-      end
 
-      it 'featurestore pagination' do
-        fgs_nr = 15
-        tds_nr = 15
-        fgs_id = Array.new(fgs_nr)
-        tds_id = Array.new(tds_nr)
+        it 'featurestore pagination' do
+          fgs_nr = 15
+          tds_nr = 15
+          @fgs = Array.new
+          @tds = Array.new
 
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
+          #make sure epipe is free of work
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        begin
           #create 15 featuregroups
           featurestore_id = get_featurestore_id(@project[:id])
           fgs_nr.times do |i|
-            fg_name = "fg_dog_#{i}"
-            fgs_id[i] = create_cached_featuregroup_checked(@project[:id], featurestore_id, fg_name)
+            @fgs[i] = {}
+            @fgs[i][:name] = "fg_dog_#{i}"
+            @fgs[i][:id] = create_cached_featuregroup_checked(@project[:id], featurestore_id, @fgs[i][:name])
           end
 
           #create 15 training datasets
           td_name = "#{@project[:projectname]}_Training_Datasets"
-          td_dataset = get_dataset(@project, td_name)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
           tds_nr.times do |i|
-            td_name = "td_dog_#{i}"
-            td_result = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, connector, td_name)
-            tds_id[i] = td_result[:id]
+            @tds[i] = {}
+            @tds[i][:name] = "td_dog_#{i}"
+            td_json, _ = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, connector, name: @tds[i][:name])
+            @tds[i][:id] = td_json[:id]
           end
 
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
@@ -293,16 +317,10 @@ describe "On #{ENV['OS']}" do
 
           expect(global_featurestore_search("TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
           expect(global_featurestore_search("TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to be >= 5
-        ensure
-          fgs_id.each do |id|
-            delete_featuregroup_checked(@project[:id], @featurestore_id, id) if defined?(id)
-          end
-          tds_id.each do |id|
-            delete_trainingdataset_checked(@project[:id], @featurestore_id, id) if defined?(id)
-          end
         end
       end
     end
+
     context "each with its own project" do
       it "local search featuregroup, training datasets with name, features, xattr with shared training datasets" do
         #make sure epipe is free of work

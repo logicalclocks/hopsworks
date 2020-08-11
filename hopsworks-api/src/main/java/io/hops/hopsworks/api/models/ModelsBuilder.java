@@ -19,10 +19,10 @@ import io.hops.hopsworks.api.models.dto.ModelDTO;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.provenance.core.Provenance;
-import io.hops.hopsworks.common.provenance.state.ProvFileStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
+import io.hops.hopsworks.common.provenance.state.ProvStateParser;
 import io.hops.hopsworks.common.provenance.state.ProvStateController;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateElastic;
-import io.hops.hopsworks.common.provenance.state.dto.ProvStateListDTO;
+import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.provenance.util.ProvHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ModelsException;
@@ -67,7 +67,7 @@ public class ModelsBuilder {
     return dto;
   }
 
-  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project project, ProvStateElastic fileProvenanceHit) {
+  public ModelDTO uri(ModelDTO dto, UriInfo uriInfo, Project project, ProvStateDTO fileProvenanceHit) {
     dto.setHref(uriInfo.getBaseUriBuilder()
         .path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
         .path(Integer.toString(project.getId()))
@@ -95,13 +95,13 @@ public class ModelsBuilder {
     validatePagination(resourceRequest);
 
     if(dto.isExpand()) {
-      ProvStateListDTO fileState = null;
+      ProvStateDTO fileState = null;
       try {
-        ProvFileStateParamBuilder provFilesParamBuilder = buildModelProvenanceParams(project, resourceRequest);
+        ProvStateParamBuilder provFilesParamBuilder = buildModelProvenanceParams(project, resourceRequest);
         fileState = provenanceController.provFileStateList(project, provFilesParamBuilder);
-        List<ProvStateElastic> models = fileState.getItems();
+        List<ProvStateDTO> models = fileState.getItems();
         dto.setCount(fileState.getCount());
-        for(ProvStateElastic fileProvStateHit: models) {
+        for(ProvStateDTO fileProvStateHit: models) {
           ModelDTO modelDTO = build(uriInfo, resourceRequest, project, fileProvStateHit);
           if(modelDTO != null) {
             dto.addItem(modelDTO);
@@ -122,7 +122,7 @@ public class ModelsBuilder {
 
   //Build specific
   public ModelDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                        ProvStateElastic fileProvenanceHit) throws ModelsException {
+                        ProvStateDTO fileProvenanceHit) throws ModelsException {
 
     ModelDTO modelDTO = new ModelDTO();
     uri(modelDTO, uriInfo, project, fileProvenanceHit);
@@ -150,26 +150,26 @@ public class ModelsBuilder {
     return modelDTO;
   }
 
-  private void buildFilter(ProvFileStateParamBuilder provFilesParamBuilder,
+  private void buildFilter(ProvStateParamBuilder provFilesParamBuilder,
                                             Set<? extends AbstractFacade.FilterBy> filters) {
     if(filters != null) {
       for (AbstractFacade.FilterBy filterBy : filters) {
         if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_EQ.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(MODEL_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
-          provFilesParamBuilder.withXAttrs(map);
+          provFilesParamBuilder.filterByXAttrs(map);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.NAME_LIKE.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(MODEL_SUMMARY_XATTR_NAME + ".name", filterBy.getValue());
-          provFilesParamBuilder.withXAttrsLike(map);
+          provFilesParamBuilder.filterLikeXAttrs(map);
         }  else if(filterBy.getParam().compareToIgnoreCase(Filters.VERSION.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(MODEL_SUMMARY_XATTR_NAME + ".version", filterBy.getValue());
-          provFilesParamBuilder.withXAttrs(map);
+          provFilesParamBuilder.filterByXAttrs(map);
         } else if(filterBy.getParam().compareToIgnoreCase(Filters.ID_EQ.name()) == 0) {
           HashMap<String, String> map = new HashMap<>();
           map.put(MODEL_SUMMARY_XATTR_NAME + ".id", filterBy.getValue());
-          provFilesParamBuilder.withXAttrs(map);
+          provFilesParamBuilder.filterByXAttrs(map);
         } else {
           throw new WebApplicationException("Filter by need to set a valid filter parameter, but found: " +
               filterBy.getParam(), Response.Status.NOT_FOUND);
@@ -178,17 +178,17 @@ public class ModelsBuilder {
     }
   }
 
-  private void buildSortOrder(ProvFileStateParamBuilder provFilesParamBuilder, Set<?
+  private void buildSortOrder(ProvStateParamBuilder provFilesParamBuilder, Set<?
       extends AbstractFacade.SortBy> sort) {
     if(sort != null) {
       for(AbstractFacade.SortBy sortBy: sort) {
         if(sortBy.getValue().compareToIgnoreCase(SortBy.NAME.name()) == 0) {
-          provFilesParamBuilder.sortBy(MODEL_SUMMARY_XATTR_NAME + ".name",
+          provFilesParamBuilder.sortByXAttr(MODEL_SUMMARY_XATTR_NAME + ".name",
               SortOrder.valueOf(sortBy.getParam().getValue()));
         } else {
           String sortKeyName = sortBy.getValue();
           String sortKeyOrder = sortBy.getParam().getValue();
-          provFilesParamBuilder.sortBy(MODEL_SUMMARY_XATTR_NAME + ".metrics." + sortKeyName,
+          provFilesParamBuilder.sortByXAttr(MODEL_SUMMARY_XATTR_NAME + ".metrics." + sortKeyName,
               SortOrder.valueOf(sortKeyOrder));
         }
       }
@@ -216,14 +216,14 @@ public class ModelsBuilder {
     ID_EQ
   }
 
-  private ProvFileStateParamBuilder buildModelProvenanceParams(Project project, ResourceRequest resourceRequest)
+  private ProvStateParamBuilder buildModelProvenanceParams(Project project, ResourceRequest resourceRequest)
       throws ProvenanceException {
 
-    ProvFileStateParamBuilder builder = new ProvFileStateParamBuilder()
-        .withProjectInodeId(project.getInode().getId())
-        .withMlType(Provenance.MLType.MODEL.name())
-        .withPagination(resourceRequest.getOffset(), resourceRequest.getLimit())
-        .filterByHasXAttr(MODEL_SUMMARY_XATTR_NAME);
+    ProvStateParamBuilder builder = new ProvStateParamBuilder()
+        .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
+        .filterByField(ProvStateParser.FieldsP.ML_TYPE, Provenance.MLType.MODEL.name())
+        .hasXAttr(MODEL_SUMMARY_XATTR_NAME)
+        .paginate(resourceRequest.getOffset(), resourceRequest.getLimit());
 
     buildSortOrder(builder, resourceRequest.getSort());
     buildFilter(builder, resourceRequest.getFilter());

@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.provenance.core.elastic;
 
+import com.lambdista.util.Try;
 import io.hops.hopsworks.common.elastic.ElasticClient;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -23,8 +24,6 @@ import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -148,6 +147,16 @@ public class ProvElasticController {
     return result;
   }
   
+  public boolean mngIndexExists(String indexName) throws ElasticException {
+    try {
+      return client.getClient().indices().exists(new GetIndexRequest(indexName), RequestOptions.DEFAULT);
+    } catch (IOException e) {
+      String msg = "error accessing elastic index: " + indexName;
+      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.SEVERE,
+        msg, msg, e);
+    }
+  }
+  
   public CreateIndexResponse mngIndexCreate(CreateIndexRequest request) throws ElasticException {
     if(request.index().length() > 255) {
       String msg = "elastic index name is too long:" + request.index();
@@ -192,24 +201,6 @@ public class ProvElasticController {
     }
   }
   
-  public <S, E extends Exception> S getDoc(GetRequest request, ElasticHitParser<S, E> resultParser)
-    throws E, ElasticException {
-    GetResponse response;
-    try {
-      LOG.log(Level.FINE, "request:{0}", request.toString());
-      response = client.getClient().get(request, RequestOptions.DEFAULT);
-    } catch (IOException e) {
-      String msg =  "error during get doc:" + request.id();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_INTERNAL_REQ_ERROR, Level.WARNING,
-        msg, e.getMessage(), e);
-    }
-    if(response.isExists()) {
-      return resultParser.apply(BasicElasticHit.instance(response));
-    } else {
-      return null;
-    }
-  }
-  
   public void indexDoc(IndexRequest request) throws ElasticException {
     IndexResponse response;
     
@@ -244,37 +235,33 @@ public class ProvElasticController {
     }
   }
   
-  public <S, A, E extends Exception> Pair<Long, S> search(SearchRequest request,
-    ElasticHitsHandler<?, S, A, E> resultParser) throws ElasticException, E {
+  public <R, S> Pair<Long, Try<S>> search(SearchRequest request, ElasticHits.Handler<R, S> handler)
+    throws ElasticException {
     SearchResponse response;
     LOG.log(Level.FINE, "request:{0}", request.toString());
     response = searchBasicInt(request);
-    resultParser.apply(response.getHits().getHits());
-    return Pair.with(response.getHits().getTotalHits().value, resultParser.get());
+    Try<S> collectedResults = handler.apply(response.getHits().getHits());
+    return Pair.with(response.getHits().getTotalHits().value, collectedResults);
   }
   
-  public <S, A, E extends Exception> Pair<Long, S> searchScrolling(SearchRequest request,
-    ElasticHitsHandler<?, S, A, E> resultParser) throws ElasticException, E {
+  public <R, S> Pair<Long, Try<S>> searchScrolling(SearchRequest request, ElasticHits.Handler<R, S> handler)
+    throws ElasticException {
     SearchResponse response;
     long leftover;
     LOG.log(Level.FINE, "request:{0}", request.toString());
     response = searchBasicInt(request);
     
-    if(response.getHits().getTotalHits().value > settings.getElasticMaxScrollPageSize()) {
-      String msg = "Elasticsearch query items size is too big: " + response.getHits().getTotalHits();
-      throw new ElasticException(RESTCodes.ElasticErrorCode.ELASTIC_QUERY_ERROR, Level.INFO, msg);
-    }
     long totalHits = response.getHits().getTotalHits().value;
     leftover = totalHits - response.getHits().getHits().length;
-    resultParser.apply(response.getHits().getHits());
+    Try<S> result = handler.apply(response.getHits().getHits());
     
-    while (leftover > 0) {
+    while (leftover > 0 & result.isSuccess()) {
       SearchScrollRequest next = nextScrollPage(response.getScrollId());
       response = searchScrollingInt(next);
       leftover = leftover - response.getHits().getHits().length;
-      resultParser.apply(response.getHits().getHits());
+      result = handler.apply(response.getHits().getHits());
     }
-    return Pair.with(totalHits, resultParser.get());
+    return Pair.with(totalHits, result);
   }
   
   public long searchCount(SearchRequest request) throws ElasticException {

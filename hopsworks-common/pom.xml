@@ -393,6 +393,12 @@
       <version>1.10.19</version>
       <scope>test</scope>
     </dependency>
+    <!-- enhance functional java - Try construct - used by provenance -->
+    <dependency>
+      <groupId>com.lambdista</groupId>
+      <artifactId>try</artifactId>
+      <version>0.3.1</version>
+    </dependency>
   </dependencies>
 
   <build>
