@@ -18,7 +18,9 @@ package io.hops.hopsworks.api.provenance;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.api.provenance.state.ProvStateBeanParam;
+import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
+import io.hops.hopsworks.api.provenance.ops.ProvOpsBeanParams;
+import io.hops.hopsworks.api.provenance.state.ProvStateBeanParams;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -26,10 +28,13 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
-import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
-import io.hops.hopsworks.common.provenance.state.ProvStateParser;
-import io.hops.hopsworks.common.provenance.state.ProvStateController;
+import io.hops.hopsworks.common.provenance.ops.ProvLinksBuilderIface;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsBuilderIface;
+import io.hops.hopsworks.common.provenance.state.ProvStateBuilder;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -42,6 +47,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
@@ -70,9 +76,13 @@ public class ProjectProvenanceResource {
   @EJB
   private JWTHelper jWTHelper;
   @EJB
-  private ProvStateController stateProvCtrl;
-  @EJB
   private HopsFSProvenanceController fsProvenanceCtrl;
+  @EJB
+  private ProvStateBuilder stateBuilder;
+  @Inject
+  private ProvOpsBuilderIface opsBuilder;
+  @Inject
+  private ProvLinksBuilderIface linksBuilder;
   
   private Project project;
   
@@ -117,41 +127,41 @@ public class ProjectProvenanceResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
-    @BeanParam ProvStateBeanParam params,
+    @BeanParam
+      ProvStateBeanParams params,
     @BeanParam Pagination pagination,
     @Context HttpServletRequest req) throws ProvenanceException {
-    ProvStateParamBuilder paramBuilder = new ProvStateParamBuilder()
-      .filterByField(ProvStateParser.FieldsP.PROJECT_I_ID, project.getInode().getId())
-      .filterByFields(params.getFileStateFilterBy())
-      .sortByFields(params.getFileStateSortBy())
-      .filterByXAttrs(params.getExactXAttrParams())
-      .filterLikeXAttrs(params.getLikeXAttrParams())
-      .hasXAttrs(params.getFilterByHasXAttrs())
-      .sortByXAttrs(params.getXattrSortBy())
-      .withExpansions(params.getExpansions())
-      .withAppExpansionFilter(params.getAppExpansionParams())
-      .paginate(pagination.getOffset(), pagination.getLimit());
-    logger.log(Level.FINE, "Local content path:{0} file state params:{1} ",
-      new Object[]{req.getRequestURL().toString(), params});
-    return getFileStates(project, paramBuilder, params.getReturnType());
-  }
-  
-  private Response getFileStates(Project project,
-    ProvStateParamBuilder params, FileStructReturnType returnType)
-    throws ProvenanceException {
-    ProvStateDTO result;
-    switch (returnType) {
-      case LIST: result = stateProvCtrl.provFileStateList(project, params); break;
-      case COUNT: result = stateProvCtrl.provFileStateCount(project, params); break;
-      default:
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
-          "return type: " + returnType + " is not managed");
-    }
+    ProvStateDTO result = stateBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
   
-  public enum FileStructReturnType {
-    LIST,
-    COUNT;
+  @GET
+  @Path("ops")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Operations Provenance query endpoint", response = ProvOpsDTO.class)
+  public Response getFileOps(
+    @BeanParam ProvOpsBeanParams params,
+    @BeanParam Pagination pagination,
+    @Context HttpServletRequest req) throws ProvenanceException, GenericException {
+    ProvOpsDTO result = opsBuilder.build(project, params, pagination);
+    return Response.ok().entity(result).build();
+  }
+  
+  @GET
+  @Path("links")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Links Provenance query endpoint - " +
+    "link feature groups/training datasets/experiments/models through their application ids",
+    response = ProvLinksDTO.class)
+  public Response getLinks(
+    @BeanParam ProvLinksBeanParams params,
+    @BeanParam Pagination pagination,
+    @Context HttpServletRequest req) throws ProvenanceException, GenericException {
+    ProvLinksDTO result = linksBuilder.build(project, params, pagination);
+    return Response.ok().entity(result).build();
   }
 }

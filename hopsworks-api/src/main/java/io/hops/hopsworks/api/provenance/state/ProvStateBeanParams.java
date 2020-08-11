@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.provenance.state;
 
-import io.hops.hopsworks.api.provenance.ProjectProvenanceResource;
+import io.hops.hopsworks.common.provenance.state.ProvStateParams;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.DefaultValue;
@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 import java.util.List;
 import java.util.Set;
 
-public class ProvStateBeanParam {
+public class ProvStateBeanParams implements ProvStateParams {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=FILE_NAME:file1",
     allowableValues = "filter_by=PROJECT_I_ID:id1, filter_by=FILE_I_ID:123, " +
@@ -79,9 +79,9 @@ public class ProvStateBeanParam {
   
   @QueryParam("return_type")
   @DefaultValue("LIST")
-  private ProjectProvenanceResource.FileStructReturnType returnType;
+  private ProvStateParams.ReturnType returnType;
   
-  public ProvStateBeanParam(
+  public ProvStateBeanParams(
     @QueryParam("filter_by") Set<String> fileStateParams,
     @QueryParam("sort_by") List<String> fileStateSortBy,
     @QueryParam("xattr_filter_by") Set<String> xAttrParams,
@@ -90,7 +90,7 @@ public class ProvStateBeanParam {
     @QueryParam("xattr_sort_by") List<String> xattrSortBy,
     @QueryParam("expand") Set<String> expansions,
     @QueryParam("exp_filter_by") Set<String> appStateParams,
-    @QueryParam("return_type") @DefaultValue("LIST") ProjectProvenanceResource.FileStructReturnType returnType) {
+    @QueryParam("return_type") @DefaultValue("LIST") ProvStateParams.ReturnType returnType) {
     this.fileStateParams = fileStateParams;
     this.fileStateSortBy = fileStateSortBy;
     this.exactXAttrParams = xAttrParams;
@@ -102,6 +102,7 @@ public class ProvStateBeanParam {
     this.returnType = returnType;
   }
   
+  @Override
   public Set<String> getFileStateFilterBy() {
     return fileStateParams;
   }
@@ -110,6 +111,7 @@ public class ProvStateBeanParam {
     this.fileStateParams = fileStateParams;
   }
   
+  @Override
   public List<String> getFileStateSortBy() {
     return fileStateSortBy;
   }
@@ -118,6 +120,7 @@ public class ProvStateBeanParam {
     this.fileStateSortBy = fileStateSortBy;
   }
   
+  @Override
   public Set<String> getExactXAttrParams() {
     return exactXAttrParams;
   }
@@ -126,6 +129,7 @@ public class ProvStateBeanParam {
     this.exactXAttrParams = exactXAttrParams;
   }
   
+  @Override
   public Set<String> getLikeXAttrParams() {
     return likeXAttrParams;
   }
@@ -134,6 +138,7 @@ public class ProvStateBeanParam {
     this.likeXAttrParams = likeXAttrParams;
   }
   
+  @Override
   public Set<String> getFilterByHasXAttrs() {
     return filterByHasXAttrs;
   }
@@ -142,6 +147,7 @@ public class ProvStateBeanParam {
     this.filterByHasXAttrs = filterByHasXAttrs;
   }
   
+  @Override
   public List<String> getXattrSortBy() {
     return xattrSortBy;
   }
@@ -150,6 +156,7 @@ public class ProvStateBeanParam {
     this.xattrSortBy = xattrSortBy;
   }
   
+  @Override
   public Set<String> getExpansions() {
     return expansions;
   }
@@ -158,6 +165,7 @@ public class ProvStateBeanParam {
     this.expansions = expansions;
   }
   
+  @Override
   public Set<String> getAppExpansionParams() {
     return appStateParams;
   }
@@ -166,11 +174,12 @@ public class ProvStateBeanParam {
     this.appStateParams = appStateParams;
   }
   
-  public ProjectProvenanceResource.FileStructReturnType getReturnType() {
+  @Override
+  public ProvStateParams.ReturnType getReturnType() {
     return returnType;
   }
   
-  public void setReturnType(ProjectProvenanceResource.FileStructReturnType returnType) {
+  public void setReturnType(ProvStateParams.ReturnType returnType) {
     this.returnType = returnType;
   }
   

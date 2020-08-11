@@ -62,6 +62,7 @@
     <module>featurestore-ee</module>
     <module>hopsworks-audit</module>
     <module>hopsworks-UT</module>
+    <module>provenance-ee</module>
   </modules>
 
   <profiles>

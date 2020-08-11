@@ -77,6 +77,27 @@ describe "On #{ENV['OS']}" do
       expect(td1["td_features"][0]["fg_features"].length).to eq(5)
     end
 
+    def check_prov_links(project, app_id, in1_id, in2_id, out_id)
+      #search for links by app_id
+      result = prov_links_get(project, app_id: app_id)
+      pp "result #{result}" if defined?(@debugOpt) && @debugOpt
+      expect(result["items"].length).to eq(1)
+      prov_verify_link(result, app_id, in1_id, out_id)
+      prov_verify_link(result, app_id, in2_id, out_id)
+
+      #search for links by in artifact
+      result = prov_links_get(project, in_artifact: in1_id)
+      pp "result #{result}" if defined?(@debugOpt) && @debugOpt
+      expect(result["items"].length).to eq(1)
+      prov_verify_link(result, app_id, in1_id, out_id)
+
+      #search for links by out artifact
+      result = prov_links_get(project, out_artifact: out_id)
+      pp "result #{result}" if defined?(@debugOpt) && @debugOpt
+      expect(result["items"].length).to eq(2)
+      prov_verify_link(result, app_id, in1_id, out_id)
+    end
+
     it 'featurestore - training dataset with features' do
       with_valid_session
       wait_result = epipe_wait_on_provenance(repeat: 5)
@@ -110,6 +131,7 @@ describe "On #{ENV['OS']}" do
       expect(wait_result["success"]).to be(true), wait_result["msg"]
 
       check_prov_states(project)
+      # check_prov_links(project, app_id, "#{fg1_name}_1", "#{fg2_name}_1", "#{td_name}_1")
     end
   end
 end
