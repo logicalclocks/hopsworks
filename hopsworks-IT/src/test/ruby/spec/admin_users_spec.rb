@@ -71,7 +71,7 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "DEACTIVATED_ACCOUNT"}
         admin_update_user(id, data)
-        expect_status(204)
+        expect_status(200)
         admin_get_user_by_id(id)
         expect_status(200)
         expect_json(status: 3)
@@ -81,7 +81,7 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {maxNumProjects: 77}
         admin_update_user(id, data)
-        expect_status(204)
+        expect_status(200)
         admin_get_user_by_id(id)
         expect_status(200)
         expect_json(maxNumProjects: 77)
@@ -91,9 +91,9 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(204)
+	      expect_status(200)
 	      admin_accept_user(id)
-	      expect_status(204)
+	      expect_status(200)
 	      admin_get_user_by_id(id)
 	      expect_status(200)
 	      expect_json(status: 2)
@@ -103,7 +103,7 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(204)
+	      expect_status(200)
 	      admin_accept_user(id)
 	      expect_status(400)
 	      expect_json(errorCode: 160046)
@@ -134,16 +134,16 @@ describe "On #{ENV['OS']}" do
         id = user[:id]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(204)
+	      expect_status(200)
         admin_pend_user(id)
-        expect_status(204)
+        expect_status(200)
       end
 
       it "fails to pend user with status other than new account" do
         id = user[:id]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
-	      expect_status(204)
+	      expect_status(200)
         admin_pend_user(id)
         expect_status(400)
         expect_json(errorCode: 160046)
