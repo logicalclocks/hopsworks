@@ -19,9 +19,9 @@
  * Controller for experiments service.
  */
 angular.module('hopsWorksApp')
-    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'MembersService', 'UserService', 'ModalService', 'ProjectService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', '$interval',
+    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'MembersService', 'UserService', 'ModalService', 'ProjectService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', 'FeaturestoreService', 'ProvenanceService', '$interval',
         '$routeParams', '$route', '$sce', 'JobService', '$location',
-        function($scope, $timeout, growl, $window, MembersService, UserService, ModalService, ProjectService, ExperimentService, TensorBoardService, DataSetService, StorageService, $interval,
+        function($scope, $timeout, growl, $window, MembersService, UserService, ModalService, ProjectService, ExperimentService, TensorBoardService, DataSetService, StorageService, FeaturestoreService, ProvenanceService, $interval,
             $routeParams, $route, $sce, JobService, $location) {
 
             var self = this;
@@ -399,6 +399,7 @@ angular.module('hopsWorksApp')
                                 'row': tmp
                             });
                         }
+                        self.getSourceTDLinks(experiment);
                     }
                 }
             };
@@ -517,6 +518,78 @@ angular.module('hopsWorksApp')
                 }
 
                 return "?expand=results(offset=" + offset + ";limit=" + self.pageSize + sortBy
+            };
+
+            self.tdLinkErrorPrint = function(error) {
+                if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                } else {
+                    growl.error('', {title: error.data.errorMsg, ttl: 8000});
+                }
+                self.tdLink = {};
+            };
+
+            self.hasTDSource = function() {
+                return self.tdLink !== undefined && self.tdLink.name !== undefined;
+            };
+
+            self.goToTrainingDataset = function(link) {
+                $location.search('');
+                $location.path('/project/' + link.projId + '/featurestore');
+                $location.search('featurestore', link.fsId);
+                $location.search('trainingDataset', link.name);
+                $location.search('version',link.version);
+            };
+
+            self.getLinkInfo = function(link) {
+                /** get project id from project name */
+                ProjectService.getProjectInfo({projectName: link.projName}).$promise.then(
+                    function (success1) {
+                        link.projId = success1.projectId;
+                        /** get featurestore of fg */
+                        FeaturestoreService.getFeaturestores(link.projId).then(
+                            function (success2) {
+                                /** get the project's main featurestore */
+                                const fs = success2.data.filter(function(fs) {
+                                    return fs.projectName === link.projName;
+                                });
+                                if (fs.length === 1) {
+                                    link.fsId = fs[0].featurestoreId;
+                                } else {
+                                    console.log('featurestore not in project');
+                                    growl.error('featurestore not in project', {title: 'provenance error', ttl: 8000});
+                                }
+                            }, self.tdLinkErrorPrint);
+                    }, self.tdLinkErrorPrint);
+            };
+
+            self.getInArtifacts = function(name, version, inType, outType, linkInfoFunc, link) {
+                ProvenanceService.getAppLinks(self.projectId, {outArtifactName: name, outArtifactVersion: version, inArtifactType: inType, outArtifactType: outType}).then(
+                    function(success) {
+                        if(success.data.items !== undefined && success.data.items.length === 1) {
+                            if(success.data.items[0].in.entry.length === 1) {
+                                var versionSplitIndex = success.data.items[0].in.entry[0].value.mlId.lastIndexOf('_');
+                                link.name = success.data.items[0].in.entry[0].value.mlId.substring(0, versionSplitIndex);
+                                link.version = parseInt(success.data.items[0].in.entry[0].value.mlId.substring(versionSplitIndex+1));
+                                link.projName = success.data.items[0].in.entry[0].value.projectName;
+                                link.appId = success.data.items[0].in.entry[0].value.appId;
+                                linkInfoFunc(link);
+                            }
+                        }
+                    }, self.tdLinkErrorPrint);
+            };
+
+            self.getSourceTDLinks = function (experiment) {
+                if(self.tdLink !== undefined && self.tdLink.experiment.id === experiment.id) {
+                    return;
+                }
+                self.tdLink = {};
+                self.tdLink.experiment = experiment;
+                var splitIndex = experiment.id.lastIndexOf('_')
+                var name = experiment.id.substr(0, splitIndex)
+                var version = experiment.id.substr(splitIndex + 1)
+                /** td <- app <- experiment */
+                self.getInArtifacts(name, version, 'TRAINING_DATASET', 'EXPERIMENT', self.getLinkInfo, self.tdLink);
             };
         }
     ]);

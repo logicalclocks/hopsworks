@@ -387,7 +387,7 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             style="overflow-x: scroll">
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='The Feature Group Schema'></i>
@@ -441,5 +441,38 @@
             <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.features.length == 0">
                 This feature group does not have a defined schema</h3>
         </div>
+
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Provenance Information for the Training Dataset'></i>
+                <span style="margin-left: 20px">
+                    Provenance
+                </span>
+            </div>
+
+            <div>
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table" style="width: 20%">
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Training Datasets generated using this Feature Group. Format: <project_name> : <application_id> : <training dataset name> : <training dataset version>'></i>
+                        <span style="margin-left: 20px">
+                            Generated Training Datasets
+                        </span>
+                    </th>
+                    </thead>
+                    <tbody>
+                    <tr class="fs-table"data-ng-repeat="td in featuregroupViewInfoCtrl.selectedFeaturegroup.tdLinks">
+                        <td class="fs-table"><a
+                                ng-click="featuregroupViewInfoCtrl.goToTD(td.fsId, td.name, td.version)">{{td.projName}} : {{td.appId}} : {{td.name}} : {{td.version}}</a></td>
+                    </tr>
+                    <tr class="fs-table" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.tdLinks.length == 0">
+                        <td class="fs-table">No Training Datasets were generated from this Feature Group.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
+</div>

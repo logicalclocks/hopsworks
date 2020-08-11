@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('featuregroupViewInfoCtrl', ['$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', 'StorageService', 'ModalService', '$location', 'growl',
-        function ($scope, FeaturestoreService, ProjectService, JobService, StorageService, ModalService, $location, growl) {
+        'JobService', 'StorageService', 'ModalService', 'ProvenanceService', '$location', 'growl',
+        function ($scope, FeaturestoreService, ProjectService, JobService, StorageService, ModalService, ProvenanceService, $location, growl) {
 
             /**
              * Initialize controller state
@@ -257,6 +257,7 @@ angular.module('hopsWorksApp')
                         self.fetchOnlineDetails();
                     }
                     self.fetchTags();
+                    self.getGeneratedTDLinks(self.selectedFeaturegroup.name, self.selectedFeaturegroup.version);
                 }
 
             };
@@ -366,6 +367,69 @@ angular.module('hopsWorksApp')
                     datasetLocation = locationSplits.slice(3).join("/");
                 }
                 $location.path('project/' + self.projectId + '/datasets/' + datasetLocation);
+            };
+
+            self.goToTD = function(fsId, name, version) {
+                $location.search('');
+                $location.path('/project/' + self.projectId + '/featurestore');
+                $location.search('featurestore', fsId);
+                $location.search('trainingDataset', name);
+                $location.search('version', version);
+            };
+
+            self.errorPrint = function(error) {
+                if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                } else {
+                    growl.error('', {title: error.data.errorMsg, ttl: 8000});
+                }
+            };
+
+            self.getLinkInfo = function(link) {
+                /** get project id from project name */
+                ProjectService.getProjectInfo({projectName: link.projName}).$promise.then(
+                    function (success1) {
+                        link.projId = success1.projectId;
+                        /** get featurestore of fg */
+                        FeaturestoreService.getFeaturestores(link.projId).then(
+                            function (success2) {
+                                /** get the project's main featurestore */
+                                const fs = success2.data.filter(function(fs) {
+                                    return fs.projectName === link.projName;
+                                });
+                                if (fs.length === 1) {
+                                    link.fsId = fs[0].featurestoreId;
+                                } else {
+                                    console.log('featurestore not in project');
+                                    growl.error('featurestore not in project', {title: 'provenance error', ttl: 8000});
+                                }
+                            }, self.errorPrint);
+                    }, self.errorPrint);
+            };
+
+            self.getOutArtifacts = function(name, version, inType, outType, linkInfoFunc, links) {
+                ProvenanceService.getAppLinks(self.projectId, {inArtifactName: name, inArtifactVersion: version, inArtifactType: inType, outArtifactType: outType}).then(
+                    function(success) {
+                        if(success.data.items !== undefined) {
+                            for (var i = 0; i < success.data.items.length; i++) {
+                                for (var j = 0; j < success.data.items[i].out.entry.length; j++) {
+                                    var versionSplitIndex = success.data.items[i].out.entry[j].value.mlId.lastIndexOf('_');
+                                    var link = {};
+                                    links.push(link);
+                                    link.name = success.data.items[i].out.entry[j].value.mlId.substring(0, versionSplitIndex);
+                                    link.version = parseInt(success.data.items[i].out.entry[j].value.mlId.substring(versionSplitIndex + 1));
+                                    link.projName = success.data.items[i].out.entry[j].value.projectName;
+                                    link.appId = success.data.items[i].out.entry[j].value.appId;
+                                    linkInfoFunc(link);
+                                }
+                            }
+                        }
+                    }, self.errorPrint);
+            };
+            self.getGeneratedTDLinks = function (name, version) {
+                self.selectedFeaturegroup.tdLinks = [];
+                /** fg -> app -> td */
+                self.getOutArtifacts(name, version, 'FEATURE', 'TRAINING_DATASET', self.getLinkInfo, self.selectedFeaturegroup.tdLinks);
             };
         }]);
 

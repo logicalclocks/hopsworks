@@ -217,6 +217,14 @@
                                         <td>Model</td>
                                         <td><a ng-click="experimentCtrl.goToModel(experiment.model)">{{experimentCtrl.buildModelLink(experiment.model)}}</a></td>
                                     </tr>
+                                    <tr ng-if="experimentCtrl.hasTDSource()">
+                                        <td>
+                                            <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                               uib-tooltip='Training Dataset used in this Experiment. Format: <project_name> : <training dataset name> : <training dataset version>'></i>
+                                            Source Training Dataset
+                                        </td>
+                                        <td><a ng-click="experimentCtrl.goToTrainingDataset(experimentCtrl.tdLink)">{{experimentCtrl.tdLink.projName}} : {{experimentCtrl.tdLink.name}} : {{experimentCtrl.tdLink.version}}</a></td>
+                                    </tr>
                                     </tbody>
                                 </table>
 

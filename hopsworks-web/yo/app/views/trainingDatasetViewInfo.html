@@ -352,5 +352,79 @@
                 This training dataset does not have a defined schema</h3>
         </div>
 
+        <div uib-accordion-group class="panel-default">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Provenance Information for the Training Dataset'></i>
+                <span style="margin-left: 20px">
+                    Provenance
+                </span>
+            </div>
+
+            <div>
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table" style="width: 20%">
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Feature Groups used to generate this Training Dataset. Format: <project_name> : <application_id> : <feature group name> : <feature group version>'></i>
+                        <span style="margin-left: 20px">
+                            Source Feature Groups
+                        </span>
+                    </th>
+                    </thead>
+                    <tbody>
+                    <tr class="fs-table"data-ng-repeat="fg in trainingDatasetViewInfoCtrl.selectedTrainingDataset.fgLinks">
+                        <td class="fs-table"><a ng-click="trainingDatasetViewInfoCtrl.goToFG(fg.fsId, fg.name, fg.version)">{{fg.projName}} : {{fg.appId}} : {{fg.name}} : {{fg.version}}</a></td>
+                    </tr>
+                    <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.fgLinks.length == 0">
+                        <td class="fs-table">No registered Feature Groups were used to generate this Training Dataset.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table" style="width: 20%">
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Models generated from this Training Dataset. Format: <project_name> : <application_id> : <model name> : <model version>'></i>
+                        <span style="margin-left: 20px">
+                            Generated Models
+                        </span>
+                    </th>
+                    </thead>
+                    <tbody>
+                    <tr class="fs-table" data-ng-repeat="model in trainingDatasetViewInfoCtrl.selectedTrainingDataset.modelLinks">
+                        <td class="fs-table"><a
+                                ng-click="trainingDatasetViewInfoCtrl.goToModel(model)">{{model.projName}} : {{model.appId}} : {{model.name}} : {{model.version}}</a></td>
+                    </tr>
+                    <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.modelLinks.length == 0">
+                        <td class="fs-table">No Models generated from this Training Dataset.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                    <thead style="border:none;" class="fs-table">
+                    <th class="fs-table" style="width: 20%">
+                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                           uib-tooltip='Experiments using this Training Dataset. Format: <project_name> : <experiment application> : <experiment version>'></i>
+                        <span style="margin-left: 20px">
+                            Experiments using the Training Dataset
+                        </span>
+                    </th>
+                    </thead>
+                    <tbody>
+                    <tr class="fs-table" data-ng-repeat="experiment in trainingDatasetViewInfoCtrl.selectedTrainingDataset.experimentLinks">
+                        <td class="fs-table"><a ng-click="trainingDatasetViewInfoCtrl.goToExperiment(experiment)">{{experiment.projName}} : {{experiment.name}} : {{experiment.version}}</a></td>
+                    </tr>
+                    <tr class="fs-table" ng-if="trainingDatasetViewInfoCtrl.selectedTrainingDataset.experimentLinks.length == 0">
+                        <td class="fs-table">No Experiments using this Training Dataset.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>

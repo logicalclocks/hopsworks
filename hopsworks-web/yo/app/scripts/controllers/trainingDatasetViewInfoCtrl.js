@@ -19,8 +19,8 @@
  */
 angular.module('hopsWorksApp')
     .controller('trainingDatasetViewInfoCtrl', ['$scope', 'FeaturestoreService', 'ProjectService',
-        'JobService', 'ModalService', 'StorageService', '$location', 'growl',
-        function ($scope, FeaturestoreService, ProjectService, JobService, ModalService, StorageService, $location, growl) {
+        'JobService', 'ModalService', 'StorageService', 'ProvenanceService', '$location', 'growl',
+        function ($scope, FeaturestoreService, ProjectService, JobService, ModalService, StorageService, ProvenanceService, $location, growl) {
 
             /**
              * Initialize controller state
@@ -202,8 +202,11 @@ angular.module('hopsWorksApp')
 
                 self.pythonCode = self.getPythonCode();
                 self.scalaCode = self.getScalaCode();
-                self.fetchSize()
+                self.fetchSize();
                 self.fetchTags();
+                self.getGeneratedModelLinks(self.selectedTrainingDataset.name, self.selectedTrainingDataset.version);
+                self.getSourceFGLinks(self.selectedTrainingDataset.name, self.selectedTrainingDataset.version);
+                self.getExperimentsLinks(self.selectedTrainingDataset.name, self.selectedTrainingDataset.version);
             };
 
             $scope.$on('trainingDatasetSelected', function (event, args) {
@@ -327,5 +330,122 @@ angular.module('hopsWorksApp')
                 self.goToUrl("newtrainingdataset")
             };
 
+            self.goToModel = function(model) {
+                if (model) {
+                    const m = model.name + '_' + model.version;
+                    StorageService.store(self.projectId + "_model", m);
+                    $location.path('project/' + model.projId + '/models');
+                }
+            };
+
+            self.goToFG = function(fsId, name, version) {
+                $location.search('');
+                $location.path('/project/' + self.projectId + '/featurestore');
+                $location.search('featurestore', fsId);
+                $location.search('featureGroup', name);
+                $location.search('version', version);
+            };
+
+            self.goToExperiment = function (link) {
+                const experimentId = link.name + "_" + link.version;
+                StorageService.store(self.projectId + "_experiment", experimentId);
+                $location.path('project/' + self.projectId + '/experiments');
+            };
+
+            self.errorPrint = function(error) {
+                if (typeof error.data.usrMsg !== 'undefined') {
+                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                } else {
+                    growl.error('', {title: error.data.errorMsg, ttl: 8000});
+                }
+            };
+
+            self.getProjectId = function(link) {
+                /** get project id from project name */
+                ProjectService.getProjectInfo({projectName: link.projName}).$promise.then(
+                    function (success2) {
+                        link.projId = success2.projectId;
+                    }, self.errorPrint);
+            };
+
+            self.getLinkInfo = function(link) {
+                /** get project id from project name */
+                ProjectService.getProjectInfo({projectName: link.projName}).$promise.then(
+                    function (success2) {
+                        link.projId = success2.projectId;
+                        /** get featurestore of fg */
+                        FeaturestoreService.getFeaturestores(link.projId).then(
+                            function (success3) {
+                                /** get the project's main featurestore */
+                                const fs = success3.data.filter(function(fs) {
+                                    return fs.projectName === link.projName;
+                                });
+                                if (fs.length === 1) {
+                                    link.fsId = fs[0].featurestoreId;
+                                } else {
+                                    console.log('featurestore not in project');
+                                    growl.error('featurestore not in project', {title: 'provenance error', ttl: 8000});
+                                }
+                            }, self.errorPrint);
+                    }, self.errorPrint);
+            };
+
+            self.getInArtifacts = function(name, version, inType, outType, linkInfoFunc, links) {
+                ProvenanceService.getAppLinks(self.projectId, {outArtifactName: name, outArtifactVersion: version, inArtifactType: inType, outArtifactType: outType}).then(
+                    function(success) {
+                        if(success.data.items !== undefined) {
+                            for (var i = 0; i < success.data.items.length; i++) {
+                                for (var j = 0; j < success.data.items[i].in.entry.length; j++) {
+                                    var versionSplitIndex = success.data.items[i].in.entry[j].value.mlId.lastIndexOf('_');
+                                    var link = {};
+                                    links.push(link);
+                                    link.name = success.data.items[i].in.entry[j].value.mlId.substring(0, versionSplitIndex);
+                                    link.version = parseInt(success.data.items[i].in.entry[j].value.mlId.substring(versionSplitIndex + 1));
+                                    link.projName = success.data.items[i].in.entry[j].value.projectName;
+                                    link.appId = success.data.items[i].in.entry[j].value.appId;
+                                    linkInfoFunc(link);
+                                }
+                            }
+                        }
+                    }, self.errorPrint);
+            };
+
+            self.getOutArtifacts = function(name, version, inType, outType, linkInfoFunc, links) {
+                ProvenanceService.getAppLinks(self.projectId, {inArtifactName: name, inArtifactVersion: version, inArtifactType: inType, outArtifactType: outType}).then(
+                    function(success) {
+                        if(success.data.items !== undefined) {
+                            for (var i = 0; i < success.data.items.length; i++) {
+                                for (var j = 0; j < success.data.items[i].out.entry.length; j++) {
+                                    var versionSplitIndex = success.data.items[i].out.entry[j].value.mlId.lastIndexOf('_');
+                                    var link = {};
+                                    links.push(link);
+                                    link.name = success.data.items[i].out.entry[j].value.mlId.substring(0, versionSplitIndex);
+                                    link.version = parseInt(success.data.items[i].out.entry[j].value.mlId.substring(versionSplitIndex + 1));
+                                    link.projName = success.data.items[i].out.entry[j].value.projectName;
+                                    link.appId = success.data.items[i].out.entry[j].value.appId;
+                                    linkInfoFunc(link);
+                                }
+                            }
+                        }
+                    }, self.errorPrint);
+            };
+
+            self.getGeneratedModelLinks = function (name, version) {
+                self.selectedTrainingDataset.modelLinks = [];
+                /** td -> app -> model */
+                self.getOutArtifacts(name, version, 'TRAINING_DATASET', 'MODEL', self.getProjectId, self.selectedTrainingDataset.modelLinks);
+            };
+
+            self.getExperimentsLinks = function (name, version) {
+                self.selectedTrainingDataset.experimentLinks = [];
+                /** td -> app -> experiment */
+                self.getOutArtifacts(name, version, 'TRAINING_DATASET', 'EXPERIMENT', self.getProjectId, self.selectedTrainingDataset.experimentLinks);
+            };
+
+            self.getSourceFGLinks = function (name, version) {
+                self.selectedTrainingDataset.fgLinks = [];
+                /** fg <- app <- td */
+                self.getInArtifacts(name, version, 'FEATURE', 'TRAINING_DATASET', self.getLinkInfo, self.selectedTrainingDataset.fgLinks);
+            };
         }]);
 
