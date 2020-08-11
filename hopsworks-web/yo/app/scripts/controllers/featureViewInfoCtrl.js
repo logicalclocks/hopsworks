@@ -76,8 +76,8 @@ angular.module('hopsWorksApp')
 
                 self.selectedFeature = feature;
 
-                self.pythonCode = self.getPythonCode(self.selectedFeature)
-                self.scalaCode = self.getScalaCode(self.selectedFeature)
+                self.pythonCode = self.getPythonCode(self.selectedFeature);
+                self.scalaCode = self.getScalaCode(self.selectedFeature);
 
                 //build featuregroups object
                 var featuregroups = {};
@@ -89,9 +89,9 @@ angular.module('hopsWorksApp')
                     self.featurestoreCtrl = featurestoreCtrl;
                     featuregroupViewInfoCtrl.view(featurestoreCtrl, featuregroups, false);
                 }
-            }
+            };
 
-            self.viewSelected = function (projectId, projectName, featurestore, feature, settings) {
+            self.viewSelected = function(featurestoreCtrl, feature) {
                 self.toggle(feature);
 
                 self.selectedFeature = feature;
@@ -105,16 +105,19 @@ angular.module('hopsWorksApp')
                 featuregroups.activeVersion = feature.featuregroup.version;
                 featuregroups.versionToGroups[feature.featuregroup.version] = feature.featuregroup;
 
-                $scope.$broadcast('featuregroupSelected', { projectId: projectId,
-                    projectName: projectName,
-                    featurestore: featurestore,
-                    featuregroups: featuregroups,
-                    settings: settings,
-                    toggle: false });
+                if (typeof(featurestoreCtrl) !== 'undefined') {
+                    self.featurestoreCtrl = featurestoreCtrl;
+                    $scope.$broadcast('featuregroupSelected', {
+                        featurestoreCtrl: featurestoreCtrl,
+                        featuregroups: featurestoreCtrl.selectedFeaturegroup,
+                        toggle: true
+                    });
+                }
             };
 
             $scope.$on('featureSelected', function (event, args) {
-                self.viewSelected(args.projectId, args.projectName, args.featurestore, args.feature, args.settings);
+                self.viewSelected(args.featurestoreCtrl, args.feature);
+
             });
         }]);
 

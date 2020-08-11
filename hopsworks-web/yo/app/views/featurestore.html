@@ -293,7 +293,7 @@
                         <tr
                                 dir-paginate="td in featurestoreCtrl.trainingDatasetsDictList| orderBy :featurestoreCtrl.trainingDatasetSortFn:featurestoreCtrl.trainingDatasetsReverse | dateRangeFilterFeaturegroups : featurestoreCtrl.trainingDatasetsFromDate : featurestoreCtrl.trainingDatasetsToDate | filter:featurestoreCtrl.tdFilter:false | itemsPerPage:featurestoreCtrl.trainingDatasetsPageSize"
                                 pagination-id="trainingdatasetstable"
-                                ng-click="trainingDatasetViewInfoCtrl.view(featurestoreCtrl, td, td.activeVersion, true);"
+                                ng-click="trainingDatasetViewInfoCtrl.view(featurestoreCtrl, td, true);"
                                 ng-class="{'active':(td.versionToGroups[td.activeVersion].id===trainingDatasetViewInfoCtrl.selectedTrainingDataset.id) && trainingDatasetViewInfoCtrl.tgState}"
                                 class="fs-table">
                             <td class="fs-table">{{td.name}}</td>
@@ -318,7 +318,7 @@
                                 <select class="form-control" 
                                         ng-model="td.activeVersion"
                                         ng-click="$event.stopPropagation();"
-                                        ng-change="trainingDatasetViewInfoCtrl.view(featurestoreCtrl, td, td.activeVersion, false); $event.stopPropagation();"
+                                        ng-change="trainingDatasetViewInfoCtrl.view(featurestoreCtrl, td, false); $event.stopPropagation();"
                                         style="z-index: {{100-$index}}">
                                     <option ng-repeat="version in td.versions">{{version}}</option>
                                 </select>
