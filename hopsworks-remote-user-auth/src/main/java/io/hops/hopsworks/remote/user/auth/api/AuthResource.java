@@ -4,6 +4,7 @@
 package io.hops.hopsworks.remote.user.auth.api;
 
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.project.AccessCredentialsDTO;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -13,7 +14,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.restutils.RESTException;
-import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.user.AuthController;
@@ -197,7 +197,7 @@ public class AuthResource {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
     remoteUserAuthController.checkProjectMembership(user, id);
-    CertsDTO certsDTO = projectController.downloadCert(id, user);
+    AccessCredentialsDTO certsDTO = projectController.credentials(id, user);
     return Response.ok().entity(certsDTO).build();
   }
 

@@ -77,7 +77,6 @@ import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.project.AccessCredentialsDTO;
-import io.hops.hopsworks.common.project.CertsDTO;
 import io.hops.hopsworks.common.project.MoreInfoDTO;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
@@ -140,7 +139,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -149,7 +147,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 @Logged
@@ -704,14 +701,14 @@ public class ProjectService {
   @POST
   @Path("{projectId}/downloadCert")
   @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   public Response downloadCerts(@PathParam("projectId") Integer id, @Secret @FormParam("password") String password,
     @Context SecurityContext sc) throws ProjectException, HopsSecurityException, DatasetException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user.getEmail().equals(Settings.AGENT_EMAIL) || !authController.validatePassword(user, password)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERT_ACCESS_DENIED, Level.FINE);
     }
-    CertsDTO certsDTO = projectController.downloadCert(id, user);
+    AccessCredentialsDTO certsDTO = projectController.credentials(id, user);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(certsDTO).build();
   }
 
@@ -742,26 +739,16 @@ public class ProjectService {
     return response.build();
   }
   
-  /**
-
-   * @param stream
-   * @return
-   */
   private StreamingOutput buildOutputStream(final InputStream stream) {
-    StreamingOutput output = new StreamingOutput() {
-      @Override
-      public void write(OutputStream out) throws IOException, WebApplicationException {
-        int length;
-        byte[] buffer = new byte[1024];
-        while ((length = stream.read(buffer)) != -1) {
-          out.write(buffer, 0, length);
-        }
-        out.flush();
-        stream.close();
+    return out -> {
+      int length;
+      byte[] buffer = new byte[1024];
+      while ((length = stream.read(buffer)) != -1) {
+        out.write(buffer, 0, length);
       }
+      out.flush();
+      stream.close();
     };
-
-    return output;
   }
   
   @Logged(logLevel = LogLevel.OFF)

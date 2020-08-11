@@ -90,7 +90,6 @@ import io.hops.hopsworks.common.serving.ServingController;
 import io.hops.hopsworks.common.serving.inference.logger.KafkaInferenceLogger;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.DateUtils;
-import io.hops.hopsworks.common.util.EmailBean;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
@@ -162,7 +161,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.mail.Message;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 import java.io.File;
@@ -265,8 +263,6 @@ public class ProjectController {
   private Instance<ProjectHandler> projectHandlers;
   @EJB
   private ProjectUtils projectUtils;
-  @EJB
-  private EmailBean emailBean;
   @EJB
   private JupyterController jupyterController;
   @EJB
@@ -2582,27 +2578,6 @@ public class ProjectController {
     String trustStore = Base64.encodeBase64String(material.getTrustStore().array());
     String certPwd = new String(material.getPassword());
     return new AccessCredentialsDTO("jks", keyStore, trustStore, certPwd);
-  }
-
-  public CertsDTO downloadCert(Integer projectId, Users user) throws ProjectException, DatasetException {
-    Project project = findProjectById(projectId);
-    try {
-      AccessCredentialsDTO accessCredentials = getAccessCredentials(project, user);
-      //Pop-up a message from admin
-      messageController.send(user, userFacade.findByEmail(settings.getAdminEmail()), "Certificate Info", "",
-          "An email was sent with the password for your project's certificates. If an email does not arrive shortly, "
-          + "please check spam first and then contact the administrator.", "");
-      emailBean.sendEmail(user.getEmail(), Message.RecipientType.TO, "Hopsworks certificate information",
-          "The password for keystore and truststore is:" + accessCredentials.getPassword());
-      return new CertsDTO("jks", accessCredentials.getkStore(), accessCredentials.gettStore());
-    } catch (Exception ex) {
-      LOGGER.log(Level.SEVERE, null, ex);
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.SEVERE, "Failed to " +
-        "download project-user certificates for project: " + project.getName() + " (projectId: " + projectId +
-        "), user: " + user.getUsername(), ex.getMessage(), ex);
-    } finally {
-      certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
-    }
   }
 
   public AccessCredentialsDTO credentials(Integer projectId, Users user) throws ProjectException, DatasetException {
