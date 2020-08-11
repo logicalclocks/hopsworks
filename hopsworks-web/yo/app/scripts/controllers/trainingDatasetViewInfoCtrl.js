@@ -174,19 +174,19 @@ angular.module('hopsWorksApp')
             /**
              * Initialization function
              */
-            self.view = function (featurestoreCtrl, trainingDatasets, activeVersion, toggle) {
+            self.view = function (featurestoreCtrl, trainingDatasets, toggle) {
 
                 if(toggle) {
-                    self.toggle(trainingDatasets.versionToGroups[activeVersion]);
+                    self.toggle(trainingDatasets.versionToGroups[trainingDatasets.activeVersion]);
                 }
 
-                self.selectedTrainingDataset = trainingDatasets.versionToGroups[activeVersion]
+                self.selectedTrainingDataset = trainingDatasets.versionToGroups[trainingDatasets.activeVersion];
 
                 self.projectId = featurestoreCtrl.projectId;
                 self.projectName = featurestoreCtrl.projectName;
                 self.featurestore = featurestoreCtrl.featurestore;
                 self.trainingDatasets = trainingDatasets;
-                self.activeVersion = activeVersion;
+                self.activeVersion = trainingDatasets.activeVersion;
                 self.settings = featurestoreCtrl.settings;
 
                 self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
@@ -206,30 +206,8 @@ angular.module('hopsWorksApp')
                 self.fetchTags();
             };
 
-            self.viewSelected = function (projectId, projectName, featurestore, settings, trainingDatasets, toggle) {
-                if(toggle) {
-                    self.toggle(trainingDatasets.versionToGroups[trainingDatasets.activeVersion]);
-                }
-
-                self.selectedTrainingDataset = trainingDatasets.versionToGroups[trainingDatasets.activeVersion];
-
-                self.projectId = projectId;
-                self.projectName = projectName;
-                self.featurestore = featurestore;
-                self.trainingDatasets = trainingDatasets;
-                self.activeVersion = trainingDatasets.activeVersion;
-                self.settings = settings;
-
-                self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType;
-                self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType;
-
-                self.pythonCode = self.getPythonCode();
-                self.scalaCode = self.getScalaCode();
-                self.fetchSize()
-            };
-
             $scope.$on('trainingDatasetSelected', function (event, args) {
-                self.viewSelected(args.projectId, args.projectName, args.featurestore, args.settings, args.trainingDatasets, args.toggle);
+                self.view(args.featurestoreCtrl, args.trainingDatasets, args.toggle);
             });
 
 
