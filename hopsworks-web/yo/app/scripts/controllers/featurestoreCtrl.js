@@ -356,29 +356,23 @@ angular.module('hopsWorksApp')
             };
 
             var broadcastFeaturegroupSelect = function () {
-                $scope.$broadcast('featuregroupSelected', { projectId: self.projectId,
-                    projectName: self.projectName,
-                    featurestore: self.featurestore,
+                $scope.$broadcast('featuregroupSelected', {
+                    featurestoreCtrl: self,
                     featuregroups: self.selectedFeaturegroup,
-                    settings: self.settings,
                     toggle: true });
             };
 
             var broadcastTrainingDatasetSelect = function () {
-                $scope.$broadcast('trainingDatasetSelected', { projectId: self.projectId,
-                    projectName: self.projectName,
-                    featurestore: self.featurestore,
+                $scope.$broadcast('trainingDatasetSelected', {
+                    featurestoreCtrl: self,
                     trainingDatasets: self.selectedTrainingDataset,
-                    settings: self.settings,
                     toggle: true });
             };
 
             var broadcastFeatureSelect = function () {
-                $scope.$broadcast('featureSelected', { projectId: self.projectId,
-                    projectName: self.projectName,
-                    featurestore: self.featurestore,
+                $scope.$broadcast('featureSelected', {
+                    featurestoreCtrl: self,
                     feature: self.selectedFeature,
-                    settings: self.settings,
                     toggle: true });
             };
 
