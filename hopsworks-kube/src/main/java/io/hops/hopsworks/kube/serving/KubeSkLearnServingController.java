@@ -176,7 +176,8 @@ public class KubeSkLearnServingController {
 
     Container skLeanContainer = new ContainerBuilder()
         .withName("sklearn")
-        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/sklearn:" + settings.
+        .withImage(ProjectUtils.getRegistryURL(settings,
+            serviceDiscoveryController) + "/sklearn:" + settings.
             getKubeSKLearnImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(servingEnv)
@@ -185,7 +186,8 @@ public class KubeSkLearnServingController {
 
     Container fileBeatContainer = new ContainerBuilder()
         .withName("filebeat")
-        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+        .withImage(ProjectUtils.getRegistryURL(settings,
+            serviceDiscoveryController) + "/filebeat:" + settings.
             getKubeFilebeatImgVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)

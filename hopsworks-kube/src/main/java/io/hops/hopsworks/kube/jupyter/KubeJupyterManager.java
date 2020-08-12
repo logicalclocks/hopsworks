@@ -14,7 +14,6 @@ import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
-import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -58,6 +57,7 @@ import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
+import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DockerJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
@@ -132,7 +132,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   private ProjectUtils projectUtils;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-
+  @EJB
+  private KubeProjectConfigMaps kubeProjectConfigMaps;
+  
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
@@ -176,6 +178,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       kubeClientService.createOrUpdateConfigMap(project, user, KERNELS_SUFFIX,
         ImmutableMap.of(
             KernelTemplate.FILE_NAME, kernelConfig.toString()));
+      
+      kubeProjectConfigMaps.reloadConfigMaps(project);
       
       String deploymentName = serviceAndDeploymentName(project, user);
       Deployment deployment = buildDeployment(
@@ -332,7 +336,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-      .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+      .withImage(ProjectUtils.getRegistryURL(settings,
+          serviceDiscoveryController) +
+          "/filebeat:" + settings.
           getKubeFilebeatImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
@@ -341,9 +347,10 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     
     return containers;
   }
-
-  private PodSpec buildPodSpec(String kubeProjectUser, List<Container> containers) {
-
+  
+  private PodSpec buildPodSpec(Project project, String kubeProjectUser,
+        List<Container> containers) {
+    
     return new PodSpecBuilder()
       .withContainers(containers)
       .withVolumes(
@@ -363,9 +370,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           .build(),
         new VolumeBuilder()
           .withName(HADOOP_CONF)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getHadoopSymbolicLinkDir() + "/etc/hadoop")
+          .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+              .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
@@ -384,16 +391,16 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           .build(),
         new VolumeBuilder()
           .withName(FLINK)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getFlinkConfDir())
+          .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+              .withName(kubeProjectConfigMaps.getFlinkConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
           .withName(SPARK)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getSparkConfDir())
+          .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+              .withName(kubeProjectConfigMaps.getSparkConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
@@ -442,7 +449,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
                               new ObjectMetaBuilder()
                                   .withLabels(ImmutableMap.of(JUPYTER, kubeProjectUser))
                                   .build())
-              .withSpec(buildPodSpec(kubeProjectUser, containers))
+              .withSpec(buildPodSpec(project, kubeProjectUser, containers))
             .build())
           .build())
       .build();
@@ -560,5 +567,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
 
     return Stream.concat(allNotebooks.stream(), orphaned).collect(Collectors.toList());
   }
-
+  
+  @Override
+  public String getJupyterHost() {
+    return kubeClientService.getNodeIpList().get(0);
+  }
 }

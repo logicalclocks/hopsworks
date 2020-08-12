@@ -20,6 +20,7 @@ import com.logicalclocks.servicediscoverclient.Builder;
 import com.logicalclocks.servicediscoverclient.ServiceDiscoveryClient;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceNotFoundException;
+import com.logicalclocks.servicediscoverclient.resolvers.DnsResolver;
 import com.logicalclocks.servicediscoverclient.resolvers.Type;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
@@ -60,8 +61,9 @@ public class ServiceDiscoveryController {
     PYTHON_JOBS_LOGSTASH("pythonjobs.logstash"),
     HOPSWORKS_APP("hopsworks.glassfish"),
     JUPYTER_LOGSTASH("jupyter.logstash"),
-    REGISTRY("registry");
-  
+    REGISTRY("registry"),
+    CONSUL_SERVER("consul");
+    
     private String name;
     HopsworksService(String name) {
       this.name = name;
@@ -125,7 +127,22 @@ public class ServiceDiscoveryController {
     Optional<Service> serviceOpt = getService(Type.DNS, serviceQuery).findAny();
     return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
   }
-
+  
+  @Lock(LockType.READ)
+  public Service getAnyAddressOfServiceWithDNSSRVOnly(HopsworksService serviceName) throws ServiceDiscoveryException {
+    ServiceQuery serviceQuery = ServiceQuery.of(constructServiceFQDN(serviceName), Collections.emptySet());
+    DnsResolver client = (DnsResolver) getClient(Type.DNS);
+    Optional<Service> serviceOpt = client.getServiceSRVOnly(serviceQuery).findAny();
+    return serviceOpt.orElseThrow(() -> new ServiceNotFoundException("Could not find service with: " + serviceQuery));
+  }
+  
+  @Lock(LockType.READ)
+  public String getConsulServerAddress() throws ServiceDiscoveryException {
+    Service consulService =
+        getAnyAddressOfServiceWithDNS(HopsworksService.CONSUL_SERVER);
+    return consulService.getAddress();
+  }
+  
   private ServiceDiscoveryClient getClient(Type type) throws ServiceDiscoveryException {
     ServiceDiscoveryClient client = clients.get(type);
     if (client != null) {

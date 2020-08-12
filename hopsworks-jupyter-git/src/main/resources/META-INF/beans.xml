@@ -10,6 +10,7 @@
                       http://xmlns.jcp.org/xml/ns/javaee/beans_1_1.xsd"
         bean-discovery-mode="annotated">
     <alternatives>
+        <stereotype>io.hops.hopsworks.kube.common.KubeStereotype</stereotype>
         <stereotype>io.hops.hopsworks.jupyter.git.controllers.GitJupyterNbVCSStereotype</stereotype>
     </alternatives>
 </beans>

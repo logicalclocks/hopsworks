@@ -8,10 +8,10 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
+import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EmptyDirVolumeSource;
-import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodSpecBuilder;
@@ -47,6 +47,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
+import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
@@ -117,6 +118,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private KubeProjectConfigMaps kubeProjectConfigMaps;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -165,12 +168,15 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           jupyterController.convertIPythonNotebook(hdfsUser, appPath, job.getProject(), pyAppPath,
             JupyterController.NotebookConversion.PY_JOB);
         }
-
+        
         String kubeProjectUser = kubeClientService.getKubeDeploymentName(job.getProject(), user);
         String secretsName = kubeClientService.getKubeDeploymentName(execution) + JWT_SUFFIX;
         String deploymentName = PYTHON_PREFIX + kubeClientService.getKubeDeploymentName(execution);
         String anacondaProjectDir = settings.getAnacondaProjectDir();
         jobsJWTManager.materializeJWT(user, job.getProject(), execution);
+        
+        kubeProjectConfigMaps.reloadConfigMaps(project);
+        
         kubeClientService.createJob(job.getProject(),
           buildJob(
             deploymentName,
@@ -293,7 +299,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             "job-type", PYTHON,
             "deployment-type", "job"))
           .build())
-      .withSpec(buildPodSpec(secretsName, kubeProjectUser, containers))
+      .withSpec(buildPodSpec(project, secretsName, kubeProjectUser, containers))
       .build());
     
     Job job = new JobBuilder()
@@ -310,7 +316,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     return job;
   }
   
-  private PodSpec buildPodSpec(String secretsName, String kubeProjectUser, List<Container> containers) {
+  private PodSpec buildPodSpec(Project project, String secretsName,
+      String kubeProjectUser, List<Container> containers) {
     return new PodSpecBuilder()
       .withContainers(containers)
       .withVolumes(
@@ -323,10 +330,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           .build(),
         new VolumeBuilder()
           .withName(HADOOP_CONF)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getHadoopSymbolicLinkDir()+ "/etc/hadoop")
-              .build())
+          .withConfigMap(
+             new ConfigMapVolumeSourceBuilder()
+                 .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
+                 .build())
           .build(),
         new VolumeBuilder()
           .withName(JWT)
@@ -337,16 +344,16 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           .build(),
         new VolumeBuilder()
           .withName(FLINK)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getFlinkConfDir())
+          .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+              .withName(kubeProjectConfigMaps.getFlinkConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
           .withName(SPARK)
-          .withHostPath(
-            new HostPathVolumeSourceBuilder()
-              .withPath(settings.getSparkConfDir())
+          .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+              .withName(kubeProjectConfigMaps.getSparkConfigMapName(project))
               .build())
           .build(),
         new VolumeBuilder()
@@ -407,7 +414,8 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     
     containers.add(new ContainerBuilder()
       .withName("filebeat")
-        .withImage(ProjectUtils.getRegistryURL(serviceDiscoveryController) + "/filebeat:" + settings.
+        .withImage(ProjectUtils.getRegistryURL(settings,
+            serviceDiscoveryController) + "/filebeat:" + settings.
             getKubeFilebeatImgVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))

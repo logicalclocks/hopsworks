@@ -8,6 +8,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jupyter.git.dao.JupyterGitArguments;
@@ -26,17 +27,18 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -68,13 +70,11 @@ public class JupyterServerProxy {
   private HttpClient client;
   @EJB
   private Settings settings;
+  @Inject
+  private JupyterManager jupyterManager;
   
-  private String jupyterHost;
-  
-  @PostConstruct
-  public void init() {
-    jupyterHost = settings.getJupyterHost();
-  }
+  private static final Logger LOGGER = Logger.getLogger(Settings.class.
+      getName());
   
   public JupyterGitResponse clone(JupyterProject jupyterProject, JupyterSettings jupyterSettings) throws IOException {
     if (jupyterProject == null) {
@@ -84,7 +84,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(CLONE_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments(notebookDirectory, jupyterSettings.getGitConfig()
@@ -108,7 +109,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(STATUS_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -132,7 +134,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(CHECKOUT_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -159,7 +162,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(PULL_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -186,7 +190,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("Git config is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(CONFIG_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -211,7 +216,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(ADD_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -236,7 +242,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(COMMIT_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments();
@@ -262,7 +269,8 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterHost, jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
+        jupyterManager.getJupyterHost(), jupyterPort));
     String pushPath = andTrack ? AUTOPUSH_PATH : PUSH_PATH;
     String path = String.format(pushPath, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();

@@ -87,6 +87,7 @@ public class KubeJobsMonitor implements JobsMonitor {
                   // The timeout cannot be set individually per job, it has to be done in kubelet. This is a more
                   // flexible way to fail a waiting app and get the logs
                   if (!Strings.isNullOrEmpty(reason) &&
+                      !reason.equals("ContainerCreating") &&
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
                     execution.setState(KubeJobType.getAsJobState(reason));
                     cleanUpExecution(execution, pod);
@@ -94,7 +95,8 @@ public class KubeJobsMonitor implements JobsMonitor {
                     DistributedFileSystemOps udfso = null;
                     try {
                       udfso = dfs.getDfsOps(execution.getHdfsUser());
-                      YarnLogUtil.writeLog(udfso, execution.getStderrPath(), "Job failed with: " + message);
+                      YarnLogUtil.writeLog(udfso, execution.getStderrPath(),
+                          "Job failed with: " + reason + " - " + message);
                     } finally {
                       if (udfso != null) {
                         dfs.closeDfsClient(udfso);

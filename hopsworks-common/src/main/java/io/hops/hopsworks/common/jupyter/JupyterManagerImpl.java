@@ -101,4 +101,6 @@ public abstract class JupyterManagerImpl implements JupyterManager {
   public abstract boolean ping(JupyterProject jupyterProject);
   
   public abstract List<JupyterProject> getAllNotebooks();
+  
+  public abstract String getJupyterHost();
 }
