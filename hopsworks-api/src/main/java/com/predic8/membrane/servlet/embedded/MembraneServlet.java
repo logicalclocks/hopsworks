@@ -18,10 +18,11 @@ package com.predic8.membrane.servlet.embedded;
 import com.predic8.membrane.core.Router;
 import com.predic8.membrane.core.rules.ServiceProxy;
 import com.predic8.membrane.core.rules.ServiceProxyKey;
+import io.hops.hopsworks.common.jupyter.JupyterManager;
 import io.hops.hopsworks.common.util.Ip;
-import io.hops.hopsworks.common.util.Settings;
 
-import javax.ejb.EJB;
+import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -36,16 +37,15 @@ import java.util.logging.Logger;
  * This embeds Membrane as a servlet.
  */
 @SuppressWarnings({"serial"})
+@Dependent
 public class MembraneServlet extends HttpServlet {
 
   private static final long serialVersionUID = 1L;
   private static final Logger LOGGER = Logger.getLogger(MembraneServlet.class.getName());
 
-  @EJB
-  Settings settings;
-
-  private String jupyterHost;
-
+  @Inject
+  private JupyterManager jupyterManager;
+  
   /*
    * For websockets, the following paths are used by JupyterHub:
    *
@@ -59,19 +59,14 @@ public class MembraneServlet extends HttpServlet {
    * ProxyPass /api/kernels/ ws://192.168.254.23:8888/api/kernels/
    * ProxyPassReverse /api/kernels/ http://192.168.254.23:8888/api/kernels/
    */
-
-  @Override
-  public void init() throws ServletException {
-    super.init();
-    jupyterHost = settings.getJupyterHost();
-  }
-
+  
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
 
     String externalIp = Ip.getHost(req.getRequestURL().toString());
-
+    String jupyterHost = jupyterManager.getJupyterHost();
+    
     StringBuilder urlBuf = new StringBuilder("http://");
     urlBuf.append(jupyterHost);
     urlBuf.append(":");
@@ -100,7 +95,8 @@ public class MembraneServlet extends HttpServlet {
     }
 
     ServiceProxy sp = new ServiceProxy(
-        new ServiceProxyKey(externalIp, "*", "*", -1), jupyterHost, targetPort);
+        new ServiceProxyKey(externalIp, "*", "*", -1), jupyterHost,
+        targetPort);
     sp.setTargetURL(urlBuf.toString());
 
     try {
