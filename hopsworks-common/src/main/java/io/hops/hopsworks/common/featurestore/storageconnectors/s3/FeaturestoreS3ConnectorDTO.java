@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -33,6 +34,8 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String accessKey;
   private String secretKey;
   private String bucket;
+  private String serverEncryptionAlgorithm;
+  private String serverEncryptionKey;
   
   public FeaturestoreS3ConnectorDTO() {
     super(null, null, null, null, null);
@@ -45,6 +48,16 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.accessKey = featurestoreS3Connector.getAccessKey();
     this.secretKey = featurestoreS3Connector.getSecretKey();
     this.bucket = featurestoreS3Connector.getBucket();
+    this.serverEncryptionAlgorithm = getEncryptionAlgorithmName(featurestoreS3Connector.getServerEncryptionAlgorithm());
+    this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();
+  }
+  
+  private String getEncryptionAlgorithmName(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
+    if (serverEncryptionAlgorithm == null) {
+      return  null;
+    } else {
+      return serverEncryptionAlgorithm.getAlgorithm();
+    }
   }
   
   @XmlElement
@@ -74,12 +87,26 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.bucket = bucket;
   }
 
+  @XmlElement
+  public String getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
+
+  public void setServerEncryptionAlgorithm(String serverEncryptionAlgorithm) {
+    this.serverEncryptionAlgorithm = serverEncryptionAlgorithm;
+  }
+
+  @XmlElement
+  public String getServerEncryptionKey() { return serverEncryptionKey; }
+
+  public void setServerEncryptionKey(String serverEncryptionKey) { this.serverEncryptionKey = serverEncryptionKey; }
+
   @Override
   public String toString() {
     return "FeaturestoreS3ConnectorDTO{" +
-        "accessKey='" + accessKey + '\'' +
-        ", secretKey='" + secretKey + '\'' +
-        ", bucket='" + bucket + '\'' +
-        '}';
+            "accessKey='" + accessKey + '\'' +
+            ", secretKey='" + secretKey + '\'' +
+            ", bucket='" + bucket + '\'' +
+            ", serverEncryptionAlgorithm='" + serverEncryptionAlgorithm + '\'' +
+            ", serverEncryptionKey='" + serverEncryptionKey + '\'' +
+            '}';
   }
 }

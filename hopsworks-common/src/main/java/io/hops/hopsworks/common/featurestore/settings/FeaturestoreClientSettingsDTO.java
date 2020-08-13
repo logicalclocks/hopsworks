@@ -17,9 +17,13 @@
 package io.hops.hopsworks.common.featurestore.settings;
 
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
+import javax.json.Json;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -48,6 +52,8 @@ public class FeaturestoreClientSettingsDTO {
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_ACCESSKEY_MAX_LENGTH;
   private int s3StorageConnectorSecretkeyMaxLength =
     FeaturestoreConstants.S3_STORAGE_CONNECTOR_SECRETKEY_MAX_LENGTH;
+  private int s3StorageServerEncryptionKeyMaxLength =
+    FeaturestoreConstants.S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH;
   private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;
@@ -72,7 +78,7 @@ public class FeaturestoreClientSettingsDTO {
   private List<String> featureImportConnectors = FeaturestoreConstants.FEATURE_IMPORT_CONNECTORS;
   private Boolean onlineFeaturestoreEnabled = false;
   private List<String> suggestedMysqlFeatureTypes = FeaturestoreConstants.SUGGESTED_MYSQL_DATA_TYPES;
-  
+  private List<String> s3ServerEncryptionAlgorithms;
   
   public FeaturestoreClientSettingsDTO() {
     //For JAXB
@@ -400,5 +406,28 @@ public class FeaturestoreClientSettingsDTO {
   
   public void setSuggestedMysqlFeatureTypes(List<String> suggestedMysqlFeatureTypes) {
     this.suggestedMysqlFeatureTypes = suggestedMysqlFeatureTypes;
+  }
+  
+  @XmlElement
+  public int getS3StorageServerEncryptionKeyMaxLength() {
+    return s3StorageServerEncryptionKeyMaxLength;
+  }
+  
+  public void setS3StorageServerEncryptionKeyMaxLength(int s3StorageServerEncryptionKeyMaxLength) {
+    this.s3StorageServerEncryptionKeyMaxLength = s3StorageServerEncryptionKeyMaxLength;
+  }
+  
+  @XmlElement
+  public List<String> getS3ServerEncryptionAlgorithms() {
+    List<String> encryptionAlgorithms = new ArrayList<>();
+    Arrays.asList(FeaturestoreS3ConnectorEncryptionAlgorithm.values()).stream().forEach(algorithm -> {
+      String jsonString = Json.createObjectBuilder()
+        .add("algorithm", algorithm.getAlgorithm())
+        .add("description", algorithm.getDescription())
+        .add("requiresKey", algorithm.isRequiresKey())
+        .build().toString();
+      encryptionAlgorithms.add(jsonString);
+    });
+    return encryptionAlgorithms;
   }
 }
