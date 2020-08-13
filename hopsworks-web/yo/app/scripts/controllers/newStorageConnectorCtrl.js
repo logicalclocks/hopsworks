@@ -36,12 +36,17 @@ angular.module('hopsWorksApp')
             //Input Variables
             self.storageConnectorName = ""
             self.storageConnectorDescription = ""
-            self.storageConnectorType = 0;
-            self.jdbcConnectionString = "";
+            self.storageConnectorType = 0
+            self.jdbcConnectionString = ""
             self.jdbcArguments = []
             self.s3Bucket = ""
             self.s3SecretKey = ""
             self.s3AccessKey = ""
+            self.s3ServerEncryptionAlgorithm = ""
+            self.s3ServerEncryptionKey = ""
+            self.s3BucketEncryption = false
+            self.s3BucketEncryptionRequiresKey = false
+            self.s3BucketSecretAndAccessKeys = false
 
             //State
             self.working = false
@@ -56,8 +61,11 @@ angular.module('hopsWorksApp')
             self.jdbcStorageConnectorConnectionStringMaxLength = self.settings.jdbcStorageConnectorConnectionstringMaxLength
             self.jdbcStorageConnectorArgumentsMaxLength = self.settings.jdbcStorageConnectorArgumentsMaxLength
             self.s3StorageConnectorBucketMaxLength = self.settings.s3StorageConnectorBucketMaxLength
-            self.s3StorageConnectorAccesskeyMaxLength = self.settings.s3StorageConnectorAccesskeyMaxLength;
-            self.s3StorageConnectorSecretkeyMaxLength = self.settings.s3StorageConnectorSecretkeyMaxLength;
+            self.s3StorageConnectorAccesskeyMaxLength = self.settings.s3StorageConnectorAccesskeyMaxLength
+            self.s3StorageConnectorSecretkeyMaxLength = self.settings.s3StorageConnectorSecretkeyMaxLength
+            self.s3ServerEncryptionAlgorithmMaxLength = self.settings.s3ServerEncryptionAlgorithmMaxLength
+            self.s3ServerEncryptionKeyMaxLength = self.settings.s3StorageServerEncryptionKeyMaxLength
+            self.s3ServerEncryptionAlgorithmAlgorithms = [];
             self.s3IAMRole = self.settings.s3IAMRole;
             self.hopsfsConnectorType = self.settings.hopsfsConnectorType
             self.s3ConnectorType = self.settings.s3ConnectorType
@@ -65,7 +73,6 @@ angular.module('hopsWorksApp')
             self.s3ConnectorDTOType = self.settings.s3ConnectorDtoType
             self.jdbcConnectorDTOType = self.settings.jdbcConnectorDtoType
             self.hopsfsConnectorDTOType = self.settings.hopsfsConnectorDtoType
-
 
             /**
              * Input validation
@@ -77,6 +84,7 @@ angular.module('hopsWorksApp')
             self.storageConnectorDescriptionWrongValue = 1;
             self.storageConnectorNames = []
             self.storageConnectorConfigWrongValue = 1
+            self.s3ServerEncryptionKeyWrongValue = 1;
             //JDBC validation
             self.storageConnectorJdbcStringWrongValue = 1
             self.jdbcArgumentsWrongValue = [];
@@ -111,6 +119,7 @@ angular.module('hopsWorksApp')
              * Perform initialization of variables that require it
              */
             self.initVariables = function () {
+                self.s3ServerEncryptionAlgorithmAlgorithms = self.makeArrayOfEncryptionAlgorithms();
                 var j = 0;
                 if (self.storageConnectorOperation === "UPDATE") {
                     self.accordion4.title = "Update"
@@ -127,8 +136,28 @@ angular.module('hopsWorksApp')
                     if (self.storageConnector.storageConnectorType === self.s3ConnectorType) {
                         self.storageConnectorType = 1
                         self.s3Bucket = self.storageConnector.bucket
-                        self.s3SecretKey = self.storageConnector.secretKey
-                        self.s3AccessKey = self.storageConnector.accessKey
+
+                        if(self.storageConnector.serverEncryptionAlgorithm){
+                            self.s3ServerEncryptionAlgorithm = self.storageConnector.serverEncryptionAlgorithm
+                        }
+                        if(self.storageConnector.serverEncryptionKey){
+                            self.s3ServerEncryptionKey = self.storageConnector.serverEncryptionKey
+                        }
+                        if(self.storageConnector.secretKey){
+                            self.s3SecretKey = self.storageConnector.secretKey
+                        }
+                        if(self.storageConnector.accessKey){
+                            self.s3AccessKey = self.storageConnector.accessKey
+                        }
+
+                        if(self.storageConnector.serverEncryptionAlgorithm){
+                            self.s3BucketEncryption = true;
+                            var providedEncryptionAlgorithm =
+                                self.findEcryptionAlgorithmFromArray(self.storageConnector.serverEncryptionAlgorithm);
+                            if(providedEncryptionAlgorithm && providedEncryptionAlgorithm.requiresKey){
+                                self.s3BucketEncryptionRequiresKey = true;
+                            }
+                        }
                     }
                     if (self.storageConnector.storageConnectorType === self.hopsfsConnectorType) {
                         self.storageConnectorType = 2
@@ -153,6 +182,8 @@ angular.module('hopsWorksApp')
                 self.storageConnectorS3BucketWrongValue = 1
                 self.storageConnectorS3AccessKeyWrongValue = 1
                 self.storageConnectorS3SecretKeyWrongValue = 1
+                self.storageConnectorS3ServerEncryptionAlgorithmWrongValue = 1
+                self.storageConnectorS3ServerEncryptionKeyWrongValue = 1
                 self.storageConnectorNameNotUnique = 1
                 self.storageConnectorDescriptionWrongValue = 1;
                 self.storageConnectorJdbcStringWrongValue = 1
@@ -229,17 +260,27 @@ angular.module('hopsWorksApp')
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
-                    if (self.s3AccessKey && self.s3AccessKey != null
-                        && self.s3AccessKey.length > self.s3StorageConnectorAccesskeyMaxLength) {
+                    if (!self.s3IAMRole && (self.s3AccessKey === "" || self.s3AccessKey === null
+                        || self.s3AccessKey.length > self.s3StorageConnectorAccesskeyMaxLength)) {
                         self.storageConnectorS3AccessKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
-
-                    if (self.s3SecretKey && self.s3SecretKey != null
-                        && self.s3SecretKey.length > self.s3StorageConnectorSecretkeyMaxLength) {
+                    if (!self.s3IAMRole && (self.s3SecretKey === "" || self.s3SecretKey === null
+                        || self.s3SecretKey.length > self.s3StorageConnectorSecretkeyMaxLength )) {
                         self.storageConnectorS3SecretKeyWrongValue = -1;
+                        self.wrong_values = -1;
+                        self.storageConnectorConfigWrongValue = -1
+                    }
+                    if (self.s3BucketEncryption && self.s3ServerEncryptionAlgorithm === "") {
+                        self.storageConnectorS3ServerEncryptionAlgorithmWrongValue = -1;
+                        self.wrong_values = -1;
+                        self.storageConnectorConfigWrongValue = -1
+                    }
+                    if (self.s3BucketEncryption && self.s3BucketEncryptionRequiresKey
+                        && (self.s3ServerEncryptionKey === "" || self.s3ServerEncryptionKey === null
+                        || self.s3ServerEncryptionKey.length > self.s3ServerEncryptionKeyMaxLength)) {
+                        self.storageConnectorS3ServerEncryptionKeyWrongValue = -1;
                         self.wrong_values = -1;
                         self.storageConnectorConfigWrongValue = -1
                     }
@@ -256,7 +297,6 @@ angular.module('hopsWorksApp')
                     }
                 }
             }
-
 
             /**
              * Callback method for when the user filled in the storage connector description. Will then
@@ -325,31 +365,34 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["connectionString"] = self.jdbcConnectionString
                     FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.jdbcConnectorType, self.storageConnector.id).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("JDBC Storage Connector updated", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("JDBC Storage Connector updated", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 if (self.storageConnectorType === 1) {
+                    self.resetAccessAndEncryptionProperties()
                     storageConnectorJson["type"] = self.s3ConnectorDTOType
                     storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
                     storageConnectorJson["bucket"] = self.s3Bucket
                     storageConnectorJson["secretKey"] = self.s3SecretKey
                     storageConnectorJson["accessKey"] = self.s3AccessKey
+                    storageConnectorJson["serverEncryptionAlgorithm"] = self.s3ServerEncryptionAlgorithm
+                    storageConnectorJson["serverEncryptionKey"] = self.s3ServerEncryptionKey
                     FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.s3ConnectorType, self.storageConnector.id).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("S3 Storage Connector updated", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("S3 Storage Connector updated", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 if (self.storageConnectorType === 2) {
                     storageConnectorJson["type"] = self.hopsfsConnectorDTOType
@@ -357,14 +400,14 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["datasetName"] = self.hopsFsDataset.name
                     FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.hopsfsConnectorType, self.storageConnector.id).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("HopsFS Storage Connector updated", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("HopsFS Storage Connector updated", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to update storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 growl.info("Updating Storage Connector... wait", { title: 'Updating..', ttl: 1000 })
             }
@@ -389,31 +432,35 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["connectionString"] = self.jdbcConnectionString
                     FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.jdbcConnectorType).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("JDBC Storage Connector created", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("JDBC Storage Connector created", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 if (self.storageConnectorType === 1) {
+                    self.resetAccessAndEncryptionProperties()
                     storageConnectorJson["type"] = self.s3ConnectorDTOType
                     storageConnectorJson["storageConnectorType"] = self.s3ConnectorType
                     storageConnectorJson["bucket"] = self.s3Bucket
                     storageConnectorJson["secretKey"] = self.s3SecretKey
                     storageConnectorJson["accessKey"] = self.s3AccessKey
+                    storageConnectorJson["serverEncryptionAlgorithm"] = self.s3ServerEncryptionAlgorithm
+                    storageConnectorJson["serverEncryptionKey"] = self.s3ServerEncryptionKey
+
                     FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.s3ConnectorType).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("S3 Storage Connector created", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("S3 Storage Connector created", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 if (self.storageConnectorType === 2) {
                     storageConnectorJson["type"] = self.hopsfsConnectorDTOType
@@ -421,14 +468,14 @@ angular.module('hopsWorksApp')
                     storageConnectorJson["datasetName"] = self.hopsFsDataset.name
                     FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
                         self.hopsfsConnectorType).then(
-                            function (success) {
-                                self.working = false;
-                                growl.success("HopsFS Storage Connector created", { title: 'Success', ttl: 1000 });
-                                self.exitToFeaturestore()
-                            }, function (error) {
-                                growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
-                                self.working = false;
-                            });
+                        function (success) {
+                            self.working = false;
+                            growl.success("HopsFS Storage Connector created", { title: 'Success', ttl: 1000 });
+                            self.exitToFeaturestore()
+                        }, function (error) {
+                            growl.error(error.data.errorMsg, { title: 'Failed to create storage connector', ttl: 15000 });
+                            self.working = false;
+                        });
                 }
                 growl.info("Creating Storage Connector... wait", { title: 'Creating', ttl: 1000 })
             };
@@ -491,6 +538,67 @@ angular.module('hopsWorksApp')
             self.init = function () {
                 self.getStorageConnectorNames()
                 self.getAllDatasets()
+            }
+
+            /**
+             * Called when the user clicks on the "S3 Bucket Encryption checkbox"
+             */
+            self.toggleS3BucketEncryptionInputFields = function () {
+                self.s3BucketEncryption = !self.s3BucketEncryption;
+            }
+
+            /**
+             * Called when the user clicks on the "S3 Bucket Encryption Checkbox"
+             */
+            self.toggleS3BucketEncryptionKeyInputField = function (requiresKey) {
+                if(requiresKey){
+                    self.s3BucketEncryptionRequiresKey = true;
+                }
+                else{
+                    self.s3BucketEncryptionRequiresKey = false;
+                }
+            }
+
+            /**
+             * Resets the values of access key, secrete key, encryption algorithm and encryption key
+             */
+            self.resetAccessAndEncryptionProperties = function () {
+                if(self.s3IAMRole){
+                    self.s3SecretKey = ""
+                    self.s3AccessKey = ""
+                }
+
+                if(!self.s3BucketEncryption){
+                    self.s3ServerEncryptionAlgorithm = ""
+                    self.s3ServerEncryptionKey = ""
+                }
+
+                if(!self.s3BucketEncryptionRequiresKey){
+                    self.s3ServerEncryptionKey = ""
+                }
+            }
+
+            /**
+             * Filter an encryption algorithm from array
+             * @param algorithm
+             * @returns {*}
+             */
+            self.findEcryptionAlgorithmFromArray = function (algorithm) {
+                return self.s3ServerEncryptionAlgorithmAlgorithms.find(function (a) {
+                    return a.algorithm == algorithm
+                })
+            }
+
+            /**
+             * Convert json strings of encryption algorithms into json objects
+             * @returns {*}
+             */
+            self.makeArrayOfEncryptionAlgorithms = function () {
+                return self.settings.s3ServerEncryptionAlgorithms.map( function (a) {
+                    var algorithm = JSON.parse(a);
+                    algorithm.value = algorithm.algorithm;
+                    return algorithm;
+                })
             }
 
             self.init()
