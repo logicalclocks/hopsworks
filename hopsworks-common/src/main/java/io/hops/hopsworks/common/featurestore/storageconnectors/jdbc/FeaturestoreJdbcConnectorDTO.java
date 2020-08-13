@@ -32,7 +32,7 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
 
   private String connectionString;
   private String arguments;
-
+  
   public FeaturestoreJdbcConnectorDTO() {
     super(null, null, null, null, null);
   }
@@ -62,6 +62,7 @@ public class FeaturestoreJdbcConnectorDTO extends FeaturestoreStorageConnectorDT
   public void setArguments(String arguments) {
     this.arguments = arguments;
   }
+  
 
   @Override
   public String toString() {

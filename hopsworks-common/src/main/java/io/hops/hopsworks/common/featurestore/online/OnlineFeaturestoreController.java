@@ -341,7 +341,7 @@ public class OnlineFeaturestoreController {
     }
 
     try {
-      featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
+      featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(user, dbuser, featurestore, db);
     } catch(Exception e) {
       //If the connector have already been created, skip this step
     }
@@ -434,7 +434,7 @@ public class OnlineFeaturestoreController {
     }
     String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
     for (FeaturestoreStorageConnectorDTO storageConnector: jdbcConnectors) {
       if (storageConnector.getName().equalsIgnoreCase(connectorName)) {
         featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnector.getId());

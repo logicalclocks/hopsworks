@@ -97,7 +97,23 @@
                         {{argument.name}}
                     </td>
                     <td class="fs-table">
-                        {{argument.value}}
+                        <span ng-if="argument.name != 'password'">
+                            {{argument.value}}
+                        </span>
+
+                        <span ng-if="argument.name == 'password'">
+                            {{storageConnectorViewInfoCtrl.pwdToShow}}
+                        </span>
+                        <button class="btn btn-primary btn-sm"
+                                ng-if="argument.name == 'password' && storageConnectorViewInfoCtrl.hasPwd == true"
+                                ng-click="storageConnectorViewInfoCtrl.showPlainConnectorPassword()">
+                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == true">
+                                Hide
+                            </span>
+                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == false">
+                                Show
+                            </span>
+                        </button>
                     </td>
                 </tr>
                 </tbody>

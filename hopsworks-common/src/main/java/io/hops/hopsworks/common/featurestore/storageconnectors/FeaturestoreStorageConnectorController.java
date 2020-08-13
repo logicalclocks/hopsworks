@@ -54,7 +54,7 @@ public class FeaturestoreStorageConnectorController {
   private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
   @EJB
   private SecretsController secretsController;
-
+  
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
    *
@@ -62,17 +62,16 @@ public class FeaturestoreStorageConnectorController {
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Users user,
-    Featurestore featurestore)
-    throws FeaturestoreException {
+    Featurestore featurestore) throws FeaturestoreException {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
     featurestoreStorageConnectorDTOS.addAll(
-        featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore));
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore));
     featurestoreStorageConnectorDTOS.addAll(
-        featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore));
+      featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore));
     featurestoreStorageConnectorDTOS.addAll(featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore));
     return featurestoreStorageConnectorDTOS;
   }
-
+  
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore with a specific type
    *
@@ -81,23 +80,23 @@ public class FeaturestoreStorageConnectorController {
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestoreWithType(Users user,
-    Featurestore featurestore,
-    FeaturestoreStorageConnectorType featurestoreStorageConnectorType) throws FeaturestoreException {
+    Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType)
+    throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore);
       case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+        return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
-            + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
-            + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
+          + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
+          FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
+          + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
   }
-
+  
   /**
    * Returns a DTO of a storage connectors for a featurestore with a specific type and id
    *
@@ -107,26 +106,26 @@ public class FeaturestoreStorageConnectorController {
    * @return JSON/XML DTOs of the storage connector
    */
   public FeaturestoreStorageConnectorDTO getStorageConnectorForFeaturestoreWithTypeAndId(
-      Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-      Integer storageConnectorId) throws FeaturestoreException {
+    Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+    Integer storageConnectorId) throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.getS3ConnectorWithIdAndFeaturestore(user, featurestore,
           storageConnectorId);
       case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorWithIdAndFeaturestore(featurestore,
-            storageConnectorId);
+        return featurestoreJdbcConnectorController.getJdbcConnectorWithIdAndFeaturestore(user, featurestore,
+          storageConnectorId);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.getHopsFsConnectorWithIdAndFeaturestore(featurestore,
-            storageConnectorId);
+          storageConnectorId);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
-            + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
-            + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
+          + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
+          FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
+          + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
   }
-
+  
   /**
    * Creates a new Storage Connector of a specific type in a feature store
    *
@@ -146,21 +145,21 @@ public class FeaturestoreStorageConnectorController {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.createFeaturestoreS3Connector(user, featurestore,
-            (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO);
+          (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO);
       case JDBC:
         return featurestoreJdbcConnectorController.createFeaturestoreJdbcConnector(featurestore,
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO);
+          (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.createFeaturestoreHopsfsConnector(featurestore,
-            (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO);
+          (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
-            + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
-            + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
+          + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
+          FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
+          + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
   }
-
+  
   /**
    * Updates an existing Storage Connector of a specific type in a feature store
    *
@@ -171,28 +170,28 @@ public class FeaturestoreStorageConnectorController {
    * @return A JSON/XML DTOs representation of the updated storage connector
    */
   public FeaturestoreStorageConnectorDTO updateStorageConnectorWithType(
-      Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, Integer storageConnectorId)
+    Users user, Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, Integer storageConnectorId)
     throws FeaturestoreException, UserException {
     validateUser(user, featurestore);
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.updateFeaturestoreS3Connector(user, featurestore,
-            (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
+          (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
       case JDBC:
         return featurestoreJdbcConnectorController.updateFeaturestoreJdbcConnector(featurestore,
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
+          (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.updateFeaturestoreHopsfsConnector(featurestore,
-            (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
+          (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorId);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
-            + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
-            + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
+          + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
+          FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
+          + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
   }
-
+  
   /**
    * Deletes a storage connector with a specific type and id in a feature store
    *
@@ -214,9 +213,9 @@ public class FeaturestoreStorageConnectorController {
         return featurestoreHopsfsConnectorController.removeFeaturestoreHopsfsConnector(storageConnectorId);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
-            + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
-            + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
+          + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
+          FeaturestoreStorageConnectorType.S3 + ", and " + FeaturestoreStorageConnectorType.JDBC
+          + ". The provided training dataset type was not recognized: " + featurestoreStorageConnectorType);
     }
   }
   
@@ -239,13 +238,13 @@ public class FeaturestoreStorageConnectorController {
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = null;
     String onlineFeaturestoreConnectorName = dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
     List<FeaturestoreStorageConnectorDTO> jdbcConnectorDTOS =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
     List<FeaturestoreStorageConnectorDTO> matchingConnectors = jdbcConnectorDTOS.stream().filter(connector ->
       connector.getName().equalsIgnoreCase(onlineFeaturestoreConnectorName)).collect(Collectors.toList());
     if(matchingConnectors.isEmpty()) {
       featurestoreJdbcConnectorDTO =
-        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbUsername,
-        featurestore, dbName);
+        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(user, dbUsername,
+          featurestore, dbName);
     } else {
       featurestoreJdbcConnectorDTO = (FeaturestoreJdbcConnectorDTO) matchingConnectors.get(0);
     }
