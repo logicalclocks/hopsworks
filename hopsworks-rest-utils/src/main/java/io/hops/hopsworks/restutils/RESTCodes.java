@@ -1463,6 +1463,8 @@ public class RESTCodes {
     ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_ALGORITHM(104, "Illegal server encryption algorithm provided",
       Response.Status.BAD_REQUEST),
     ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY(105, "Illegal server encryption key provided",
+      Response.Status.BAD_REQUEST),
+    TRAINING_DATASET_DUPLICATE_SPLIT_NAMES(106, "Duplicate split names in training dataset provided.",
       Response.Status.BAD_REQUEST);
     
     private int code;

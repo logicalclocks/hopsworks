@@ -67,8 +67,10 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -598,6 +600,7 @@ public class TrainingDatasetController {
     throws FeaturestoreException {
     if (trainingDatasetSplitDTOs != null && !trainingDatasetSplitDTOs.isEmpty()) {
       Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
+      Set<String> splitNames = new HashSet<>();
       for (TrainingDatasetSplitDTO trainingDatasetSplitDTO : trainingDatasetSplitDTOs) {
         if (!namePattern.matcher(trainingDatasetSplitDTO.getName()).matches()) {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_NAME,
@@ -609,6 +612,10 @@ public class TrainingDatasetController {
           throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_TRAINING_DATASET_SPLIT_PERCENTAGE,
             Level.FINE, ", the provided training dataset split percentage is invalid. Percentages can only be numeric" +
             ". Weights will be normalized if they don’t sum up to 1.0.");
+        }
+        if (!splitNames.add(trainingDatasetSplitDTO.getName())) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_DUPLICATE_SPLIT_NAMES,
+            Level.FINE, " The split names must be unique");
         }
       }
     }
