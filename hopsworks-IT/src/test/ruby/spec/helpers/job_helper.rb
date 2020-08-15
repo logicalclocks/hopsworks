@@ -101,7 +101,7 @@ module JobHelper
     elsif type.eql? "py"
 
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_single_experiment.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
               "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
       end
 
@@ -115,7 +115,7 @@ module JobHelper
 
     else
         if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_single_experiment.ipynb",
+          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
           "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
         end
         if job_conf.nil?
@@ -147,7 +147,7 @@ module JobHelper
 
     if type.eql? "py"
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".py")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/test_job.py",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/test_job.py",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".py", @user[:username],
                         "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
       end
@@ -155,7 +155,7 @@ module JobHelper
 
     elsif type.eql? "ipynb"
       if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/test_job.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/test_job.ipynb",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
                         "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
       end
