@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('LoginCtrl', ['$location', '$cookies', '$http', '$rootScope', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 'ModalService', 'VariablesService',
-          function ($location, $cookies, $http, $rootScope, growl, TourService, AuthService, BannerService, md5, ModalService, VariablesService) {
+    .controller('LoginCtrl', ['$location', '$cookies', '$http', '$rootScope', 'growl', 'TourService', 'AuthService', 'BannerService', 'md5', 'ModalService', 'VariablesService',
+        function ($location, $cookies, $http, $rootScope, growl, TourService, AuthService, BannerService, md5, ModalService, VariablesService) {
 
             var self = this;
 
@@ -56,111 +56,121 @@ angular.module('hopsWorksApp')
             self.otp = $cookies.get('otp');
             self.ldapEnabled = $cookies.get('ldap') === 'true';
             self.krbEnabled = $cookies.get("krb") === 'true';
+            self.registerDisabled = $cookies.get("registerDisabled") === 'true';
+            self.loginDisabled = $cookies.get("loginDisabled") === 'true';
             self.openIdProviders = [];
 
+            var getErrorMsg = function (error, msg) {
+                var errorMsg = "";
+                if (error.data !== undefined &&
+                    error.data !== null &&
+                    error.data.errorMsg !== undefined &&
+                    error.data.errorMsg !== null) {
+                    errorMsg = error.data.errorMsg;
+                }
+                return (typeof error.data !== 'undefined' &&
+                    error.data !== undefined &&
+                    error.data !== null &&
+                    typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : msg + errorMsg;
+            };
 
             var getAnnouncement = function () {
-              BannerService.findBanner().then(
-                      function (success) {
+                BannerService.findBanner().then(
+                    function (success) {
                         console.log(success);
                         self.otp = success.data.otp;
                         if (success.data.status === 1) {
-                          self.announcement = success.data.errorMsg;
+                            self.announcement = success.data.errorMsg;
                         }
-                      }, function (error) {
-                self.announcement = '';
-              });
+                    }, function (error) {
+                        self.announcement = '';
+                    });
             };
 
             var isFirstTime = function () {
-              BannerService.isFirstTime().then(
-                      function (success) {
+                BannerService.isFirstTime().then(
+                    function (success) {
                         self.firstTime = true;
                         self.user.toursState = 0;
-                      }, function (error) {
-                self.firstTime = false;
-              });
+                    }, function (error) {
+                        self.firstTime = false;
+                    });
             };
             var isAdminPasswordChanged = function () {
-              BannerService.hasAdminPasswordChanged().then(
-                      function (success) {
+                BannerService.hasAdminPasswordChanged().then(
+                    function (success) {
                         self.adminPasswordChanged = true;
-                      }, function (error) {
-                self.adminPasswordChanged = false;
-                self.announcement = "Security risk: change the current default password for the default admin account."
-              });
+                    }, function (error) {
+                        self.adminPasswordChanged = false;
+                        self.announcement = "Security risk: change the current default password for the default admin account."
+                    });
             };
             self.enterAdminPassword = function () {
-              self.user.password = "admin";
-              self.tourService.resetTours();
+                self.user.password = "admin";
+                self.tourService.resetTours();
             };
 
             self.login = function () {
-              self.working = true;
-              AuthService.login(self.user).then(
-                      function (success) {
+                self.working = true;
+                AuthService.login(self.user).then(
+                    function (success) {
                         if (self.firstTime == true) {
-                          BannerService.firstSuccessfulLogin().then(
-                                  function (success) {
+                            BannerService.firstSuccessfulLogin().then(
+                                function (success) {
                                     self.firstTime = false;
-                                  }, function (error) {
-                            // todo ?
-                          });
+                                }, function (error) {
+                                    // todo ?
+                                });
                         }
                         self.working = false;
                         self.secondFactorRequired = false;
                         AuthService.saveToken(success.headers('Authorization'));
                         $cookies.put("email", self.user.email);
                         $location.path('/');
-                      }, function (error) {
+                    }, function (error) {
                         self.working = false;
                         if (error.data !== undefined && error.data.errorCode === 120002) {
-                          self.errorMessage = "";
-                          self.emailHash = md5.createHash(self.user.email || '');
-                          self.secondFactorRequired = true;
-                        } else if (error.data !== undefined &&
-                                error.data !== null &&
-                                error.data.errorMsg !== undefined &&
-                                error.data.errorMsg !== null) {
-                          self.errorMessage = error.data.errorMsg;
+                            self.errorMessage = "";
+                            self.emailHash = md5.createHash(self.user.email || '');
+                            self.secondFactorRequired = true;
+                        } else {
+                            self.errorMessage = getErrorMsg(error, "");
                         }
-              });
-            };
-            
-            var krbLogin = function (user) {
-              self.working = true;
-              self.errorMessage = '';
-              AuthService.krbLogin(user).then(function (success) {
-                  self.working = false;
-                  $cookies.put("email", success.data.data.value);
-                  $location.path('/');
-                }, function (error) {
-                  self.working = false;
-                  console.log("Login error: ", error);
-                  if (error !== undefined && error.status === 412) {
-                    self.errorMessage = '';
-                    ModalService.remoteUserConsent('sm', error.data).then(function (success) {
-                      if (success.val.consent) {
-                        user.chosenEmail = success.val.chosenEmail;
-                        user.consent = success.val.consent;
-                        krbLogin(user);
-                      } else {
-                        user = {chosenEmail: '', consent: ''};
-                      }
-                    }, function (error) {
-                      user = {chosenEmail: '', consent: ''};
                     });
-                  } else if (error.data !== undefined && error.data !== null && 
-                             error.data.errorMsg !== undefined && error.data.errorMsg !== null) {
-                    self.errorMessage = 'Sorry, could not log you in with Kerberos. ' + error.data.errorMsg;
-                  }
-                  self.errorMessage = self.errorMessage === ''? 'Sorry, could not log you in with Kerberos. ': self.errorMessage;
-              });
             };
-            
+
+            var krbLogin = function (user) {
+                self.working = true;
+                self.errorMessage = '';
+                AuthService.krbLogin(user).then(function (success) {
+                    self.working = false;
+                    $cookies.put("email", success.data.data.value);
+                    $location.path('/');
+                }, function (error) {
+                    self.working = false;
+                    console.log("Login error: ", error);
+                    if (error !== undefined && error.status === 412) {
+                        self.errorMessage = '';
+                        ModalService.remoteUserConsent('sm', error.data).then(function (success) {
+                            if (success.val.consent) {
+                                user.chosenEmail = success.val.chosenEmail;
+                                user.consent = success.val.consent;
+                                krbLogin(user);
+                            } else {
+                                user = {chosenEmail: '', consent: ''};
+                            }
+                        }, function (error) {
+                            user = {chosenEmail: '', consent: ''};
+                        });
+                    } else {
+                        self.errorMessage = getErrorMsg(error, 'Sorry, could not log you in with Kerberos. ');
+                    }
+                });
+            };
+
             self.krbLogin = function () {
-              var user = {chosenEmail: '', consent: ''};
-              krbLogin(user);
+                var user = {chosenEmail: '', consent: ''};
+                krbLogin(user);
             };
 
             self.oauthLogin = function (providerName) {
@@ -172,17 +182,21 @@ angular.module('hopsWorksApp')
             }
 
             var checkRemoteAuth = function () {
-              VariablesService.getAuthStatus().then( function (success) {
-                  $cookies.put("otp", success.data.twofactor);
-                  $cookies.put("ldap", success.data.ldap);
-                  $cookies.put("krb", success.data.krb);
-                  $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
-                  self.otp = $cookies.get('otp');
-                  self.ldapEnabled = $cookies.get('ldap') === 'true';
-                  self.krbEnabled = $cookies.get("krb") === 'true';
-                  self.openIdProviders = JSON.parse($cookies.get("openIdProviders"));
-              }, function (error) {
-              });
+                VariablesService.getAuthStatus().then( function (success) {
+                    $cookies.put("otp", success.data.twofactor);
+                    $cookies.put("ldap", success.data.ldap);
+                    $cookies.put("krb", success.data.krb);
+                    $cookies.put("loginDisabled", success.data.loginDisabled);
+                    $cookies.put("registerDisabled", success.data.registerDisabled);
+                    $cookies.put("openIdProviders", JSON.stringify(success.data.openIdProviders));//check undefined
+                    self.otp = $cookies.get('otp');
+                    self.ldapEnabled = $cookies.get('ldap') === 'true';
+                    self.krbEnabled = $cookies.get("krb") === 'true';
+                    self.registerDisabled = $cookies.get("registerDisabled") === 'true';
+                    self.loginDisabled = $cookies.get("loginDisabled") === 'true';
+                    self.openIdProviders = JSON.parse($cookies.get("openIdProviders"));
+                }, function (error) {
+                });
             };
             checkRemoteAuth();
 
@@ -190,4 +204,4 @@ angular.module('hopsWorksApp')
             isFirstTime();
             getAnnouncement();
 
-          }]);
+        }]);

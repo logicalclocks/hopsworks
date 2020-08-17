@@ -1864,76 +1864,12 @@ public class ProjectController {
     for (ProjectTeam projectTeam : projectTeams) {
       try {
         if (!projectTeam.getProjectTeamPK().getTeamMember().equals(owner.getEmail())) {
-
-          //if the role is not properly set set it to the default role (Data Scientist).
-          if (projectTeam.getTeamRole() == null ||
-              (!projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()) &&
-                  !projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getRole()))) {
-            projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
-          }
-
           projectTeam.setTimestamp(new Date());
           newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().getTeamMember());
-          if (newMember != null && !projectTeamFacade.isUserMemberOfProject(project, newMember)) {
-            //this makes sure that the member is added to the project sent as the
-            //first param b/c the securty check was made on the parameter sent as path.
-            projectTeam.getProjectTeamPK().setProjectId(project.getId());
-            projectTeam.setProject(project);
-            projectTeam.setUser(newMember);
-            project.getProjectTeamCollection().add(projectTeam);
-            projectFacade.update(project);
-            hdfsUsersController.addNewProjectMember(project, projectTeam);
-
-            //Add user to kafka topics ACLs by default
-            if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
-              kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
-            }
-  
-            //if online-featurestore service is enabled in the project, give new member access to it
-            if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
-                settings.isOnlineFeaturestore()) {
-              Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-              onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
-                  featurestore, projectTeam.getTeamRole());
-            }
-
-            // TODO: This should now be a REST call
-            Future<CertificatesController.CertsResult> certsResultFuture = null;
-            try {
-              certsResultFuture = certificatesController.generateCertificates(project, newMember);
-              certsResultFuture.get();
-            } catch (Exception ex) {
-              try {
-                if (certsResultFuture != null) {
-                  certsResultFuture.get();
-                }
-                certificatesController.revokeUserSpecificCertificates(project, newMember);
-              } catch (IOException | InterruptedException | ExecutionException |
-                HopsSecurityException | GenericException e) {
-                String failedUser = project.getName() + HdfsUsersController.USER_NAME_DELIMITER + newMember.
-                  getUsername();
-                LOGGER.log(Level.SEVERE,
-                  "Could not delete user certificates for user " + failedUser + ". Manual cleanup is needed!!! ", e);
-              }
-              LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
-              projectTeamFacade.removeProjectTeam(project, newMember);
-              hdfsUsersController.removeProjectMember(newMember, project);
-              throw new EJBException("Could not create certificates for user");
-            }
-
-            String message = "You have been added to project " + project.getName() + " with a role "
-              + projectTeam.getTeamRole() + ".";
-            messageController.send(newMember, owner, "You have been added to a project.",
-              message, message, "");
-
-            LOGGER.log(Level.FINE, "{0} - member added to project : {1}.", new Object[]{newMember.getEmail(),
-                project.getName()});
-
-            logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner,
-              project, ActivityFlag.MEMBER);
-          } else if (newMember == null) {
+          boolean added = addMember(projectTeam, project, newMember, owner);
+          if (newMember == null) {
             failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " was not found in the system.");
-          } else {
+          } else if (!added) {
             failedList.add(newMember.getEmail() + " is already a member in this project.");
           }
         } else {
@@ -1947,6 +1883,90 @@ public class ProjectController {
     }
 
     return failedList;
+  }
+  
+  public boolean addMember(ProjectTeam projectTeam, Project project, Users newMember, Users owner) throws UserException,
+    KafkaException, ProjectException, FeaturestoreException {
+    if (projectTeam.getTeamRole() == null ||
+      (!projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()) &&
+        !projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getRole()))) {
+      projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
+    }
+  
+    projectTeam.setTimestamp(new Date());
+    if (newMember != null && !projectTeamFacade.isUserMemberOfProject(project, newMember)) {
+      //this makes sure that the member is added to the project sent as the
+      //first param b/c the securty check was made on the parameter sent as path.
+      projectTeam.getProjectTeamPK().setProjectId(project.getId());
+      projectTeam.setProject(project);
+      projectTeam.setUser(newMember);
+      project.getProjectTeamCollection().add(projectTeam);
+      projectFacade.update(project);
+      hdfsUsersController.addNewProjectMember(project, projectTeam);
+    
+      //Add user to kafka topics ACLs by default
+      if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
+        kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
+      }
+    
+      //if online-featurestore service is enabled in the project, give new member access to it
+      if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
+        settings.isOnlineFeaturestore()) {
+        Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
+        onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
+          featurestore, projectTeam.getTeamRole());
+      }
+    
+      // TODO: This should now be a REST call
+      Future<CertificatesController.CertsResult> certsResultFuture = null;
+      try {
+        certsResultFuture = certificatesController.generateCertificates(project, newMember);
+        certsResultFuture.get();
+      } catch (Exception ex) {
+        try {
+          if (certsResultFuture != null) {
+            certsResultFuture.get();
+          }
+          certificatesController.revokeUserSpecificCertificates(project, newMember);
+        } catch (IOException | InterruptedException | ExecutionException | HopsSecurityException | GenericException e) {
+          String failedUser = project.getName() + HdfsUsersController.USER_NAME_DELIMITER + newMember.getUsername();
+          LOGGER.log(Level.SEVERE,
+            "Could not delete user certificates for user " + failedUser + ". Manual cleanup is needed!!! ", e);
+        }
+        LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
+        projectTeamFacade.removeProjectTeam(project, newMember);
+        hdfsUsersController.removeProjectMember(newMember, project);
+        throw new EJBException("Could not create certificates for user");
+      }
+    
+      String message = "You have been added to project " + project.getName() + " with a role "
+        + projectTeam.getTeamRole() + ".";
+      messageController.send(newMember, owner, "You have been added to a project.", message, message, "");
+    
+      LOGGER.log(Level.FINE, "{0} - member added to project : {1}.", new Object[]{newMember.getEmail(),
+        project.getName()});
+    
+      logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner,
+        project, ActivityFlag.MEMBER);
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  public void addMember(Users user, String role, Project project) throws KafkaException, ProjectException,
+    UserException, FeaturestoreException {
+    if (user == null || project == null) {
+      throw new IllegalArgumentException("User and project can not be null.");
+    }
+    ProjectTeam projectTeam = new ProjectTeam(new ProjectTeamPK(project.getId(), user.getEmail()));
+    projectTeam.setTeamRole(role);
+    Users owner = project.getOwner();
+    boolean added = addMember(projectTeam, project, user, owner);
+    if (!added) {
+      LOGGER.log(Level.FINE, "User {0} is already a member in this project {1}.", new Object[]{user.getUsername(),
+        project.getName()});
+    }
   }
 
   /**
@@ -1964,10 +1984,8 @@ public class ProjectController {
     //find the project as an inode from hops database
     Inode inode = inodeController.getInodeAtPath(Utils.getProjectPath(project.getName()));
 
-    List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(
-      project);
-    List<ProjectServiceEnum> projectServices = projectServicesFacade.
-      findEnabledServicesForProject(project);
+    List<ProjectTeam> projectTeam = projectTeamFacade.findMembersByProject(project);
+    List<ProjectServiceEnum> projectServices = projectServicesFacade.findEnabledServicesForProject(project);
     List<String> services = new ArrayList<>();
     for (ProjectServiceEnum s : projectServices) {
       services.add(s.toString());
@@ -2149,16 +2167,29 @@ public class ProjectController {
       TensorBoardException, FeaturestoreException {
     Users userToBeRemoved = userFacade.findByEmail(toRemoveEmail);
     if (userToBeRemoved == null) {
-      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + user.getEmail());
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE,
+        "user: " + userToBeRemoved.getEmail());
     }
+    removeMemberFromTeam(project, userToBeRemoved);
+    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(), user, project, ActivityFlag.
+      MEMBER);
+  }
+  
+  public void removeMemberFromTeam(Project project, Users userToBeRemoved) throws ProjectException, ServiceException,
+    IOException, GenericException, JobException, HopsSecurityException, TensorBoardException, FeaturestoreException {
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, userToBeRemoved);
     if (projectTeam == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
-        "project: " + project + ", user: " + user.getEmail());
+        "project: " + project + ", user: " + userToBeRemoved.getEmail());
+    }
+  
+    //Not able to remove project owner regardless of who is trying to remove the member
+    if (project.getOwner().equals(userToBeRemoved)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
     }
     projectTeamFacade.removeProjectTeam(project, userToBeRemoved);
     String hdfsUser = hdfsUsersController.getHdfsUserName(project, userToBeRemoved);
-
+    
     YarnClientWrapper yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
     YarnClient client = yarnClientWrapper.getYarnClient();
     try {
@@ -2168,16 +2199,17 @@ public class ProjectController {
         YarnApplicationState.ACCEPTED, YarnApplicationState.NEW, YarnApplicationState.NEW_SAVING,
         YarnApplicationState.RUNNING, YarnApplicationState.SUBMITTED));
       //kill jupyter for this user
-
+      
       JupyterProject jupyterProject = jupyterFacade.findByUser(hdfsUser);
       if (jupyterProject != null) {
-        jupyterController.shutdown(project, hdfsUser, user, jupyterProject.getSecret(), jupyterProject.getCid(),
-          jupyterProject.getPort());
+        jupyterController
+          .shutdown(project, hdfsUser, userToBeRemoved, jupyterProject.getSecret(), jupyterProject.getCid(),
+            jupyterProject.getPort());
       }
-
+      
       //kill running TB if any
-      tensorBoardController.cleanup(project, user);
-
+      tensorBoardController.cleanup(project, userToBeRemoved);
+      
       //kill all jobs run by this user.
       //kill jobs
       List<Jobs> running = jobFacade.getRunningJobs(project, hdfsUser);
@@ -2186,7 +2218,7 @@ public class ProjectController {
           executionController.stop(job);
         }
       }
-
+      
       //wait that log aggregation for the jobs finish
       for (ApplicationReport appReport : projectsApps) {
         FinalApplicationStatus finalState = appReport.getFinalApplicationStatus();
@@ -2207,28 +2239,24 @@ public class ProjectController {
     // Revoke privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-      onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, user);
+      onlineFeaturestoreController.removeOnlineFeaturestoreUser(featurestore, userToBeRemoved);
     }
 
     kafkaController.removeProjectMemberFromTopics(project, userToBeRemoved);
-
-    logActivity(ActivityFacade.REMOVED_MEMBER + userToBeRemoved.getEmail(),
-        user, project, ActivityFlag.MEMBER);
-
     certificateMaterializer.forceRemoveLocalMaterial(userToBeRemoved.getUsername(), project.getName(), null, false);
     try {
       certificatesController.revokeUserSpecificCertificates(project, userToBeRemoved);
     } catch (HopsSecurityException ex) {
       if (ex.getErrorCode() != RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND) {
         LOGGER.log(Level.SEVERE, "Could not delete certificates when removing member "
-            + userToBeRemoved.getUsername() + " from project " + project.getName()
-            + ". Manual cleanup is needed!!!", ex);
+          + userToBeRemoved.getUsername() + " from project " + project.getName()
+          + ". Manual cleanup is needed!!!", ex);
         throw ex;
       }
     } catch (IOException | GenericException ex) {
       LOGGER.log(Level.SEVERE, "Could not delete certificates when removing member "
-          + userToBeRemoved.getUsername() + " from project " + project.getName()
-          + ". Manual cleanup is needed!!!", ex);
+        + userToBeRemoved.getUsername() + " from project " + project.getName()
+        + ". Manual cleanup is needed!!!", ex);
       throw ex;
     }
   }
@@ -2246,20 +2274,39 @@ public class ProjectController {
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole)
       throws UserException, ProjectException, FeaturestoreException {
-    Users projOwner = project.getOwner();
     Users user = userFacade.findByEmail(toUpdateEmail);
-    if (projOwner.equals(user)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
-        "project: " + project.getName());
-    }
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toUpdateEmail);
+    }
+    updateMemberRole(project, user, newRole);
+    logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFlag.MEMBER);
+  }
+  
+  /**
+   * Updates the role of a member
+   * No activity log.
+   * @param project
+   * @param user
+   * @param newRole
+   * @throws UserException
+   * @throws ProjectException
+   */
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public void updateMemberRole(Project project, Users user, String newRole)
+    throws UserException, ProjectException, FeaturestoreException {
+    if (project.getOwner().equals(user)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
+        "project: " + project.getName());
     }
     ProjectTeam projectTeam = projectTeamFacade.findProjectTeam(project, user);
     if (projectTeam == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
         "project: " + project.getName() + ", user: " + user.getUsername());
-      //member not found
+    }
+    if (newRole == null || newRole.isEmpty() ||
+      (!newRole.equals(AllowedRoles.DATA_OWNER) && !newRole.equals(AllowedRoles.DATA_SCIENTIST))) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.ROLE_NOT_SET, Level.FINE,
+        "Role not set or not supported role=" + newRole);
     }
     if (projectTeam.getTeamRole().equals(newRole)) {
       //nothing to update
@@ -2281,8 +2328,6 @@ public class ProjectController {
       onlineFeaturestoreController
           .updateUserOnlineFeatureStoreDB(user, featurestore, newRole);
     }
-
-    logActivity(ActivityFacade.CHANGE_ROLE + toUpdateEmail, opsOwner, project, ActivityFlag.MEMBER);
   }
 
   /**

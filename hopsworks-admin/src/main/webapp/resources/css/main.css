@@ -50,7 +50,7 @@ body {
 }
 
 .admin-main-layout .ui-widget-content {
-  border-width: 0px;  
+  border-width: 0px;
   overflow-y: auto;
 }
 
@@ -120,7 +120,7 @@ body {
   text-align: left;
   color: #4184F3;
   font-weight: 500;
-  line-height: 1; 
+  line-height: 1;
   margin-bottom: 20px;
 }
 
@@ -130,8 +130,17 @@ body {
 }
 
 .user-profile .ui-widget-content {
-  border-width: 0px;  
+  border-width: 0px;
   overflow-y: hidden;
+}
+
+#mappingForm .ui-picklist .ui-picklist-list {
+  height: 200px !important;
+  overflow: auto;
+}
+
+#mappingForm .ui-widget-content {
+  border: 1px solid #dddddd !important;
 }
 
 .register-server .ui-widget-content {
@@ -158,19 +167,19 @@ ui-panelgrid td {
   font-size: 14px;
 }
 
-.ui-dialog.ui-widget-content 
+.ui-dialog.ui-widget-content
 .ui-dialog-content{
   padding: 5px 15px !important;
   font-size: 12px !important;
 }
 
-.ui-dialog.ui-widget-content 
+.ui-dialog.ui-widget-content
 .ui-dialog-titlebar {
   background-color: #f5f5f5 !important;
   padding: 2px 5px !important;
 }
 
-.ui-dialog.ui-widget-content 
+.ui-dialog.ui-widget-content
 .ui-dialog-title {
   font-size: 20px !important;
   margin-right: 10px !important;
@@ -208,7 +217,7 @@ ui-panelgrid td {
   border-image: none;
   border-radius: 4px;
   box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
-  font-style: normal !important;   
+  font-style: normal !important;
   text-decoration: none !important;
 }
 
@@ -232,7 +241,7 @@ ui-panelgrid td {
   border-image: none;
   border-radius: 4px;
   box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
-  font-style: normal !important;   
+  font-style: normal !important;
   text-decoration: none !important;
 }
 
@@ -242,9 +251,23 @@ ui-panelgrid td {
 }
 
 .condaSync {
- /*background-color: lightgreen;*/ 
+  /*background-color: lightgreen;*/
 }
 
 .condaOutOfSync {
- background-color: red; 
+  background-color: red;
+}
+
+.topAligned {
+  vertical-align: top;
+}
+
+.panelGridLeftAligned td {
+  text-align: left;
+}
+
+.remote-user-deleted {
+  background-color: #fcf8e3 !important;
+  background-image: none !important;
+  color: #000000 !important;
 }

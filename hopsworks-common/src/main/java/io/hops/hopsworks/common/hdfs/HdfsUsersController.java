@@ -58,6 +58,8 @@ import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +69,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Stateless
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class HdfsUsersController {
 
   public static final String USER_NAME_DELIMITER = "__";
