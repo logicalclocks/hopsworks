@@ -104,4 +104,32 @@ public class CloudClient {
       return json;
     });
   }
+
+  public void sendStorageUsage(long bytes, long objects) throws IOException {
+    JSONObject json = new JSONObject();
+    json.put("bytes", bytes);
+    json.put("objects", objects);
+
+    JSONObject data = new JSONObject();
+    data.put("data", json);
+
+    URI storageUsageUrl = URI.create(settings.getCloudEventsEndPoint() + "/usage/storage");
+
+    HttpPost request = new HttpPost(storageUsageUrl);
+    request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+    request.setHeader("x-api-key", settings.getCloudEventsEndPointAPIKey());
+    request.setEntity(new StringEntity(data.toString()));
+
+    HttpHost host = new HttpHost(storageUsageUrl.getHost(),
+            storageUsageUrl.getPort(), storageUsageUrl.getScheme());
+    int statusCode = httpClient.execute(host, request, httpResponse -> {
+      String responseStr = EntityUtils.toString(httpResponse.getEntity());
+      LOGGER.log(Level.INFO, responseStr);
+      return httpResponse.getStatusLine().getStatusCode();
+    });
+
+    if(statusCode != 200){
+      throw new IOException("Failed to send storage usage, return status: " + statusCode);
+    }
+  }
 }
