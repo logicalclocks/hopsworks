@@ -25,7 +25,7 @@ module ExperimentHelper
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_multiple_experiments.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_multiple_experiments.ipynb",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
                         "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
     end
@@ -48,7 +48,7 @@ module ExperimentHelper
     end
 
     if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/opt_experiment.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/opt_experiment.ipynb",
                         "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username],
                         "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
     end

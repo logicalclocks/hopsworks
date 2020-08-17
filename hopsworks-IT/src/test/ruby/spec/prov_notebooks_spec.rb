@@ -84,7 +84,7 @@ describe "On #{ENV['OS']}" do
 
       project = create_project
       job_name = "prov_training_dataset"
-      src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux"
+      src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary"
       src = "#{src_dir}/#{job_name}.ipynb"
       dst = "/Projects/#{project[:projectname]}/Resources"
       user = @user[:username]
