@@ -138,7 +138,6 @@ describe "On #{ENV['OS']}" do
             # Install a library to create the new environment
             install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', conda_channel)
             expect_status(201)
-            es_index_date_suffix = Time.now.strftime("%Y.%m.%d")
 
             get_env_commands(@project[:id], python_version)
             expect_status(200)
@@ -153,10 +152,14 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".0")).to be true
-            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".1")).to be true
-            expect(check_if_img_exists_locally(@project[:projectname].downcase + ":" + getVar('hopsworks_version').value + ".2")).to be false
-            expect(check_if_img_exists_locally(@project[:docker_image])).to be true
+            # Need to get the latest image of the project from DB
+            base_python_project_image=@project.docker_image
+            @project = get_project_by_name(@project[:projectname])
+            non_versioned_project_image = @project.docker_image.rpartition('.').first
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".0")).to be true
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".1")).to be true
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".2")).to be false
+            expect(check_if_img_exists_locally(base_python_project_image)).to be true
 
           end
 
@@ -339,19 +342,62 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'remove env' do
-            skip "will be reimplemented shortly"
+            if not conda_exists(python_version)
+              skip "Anaconda is not installed in the machine or test is run locally"
+            end
             @project = create_env_and_update_project(@project, python_version)
+            # Install a library to create the new environment
+            install_library(@project[:id], python_version, 'dropbox', 'conda', '10.2.0', conda_channel)
+            expect_status(201)
+            # Wait until library is installed
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+            @project = get_project_by_name(@project[:projectname])
+            non_versioned_project_image = @project.docker_image.rpartition('.').first
             delete_env(@project[:id], python_version)
             expect_status(204)
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
+            # Sleep so that kagent has enough time to process system command to cleanup the docker images
+            sleep(15)
+            # Check if project docker images were removed by kagent
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".0")).to be false
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".1")).to be false
 
+            # Check that docker registry does not contain the image tags
+            expect(image_in_registry(@project.projectname.downcase, non_versioned_project_image.split(":")[1])).to be false
+          end
+
+          it 'clean up env of deleted project' do
             if not conda_exists(python_version)
               skip "Anaconda is not installed in the machine or test is run locally"
             end
-            expect(check_if_img_exists_locally(@project[:docker_image])).to be false
+            projectname = "project_#{short_random_id}"
+            project = create_project_by_name(projectname)
+            project = create_env_and_update_project(project, python_version)
+            # Install a library to create the new environment
+            install_library(project[:id], python_version, 'dropbox', 'conda', '10.2.0', conda_channel)
+            expect_status(201)
+            project = get_project_by_name(project[:projectname])
+            non_versioned_project_image = project.docker_image.rpartition('.').first
+            wait_for do
+              CondaCommands.find_by(project_id: project[:id]).nil?
+            end
+            delete_project(project)
+            # Wait for garbage collection
+            sleep(20)
+            wait_for do
+              CondaCommands.find_by(project_id: project[:id]).nil?
+            end
+            # Check if project docker images were removed by kagent
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".0")).to be false
+            expect(check_if_img_exists_locally(non_versioned_project_image + ".1")).to be false
+
+            # Check that docker registry does not contain the image tags
+            expect(image_in_registry(project.projectname.downcase, non_versioned_project_image.split(":")[1])).to be false
           end
 
           it 'destroy anaconda should not delete base docker image' do
@@ -373,7 +419,7 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'create environment from yml' do
-            skip "The feature is temporary removed"
+            skip "The feature is temporarily removed"
             delete_env(@project[:id], python_version)
             upload_yml
             create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", nil, nil, true)
@@ -385,52 +431,6 @@ describe "On #{ENV['OS']}" do
 
             @project = get_project_by_name(@project[:projectname])
             expect(python_version).to eq "3.6"
-          end
-
-          it 'GC stale Conda env' do
-            skip "will be reimplemented shortly"
-            if not conda_exists(python_version)
-              skip "Anaconda is not installed in the machine or test is run locally"
-            end
-
-            @project = get_project_by_name(@project[:projectname])
-            delete_env(@project[:id], python_version)
-
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
-
-            # Create a second project with Anaconda enabled
-            project2 = create_project
-            project2 = create_env_and_update_project(project2, python_version)
-            expect_status(201)
-
-            # Install a library to create the new environment
-            install_library(project2[:id], python_version, 'paramiko', 'conda', '2.4.2', conda_channel)
-            expect_status(201)
-            wait_for do
-              CondaCommands.find_by(project_id: project2[:id]).nil?
-            end
-            expect(check_if_img_exists_locally(project2[:docker_image])).to be true
-
-            # Disable Anaconda for project2 directly in the database
-            # so it does not send a command to kagent
-            tmp_proj = Project.find_by(id: project2[:id])
-            tmp_proj.conda = 0
-            tmp_proj.conda_env = 0
-            tmp_proj.save
-
-            wait_for do
-              CondaCommands.find_by(project_id: project2[:id]).nil?
-            end
-
-            trigger_conda_gc
-
-            wait_for do
-              check_if_img_exists_locally(project2[:docker_image]) == false
-            end
-
-            expect(check_if_img_exists_locally(project2[:docker_image])).to be false
           end
         end
       end

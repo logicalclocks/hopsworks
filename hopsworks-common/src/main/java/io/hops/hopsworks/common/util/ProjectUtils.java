@@ -118,7 +118,7 @@ public class ProjectUtils {
   }
 
   public String getInitialDockerImageName(Project project) {
-    String initialImageTag = settings.getHopsworksVersion() + ".0";
+    String initialImageTag = System.currentTimeMillis() + "-" + settings.getHopsworksVersion() + ".0";
     if(settings.getKubeType() == Settings.KubeType.EKS && settings.isManagedDockerRegistry()){
       return settings.getBaseDockerImageName() + ":" + project.getName().toLowerCase() + "_" + initialImageTag;
     }else{

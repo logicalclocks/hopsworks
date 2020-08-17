@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
@@ -284,6 +285,63 @@ public class LibraryController {
     }
     String result = processResult.getStdout();
     return (result != null && !result.isEmpty())? result.split("\n") : new String[0];
+  }
+  
+  public Collection<PythonDep> listLibraries(String imageName) throws ServiceException {
+    String prog = settings.getSudoersDir() + "/dockerImage.sh";
+    
+    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+      .addCommand("/usr/bin/sudo")
+      .addCommand(prog)
+      .addCommand("list")
+      .addCommand(imageName)
+      .redirectErrorStream(true)
+      .setWaitTimeout(300L, TimeUnit.SECONDS)
+      .build();
+    
+    try {
+      ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
+      if (processResult.getExitCode() != 0) {
+        String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
+          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+        LOGGER.log(Level.SEVERE, errorMsg);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
+      } else {
+        return depStringToCollec(processResult.getStdout());
+      }
+    } catch (IOException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
+    }
+  }
+  
+  public Collection<PythonDep> depStringToCollec(String condaListStr) throws ServiceException {
+    Collection<PythonDep> deps = new ArrayList<>();
+    
+    String[] lines = condaListStr.split(System.getProperty("line.separator"));
+    
+    for (int i = 3; i < lines.length; i++) {
+      
+      String line = lines[i];
+      String[] split = line.split(" +");
+      
+      String libraryName = split[0];
+      String version = split[1];
+      String channel = "conda";
+      if (split.length > 3) {
+        channel = split[3].trim().isEmpty() ? channel : split[3];
+      }
+      
+      CondaInstallType installType = CondaInstallType.PIP;
+      if (!(channel.equals("pypi"))) {
+        installType = CondaInstallType.CONDA;
+      }
+      AnacondaRepo repo = libraryFacade.getRepo(channel, true);
+      boolean cannotBeRemoved = channel.equals("default");
+      PythonDep pyDep = libraryFacade.getOrCreateDep(repo, installType, libraryName, version,
+        false, cannotBeRemoved);
+      deps.add(pyDep);
+    }
+    return deps;
   }
   
 }

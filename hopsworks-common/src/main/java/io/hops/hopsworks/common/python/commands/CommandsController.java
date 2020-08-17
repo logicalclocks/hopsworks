@@ -15,13 +15,10 @@
  */
 package io.hops.hopsworks.common.python.commands;
 
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
-import io.hops.hopsworks.common.util.WebCommunication;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -57,13 +54,7 @@ public class CommandsController {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private HostsFacade hostsFacade;
-  @EJB
-  private WebCommunication web;
-  @EJB
   private LibraryFacade libraryFacade;
-  @EJB
-  private ProjectUtils projectUtils;
   
   public void deleteCommands(Project project, String lib) {
     condaCommandFacade.deleteCommandsForLibrary(project, lib);
@@ -94,10 +85,9 @@ public class CommandsController {
     if (commands == null) {
       return;
     }
-    for (CondaCommands cc : commands) {
-      // First, remove any old commands for the project in conda_commands
-      condaCommandFacade.remove(cc);
-    }
+    // First, remove any old commands for the project in conda_commands. Except for REMOVE commands as they are
+    //processed asynchronously
+    commands.stream().filter(cc -> cc.getOp() != CondaOp.REMOVE).forEach(condaCommandFacade::remove);
   }
 
   public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType, Project proj, String channelUrl,
@@ -169,6 +159,9 @@ public class CommandsController {
         cc.setStatus(condaStatus);
         cc.setArg(arg);
         cc.setErrorMsg(errorMessage);
+        condaCommandFacade.update(cc);
+      } else if (condaStatus == CondaStatus.ONGOING){
+        cc.setStatus(condaStatus);
         condaCommandFacade.update(cc);
       }
     } else {

@@ -109,6 +109,9 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findByStatus",
           query
           = "SELECT c FROM CondaCommands c WHERE c.status = :status"),
+  @NamedQuery(name = "CondaCommands.findByStatusAndCondaOp",
+          query
+          = "SELECT c FROM CondaCommands c WHERE c.status = :status AND c.op = :op"),
   @NamedQuery(name = "CondaCommands.findByCreated",
           query
           = "SELECT c FROM CondaCommands c WHERE c.created = :created"),

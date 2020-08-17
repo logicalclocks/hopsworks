@@ -101,8 +101,6 @@ public class Settings implements Serializable {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private ProjectUtils projectUtils;
-  @EJB
   private OSProcessExecutor osProcessExecutor;
 
   @PersistenceContext(unitName = "kthfsPU")
@@ -1432,10 +1430,9 @@ public class Settings implements Serializable {
   public static final String DIR_META_TEMPLATES = Path.SEPARATOR + "user" + Path.SEPARATOR + "metadata"
     + Path.SEPARATOR + "uploads" + Path.SEPARATOR;
   public static final String PROJECT_STAGING_DIR = "Resources";
-
-  private static String DEFAULT_RESERVED_PROJECT_NAMES = "python27,python36,python37,python38,python39,hops-system," +
-    "hopsworks,information_schema,airflow,glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema," +
-    "sqoop,sys";
+  
+  private final static String DEFAULT_RESERVED_PROJECT_NAMES = "hops-system,hopsworks,information_schema,airflow," +
+    "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys";
   private Set<String> RESERVED_PROJECT_NAMES;
   
   public synchronized Set<String> getReservedProjectNames() {
