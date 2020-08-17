@@ -183,7 +183,7 @@ describe "On #{ENV['OS']}" do
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
 
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/run_single_experiment.ipynb",
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
                                 "/Projects/#{projectname}/Jupyter/shared_notebook.ipynb", @user[:username],
                                 "#{projectname}__Resources", 750, "#{projectname}")
 
@@ -210,7 +210,8 @@ describe "On #{ENV['OS']}" do
 
       it "should convert .ipynb file to .py file" do
 
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/aux/export_model.ipynb", "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
+                        "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
         expect_status(201)
