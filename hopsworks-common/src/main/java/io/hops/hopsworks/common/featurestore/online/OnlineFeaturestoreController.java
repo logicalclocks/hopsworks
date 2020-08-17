@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
@@ -108,7 +107,7 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
         Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
     }
-    jdbcString = settings.getFeaturestoreJdbcUrl() + databaseName;
+    jdbcString = featurestoreJdbcConnectorController.onlineJdbcConnectionString(databaseName);
     try {
       return DriverManager.getConnection(jdbcString, dbUsername, password);
     } catch (SQLException e) {
@@ -339,12 +338,6 @@ public class OnlineFeaturestoreController {
         .ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE, "An error occurred when trying to create " +
         "the MySQL database for an online feature store", e.getMessage(), e);
     }
-
-    try {
-      featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(user, dbuser, featurestore, db);
-    } catch(Exception e) {
-      //If the connector have already been created, skip this step
-    }
   }
 
   /**
@@ -432,16 +425,7 @@ public class OnlineFeaturestoreController {
         Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
         e.getMessage(), e);
     }
-    String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
-    List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
-    for (FeaturestoreStorageConnectorDTO storageConnector: jdbcConnectors) {
-      if (storageConnector.getName().equalsIgnoreCase(connectorName)) {
-        featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnector.getId());
-      }
-    }
   }
-  
   
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.

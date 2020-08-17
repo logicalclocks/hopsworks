@@ -285,8 +285,7 @@ public class FeaturestoreService {
       String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
       String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
       onlineFeaturestoreConnector =
-        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-          dbUsername, featurestore, dbName);
+        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, featurestore);
       featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
       featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
       featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());

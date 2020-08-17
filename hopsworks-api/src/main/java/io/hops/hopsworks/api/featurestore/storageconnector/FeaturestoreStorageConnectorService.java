@@ -371,8 +371,7 @@ public class FeaturestoreStorageConnectorService {
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
-      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-      dbUsername, featurestore, dbName);
+      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, featurestore);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
       new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {
       };
