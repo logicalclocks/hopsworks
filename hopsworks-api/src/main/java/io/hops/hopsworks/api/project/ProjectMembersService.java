@@ -221,10 +221,6 @@ public class ProjectMembersService {
       throw new ProjectException(RESTCodes.ProjectErrorCode.MEMBER_REMOVAL_NOT_ALLOWED, Level.FINE);
     }
 
-    //Not able to remove project owner regardless of who is trying to remove the member
-    if (project.getOwner().getEmail().equals(email)) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_NOT_ALLOWED, Level.FINE);
-    }
     projectController.removeMemberFromTeam(project, reqUser, email);
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);

@@ -134,6 +134,15 @@ body {
   overflow-y: hidden;
 }
 
+#mappingForm .ui-picklist .ui-picklist-list {
+  height: 200px !important;
+  overflow: auto;
+}
+
+#mappingForm .ui-widget-content {
+  border: 1px solid #dddddd !important;
+}
+
 .register-server .ui-widget-content {
   border-width: 0px;
   overflow-y: hidden;
@@ -247,4 +256,18 @@ ui-panelgrid td {
 
 .condaOutOfSync {
  background-color: red; 
+}
+
+.topAligned {
+  vertical-align: top;
+}
+
+.panelGridLeftAligned td {
+  text-align: left;
+}
+
+.remote-user-deleted {
+  background-color: #fcf8e3 !important;
+  background-image: none !important;
+  color: #000000 !important;
 }

@@ -61,6 +61,20 @@ angular.module('hopsWorksApp')
             self.openIdProviders = [];
 
 
+            var getErrorMsg = function (error, msg) {
+                var errorMsg = "";
+                if (error.data !== undefined &&
+                    error.data !== null &&
+                    error.data.errorMsg !== undefined &&
+                    error.data.errorMsg !== null) {
+                    errorMsg = error.data.errorMsg;
+                }
+               return (typeof error.data !== 'undefined' &&
+                       error.data !== undefined &&
+                       error.data !== null &&
+                       typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : msg + errorMsg;
+            };
+
             var getAnnouncement = function () {
               BannerService.findBanner().then(
                       function (success) {
@@ -120,11 +134,8 @@ angular.module('hopsWorksApp')
                           self.errorMessage = "";
                           self.emailHash = md5.createHash(self.user.email || '');
                           self.secondFactorRequired = true;
-                        } else if (error.data !== undefined &&
-                                error.data !== null &&
-                                error.data.errorMsg !== undefined &&
-                                error.data.errorMsg !== null) {
-                          self.errorMessage = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;;
+                        } else {
+                          self.errorMessage = getErrorMsg(error, "");
                         }
               });
             };
@@ -152,11 +163,9 @@ angular.module('hopsWorksApp')
                     }, function (error) {
                       user = {chosenEmail: '', consent: ''};
                     });
-                  } else if (error.data !== undefined && error.data !== null && 
-                             error.data.errorMsg !== undefined && error.data.errorMsg !== null) {
-                    self.errorMessage = 'Sorry, could not log you in with Kerberos. ' + error.data.errorMsg;
+                  } else {
+                      self.errorMessage = getErrorMsg(error, 'Sorry, could not log you in with Kerberos. ');
                   }
-                  self.errorMessage = self.errorMessage === ''? 'Sorry, could not log you in with Kerberos. ': self.errorMessage;
               });
             };
             

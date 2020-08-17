@@ -2719,6 +2719,9 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LDAP_USERDN = "ldap_user_dn";
   private static final String VARIABLE_LDAP_GROUPDN = "ldap_group_dn";
   private static final String VARIABLE_LDAP_ACCOUNT_STATUS = "ldap_account_status";
+  private static final String VARIABLE_LDAP_GROUPS_SEARCH_FILTER = "ldap_groups_search_filter";
+  private static final String VARIABLE_LDAP_GROUP_MEMBERS_SEARCH_FILTER = "ldap_group_members_filter";
+  private static final String VARIABLE_LDAP_GROUPS_TARGET = "ldap_groups_target";
   private static final String VARIABLE_OAUTH_ENABLED = "oauth_enabled";
   private static final String VARIABLE_OAUTH_REDIRECT_URI = "oauth_redirect_uri";
   private static final String VARIABLE_OAUTH_ACCOUNT_STATUS = "oauth_account_status";
@@ -2726,6 +2729,7 @@ public class Settings implements Serializable {
   
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
+  private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
 
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2746,12 +2750,16 @@ public class Settings implements Serializable {
   private String LDAP_GROUP_DN_DEFAULT = "";
   private String LDAP_USER_DN = LDAP_USER_DN_DEFAULT;
   private String LDAP_GROUP_DN = LDAP_GROUP_DN_DEFAULT;
+  private String LDAP_GROUPS_TARGET = "distinguishedName";
+  private String LDAP_GROUPS_SEARCH_FILTER = "(&(objectCategory=group)(cn=%c))";
+  private String LDAP_GROUP_MEMBERS_SEARCH_FILTER = "(&(objectCategory=user)(memberOf=%d))";
   private int LDAP_ACCOUNT_STATUS = 1;
   private String OAUTH_ENABLED = "false";
   private boolean IS_OAUTH_ENABLED = false;
   private String OAUTH_GROUP_MAPPING = "";
   private String OAUTH_REDIRECT_URI = "hopsworks/callback";
   private int OAUTH_ACCOUNT_STATUS = 1;
+  private long LDAP_GROUP_MAPPING_SYNC_INTERVAL = 0;
   
   private boolean DISABLE_PASSWORD_LOGIN = false;
   private boolean DISABLE_REGISTRATION = false;
@@ -2773,6 +2781,10 @@ public class Settings implements Serializable {
     LDAP_DYNAMIC_GROUP_TARGET = setVar(VARIABLE_LDAP_DYNAMIC_GROUP_TARGET, LDAP_DYNAMIC_GROUP_TARGET);
     LDAP_USER_DN = setStrVar(VARIABLE_LDAP_USERDN, LDAP_USER_DN_DEFAULT);
     LDAP_GROUP_DN = setStrVar(VARIABLE_LDAP_GROUPDN, LDAP_GROUP_DN_DEFAULT);
+    LDAP_GROUPS_TARGET = setVar(VARIABLE_LDAP_GROUPS_TARGET, LDAP_GROUPS_TARGET);
+    LDAP_GROUPS_SEARCH_FILTER = setStrVar(VARIABLE_LDAP_GROUPS_SEARCH_FILTER, LDAP_GROUPS_SEARCH_FILTER);
+    LDAP_GROUP_MEMBERS_SEARCH_FILTER =
+      setStrVar(VARIABLE_LDAP_GROUP_MEMBERS_SEARCH_FILTER, LDAP_GROUP_MEMBERS_SEARCH_FILTER);
     IS_KRB_ENABLED = setBoolVar(VARIABLE_KRB_AUTH, IS_KRB_ENABLED);
     IS_LDAP_ENABLED = setBoolVar(VARIABLE_LDAP_AUTH, IS_LDAP_ENABLED);
     OAUTH_ENABLED = setStrVar(VARIABLE_OAUTH_ENABLED, OAUTH_ENABLED);
@@ -2783,6 +2795,9 @@ public class Settings implements Serializable {
   
     DISABLE_PASSWORD_LOGIN = setBoolVar(VARIABLE_DISABLE_PASSWORD_LOGIN, DISABLE_PASSWORD_LOGIN);
     DISABLE_REGISTRATION = setBoolVar(VARIABLE_DISABLE_REGISTRATION, DISABLE_REGISTRATION);
+  
+    LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
+      LDAP_GROUP_MAPPING_SYNC_INTERVAL);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -2873,6 +2888,21 @@ public class Settings implements Serializable {
   public synchronized int getLdapAccountStatus() {
     checkCache();
     return LDAP_ACCOUNT_STATUS;
+  }
+  
+  public synchronized String getLdapGroupsTarget() {
+    checkCache();
+    return LDAP_GROUPS_TARGET;
+  }
+  
+  public synchronized String getLdapGroupsSearchFilter() {
+    checkCache();
+    return LDAP_GROUPS_SEARCH_FILTER;
+  }
+  
+  public synchronized String getLdapGroupMembersFilter() {
+    checkCache();
+    return LDAP_GROUP_MEMBERS_SEARCH_FILTER;
   }
 
   public synchronized String getOAuthEnabled() {
@@ -2965,6 +2995,12 @@ public class Settings implements Serializable {
     checkCache();
     return DISABLE_REGISTRATION;
   }
+  
+  public synchronized long ldapGroupMappingSyncInterval() {
+    checkCache();
+    return LDAP_GROUP_MAPPING_SYNC_INTERVAL;
+  }
+  
   
   //----------------------------END remote user------------------------------------
 

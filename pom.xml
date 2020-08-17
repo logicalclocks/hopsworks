@@ -82,7 +82,8 @@
         <activeByDefault>false</activeByDefault>
       </activation>
       <modules>
-        <module>hopsworks-remote-user-auth</module>
+        <module>hopsworks-remote-user</module>
+        <module>hopsworks-remote-user-api</module>
       </modules>
     </profile>
     <profile>

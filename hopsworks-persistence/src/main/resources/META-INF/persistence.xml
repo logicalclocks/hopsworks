@@ -118,6 +118,7 @@
     <class>io.hops.hopsworks.persistence.entity.remote.user.RemoteUser</class>
     <class>io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient</class>
     <class>io.hops.hopsworks.persistence.entity.remote.oauth.OauthLoginState</class>
+    <class>io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping</class>
     <class>io.hops.hopsworks.persistence.entity.rstudio.RStudioProject</class>
     <class>io.hops.hopsworks.persistence.entity.rstudio.RStudioSettings</class>
     <class>io.hops.hopsworks.persistence.entity.security.RemoteMaterialReferences</class>

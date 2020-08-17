@@ -232,9 +232,7 @@ public class KafkaResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response acceptSharedTopic(@PathParam("topic") String topicName, @Context UriInfo uriInfo,
-    @Context SecurityContext sc)
-    throws KafkaException, ProjectException, UserException {
-    
+    @Context SecurityContext sc) throws KafkaException, ProjectException, UserException {
     kafkaController.acceptSharedTopic(project, topicName);
     return Response.ok().build();
   }

@@ -17,12 +17,15 @@ package io.hops.hopsworks.common.dao.remote.user;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserStatus;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.List;
 
 @Stateless
 public class RemoteUserFacade extends AbstractFacade<RemoteUser> {
@@ -54,6 +57,12 @@ public class RemoteUserFacade extends AbstractFacade<RemoteUser> {
     } catch (NoResultException e) {
       return null;
     }
+  }
+  
+  public List<RemoteUser> findByStatus(RemoteUserStatus status) {
+    TypedQuery<RemoteUser> query = em.createNamedQuery("RemoteUser.findByStatus", RemoteUser.class);
+    query.setParameter("status", status);
+    return query.getResultList();
   }
 
 }

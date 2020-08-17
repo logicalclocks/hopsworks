@@ -164,7 +164,7 @@ function getPathname() {
 }
 
 function getRemoteUserAuthPathname() {
-  return "/hopsworks-remote-user-auth";
+  return "/hopsworks-remote-user-api";
 }
 
 function getApiPath() {

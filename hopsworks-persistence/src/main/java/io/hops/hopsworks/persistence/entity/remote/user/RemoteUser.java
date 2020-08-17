@@ -56,6 +56,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "RemoteUser.findByUuid",
       query = "SELECT r FROM RemoteUser r WHERE r.uuid = :uuid")
   ,
+    @NamedQuery(name = "RemoteUser.findByStatus",
+      query = "SELECT r FROM RemoteUser r WHERE r.status = :status")
+    ,
     @NamedQuery(name = "RemoteUser.findByUid",
       query = "SELECT r FROM RemoteUser r WHERE r.uid = :uid")})
 public class RemoteUser implements Serializable {
@@ -90,6 +93,13 @@ public class RemoteUser implements Serializable {
   @OneToOne(optional = false,
       cascade = CascadeType.PERSIST)
   private Users uid;
+  @Basic(optional = false)
+  @NotNull
+  @Size(min = 1,
+    max = 45)
+  @Enumerated(EnumType.ORDINAL)
+  @Column(name = "status")
+  private RemoteUserStatus status = RemoteUserStatus.ACTIVE;
 
   public RemoteUser() {
   }
@@ -140,7 +150,15 @@ public class RemoteUser implements Serializable {
   public void setUid(Users uid) {
     this.uid = uid;
   }
-
+  
+  public RemoteUserStatus getStatus() {
+    return status;
+  }
+  
+  public void setStatus(RemoteUserStatus status) {
+    this.status = status;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;
