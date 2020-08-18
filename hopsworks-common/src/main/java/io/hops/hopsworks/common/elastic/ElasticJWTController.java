@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.common.elastic;
 
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
@@ -54,7 +55,7 @@ public class ElasticJWTController {
     SignatureAlgorithm alg = SignatureAlgorithm.valueOf(settings.getJWTSignatureAlg());
     try {
       return jwtController.getSigningKeyForELK(alg);
-    } catch (NoSuchAlgorithmException e) {
+    } catch (NoSuchAlgorithmException | SigningKeyEncryptionException e) {
       throw new ElasticException(RESTCodes.ElasticErrorCode.SIGNING_KEY_ERROR,
           Level.SEVERE, "Failed to get elk signing key", e.getMessage(),
           e);
@@ -98,7 +99,8 @@ public class ElasticJWTController {
       }
       return jwtController.createTokenForELK(project, settings.getJWTIssuer()
           , claims, expiresAt, alg);
-    } catch (DuplicateSigningKeyException | NoSuchAlgorithmException | SigningKeyNotFoundException e) {
+    } catch (DuplicateSigningKeyException | NoSuchAlgorithmException | SigningKeyNotFoundException |
+      SigningKeyEncryptionException e) {
       throw new ElasticException(RESTCodes.ElasticErrorCode.JWT_NOT_CREATED,
           Level.SEVERE, "Failed to create jwt token for elk", e.getMessage(), e);
     }

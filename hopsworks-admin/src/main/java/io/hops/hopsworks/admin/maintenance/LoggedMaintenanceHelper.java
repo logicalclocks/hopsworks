@@ -15,10 +15,10 @@
  */
 package io.hops.hopsworks.admin.maintenance;
 
-import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -36,7 +36,7 @@ public class LoggedMaintenanceHelper {
   @EJB
   private Settings settings;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private MasterPasswordService masterPasswordService;
   
   
   public void updateVariable(String varName, String varValue,
@@ -47,8 +47,8 @@ public class LoggedMaintenanceHelper {
   public void changeMasterEncryptionPassword(String currentPassword, String newPassword, HttpServletRequest request)
     throws IOException, EncryptionMasterPasswordException {
     String userEmail = request.getUserPrincipal().getName();
-    certificatesMgmService.checkPassword(currentPassword, userEmail);
-    Integer opId = certificatesMgmService.initUpdateOperation();
-    certificatesMgmService.resetMasterEncryptionPassword(opId, newPassword, userEmail);
+    masterPasswordService.checkPassword(currentPassword, userEmail);
+    Integer opId = masterPasswordService.initUpdateOperation();
+    masterPasswordService.resetMasterEncryptionPassword(opId, newPassword, userEmail);
   }
 }

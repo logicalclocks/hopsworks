@@ -42,6 +42,8 @@ import io.hops.hopsworks.persistence.entity.dela.certs.ClusterCertificate;
 import io.hops.hopsworks.common.dao.dela.certs.ClusterCertificateFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.security.password.MasterPasswordChangeResult;
+import io.hops.hopsworks.security.password.MasterPasswordHandler;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

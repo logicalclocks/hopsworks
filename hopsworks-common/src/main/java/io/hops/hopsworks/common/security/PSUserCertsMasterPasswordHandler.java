@@ -44,6 +44,8 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.EncryptionMasterPasswordException;
+import io.hops.hopsworks.security.password.MasterPasswordChangeResult;
+import io.hops.hopsworks.security.password.MasterPasswordHandler;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;

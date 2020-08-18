@@ -51,6 +51,7 @@ import io.hops.hopsworks.persistence.entity.security.RemoteMaterialReferences;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.CryptoPasswordNotFoundException;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 import org.apache.commons.collections.Bag;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections.bag.HashBag;
@@ -125,7 +126,7 @@ public class CertificateMaterializer {
   @EJB
   private UserFacade userFacade;
   @EJB
-  private CertificatesMgmService certificatesMgmService;
+  private MasterPasswordService masterPasswordService;
   @EJB
   private RemoteMaterialReferencesFacade remoteMaterialReferencesFacade;
   @EJB
@@ -1206,7 +1207,7 @@ public class CertificateMaterializer {
     String userPassword = user.getPassword();
 
     try {
-      String decryptedPassword = HopsUtils.decrypt(userPassword, encryptedPassword, certificatesMgmService
+      String decryptedPassword = HopsUtils.decrypt(userPassword, encryptedPassword, masterPasswordService
           .getMasterEncryptionPassword());
       return decryptedPassword.toCharArray();
     } catch (Exception ex) {

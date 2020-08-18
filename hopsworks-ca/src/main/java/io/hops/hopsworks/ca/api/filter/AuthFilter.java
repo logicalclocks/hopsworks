@@ -20,6 +20,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.ca.api.exception.mapper.CAJsonResponse;
 import io.hops.hopsworks.ca.controllers.CAConf;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.hops.hopsworks.jwt.AlgorithmFactory;
@@ -62,7 +63,7 @@ public class AuthFilter extends JWTFilter {
   private UriInfo uriInfo;
 
   @Override
-  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return algorithmFactory.getAlgorithm(jwt);
   }
 

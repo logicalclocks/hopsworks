@@ -15,28 +15,20 @@
  */
 package io.hops.hopsworks.jwt.dao;
 
-import io.hops.hopsworks.jwt.SignatureAlgorithm;
-import io.hops.hopsworks.jwt.SigningKeyGenerator;
-import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.persistence.entity.jwt.JwtSigningKey;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import java.util.List;
 
 @Stateless
 public class JwtSigningKeyFacade {
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  
-  @EJB
-  private SigningKeyGenerator signingKeyGenerator;
 
   public JwtSigningKey find(Integer id) {
     return em.find(JwtSigningKey.class, id);
@@ -66,40 +58,13 @@ public class JwtSigningKeyFacade {
     signingKey.setName(newName);
     em.merge(signingKey);
   }
-  
-  public JwtSigningKey getOrCreateSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
-    JwtSigningKey signingKey = this.findByName(keyName);
-    if (signingKey == null) {
-      signingKey = this.createSigningKey(keyName, alg);
-    }
-    return signingKey;
-  }
-  
-  public JwtSigningKey createNewSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException, 
-      DuplicateSigningKeyException {
-    JwtSigningKey signingKey = this.findByName(keyName);
-    if (signingKey != null) {
-      // throwing DuplicateSigningKeyException to catch parent exception (JWTException) and
-      throw new DuplicateSigningKeyException("A signing key with the same name already exists.");
-    }
-    return this.createSigningKey(keyName, alg);
-  }
-  
-  private JwtSigningKey createSigningKey(String keyName, SignatureAlgorithm alg) throws NoSuchAlgorithmException {
-    JwtSigningKey signingKey;
-    String base64Encoded = signingKeyGenerator.getSigningKey(alg.getJcaName());
-    signingKey = new JwtSigningKey(base64Encoded, keyName);
-    persist(signingKey);
-    JwtSigningKey newSigningKey = findByName(keyName);
-    return newSigningKey;
+
+  public void persist(JwtSigningKey jwtSigningKey) {
+    em.persist(jwtSigningKey);
   }
 
-  public void persist(JwtSigningKey invalidJwt) {
-    em.persist(invalidJwt);
-  }
-
-  public JwtSigningKey merge(JwtSigningKey invalidJwt) {
-    return em.merge(invalidJwt);
+  public JwtSigningKey merge(JwtSigningKey jwtSigningKey) {
+    return em.merge(jwtSigningKey);
   }
 
   public void remove(JwtSigningKey jwtSigningKey) {

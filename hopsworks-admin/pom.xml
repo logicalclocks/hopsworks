@@ -72,9 +72,17 @@
         </exclusion>
       </exclusions>
     </dependency>
+
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-security</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

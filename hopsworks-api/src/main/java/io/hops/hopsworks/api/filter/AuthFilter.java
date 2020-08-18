@@ -26,6 +26,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.jwt.AlgorithmFactory;
 import io.hops.hopsworks.jwt.JWTController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.jwt.filter.JWTFilter;
 import io.hops.hopsworks.restutils.JsonResponse;
@@ -68,7 +69,7 @@ public class AuthFilter extends JWTFilter {
   private ResourceInfo resourceInfo;
 
   @Override
-  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException {
+  public Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException, SigningKeyEncryptionException {
     return algorithmFactory.getAlgorithm(jwt);
   }
 

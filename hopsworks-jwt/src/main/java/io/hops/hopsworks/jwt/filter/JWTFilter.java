@@ -37,6 +37,8 @@ import static io.hops.hopsworks.jwt.Constants.DEFAULT_EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.EXPIRY_LEEWAY;
 import static io.hops.hopsworks.jwt.Constants.ROLES;
 import static io.hops.hopsworks.jwt.Constants.WWW_AUTHENTICATE_VALUE;
+
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 
 public abstract class JWTFilter implements ContainerRequestFilter {
@@ -133,7 +135,8 @@ public abstract class JWTFilter implements ContainerRequestFilter {
     return !set1.isEmpty();
   }
 
-  public abstract Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException;
+  public abstract Algorithm getAlgorithm(DecodedJWT jwt) throws SigningKeyNotFoundException,
+    SigningKeyEncryptionException;
 
   public abstract Set<String> allowedRoles();
 

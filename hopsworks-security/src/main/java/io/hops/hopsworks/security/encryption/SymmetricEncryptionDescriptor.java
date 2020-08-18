@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.security;
+package io.hops.hopsworks.security.encryption;
 
 import java.nio.charset.Charset;
 

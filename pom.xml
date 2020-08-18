@@ -60,6 +60,7 @@
     <module>hopsworks-IT</module>
     <module>hopsworks-rest-utils</module>
     <module>hopsworks-UT</module>
+    <module>hopsworks-security</module>
   </modules>
 
   <profiles>

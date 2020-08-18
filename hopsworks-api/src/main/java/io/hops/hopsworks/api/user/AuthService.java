@@ -60,6 +60,7 @@ import io.hops.hopsworks.jwt.JsonWebToken;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.jwt.exception.DuplicateSigningKeyException;
 import io.hops.hopsworks.jwt.exception.InvalidationException;
+import io.hops.hopsworks.jwt.exception.SigningKeyEncryptionException;
 import io.hops.hopsworks.jwt.exception.SigningKeyNotFoundException;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
@@ -156,8 +157,7 @@ public class AuthService {
   @JWTNotRequired
   public Response login(@FormParam("email") String email, @FormParam("password") String password,
     @FormParam("otp") String otp, @Context HttpServletRequest req) throws UserException, SigningKeyNotFoundException,
-    NoSuchAlgorithmException,
-    LoginException, DuplicateSigningKeyException {
+    NoSuchAlgorithmException, LoginException, DuplicateSigningKeyException, SigningKeyEncryptionException {
 
     if (email == null || email.isEmpty()) {
       throw new IllegalArgumentException("Email was not provided");
@@ -204,7 +204,7 @@ public class AuthService {
   @JWTNotRequired
   public Response serviceLogin(@FormParam("email") String email, @FormParam("password") String password,
     @Context HttpServletRequest request) throws UserException, GeneralSecurityException, SigningKeyNotFoundException,
-    DuplicateSigningKeyException, HopsSecurityException {
+    DuplicateSigningKeyException, HopsSecurityException, SigningKeyEncryptionException {
     if (Strings.isNullOrEmpty(email)) {
       throw new IllegalArgumentException("Email cannot be null or empty");
     }
@@ -418,7 +418,7 @@ public class AuthService {
   }
 
   private Response login(Users user, String password, HttpServletRequest req) throws UserException,
-      SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException {
+    SigningKeyNotFoundException, NoSuchAlgorithmException, DuplicateSigningKeyException, SigningKeyEncryptionException {
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     if (user.getBbcGroupCollection() == null || user.getBbcGroupCollection().isEmpty()) {
       throw new UserException(RESTCodes.UserErrorCode.NO_ROLE_FOUND, Level.FINE,

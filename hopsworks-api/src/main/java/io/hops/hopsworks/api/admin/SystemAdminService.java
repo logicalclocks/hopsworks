@@ -65,6 +65,7 @@ import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.security.password.MasterPasswordService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -103,6 +104,8 @@ public class SystemAdminService {
   @EJB
   private CertificatesMgmService certificatesMgmService;
   @EJB
+  private MasterPasswordService masterPasswordService;
+  @EJB
   private NoCacheResponse noCacheResponse;
   @EJB
   private Settings settings;
@@ -134,9 +137,9 @@ public class SystemAdminService {
     LOGGER.log(Level.FINE, "Requested master encryption password change");
     try {
       Users user = jWTHelper.getUserPrincipal(sc);
-      certificatesMgmService.checkPassword(oldPassword, user.getEmail());
-      Integer operationId = certificatesMgmService.initUpdateOperation();
-      certificatesMgmService.resetMasterEncryptionPassword(operationId, newPassword, user.getEmail());
+      masterPasswordService.checkPassword(oldPassword, user.getEmail());
+      Integer operationId = masterPasswordService.initUpdateOperation();
+      masterPasswordService.resetMasterEncryptionPassword(operationId, newPassword, user.getEmail());
       
       RESTApiJsonResponse response = noCacheResponse.buildJsonResponse(Response.Status.CREATED,
           String.valueOf(operationId));
@@ -154,7 +157,7 @@ public class SystemAdminService {
   @GET
   @Path("/encryptionPass/{opId}")
   public Response getUpdatePasswordStatus(@PathParam("opId") Integer operationId, @Context SecurityContext sc) {
-    CertificatesMgmService.UPDATE_STATUS status = certificatesMgmService.getOperationStatus(operationId);
+    MasterPasswordService.UPDATE_STATUS status = masterPasswordService.getOperationStatus(operationId);
     switch (status) {
       case OK:
         return noCacheResponse.getNoCacheCORSResponseBuilder(Response.Status.OK).build();

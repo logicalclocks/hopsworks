@@ -54,6 +54,7 @@ import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
 import io.hops.hopsworks.restutils.RESTLogLevel;
+import io.hops.hopsworks.security.util.SecuritySettings;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -104,6 +105,8 @@ public class Settings implements Serializable {
   private ProjectUtils projectUtils;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private SecuritySettings securitySettings;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -729,6 +732,7 @@ public class Settings implements Serializable {
   public synchronized void refreshCache() {
     cached = false;
     populateCache();
+    securitySettings.refreshCache();
   }
 
   public synchronized void updateVariable(String variableName, String variableValue, VariablesVisibility visibility) {
