@@ -48,4 +48,6 @@ public interface JupyterManager {
   boolean ping(JupyterProject jupyterProject);
   
   List<JupyterProject> getAllNotebooks();
+  
+  String getJupyterHost();
 }

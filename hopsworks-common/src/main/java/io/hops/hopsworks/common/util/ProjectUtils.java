@@ -73,7 +73,7 @@ public class ProjectUtils {
   public static String getFullDockerImageName(Project project, Settings settings,
       ServiceDiscoveryController serviceDiscoveryController, boolean useBase) throws ServiceDiscoveryException {
     String imageName = getDockerImageName(project, settings, useBase);
-    return getRegistryURL(serviceDiscoveryController) + "/" + imageName;
+    return getRegistryURL(settings, serviceDiscoveryController) + "/" + imageName;
   }
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
@@ -89,18 +89,27 @@ public class ProjectUtils {
   }
   
   public String getFullDockerImageName(String imageName) throws ServiceDiscoveryException {
-    return getRegistryURL(serviceDiscoveryController) + "/" + imageName;
+    return getRegistryURL(settings, serviceDiscoveryController) + "/" + imageName;
   }
 
   public String getRegistryURL() throws
       ServiceDiscoveryException {
-    return getRegistryURL(serviceDiscoveryController);
+    return getRegistryURL(settings, serviceDiscoveryController);
   }
   
-  public static String getRegistryURL(ServiceDiscoveryController serviceDiscoveryController) throws
+  public static String getRegistryURL(Settings settings,
+      ServiceDiscoveryController serviceDiscoveryController) throws
       ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
-        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.REGISTRY);
+        .getAnyAddressOfServiceWithDNSSRVOnly(ServiceDiscoveryController.HopsworksService.REGISTRY);
+    if(settings.isCloud() && settings.isManagedDockerRegistry()){
+      String registryUrl = registry.getAddress();
+      String dockerNamespace = settings.getDockerNamespace();
+      if(!dockerNamespace.isEmpty()){
+        registryUrl += "/" + dockerNamespace;
+      }
+      return registryUrl;
+    }
     return registry.getName() + ":" + registry.getPort();
   }
 
@@ -109,10 +118,15 @@ public class ProjectUtils {
   }
 
   public String getInitialDockerImageName(Project project) {
-    return project.getName().toLowerCase() + ":" + settings.getHopsworksVersion() + ".0";
+    String initialImageTag = settings.getHopsworksVersion() + ".0";
+    if(settings.getKubeType() == Settings.KubeType.EKS && settings.isManagedDockerRegistry()){
+      return settings.getBaseDockerImageName() + ":" + project.getName().toLowerCase() + "_" + initialImageTag;
+    }else{
+      return project.getName().toLowerCase() + ":" + initialImageTag;
+    }
   }
 
   public String getFullBaseImageName() throws ServiceDiscoveryException {
-    return getRegistryURL(serviceDiscoveryController) + "/" + settings.getBaseDockerImage();
+    return getRegistryURL(settings, serviceDiscoveryController) + "/" + settings.getBaseDockerImage();
   }
 }

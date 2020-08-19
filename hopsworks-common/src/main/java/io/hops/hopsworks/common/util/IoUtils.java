@@ -61,9 +61,13 @@ public class IoUtils {
   }
 
   public static String readContentFromPath(String path) throws IOException {
-    return Files.toString(new File(path), Charsets.UTF_8);
+    return readContentFromPath(new File(path));
   }
-
+  
+  public static String readContentFromPath(File file) throws IOException {
+    return Files.toString(file, Charsets.UTF_8);
+  }
+  
   public static List<String> readLinesFromClasspath(String url) throws
           IOException {
     return Resources.readLines(Resources.getResource(url), Charsets.UTF_8);

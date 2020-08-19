@@ -346,6 +346,28 @@ public class Settings implements Serializable {
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
   
+  public enum KubeType{
+    Local("local"),
+    EKS("eks");
+    private String name;
+    KubeType(String name){
+      this.name = name;
+    }
+    
+    static KubeType fromString(String str){
+      if(str.equals(Local.name)){
+        return Local;
+      }else if(str.equals(EKS.name)){
+        return EKS;
+      }
+      return Local;
+    }
+  }
+  private static final String VARIABLE_KUBE_TYPE = "kube_type";
+  private static final String VARIABLE_DOCKER_NAMESPACE = "docker_namespace";
+  private static final String VARIABLE_MANAGED_DOCKER_REGISTRY =
+      "managed_docker_registry";
+  
   private String setVar(String varName, String defaultValue) {
     return setStrVar(varName, defaultValue);
   }
@@ -716,6 +738,11 @@ public class Settings implements Serializable {
           DOCKER_BASE_IMAGE_PYTHON_VERSION);
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
       populateProvenanceCache();
+
+      KUBE_TYPE = KubeType.fromString(setStrVar(VARIABLE_KUBE_TYPE, KUBE_TYPE.name));
+      DOCKER_NAMESPACE = setStrVar(VARIABLE_DOCKER_NAMESPACE, DOCKER_NAMESPACE);
+      MANAGED_DOCKER_REGISTRY = setBoolVar(VARIABLE_MANAGED_DOCKER_REGISTRY,
+          MANAGED_DOCKER_REGISTRY);
       cached = true;
     }
   }
@@ -3663,4 +3690,27 @@ public class Settings implements Serializable {
     return YARN_APP_UID;
   }
   //-----------------------------END YARN DOCKER-------------------------------------------------//
+  
+  private KubeType KUBE_TYPE = KubeType.Local;
+  public synchronized KubeType getKubeType() {
+    checkCache();
+    return KUBE_TYPE;
+  }
+  
+  private String DOCKER_NAMESPACE = "";
+  public String getDockerNamespace(){
+    checkCache();
+    return DOCKER_NAMESPACE;
+  }
+  
+  private Boolean MANAGED_DOCKER_REGISTRY = false;
+  public Boolean isManagedDockerRegistry(){
+    checkCache();
+    return MANAGED_DOCKER_REGISTRY;
+  }
+  
+  public synchronized String getBaseDockerImageName(){
+    checkCache();
+    return DOCKER_BASE_IMAGE;
+  }
 }

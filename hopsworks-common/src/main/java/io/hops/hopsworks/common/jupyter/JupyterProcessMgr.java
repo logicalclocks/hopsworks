@@ -327,7 +327,12 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
 
     return allNotebooks;
   }
-
+  
+  @Override
+  public String getJupyterHost() {
+    return jupyterHost;
+  }
+  
   private int executeJupyterCommand(String... args) {
     if (args == null || args.length == 0) {
       return -99;
