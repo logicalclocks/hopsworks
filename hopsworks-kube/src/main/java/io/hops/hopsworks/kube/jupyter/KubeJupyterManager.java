@@ -339,7 +339,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
       .withImage(ProjectUtils.getRegistryURL(settings,
           serviceDiscoveryController) +
           "/filebeat:" + settings.
-          getKubeFilebeatImgVersion())
+          getHopsworksVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
       .withVolumeMounts(logMount)

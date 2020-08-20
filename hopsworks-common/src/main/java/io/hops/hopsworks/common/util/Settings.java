@@ -290,10 +290,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KUBE_DOCKER_MAX_CORES_ALLOCATION = "kube_docker_max_cores_allocation";
   private static final String VARIABLE_KUBE_INSTALLED = "kubernetes_installed";
   
-  // Container image versions
-  private static final String VARIABLE_KUBE_TF_IMG_VERSION = "kube_tf_img_version";
-  private static final String VARIABLE_KUBE_SKLEARN_IMG_VERSION = "kube_sklearn_img_version";
-  private static final String VARIABLE_KUBE_FILEBEAT_IMG_VERSION = "kube_filebeat_img_version";
 
   /*
    * -------------------- Jupyter ---------------
@@ -679,9 +675,6 @@ public class Settings implements Serializable {
       KUBE_KEYSTORE_KEY = setStrVar(VARIABLE_KUBE_KEYSTORE_KEY, KUBE_KEYSTORE_KEY);
       KUBE_PULL_POLICY = setStrVar(VARIABLE_KUBE_PULL_POLICY, KUBE_PULL_POLICY);
       KUBE_MAX_SERVING_INSTANCES = setIntVar(VARIABLE_KUBE_MAX_SERVING, KUBE_MAX_SERVING_INSTANCES);
-      KUBE_TF_IMG_VERSION = setVar(VARIABLE_KUBE_TF_IMG_VERSION, KUBE_TF_IMG_VERSION);
-      KUBE_SKLEARN_IMG_VERSION = setVar(VARIABLE_KUBE_SKLEARN_IMG_VERSION, KUBE_SKLEARN_IMG_VERSION);
-      KUBE_FILEBEAT_IMG_VERSION = setVar(VARIABLE_KUBE_FILEBEAT_IMG_VERSION, KUBE_FILEBEAT_IMG_VERSION);
       KUBE_API_MAX_ATTEMPTS = setIntVar(VARIABLE_KUBE_API_MAX_ATTEMPTS, KUBE_API_MAX_ATTEMPTS);
       KUBE_DOCKER_MAX_MEMORY_ALLOCATION = setIntVar(VARIABLE_KUBE_DOCKER_MAX_MEMORY_ALLOCATION,
           KUBE_DOCKER_MAX_MEMORY_ALLOCATION);
@@ -3318,24 +3311,6 @@ public class Settings implements Serializable {
   public synchronized Integer getKubeAPIMaxAttempts() {
     checkCache();
     return KUBE_API_MAX_ATTEMPTS;
-  }
-
-  private String KUBE_TF_IMG_VERSION = "0.10.0";
-  public synchronized String getKubeTfImgVersion() {
-    checkCache();
-    return KUBE_TF_IMG_VERSION;
-  }
-
-  private String KUBE_SKLEARN_IMG_VERSION = "0.10.0";
-  public synchronized String getKubeSKLearnImgVersion() {
-    checkCache();
-    return KUBE_SKLEARN_IMG_VERSION;
-  }
-
-  private String KUBE_FILEBEAT_IMG_VERSION = "1.3.0";
-  public synchronized String getKubeFilebeatImgVersion() {
-    checkCache();
-    return KUBE_FILEBEAT_IMG_VERSION;
   }
   
   private Boolean ONLINE_FEATURESTORE = false;

@@ -178,7 +178,7 @@ public class KubeSkLearnServingController {
         .withName("sklearn")
         .withImage(ProjectUtils.getRegistryURL(settings,
             serviceDiscoveryController) + "/sklearn:" + settings.
-            getKubeSKLearnImgVersion())
+            getHopsworksVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(servingEnv)
         .withVolumeMounts(secretMount, logMount, pythonEnvMount)
@@ -188,7 +188,7 @@ public class KubeSkLearnServingController {
         .withName("filebeat")
         .withImage(ProjectUtils.getRegistryURL(settings,
             serviceDiscoveryController) + "/filebeat:" + settings.
-            getKubeFilebeatImgVersion())
+            getHopsworksVersion())
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(fileBeatEnv)
         .withVolumeMounts(logMount)

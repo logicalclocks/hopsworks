@@ -416,7 +416,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       .withName("filebeat")
         .withImage(ProjectUtils.getRegistryURL(settings,
             serviceDiscoveryController) + "/filebeat:" + settings.
-            getKubeFilebeatImgVersion())
+            getHopsworksVersion())
       .withImagePullPolicy(settings.getKubeImagePullPolicy())
       .withEnv(kubeClientService.getEnvVars(filebeatEnv))
       .withVolumeMounts(logMount)
