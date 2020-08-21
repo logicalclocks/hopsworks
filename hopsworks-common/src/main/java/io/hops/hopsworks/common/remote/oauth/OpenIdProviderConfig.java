@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.remote;
+package io.hops.hopsworks.common.remote.oauth;
 
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
@@ -24,20 +24,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Set;
 
-import static io.hops.hopsworks.common.remote.OpenIdConstant.AUTHORIZATION_ENDPOINT;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.CLAIMS_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.ISSUER;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.JWKS_URI;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.REGISTRATION_ENDPOINT;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.RESPONSE_TYPES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.REVOCATION_ENDPOINT;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.SCOPES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.SUBJECT_TYPES_SUPPORTED;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.TOKEN_ENDPOINT;
-import static io.hops.hopsworks.common.remote.OpenIdConstant.USERINFO_ENDPOINT;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.AUTHORIZATION_ENDPOINT;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.CLAIMS_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ID_TOKEN_ENCRYPTION_ALG_VALUES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ID_TOKEN_ENCRYPTION_ENC_VALUES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ID_TOKEN_SIGNING_ALG_VALUES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.ISSUER;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.JWKS_URI;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.REGISTRATION_ENDPOINT;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.RESPONSE_TYPES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.REVOCATION_ENDPOINT;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.SCOPES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.SUBJECT_TYPES_SUPPORTED;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.TOKEN_ENDPOINT;
+import static io.hops.hopsworks.common.remote.oauth.OpenIdConstant.USERINFO_ENDPOINT;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toSet;

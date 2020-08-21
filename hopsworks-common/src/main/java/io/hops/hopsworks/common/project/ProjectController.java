@@ -1534,7 +1534,15 @@ public class ProjectController {
       }
     }
   }
-
+  
+  public List<String> findProjectNames() {
+    List<String> projectNames = new ArrayList<>();
+    for (Project project : projectFacade.findAll()) {
+      projectNames.add(project.getName());
+    }
+    return projectNames;
+  }
+  
   private static class InsecureHostnameVerifier implements HostnameVerifier {
     static InsecureHostnameVerifier INSTANCE = new InsecureHostnameVerifier();
 
