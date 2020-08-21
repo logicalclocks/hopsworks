@@ -59,7 +59,7 @@ public class OAuthClientRegistration implements Serializable {
   
   @EJB
   private OauthClientFacade oauthClientFacade;
-  @Inject
+  @EJB
   private OAuthClientHelper oAuthClientHelper;
   
   @PostConstruct
