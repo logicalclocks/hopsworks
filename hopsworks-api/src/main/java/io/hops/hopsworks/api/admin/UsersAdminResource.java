@@ -25,10 +25,14 @@ import io.hops.hopsworks.api.user.UsersBeanParam;
 import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
+import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
@@ -39,9 +43,11 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -51,6 +57,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.util.logging.Logger;
 
 @Path("/admin")
 @Stateless
@@ -59,13 +66,19 @@ import javax.ws.rs.core.UriInfo;
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersAdminResource {
-
+  private final static Logger LOGGER = Logger.getLogger(UsersAdminResource.class.getName());
   @EJB
   private UsersBuilder usersBuilder;
   @EJB
   private UserProfileBuilder userProfileBuilder;
   @EJB
   private Settings settings;
+  @EJB
+  private UserFacade userFacade;
+  @EJB
+  private RemoteUserFacade remoteUserFacade;
+  @Inject
+  private RemoteGroupMappingHelper remoteGroupMappingHelper;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -151,6 +164,34 @@ public class UsersAdminResource {
     BbcGroupDTO dto = usersBuilder.buildUserGroups(uriInfo);
     return Response.ok().entity(dto).build();
   }
-
+  
+  @POST
+  @Path("/users/remote/{id}/sync-group")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response syncRemoteGroup(@PathParam("id") Integer id, @Context SecurityContext sc) throws UserException {
+    Users users = userFacade.find(id);
+    RemoteUser remoteUser = remoteUserFacade.findByUsers(users);
+    remoteGroupMappingHelper.syncMapping(remoteUser);
+    return Response.noContent().build();
+  }
+  
+  @POST
+  @Path("/users/remote/by-email/{email}/sync-group")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response syncRemoteGroupByEmail(@PathParam("email") String email, @Context SecurityContext sc)
+    throws UserException {
+    Users users = userFacade.findByEmail(email);
+    RemoteUser remoteUser = remoteUserFacade.findByUsers(users);
+    remoteGroupMappingHelper.syncMapping(remoteUser);
+    return Response.noContent().build();
+  }
+  
+  @POST
+  @Path("/users/remote/sync-group")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response syncRemoteGroup(@Context SecurityContext sc) {
+    remoteGroupMappingHelper.syncMappingAsync();
+    return Response.accepted().build();
+  }
   
 }

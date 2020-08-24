@@ -17,9 +17,7 @@ package io.hops.hopsworks.admin.remote.user.oauth;
 
 import io.hops.hopsworks.admin.maintenance.MessagesController;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
-import io.hops.hopsworks.common.remote.OAuthHelper;
-import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
-import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
@@ -28,8 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ViewScoped;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URISyntaxException;
@@ -63,9 +60,7 @@ public class OAuthClientRegistration implements Serializable {
   @EJB
   private OauthClientFacade oauthClientFacade;
   @EJB
-  private Settings settings;
-  
-  private OAuthHelper oAuthHelper;
+  private OAuthClientHelper oAuthClientHelper;
   
   @PostConstruct
   public void init() {
@@ -82,8 +77,7 @@ public class OAuthClientRegistration implements Serializable {
     this.jwksURI = "";
     this.autoProviderURI = "";
     this.oauthClients = oauthClientFacade.findAll();
-    this.oauthEnabled = settings.isOAuthEnabled();
-    initOAuthHelper();
+    this.oauthEnabled = oAuthClientHelper.getoAuthHelper().oauthAvailable();
   }
   
   public String getClientId() {
@@ -212,26 +206,12 @@ public class OAuthClientRegistration implements Serializable {
     this.oauthEnabled = oauthEnabled;
   }
   
-  private void initOAuthHelper() {
-    String moduleName = null;
-    String fullModuleName = null;
-    try {
-      String applicationName = InitialContext.doLookup("java:app/AppName");
-      moduleName = InitialContext.doLookup("java:module/ModuleName");
-      moduleName = moduleName.replace("admin", "remote-user-auth");
-      fullModuleName = "java:global/" + applicationName + "/" + moduleName + "/OAuthHelperImpl";
-      oAuthHelper = InitialContext.doLookup(fullModuleName);
-    } catch (NamingException ex) {
-      oAuthHelper = null;
-    }
-  }
-  
   public void fetchOpenIdProviderConfig() {
     if (!checkOAuthHelper() || autoProviderURI == null || autoProviderURI.isEmpty()) {
       return;
     }
     try {
-      this.setOpenIdProviderConfig(oAuthHelper.getOpenIdProviderConfiguration(autoProviderURI));
+      this.setOpenIdProviderConfig(oAuthClientHelper.getoAuthHelper().getOpenIdProviderConfiguration(autoProviderURI));
       if (this.getAuthorisationEndpoint() != null) {
         setRegistrationDisabled(registrationDisabled());
         RequestContext context = RequestContext.getCurrentInstance();
@@ -248,7 +228,7 @@ public class OAuthClientRegistration implements Serializable {
       return;
     }
     try {
-      oAuthHelper.registerClient(openIdProviderConfig);
+      oAuthClientHelper.getoAuthHelper().registerClient(openIdProviderConfig);
     } catch (IOException | URISyntaxException e) {
       LOGGER.log(Level.WARNING,"Failed to register client. {0}", e.getMessage());
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
@@ -256,8 +236,8 @@ public class OAuthClientRegistration implements Serializable {
   }
   
   private boolean checkOAuthHelper() {
-    if (oAuthHelper == null) {
-      MessagesController.addErrorMessage("Not supported", "Remote auth is not available.");
+    if (oAuthClientHelper.getoAuthHelper() == null || oAuthClientHelper.getoAuthHelper().oauthAvailable()) {
+      MessagesController.addErrorMessage("Not supported", "OAuth is not available.");
       return false;
     }
     return true;
@@ -283,7 +263,7 @@ public class OAuthClientRegistration implements Serializable {
       OauthClient oauthClient = new OauthClient(this.clientId, this.clientSecret, this.providerURI, this.providerName,
         this.providerLogoURI, this.providerDisplayName, this.providerMetadataEndpointSupported,
         this.authorisationEndpoint, this.tokenEndpoint, this.userInfoEndpoint, this.jwksURI);
-      oauthClientFacade.save(oauthClient);
+      oAuthClientHelper.getoAuthHelper().saveClient(oauthClient);
       MessagesController.addInfoMessage("Added new OAuth server.");
       init();
     } catch (Exception e) {
@@ -293,9 +273,12 @@ public class OAuthClientRegistration implements Serializable {
   }
   
   public void onRowEdit(RowEditEvent event) {
+    if (!checkOAuthHelper()) {
+      return;
+    }
     OauthClient oauthClient = (OauthClient) event.getObject();
     try {
-      oauthClientFacade.update(oauthClient);
+      oAuthClientHelper.getoAuthHelper().updateClient(oauthClient);
       MessagesController.addInfoMessage("Updated OAuth server.");
     } catch (Exception e) {
       MessagesController.addErrorMessage(e.getMessage(), getRootCause(e));
@@ -304,7 +287,7 @@ public class OAuthClientRegistration implements Serializable {
   
   public void delete(OauthClient oauthClient) {
     try {
-      oauthClientFacade.remove(oauthClient);
+      oAuthClientHelper.getoAuthHelper().removeClient(oauthClient);
       MessagesController.addInfoMessage("Deleted OAuth server.");
       init();
     } catch (Exception e) {

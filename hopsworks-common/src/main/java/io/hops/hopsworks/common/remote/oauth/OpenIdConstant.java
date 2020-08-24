@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.remote;
+package io.hops.hopsworks.common.remote.oauth;
 
 public class OpenIdConstant {
   
@@ -54,6 +54,8 @@ public class OpenIdConstant {
   public static final String OPENID_SCOPE = "openid";
   public static final String PROFILE_SCOPE = "profile";
   public static final String EMAIL_SCOPE = "email";
+  public static final String ROLES_SCOPE = "roles";
+  public static final String GROUPS_SCOPE = "groups";
 
   public static final String NAME = "name";
   public static final String FAMILY_NAME = "family_name";
@@ -62,6 +64,7 @@ public class OpenIdConstant {
   public static final String NICKNAME = "nickname";
   public static final String PREFERRED_USERNAME = "preferred_username";
   public static final String GROUPS = "groups";
+  public static final String ROLES = "roles";
   public static final String PROFILE = "profile";
   public static final String PICTURE = "picture";
   public static final String WEBSITE = "website";
