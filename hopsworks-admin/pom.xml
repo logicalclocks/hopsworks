@@ -60,6 +60,7 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
     <cloud.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</cloud.stereotype>
+    <remote-auth.stereotype>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</remote-auth.stereotype>
   </properties>
   
   <dependencies>
@@ -122,13 +123,6 @@
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-audit</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.hops.hopsworks</groupId>
-      <artifactId>hopsworks-remote-user</artifactId>
-      <version>${project.version}</version>
-      <type>ejb</type>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -212,6 +206,10 @@
               <token>io.hops.hopsworks.common.integrations.UnmanagedStereotype</token>
               <value>${cloud.stereotype}</value>
             </replacement>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</token>
+              <value>${remote-auth.stereotype}</value>
+            </replacement>
           </replacements>
         </configuration>
       </plugin>
@@ -243,6 +241,15 @@
       </activation>
       <properties>
         <cloud.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</cloud.stereotype>
+      </properties>
+    </profile>
+    <profile>
+      <id>remote-user-auth</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <remote-auth.stereotype>io.hops.hopsworks.remote.user.RemoteAuthStereotype</remote-auth.stereotype>
       </properties>
     </profile>
   </profiles>

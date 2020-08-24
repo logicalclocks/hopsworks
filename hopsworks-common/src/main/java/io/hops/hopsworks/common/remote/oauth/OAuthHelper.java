@@ -13,8 +13,9 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.remote;
+package io.hops.hopsworks.common.remote.oauth;
 
+import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 
 import javax.security.auth.login.LoginException;

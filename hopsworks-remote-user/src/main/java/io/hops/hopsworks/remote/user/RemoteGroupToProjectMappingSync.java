@@ -24,7 +24,7 @@ public class RemoteGroupToProjectMappingSync {
   private final static Logger LOGGER = Logger.getLogger(RemoteGroupToProjectMappingSync.class.getName());
 
   @EJB
-  private RemoteGroupMappingHelper remoteGroupMappingHelper;
+  private RemoteGroupMapping remoteGroupMapping;
   @EJB
   private Settings settings;
   @Resource
@@ -52,7 +52,7 @@ public class RemoteGroupToProjectMappingSync {
   
   @Timeout
   public void performTimeout(Timer timer) {
-    remoteGroupMappingHelper.syncMapping();
+    remoteGroupMapping.syncMapping();
     LOGGER.log(Level.INFO, "Remote Group To Project Member Mapping Timer expired.");
   }
   

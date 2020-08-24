@@ -32,8 +32,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.util.Variables;
 import io.hops.hopsworks.persistence.entity.util.VariablesVisibility;
-import io.hops.hopsworks.remote.user.RemoteGroupMappingHelper;
-import io.hops.hopsworks.remote.user.ldap.LdapUserController;
 import org.primefaces.context.RequestContext;
 import org.primefaces.event.RowEditEvent;
 import org.primefaces.model.DualListModel;
@@ -96,13 +94,11 @@ public class ConfigureLdap implements Serializable {
   @EJB
   private ProjectController projectController;
   @EJB
-  private LdapUserController ldapUserController;
-  @EJB
   private RemoteUserFacade remoteUserFacade;
   @EJB
   private RemoteGroupProjectMappingFacade remoteGroupProjectMappingFacade;
   @EJB
-  private RemoteGroupMappingHelper remoteGroupMappingHelper;
+  private LdapConfigHelper ldapConfigHelper;
 
   
   @PostConstruct
@@ -121,7 +117,7 @@ public class ConfigureLdap implements Serializable {
     this.userDn = settings.getLdapUserDN();
     this.groupDn = settings.getLdapGroupDN();
     this.variablesToUpdate = new HashMap<>();
-    this.ldapEnabled = settings.isLdapEnabled() || settings.isKrbEnabled();
+    this.ldapEnabled = ldapConfigHelper.getLdapHelper().isLdapAvailable();
     this.groupsSearchFilter = settings.getLdapGroupsSearchFilter();
     this.groupsTarget = settings.getLdapGroupsTarget();
     this.groupMembersSearchFilter = settings.getLdapGroupMembersFilter();
@@ -394,7 +390,7 @@ public class ConfigureLdap implements Serializable {
       this.groupQuery = "(objectCategory=group)";
     }
     List<String> ldapGroupsTarget = new ArrayList<>();
-    List<String> ldapGroupsSource = ldapUserController.getLDAPGroups(this.groupQuery);
+    List<String> ldapGroupsSource = ldapConfigHelper.getLdapHelper().getLDAPGroups(this.groupQuery);
     if (ldapGroupsSource == null) {
       ldapGroupsSource = new ArrayList<>();
     }
@@ -402,7 +398,7 @@ public class ConfigureLdap implements Serializable {
   }
   
   public void getMembers() {
-    this.remoteUsersDTO = ldapUserController.getMembers(this.ldapGroups.getTarget());
+    this.remoteUsersDTO = ldapConfigHelper.getLdapHelper().getMembers(this.ldapGroups.getTarget());
     RequestContext ctx = RequestContext.getCurrentInstance();
     FacesContext context = FacesContext.getCurrentInstance();
     boolean validationFailed = context.isValidationFailed();
@@ -426,7 +422,8 @@ public class ConfigureLdap implements Serializable {
         MessagesController.addErrorMessage("Mapping: ", group + " to " + this.project + " already exists.");
         continue;
       }
-      ldapUserController.addNewGroupProjectMapping(new RemoteGroupProjectMapping(group, project1, this.project_role));
+      ldapConfigHelper.getLdapHelper()
+        .addNewGroupProjectMapping(new RemoteGroupProjectMapping(group, project1, this.project_role));
     }
     this.remoteGroupProjectMappings = remoteGroupProjectMappingFacade.findAll();
     MessagesController
@@ -528,7 +525,7 @@ public class ConfigureLdap implements Serializable {
   public void syncRemoteGroup(Users user) {
     RemoteUser remoteUser = remoteUserFacade.findByUsers(user);
     try {
-      remoteGroupMappingHelper.syncMapping(remoteUser);
+      ldapConfigHelper.getRemoteGroupMappingHelper().syncMapping(remoteUser);
       initRemoteUsers();
       MessagesController.addInfoMessage("Synchronization completed with success.");
     } catch (UserException e) {
@@ -538,7 +535,7 @@ public class ConfigureLdap implements Serializable {
   
   public void syncAllRemoteGroups() {
     try {
-      remoteGroupMappingHelper.syncMappingAsync();
+      ldapConfigHelper.getRemoteGroupMappingHelper().syncMappingAsync();
       MessagesController.addInfoMessage("Synchronization started ...");
     } catch (Exception e) {
       MessagesController.addErrorMessage(e.getMessage());
@@ -548,7 +545,7 @@ public class ConfigureLdap implements Serializable {
   public void deleteRemoteUserFromAllProjects(Users user) {
     RemoteUser remoteUser = remoteUserFacade.findByUsers(user);
     try {
-      remoteGroupMappingHelper.removeFromAllProjects(remoteUser);
+      ldapConfigHelper.getRemoteGroupMappingHelper().removeFromAllProjects(remoteUser);
       initRemoteUsers();
       MessagesController.addInfoMessage("Removing user from all projects completed with success.");
     } catch (UserException e) {

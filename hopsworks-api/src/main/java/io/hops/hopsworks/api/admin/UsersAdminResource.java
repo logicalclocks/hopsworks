@@ -34,6 +34,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -42,7 +43,6 @@ import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
-import io.hops.hopsworks.remote.user.RemoteGroupMappingHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -50,6 +50,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -84,7 +85,7 @@ public class UsersAdminResource {
   private UserFacade userFacade;
   @EJB
   private RemoteUserFacade remoteUserFacade;
-  @EJB
+  @Inject
   private RemoteGroupMappingHelper remoteGroupMappingHelper;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)

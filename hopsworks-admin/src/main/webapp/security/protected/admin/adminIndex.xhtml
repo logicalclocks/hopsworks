@@ -274,7 +274,7 @@
               <p:outputLabel style="text-align: left"  value="Manage Conda"></p:outputLabel>
             </p:column>
 
-            <p:column rendered="#{oAuthClientRegistration.oauthEnabled}">
+            <p:column rendered="#{remoteAuth.oauthEnabled}">
               <h:commandLink action="oauthClient">
                 <p:graphicImage id="oauth2"
                                 value="/resources/images/oauth2.png"
@@ -286,7 +286,7 @@
               <br></br>
               <p:outputLabel style="text-align: left" value="Register OAuth 2.0 Client"></p:outputLabel>
             </p:column>
-            <p:column rendered="#{configureLdap.ldapEnabled}">
+            <p:column rendered="#{remoteAuth.ldapEnabled}">
               <h:commandLink action="confLDAP">
                 <p:graphicImage id="ldap"
                                 value="/resources/images/ldap.png"

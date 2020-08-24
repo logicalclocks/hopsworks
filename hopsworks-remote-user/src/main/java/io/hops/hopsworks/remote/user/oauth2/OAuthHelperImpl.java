@@ -4,10 +4,12 @@
 package io.hops.hopsworks.remote.user.oauth2;
 
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
-import io.hops.hopsworks.common.remote.OAuthHelper;
-import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
+import io.hops.hopsworks.common.remote.oauth.OAuthHelper;
+import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
+import io.hops.hopsworks.remote.user.RemoteAuthStereotype;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -19,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
 
+@RemoteAuthStereotype
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class OAuthHelperImpl implements OAuthHelper {
@@ -33,10 +36,12 @@ public class OAuthHelperImpl implements OAuthHelper {
   private OauthClientFacade oauthClientFacade;
   @EJB
   private OAuthProviderCache oAuthProviderCache;
+  @EJB
+  private Settings settings;
   
   @Override
   public boolean oauthAvailable() {
-    return true;
+    return settings.isOAuthEnabled();
   }
   
   @Override

@@ -27,8 +27,8 @@ import java.util.logging.Logger;
 @Singleton
 @AccessTimeout(value = 5, unit = TimeUnit.SECONDS)
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class RemoteGroupMappingHelper {
-  private final static Logger LOGGER = Logger.getLogger(RemoteGroupMappingHelper.class.getName());
+public class RemoteGroupMapping {
+  private final static Logger LOGGER = Logger.getLogger(RemoteGroupMapping.class.getName());
   
   @EJB
   private RemoteUserFacade remoteUserFacade;

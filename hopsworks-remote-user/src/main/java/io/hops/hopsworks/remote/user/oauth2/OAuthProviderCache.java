@@ -5,8 +5,8 @@ package io.hops.hopsworks.remote.user.oauth2;
 
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
-import io.hops.hopsworks.common.remote.OpenIdConstant;
-import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
+import io.hops.hopsworks.common.remote.oauth.OpenIdConstant;
+import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.persistence.entity.remote.oauth.OauthClient;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;

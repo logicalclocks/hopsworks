@@ -7,7 +7,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthLoginStateFacade;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
-import io.hops.hopsworks.common.remote.OpenIdProviderConfig;
+import io.hops.hopsworks.common.remote.oauth.OpenIdProviderConfig;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.util.Settings;
