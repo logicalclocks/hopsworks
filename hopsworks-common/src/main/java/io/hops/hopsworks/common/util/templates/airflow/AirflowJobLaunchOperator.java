@@ -21,11 +21,13 @@ public class AirflowJobLaunchOperator extends AirflowOperator {
   
   private final String jobName;
   private boolean wait;
+  private final String jobArgs;
   
-  public AirflowJobLaunchOperator(String projectName, String id, String jobName) {
+  public AirflowJobLaunchOperator(String projectName, String id, String jobName, String jobArgs) {
     super(projectName, id);
     this.jobName = jobName;
     this.wait = false;
+    this.jobArgs = jobArgs;
   }
   
   public String getJobName() {
@@ -38,5 +40,9 @@ public class AirflowJobLaunchOperator extends AirflowOperator {
   
   public void setWait(boolean wait) {
     this.wait = wait;
+  }
+  
+  public String getJobArgs() {
+    return jobArgs;
   }
 }

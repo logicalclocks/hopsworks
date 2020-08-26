@@ -41,18 +41,32 @@
     </div>
     <!-- Operator jobName -->
     <div class="row"
-        ng-if="dagComposerModalsCtrl.operator.hasAttribute(dagComposerModalsCtrl.operator.HAS_JOB_NAME_ATTR)">
+        ng-if="dagComposerModalsCtrl.operator.hasAttribute(dagComposerModalsCtrl.operator.HAS_JOB_NAME_ATTR)" style="margin-top: 10px; margin-bottom: 10px">
         <div class="text-right col-md-4">Job name<i class="fa fa-info-circle"
                 uib-tooltip="Job's name you want to operate on" style="margin-left: 10px"></i>
         </div>
         <div class="col-md-2">
-            <select ng-model="dagComposerModalsCtrl.operator.jobName" ng-options="j for j in dagComposerModalsCtrl.jobs">
+            <select ng-model="dagComposerModalsCtrl.operator.jobName"
+                    ng-options="j for j in dagComposerModalsCtrl.jobNames"
+                    ng-change="dagComposerModalsCtrl.checkIfJobCanTakeArguments()">
             </select>
+        </div>
+    </div>
+    <!-- Job Arguments -->
+    <div class="row"
+         ng-if="dagComposerModalsCtrl.jobCanTakeArguments
+         && dagComposerModalsCtrl.operator.hasAttribute(dagComposerModalsCtrl.operator.CAN_REQUIRE_JOB_ARGUMENTS)"
+         style="margin-top: 10px; margin-bottom: 10px">
+        <div class="text-right col-md-4">Job Arguments<i class="fa fa-info-circle"
+                                                    uib-tooltip="Job arguments" style="margin-left: 10px"></i>
+        </div>
+        <div class="col-md-2">
+            <input type="text" ng-model="dagComposerModalsCtrl.operator.jobArgs">
         </div>
     </div>
     <!-- Operator wait -->
     <div class="row"
-        ng-if="dagComposerModalsCtrl.operator.hasAttribute(dagComposerModalsCtrl.operator.HAS_WAIT_2_FINISH_ATTR)">
+        ng-if="dagComposerModalsCtrl.operator.hasAttribute(dagComposerModalsCtrl.operator.HAS_WAIT_2_FINISH_ATTR)" style="margin-top: 10px; margin-bottom: 10px">
         <div class="text-right col-md-4">Wait to finish<i class="fa fa-info-circle"
                 uib-tooltip="Whether your DAG will block waiting for this task to finish" style="margin-left: 10px"></i>
         </div>
