@@ -45,7 +45,7 @@ public class FeaturestoreConstants {
   public static final int S3_STORAGE_SERVER_ENCRYPTION_KEY_MAX_LENGTH = 1000;
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
-    "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
+    "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
   public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HOPSFS.name();
   public static final String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
