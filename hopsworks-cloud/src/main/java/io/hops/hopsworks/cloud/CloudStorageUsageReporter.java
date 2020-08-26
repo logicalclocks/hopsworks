@@ -45,7 +45,7 @@ public class CloudStorageUsageReporter {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
     try {
-      ContentSummary summary = dfs.getDfsOps().getFilesystem().getContentSummary(new Path("/"));
+      ContentSummary summary = dfs.getDfsOps().getFilesystem().getLastUpdatedContentSummary(new Path("/"));
       cloudClient.sendStorageUsage(summary.getSpaceConsumed(),
               summary.getDirectoryCount() + summary.getFileCount());
     } catch (IOException ex) {
