@@ -228,6 +228,16 @@ module DatasetHelper
     expect_status_details(201)
   end
 
+  def delete_dir(project, path, dataset_type)
+    pp "delete #{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}" if defined?(@debugOpt) && @debugOpt
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}"
+  end
+
+  def delete_dir_checked(project, path, dataset_type: "DATASET")
+    delete_dir(project, path, dataset_type)
+    expect_status_details(204)
+  end
+
   def create_random_dataset(project, searchable, generate_readme)
     dsname = "dataset_#{short_random_id}"
     query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: generate_readme})
@@ -407,6 +417,11 @@ module DatasetHelper
 
   def update_dataset_permissions(project, path, permissions, datasetType)
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=permission&permissions=#{permissions}#{datasetType}"
+  end
+
+  def update_dataset_permissions_checked(project, path, permissions, datasetType: "DATASET")
+    update_dataset_permissions(project, path, permissions,"&type=#{datasetType}")
+    expect_status_details(200)
   end
 
   def update_dataset_description(project, path, description, datasetType)
