@@ -284,18 +284,6 @@ describe "On #{ENV['OS']}" do
           expect_status(400)
           reset_session
         end
-        it "should fail to upload to a shared dataset with permission owner only" do
-          with_valid_project
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
-          dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name_checked(@project, dsname)
-          request_access(@project, ds, project)
-          share_dataset(@project, dsname, project[:projectname], "")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
-          expect_json(errorCode: 110016)
-          expect_status(400)
-        end
       end
       context 'with authentication and sufficient privilege' do
         before :all do
@@ -305,17 +293,6 @@ describe "On #{ENV['OS']}" do
           dsname = "dataset_#{short_random_id}"
           ds = create_dataset_by_name_checked(@project, dsname)
           uploadFile(@project, dsname, "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
-          expect_status(204)
-        end
-        it "should upload to a shared dataset with permission group writable." do
-          projectname = "project_#{short_random_id}"
-          project = create_project_by_name(projectname)
-          dsname = "dataset_#{short_random_id}"
-          ds = create_dataset_by_name_checked(@project, dsname)
-          request_access(@project, ds, project)
-          share_dataset(@project, dsname, project[:projectname], "")
-          update_dataset_permissions(@project, dsname, "GROUP_WRITABLE_SB", "&type=DATASET")
-          uploadFile(project, "#{@project[:projectname]}::#{dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
           expect_status(204)
         end
         it "should upload to a dataset with permission owner only if Data owner" do
@@ -560,6 +537,7 @@ describe "On #{ENV['OS']}" do
           ds = json_body[:items].detect { |d| d[:attributes][:name] == "testdir" }
           expect(ds).to be_present
         end
+
         it "should be able to see content shared dataset with a name that already exist in the target project" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
@@ -739,6 +717,65 @@ describe "On #{ENV['OS']}" do
       end
     end
 
+    describe "operations in shared dataset" do
+      before :all do
+        @project1 = create_project
+        @project2 = create_project
+      end
+
+      context "read only" do
+        before :all do
+          @dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(@project1, @dsname)
+          share_dataset_checked(@project1, @dsname, @project2[:projectname], "DATASET")
+          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", "DATASET")
+        end
+        it "should fail to upload to a shared dataset with permission owner only" do
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_status_details(400, error_code: 110016)
+        end
+
+        it "should fail to delete - absolute path" do
+          dirname = "dir_#{short_random_id}"
+          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
+          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          expect_status_details(403, error_code: 110050)
+        end
+        it "should fail to delete - relative path" do
+          dirname = "dir_#{short_random_id}"
+          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
+          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          expect_status_details(403, error_code: 110050)
+        end
+      end
+
+      context "group writable" do
+        before :all do
+          @dsname = "dataset_#{short_random_id}"
+          create_dataset_by_name_checked(@project1, @dsname)
+          share_dataset_checked(@project1, @dsname, @project2[:projectname], "DATASET")
+          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", "DATASET")
+          update_dataset_permissions_checked(@project1, @dsname, "GROUP_WRITABLE")
+        end
+        it "should upload to a shared dataset with permission group writable." do
+          uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
+          expect_status_details(204)
+        end
+
+        it "should delete - absolute path" do
+          dirname = "dir_#{short_random_id}"
+          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
+          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          expect_status_details(204)
+        end
+        it "should delete - relative path" do
+          dirname = "dir_#{short_random_id}"
+          create_dir(@project1, "#{@dsname}/testdir", "&type=DATASET")
+          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          expect_status_details(204)
+        end
+      end
+    end
     describe "#publish-import" do
       context 'regular dataset' do
         before :all do

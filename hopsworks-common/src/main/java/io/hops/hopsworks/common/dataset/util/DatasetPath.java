@@ -42,12 +42,7 @@ public class DatasetPath {
     String pathStr = Utils.pathStripSlash(p);
     String pathRoot = Utils.pathStripSlash(root); // Projects or /apps/hive/warehouse
     boolean isProject = root.equals(Settings.DIR_ROOT);
-    boolean isFullPath = pathStr.startsWith(pathRoot + File.separator);
     isShared = pathStr.contains(Settings.SHARED_FILE_SEPARATOR);
-    if (isFullPath && isShared) {
-      //make it relative
-      pathStr = pathStr.replace(pathRoot + File.separator, "");
-    }
     String dataset = getDatasetFromPath(pathStr, pathRoot, project.getName(), isProject);
     String datasetName =
       !dataset.isEmpty() && dataset.contains(File.separator) ? dataset.split(File.separator)[0] : dataset;
@@ -70,7 +65,6 @@ public class DatasetPath {
     }
     relativePath = new Path(File.separator + dataset);
     datasetFullPath = getDatasetPath(fullPath.toString(), new Path(pathRoot + projectName));
-    
   }
   
   public Path getFullPath() {
