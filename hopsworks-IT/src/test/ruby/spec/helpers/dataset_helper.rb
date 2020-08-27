@@ -228,7 +228,7 @@ module DatasetHelper
     expect_status_details(201)
   end
 
-  def delete_dir(project, path, dataset_type)
+  def delete_dir(project, path, dataset_type: "DATASET")
     pp "delete #{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}" if defined?(@debugOpt) && @debugOpt
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}"
   end
@@ -258,8 +258,8 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}#{datasetType}"
   end
 
-  def share_dataset_checked(project, path, target_project, datasetType: "")
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&type=#{datasetType}"
+  def share_dataset_checked(project, path, target_project, permission: "EDITABLE", datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
     expect_status_details(204)
@@ -339,6 +339,13 @@ module DatasetHelper
 
   def accept_dataset(project, path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept#{datasetType}"
+  end
+
+  def accept_dataset_checked(project, path, datasetType: "")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+    expect_status_details(204)
   end
 
   def reject_dataset(project, path, datasetType: "")

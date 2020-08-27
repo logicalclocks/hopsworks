@@ -766,35 +766,35 @@ describe "On #{ENV['OS']}" do
         before :all do
           @dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project1, @dsname)
-          share_dataset_checked(@project1, @dsname, @project2[:projectname], "DATASET")
-          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", "DATASET")
+          share_dataset_checked(@project1, @dsname, @project2[:projectname], permission: "READ_ONLY", datasetType: "DATASET")
+          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", datasetType: "DATASET")
         end
-        it "should fail to upload to a shared dataset with permission owner only" do
+        it "should fail to upload to a shared dataset with permission read only" do
           uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
-          expect_status_details(400, error_code: 110016)
+          expect_status_details(403, error_code: 200002)
         end
 
         it "should fail to delete - absolute path" do
           dirname = "dir_#{short_random_id}"
-          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
-          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          create_dir(@project1, "#{@dsname}/#{dirname}", query: "&type=DATASET")
+          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}")
           expect_status_details(403, error_code: 110050)
         end
         it "should fail to delete - relative path" do
           dirname = "dir_#{short_random_id}"
-          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
-          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          create_dir(@project1, "#{@dsname}/#{dirname}", query: "&type=DATASET")
+          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}")
           expect_status_details(403, error_code: 110050)
         end
       end
 
-      context "group writable" do
+      context "editable" do
         before :all do
           @dsname = "dataset_#{short_random_id}"
           create_dataset_by_name_checked(@project1, @dsname)
-          share_dataset_checked(@project1, @dsname, @project2[:projectname], "DATASET")
-          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", "DATASET")
-          update_dataset_permissions_checked(@project1, @dsname, "GROUP_WRITABLE")
+          share_dataset_checked(@project1, @dsname, @project2[:projectname], datasetType: "DATASET")
+          accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@dsname}", datasetType: "DATASET")
+          update_dataset_permissions_checked(@project1, @dsname, "EDITABLE")
         end
         it "should upload to a shared dataset with permission group writable." do
           uploadFile(@project2, "#{@project1[:projectname]}::#{@dsname}", "#{ENV['PROJECT_DIR']}/tools/metadata_designer/Sample.json")
@@ -803,14 +803,14 @@ describe "On #{ENV['OS']}" do
 
         it "should delete - absolute path" do
           dirname = "dir_#{short_random_id}"
-          create_dir(@project1, "#{@dsname}/#{dirname}", "&type=DATASET")
-          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          create_dir(@project1, "#{@dsname}/#{dirname}", query: "&type=DATASET")
+          delete_dir(@project2,"/Projects/#{@project2[:projectname]}/#{@project1[:projectname]}::#{@dsname}/#{dirname}")
           expect_status_details(204)
         end
         it "should delete - relative path" do
           dirname = "dir_#{short_random_id}"
-          create_dir(@project1, "#{@dsname}/testdir", "&type=DATASET")
-          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}", "DATASET")
+          create_dir(@project1, "#{@dsname}/testdir", query: "&type=DATASET")
+          delete_dir(@project2,"#{@project1[:projectname]}::#{@dsname}/#{dirname}")
           expect_status_details(204)
         end
       end
