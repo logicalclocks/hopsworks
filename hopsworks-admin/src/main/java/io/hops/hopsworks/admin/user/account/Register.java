@@ -333,22 +333,4 @@ public class Register implements Serializable {
     MessagesController.addErrorMessage(msg, errorMsg, "msg");
     LOGGER.log(Level.SEVERE, msg + " {0}", errorMsg);
   }
-  
-  @Override
-  public String toString() {
-    return "Register{" +
-      "uuid='" + uuid + '\'' +
-      ", email='" + email + '\'' +
-      ", firstName='" + firstName + '\'' +
-      ", lastName='" + lastName + '\'' +
-      ", role='" + role + '\'' +
-      ", phone='" + phone + '\'' +
-      ", status=" + status +
-      ", maxNumProjects=" + maxNumProjects +
-      ", remoteUserType=" + remoteUserType +
-      ", accountType=" + accountType +
-      ", password='" + password + '\'' +
-      ", remoteAuthEnabled=" + remoteAuthEnabled +
-      '}';
-  }
 }
