@@ -16,7 +16,9 @@
 package io.hops.hopsworks.common.remote.ldap;
 
 import io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype;
+import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping;
 
 import javax.ejb.Stateless;
@@ -45,6 +47,11 @@ public class NullLdapHelper implements LdapHelper{
   
   @Override
   public void addNewGroupProjectMapping(RemoteGroupProjectMapping remoteGroupProjectMapping) {
+    throw new UnsupportedOperationException("Remote auth not supported.");
+  }
+  
+  @Override
+  public RemoteUserDTO getRemoteUserByUuid(String uuid) throws UserException {
     throw new UnsupportedOperationException("Remote auth not supported.");
   }
 }

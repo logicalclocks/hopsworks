@@ -15,15 +15,21 @@
  */
 package io.hops.hopsworks.admin.user.administration;
 
+import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.audit.AccountAuditFacade;
+import io.hops.hopsworks.common.remote.RemoteUserDTO;
+import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.HttpUtil;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -31,6 +37,7 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import java.util.logging.Level;
@@ -46,9 +53,11 @@ public class AuditedUserAdministration {
   @EJB
   private AuthController authController;
   @EJB
-  private Settings settings;
-  @EJB
   private AccountAuditFacade accountAuditFacade;
+  @EJB
+  private Settings settings;
+  @Inject
+  private RemoteUserHelper remoteUserHelper;
   
   public void activateUser(Users user, HttpServletRequest httpServletRequest)
     throws UserException {//httpServletRequest needed for logging
@@ -103,6 +112,22 @@ public class AuditedUserAdministration {
   public void updateProfile(Users user, HttpServletRequest request) {
     //httpServletRequest needed for logging
     userFacade.update(user);
+  }
+  
+  public void createUser(UserDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType,
+    HttpServletRequest request) throws UserException {
+    Users init = userFacade.findByEmail(request.getRemoteUser());
+    String remoteHost = HttpUtil.extractRemoteHostIp(request);
+    String userAgent = HttpUtil.extractUserAgent(request);
+    Users user = usersController.registerUser(newUser, role, accountStatus, accountType);
+    accountAuditFacade.registerAccountChange(init, "REGISTRATION", "SUCCESS", "Register new user by admin", user,
+      remoteHost, userAgent);
+  }
+
+  public void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname,
+    UserAccountStatus accountStatus, RemoteUserType accountType, HttpServletRequest request) throws UserException,
+    GenericException {
+    remoteUserHelper.createRemoteUser(userDTO, email, givenName, surname, accountType, accountStatus);
   }
   
   //Can not be audited b/c target user will be deleted, but will be logged.

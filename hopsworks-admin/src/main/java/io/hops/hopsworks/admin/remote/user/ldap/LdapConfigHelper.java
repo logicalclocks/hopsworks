@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.admin.remote.user.ldap;
 
+import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
 import io.hops.hopsworks.common.remote.ldap.LdapHelper;
 
@@ -23,17 +24,23 @@ import javax.inject.Inject;
 
 @Stateless
 public class LdapConfigHelper {
-
+  
   @Inject
   private LdapHelper ldapHelper;
   @Inject
   private RemoteGroupMappingHelper remoteGroupMappingHelper;
-
+  @Inject
+  private RemoteUserHelper remoteUserHelper;
+  
   public LdapHelper getLdapHelper() {
     return ldapHelper;
   }
-
+  
   public RemoteGroupMappingHelper getRemoteGroupMappingHelper() {
     return remoteGroupMappingHelper;
+  }
+  
+  public RemoteUserHelper getRemoteUserHelper() {
+    return remoteUserHelper;
   }
 }
