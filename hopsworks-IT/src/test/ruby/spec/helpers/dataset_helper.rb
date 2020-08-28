@@ -341,14 +341,14 @@ module DatasetHelper
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept#{datasetType}"
   end
 
-  def accept_dataset_checked(project, path, datasetType: "")
+  def accept_dataset_checked(project, path, datasetType: "DATASET")
     query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
     expect_status_details(204)
   end
 
-  def reject_dataset(project, path, datasetType: "")
+  def reject_dataset(project, path, datasetType: "DATASET")
     query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
