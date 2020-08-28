@@ -123,6 +123,13 @@ public class CondaCommandFacade extends AbstractFacade<CondaCommands> {
     query.setParameter("status", status);
     return query.getResultList();
   }
+  
+  public List<CondaCommands> findByStatusAndCondaOp(CondaStatus status, CondaOp op) {
+    TypedQuery<CondaCommands> query = em.createNamedQuery("CondaCommands.findByStatusAndCondaOp", CondaCommands.class);
+    query.setParameter("status", status);
+    query.setParameter("op", op);
+    return query.getResultList();
+  }
 
   public CondaCommands findCondaCommand(int commandId) {
     return em.find(CondaCommands.class, commandId);

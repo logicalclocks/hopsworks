@@ -17,18 +17,15 @@ package io.hops.hopsworks.common.python.environment;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.agent.AgentController;
-import io.hops.hopsworks.common.dao.host.HostsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.dao.python.LibraryFacade;
-import io.hops.hopsworks.common.elastic.ElasticController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.library.LibraryController;
-import io.hops.hopsworks.common.python.library.LibraryInstaller;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.PythonException;
@@ -66,8 +63,6 @@ public class EnvironmentController {
   @EJB
   private ProjectFacade projectFacade;
   @EJB
-  private HostsFacade hostsFacade;
-  @EJB
   private Settings settings;
   @EJB
   private ProjectUtils projectUtils;
@@ -80,15 +75,11 @@ public class EnvironmentController {
   @EJB
   private CommandsController commandsController;
   @EJB
-  private ElasticController elasticController;
-  @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
   private DistributedFsService dfs;
   @EJB
   private LibraryFacade libraryFacade;
-  @EJB
-  private LibraryInstaller libraryInstaller;
 
   private static final Logger LOGGER = Logger.getLogger(EnvironmentController.class.getName());
   
@@ -112,7 +103,7 @@ public class EnvironmentController {
     Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
     if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
       try {
-        defaultEnvDeps = libraryInstaller.listLibraries(projectUtils.getFullDockerImageName(project, true));
+        defaultEnvDeps = libraryController.listLibraries(projectUtils.getFullDockerImageName(project, true));
       } catch (ServiceDiscoveryException e) {
         throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
             getMessage(), e);
@@ -141,6 +132,7 @@ public class EnvironmentController {
   public void removeEnvironment(Project project) {
     commandsController.deleteCommandsForProject(project);
     project.setPythonDepCollection(new ArrayList<>());
+    condaEnvironmentRemove(project, project.getOwner());
     project.setConda(false);
     project.setPythonVersion(null);
     projectFacade.update(project);
@@ -165,9 +157,13 @@ public class EnvironmentController {
     condaCommandFacade.save(cc);
   }
   
-  private void condaEnvironmentRemove(Project proj, Users user) {
-    condaEnvironmentOp(CondaOp.REMOVE, "", proj, user,
-      "", null, false);
+  public void condaEnvironmentRemove(Project proj, Users user) {
+    // Do not remove conda env if project is using the base
+    if (!proj.getDockerImage().equals(settings.getBaseDockerImage())) {
+      condaEnvironmentOp(CondaOp.REMOVE, "", proj, user,proj.getDockerImage(), null, false);
+    } else {
+      LOGGER.log(Level.INFO, "Will not remove conda env " + proj.getDockerImage() + "  for project: " + proj.getName());
+    }
   }
   
   public String findPythonVersion(String ymlFile) throws PythonException {

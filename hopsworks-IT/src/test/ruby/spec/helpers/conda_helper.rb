@@ -43,6 +43,9 @@ require 'tmpdir'
 
 module CondaHelper
 
+  #the registry url and port should not change, if they do fix the tests
+  @@registry = "registry.service.consul:4443"
+
   def wait_for
     timeout = 1800
     start = Time.now
@@ -59,11 +62,16 @@ module CondaHelper
   module_function :wait_for
 
   def conda_exists(python_version)
-    #the registry url and port should not change, if they do fix the tests
-    registry = "registry.service.consul:4443"
-    image_name = registry + "/python" + python_version.gsub(".","")
-    system ("docker pull " + image_name + "> /dev/null 2>&1")
-    return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
+    image_name = @@registry + "/python" + python_version.gsub(".","") + ":" + getVar('hopsworks_version').value
+    system("docker pull " + image_name + "> /dev/null 2>&1")
+    system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
+  end
+
+  def image_in_registry(docker_image_name, tag)
+    # Handle only local docker registry for now
+    if getVar('managed_docker_registry').value.eql? "false"
+      system("docker exec registry ls -l /var/lib/registry/docker/registry/v2/repositories/#{docker_image_name}/_manifests/tags/#{tag}.0")
+    end
   end
 
   def upload_yml
@@ -82,17 +90,8 @@ module CondaHelper
   end
 
   def check_if_img_exists_locally(docker_image_name)
-    #the registry url and port should not change, if they do fix the tests
-    registry = "registry.service.consul4443"
-    image_name = registry + "/" + docker_image_name
+    image_name = @@registry + "/" + docker_image_name
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
-  end
-
-  def trigger_conda_gc
-    tmp = Dir.tmpdir()
-    trigger_file = File.join(tmp, 'trigger_conda_gc')
-    File.open(trigger_file, "w") { |file| file.puts "1"}
-    File.chmod(0777, trigger_file)
   end
 
   def delete_env(projectId, version)

@@ -13,21 +13,13 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
+package io.hops.hopsworks.common.python.environment;
 
-public enum CondaOp {
-  CREATE,
-  REMOVE,
-  INSTALL,
-  UNINSTALL,
-  EXPORT;
-  
-  public boolean isEnvOp() {
-    return CondaOp.isEnvOp(this);
-  }
-  
-  public static boolean isEnvOp(CondaOp arg) {
-    return arg.compareTo(CondaOp.CREATE) == 0 ||
-      arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.EXPORT) == 0;
-  }
+import io.hops.hopsworks.exceptions.ServiceException;
+
+import java.io.IOException;
+
+public interface DockerRegistryMngr {
+
+  void gc() throws IOException, ServiceException;
 }
