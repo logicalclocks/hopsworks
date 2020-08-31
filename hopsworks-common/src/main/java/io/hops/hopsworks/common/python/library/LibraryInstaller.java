@@ -136,7 +136,7 @@ public class LibraryInstaller {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void isAlive() {
     try {
-      LOG.log(Level.INFO, "isAlive-start: " + System.currentTimeMillis());
+      LOG.log(Level.FINE, "isAlive-start: " + System.currentTimeMillis());
       registryGCCycles.incrementAndGet();
       final List<CondaCommands> allCondaCommandsOngoing = condaCommandFacade.findByStatus(CondaStatus.ONGOING);
       // Run Registry GC every 10 seconds if there are no pending operations call registry GC, else proceed with
@@ -175,7 +175,7 @@ public class LibraryInstaller {
         }
       }
     } finally {
-      LOG.log(Level.INFO, "isAlive-stop: " + System.currentTimeMillis());
+      LOG.log(Level.FINE, "isAlive-stop: " + System.currentTimeMillis());
       schedule();
     }
   }
