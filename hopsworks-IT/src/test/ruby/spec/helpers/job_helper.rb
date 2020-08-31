@@ -23,7 +23,7 @@ module JobHelper
 
     job_conf[:appName] = job_name
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-    expect_status(201)
+    expect_status_details(201)
   end
 
   def get_spark_default_py_config(project, job_name, type)
@@ -71,7 +71,7 @@ module JobHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
        post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.6?action=create"
-       expect_status(201)
+       expect_status_details(201)
     end
 
     if type.eql? "jar"
@@ -106,7 +106,7 @@ module JobHelper
       end
 
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
-      expect_status(200)
+      expect_status_details(200)
       if job_conf.nil?
         job_conf = get_spark_default_py_config(project, job_name, "py")
       end
@@ -130,7 +130,7 @@ module JobHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments"
     if response.code == 404
       post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/3.6?action=create"
-      expect_status(201)
+      expect_status_details(201)
     end
 
     if job_conf.nil?
@@ -161,7 +161,7 @@ module JobHelper
       end
 
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
-      expect_status(200)
+      expect_status_details(200)
       job_conf[:appPath] = "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb"
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
 

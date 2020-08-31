@@ -96,9 +96,9 @@ angular.module('hopsWorksApp')
             self.errorHandler = function (file, message, flow) {
               var msg = JSON.parse(message);
                 if (typeof msg.usrMsg !== 'undefined') {
-                    growl.error(msg.usrMsg, {title: msg.errorMsg, ttl: 8000});
+                    growl.error(msg.usrMsg, {title: "Error uploading", ttl: 8000});
                 } else {
-                    growl.error("", {title: msg.errorMsg, ttl: 8000});
+                    growl.error(msg.errorMsg, {title: "Error uploading", ttl: 8000});
                 }
             };
 

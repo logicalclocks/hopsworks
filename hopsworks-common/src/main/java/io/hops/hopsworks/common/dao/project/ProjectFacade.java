@@ -68,8 +68,12 @@ public class ProjectFacade extends AbstractFacade<Project> {
 
   @Override
   public List<Project> findAll() {
-    TypedQuery<Project> query = em.createNamedQuery("Project.findAll",
-        Project.class);
+    TypedQuery<Project> query = em.createNamedQuery("Project.findAll", Project.class);
+    return query.getResultList();
+  }
+  
+  public List<Project> findAllOrderByCreated() {
+    TypedQuery<Project> query = em.createNamedQuery("Project.findAllOrderByCreated", Project.class);
     return query.getResultList();
   }
 

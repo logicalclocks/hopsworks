@@ -51,20 +51,6 @@
                     <div class="form-group has-feedback">
                         <label class="text-muted control-label">Projects</label><br>
                         <div class="btn-group" role="group" aria-label="..." style="min-width: 100%">
-                            <div uib-dropdown class="btn-group" role="group" style="width: 21%">
-                                    <button type="button"
-                                            uib-dropdown-toggle
-                                            class="btn btn-default"
-                                            aria-haspopup="true" aria-expanded="false">
-                                        <span id="search_concept">Filter by</span>
-                                        <span class="caret"></span>
-                                    </button>
-
-                                    <ul uib-dropdown-menu role="menu" style="min-width: 115px">
-                                        <li role="menuitem"><a > All</a></li>
-                                        <li role="menuitem"><a > Requested</a></li>
-                                    </ul>
-                            </div>
                             <div class="btn-group" role="group" style="width: 100%">
                                 <div type="button" class="btn btn-default" style="padding: 3px;width: 100%">
                                     <ui-select name="project_name" theme="select2" id="project_select"
@@ -86,6 +72,28 @@
                                     <span ng-show="(dataSetForm.$submitted || dataSetForm.project_name.$dirty) &amp;&amp; dataSetForm.project_name.$error.required"
                                           class="text-danger ng-hide">Choose a project to share with.
                                     </span>
+                                </div>
+                                <div uib-dropdown class="btn-group" role="group" style="width: 25%">
+                                    <button type="button"
+                                            uib-dropdown-toggle
+                                            class="btn btn-default"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        <span id="search_concept">
+                                            {{shareDatasetCtrl.permission[shareDatasetCtrl.selectedPermission]}}
+                                        </span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul uib-dropdown-menu role="menu" style="min-width: 115px">
+                                        <li role="menuitem">
+                                            <a ng-click="shareDatasetCtrl.selectedPermission = 'READ_ONLY'"> Everyone can read </a>
+                                        </li>
+                                        <li role="menuitem">
+                                            <a ng-click="shareDatasetCtrl.selectedPermission = 'EDITABLE'"> Everyone can edit </a>
+                                        </li>
+                                        <li role="menuitem">
+                                            <a ng-click="shareDatasetCtrl.selectedPermission = 'EDITABLE_BY_OWNERS'">Data owners can edit </a>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>

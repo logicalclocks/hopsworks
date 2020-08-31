@@ -270,6 +270,7 @@ public class RESTCodes {
     DATASET_PARAMETERS_INVALID(31, "Invalid parameters for requested dataset operation",
         Response.Status.BAD_REQUEST),
     EMPTY_PATH(32, "Empty path requested", Response.Status.BAD_REQUEST),
+    ONGOING_PERMISSION_OPERATION(33, "There is an ongoing permission operation", Response.Status.CONFLICT),
     UPLOAD_PATH_NOT_SPECIFIED(35, "The path to upload the template was not specified",
         Response.Status.BAD_REQUEST),
     README_NOT_ACCESSIBLE(36, "Readme not accessible.", Response.Status.UNAUTHORIZED),

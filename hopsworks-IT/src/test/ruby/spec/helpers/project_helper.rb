@@ -136,6 +136,11 @@ module ProjectHelper
     expect_status(200)
   end
 
+  def remove_member(project, member)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/projectMembers/#{member}"
+    expect_status(200)
+  end
+
   def get_all_projects
     projects = Project.find_by(username: "#{@user.email}")
     projects
@@ -259,5 +264,13 @@ module ProjectHelper
     inode = INode.where(partition_id:project[:partition_id], parent_id:project[:inode_pid], name:project[:inode_name])
     expect(inode.length).to eq(1), "inode not found for project: #{project[:inode_name]}"
     inode.first
+  end
+
+  def create_member_in_table(project, user, role)
+    ProjectTeam.create(project_id: project[:id], team_member: user[:email], team_role: role)
+  end
+
+  def remove_member_from_table(project, user)
+    ProjectTeam.where(project_id: project[:id], team_member: user[:email]).delete_all
   end
 end

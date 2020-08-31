@@ -54,5 +54,22 @@ public enum ProjectRoleTypes {
   public String getRole() {
     return this.role;
   }
-
+  
+  public static ProjectRoleTypes fromString(String text) {
+    for (ProjectRoleTypes b : ProjectRoleTypes.values()) {
+      if (b.role.equalsIgnoreCase(text)) {
+        return b;
+      }
+    }
+    return null;
+  }
+  
+  public static boolean isAllowedRole(String role) {
+    try {
+      ProjectRoleTypes r = ProjectRoleTypes.fromString(role);
+      return r != null && !r.equals(ProjectRoleTypes.UNDER_REMOVAL);
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
+  }
 }

@@ -22,6 +22,8 @@ import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -85,6 +87,11 @@ public class DatasetSharedWith implements Serializable {
       referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  @Column(name = "permission")
+  private DatasetAccessPermission permission;
 
   public DatasetSharedWith() {
   }
@@ -93,10 +100,11 @@ public class DatasetSharedWith implements Serializable {
     this.id = id;
   }
 
-  public DatasetSharedWith(Project project, Dataset dataset, boolean accepted) {
+  public DatasetSharedWith(Project project, Dataset dataset, DatasetAccessPermission permission, boolean accepted) {
     this.project = project;
     this.dataset = dataset;
     this.accepted = accepted;
+    this.permission = permission;
     this.sharedOn = new Date();
   }
 
@@ -139,7 +147,15 @@ public class DatasetSharedWith implements Serializable {
   public void setProject(Project project) {
     this.project = project;
   }
-
+  
+  public DatasetAccessPermission getPermission() {
+    return permission;
+  }
+  
+  public void setPermission(DatasetAccessPermission permission) {
+    this.permission = permission;
+  }
+  
   @Override
   public int hashCode() {
     int hash = 0;

@@ -334,7 +334,7 @@ describe "On #{ENV['OS']}" do
         featurestore_name = project1[:projectname].downcase + "_featurestore.db"
         featurestore1 = get_dataset(project1, featurestore_name)
         request_access_by_dataset(featurestore1, project2)
-        share_dataset_checked(project1, featurestore_name, project2[:projectname], "FEATURESTORE")
+        share_dataset_checked(project1, featurestore_name, project2[:projectname], datasetType: "FEATURESTORE")
         fgs1 = featuregroups_setup(project1)
         fgs2 = featuregroups_setup(project2)
         tds1 = trainingdataset_setup(project1)
@@ -424,7 +424,7 @@ describe "On #{ENV['OS']}" do
         featurestore1 = get_dataset(project1, featurestore1_name)
         #share featurestore from one of your projects with another one of your projects
         request_access_by_dataset(featurestore1, project2)
-        share_dataset_checked(project1, featurestore1_name, project2[:projectname], "FEATURESTORE")
+        share_dataset_checked(project1, featurestore1_name, project2[:projectname], datasetType: "FEATURESTORE")
         fg1_name = "fg_dog1"
         featuregroup1_id = create_cached_featuregroup_checked(project1[:id], featurestore1_id, fg1_name)
 
@@ -440,7 +440,7 @@ describe "On #{ENV['OS']}" do
         create_session(user1_email, "Pass123")
         request_access_by_dataset(featurestore3, project2)
         create_session(user2_email, "Pass123")
-        share_dataset_checked(project3, featurestore3_name, project2[:projectname], "FEATURESTORE")
+        share_dataset_checked(project3, featurestore3_name, project2[:projectname], datasetType: "FEATURESTORE")
 
         create_session(user1_email, "Pass123")
 

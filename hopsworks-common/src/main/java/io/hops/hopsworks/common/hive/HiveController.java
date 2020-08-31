@@ -47,7 +47,6 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
@@ -57,6 +56,7 @@ import io.hops.hopsworks.common.security.BaseHadoopClientsService;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
@@ -66,7 +66,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -188,7 +187,8 @@ public class HiveController {
     Inode dbInode = inodeController.getInodeAtPath(dbPath.toString());
 
     // Persist Hive db as dataset in the Hopsworks database
-    Dataset dbDataset = new Dataset(dbInode, project);
+    // Make the dataset editable by default
+    Dataset dbDataset = new Dataset(dbInode, project, DatasetAccessPermission.EDITABLE);
     dbDataset.setDsType(datasetType);
     dbDataset.setSearchable(true);
     dbDataset.setFeatureStore(featurestore);
@@ -196,11 +196,7 @@ public class HiveController {
 
     try {
       // Assign database directory to the user and project group
-      hdfsUsersBean.addDatasetUsersGroups(user, project, dbDataset, dfso);
-
-      // Make the dataset editable by default
-      final FsPermission fsPermission = FsPermissions.rwxrwx___T;
-      dfso.setPermission(dbPath, fsPermission);
+      hdfsUsersBean.createDatasetGroupsAndSetPermissions(user, project, dbDataset, dbPath, dfso);
   
       fsProvenanceCtrl.updateHiveDatasetProvCore(project, dbPath.toString(), metaStatus, dfso);
       datasetController.logDataset(project, dbDataset, OperationType.Add);
@@ -226,8 +222,7 @@ public class HiveController {
         dfso.rm(dbPath, true);
       } catch (IOException rmEx) {
         // Nothing we can really do here
-        logger.log(Level.SEVERE, "Cannot delete Hive database directory: " + dbPath.toString() +
-            " Trace: " + rmEx);
+        logger.log(Level.SEVERE, "Cannot delete Hive database directory: " + dbPath.toString() + " Trace: " + rmEx);
       }
       throw new IOException(e);
     }

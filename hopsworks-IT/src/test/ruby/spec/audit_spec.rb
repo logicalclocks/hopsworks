@@ -68,7 +68,7 @@ describe "On #{ENV['OS']}" do
         adminUser = with_admin_session_return_user
         admin_accept_user(newUser[:uid], user = {})
 
-        testLog("acceptUser", adminUser[:email], "Response: 204")
+        testLog("acceptUser", adminUser[:email], "Response: 200")
       end
     end
     context 'account ' do

@@ -342,6 +342,12 @@ module SessionHelper
     user.save
     user
   end
+
+  def set_num_projects(user, num)
+    user.max_num_projects = num
+    user.save
+    user
+  end
   
   def create_users()
     user = {}

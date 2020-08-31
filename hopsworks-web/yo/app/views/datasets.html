@@ -151,7 +151,6 @@
                         current-page="datasetsCtrl.datasetPagination.currentPage"
                         total-items="datasetsCtrl.filesCount"
                         id="table-row-{{ dataset.name}}"
-                        title="Browse dataset"
                         context-menu data-target="table-menu-{{ dataset.name}}"
                         ng-click="datasetsCtrl.browseDataset(dataset)"
                         ng-class="{'highlight': datasetsCtrl.selected === dataset.name}">
@@ -200,6 +199,7 @@
                                       detach_template="metadataCtrl.detachTemplate(attributes)"
                                       show_manifest="datasetsCtrl.showManifest(publicId)"
                                       share="datasetsCtrl.share(dataset)"
+                                      shared-with="datasetsCtrl.sharedWith(dataset)"
                                       share_with_cluster="datasetsCtrl.publish(dataset)"
                                       share_with_hops="datasetsCtrl.shareWithHops(id)"
                                       unshare="datasetsCtrl.unshare(dataset)"
@@ -277,11 +277,15 @@
                                       title="{{datasetsCtrl.shortDatasetName(dataset).length > 17 ? datasetsCtrl.shortDatasetName(dataset):''}}">
                                   {{datasetsCtrl.shortDatasetName(dataset)| cut:true:17:'...'}}
                                 </span>
+                                  <span class="fa fa-users pull-right"
+                                        ng-if="dataset.permission === 'EDITABLE'" data-toggle="tooltip"
+                                        title="This dataset is editable by everyone."></span>
                                   <span class="fa fa-user pull-right"
-                                        ng-if="dataset.permission === 'GROUP_WRITABLE_SB'" data-toggle="tooltip"
-                                        title="This dataset is group writable and sticky bit is set."></span>
-                                  <span class="fa fa-users pull-right" ng-if="dataset.permission === 'GROUP_WRITABLE'" data-toggle="tooltip"
-                                        title="This dataset is group writable."></span>
+                                        ng-if="dataset.permission === 'EDITABLE_BY_OWNERS'" data-toggle="tooltip"
+                                        title="This dataset is editable by data owners."></span>
+                                  <span class="fa fa-users pull-right"
+                                        ng-if="dataset.permission === 'READ_ONLY'" data-toggle="tooltip"
+                                        title="This dataset is read only."></span>
                                   <br/>
                                   <small><b>Owner:</b>
                                     <span data-toggle="tooltip"
@@ -428,16 +432,22 @@
                             <td style="color: grey;"></td>
                           </tr>
 
-                          <tr style="background-color: #fafafa" title="{{datasetsCtrl.selectedFiles[datasetsCtrl.selected].attributes.permission}}">
+                          <tr style="background-color: #fafafa">
                             <td style="color: grey;">Permission</td>
-                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'GROUP_WRITABLE_SB'">
-                              Group writable with sticky bit set.
+                            <td style="color: grey;"
+                                ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'EDITABLE'"
+                                title="Editable by everyone">
+                              Editable.
                             </td>
-                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'GROUP_WRITABLE'">
-                              Group writable.
+                            <td style="color: grey;"
+                                ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'EDITABLE_BY_OWNERS'"
+                                title="Editable by Data owners">
+                              Editable by data owners.
                             </td>
-                            <td style="color: grey;" ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'OWNER_ONLY'">
-                              Owner only.
+                            <td style="color: grey;"
+                                ng-if="datasetsCtrl.selectedFiles[datasetsCtrl.selected].permission === 'READ_ONLY'"
+                                title="Read only">
+                              Read only.
                             </td>
                             <td style="color: grey;"></td>
                           </tr>

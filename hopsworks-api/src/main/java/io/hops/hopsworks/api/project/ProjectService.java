@@ -113,11 +113,6 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -137,6 +132,10 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -147,7 +146,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.StreamingOutput;
 
 @Logged
 @Path("/project")
@@ -459,7 +457,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id, @Context SecurityContext sc)
     throws ProjectException, DatasetException, HopsSecurityException, ServiceException, FeaturestoreException,
-    UserException, ElasticException, SchemaException, KafkaException, ProvenanceException{
+    ElasticException, SchemaException, KafkaException, ProvenanceException, IOException, UserException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -539,7 +537,8 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, JobException, ElasticException, SchemaException, ProvenanceException {
+    HopsSecurityException, FeaturestoreException, JobException, IOException, ElasticException, SchemaException,
+    ProvenanceException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -614,7 +613,7 @@ public class ProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
+    HopsSecurityException, FeaturestoreException, ElasticException, SchemaException, IOException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     projectController.createProject(projectDTO, user, req.getSession().getId());

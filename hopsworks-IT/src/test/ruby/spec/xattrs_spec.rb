@@ -38,7 +38,7 @@ describe "On #{ENV['OS']}" do
     end
     context "no dependency - same dataset" do
       before(:all) do
-        create_dataset_by_name_checked(@project, @dsnames[0])
+        create_dataset_by_name_checked(@project, @dsnames[0], permission: "READ_ONLY")
         @path = "/Projects/#{@project[:projectname]}/#{@dsnames[0]}"
         #increment for any new xattr attached - tests should not clash on xattr names
         attached_xattr = 8
@@ -141,7 +141,7 @@ describe "On #{ENV['OS']}" do
     context "each test has its own dataset" do
       it "should get all extended attributes (none)" do
         dsname = @dsnames[1]
-        create_dataset_by_name_checked(@project, dsname)
+        create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         path = "/Projects/#{@project[:projectname]}/#{dsname}"
         parsed_body = get_xattrs_checked(@project, path)
         expect(parsed_body[:items].count).to eq(0)
@@ -149,7 +149,7 @@ describe "On #{ENV['OS']}" do
 
       it "should get all extended attributes attached to a dataset" do
         dsname = @dsnames[2]
-        create_dataset_by_name_checked(@project, dsname)
+        create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         path = "/Projects/#{@project[:projectname]}/#{dsname}"
         xattr1 = "xattr_1"
         val1 = "some value"
@@ -171,7 +171,7 @@ describe "On #{ENV['OS']}" do
 
       it "should get the remaining extended attributes attached to a dataset" do
         dsname = @dsnames[3]
-        create_dataset_by_name_checked(@project, dsname)
+        create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         path = "/Projects/#{@project[:projectname]}/#{dsname}"
         xattr1 = "xattr_1"
         val1 = "some value"
@@ -188,7 +188,7 @@ describe "On #{ENV['OS']}" do
 
       it "should allow to attach max nr of xattr to a dataset " do
         dsname = @dsnames[4]
-        create_dataset_by_name_checked(@project, dsname)
+        create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         path = "/Projects/#{@project[:projectname]}/#{dsname}"
         @xattr_max_nr.times do |i|
           xattr = "xattr_#{i}"
@@ -201,7 +201,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not allow to attach more than  max nr of xattr to a dataset" do
         dsname = @dsnames[5]
-        create_dataset_by_name_checked(@project, dsname)
+        create_dataset_by_name_checked(@project, dsname, permission: "READ_ONLY")
         path = "/Projects/#{@project[:projectname]}/#{dsname}"
         @xattr_max_nr.times do |i|
           xattr = "xattr_#{i}"

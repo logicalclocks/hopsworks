@@ -166,10 +166,10 @@ public class UsersAdminResource {
   @ApiOperation(value = "Resend confirmation email to user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/pending")
+  @Produces(MediaType.APPLICATION_JSON)
   @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.CHANGED_STATUS, message = "Resend confirmation email")
-  public Response pendingUser(@Context HttpServletRequest req,
-    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id)
-    throws UserException, ServiceException {
+  public Response pendingUser(@Context HttpServletRequest req, @Context SecurityContext sc,
+    @AuditTarget(UserIdentifier.ID) @PathParam("id") Integer id) throws UserException, ServiceException {
     String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
     UserProfileDTO userProfileDTO = userProfileBuilder.pendUser(linkUrl, id);
     return Response.ok(userProfileDTO).build();

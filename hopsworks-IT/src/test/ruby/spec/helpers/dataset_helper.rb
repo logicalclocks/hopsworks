@@ -76,14 +76,14 @@ module DatasetHelper
     get_dataset_by_name(dsname)
   end
 
-  def create_dataset_by_name_checked(project, dsname)
-    create_dataset_by_name(project, dsname)
+  def create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
+    create_dataset_by_name(project, dsname, permission: permission)
     expect_status_details(201)
     get_dataset(project, dsname) 
   end
 
-  def create_dataset_by_name(project, dsname)
-    query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true})
+  def create_dataset_by_name(project, dsname, permission: "READ_ONLY")
+    query = URI.encode_www_form({description: "test dataset", searchable: true, generate_readme: true, permission: permission})
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}?action=create&#{query}"
   end
   
@@ -109,7 +109,7 @@ module DatasetHelper
   end
 
   def request_access_by_name(owningProject, datasetName, requestingProject)
-    get_dataset_stat(owningProject, datasetName, "&type=DATASET")
+    get_dataset_stat(owningProject, datasetName, datasetType: "&type=DATASET")
     expect_status(200)
     ds = json_body
     request_dataset_access(requestingProject, ds[:attributes][:id])
@@ -157,21 +157,21 @@ module DatasetHelper
     while x < num do
       name = (0...7).map { ('a'..'z').to_a[rand(26)] }.join
       dsname = "#{name}_#{short_random_id}"
-      query = URI.encode_www_form({description: "test dataset", searchable: false, generate_readme: false})
-      create_dir(project, dsname, "&type=DATASET&#{query}")
+      query = URI.encode_www_form({description: "test dataset", searchable: false, generate_readme: false, permission: "READ_ONLY"})
+      create_dir(project, dsname, query: "&type=DATASET&#{query}")
       if response.code == 201
         x += 1
         if accepted
           request_access_by_name(project, dsname, @project)
         end
-        share_dataset(project, dsname, @project[:projectname], "")
+        share_dataset(project, dsname, @project[:projectname], permission: "EDITABLE", datasetType: "")
       end
     end
 
   end
 
   def create_dataset_contents(num)
-    create_dirs(@project, @dataset[:inode_name], num, false )
+    create_dirs(@project, @dataset[:inode_name], num, false)
   end
 
   def create_dataset_contents_for_new_user(num)
@@ -181,7 +181,7 @@ module DatasetHelper
     newUserParams[:last_name] = "lastName" # should be different from last
     newUser = create_user(newUserParams)
     add_member_to_project(@project, newUser[:email], "Data owner")
-    update_dataset_permissions(@project, @dataset[:inode_name], "GROUP_WRITABLE_SB", "&type=DATASET")
+    update_dataset_permissions(@project, @dataset[:inode_name], "EDITABLE", datasetType: "&type=DATASET")
     expect_status(200)
     create_session(newUser[:email], "Pass123")
     create_dirs(@project, @dataset[:inode_name], num, false)
@@ -211,24 +211,24 @@ module DatasetHelper
     while x < num do
       name = (0...7).map { ('a'..'z').to_a[rand(26)] }.join
       dsname = "#{path}/#{name}_#{short_random_id}"
-      query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: false})
-      create_dir(project, dsname, "&type=DATASET&#{query}")
+      query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: false, permission: "READ_ONLY"})
+      create_dir(project, dsname, query: "&type=DATASET&#{query}")
       if response.code == 201
         x += 1
       end
     end
   end
 
-  def create_dir(project, path, query)
+  def create_dir(project, path, query: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=create#{query}"
   end
 
-  def create_dir_checked(project, path, query)
-    create_dir(project, path, query)
+  def create_dir_checked(project, path, query: "")
+    create_dir(project, path, query: query)
     expect_status_details(201)
   end
 
-  def delete_dir(project, path, dataset_type)
+  def delete_dir(project, path, dataset_type: "DATASET")
     pp "delete #{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}" if defined?(@debugOpt) && @debugOpt
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?type=#{dataset_type}"
   end
@@ -240,26 +240,26 @@ module DatasetHelper
 
   def create_random_dataset(project, searchable, generate_readme)
     dsname = "dataset_#{short_random_id}"
-    query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: generate_readme})
-    create_dir(project, dsname, "&#{query}")
+    query = URI.encode_www_form({description: "test dataset", searchable: searchable, generate_readme: generate_readme, permission: "READ_ONLY"})
+    create_dir(project, dsname, query: "&#{query}")
     expect_status(201)
     return dsname
   end
 
-  def copy_dataset(project, path, destination_path, datasetType)
+  def copy_dataset(project, path, destination_path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=copy&destination_path=#{destination_path}#{datasetType}"
   end
 
-  def move_dataset(project, path, destination_path, datasetType)
+  def move_dataset(project, path, destination_path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=move&destination_path=#{destination_path}#{datasetType}"
   end
 
-  def share_dataset(project, path, target_project, datasetType)
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}#{datasetType}"
+  def share_dataset(project, path, target_project, permission: "EDITABLE", datasetType: "")
+    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}#{datasetType}"
   end
 
-  def share_dataset_checked(project, path, target_project, datasetType)
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&type=#{datasetType}"
+  def share_dataset_checked(project, path, target_project, permission: "EDITABLE", datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share&target_project=#{target_project}&permission=#{permission}&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
     expect_status_details(204)
@@ -271,55 +271,55 @@ module DatasetHelper
     inode.first
   end
 
-  def publish_dataset(project, dataset_name, dataset_type)
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=publish"
+  def publish_dataset(project, dataset_name, datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{datasetType}&action=publish"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
   end
 
-  def publish_dataset_checked(project, dataset_name, dataset_type)
-    publish_dataset(project, dataset_name, dataset_type)
+  def publish_dataset_checked(project, dataset_name, datasetType: "DATASET")
+    publish_dataset(project, dataset_name, datasetType: datasetType)
     expect_status_details(204)
     dataset = get_dataset(project, dataset_name)
     expect(dataset).not_to be_nil, "main dataset is nil"
     expect(dataset[:public_ds]).to be(true), "main dataset - attribute public - not set to true"
   end
 
-  def unpublish_dataset(project, dataset_name, dataset_type)
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=unpublish"
+  def unpublish_dataset(project, dataset_name, datasetType: "")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{datasetType}&action=unpublish"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
   end
 
-  def unpublish_dataset_checked(project, dataset_name, dataset_type)
-    unpublish_dataset(project, dataset_name, dataset_type)
+  def unpublish_dataset_checked(project, dataset_name, datasetType: "")
+    unpublish_dataset(project, dataset_name, datasetType: datasetType)
     expect_status_details(204)
     dataset = get_dataset(project, dataset_name)
     expect(dataset).not_to be_nil, "main dataset is nil"
     expect(dataset[:public_ds]).to be(false), "main dataset - attribute public - not reset to false"
   end
 
-  def import_dataset(target_project, dataset_name, dataset_type, dataset_project)
+  def import_dataset(target_project, dataset_name, dataset_project, datasetType: "")
     query = "#{ENV['HOPSWORKS_API']}/project/#{target_project[:id]}/dataset/#{dataset_name}"\
-      "?type=#{dataset_type}&action=import&target_project=#{dataset_project[:projectname]}"
+      "?type=#{datasetType}&action=import&target_project=#{dataset_project[:projectname]}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
   end
 
-  def import_dataset_checked(target_project, dataset_name, dataset_type, dataset_project)
-    import_dataset(target_project, dataset_name, dataset_type, dataset_project)
+  def import_dataset_checked(target_project, dataset_name, dataset_project, datasetType: "")
+    import_dataset(target_project, dataset_name, dataset_project, datasetType: datasetType)
     expect_status_details(204)
     check_shared_dataset(target_project, dataset_name, dataset_project)
   end
 
-  def unshare_all_dataset(project, dataset_name, dataset_type)
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{dataset_type}&action=unshare_all"
+  def unshare_all_dataset(project, dataset_name, datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dataset_name}?type=#{datasetType}&action=unshare_all"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
   end
 
-  def unshare_all_dataset_checked(project, dataset_name, dataset_type)
-    unshare_all_dataset(project, dataset_name, dataset_type)
+  def unshare_all_dataset_checked(project, dataset_name, datasetType: "DATASET")
+    unshare_all_dataset(project, dataset_name, datasetType: datasetType)
     expect_status_details(204)
   end
 
@@ -337,65 +337,72 @@ module DatasetHelper
     expect(dataset.length).to eq(0), "dataset:#{dataset_name} should not be available in project:#{target_project} body:#{JSON.pretty_generate(json_body)}"
   end
 
-  def accept_dataset(project, path, datasetType)
+  def accept_dataset(project, path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept#{datasetType}"
   end
 
-  def accept_dataset_checked(project, path, datasetType)
+  def accept_dataset_checked(project, path, datasetType: "DATASET")
     query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
     expect_status_details(204)
   end
 
-  def reject_dataset(project, path, datasetType)
+  def reject_dataset(project, path, datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
+    pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
+    post "#{query}"
+    expect_status_details(204)
+  end
+
+  def reject_dataset(project, path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=reject#{datasetType}"
   end
 
-  def zip_dataset(project, path, datasetType)
+  def zip_dataset(project, path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=zip#{datasetType}"
   end
 
-  def unzip_dataset(project, path, datasetType)
+  def unzip_dataset(project, path, datasetType: "")
     post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=unzip#{datasetType}"
   end
 
-  def delete_dataset(project, path, datasetType)
+  def delete_dataset(project, path, datasetType: "")
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}#{datasetType}"
   end
 
-  def delete_corrupted_dataset(project, path, datasetType)
+  def delete_corrupted_dataset(project, path, datasetType: "")
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=corrupted#{datasetType}"
   end
 
-  def unshare_dataset(project, path, datasetType)
+  def unshare_dataset(project, path, datasetType: "")
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=unshare#{datasetType}"
   end
 
-  def unshare_from(project, path, target, datasetType)
+  def unshare_from(project, path, target, datasetType: "")
     delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=unshare&target_project=#{target}#{datasetType}"
   end
 
-  def get_download_token(project, path, datasetType)
+  def get_download_token(project, path, datasetType: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/token/#{path}#{datasetType}"
   end
 
-  def download_dataset_with_token(project, path, token, datasetType)
+  def download_dataset_with_token(project, path, token, datasetType: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/#{path}?token=#{token}#{datasetType}"
   end
 
-  def download_dataset(project, path, datasetType)
-    get_download_token(project, path, "?#{datasetType}")
+  def download_dataset(project, path, datasetType: "")
+    get_download_token(project, path, datasetType: "?#{datasetType}")
     expect_status(200)
     token = json_body[:data][:value]
-    download_dataset_with_token(project, path, token, "&#{datasetType}")
+    download_dataset_with_token(project, path, token, datasetType: "&#{datasetType}")
   end
 
-  def get_datasets_in_path(project, path, query)
+  def get_datasets_in_path(project, path, query: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=listing&expand=inodes#{query}"
   end
 
-  def get_dataset_stat(project, path, datasetType, expand_inodes: true)
+  def get_dataset_stat(project, path, datasetType: "", expand_inodes: true)
     if expand_inodes
       pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}" if defined?(@debugOpt) && @debugOpt
       get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=stat&expand=inodes#{datasetType}"
@@ -405,26 +412,30 @@ module DatasetHelper
     end
   end
 
-  def get_dataset_stat_checked(project, path, datasetType, expand_inodes: true)
-    get_dataset_stat(project, path, datasetType, expand_inodes: expand_inodes)
+  def get_dataset_stat_checked(project, path, datasetType: "", expand_inodes: true)
+    get_dataset_stat(project, path, datasetType: datasetType, expand_inodes: expand_inodes)
     expect_status_details(200)
     json_body
   end
 
-  def get_dataset_blob(project, path, datasetType)
+  def get_dataset_blob(project, path, datasetType: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=blob&expand=inodes&mode=head#{datasetType}"
   end
 
-  def update_dataset_permissions(project, path, permissions, datasetType)
+  def update_dataset_permissions(project, path, permissions, datasetType: "")
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=permission&permissions=#{permissions}#{datasetType}"
   end
 
   def update_dataset_permissions_checked(project, path, permissions, datasetType: "DATASET")
-    update_dataset_permissions(project, path, permissions,"&type=#{datasetType}")
+    update_dataset_permissions(project, path, permissions, datasetType: "&type=#{datasetType}")
     expect_status_details(200)
   end
 
-  def update_dataset_description(project, path, description, datasetType)
+  def update_dataset_shared_with_permissions(project, path, target_project, permissions, datasetType: "")
+    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=share_permission&permissions=#{permissions}&target_project=#{target_project[:projectname]}#{datasetType}"
+  end
+
+  def update_dataset_description(project, path, description, datasetType: "")
     put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=description&description=#{description}#{datasetType}"
   end
 
@@ -450,7 +461,7 @@ module DatasetHelper
     else
       sorted = ds.sort_by(&:downcase).reverse
     end
-    get_datasets_in_path(project, path, "&sort_by=#{sort_by_query}:#{order}")
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}" }
     expect(sortedRes).to eq(sorted)
@@ -463,7 +474,7 @@ module DatasetHelper
     else
       sorted = ds.sort_by(&:downcase).reverse
     end
-    get_datasets_in_path(project, path, "&sort_by=#{sort_by_query}:#{order}")
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
     expect(sortedRes).to eq(sorted)
@@ -476,7 +487,7 @@ module DatasetHelper
     else
       sorted = ds.sort.reverse
     end
-    get_datasets_in_path(project, path, "&sort_by=#{sort_by_query}:#{order}")
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}" }
     expect(sortedRes).to eq(sorted)
@@ -489,7 +500,7 @@ module DatasetHelper
     else
       sorted = ds.sort.reverse
     end
-    get_datasets_in_path(project, path, "&sort_by=#{sort_by_query}:#{order}")
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
     expect(sortedRes).to eq(sorted)
@@ -510,21 +521,21 @@ module DatasetHelper
         datasetTypes[:"#{b}"] <=> datasetTypes[:"#{a}"]
       end
     end
-    get_datasets_in_path(project, path, "&sort_by=#{sort_by_query}:#{order}")
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}"}
     expect(sortedRes).to eq(sorted)
   end
 
   def test_filter_by(project, excluded, path, filter_by, filter_by_query)
-    get_datasets_in_path(project, path, "&filter_by=#{filter_by_query}")
+    get_datasets_in_path(project, path, query: "&filter_by=#{filter_by_query}")
     expect_status(200)
     filteredRes = json_body[:items].map { |o| "#{o[:"#{filter_by}"]}" }
     expect(filteredRes & excluded).to be_empty
   end
 
   def test_filter_by_attr(project, excluded, path, filter_by, filter_by_query)
-    get_datasets_in_path(project, path, "&filter_by=#{filter_by_query}")
+    get_datasets_in_path(project, path, query: "&filter_by=#{filter_by_query}")
     expect_status(200)
     filteredRes = json_body[:items].map { |o| "#{o[:attributes][:"#{filter_by}"]}" }
     expect(filteredRes & excluded).to be_empty
@@ -533,7 +544,7 @@ module DatasetHelper
   def test_filter_by_starts_with(project, datasets, path, filter_by, filter_by_query, filter_val)
     ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"].start_with?("#{filter_val}")}.compact
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
     expect(filteredRes).to eq(sorted)
@@ -546,7 +557,7 @@ module DatasetHelper
       ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"].start_with?("#{filter_val}")}.compact
     end
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     if path == ""
       filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
@@ -559,7 +570,7 @@ module DatasetHelper
   def test_filter_by_eq(project, datasets, path, filter_by, filter_by_query, filter_val)
     ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]==filter_val}.compact
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
     expect(filteredRes).to eq(sorted)
@@ -572,7 +583,7 @@ module DatasetHelper
       ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]==filter_by_val}.compact
     end
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
     expect_status(200)
     if path == ""
       filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
@@ -585,7 +596,7 @@ module DatasetHelper
   def test_filter_by_lt(project, datasets, path, filter_by, filter_by_query, filter_val)
     ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]<filter_val}.compact
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
@@ -601,7 +612,7 @@ module DatasetHelper
       ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]<filter_by_val}.compact
     end
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
@@ -617,7 +628,7 @@ module DatasetHelper
   def test_filter_by_gt(project, datasets, path, filter_by, filter_by_query, filter_val)
     ds = datasets.map { |o| "#{o[:id]}" if o[:"#{filter_by}"]>filter_val}.compact
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
@@ -633,7 +644,7 @@ module DatasetHelper
       ds = datasets.map { |o| "#{o[:attributes][:id]}" if o[:attributes][:"#{filter_by}"]>filter_by_val}.compact
     end
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&filter_by=#{filter_by_query}:#{filter_by_query_val}")
     expect_status(200)
     filteredRes = []
     if json_body[:items]
@@ -662,7 +673,7 @@ module DatasetHelper
   def test_offset_limit(project, datasets, path, offset, limit)
     ds = datasets.map { |o| "#{o[:id]}"}
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
     expect_status(200)
     filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
     offset, limit = check_offset_limit(offset, limit, sorted.length)
@@ -676,7 +687,7 @@ module DatasetHelper
       ds = datasets.map { |o| "#{o[:attributes][:id]}"}
     end
     sorted = ds.sort
-    get_datasets_in_path(project, path, "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
+    get_datasets_in_path(project, path, query: "&sort_by=id:asc&limit=#{limit}&offset=#{offset}")
     expect_status(200)
     if path == ""
       filteredRes = json_body[:items].map { |o| "#{o[:id]}" }
@@ -687,4 +698,111 @@ module DatasetHelper
     expect(filteredRes).to eq(sorted.drop(offset).take(limit))
   end
 
+  def data_owner_create_dir(project, dataset, data_owner)
+    create_session(data_owner[:email], "Pass123")
+    create_dir(project, "#{dataset}/test_#{short_random_id}", query: "&type=DATASET")
+  end
+
+  def data_scientist_create_dir(project, dataset, data_scientist)
+    create_session(data_scientist[:email], "Pass123")
+    create_dir(project, "#{dataset}/test_#{short_random_id}", query: "&type=DATASET")
+  end
+
+  def test_read_only_dataset(project, dataset, data_owner, data_scientist)
+    data_owner_create_dir(project, dataset, data_owner)
+    expect_status_details(403)
+
+    data_scientist_create_dir(project, dataset, data_scientist)
+    expect_status_details(403)
+  end
+
+  def test_editable_dataset(project, dataset, data_owner, data_scientist)
+    data_owner_create_dir(project, dataset, data_owner)
+    expect_status_details(201)
+
+    data_scientist_create_dir(project, dataset, data_scientist)
+    expect_status_details(201)
+  end
+
+  def test_owners_only_dataset(project, dataset, data_owner, data_scientist)
+    data_owner_create_dir(project, dataset, data_owner)
+    expect_status_details(201)
+
+    data_scientist_create_dir(project, dataset, data_scientist)
+    expect_status_details(403)
+  end
+
+  def get_group_members(dataset_group, dataset_read_group)
+    hdfs_group = HdfsGroups.find_by(name: dataset_group)
+    hdfs_read_group = HdfsGroups.find_by(name: dataset_read_group)
+    usernames_in_write_group = hdfs_group.hdfs_users.map { |user| "#{user[:name]}" }
+    usernames_in_read_group = hdfs_read_group.hdfs_users.map { |user| "#{user[:name]}" }
+    return {write_group: usernames_in_write_group, read_group: usernames_in_read_group}
+  end
+
+  def test_members_read_only_dataset(all_users, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_read_group & all_users).to match_array(all_users)
+    expect(usernames_in_write_group & all_users).to be_empty
+  end
+
+  def test_members_editable_dataset(all_users, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_write_group & all_users).to match_array(all_users)
+    expect(usernames_in_read_group & all_users).to be_empty
+  end
+
+  def test_members_owners_only_dataset(data_owners, data_scientists, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_write_group & data_owners).to match_array(data_owners)
+    expect(usernames_in_write_group & data_scientists).to be_empty
+    expect(usernames_in_read_group & data_scientists).to match_array(data_scientists)
+    expect(usernames_in_read_group & data_owners).to be_empty
+  end
+
+  def test_members_not_in_read_only_dataset(all_users, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_read_group & all_users).to be_empty
+    expect(usernames_in_write_group & all_users).to be_empty
+  end
+
+  def test_members_not_in_editable_dataset(all_users, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_write_group & all_users).to be_empty
+    expect(usernames_in_read_group & all_users).to be_empty
+  end
+
+  def test_members_not_in_owners_only_dataset(data_owners, data_scientists, dataset_group, dataset_read_group)
+    members = get_group_members(dataset_group, dataset_read_group)
+    usernames_in_write_group = members[:write_group]
+    usernames_in_read_group = members[:read_group]
+    expect(usernames_in_write_group & data_owners).to be_empty
+    expect(usernames_in_write_group & data_scientists).to be_empty
+    expect(usernames_in_read_group & data_scientists).to be_empty
+    expect(usernames_in_read_group & data_owners).to be_empty
+  end
+
+  def do_permission_cleanup(project)
+    with_admin_session
+    post "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:id]}/fix-permission"
+    expect_status_details(204)
+    create_session(project[:username], "Pass123")
+  end
+
+  def test_dataset_permission(project, datasetName, permission)
+    get_dataset_stat(project, datasetName, datasetType: '&type=DATASET')
+    expect_status_details(200)
+    ds = json_body
+    expect(ds[:attributes][:permission]).to eq (permission)
+  end
 end

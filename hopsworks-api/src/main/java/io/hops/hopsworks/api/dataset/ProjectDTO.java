@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.dataset;
 
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -24,14 +25,16 @@ public class ProjectDTO {
   private Integer id;
   private String name;
   private String owner;
+  private DatasetAccessPermission permission;
   
   public ProjectDTO() {
   }
   
-  public ProjectDTO(Project project) {
+  public ProjectDTO(Project project, DatasetAccessPermission permission) {
     this.id = project.getId();
     this.name = project.getName();
     this.owner = project.getOwner().getFname() + " " + project.getOwner().getLname();
+    this.permission = permission;
   }
   
   public Integer getId() {
@@ -58,12 +61,21 @@ public class ProjectDTO {
     this.owner = owner;
   }
   
+  public DatasetAccessPermission getPermission() {
+    return permission;
+  }
+  
+  public void setPermission(DatasetAccessPermission permission) {
+    this.permission = permission;
+  }
+  
   @Override
   public String toString() {
     return "ProjectDTO{" +
       "id=" + id +
       ", name='" + name + '\'' +
       ", owner='" + owner + '\'' +
+      ", permission=" + permission +
       '}';
   }
 }

@@ -82,7 +82,7 @@ describe "On #{ENV['OS']}" do
           logs = json_body[:items].detect { |e| e[:name] == "Logs" }
           resources = json_body[:items].detect { |e| e[:name] == "Resources" }
           expect(logs[:description]).to eq ("Contains the logs for jobs that have been run through the Hopsworks platform.")
-          expect(logs[:attributes][:permission]).to eq ("rwxrwx--T")
+          expect(logs[:attributes][:permission]).to eq ("rwxrwx---")
           expect(logs[:attributes][:owner]).to eq ("#{@user[:fname]} #{@user[:lname]}")
           expect(resources[:description]).to eq ("Contains resources used by jobs, for example, jar files.")
           expect(resources[:attributes][:permission]).to eq ("rwxrwx---")
@@ -141,13 +141,13 @@ describe "On #{ENV['OS']}" do
           projectname = "project_#{short_random_id}"
           project = create_project_by_name(projectname)
           dsname = "dataset_#{short_random_id}"
-          create_dataset_by_name_checked(project, dsname)
+          create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
           delete_project(project)
 
           sleep(15)
 
           project = create_project_by_name(projectname)
-          create_dataset_by_name_checked(project, dsname)
+          create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
 
           get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{dsname}?action=listing&expand=inodes"
           expect_status(200)

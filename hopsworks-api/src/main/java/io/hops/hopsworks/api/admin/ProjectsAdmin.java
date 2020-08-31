@@ -49,6 +49,7 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.dataset.acl.PermissionsCleaner;
 import io.hops.hopsworks.common.project.ProjectController;
 import io.hops.hopsworks.common.project.ProjectDTO;
 import io.hops.hopsworks.common.project.QuotasDTO;
@@ -88,6 +89,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -116,6 +118,8 @@ public class ProjectsAdmin {
   private Settings settings;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private PermissionsCleaner permissionsCleaner;
 
   @DELETE
   @Produces(MediaType.APPLICATION_JSON)
@@ -142,7 +146,7 @@ public class ProjectsAdmin {
   @Path("/projects/createas")
   public Response createProjectAsUser(@Context HttpServletRequest request, @Context SecurityContext sc,
       ProjectDTO projectDTO) throws DatasetException, GenericException, KafkaException, ProjectException, UserException,
-      ServiceException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
+    ServiceException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException, IOException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.AUTHENTICATION_FAILURE, Level.WARNING,
@@ -253,5 +257,26 @@ public class ProjectsAdmin {
     GenericEntity<ProjectDeletionLog> response = new GenericEntity<ProjectDeletionLog>(deletionLog) {
     };
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(response).build();
+  }
+  
+  @POST
+  @Path("/projects/{id}/fix-permission")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response forcePermissionFix(@PathParam("id") Integer projectId, @Context SecurityContext sc)
+    throws ProjectException {
+    Project project = projectFacade.find(projectId);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + projectId);
+    }
+    permissionsCleaner.fixPermissions(project);
+    return Response.noContent().build();
+  }
+  
+  @POST
+  @Path("/projects/fix-permission")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response forcePermissionFix(@Context SecurityContext sc) {
+    permissionsCleaner.fixPermissions();
+    return Response.accepted().build();
   }
 }

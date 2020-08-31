@@ -188,7 +188,7 @@ public class DownloadService {
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     Dataset ds = datasetPath.getDataset();
-    if (ds.isShared(project) && ds.getPermissions().equals(DatasetPermissions.OWNER_ONLY) && !ds.isPublicDs()) {
+    if (ds.isShared(project) && ds.getFilePermissions().equals(DatasetPermissions.OWNER_ONLY) && !ds.isPublicDs()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.FINE);
     }
 

@@ -39,22 +39,23 @@
 package io.hops.hopsworks.common.hdfs;
 
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
+import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
+import io.hops.hopsworks.persistence.entity.dataset.PermissionTransition;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsGroups;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsGroupsFacade;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
-import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.exceptions.DatasetException;
-import io.hops.hopsworks.exceptions.ProjectException;
-import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.security.UserAlreadyInGroupException;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.permission.AclEntry;
+import org.apache.hadoop.fs.permission.AclEntryScope;
+import org.apache.hadoop.fs.permission.AclEntryType;
+import org.apache.hadoop.fs.permission.FsAction;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -64,9 +65,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -80,10 +78,6 @@ public class HdfsUsersController {
   private HdfsGroupsFacade hdfsGroupsFacade;
   @EJB
   private DistributedFsService dfsService;
-  @EJB
-  private InodeController inodes;
-  @EJB
-  private ProjectTeamFacade projectTeamFacade;
 
   /**
    * Creates a new group in HDFS with the name <code>projectName</code> if it
@@ -100,72 +94,23 @@ public class HdfsUsersController {
     Path location = new Path(Utils.getProjectPath(project.getName()));
     //FsPermission(FsAction u, FsAction g, FsAction o) 555
     //We prohibit a user from creating top-level datasets bypassing Hopsworks UI (i.e. from as Spark app)
+    //r_x for others to allow sharing
     dfso.setOwner(location, owner, project.getName());
     dfso.setPermission(location, FsPermissions.r_xr_xr_x);
 
     // Add project owner to the project group
+    //TODO: do we need to add the owner to group if permission is r_xr_xr_x?
     HdfsGroups projectGroup = hdfsGroupsFacade.findByName(project.getName());
     if (projectGroup == null) {
       throw new IllegalArgumentException("No group found for project in HDFS.");
     }
-    addUserToGroup(dfso, owner, projectGroup);
+    addToGroup(owner, projectGroup.getName(), dfso);
   }
 
   /**
-   * Adds a new member to the project. This will create a new user in HDFS
-   * with the name <code>projectName</code>__<code>username</code> and adds it
-   * to the group <code>projectName</code>. throws IllegalArgumentException if
-   * the project group is not found.
-   * <p>
-   * @param project
-   * @param member
-   * @throws io.hops.hopsworks.exceptions.UserException
-   */
-  public void addNewProjectMember(Project project, ProjectTeam member) throws UserException {
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfsService.getDfsOps();
-      addDataOwnerToProject(dfso, project, member, true);
-    } catch (IOException ex) {
-      throw new UserException(RESTCodes.UserErrorCode.CREATE_USER_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-  }
-
-  /**
-   * Adds a user to project group if the member have a Data owner role in the
-   * project.
-   * <p>
-   * throws IllegalArgumentException if the project group is not found.
-   * <p>
-   * @param project
-   * @param member
-   * @throws io.hops.hopsworks.exceptions.UserException
-   */
-  public void addUserToProjectGroup(Project project, ProjectTeam member) throws UserException {
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfsService.getDfsOps();
-      addDataOwnerToProject(dfso, project, member, false);
-    } catch (IOException ex) {
-      throw new UserException(RESTCodes.UserErrorCode.CREATE_USER_ERROR, Level.SEVERE, null, ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-  }
-
-  /**
-   * Create a new group in HDFS with the name project.name__datasetName if it
-   * does not exist, then adds all members of the project to this group. This
-   * is done when a new dataset is created in a project. If stickyBit is set
-   * true: all members of the project will be given r, w, x privileges. If
-   * stickyBit is set false: user will get all privileges, and all other
-   * members will have r and x privileges.
+   * Create a new group in HDFS with the name project.name__datasetName with write access and an Acl entry
+   * project.name__datasetName__read with read access. Also sets permissions and adds all members of the project to the
+   * appropriate groups.
    * <p>
    * @param owner
    * @param project
@@ -173,185 +118,67 @@ public class HdfsUsersController {
    * @param dfso
    * @throws java.io.IOException
    */
-  public void addDatasetUsersGroups(Users owner, Project project,
-      Dataset dataset, DistributedFileSystemOps dfso) throws IOException {
-    if (owner == null || project == null || project.getProjectTeamCollection()
-        == null || dataset == null) {
+  public void createDatasetGroupsAndSetPermissions(Users owner, Project project, Dataset dataset, Path dsPath,
+    DistributedFileSystemOps dfso) throws IOException {
+    if (owner == null || project == null || project.getProjectTeamCollection() == null || dataset == null) {
       throw new IllegalArgumentException("One or more arguments are null.");
     }
     String datasetGroup = getHdfsGroupName(project, dataset);
+    String datasetAclGroup = getHdfsAclGroupName(project, dataset);
     String dsOwner = getHdfsUserName(project, owner);
-    String dsPath = inodes.getPath(dataset.getInode());
-    Path location = new Path(dsPath);
-    dfso.setOwner(location, dsOwner, datasetGroup);
-
+    dfso.setOwner(dsPath, dsOwner, datasetGroup);
+    dfso.addGroup(datasetAclGroup);
+    dfso.setPermission(dsPath, getDatasetAcl(datasetAclGroup));
     HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
     if (hdfsGroup == null) {
       throw new IllegalArgumentException("Could not create dataset group in HDFS.");
     }
 
-    Set<Users> projectUsers = project.getProjectTeamCollection()
-        .stream().map(ProjectTeam::getUser).collect(Collectors.toSet());
-
     // During the project creation we cannot rely on the owner being in the projectTeamCollection
     // when this method is invoked, hence we explicitly add them to the group.
-    projectUsers.add(owner);
+    String hdfsUsername = getHdfsUserName(project, owner);
+    addToGroup(hdfsUsername, hdfsGroup.getName(), dfso);
 
     //add every member to the new ds group
-    for (Users member : projectUsers) {
-      String hdfsUsername = getHdfsUserName(project, member);
-      addUserToGroup(dfso, hdfsUsername, hdfsGroup);
-    }
+    addMembersToGroups(datasetGroup, datasetAclGroup, dfso, project.getProjectTeamCollection(),
+      dataset.getPermission());
   }
-
-  /**
-   * Removes the user project__username. This should cascade to the groups the
-   * user is a member of. This can be used to remove a data_owner or a
-   * data_scientist from project.
-   * <p>
-   * @param user
-   * @param project
-   * @throws io.hops.hopsworks.exceptions.ProjectException
-   */
-  public void removeProjectMember(Users user, Project project) throws ProjectException {
-    if (user == null || project == null) {
-      throw new IllegalArgumentException("One or more arguments are null.");
-    }
-    DistributedFileSystemOps dfso = null;
-    try {
-      String userName = getHdfsUserName(project, user);
-      dfsService.removeDfsOps(userName);
-      dfso = dfsService.getDfsOps();
-      dfso.removeUser(userName);
-    } catch (IOException ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED, Level.SEVERE,
-          "user: " + user + " project: " + project.getName(), ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-  }
-
-  /**
-   * Removes the user project__username from the group projectName. This means
-   * the user is no longer a data_owner in this project. (will be a
-   * data_scientist with r, x privileges on datasets inside the project)
-   * <p>
-   * @param user
-   * @param project
-   */
-  public void modifyProjectMembership(Users user, Project project) throws ProjectException {
-    if (user == null || project == null || project.getProjectTeamCollection()
-        == null) {
-      throw new IllegalArgumentException("One or more arguments are null.");
-    }
-    String userName = getHdfsUserName(project, user);
-    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(userName);
-    if (hdfsUser == null || hdfsGroup == null) {
-      throw new IllegalArgumentException(
-          "Hdfs user not found or not in project group.");
-    }
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfsService.getDfsOps();
-      dfso.removeUserFromGroup(userName, hdfsGroup.getName());
-    } catch (IOException ex) {
-      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_MEMBER_NOT_REMOVED, Level.SEVERE,
-          "user: " + user + " project: " + project.getName(), ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-
-  }
-
-  /**
-   * Adds all members of project to the dataset's group. This will give the
-   * added members read and execute privileges.
-   * <p>
-   * @param project
-   * @param dataset
-   * @throws io.hops.hopsworks.exceptions.DatasetException
-   */
-  public void shareDataset(Project project, Dataset dataset) throws DatasetException {
-    if (project == null || dataset == null) {
-      throw new IllegalArgumentException("One or more arguments are null.");
-    }
-    String datasetGroup = getHdfsGroupName(dataset);
-    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
-    if (hdfsGroup == null) {
-      throw new IllegalArgumentException("Dataset group not found");
-    }
-
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfsService.getDfsOps();
-
-      Collection<ProjectTeam> projectTeam = projectTeamFacade.
-          findMembersByProject(project);
-
-      //every member of the project the ds is going to be shard with is
-      //added to the dataset group.
-      for (ProjectTeam member : projectTeam) {
-        String hdfsUsername = getHdfsUserName(project, member.getUser());
-        addUserToGroup(dfso, hdfsUsername, hdfsGroup);
-      }
-
-    } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-          "error while sharing dataset: " + dataset.getName(), ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-  }
-
-  /**
-   * Removes all members of project to the dataset's group.
-   * <p>
-   * @param project
-   * @param dataset
-   * @throws io.hops.hopsworks.exceptions.DatasetException
-   */
-  public void unshareDataset(Project project, Dataset dataset) throws DatasetException {
-    if (project == null || dataset == null) {
-      throw new IllegalArgumentException("One or more arguments are null.");
-    }
-    String datasetGroup = getHdfsGroupName(dataset);
-    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
-    if (hdfsGroup == null) {
-      throw new IllegalArgumentException("Dataset group not found");
-    }
-
-    DistributedFileSystemOps dfso = null;
-    try {
-      dfso = dfsService.getDfsOps();
-
-      removeUserFromGroup(dfso, project.getName(), hdfsGroup);
-
-      //every member of the project the ds is going to be unshard with is removed from the dataset group.
-      Collection<ProjectTeam> projectTeam = projectTeamFacade.
-          findMembersByProject(project);
-
-      String hdfsUsername;
-      for (ProjectTeam member : projectTeam) {
-        hdfsUsername = getHdfsUserName(project, member.getUser());
-        removeUserFromGroup(dfso, hdfsUsername, hdfsGroup);
-      }
-
-    } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-          "error while unsharing dataset: " + dataset.getName(), ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-
+  
+  private List<AclEntry> getDatasetAcl(String aclGroup) {
+    List<AclEntry> aclEntries = new ArrayList<>();
+    AclEntry aclEntryUser = new AclEntry.Builder()
+      .setType(AclEntryType.USER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.ALL)
+      .build();
+    aclEntries.add(aclEntryUser);
+    AclEntry aclEntryGroup = new AclEntry.Builder()
+      .setType(AclEntryType.GROUP)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.ALL)
+      .build();
+    aclEntries.add(aclEntryGroup);
+    AclEntry aclEntryDatasetGroup = new AclEntry.Builder()
+      .setType(AclEntryType.GROUP)
+      .setName(aclGroup)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.READ_EXECUTE)
+      .build();
+    aclEntries.add(aclEntryDatasetGroup);
+    AclEntry aclEntryOther = new AclEntry.Builder()
+      .setType(AclEntryType.OTHER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.NONE)
+      .build();
+    aclEntries.add(aclEntryOther);
+    AclEntry aclEntryDefault = new AclEntry.Builder()
+      .setType(AclEntryType.GROUP)
+      .setName(aclGroup)
+      .setScope(AclEntryScope.DEFAULT)
+      .setPermission(FsAction.READ_EXECUTE)
+      .build();
+    aclEntries.add(aclEntryDefault);
+    return aclEntries;
   }
   
   /**
@@ -360,9 +187,7 @@ public class HdfsUsersController {
    * @param hdfsDsGroups
    * @throws java.io.IOException
    */
-  public void deleteGroups(List<HdfsGroups> hdfsDsGroups) throws
-      IOException {
-
+  public void deleteGroups(List<HdfsGroups> hdfsDsGroups) throws IOException {
     DistributedFileSystemOps dfso = null;
     try {
       dfso = dfsService.getDfsOps();
@@ -370,9 +195,7 @@ public class HdfsUsersController {
         dfso.removeGroup(hdfsDsGroup.getName());
       }
     } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
+      dfsService.closeDfsClient(dfso);
     }
   }
 
@@ -390,9 +213,7 @@ public class HdfsUsersController {
         dfso.removeUser(user.getName());
       }
     } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
+      dfsService.closeDfsClient(dfso);
     }
   }
 
@@ -412,62 +233,10 @@ public class HdfsUsersController {
       dfso = dfsService.getDfsOps();
       dfso.removeGroup(datasetGroup);
     } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
+      dfsService.closeDfsClient(dfso);
     }
   }
-
-  /**
-   * Remove all members of the project from the dataset group.
-   * <p>
-   * @param project
-   * @param dataset
-   * @throws DatasetException
-   */
-  public void unShareDataset(Project project, Dataset dataset) throws DatasetException {
-    if (project == null || dataset == null) {
-      throw new IllegalArgumentException("One or more arguments are null.");
-    }
-    String datasetGroup = getHdfsGroupName(dataset);
-    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(datasetGroup);
-    if (hdfsGroup == null) {
-      throw new IllegalArgumentException("Dataset group not found");
-    }
-    if (hdfsGroup.getHdfsUsersCollection() == null) {
-      throw new IllegalArgumentException("The dataset group have no members.");
-    }
-
-    DistributedFileSystemOps dfso = null;
-    try {
-
-      dfso = dfsService.getDfsOps();
-
-      // For old installations, the PROJECTGENERICUSER might still be in the
-      // group. So if it exists, we remove it.
-      removeUserFromGroup(dfso, project.getName() + "__PROJECTGENERICUSER", hdfsGroup);
-
-      //every member of the project the ds is going to be unshard from is
-      //removed from the dataset group.
-      Collection<ProjectTeam> projectTeam = projectTeamFacade.
-          findMembersByProject(project);
-
-      String hdfsUsername;
-      for (ProjectTeam member : projectTeam) {
-        hdfsUsername = getHdfsUserName(project, member.getUser());
-        removeUserFromGroup(dfso, hdfsUsername, hdfsGroup);
-      }
-
-    } catch (IOException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
-          "error while unsharing dataset: " + dataset.getName(), ex.getMessage(), ex);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-    }
-  }
-
+  
   /**
    * Returns all the hdfs username corresponding to projectName
    * <p>
@@ -548,8 +317,17 @@ public class HdfsUsersController {
     if (project == null || ds == null) {
       return null;
     }
-    return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().
-        getName();
+    return project.getName() + USER_NAME_DELIMITER + ds.getInode().getInodePK().getName();
+  }
+  
+  /**
+   *
+   * @param project
+   * @param ds
+   * @return
+   */
+  public String getHdfsAclGroupName(Project project, Dataset ds) {
+    return getHdfsGroupName(project, ds) + USER_NAME_DELIMITER + "read";
   }
 
   /**
@@ -580,65 +358,567 @@ public class HdfsUsersController {
     }
     return dataset.getProject().getName() + USER_NAME_DELIMITER + dataset.getInode().getInodePK().getName();
   }
-
-  private void addDataOwnerToProject(DistributedFileSystemOps dfso,
-      Project project, ProjectTeam member, boolean addToAllDatasetGroups) throws
-      IOException {
-    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(project.getName());
-    if (hdfsGroup == null) {
-      throw new IllegalArgumentException("No group found for project in HDFS.");
+  
+  
+  public void makeImmutable(Path path, DistributedFileSystemOps dfso) throws IOException {
+    List<AclEntry> aclEntries = new ArrayList<>();
+    AclEntry aclEntryUser = new AclEntry.Builder()
+      .setType(AclEntryType.USER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.READ_EXECUTE)
+      .build();
+    aclEntries.add(aclEntryUser);
+    AclEntry aclEntryGroup = new AclEntry.Builder()
+      .setType(AclEntryType.GROUP)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.READ_EXECUTE)
+      .build();
+    aclEntries.add(aclEntryGroup);
+    AclEntry aclEntryOther = new AclEntry.Builder()
+      .setType(AclEntryType.OTHER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.NONE)
+      .build();
+    aclEntries.add(aclEntryOther);
+    dfso.setPermission(path, aclEntries);
+  }
+  
+  public void undoImmutable(Path path, DistributedFileSystemOps dfso) throws IOException {
+    List<AclEntry> aclEntries = new ArrayList<>();
+    AclEntry aclEntryUser = new AclEntry.Builder()
+      .setType(AclEntryType.USER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.ALL)
+      .build();
+    aclEntries.add(aclEntryUser);
+    AclEntry aclEntryGroup = new AclEntry.Builder()
+      .setType(AclEntryType.GROUP)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.ALL)
+      .build();
+    aclEntries.add(aclEntryGroup);
+    AclEntry aclEntryOther = new AclEntry.Builder()
+      .setType(AclEntryType.OTHER)
+      .setScope(AclEntryScope.ACCESS)
+      .setPermission(FsAction.NONE)
+      .build();
+    aclEntries.add(aclEntryOther);
+    dfso.setPermission(path, aclEntries);
+  }
+  
+  /**
+   * Add member to all project group and dataset groups.
+   * @param teamMember
+   * @throws IOException
+   */
+  public void addNewProjectMember(ProjectTeam teamMember) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      addNewProjectMember(teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
     }
-
-    String hdfsUsername = getHdfsUserName(project, member.getUser());
+  }
+  
+  /**
+   * Add member to all dataset groups in project
+   * @param teamMember
+   * @throws IOException
+   */
+  public void addNewMember(ProjectTeam teamMember) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      addNewMember(teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Add member to the dataset group
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @throws IOException
+   */
+  public void addNewMember(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember)
+    throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      addNewMember(dataset, permission, teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Add member to project group and all dataset groups
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void addNewProjectMember(ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    createUserIfNotExist(teamMember, dfso);
+    //add only data_owners to project group
+    if (AllowedRoles.DATA_OWNER.equals(teamMember.getTeamRole())) {
+      addToGroup(teamMember.getProject().getName(), teamMember, dfso);
+    }
+    addNewMember(teamMember, dfso);
+  }
+  
+  /**
+   * Add member to all dataset groups in project.
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void addNewMember(ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    createUserIfNotExist(teamMember, dfso);
+    for (Dataset ds : teamMember.getProject().getDatasetCollection()) {
+      addNewMember(ds, ds.getPermission(), teamMember, dfso);
+    }
+    for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
+      addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+    }
+  }
+  
+  /**
+   * Will only remove the member from all dataset groups
+   * @param teamMember
+   * @throws IOException
+   */
+  public void removeMember(ProjectTeam teamMember) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      removeMember(teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Will remove the user from hdfs groups
+   * @param teamMember
+   * @throws IOException
+   */
+  public void removeUserName(ProjectTeam teamMember) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      removeUserName(teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Remove member from dataset group
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @throws IOException
+   */
+  public void removeMember(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember)
+    throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      removeMember(dataset, permission, teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Will remove the user from hdfs groups
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void removeUserName(ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    dfso.removeUser(hdfsUserName);
+  }
+  
+  /**
+   * Will only remove the member from all dataset groups
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void removeMember(ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    for (Dataset ds : teamMember.getProject().getDatasetCollection()) {
+      removeMember(ds, ds.getPermission(), teamMember, dfso);
+    }
+    for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
+      removeMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+    }
+  }
+  
+  /**
+   * Move member to the appropriate dataset group.
+   * The appropriate dataset group is decided by the dataset permission.
+   * @param teamMember
+   * @throws IOException
+   */
+  public void changeMemberRole(ProjectTeam teamMember) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      changeMemberRole(teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Move member to the appropriate dataset group.
+   * The appropriate dataset group is decided by the permission.
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @throws IOException
+   */
+  public void changeMemberRole(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember)
+    throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfsService.getDfsOps();
+      changeMemberRole(dataset, permission, teamMember, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Move data owners to project group and users to the appropriate dataset group.
+   * The appropriate dataset group is decided by the dataset permission.
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void changeMemberRole(ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    //add only data_owners to project group
+    if (AllowedRoles.DATA_OWNER.equals(teamMember.getTeamRole())) {
+      addToGroup(teamMember.getProject().getName(), teamMember, dfso);
+    } else {
+      removeFromGroup(teamMember.getProject().getName(), teamMember, dfso);
+    }
+    for (Dataset ds : teamMember.getProject().getDatasetCollection()) {
+      changeMemberRole(ds, ds.getPermission(), teamMember, dfso);
+    }
+    for (DatasetSharedWith datasetSharedWith : teamMember.getProject().getDatasetSharedWithCollection()) {
+      changeMemberRole(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember, dfso);
+    }
+  }
+  
+  /**
+   * Add a member to the appropriate dataset group.
+   * The appropriate dataset group is decided by the permission.
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void addNewMember(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember,
+    DistributedFileSystemOps dfso) throws IOException {
+    String datasetGroup = getHdfsGroupName(dataset.getProject(), dataset);
+    String datasetAclGroup = getHdfsAclGroupName(dataset.getProject(), dataset);
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    addNewMember(datasetGroup, datasetAclGroup, hdfsUserName, permission, teamMember, dfso);
+  }
+  
+  private void addNewMember(String datasetGroup, String datasetAclGroup, String hdfsUserName,
+    DatasetAccessPermission permission, ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    switch (permission) {
+      case EDITABLE:
+        addToGroup(hdfsUserName, datasetGroup, dfso);
+        break;
+      case EDITABLE_BY_OWNERS:
+        if (AllowedRoles.DATA_OWNER.equals(teamMember.getTeamRole())) {
+          addToGroup(hdfsUserName, datasetGroup, dfso);
+        } else {
+          addToGroup(hdfsUserName, datasetAclGroup, dfso);
+        }
+        break;
+      case READ_ONLY:
+        addToGroup(hdfsUserName, datasetAclGroup, dfso);
+        break;
+      default:
+        throw new IOException("Unknown permission for dataset: " + datasetGroup);
+    }
+  }
+  
+  /**
+   * Add all members to every dataset group in the project.
+   * @param datasetGroup
+   * @param datasetAclGroup
+   * @param dfso
+   * @param projectTeamMembers
+   * @param permission
+   * @throws IOException
+   */
+  public void addMembersToGroups(String datasetGroup, String datasetAclGroup, DistributedFileSystemOps dfso,
+    Collection<ProjectTeam> projectTeamMembers, DatasetAccessPermission permission) throws IOException {
+    if (projectTeamMembers == null || projectTeamMembers.isEmpty()) {
+      return;
+    }
+    for(ProjectTeam teamMember : projectTeamMembers) {
+      String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+      addNewMember(datasetGroup, datasetAclGroup, hdfsUserName, permission, teamMember, dfso);
+    }
+  }
+  
+  /**
+   * Remove a member from the appropriate dataset group.
+   * The appropriate dataset group is decided by the permission.
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void removeMember(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember,
+    DistributedFileSystemOps dfso) throws IOException {
+    String datasetGroup = getHdfsGroupName(dataset.getProject(), dataset);
+    String datasetAclGroup = getHdfsAclGroupName(dataset.getProject(), dataset);
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    switch (permission) {
+      case EDITABLE:
+        removeFromGroup(hdfsUserName, datasetGroup, dfso);
+        break;
+      case EDITABLE_BY_OWNERS:
+        if (AllowedRoles.DATA_OWNER.equals(teamMember.getTeamRole())) {
+          removeFromGroup(hdfsUserName, datasetGroup, dfso);
+        } else {
+          removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+        }
+        break;
+      case READ_ONLY:
+        removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+        break;
+      default:
+        throw new IOException("Unknown permission for dataset: " + dataset.getName());
+    }
+  }
+  
+  /**
+   * Move member to the appropriate dataset group
+   * The appropriate dataset group is decided by the permission.
+   * @param dataset
+   * @param permission
+   * @param teamMember
+   * @param dfso
+   * @throws IOException
+   */
+  public void changeMemberRole(Dataset dataset, DatasetAccessPermission permission, ProjectTeam teamMember,
+    DistributedFileSystemOps dfso) throws IOException {
+    String datasetGroup = getHdfsGroupName(dataset.getProject(), dataset);
+    String datasetAclGroup = getHdfsAclGroupName(dataset.getProject(), dataset);
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    switch (permission) {
+      case EDITABLE:
+      case READ_ONLY:
+        //noop
+        break;
+      case EDITABLE_BY_OWNERS:
+        if (AllowedRoles.DATA_OWNER.equals(teamMember.getTeamRole())) {
+          removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+          addToGroup(hdfsUserName, datasetGroup, dfso);
+        } else {
+          removeFromGroup(hdfsUserName, datasetGroup, dfso);
+          addToGroup(hdfsUserName, datasetAclGroup, dfso);
+        }
+        break;
+      default:
+        throw new IOException("Unknown permission for dataset: " + dataset.getName());
+    }
+  }
+  
+  /**
+   * Move all members to the appropriate dataset group after permission change.
+   * @param ds
+   * @param targetProject
+   * @param permissionTransition
+   * @throws IOException
+   */
+  public void changePermission(Dataset ds, Project targetProject, PermissionTransition permissionTransition)
+    throws IOException {
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    try {
+      dfso = dfsService.getDfsOps();
+      changePermission(ds, targetProject, permissionTransition, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  public void changePermission(Dataset ds, Project targetProject, PermissionTransition permissionTransition,
+    DistributedFileSystemOps dfso) throws IOException {
+    for (ProjectTeam teamMember : targetProject.getProjectTeamCollection()) {
+      changePermission(ds, teamMember, permissionTransition, dfso);
+    }
+  }
+  
+  /**
+   * Move member to the appropriate dataset group after permission change.
+   * @param dataset
+   * @param teamMember
+   * @param permissionTransition
+   * @throws IOException
+   */
+  public void changePermission(Dataset dataset, ProjectTeam teamMember, PermissionTransition permissionTransition)
+    throws IOException {
+    DistributedFileSystemOps dfso = dfsService.getDfsOps();
+    try {
+      dfso = dfsService.getDfsOps();
+      changePermission(dataset, teamMember, permissionTransition, dfso);
+    } finally {
+      dfsService.closeDfsClient(dfso);
+    }
+  }
+  
+  /**
+   * Move member to the appropriate dataset group after permission change.
+   * @param dataset
+   * @param teamMember
+   * @param permissionTransition
+   * @param dfso
+   * @throws IOException
+   */
+  public void changePermission(Dataset dataset, ProjectTeam teamMember, PermissionTransition permissionTransition,
+    DistributedFileSystemOps dfso) throws IOException {
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    String datasetGroup = getHdfsGroupName(dataset.getProject(), dataset);
+    String datasetAclGroup = getHdfsAclGroupName(dataset.getProject(), dataset);
+    switch (permissionTransition) {
+      case EDITABLE_TO_EDITABLE:
+      case READ_ONLY_TO_READ_ONLY:
+      case EDITABLE_BY_OWNERS_TO_EDITABLE_BY_OWNERS:
+        //noop
+        break;
+      case EDITABLE_TO_EDITABLE_BY_OWNERS:
+        changePermissionEditableToEditableByOwners(datasetGroup, datasetAclGroup, hdfsUserName,
+          teamMember.getTeamRole(), dfso);
+        break;
+      case EDITABLE_TO_READ_ONLY:
+        changePermissionEditableToReadOnly(datasetGroup, datasetAclGroup, hdfsUserName, dfso);
+        break;
+      case EDITABLE_BY_OWNERS_TO_EDITABLE:
+        changePermissionEditableByOwnersToEditable(datasetGroup, datasetAclGroup, hdfsUserName,
+          teamMember.getTeamRole(), dfso);
+        break;
+      case EDITABLE_BY_OWNERS_TO_READ_ONLY:
+        changePermissionEditableByOwnersToReadOnly(datasetGroup, datasetAclGroup, hdfsUserName,
+          teamMember.getTeamRole(), dfso);
+        break;
+      case READ_ONLY_TO_EDITABLE:
+        changePermissionReadOnlyToEditable(datasetGroup, datasetAclGroup, hdfsUserName, dfso);
+        break;
+      case READ_ONLY_TO_EDITABLE_BY_OWNERS:
+        changePermissionReadOnlyToEditableByOwners(datasetGroup, datasetAclGroup, hdfsUserName,
+          teamMember.getTeamRole(), dfso);
+        break;
+      default:
+        throw new IllegalArgumentException("Illegal permission transition.");
+    }
+  }
+  
+  private void changePermissionReadOnlyToEditableByOwners(String datasetGroup, String datasetAclGroup,
+    String hdfsUserName, String role, DistributedFileSystemOps dfso) throws IOException {
+    if (AllowedRoles.DATA_OWNER.equals(role)) {
+      removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+      addToGroup(hdfsUserName, datasetGroup, dfso);
+    }
+  }
+  
+  private void changePermissionReadOnlyToEditable(String datasetGroup, String datasetAclGroup, String hdfsUserName,
+    DistributedFileSystemOps dfso) throws IOException {
+    removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+    addToGroup(hdfsUserName, datasetGroup, dfso);
+  }
+  
+  private void changePermissionEditableByOwnersToReadOnly(String datasetGroup, String datasetAclGroup,
+    String hdfsUserName, String role, DistributedFileSystemOps dfso) throws IOException {
+    if (AllowedRoles.DATA_OWNER.equals(role)) {
+      removeFromGroup(hdfsUserName, datasetGroup, dfso);
+      addToGroup(hdfsUserName, datasetAclGroup, dfso);
+    }
+  }
+  
+  private void changePermissionEditableByOwnersToEditable(String datasetGroup, String datasetAclGroup,
+    String hdfsUserName, String role, DistributedFileSystemOps dfso) throws IOException {
+    if (AllowedRoles.DATA_SCIENTIST.equals(role)) {
+      removeFromGroup(hdfsUserName, datasetAclGroup, dfso);
+      addToGroup(hdfsUserName, datasetGroup, dfso);
+    }
+  }
+  
+  private void changePermissionEditableToReadOnly(String datasetGroup, String datasetAclGroup, String hdfsUserName,
+    DistributedFileSystemOps dfso) throws IOException {
+    removeFromGroup(hdfsUserName, datasetGroup, dfso);
+    addToGroup(hdfsUserName, datasetAclGroup, dfso);
+  }
+  
+  private void changePermissionEditableToEditableByOwners(String datasetGroup, String datasetAclGroup,
+    String hdfsUserName, String role, DistributedFileSystemOps dfso) throws IOException {
+    if (AllowedRoles.DATA_SCIENTIST.equals(role)) {
+      removeFromGroup(hdfsUserName, datasetGroup, dfso);
+      addToGroup(hdfsUserName, datasetAclGroup, dfso);
+    }
+  }
+  
+  private void addToGroup(String group, ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    addToGroup(hdfsUserName, group, dfso);
+  }
+  
+  private void removeFromGroup(String group, ProjectTeam teamMember, DistributedFileSystemOps dfso) throws IOException {
+    String hdfsUserName = getHdfsUserName(teamMember.getProject(), teamMember.getUser());
+    removeFromGroup(hdfsUserName, group, dfso);
+  }
+  
+  private void removeFromGroup(String hdfsUserName, String group, DistributedFileSystemOps dfso) throws IOException {
+    HdfsGroups hdfsGroup = hdfsGroupsFacade.findByName(group);
+    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUserName);
+    removeFromGroup(hdfsUser, hdfsGroup, dfso);
+    //user not in group
+  }
+  
+  public void removeFromGroup(HdfsUsers hdfsUser, HdfsGroups hdfsGroup, DistributedFileSystemOps dfso)
+    throws IOException {
+    if (hdfsGroup.hasUser(hdfsUser)) {
+      dfso.removeUserFromGroup(hdfsUser.getName(), hdfsGroup.getName());
+    }
+  }
+  
+  public void addToGroup(String hdfsUserName, String group, DistributedFileSystemOps dfso) throws IOException {
+    try {
+      dfso.addUserToGroup(hdfsUserName, group);
+    } catch (UserAlreadyInGroupException e) {
+      //user already in group
+    }
+  }
+  
+  private void createUserIfNotExist(ProjectTeam member, DistributedFileSystemOps dfso) throws IOException {
+    String hdfsUsername = getHdfsUserName(member.getProject(), member.getUser());
     HdfsUsers memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
     if (memberHdfsUser == null) {
       dfso.addUser(hdfsUsername);
-      memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-    }
-
-    //add only data_owners to project group
-    if (member.getTeamRole().equals(AllowedRoles.DATA_OWNER)) {
-      if (!memberHdfsUser.inGroup(hdfsGroup)) {
-        dfso.addUserToGroup(hdfsUsername, hdfsGroup.getName());
-      }
-    }
-
-    if (addToAllDatasetGroups) {
-      // add the member to all dataset groups in the project.
-      Collection<Dataset> dsInProject = project.getDatasetCollection();
-      dsInProject.addAll(project.getDatasetSharedWithCollection().stream()
-          .filter(DatasetSharedWith::getAccepted)
-          .map(DatasetSharedWith::getDataset)
-          .collect(Collectors.toList()));
-
-      for (Dataset ds : dsInProject) {
-        String dsGroups = getHdfsGroupName(ds);
-        HdfsGroups hdfsDsGroup = hdfsGroupsFacade.findByName(dsGroups);
-        if (hdfsDsGroup != null && !memberHdfsUser.inGroup(hdfsDsGroup)) {
-          dfso.addUserToGroup(hdfsUsername, dsGroups);
-        }
-      }
     }
   }
-
-  private void addUserToGroup(DistributedFileSystemOps dfso,
-      String hdfsUserName, HdfsGroups hdfsGroup) throws IOException {
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUserName);
-    if (hdfsUser == null) {
-      dfso.addUser(hdfsUserName);
-      hdfsUser = hdfsUsersFacade.findByName(hdfsUserName);
+  
+  public HdfsUsers getOrCreateUser(String hdfsUsername, DistributedFileSystemOps dfso) throws IOException {
+    HdfsUsers memberHdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
+    if (memberHdfsUser == null) {
+      dfso.addUser(hdfsUsername);
     }
-    if (!hdfsGroup.hasUser(hdfsUser)) {
-      dfso.addUserToGroup(hdfsUserName, hdfsGroup.getName());
-    }
+    return hdfsUsersFacade.findByName(hdfsUsername);
   }
-
-  private void removeUserFromGroup(DistributedFileSystemOps dfso,
-      String hdfsUserName, HdfsGroups hdfsGroup) throws IOException {
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUserName);
-
-    if (hdfsGroup.hasUser(hdfsUser)) {
-      dfso.removeUserFromGroup(hdfsUserName, hdfsGroup.getName());
-    }
-  }
+  
 }

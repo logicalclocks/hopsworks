@@ -38,13 +38,12 @@
  */
 package io.hops.hopsworks.common.dao.project.team;
 
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.common.dao.project.service.ProjectServiceFacade;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -56,20 +55,21 @@ import java.util.Date;
 import java.util.List;
 
 @Stateless
-public class ProjectTeamFacade {
-
+public class ProjectTeamFacade extends AbstractFacade<ProjectTeam> {
+  
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
-  @EJB
-  private ProjectServiceFacade projectServiceFacade;
-
-  public ProjectTeamFacade() {
-  }
-
+  
+  @Override
   protected EntityManager getEntityManager() {
     return em;
   }
-
+  
+  public ProjectTeamFacade() {
+    super(ProjectTeam.class);
+  }
+  
+  
   /**
    * Count the number of members in this project with the given role.
    * <p/>
@@ -253,17 +253,6 @@ public class ProjectTeamFacade {
 
   public void persistProjectTeam(ProjectTeam team) {
     em.persist(team);
-  }
-
-  /**
-   * merges an update to project team
-   *
-   * @param team
-   */
-  public void update(ProjectTeam team) {
-    if (team != null) {
-      em.merge(team);
-    }
   }
 
   /**

@@ -61,6 +61,12 @@ angular.module('hopsWorksApp')
             self.dataSet = {'name': "", 'description': undefined, 'template': "", 'searchable': true, 'generateReadme': true};
             var pId = $routeParams.projectID;
             var dataSetService = DataSetService(pId);
+            var defaultPermissions = 'READ_ONLY';
+            self.selectedPermission = defaultPermissions;
+            self.permission = {};
+            self.permission['READ_ONLY'] = 'Everyone can read ';
+            self.permission['EDITABLE_BY_OWNERS'] = 'Data owners can edit ';
+            self.permission['EDITABLE'] = 'Everyone can edit ';
 
             self.templates = [];
 
@@ -80,25 +86,25 @@ angular.module('hopsWorksApp')
 
             var createDataSetDir = function (dataSet) {
               self.working = true;
-              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable,  dataSet.generateReadme, self.datasetType)
+              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable,  dataSet.generateReadme, undefined, self.datasetType)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
                       });
             };
 
             var createTopLevelDataSet = function (dataSet) {
               self.working = true;
-              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, dataSet.generateReadme)
+              dataSetService.create(dataSet.name, dataSet.template, dataSet.description, dataSet.searchable, dataSet.generateReadme, self.selectedPermission)
                       .then(function (success) {
                         self.working = false;
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.errorMsg, {title: 'Error', ttl: 10000});
+                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
                       });
             };
 

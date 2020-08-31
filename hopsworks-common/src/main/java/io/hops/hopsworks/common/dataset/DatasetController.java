@@ -41,32 +41,16 @@ package io.hops.hopsworks.common.dataset;
 
 import io.hops.common.Pair;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
-import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetRequest;
 import io.hops.hopsworks.common.dao.dataset.DatasetRequestFacade;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
-import io.hops.hopsworks.persistence.entity.dataset.SharedState;
-import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
-import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
 import io.hops.hopsworks.common.dao.log.operation.OperationsLogFacade;
-import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
-import io.hops.hopsworks.persistence.entity.metadata.Template;
 import io.hops.hopsworks.common.dao.metadata.db.InodeBasicMetadataFacade;
 import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
-import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -74,9 +58,9 @@ import io.hops.hopsworks.common.hdfs.FsPermissions;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
-import io.hops.hopsworks.common.jupyter.JupyterController;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
@@ -86,6 +70,22 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetRequest;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.dataset.PermissionTransition;
+import io.hops.hopsworks.persistence.entity.dataset.SharedState;
+import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
+import io.hops.hopsworks.persistence.entity.log.operation.OperationsLog;
+import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
+import io.hops.hopsworks.persistence.entity.metadata.Template;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -136,8 +136,6 @@ public class DatasetController {
   @EJB
   private InodeBasicMetadataFacade inodeBasicMetaFacade;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
-  @EJB
   private OperationsLogFacade operationsLogFacade;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
@@ -155,8 +153,6 @@ public class DatasetController {
   private HopsFSProvenanceController fsProvController;
   @EJB
   private JupyterController jupyterController;
-  @EJB
-  private DatasetHelper datasetHelper;
 
   /**
    * Create a new DataSet. This is, a folder right under the project home
@@ -173,12 +169,12 @@ public class DatasetController {
    * @param templateId The id of the metadata template to be associated with
    * this DataSet.
    * @param stickyBit Whether or not the dataset should have the sticky bit set
-   * @param defaultDataset
+   * @param permission
    * @param dfso
    * folder names, or the folder already exists.
    */
   public void createDataset(Users user, Project project, String dataSetName, String datasetDescription, int templateId,
-    ProvTypeDTO metaStatus, boolean stickyBit, boolean defaultDataset, DistributedFileSystemOps dfso)
+    ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission, DistributedFileSystemOps dfso)
     throws DatasetException, HopsSecurityException {
   
     //Parameter checking.
@@ -196,14 +192,12 @@ public class DatasetController {
         "Dataset name: " + dataSetName);
     }
     //Permission 770
-    FsAction global = FsAction.NONE;
-    FsAction group = (defaultDataset ? FsAction.ALL : FsAction.READ_EXECUTE);
-    FsPermission fsPermission = new FsPermission(FsAction.ALL, group, global, stickyBit);
+    FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, stickyBit);
     success = createFolder(dsPath, templateId, fsPermission, dfso);
     if (success) {
       try {
         ds = inodes.findByInodePK(parent, dataSetName, HopsUtils.dataSetPartitionId(parent, dataSetName));
-        Dataset newDS = new Dataset(ds, project);
+        Dataset newDS = new Dataset(ds, project, permission);
         newDS.setSearchable(isSearchable(metaStatus.getMetaStatus()));
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
@@ -211,7 +205,7 @@ public class DatasetController {
         datasetFacade.persistDataset(newDS);
         activityFacade.persistActivity(ActivityFacade.NEW_DATA + dataSetName, project, user, ActivityFlag.DATASET);
         // creates a dataset and adds user as owner.
-        hdfsUsersBean.addDatasetUsersGroups(user, project, newDS, dfso);
+        hdfsUsersController.createDatasetGroupsAndSetPermissions(user, project, newDS, new Path(dsPath), dfso);
 
         Dataset logDs = getByProjectAndDsName(project,null, dataSetName);
         //set the dataset meta enabled(or prov). Support 3 level indexing
@@ -313,8 +307,7 @@ public class DatasetController {
    * @return
    * @throws java.io.IOException
    */
-  public boolean deleteDatasetDir(Dataset dataset, Path location,
-      DistributedFileSystemOps udfso) throws IOException {
+  public boolean deleteDatasetDir(Dataset dataset, Path location, DistributedFileSystemOps udfso) throws IOException {
     OperationsLog log = new OperationsLog(dataset, OperationType.Delete);
     boolean success = udfso.rm(location, true);
     if (success) {
@@ -323,11 +316,8 @@ public class DatasetController {
     return success;
   }
   
-  public void recChangeOwnershipAndPermission(Path path, FsPermission permission,
-      String username, String group,
-      DistributedFileSystemOps dfso,
-      DistributedFileSystemOps udfso)
-      throws IOException {
+  public void recChangeOwnershipAndPermission(Path path, FsPermission permission, String username, String group,
+    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso) throws IOException {
 
     /*
      * TODO: Currently there is no change permission recursively operation
@@ -374,11 +364,10 @@ public class DatasetController {
    * @param template The id of the template to be associated with the created
    * folder.
    * @return
-   * @throws IOException
+   * @throws HopsSecurityException
    */
-  private boolean createFolder(String path, int template,
-      FsPermission fsPermission,
-      DistributedFileSystemOps dfso) throws HopsSecurityException {
+  private boolean createFolder(String path, int template, FsPermission fsPermission, DistributedFileSystemOps dfso)
+    throws HopsSecurityException {
     boolean success;
     Path location = new Path(path);
     try {
@@ -400,8 +389,8 @@ public class DatasetController {
         }
       }
     } catch (IOException  ex) {
-      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.WARNING, "path: " + path,
-        ex.getMessage(), ex);
+      throw new HopsSecurityException(RESTCodes.SecurityErrorCode.HDFS_ACCESS_CONTROL, Level.WARNING,
+        "Permission denied: path=" + path, ex.getMessage(), ex);
     }
     return success;
   }
@@ -421,8 +410,7 @@ public class DatasetController {
       //Generate README.md for the Default Datasets
       readmeFile = String.format(Settings.README_TEMPLATE, dsName, description);
       StringBuilder readmeSb = new StringBuilder();
-      readmeSb.append(Utils.getProjectPath(project)).append(dsName)
-          .append(File.separator).append(Settings.README_FILE);
+      readmeSb.append(Utils.getProjectPath(project)).append(dsName).append(File.separator).append(Settings.README_FILE);
 
       readMeFilePath = readmeSb.toString();
 
@@ -431,14 +419,12 @@ public class DatasetController {
         fsOut.flush();
         udfso.setPermission(new org.apache.hadoop.fs.Path(readMeFilePath), FsPermissions.rwxr_x___);
       } catch (IOException ex) {
-        LOGGER.log(Level.WARNING, "README.md could not be generated for project"
-            + " {0} and dataset {1}.", new Object[]{project, dsName});
+        LOGGER.log(Level.WARNING, "README.md could not be generated for project {0} and dataset {1}.",
+          new Object[]{project, dsName});
       }
     } else {
-      LOGGER.log(Level.WARNING, "README.md could not be generated for project"
-          + " {0} and dataset {1}. DFS client was null", new Object[]{
-            project,
-            dsName});
+      LOGGER.log(Level.WARNING, "README.md could not be generated for project {0} and dataset {1}. DFS client was " +
+        "null", new Object[]{project, dsName});
     }
   }
 
@@ -452,8 +438,7 @@ public class DatasetController {
    * access permission to the file.
    * @throws IOException
    */
-  public FilePreviewDTO getReadme(String path, DistributedFileSystemOps dfso)
-      throws IOException {
+  public FilePreviewDTO getReadme(String path, DistributedFileSystemOps dfso) throws IOException {
     if (path == null || dfso == null) {
       throw new IllegalArgumentException("One or more arguments are not set.");
     }
@@ -481,9 +466,7 @@ public class DatasetController {
       throw new AccessControlException(
           "Permission denied: You can not view the file.");
     } finally {
-      if (dis != null) {
-        dis.close();
-      }
+      dfs.closeDfsClient(dfso);
     }
     return filePreviewDTO;
   }
@@ -500,13 +483,11 @@ public class DatasetController {
     switch (ds.getDsType()) {
       case DATASET:
         Project owningProject = getOwningProject(ds);
-        path = new Path(Utils.getProjectPath(owningProject.getName()),
-            ds.getInode().getInodePK().getName());
+        path = new Path(Utils.getProjectPath(owningProject.getName()), ds.getInode().getInodePK().getName());
         break;
       case FEATURESTORE:
       case HIVEDB:
-        path = new Path(settings.getHiveWarehouse(),
-            ds.getInode().getInodePK().getName());
+        path = new Path(settings.getHiveWarehouse(), ds.getInode().getInodePK().getName());
     }
 
     return path;
@@ -550,11 +531,11 @@ public class DatasetController {
     } else if (role.equals(AllowedRoles.DATA_SCIENTIST)) {
       DistributedFileSystemOps udfso = null;
       try {
-        String username = hdfsUsersBean.getHdfsUserName(project, user);
+        String username = hdfsUsersController.getHdfsUserName(project, user);
         udfso = dfs.getDfsOps(username);
         String owner = udfso.getFileStatus(new org.apache.hadoop.fs.Path(path)).getOwner();
         //Find hdfs user for this project
-        String projectUser = hdfsUsersBean.getHdfsUserName(project, user);
+        String projectUser = hdfsUsersController.getHdfsUserName(project, user);
         //If user requesting the download is the owner, approve the request
         if (owner.equals(projectUser)) {
           return true;
@@ -562,9 +543,7 @@ public class DatasetController {
       } catch (IOException ex) {
         LOGGER.log(Level.SEVERE, "Could not get owner of file: " + path, ex);
       } finally {
-        if (udfso != null) {
-          dfs.closeDfsClient(udfso);
-        }
+        dfs.closeDfsClient(udfso);
       }
     }
     return false;
@@ -696,9 +675,7 @@ public class DatasetController {
           LOGGER.log(Level.SEVERE, "Error while closing stream.", ex);
         }
       }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+      dfs.closeDfsClient(udfso);
     }
     return filePreviewDTO;
   }
@@ -722,9 +699,7 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE, "path: " +
         filePath.toString(), ex.getMessage(), ex);
     } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+      dfs.closeDfsClient(udfso);
     }
     if (!exist) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_NOT_FOUND, Level.FINE,
@@ -800,19 +775,19 @@ public class DatasetController {
     }
   }
   
-  public void share(String targetProjectName, String fullPath, Project project, Users user) throws DatasetException,
-    ProjectException {
+  public void share(String targetProjectName, String fullPath,  DatasetAccessPermission permission, Project project,
+    Users user) throws DatasetException, ProjectException {
     Project targetProject = projectFacade.findByName(targetProjectName);
     Dataset ds = getByProjectAndFullPath(project, fullPath);
     if (targetProject == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Target project not found.");
     }
-    DatasetSharedWith datasetSharedWith = share(targetProject, ds, user, false);
+    DatasetSharedWith datasetSharedWith = share(targetProject, ds, user, permission, false);
     if (DatasetType.FEATURESTORE.equals(ds.getDsType()) && datasetSharedWith.getAccepted()) {
       Dataset trainingDataset = getTrainingDataset(project);
       if (trainingDataset != null) {
         try {
-          share(targetProject, trainingDataset, user, true);
+          share(targetProject, trainingDataset, user, permission, true);
         } catch (DatasetException de) {
           //Dataset already shared nothing to do
         }
@@ -826,15 +801,15 @@ public class DatasetController {
     return datasetFacade.findByProjectAndInode(project, inode);
   }
   
-  private DatasetSharedWith share(Project targetProject, Dataset ds, Users user, boolean autoAccept)
-    throws DatasetException {
+  private DatasetSharedWith share(Project targetProject, Dataset ds, Users user, DatasetAccessPermission permission,
+    boolean autoAccept) throws DatasetException {
     DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(targetProject, ds);
     if (datasetSharedWith != null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
         "Dataset already in " + targetProject.getName());
     }
     // Create the new Dataset entry
-    datasetSharedWith = new DatasetSharedWith(targetProject, ds, true);
+    datasetSharedWith = new DatasetSharedWith(targetProject, ds, permission, true);
     // if the dataset is not requested or is requested by a data scientist set status to pending.
     DatasetRequest dsReq = datasetRequest.findByProjectAndDataset(targetProject, ds);
     if(ds.isPublicDs()) {
@@ -842,13 +817,13 @@ public class DatasetController {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_ALREADY_IN_PROJECT, Level.FINE,
           "Dataset already in project.");
       }
-      hdfsUsersController.shareDataset(targetProject, ds);
+      addMembersToGroup(datasetSharedWith);
     } else {
       if (!autoAccept && (dsReq == null || dsReq.getProjectTeam().getTeamRole().equals(AllowedRoles.DATA_SCIENTIST))) {
         datasetSharedWith.setAccepted(false);
       } else {
         //dataset is private and requested by a data owner
-        hdfsUsersController.shareDataset(targetProject, ds);
+        addMembersToGroup(datasetSharedWith);
       }
     }
     datasetSharedWithFacade.save(datasetSharedWith);
@@ -862,14 +837,30 @@ public class DatasetController {
     return datasetSharedWith;
   }
   
+  private void addMembersToGroup(DatasetSharedWith datasetSharedWith) throws DatasetException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      for (ProjectTeam teamMember : datasetSharedWith.getProject().getProjectTeamCollection()) {
+        hdfsUsersController.addNewMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(), teamMember,
+          dfso);
+      }
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.FINE,
+        "Failed to add member to group", e.getMessage());
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+  }
+
   public void acceptShared(Project project, DatasetSharedWith datasetSharedWith) throws DatasetException {
-    acceptSharedDs(project, datasetSharedWith);
+    acceptSharedDs(datasetSharedWith);
     if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
-      DatasetSharedWith trainingDataset =
-        getOrCreateSharedTrainingDataset(project, datasetSharedWith.getDataset().getProject());
+      DatasetSharedWith trainingDataset = getOrCreateSharedTrainingDataset(project,
+        datasetSharedWith.getDataset().getProject(), datasetSharedWith.getPermission());
       if (trainingDataset != null && !trainingDataset.getAccepted()) {
         try {
-          acceptSharedDs(project, trainingDataset);
+          acceptSharedDs(trainingDataset);
         } catch (DatasetException de) {
           //Dataset not shared or already accepted nothing to do
         }
@@ -877,22 +868,23 @@ public class DatasetController {
     }
   }
   
-  private DatasetSharedWith getOrCreateSharedTrainingDataset(Project project, Project parentProject) {
+  private DatasetSharedWith getOrCreateSharedTrainingDataset(Project project, Project parentProject,
+    DatasetAccessPermission permission) {
     Dataset trainingDataset = getTrainingDataset(parentProject);
     DatasetSharedWith sharedTrainingDataset = datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
     if (sharedTrainingDataset == null) {
-      sharedTrainingDataset = new DatasetSharedWith(project, trainingDataset, false);
+      sharedTrainingDataset = new DatasetSharedWith(project, trainingDataset, permission, false);
       datasetSharedWithFacade.save(sharedTrainingDataset);
       sharedTrainingDataset = datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
     }
     return sharedTrainingDataset;
   }
   
-  private void acceptSharedDs(Project project, DatasetSharedWith datasetSharedWith) throws DatasetException {
+  private void acceptSharedDs(DatasetSharedWith datasetSharedWith) throws DatasetException {
     if (datasetSharedWith == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
     }
-    hdfsUsersController.shareDataset(project, datasetSharedWith.getDataset());
+    addMembersToGroup(datasetSharedWith);
     datasetSharedWith.setAccepted(true);
     datasetSharedWithFacade.update(datasetSharedWith);
   }
@@ -905,8 +897,8 @@ public class DatasetController {
   }
   
   public void createDirectory(Project project, Users user, Path fullPath, String name, Boolean isDataset,
-    Integer templateId, String description, ProvTypeDTO metaStatus, Boolean generateReadme) throws DatasetException,
-    HopsSecurityException {
+    Integer templateId, String description, ProvTypeDTO metaStatus, Boolean generateReadme,
+    DatasetAccessPermission permission) throws DatasetException, HopsSecurityException {
     DistributedFileSystemOps dfso = dfs.getDfsOps();
     String username = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(username);
@@ -918,7 +910,7 @@ public class DatasetController {
     }
     try {
       if (isDataset) {
-        createDataset(user, project, name, description, templateId, metaStatus, false, false, dfso);
+        createDataset(user, project, name, description, templateId, metaStatus, false, permission, dfso);
         //Generate README.md for the dataset if the user requested it
         if (generateReadme != null && generateReadme) {
           //Persist README.md to hdfs
@@ -929,18 +921,14 @@ public class DatasetController {
         createSubDirectory(project, fullPath, templateId, description, searchable, udfso);
       }
     } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+      dfs.closeDfsClient(dfso);
+      dfs.closeDfsClient(udfso);
     }
   }
   
   public void move(Project project, Users user, Path sourcePath, Path destPath, Dataset sourceDataset,
     Dataset destDataset) throws DatasetException, HopsSecurityException {
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     if (!getOwningProject(sourceDataset).equals(destDataset.getProject())) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_FORBIDDEN, Level.FINE,
         "Cannot copy file/folder from another project.");
@@ -985,18 +973,14 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE,
         "move operation failed for: " + sourcePath.toString(), ex.getMessage(), ex);
     } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-      if (dfso != null) {
-        dfso.close();
-      }
+      dfs.closeDfsClient(udfso);
+      dfs.closeDfsClient(dfso);
     }
   }
   
   public void copy(Project project, Users user, Path sourcePath, Path destPath, Dataset sourceDataset,
     Dataset destDataset) throws DatasetException {
-    String username = hdfsUsersBean.getHdfsUserName(project, user);
+    String username = hdfsUsersController.getHdfsUserName(project, user);
     if (!getOwningProject(sourceDataset).equals(destDataset.getProject())) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.COPY_FROM_PROJECT, Level.FINE);
     }
@@ -1020,39 +1004,74 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.SEVERE, "move operation " +
         "failed for: " + sourcePath.toString(), ex.getMessage(), ex);
     } finally {
-      if (udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+      dfs.closeDfsClient(udfso);
     }
   }
   
-  public void setPermissions(Path path, Dataset ds, DatasetPermissions datasetPermissions, Project project, Users user)
+  public void changePermissions(Dataset ds, PermissionTransition permissionTransition, Project targetProject)
     throws DatasetException {
-    if (ds.isShared(project)) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    if (permissionTransition.noop()) {
+      datasetFacade.update(ds);
+      return;
     }
-    if(ds.isPublicDs()) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
-    }
-    DistributedFileSystemOps dfso = null;
+    ds.setPermission(permissionTransition.getTo());
     try {
-      dfso = dfs.getDfsOps();
-      // Change permission as super user
-      FsPermission fsPermission = null;
-      if (null != datasetPermissions) {
-        fsPermission = datasetPermissions.toFsPermission();
-        recChangeOwnershipAndPermission(path, fsPermission, null, null, null, dfso);
-      }
+      hdfsUsersController.changePermission(ds, targetProject, permissionTransition);
     } catch (IOException e) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.WARNING,
-        "dataset: " + ds.getId(), e.getMessage(), e);
-    } finally {
-      if (dfso != null) {
-        dfso.close();
-      }
+        "dataset: " + ds.getName(), e.getMessage(), e);
     }
+    datasetFacade.update(ds);
   }
   
+  public void changePermissions(Dataset ds, PermissionTransition permissionTransition, Project targetProject,
+    DistributedFileSystemOps dfso) throws DatasetException {
+    if (permissionTransition.noop()) {
+      datasetFacade.update(ds);
+      return;
+    }
+    ds.setPermission(permissionTransition.getTo());
+    try {
+      hdfsUsersController.changePermission(ds, targetProject, permissionTransition, dfso);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.WARNING,
+        "dataset: " + ds.getName(), e.getMessage(), e);
+    }
+    datasetFacade.update(ds);
+  }
+  
+  public void changePermissions(DatasetSharedWith ds, PermissionTransition permissionTransition)
+    throws DatasetException {
+    if (permissionTransition.noop()) {
+      datasetSharedWithFacade.update(ds);
+      return;
+    }
+    ds.setPermission(permissionTransition.getTo());
+    try {
+      hdfsUsersController.changePermission(ds.getDataset(), ds.getProject(), permissionTransition);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.WARNING,
+        "dataset: " + ds.getDataset().getName(), e.getMessage(), e);
+    }
+    datasetSharedWithFacade.update(ds);
+  }
+  
+  public void changePermissions(DatasetSharedWith ds, PermissionTransition permissionTransition,
+    DistributedFileSystemOps dfso) throws DatasetException {
+    if (permissionTransition.noop()) {
+      datasetSharedWithFacade.update(ds);
+      return;
+    }
+    ds.setPermission(permissionTransition.getTo());
+    try {
+      hdfsUsersController.changePermission(ds.getDataset(), ds.getProject(), permissionTransition, dfso);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.WARNING,
+        "dataset: " + ds.getDataset().getName(), e.getMessage(), e);
+    }
+    datasetSharedWithFacade.update(ds);
+  }
+
   public void delete(Project project, Users user, Path fullPath, Dataset dataset, boolean isDataset)
     throws DatasetException {
     boolean success;
@@ -1089,9 +1108,7 @@ public class DatasetController {
         throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
           "path: " + fullPath.toString(), ex.getMessage(), ex);
       } finally {
-        if (dfso != null) {
-          dfs.closeDfsClient(dfso);
-        }
+        dfs.closeDfsClient(dfso);
       }
       if (!success) {
         throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
@@ -1130,13 +1147,32 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
         "path: " + fullPath.toString(), ex.getMessage(), ex);
     } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
-      }
+      dfs.closeDfsClient(dfso);
     }
   }
   
+  /**
+   * Unshare a dataset from target project. If the dataset is a feature store also unshares the training dataset
+   * associated with the feature store.
+   * @param project
+   * @param user
+   * @param dataset
+   * @param targetProjectName
+   * @throws DatasetException
+   * @throws IOException
+   */
   public void unshare(Project project, Users user, Dataset dataset, String targetProjectName) throws DatasetException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      unshare(project, user, dataset, targetProjectName, dfso);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+  }
+
+  public void unshare(Project project, Users user, Dataset dataset, String targetProjectName,
+    DistributedFileSystemOps dfso) throws DatasetException {
     Project targetProject = projectFacade.findByName(targetProjectName);
     if (targetProject == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.TARGET_PROJECT_NOT_FOUND, Level.FINE);
@@ -1149,13 +1185,11 @@ public class DatasetController {
     if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
       DatasetSharedWith trainingDataset =
         getSharedTrainingDataset(targetProject, datasetSharedWith.getDataset().getProject());
-      try {
-        unshareDs(project, user, dataset, targetProject, trainingDataset);
-      } catch (DatasetException de) {
-        //Dataset not shared nothing to do
+      if (trainingDataset != null) {
+        unshareDs(project, user, dataset, trainingDataset, dfso);
       }
     }
-    unshareDs(project, user, dataset, targetProject, datasetSharedWith);
+    unshareDs(project, user, dataset, datasetSharedWith, dfso);
   }
   
   private DatasetSharedWith getSharedTrainingDataset(Project project, Project parentProject) {
@@ -1163,18 +1197,62 @@ public class DatasetController {
     return datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
   }
   
-  private void unshareDs(Project project, Users user, Dataset dataset, Project targetProject,
-    DatasetSharedWith datasetSharedWith) throws DatasetException {
+  private void unshareDs(Project project, Users user, Dataset dataset, DatasetSharedWith datasetSharedWith,
+    DistributedFileSystemOps dfso) throws DatasetException {
+    removeAllShareMembers(datasetSharedWith, dfso);
+    datasetSharedWithFacade.remove(datasetSharedWith);
+    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
+      datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
+  }
+
+  private void unshareDs(Project project, Users user, Dataset dataset, DatasetSharedWith datasetSharedWith)
+    throws DatasetException {
+    removeAllShareMembers(datasetSharedWith);
+    datasetSharedWithFacade.remove(datasetSharedWith);
+    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
+      datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
+  }
+  
+  /**
+   * Unshares a dataset from the target project.
+   * @param targetProject
+   * @param dataset
+   * @throws IOException
+   */
+  public void unshareDataset(Project project, Users user, Project targetProject, Dataset dataset)
+    throws DatasetException {
+    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(targetProject, dataset);
     if (datasetSharedWith == null) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
         "project: " + targetProject.getName());
     }
-    hdfsUsersController.unshareDataset(targetProject, dataset);
-    datasetSharedWithFacade.remove(datasetSharedWith);
-    activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
-      targetProject.getName(), project, user, ActivityFlag.DATASET);
+    unshareDs(project, user, dataset, datasetSharedWith);
   }
-  
+
+  private void removeAllShareMembers(DatasetSharedWith datasetSharedWith) throws DatasetException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      removeAllShareMembers(datasetSharedWith, dfso);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+  }
+
+  private void removeAllShareMembers(DatasetSharedWith datasetSharedWith, DistributedFileSystemOps dfso)
+    throws DatasetException {
+    for (ProjectTeam teamMember : datasetSharedWith.getProject().getProjectTeamCollection()) {
+      try {
+        hdfsUsersController.removeMember(datasetSharedWith.getDataset(), datasetSharedWith.getPermission(),
+          teamMember, dfso);
+      } catch (IOException e) {
+        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.FINE, "Failed to " +
+          "remove " + teamMember.getUser().getUsername() + " from dataset group " +
+          datasetSharedWith.getDataset().getName(), e.getMessage());
+      }
+    }
+  }
+
   public void updateDescription(Project project, Users user, Dataset dataset, String description) {
     if (description != null && !dataset.getDescription().equals(description)) {
       dataset.setDescription(description);
@@ -1184,24 +1262,151 @@ public class DatasetController {
     }
   }
   
-  public void shareWithCluster(Project project, Dataset dataset, Users user, DatasetType datasetType)
-      throws DatasetException {
+  public void makeImmutable(Dataset ds, Project project, Users user, Path path) throws DatasetException {
+    PermissionTransition permissionTransition = PermissionTransition.valueOf(ds.getPermission(),
+      DatasetAccessPermission.READ_ONLY);
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      hdfsUsersController.makeImmutable(path, dfso);
+      changePermissions(ds, permissionTransition, project, dfso);
+      List<DatasetSharedWith> sharedWith = datasetSharedWithFacade.findByDataset(ds);
+      for (DatasetSharedWith datasetSharedWith : sharedWith) {
+        updateSharePermission(datasetSharedWith, PermissionTransition.valueOf(datasetSharedWith.getPermission(),
+          DatasetAccessPermission.READ_ONLY), project, user, dfso);
+      }
+    } catch (Exception e) {
+      // try and rollback
+      // if rollback succeed remove DatasetPermissionOperation
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.FINE, e.getMessage());
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
+  }
+
+  public void updatePermission(Dataset ds, DatasetAccessPermission datasetPermissions, Project project,
+    Project targetProject, Users user) throws DatasetException {
+    if (ds.isShared(project)) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    }
+    if (ds.isPublicDs()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
+    }
+    PermissionTransition permissionTransition = PermissionTransition.valueOf(ds.getPermission(), datasetPermissions);
+    changePermissions(ds, permissionTransition, targetProject);
+    if (!permissionTransition.noop()) {
+      activityFacade.persistActivity(ActivityFacade.CHANGE_DATASET_PERMISSION + " of " + ds.getName() + " from " +
+          permissionTransition.getFrom().getDescription() + " to " + permissionTransition.getTo().getDescription(),
+        project, user, ActivityFlag.DATASET);
+    }
+  }
+  
+  public void updateSharePermission(Dataset ds, DatasetAccessPermission datasetPermissions, Project project,
+    String targetProjectName, Users user) throws DatasetException, ProjectException {
+    if (ds.isShared(project)) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    }
+    if (ds.isPublicDs()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
+    }
+    Project targetProject = projectFacade.findByName(targetProjectName);
+    if (targetProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Target project not " +
+        "found.");
+    }
+    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(targetProject, ds);
+    if (datasetSharedWith == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
+        "project: " + targetProject.getName());
+    }
+    PermissionTransition permissionTransition = PermissionTransition.valueOf(datasetSharedWith.getPermission(),
+      datasetPermissions);
+    updateSharePermission(datasetSharedWith, permissionTransition, project, user);
+  }
+  
+  public void updateSharePermission(Dataset ds, DatasetAccessPermission datasetPermissions, Project project,
+    String targetProjectName, Users user, DistributedFileSystemOps dfso) throws DatasetException, ProjectException {
+    if (ds.isShared(project)) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    }
+    if (ds.isPublicDs()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PUBLIC_IMMUTABLE, Level.FINE);
+    }
+    Project targetProject = projectFacade.findByName(targetProjectName);
+    if (targetProject == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "Target project not " +
+        "found.");
+    }
+    DatasetSharedWith datasetSharedWith = datasetSharedWithFacade.findByProjectAndDataset(targetProject, ds);
+    if (datasetSharedWith == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_SHARED_WITH_PROJECT, Level.FINE,
+        "project: " + targetProject.getName());
+    }
+    PermissionTransition permissionTransition = PermissionTransition.valueOf(datasetSharedWith.getPermission(),
+      datasetPermissions);
+    updateSharePermission(datasetSharedWith, permissionTransition, project, user, dfso);
+  }
+  
+  private void updateSharePermission(DatasetSharedWith datasetSharedWith, PermissionTransition permissionTransition,
+    Project project, Users user) throws DatasetException {
+    changePermissions(datasetSharedWith, permissionTransition);
+    if (!permissionTransition.noop()) {
+      activityFacade.persistActivity(
+        ActivityFacade.CHANGE_DATASET_SHARE_PERMISSION + " of " + datasetSharedWith.getDataset().getName() +
+          " shared with project " + datasetSharedWith.getProject().getName() + " from " +
+          permissionTransition.getFrom().getDescription() + " to " + permissionTransition.getTo().getDescription(),
+        project, user, ActivityFlag.DATASET);
+      activityFacade.persistActivity(
+        ActivityFacade.CHANGE_DATASET_SHARE_PERMISSION + " of " + datasetSharedWith.getDataset().getName() +
+          " shared with project " + datasetSharedWith.getProject().getName() + " from " +
+          permissionTransition.getFrom().getDescription() + " to " + permissionTransition.getTo().getDescription(),
+        datasetSharedWith.getProject(), user, ActivityFlag.DATASET);
+    }
+  }
+  
+  private void updateSharePermission(DatasetSharedWith datasetSharedWith, PermissionTransition permissionTransition,
+    Project project, Users user, DistributedFileSystemOps dfso) throws DatasetException {
+    changePermissions(datasetSharedWith, permissionTransition, dfso);
+    if (!permissionTransition.noop()) {
+      activityFacade.persistActivity(
+        ActivityFacade.CHANGE_DATASET_SHARE_PERMISSION + " of " + datasetSharedWith.getDataset().getName() +
+          " shared with project " + datasetSharedWith.getProject().getName() + " from " +
+          permissionTransition.getFrom().getDescription() + " to " + permissionTransition.getTo().getDescription(),
+        project, user, ActivityFlag.DATASET);
+      activityFacade.persistActivity(
+        ActivityFacade.CHANGE_DATASET_SHARE_PERMISSION + " of " + datasetSharedWith.getDataset().getName() +
+          " shared with project " + datasetSharedWith.getProject().getName() + " from " +
+          permissionTransition.getFrom().getDescription() + " to " + permissionTransition.getTo().getDescription(),
+        datasetSharedWith.getProject(), user, ActivityFlag.DATASET);
+    }
+  }
+  
+  public void shareWithCluster(Project project, Dataset dataset, Users user, Path path) throws DatasetException {
     if (dataset.isPublicDs()) {
       return;
     }
-    DatasetPath dsPath = datasetHelper.getDatasetPath(project, getDatasetPath(dataset).toString(), datasetType);
-    setPermissions(dsPath.getFullPath(), dataset, DatasetPermissions.OWNER_ONLY, project, user);
-    dataset.setPublicDsState(SharedState.CLUSTER);
-    datasetFacade.merge(dataset);
+    if (dataset.isShared(project)) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OWNER_ERROR, Level.FINE);
+    }
+    dataset.setPublicDs(SharedState.CLUSTER.state);
+    makeImmutable(dataset, project, user, path);//will update dataset
     logDataset(project, dataset, OperationType.Update);
     activityFacade.persistActivity(ActivityFacade.SHARED_DATA + dataset.getName() + " with cluster ",
       project, user, ActivityFlag.DATASET);
-
   }
   
-  public void unshareFromCluster(Project project, Dataset dataset, Users user) {
+  public void unshareFromCluster(Project project, Dataset dataset, Users user, Path path) throws DatasetException {
     if (!dataset.isPublicDs()) {
       return;
+    }
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      hdfsUsersController.undoImmutable(path, dfso);
+    } catch (IOException e) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_PERMISSION_ERROR, Level.FINE, e.getMessage());
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
     dataset.setPublicDsState(SharedState.PRIVATE);
     datasetFacade.merge(dataset);
@@ -1212,8 +1417,14 @@ public class DatasetController {
 
   public void unshareAll(Dataset dataset, Users user) throws DatasetException {
     List<DatasetSharedWith> shared = datasetSharedWithFacade.findByDataset(dataset);
-    for(DatasetSharedWith s : shared) {
-      unshare(dataset.getProject(), user, dataset, s.getProject().getName());
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      for (DatasetSharedWith s : shared) {
+        unshare(dataset.getProject(), user, dataset, s.getProject().getName(), dfso);
+      }
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
   }
 }
