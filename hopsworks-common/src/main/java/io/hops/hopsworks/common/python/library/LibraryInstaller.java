@@ -15,9 +15,12 @@
  */
 package io.hops.hopsworks.common.python.library;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
@@ -68,16 +71,16 @@ import java.util.stream.Collectors;
 @DependsOn("Settings")
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public class LibraryInstaller {
-  
+
   private static final Logger LOG = Logger.getLogger(LibraryInstaller.class.getName());
-  
+
   private static final Comparator<CondaCommands> ASC_COMPARATOR = new CommandsComparator<>();
-  
+
   private final AtomicInteger registryGCCycles = new AtomicInteger();
   private String prog;
   private String anaconda_dir;
   private String anaconda_project_dir;
-  
+
   @Resource
   private TimerService timerService;
   @EJB
@@ -99,12 +102,15 @@ public class LibraryInstaller {
   @Inject
   private DockerRegistryMngr registry;
   private ManagedExecutorService executorService;
+  private Collection<PythonDep> envDeps;
+  @EJB
+  private DistributedFsService dfs;
 
   @PostConstruct
   public void init() {
     prog =  settings.getSudoersDir() + "/dockerImage.sh";
     anaconda_dir = settings.getAnacondaDir();
-    anaconda_project_dir = anaconda_dir + "/envs/theenv";
+    anaconda_project_dir = anaconda_dir + "/envs/" + settings.getCurrentCondaEnvironment();
     // Set all ONGOING to FAILED with an error message
     List<CondaCommands> allOngoing = condaCommandFacade.findByStatus(CondaStatus.ONGOING);
     allOngoing.forEach(cc -> {
@@ -118,14 +124,14 @@ public class LibraryInstaller {
       LOG.log(Level.SEVERE, "Error looking up for the condaExecutorService", e);
       // Nothing else we can do here
     }
-    
+
     schedule();
   }
 
   private void schedule() {
     timerService.createSingleActionTimer(1000L, new TimerConfig("python library installer", false));
   }
-  
+
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void isAlive() {
@@ -137,7 +143,7 @@ public class LibraryInstaller {
       // other conda ops
       if (registryGCCycles.get() % 10 == 0 && allCondaCommandsOngoing.isEmpty()) {
         registryGCCycles.set(0);
-        
+
         //Run registry GC
         try {
           LOG.log(Level.FINE, "registryGC-start: " + System.currentTimeMillis());
@@ -150,11 +156,11 @@ public class LibraryInstaller {
         // Group new commands by project and run it parallel
         final List<CondaCommands> allCondaCommandsNew = condaCommandFacade.findByStatus(CondaStatus.NEW);
         final Map<Project, List<CondaCommands>> allCondaCommandsNewByProject = allCondaCommandsNew
-          .stream()
-          .collect(Collectors.groupingBy(CondaCommands::getProjectId));
+            .stream()
+            .collect(Collectors.groupingBy(CondaCommands::getProjectId));
         final Map<Project, List<CondaCommands>> allCondaCommandsOngoingByProject = allCondaCommandsOngoing
-          .stream()
-          .collect(Collectors.groupingBy(CondaCommands::getProjectId));
+            .stream()
+            .collect(Collectors.groupingBy(CondaCommands::getProjectId));
         LOG.log(Level.FINE, "allCondaCommandsOngoingByProject:" + allCondaCommandsOngoingByProject);
         for (Project project : allCondaCommandsNewByProject.keySet()) {
           if (!allCondaCommandsOngoingByProject.containsKey(project)) {
@@ -173,7 +179,7 @@ public class LibraryInstaller {
       schedule();
     }
   }
-  
+
   private void condaCommandHandler(List<CondaCommands> projectCondaCommands){
     projectCondaCommands.sort(ASC_COMPARATOR);
     for (final CondaCommands cc : projectCondaCommands) {
@@ -182,9 +188,10 @@ public class LibraryInstaller {
         try {
           try {
             commandsController.updateCondaCommandStatus(
-              cc.getId(), CondaStatus.ONGOING, cc.getArg(), cc.getOp());
+                cc.getId(), CondaStatus.ONGOING, cc.getArg(), cc.getOp());
             switch (cc.getOp()) {
               case CREATE:
+              case IMPORT:
                 createNewImage(cc);
                 break;
               case INSTALL:
@@ -202,11 +209,11 @@ public class LibraryInstaller {
           } catch (Throwable ex) {
             LOG.log(Level.WARNING, "Could not execute command with ID: " + cc.getId(), ex);
             commandsController.updateCondaCommandStatus(
-              cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.toString());
+                cc.getId(), CondaStatus.FAILED, cc.getArg(), cc.getOp(), ex.toString());
             continue;
           }
           commandsController.updateCondaCommandStatus(
-            cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
+              cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
         } catch (ServiceException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId(), ex);
         }
@@ -216,26 +223,65 @@ public class LibraryInstaller {
   private void createNewImage(CondaCommands cc) throws IOException, ServiceDiscoveryException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
-    File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
-    try(BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
-      writer.write("FROM " + projectUtils.getFullBaseImageName());
-    }
-    
-    Project project = cc.getProjectId();
-    String initialDockerImage = projectUtils.getInitialDockerImageName(project);
-
-    ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("create")
-        .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getRegistryURL() + "/" + initialDockerImage)
-        .redirectErrorStream(true)
-        .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(300L, TimeUnit.SECONDS)
-        .build();
-
     try {
+      File home = new File(System.getProperty("user.home"));
+      File condarc = new File(home, ".condarc");
+      File pip = new File(home, ".pip");
+      FileUtils.copyFileToDirectory(condarc, baseDir);
+      FileUtils.copyDirectoryToDirectory(pip, baseDir);
+      File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
+      try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
+        String baseImage = projectUtils.getFullBaseImageName();
+        //If a user creates an environment from a yml file and jupyter install is not selected build on the base
+        //image that does not contain a python environment
+        if(!Strings.isNullOrEmpty(cc.getEnvironmentYml()) && !cc.getInstallJupyter()) {
+          baseImage = baseImage.replace(settings.getBaseDockerImagePythonName(),
+              settings.getBaseNonPythonDockerImage());
+        }
+        writer.write("# syntax=docker/dockerfile:experimental");
+        writer.newLine();
+        writer.write("FROM " + baseImage);
+        writer.newLine();
+        // If new image is created from a YML file, copy it in the image, create the env and delete it
+        if (!Strings.isNullOrEmpty(cc.getEnvironmentYml())) {
+          // Materialize YML
+          String projectEnvYml = "environment.yml";
+          // Copy from hdfs
+          DistributedFileSystemOps dfso = null;
+          try {
+            dfso = dfs.getDfsOps();
+            dfso.copyToLocal(cc.getEnvironmentYml(), baseDir + File.separator + projectEnvYml);
+          } finally {
+            if (dfso != null) {
+              dfso.close();
+            }
+          }
+          // Mount in Dockerfile
+          writer.write("RUN rm -f /root/.condarc");
+          writer.newLine();
+          writer.write("COPY .condarc .pip " + projectEnvYml + " /root/");
+          writer.newLine();
+          String dockerCondaCmd = cc.getInstallJupyter() ?
+              "RUN conda env update -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment() :
+              "RUN conda env create -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment();
+          writer.write(dockerCondaCmd);
+        }
+      }
+
+      Project project = cc.getProjectId();
+      String initialDockerImage = projectUtils.getInitialDockerImageName(project);
+
+      ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
+          .addCommand("/usr/bin/sudo")
+          .addCommand(prog)
+          .addCommand("create")
+          .addCommand(dockerFile.getAbsolutePath())
+          .addCommand(projectUtils.getRegistryURL() + "/" + initialDockerImage)
+          .redirectErrorStream(true)
+          .setCurrentWorkingDirectory(baseDir)
+          .setWaitTimeout(30, TimeUnit.MINUTES)
+          .build();
+
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
@@ -244,7 +290,13 @@ public class LibraryInstaller {
       } else {
         project.setDockerImage(initialDockerImage);
         projectFacade.update(project);
+
+        Collection<PythonDep> envDeps = libraryController.
+            listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
+        libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
       }
+    } catch (ServiceException e) {
+      LOG.log(Level.SEVERE, "Failed to persist python deps", e);
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
@@ -266,41 +318,41 @@ public class LibraryInstaller {
         writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false));
         writer.newLine();
         writer.write(
-          "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
-            + " --mount=type=bind,source=.pip,target=/root/.pip ");
+            "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
+                + " --mount=type=bind,source=.pip,target=/root/.pip ");
         switch (cc.getInstallType()) {
           case CONDA:
             writer.write(anaconda_dir + "/bin/conda install -y -n " +
-              "theenv" + " -c " + cc.getChannelUrl() + " " + cc.
-              getLib() + "=" + cc.getVersion());
+                settings.getCurrentCondaEnvironment() + " -c " + cc.getChannelUrl() + " " + cc.
+                getLib() + "=" + cc.getVersion());
             break;
           case PIP:
             writer.write(anaconda_project_dir + "/bin/pip install --upgrade " +
-              cc.getLib() + "==" + cc.getVersion());
+                cc.getLib() + "==" + cc.getVersion());
             break;
           case ENVIRONMENT:
           default:
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
       }
-      
+
       String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
-      
+
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("create")
-        .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
-        .redirectErrorStream(true)
-        .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(300L, TimeUnit.SECONDS)
-        .build();
-      
+          .addCommand("/usr/bin/sudo")
+          .addCommand(prog)
+          .addCommand("create")
+          .addCommand(dockerFile.getAbsolutePath())
+          .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
+          .redirectErrorStream(true)
+          .setCurrentWorkingDirectory(baseDir)
+          .setWaitTimeout(300L, TimeUnit.SECONDS)
+          .build();
+
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       } else {
         Project project = cc.getProjectId();
@@ -310,9 +362,9 @@ public class LibraryInstaller {
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
-    
+
     Collection<PythonDep> envDeps =
-      libraryController.listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
+        libraryController.listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
     libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
   }
 
@@ -326,35 +378,35 @@ public class LibraryInstaller {
         switch (cc.getInstallType()) {
           case CONDA:
             writer.write("RUN " + anaconda_dir + "/bin/conda remove -y -n " +
-              "theenv" + " " + cc.getLib() + "\n");
+                settings.getCurrentCondaEnvironment() + " " + cc.getLib() + "\n");
             break;
           case PIP:
             writer.write("RUN " + anaconda_project_dir + "/bin/pip uninstall -y " +
-              cc.getLib() + "\n");
+                cc.getLib() + "\n");
             break;
           case ENVIRONMENT:
           default:
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
       }
-      
+
       String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
-      
+
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-        .addCommand("/usr/bin/sudo")
-        .addCommand(prog)
-        .addCommand("create")
-        .addCommand(dockerFile.getAbsolutePath())
-        .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
-        .redirectErrorStream(true)
-        .setCurrentWorkingDirectory(baseDir)
-        .setWaitTimeout(300L, TimeUnit.SECONDS)
-        .build();
-      
+          .addCommand("/usr/bin/sudo")
+          .addCommand(prog)
+          .addCommand("create")
+          .addCommand(dockerFile.getAbsolutePath())
+          .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
+          .redirectErrorStream(true)
+          .setCurrentWorkingDirectory(baseDir)
+          .setWaitTimeout(300L, TimeUnit.SECONDS)
+          .build();
+
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       } else {
         Project project = cc.getProjectId();
@@ -365,31 +417,31 @@ public class LibraryInstaller {
       FileUtils.deleteDirectory(baseDir);
     }
   }
-  
-  
+
+
 
   public void exportLibraries(CondaCommands cc) throws IOException, ServiceException, ServiceDiscoveryException {
-    
+
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
-      .addCommand("/usr/bin/sudo")
-      .addCommand(prog)
-      .addCommand("export")
-      .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
-      .redirectErrorStream(true)
-      .setWaitTimeout(300L, TimeUnit.SECONDS)
-      .build();
-    
+        .addCommand("/usr/bin/sudo")
+        .addCommand(prog)
+        .addCommand("export")
+        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
+        .redirectErrorStream(true)
+        .setWaitTimeout(300L, TimeUnit.SECONDS)
+        .build();
+
     ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
     if (processResult.getExitCode() != 0) {
       String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-        + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+          + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     } else {
       environmentController.uploadYmlInProject(cc.getProjectId(), cc.getUserId(), processResult.getStdout(),
-        cc.getArg());
+          cc.getArg());
     }
   }
-  
+
   private String getNextDockerImageName(Project project) {
     String dockerImage = project.getDockerImage();
     int indexOfLastDigit = dockerImage.lastIndexOf(".");
@@ -420,5 +472,5 @@ public class LibraryInstaller {
       return t.getId().compareTo(t1.getId());
     }
   }
-  
+
 }

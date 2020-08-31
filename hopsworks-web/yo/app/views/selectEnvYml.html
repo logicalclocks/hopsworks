@@ -46,13 +46,13 @@
 <div class="modal-body" ng-controller="PythonCtrl as pythonCtrl">
 
   <div class="row">
-    <div class="col-md-2">
-      <button id="selectAllYmlButton" class="btn btn-primary">
-          <span>
-            Select .yml </span>
-      </button>
+    <div class="col-md-12">
+    <h3>Select a YAML file by using the Data Sets browser below
+    </h3>
     </div>
-    <div class="col-md-9 col-md-offset-1">
+  </div>
+  <div class="row">
+    <div class="col-md-12">
 
       <input style="margin-top: 5px" ng-init="selectEnvYmlCtrl.environmentYmlDef.ymlPath = ''" type="text" class="form-control" id="allYml" ng-model="selectEnvYmlCtrl.environmentYmlDef.ymlPath" required/>
     </div>
@@ -68,10 +68,7 @@
     </span>
   </div>
 
-  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
-          <span>
-            Create environment</span>
-  </button>
+
 
   <div class="table-responsive" style="overflow: hidden;" ng-controller="DatasetsCtrl as datasetsCtrl">
 
@@ -127,4 +124,8 @@
       </div>
     </div>
   </div>
+  <button id="createEnvironment" class="btn btn-success" ng-click="selectEnvYmlCtrl.confirmSelection(pythonCtrl, false)" type="submit" style="margin-top:5px; margin-bottom:10px;">
+          <span>
+            Create environment</span>
+  </button>
 </div>

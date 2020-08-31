@@ -144,7 +144,7 @@ describe "On #{ENV['OS']}" do
           create_dataset_by_name_checked(project, dsname)
           delete_project(project)
 
-          sleep(10)
+          sleep(15)
 
           project = create_project_by_name(projectname)
           create_dataset_by_name_checked(project, dsname)
@@ -199,13 +199,13 @@ describe "On #{ENV['OS']}" do
           @service_host = ENV['KIBANA_API'].split(":").map(&:strip)[0]
           with_valid_session
         end
-        
+
         after :all do
           # Make sure we bring back the service
           execute_remotely @service_host, "sudo systemctl start #{@failed_service}"
           sleep 60
         end
-        
+
         it "Should be able to create a Project after a failed attempt" do
           # First shutdown the service
           execute_remotely @service_host, "sudo systemctl stop #{@failed_service}"
@@ -223,7 +223,7 @@ describe "On #{ENV['OS']}" do
         end
       end
     end
-    
+
     describe "#access" do
       context 'without authentication' do
         before :all do
@@ -282,7 +282,7 @@ describe "On #{ENV['OS']}" do
           expect_json(successMessage: "The project and all related files were removed successfully.")
         end
       end
-      
+
       context 'with authentication and sufficient privilege' do
         before :all do
           with_valid_project
@@ -314,18 +314,21 @@ describe "On #{ENV['OS']}" do
         it "should delete and recreate spark tour" do
           project = create_project_tour("spark")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("spark")
           delete_project(project)
         end
         it "should delete and recreate kafka tour" do
           project = create_project_tour("kafka")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("kafka")
           delete_project(project)
         end
         it "should delete and recreate deep_learning tour" do
           project = create_project_tour("deep_learning")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("deep_learning")
           delete_project(project)
         end
@@ -341,6 +344,7 @@ describe "On #{ENV['OS']}" do
           end
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           delete_project(project)
+          sleep(15)
           project = create_project_tour("featurestore")
           wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")

@@ -87,8 +87,12 @@ describe "On #{ENV['OS']}" do
               create_python_job(@project, $job_name, type)
               start_execution(@project[:id], $job_name)
               expect_status(201)
+              execution_id_1 = json_body[:id]
               start_execution(@project[:id], $job_name)
               expect_status(201)
+              execution_id_2 = json_body[:id]
+              wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED")
+              wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED")
             end
             it "should start a job with args 123" do
               create_python_job(@project, $job_name, type)
@@ -99,6 +103,7 @@ describe "On #{ENV['OS']}" do
               get_execution(@project[:id], $job_name, execution_id)
               expect_status(200)
               expect(json_body[:args]).to eq args
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
             end
             it "should run job and get out and err logs" do
               create_python_job(@project, $job_name, type)
@@ -107,26 +112,14 @@ describe "On #{ENV['OS']}" do
               expect_status(201)
 
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
-
               #wait for log aggregation
-              begin
-                wait_result = wait_for_me_time(60) do
-                  get_execution_log(@project[:id], $job_name, execution_id, "out")
-                  { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
-                end
-                expect(wait_result["success"]).to be(true), wait_result["msg"]
-              rescue
-                start_execution(@project[:id], $job_name)
-                execution_id = json_body[:id]
-                expect_status(201)
-                wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
-                wait_result = wait_for_me_time(60) do
-                  get_execution_log(@project[:id], $job_name, execution_id, "out")
-                  { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
-                end
-                expect(wait_result["success"]).to be(true), wait_result["msg"]
+              wait_result = wait_for_me_time(60) do
+                get_execution_log(@project[:id], $job_name, execution_id, "out")
+                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
               end
-              #get out log
+              expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+              #get err log
               get_execution_log(@project[:id], $job_name, execution_id, "out")
               expect(json_body[:type]).to eq "OUT"
               expect(json_body[:log]).to be_present

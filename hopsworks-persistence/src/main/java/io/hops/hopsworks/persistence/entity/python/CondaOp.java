@@ -20,12 +20,9 @@ public enum CondaOp {
   REMOVE,
   INSTALL,
   UNINSTALL,
-  EXPORT;
-  
-  public boolean isEnvOp() {
-    return CondaOp.isEnvOp(this);
-  }
-  
+  EXPORT,
+  IMPORT;
+
   public static boolean isEnvOp(CondaOp arg) {
     return arg.compareTo(CondaOp.CREATE) == 0 ||
       arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.EXPORT) == 0;

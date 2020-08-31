@@ -531,7 +531,8 @@ public class RESTCodes {
     JUPYTER_STOP_ERROR(17, "Couldn't stop Jupyter Notebook Server.",
         Response.Status.INTERNAL_SERVER_ERROR),
     INVALID_YML(18, "Invalid .yml file", Response.Status.BAD_REQUEST),
-    INVALID_YML_SIZE(19, ".yml file too large. Maximum size is 10000 bytes",
+    INVALID_YML_SIZE(19, ".yml file too large. Please set a higher value for variable " +
+        "max_env_yml_byte_size",
       Response.Status.INTERNAL_SERVER_ERROR),
     ANACONDA_FROM_YML_ERROR(20, "Failed to create Anaconda environment from .yml file.",
       Response.Status.INTERNAL_SERVER_ERROR),

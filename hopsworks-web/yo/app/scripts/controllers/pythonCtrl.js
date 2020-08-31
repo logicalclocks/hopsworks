@@ -201,7 +201,7 @@ angular.module('hopsWorksApp')
                             if (typeof envs[i].commands !== 'undefined' && envs[i].commands.count > 0) {
                                 opsStatusList.push(envs[i]);
                             }
-                            if(envs[i].commands.items && envs[i].commands.items[0].op === 'YML') {
+                            if(envs[i].commands.items && envs[i].commands.items[0].op === 'IMPORT') {
                                 self.pythonVersion = envs[i].pythonVersion;
                             }
                         }
@@ -402,8 +402,8 @@ angular.module('hopsWorksApp')
                                 self.stopLoading()
                                 self.enabled = true;
                                 self.enabling = false;
+                                self.init();
                                 self.getInstalled();
-                                self.pythonVersion = '0.0';
                                 growl.success("Anaconda initialized for this project.", {
                                     title: 'Done',
                                     ttl: 5000

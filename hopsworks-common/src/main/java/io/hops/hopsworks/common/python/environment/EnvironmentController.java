@@ -93,7 +93,7 @@ public class EnvironmentController {
     if (!ProjectUtils.isCondaEnabled(project)) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
-    if (project.getDockerImage().equals(settings.getBaseDockerImage())) {
+    if (project.getDockerImage().equals(settings.getBaseDockerImagePythonName())) {
       createProjectDockerImage(project, user);
     }
   }
@@ -115,7 +115,6 @@ public class EnvironmentController {
         defaultEnvDeps = agentController.persistAndMarkUnmutable(defaultEnvDeps);
       }
     }
-    // Insert all deps in current listing
     libraryController.addPythonDepsForProject(project, defaultEnvDeps);
   }
   
@@ -125,8 +124,27 @@ public class EnvironmentController {
       project.getPythonVersion(), null, false);
     project.setConda(true);
     project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
-    project.setDockerImage(settings.getBaseDockerImage());
+    project.setDockerImage(settings.getBaseDockerImagePythonName());
     projectFacade.update(project);
+  }
+  
+  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+  public String createProjectDockerImageFromYml(String ymlPath, boolean installJupyter, Users user, Project project)
+    throws PythonException, ServiceException {
+    if (ProjectUtils.isCondaEnabled(project)) {
+      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
+    }
+    String username = hdfsUsersController.getHdfsUserName(project, user);
+    String yml = validateYml(new Path(ymlPath), username);
+    // Get Python version from yaml
+    String pythonVersion = findPythonVersion(yml);
+    
+    condaEnvironmentOp(CondaOp.IMPORT, pythonVersion, project, user, project.getPythonVersion(), ymlPath,
+      installJupyter);
+    project.setConda(true);
+    project.setPythonVersion(pythonVersion);
+    projectFacade.update(project);
+    return pythonVersion;
   }
 
   public void removeEnvironment(Project project) {
@@ -156,16 +174,17 @@ public class EnvironmentController {
         new Date(), arg, environmentYml, installJupyter);
     condaCommandFacade.save(cc);
   }
-  
+
   public void condaEnvironmentRemove(Project proj, Users user) {
     // Do not remove conda env if project is using the base
-    if (!proj.getDockerImage().equals(settings.getBaseDockerImage())) {
+    if (!proj.getDockerImage().equals(settings.getBaseDockerImagePythonName()) &&
+        !proj.getDockerImage().equals(settings.getBaseNonPythonDockerImage())) {
       condaEnvironmentOp(CondaOp.REMOVE, "", proj, user,proj.getDockerImage(), null, false);
     } else {
       LOGGER.log(Level.INFO, "Will not remove conda env " + proj.getDockerImage() + "  for project: " + proj.getName());
     }
   }
-  
+
   public String findPythonVersion(String ymlFile) throws PythonException {
     String foundVersion = null;
     Pattern urlPattern = Pattern.compile("(- python=(\\d+.\\d+))");
@@ -190,8 +209,7 @@ public class EnvironmentController {
     String ymlPath = projectRelativeExportPath + "/" + "environment_" + exportTime + ".yml";
     condaEnvironmentOp(CondaOp.EXPORT, project.getPythonVersion(), project, user,
         ymlPath,  null, false);
-    String[] result = {ymlPath};
-    return result;
+    return new String[]{ymlPath};
   }
   
   public void createEnv(Project project, boolean createBaseEnv) throws PythonException,
@@ -201,41 +219,38 @@ public class EnvironmentController {
     }
     project.setConda(true);
     project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
-    project.setDockerImage(settings.getBaseDockerImage());
+    project.setDockerImage(settings.getBaseDockerImagePythonName());
     projectFacade.update(project);
     synchronizeDependencies(project, createBaseEnv);
   }
   
-  private String getYmlFromPath(Path fullPath, String username) throws ServiceException {
+  private String validateYml(Path fullPath, String username) throws ServiceException {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);
-      //tests if the user have permission to access this path
-      
       long fileSize = udfso.getFileStatus(fullPath).getLen();
-      byte[] ymlFileInBytes = new byte[(int) fileSize];
-      
-      if (fileSize < 10000) {
+
+      if (fileSize < settings.getMaxEnvYmlByteSize()) {
+        byte[] ymlFileInBytes = new byte[(int) fileSize];
         try (DataInputStream dis = new DataInputStream(udfso.open(fullPath))) {
           dis.readFully(ymlFileInBytes, 0, (int) fileSize);
           String ymlFileContents = new String(ymlFileInBytes);
           
-          /* Exclude libraries from being installed.
-            mmlspark because is not distributed on PyPi
-            Jupyter, Sparkmagic and hdfscontents because if users want to use Jupyter they should
-            check the "install jupyter" option
+          /*
+            Exclude libraries from being installed which are not publically available on pypi but in our base
           */
           ymlFileContents = Arrays.stream(ymlFileContents.split(System.lineSeparator()))
-            .filter(line -> !line.contains("jupyter"))
-            .filter(line -> !line.contains("sparkmagic"))
-            .filter(line -> !line.contains("hdfscontents"))
+            .filter(line -> !line.contains("jupyterlab-git"))
             .collect(Collectors.joining(System.lineSeparator()));
+
+          udfso.rm(fullPath, false);
+          udfso.create(fullPath, ymlFileContents);
+
           return ymlFileContents;
         }
       } else {
         throw new ServiceException(RESTCodes.ServiceErrorCode.INVALID_YML_SIZE, Level.WARNING);
       }
-      
     } catch (IOException ex) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_FROM_YML_ERROR, Level.SEVERE, "path: " + fullPath,
         ex.getMessage(), ex);
