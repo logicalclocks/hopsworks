@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.user;
 
+import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
@@ -150,7 +151,7 @@ public class UsersController {
   
   public Users registerUser(UserDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType)
     throws UserException {
-    if (newUser.getEmail() != null && !newUser.getEmail().isEmpty()) {
+    if (!Strings.isNullOrEmpty(newUser.getEmail())) {
       newUser.setEmail(newUser.getEmail().toLowerCase());
     }
     userValidator.isValidEmail(newUser.getEmail());
