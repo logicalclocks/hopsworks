@@ -149,8 +149,8 @@ public class UsersAdminResource {
   @ApiOperation(value = "Resend confirmation email to user specified by id.", response = UserProfileDTO.class)
   @PUT
   @Path("/users/{id}/pending")
-  public Response pendingUser(@Context HttpServletRequest req, @PathParam("id") Integer id)
-    throws UserException, ServiceException {
+  public Response pendingUser(@Context HttpServletRequest req, @PathParam("id") Integer id) throws UserException,
+    ServiceException {
     String linkUrl = FormatUtils.getUserURL(req) + settings.getEmailVerificationEndpoint();
     UserProfileDTO userProfileDTO = userProfileBuilder.pendUser(linkUrl, id);
     return Response.ok(userProfileDTO).build();

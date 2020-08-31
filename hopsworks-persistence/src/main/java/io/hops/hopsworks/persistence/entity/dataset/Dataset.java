@@ -168,6 +168,11 @@ public class Dataset implements Serializable {
       referencedColumnName = "id")
   @ManyToOne(optional = false)
   private Project project;
+  @Basic(optional = false)
+  @NotNull
+  @Enumerated(EnumType.STRING)
+  @Column(name = "permission")
+  private DatasetAccessPermission permission;
 
   public Dataset() {
   }
@@ -183,11 +188,12 @@ public class Dataset implements Serializable {
     this.inodeId = inode.getId();
   }
   
-  public Dataset(Inode inode, Project project) {
+  public Dataset(Inode inode, Project project, DatasetAccessPermission permission) {
     this.inode = inode;
     this.project = project;
     this.name = inode.getInodePK().getName();
     this.inodeId = inode.getId();
+    this.permission = permission;
   }
   
   public Dataset(Dataset ds, Project project){
@@ -327,11 +333,19 @@ public class Dataset implements Serializable {
     return this.getInode().getId();
   }
   
-  public DatasetPermissions getPermissions() {
+  public DatasetPermissions getFilePermissions() {
     FsPermission fsPermission = new FsPermission(this.inode.getPermission());
     return DatasetPermissions.fromFilePermissions(fsPermission);
   }
   
+  public DatasetAccessPermission getPermission() {
+    return permission;
+  }
+
+  public void setPermission(DatasetAccessPermission permission) {
+    this.permission = permission;
+  }
+
   @Override
   public int hashCode() {
     int hash = 0;

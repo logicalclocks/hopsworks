@@ -274,8 +274,7 @@ public class ProjectService {
   @GET
   @Path("/getMoreInfo/{type: (ds|inode)}/{inodeId}")
   @Produces(MediaType.APPLICATION_JSON)
-  public Response getMoreInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc)
-    throws DatasetException {
+  public Response getMoreInfo(@PathParam("inodeId") Long inodeId, @Context SecurityContext sc) throws DatasetException {
     MoreInfoDTO info = null;
 
     if (inodeId != null) {
@@ -448,7 +447,7 @@ public class ProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER})
   public Response updateProject(ProjectDTO projectDTO, @PathParam("projectId") Integer id, @Context SecurityContext sc)
     throws ProjectException, DatasetException, HopsSecurityException, ServiceException, FeaturestoreException,
-    UserException, ElasticException, SchemaException, KafkaException, ProvenanceException{
+    ElasticException, SchemaException, KafkaException, ProvenanceException, IOException, UserException {
 
     RESTApiJsonResponse json = new RESTApiJsonResponse();
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -528,7 +527,8 @@ public class ProjectService {
   @Produces(MediaType.APPLICATION_JSON)
   public Response example(@PathParam("type") String type, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, JobException, ElasticException, SchemaException, ProvenanceException {
+    HopsSecurityException, FeaturestoreException, JobException, IOException, ElasticException, SchemaException,
+    ProvenanceException {
     if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
@@ -603,7 +603,7 @@ public class ProjectService {
   @Consumes(MediaType.APPLICATION_JSON)
   public Response createProject(ProjectDTO projectDTO, @Context HttpServletRequest req, @Context SecurityContext sc)
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
-    HopsSecurityException, FeaturestoreException, ElasticException, SchemaException {
+    HopsSecurityException, FeaturestoreException, ElasticException, SchemaException, IOException {
 
     Users user = jWTHelper.getUserPrincipal(sc);
     projectController.createProject(projectDTO, user, req.getSession().getId());

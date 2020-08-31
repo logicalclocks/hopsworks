@@ -103,7 +103,7 @@
 }
 
 .project-name {
-  width: 155px;
+  width: 160px;
   margin-left: 10px;
   white-space: nowrap;
   overflow: hidden;
@@ -181,7 +181,7 @@
   color: #fff;
   background-color: #1a1a1a;
   line-height: 1;
-  padding: 10px 0px 10px 0px;
+  margin-left: 0px;
   font-size: 20px;
 }
 .sidebar-nav li:nth-child(2):before {

@@ -93,6 +93,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -202,7 +203,7 @@ public class DelaProjectService {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response removePublic(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
     @ApiParam(value="delete dataset", required = true) @QueryParam("clean") boolean clean)
-      throws DelaException, DatasetException {
+    throws DelaException, IOException, DatasetException {
 
     Dataset dataset = getDatasetByPublicId(publicDSId);
     Users user = jWTHelper.getUserPrincipal(sc);
@@ -223,7 +224,8 @@ public class DelaProjectService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response startDownload(@Context SecurityContext sc, @PathParam("publicDSId") String publicDSId,
-    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException, ProvenanceException {
+    HopsworksTransferDTO.Download downloadDTO) throws DelaException, DatasetException, ProvenanceException,
+    IOException {
     Users user = jWTHelper.getUserPrincipal(sc);
     //dataset not createed yet
 

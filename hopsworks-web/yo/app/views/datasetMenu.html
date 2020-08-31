@@ -37,22 +37,22 @@
             <span><i class="fa fa-edit"></i>Permissions</span>
         </a>
         <ul class="dropdown-menu">
-            <li ng-if="dataset.permission === 'GROUP_WRITABLE_SB' || dataset.permission === 'GROUP_WRITABLE'">
+            <li ng-if="dataset.permission !== 'EDITABLE'">
                 <a tabindex="-1"
-                   ng-click="permissions({'dataset': dataset, 'permission': 'OWNER_ONLY'}); $event.stopPropagation();">
-                    <span><i class="fa fa-lock"></i>Owner only</span>
+                   ng-click="permissions({'dataset': dataset, 'permission': 'EDITABLE'}); $event.stopPropagation();">
+                    <span><i class="fa fa-users"></i>Editable</span>
                 </a>
             </li>
-            <li ng-if="dataset.permission !== 'GROUP_WRITABLE_SB'">
+            <li ng-if="dataset.permission !== 'EDITABLE_BY_OWNERS'">
                 <a tabindex="-1"
-                   ng-click="permissions({'dataset': dataset, 'permission':'GROUP_WRITABLE_SB'}); $event.stopPropagation();">
-                    <span><i class="fa fa-user"></i>Group writable & sticky bit set</span>
+                   ng-click="permissions({'dataset': dataset, 'permission':'EDITABLE_BY_OWNERS'}); $event.stopPropagation();">
+                    <span><i class="fa fa-user"></i>Editable by data owners</span>
                 </a>
             </li>
-            <li ng-if="dataset.permission !== 'GROUP_WRITABLE'">
+            <li ng-if="dataset.permission !== 'READ_ONLY'">
                 <a tabindex="-1"
-                   ng-click="permissions({'dataset': dataset, 'permission':'GROUP_WRITABLE'}); $event.stopPropagation();">
-                    <span><i class="fa fa-users"></i>Group writable</span>
+                   ng-click="permissions({'dataset': dataset, 'permission':'READ_ONLY'}); $event.stopPropagation();">
+                    <span><i class="fa fa-lock"></i>Read only</span>
                 </a>
             </li>
         </ul>
@@ -82,6 +82,15 @@
            tabindex="6"
            ng-click="showManifest({'publicId': dataset.publicId}); $event.stopPropagation();">
             <span>Show Manifest</span>
+        </a>
+    </li>
+    <li ng-if="!dataset.shared && dataset.sharedWith > 0"
+        ng-show="role === 'Data owner'" id="show_shared_with">
+        <a class="pointer"
+           role="menuitem"
+           tabindex="6"
+           ng-click="sharedWith({'dataset': dataset}); $event.stopPropagation();">
+            <span><i class="fa fa-lock"></i>Share permissions</span>
         </a>
     </li>
     <li class="divider"

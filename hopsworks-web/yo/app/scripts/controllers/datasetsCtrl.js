@@ -1277,6 +1277,10 @@ angular.module('hopsWorksApp')
               });
             };
 
+            self.sharedWith = function (dataset) {
+                ModalService.sharedWith('md', dataset.attributes.path, dataset.datasetType);
+            };
+
             /**
              * Opens a modal dialog to make dataset editable
              * @param {type} name

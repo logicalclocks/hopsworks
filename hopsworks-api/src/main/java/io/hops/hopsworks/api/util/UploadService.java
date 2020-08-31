@@ -39,8 +39,6 @@
 package io.hops.hopsworks.api.util;
 
 import com.google.api.client.repackaged.com.google.common.base.Strings;
-import io.hops.hopsworks.common.dataset.util.DatasetHelper;
-import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -55,6 +53,8 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FolderNameValidator;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -71,7 +71,6 @@ import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.metadata.InodeBasicMetadata;
@@ -261,15 +260,6 @@ public class UploadService {
       if (isMember) {
         role = projectTeamFacade.findCurrentRole(owning, user);
       }
-
-      //Do not allow non-DataOwners to upload to a non-Editable dataset
-      //Do not allow anyone to upload if the dataset is shared and non-Editable
-      if (datasetPath.getDataset().getPermissions().equals(DatasetPermissions.OWNER_ONLY)
-          && ((role != null && project.equals(owning) && !role.equals(AllowedProjectRoles.DATA_OWNER))
-          || !project.equals(owning))) {
-        throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_EDITABLE, Level.FINE,
-            "dataset: " + datasetPath.getDataset().getName(), "datasetId: " + datasetPath.getDataset().getId());
-      }
       confFileUpload(datasetPath, templateId);
     } else {
       confUploadTemplate();
@@ -339,12 +329,7 @@ public class UploadService {
       if (this.username != null) {
         DistributedFileSystemOps udfso = null;
         try {
-          //If the user is a Data Owner in the owning project perform operation as superuser
-          if (!Strings.isNullOrEmpty(role) && role.equals(AllowedProjectRoles.DATA_OWNER)) {
-            udfso = dfs.getDfsOps();
-          } else {
-            udfso = dfs.getDfsOps(username);
-          }
+          udfso = dfs.getDfsOps(username);
           udfso.touchz(new Path(this.path, fileName));
         } catch (AccessControlException ex) {
           throw new AccessControlException("Permission denied: You can not upload to this folder. ");

@@ -63,7 +63,7 @@ module ProvStateHelper
   end
 
   def prov_create_dir(project, dirname)
-    create_dir(project, dirname, "")
+    create_dir(project, dirname, query: "")
     expect_status(201)
   end
 

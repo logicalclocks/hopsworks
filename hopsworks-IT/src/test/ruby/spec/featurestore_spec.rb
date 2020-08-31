@@ -70,7 +70,8 @@ describe "On #{ENV['OS']}" do
           project = get_project
           projectname = "project_#{short_random_id}"
           second_project = create_project_by_name(projectname)
-          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
+              "EDITABLE", datasetType: "&type=FEATURESTORE")
 
           list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
           get list_project_featurestores_endpoint
@@ -85,7 +86,7 @@ describe "On #{ENV['OS']}" do
             |d| d["featurestoreName"] == "#{projectname}_featurestore"  }
           expect(second_featurestore.length).to be 0
 
-          accept_dataset(@project, "#{projectname}_featurestore.db", "&type=FEATURESTORE")
+          accept_dataset(@project, "#{projectname}_featurestore.db", datasetType: "&type=FEATURESTORE")
 
           list_project_featurestores_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores"
           get list_project_featurestores_endpoint
@@ -622,8 +623,8 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id)
           path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
-          ds = get_dataset_stat_checked(@project, path, "&type=FEATURESTORE")
-          expect(ds[:attributes][:permission]).to eql("rwxrwx--T")
+          ds = get_dataset_stat_checked(@project, path, datasetType: "&type=FEATURESTORE")
+          expect(ds[:attributes][:permission]).to eql("rwxrwx---")
         end
 
         it "should not be able to add a cached offline featuregroup to the featurestore with a invalid hive table name" do
@@ -970,10 +971,11 @@ describe "On #{ENV['OS']}" do
           # Create a feature group in second project and share it with the first project
           second_project = create_project_by_name(projectname)
           featurestore_id = get_featurestore_id(second_project.id)
-          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
+              "EDITABLE", datasetType: "&type=FEATURESTORE")
           json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
           featuregroup_id = JSON.parse(json_result)['id']
-          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", "&type=FEATURESTORE")
+          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", datasetType: "&type=FEATURESTORE")
 
           # Create a new user and add it only to the first project
           member = create_user
@@ -995,10 +997,11 @@ describe "On #{ENV['OS']}" do
           # Create a feature group in second project and share it with the first project
           second_project = create_project_by_name(projectname)
           featurestore_id = get_featurestore_id(second_project.id)
-          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], "&type=FEATURESTORE")
+          share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
+              "EDITABLE", datasetType: "&type=FEATURESTORE")
           json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
           featuregroup_id = JSON.parse(json_result)['id']
-          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", "&type=FEATURESTORE")
+          accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", datasetType: "&type=FEATURESTORE")
 
           # Create a new user and add it only to the first project
           member = create_user
@@ -1621,7 +1624,7 @@ describe "On #{ENV['OS']}" do
           # Make sure that the directory has been removed correctly
           get_datasets_in_path(project,
                                "#{project[:projectname]}_Training_Datasets/#{parsed_json1['name']}_#{parsed_json1['version']}",
-                               "&type=DATASET")
+                               query: "&type=DATASET")
           expect_status(400)
         end
 

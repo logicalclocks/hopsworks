@@ -40,11 +40,11 @@
 package io.hops.hopsworks.dela;
 
 import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
+import io.hops.hopsworks.common.dao.dataset.DatasetSharedWithFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.dataset.FilePreviewDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -53,6 +53,7 @@ import io.hops.hopsworks.exceptions.DelaException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.SharedState;
 import io.hops.hopsworks.persistence.entity.log.operation.OperationType;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -83,7 +84,7 @@ public class DelaDatasetController {
   @EJB
   private DatasetController datasetController;
   @EJB
-  private HdfsUsersController hdfsUsersBean;
+  private DatasetSharedWithFacade datasetSharedWithFacade;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -135,11 +136,11 @@ public class DelaDatasetController {
     return dataset;
   }
 
-  public void delete(Project project, Dataset dataset) throws DelaException, DatasetException {
+  public void delete(Project project, Dataset dataset, Users user) throws DelaException, IOException, DatasetException {
     if (dataset.isShared(project)) {
       //remove the entry in the table that represents shared ds
       //but leave the dataset in hdfs b/c the user does not have the right to delete it.
-      hdfsUsersBean.unShareDataset(project, dataset);
+      datasetController.unshareDataset(project, user, project, dataset);
       return;
     }
     try {
@@ -160,7 +161,7 @@ public class DelaDatasetController {
     try {
       ProvTypeDTO projectMetaStatus = fsProvenanceController.getProjectProvType(user, project);
       datasetCtrl.createDataset(user, project, name, description, -1, projectMetaStatus,
-        false, false, dfso);
+        false, DatasetAccessPermission.EDITABLE, dfso);
       return datasetController.getByProjectAndDsName(project, null, name);
     } finally {
       if(dfso != null) {

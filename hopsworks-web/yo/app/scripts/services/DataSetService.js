@@ -90,13 +90,14 @@ angular.module('hopsWorksApp')
                   var previewMode = getQuery(mode, 'mode');
                   return $http.get(baseUrl + getEncodedPath(path) + '?action=blob&expand=inodes' + datasetType + previewMode);
                 },
-                create: function (path, templateId, description, searchable, generateReadme, type) {
+                create: function (path, templateId, description, searchable, generateReadme, permission, type) {
                   var template = getQuery(templateId, 'templateId');
                   var description = getQuery(description, 'description');
                   var searchable = getQuery(searchable, 'searchable');
                   var generateReadme = getQuery(generateReadme, 'generate_readme');
+                  var permission = getQuery(permission, 'permission');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + template + description + searchable + generateReadme + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=create' + template + description + searchable + generateReadme + permission + datasetType);
                 },
                 copy: function (path, destinationPath) {
                   var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
@@ -106,10 +107,11 @@ angular.module('hopsWorksApp')
                   var destinationPath = getQuery(getEncodedPath(destinationPath), 'destination_path');
                   return $http.post(baseUrl + getEncodedPath(path) + '?action=move' + destinationPath);
                 },
-                share: function (path, targetProject, type) {
+                share: function (path, targetProject, permission, type) {
                   var targetProject = getQuery(targetProject, 'target_project');
+                  var permission = getQuery(permission, 'permission');
                   var datasetType = getQuery(type, 'type');
-                  return $http.post(baseUrl + getEncodedPath(path) + '?action=share' + targetProject + datasetType);
+                  return $http.post(baseUrl + getEncodedPath(path) + '?action=share' + targetProject + permission + datasetType);
                 },
                 accept: function (path, type) {
                   var datasetType = getQuery(type, 'type');
@@ -127,6 +129,12 @@ angular.module('hopsWorksApp')
                 },
                 permissions: function (path, permissions) {
                   return $http.put(baseUrl + getEncodedPath(path) + '?action=permission' + '&permissions=' + permissions);
+                },
+                sharePermissions: function (path, targetProject, permissions, type) {
+                  var permission = getQuery(permissions, 'permissions');
+                  var targetProject = getQuery(targetProject, 'target_project');
+                  var datasetType = getQuery(type, 'type');
+                  return $http.put(baseUrl + getEncodedPath(path) + '?action=share_permission' + permission + targetProject + datasetType);
                 },
                 updateDescription: function (path, description) {
                   return $http.put(baseUrl + getEncodedPath(path) + '?action=description' + '&description=' + description);

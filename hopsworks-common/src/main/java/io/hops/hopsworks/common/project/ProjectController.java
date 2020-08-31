@@ -111,6 +111,7 @@ import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetAccessPermission;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
@@ -298,7 +299,7 @@ public class ProjectController {
    */
   public Project createProject(ProjectDTO projectDTO, Users owner, String sessionId) throws DatasetException,
     GenericException, KafkaException, ProjectException, UserException, HopsSecurityException, ServiceException,
-    FeaturestoreException, ElasticException, SchemaException {
+    FeaturestoreException, ElasticException, SchemaException, IOException {
 
     Long startTime = System.currentTimeMillis();
 
@@ -397,19 +398,18 @@ public class ProjectController {
         setProjectInode(project, dfso);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures, true, owner);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR,
-          Level.SEVERE, "project: " + projectName, ex.getMessage(), ex);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_INODE_CREATION_ERROR, Level.SEVERE,
+          "project: " + projectName, ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 6 (inodes): {0}", System.currentTimeMillis() - startTime);
 
       //set payment and quotas
       try {
-        setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(),
-          dfso, owner);
+        setProjectOwnerAndQuotas(project, settings.getHdfsDefaultQuotaInMBs(), dfso, owner);
       } catch (IOException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures, true, owner);
-        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE,
-          "project: " + project.getName(), ex.getMessage(), ex);
+        throw new ProjectException(RESTCodes.ProjectErrorCode.QUOTA_ERROR, Level.SEVERE, "project: " + project.getName()
+          , ex.getMessage(), ex);
       }
       LOGGER.log(Level.FINE, "PROJECT CREATION TIME. Step 7 (quotas): {0}", System.currentTimeMillis() - startTime);
 
@@ -449,7 +449,7 @@ public class ProjectController {
       for (ProjectServiceEnum service : projectServices) {
         try {
           projectCreationFutures.addAll(addService(project, service, owner, dfso, provType));
-        } catch (RESTException ex) {
+        } catch (RESTException | IOException ex) {
           cleanup(project, sessionId, projectCreationFutures);
           throw ex;
         }
@@ -659,28 +659,22 @@ public class ProjectController {
    * @param dfso
    * @throws java.io.IOException
    */
-  public void createProjectLogResources(Users user, Project project,
-    DistributedFileSystemOps dfso) throws IOException, DatasetException, HopsSecurityException {
+  public void createProjectLogResources(Users user, Project project, DistributedFileSystemOps dfso) throws IOException,
+    DatasetException, HopsSecurityException {
 
     for (Settings.BaseDataset ds : Settings.BaseDataset.values()) {
-      boolean sticky = true;
-      if(ds.getName().equals(Settings.BaseDataset.RESOURCES.getName())){
-        sticky = false;
-      }
-      datasetController.createDataset(user, project, ds.getName(), ds.
-          getDescription(), -1, Provenance.Type.DISABLED.dto, sticky, true, dfso);
+      datasetController.createDataset(user, project, ds.getName(), ds.getDescription(), -1,
+        Provenance.Type.DISABLED.dto, false, DatasetAccessPermission.EDITABLE, dfso);
 
       Path dsPath = new Path(Utils.getProjectPath(project.getName()) + ds.getName());
 
       FileStatus fstatus = dfso.getFileStatus(dsPath);
-
       // create subdirectories for the resource dataset
       if (ds.equals(Settings.BaseDataset.RESOURCES)) {
         String[] subResources = settings.getResourceDirs().split(";");
         for (String sub : subResources) {
           Path subDirPath = new Path(dsPath, sub);
-          datasetController.createSubDirectory(project, subDirPath, -1,
-            "", false, dfso);
+          datasetController.createSubDirectory(project, subDirPath, -1, "", false, dfso);
           dfso.setOwner(subDirPath, fstatus.getOwner(), fstatus.getGroup());
         }
       } else if (ds.equals(Settings.BaseDataset.LOGS)) {
@@ -694,8 +688,7 @@ public class ProjectController {
       }
 
       //Persist README.md to hdfs for Default Datasets
-      datasetController.generateReadme(dfso, ds.getName(),
-        ds.getDescription(), project.getName());
+      datasetController.generateReadme(dfso, ds.getName(), ds.getDescription(), project.getName());
       Path readmePath = new Path(dsPath, Settings.README_FILE);
       dfso.setOwner(readmePath, fstatus.getOwner(), fstatus.getGroup());
     }
@@ -725,17 +718,17 @@ public class ProjectController {
   }
 
   // Used only during project creation
-  private List<Future<?>> addService(Project project, ProjectServiceEnum service,
-    Users user, DistributedFileSystemOps dfso, ProvTypeDTO projectProvCore)
-      throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-      UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
+  private List<Future<?>> addService(Project project, ProjectServiceEnum service, Users user,
+    DistributedFileSystemOps dfso, ProvTypeDTO projectProvCore) throws ProjectException, ServiceException,
+    DatasetException, HopsSecurityException, UserException, FeaturestoreException, ElasticException, SchemaException,
+    KafkaException, IOException {
     return addService(project, service, user, dfso, dfso, projectProvCore);
   }
-
-  public List<Future<?>> addService(Project project, ProjectServiceEnum service,
-    Users user, DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO projectProvCore)
-      throws ProjectException, ServiceException, DatasetException, HopsSecurityException,
-      UserException, FeaturestoreException, ElasticException, SchemaException, KafkaException {
+  
+  public List<Future<?>> addService(Project project, ProjectServiceEnum service, Users user,
+    DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO projectProvCore) throws ProjectException,
+    ServiceException, DatasetException, HopsSecurityException, FeaturestoreException, ElasticException, SchemaException,
+    KafkaException, IOException, UserException {
 
     List<Future<?>> futureList = new ArrayList<>();
 
@@ -802,21 +795,19 @@ public class ProjectController {
     logActivity(ActivityFacade.ADDED_SERVICE + service.toString(), user, project, ActivityFlag.SERVICE);
     return futureList;
   }
-
-  private void addServiceDataset(Project project, Users user,
-    Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
-    DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
-    throws DatasetException, HopsSecurityException, ProjectException {
+  
+  private void addServiceDataset(Project project, Users user, Settings.ServiceDataset ds, DistributedFileSystemOps dfso,
+    DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore) throws DatasetException, HopsSecurityException,
+    ProjectException {
     try {
       String datasetName = ds.getName();
       //Training Datasets should be shareable, prefix with project name to avoid naming conflicts when sharing
       if (ds == Settings.ServiceDataset.TRAININGDATASETS) {
         datasetName = project.getName() + "_" + datasetName;
       }
-      datasetController.createDataset(user, project, datasetName, ds.
-        getDescription(), -1, datasetProvCore, false, true, dfso);
-      datasetController.generateReadme(udfso, datasetName,
-        ds.getDescription(), project.getName());
+      datasetController.createDataset(user, project, datasetName, ds.getDescription(), -1, datasetProvCore,
+        false, DatasetAccessPermission.EDITABLE, dfso);
+      datasetController.generateReadme(udfso, datasetName, ds.getDescription(), project.getName());
 
       // This should only happen in project creation
       // Create dataset and corresponding README file as superuser
@@ -852,7 +843,8 @@ public class ProjectController {
   private Future<CertificatesController.CertsResult> addServiceServing(Project project, Users user,
     DistributedFileSystemOps dfso, DistributedFileSystemOps udfso, ProvTypeDTO datasetProvCore)
     throws ProjectException, DatasetException, HopsSecurityException,
-    UserException, ElasticException, ServiceException, SchemaException, FeaturestoreException, KafkaException {
+    ElasticException, ServiceException, SchemaException, FeaturestoreException, KafkaException,
+    IOException, UserException {
 
     addServiceDataset(project, user, Settings.ServiceDataset.SERVING, dfso, udfso, datasetProvCore);
     elasticController.createIndexPattern(project, user,
@@ -869,7 +861,7 @@ public class ProjectController {
    * @param project
    */
   private Future<CertificatesController.CertsResult> addServingManager(Project project) throws HopsSecurityException,
-    UserException {
+    IOException {
     // Add the Serving Manager user to the project team
     Users servingManagerUser = userFacade.findByUsername(KafkaInferenceLogger.SERVING_MANAGER_USERNAME);
     ProjectTeamPK stp = new ProjectTeamPK(project.getId(), servingManagerUser.getEmail());
@@ -877,9 +869,10 @@ public class ProjectController {
     st.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
     st.setTimestamp(new Date());
     st.setUser(servingManagerUser);
+    st.setProject(project);//Not fetched by jpa from project id in PK
     projectTeamFacade.persistProjectTeam(st);
     // Create the Hdfs user
-    hdfsUsersController.addNewProjectMember(project, st);
+    hdfsUsersController.addNewMember(st);
     // Create the certificate for this project user
     Future<CertificatesController.CertsResult> certsResultFuture = null;
     try {
@@ -1812,8 +1805,7 @@ public class ProjectController {
 
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   private void removeQuotas(Project project) {
-    YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.
-      findByProjectName(project.getName());
+    YarnProjectsQuota yarnProjectsQuota = yarnProjectsQuotaFacade.findByProjectName(project.getName());
     yarnProjectsQuotaFacade.remove(yarnProjectsQuota);
   }
 
@@ -1867,40 +1859,46 @@ public class ProjectController {
     if (projectTeams == null) {
       return failedList;
     }
-
+  
     Users newMember;
-    for (ProjectTeam projectTeam : projectTeams) {
-      try {
-        if (!projectTeam.getProjectTeamPK().getTeamMember().equals(owner.getEmail())) {
-          projectTeam.setTimestamp(new Date());
-          newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().getTeamMember());
-          boolean added = addMember(projectTeam, project, newMember, owner);
-          if (newMember == null) {
-            failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " was not found in the system.");
-          } else if (!added) {
-            failedList.add(newMember.getEmail() + " is already a member in this project.");
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();//use one dfso
+      for (ProjectTeam projectTeam : projectTeams) {
+        try {
+          if (!projectTeam.getProjectTeamPK().getTeamMember().equals(owner.getEmail())) {
+            projectTeam.setTimestamp(new Date());
+            newMember = userFacade.findByEmail(projectTeam.getProjectTeamPK().getTeamMember());
+            boolean added = addMember(projectTeam, project, newMember, owner, dfso);
+            if (newMember == null) {
+              failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " was not found in the system.");
+            } else if (!added) {
+              failedList.add(newMember.getEmail() + " is already a member in this project.");
+            }
+          } else {
+            failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " is already a member in this project.");
           }
-        } else {
-          failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + " is already a member in this project.");
+        } catch (EJBException | IOException ejb) {
+          failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + "could not be added. Try again later.");
+          LOGGER.log(Level.SEVERE, "Adding  team member {0} to members failed",
+            projectTeam.getProjectTeamPK().getTeamMember());
         }
-      } catch (EJBException ejb) {
-        failedList.add(projectTeam.getProjectTeamPK().getTeamMember() + "could not be added. Try again later.");
-        LOGGER.log(Level.SEVERE, "Adding  team member {0} to members failed",
-          projectTeam.getProjectTeamPK().getTeamMember());
       }
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
-
     return failedList;
   }
   
-  public boolean addMember(ProjectTeam projectTeam, Project project, Users newMember, Users owner) throws UserException,
-    KafkaException, ProjectException, FeaturestoreException {
+  public boolean addMember(ProjectTeam projectTeam, Project project, Users newMember, Users owner,
+    DistributedFileSystemOps dfso) throws UserException, KafkaException, ProjectException, FeaturestoreException,
+    IOException {
     if (projectTeam.getTeamRole() == null ||
       (!projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_SCIENTIST.getRole()) &&
         !projectTeam.getTeamRole().equals(ProjectRoleTypes.DATA_OWNER.getRole()))) {
       projectTeam.setTeamRole(ProjectRoleTypes.DATA_SCIENTIST.getRole());
     }
-  
+    
     projectTeam.setTimestamp(new Date());
     if (newMember != null && !projectTeamFacade.isUserMemberOfProject(project, newMember)) {
       //this makes sure that the member is added to the project sent as the
@@ -1910,13 +1908,13 @@ public class ProjectController {
       projectTeam.setUser(newMember);
       project.getProjectTeamCollection().add(projectTeam);
       projectFacade.update(project);
-      hdfsUsersController.addNewProjectMember(project, projectTeam);
-    
+      hdfsUsersController.addNewProjectMember(projectTeam, dfso);
+      
       //Add user to kafka topics ACLs by default
       if (projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.KAFKA)) {
         kafkaController.addProjectMemberToTopics(project, newMember.getEmail());
       }
-    
+      
       //if online-featurestore service is enabled in the project, give new member access to it
       if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE) &&
         settings.isOnlineFeaturestore()) {
@@ -1924,7 +1922,7 @@ public class ProjectController {
         onlineFeaturestoreController.createDatabaseUser(projectTeam.getUser(),
           featurestore, projectTeam.getTeamRole());
       }
-    
+      
       // TODO: This should now be a REST call
       Future<CertificatesController.CertsResult> certsResultFuture = null;
       try {
@@ -1942,18 +1940,18 @@ public class ProjectController {
             "Could not delete user certificates for user " + failedUser + ". Manual cleanup is needed!!! ", e);
         }
         LOGGER.log(Level.SEVERE, "error while creating certificates, jupyter kernel: " + ex.getMessage(), ex);
+        hdfsUsersController.removeMember(projectTeam);
         projectTeamFacade.removeProjectTeam(project, newMember);
-        hdfsUsersController.removeProjectMember(newMember, project);
         throw new EJBException("Could not create certificates for user");
       }
-    
+      
       String message = "You have been added to project " + project.getName() + " with a role "
         + projectTeam.getTeamRole() + ".";
       messageController.send(newMember, owner, "You have been added to a project.", message, message, "");
-    
+      
       LOGGER.log(Level.FINE, "{0} - member added to project : {1}.", new Object[]{newMember.getEmail(),
         project.getName()});
-    
+      
       logActivity(ActivityFacade.NEW_MEMBER + projectTeam.getProjectTeamPK().getTeamMember(), owner,
         project, ActivityFlag.MEMBER);
       return true;
@@ -1963,14 +1961,21 @@ public class ProjectController {
   }
   
   public void addMember(Users user, String role, Project project) throws KafkaException, ProjectException,
-    UserException, FeaturestoreException {
+    UserException, FeaturestoreException, IOException {
     if (user == null || project == null) {
       throw new IllegalArgumentException("User and project can not be null.");
     }
     ProjectTeam projectTeam = new ProjectTeam(new ProjectTeamPK(project.getId(), user.getEmail()));
     projectTeam.setTeamRole(role);
     Users owner = project.getOwner();
-    boolean added = addMember(projectTeam, project, user, owner);
+    boolean added;
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      added = addMember(projectTeam, project, user, owner, dfso);
+    } finally {
+      dfs.closeDfsClient(dfso);
+    }
     if (!added) {
       LOGGER.log(Level.FINE, "User {0} is already a member in this project {1}.", new Object[]{user.getUsername(),
         project.getName()});
@@ -2267,6 +2272,7 @@ public class ProjectController {
         + ". Manual cleanup is needed!!!", ex);
       throw ex;
     }
+    hdfsUsersController.removeMember(projectTeam);//TODO: projectTeam might be null?
   }
 
   /**
@@ -2281,7 +2287,7 @@ public class ProjectController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void updateMemberRole(Project project, Users opsOwner, String toUpdateEmail, String newRole)
-      throws UserException, ProjectException, FeaturestoreException {
+    throws UserException, ProjectException, FeaturestoreException, IOException {
     Users user = userFacade.findByEmail(toUpdateEmail);
     if (user == null) {
       throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "user: " + toUpdateEmail);
@@ -2300,8 +2306,8 @@ public class ProjectController {
    * @throws ProjectException
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public void updateMemberRole(Project project, Users user, String newRole)
-    throws UserException, ProjectException, FeaturestoreException {
+  public void updateMemberRole(Project project, Users user, String newRole) throws ProjectException,
+    FeaturestoreException, IOException {
     if (project.getOwner().equals(user)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_OWNER_ROLE_NOT_ALLOWED, Level.FINE,
         "project: " + project.getName());
@@ -2323,18 +2329,13 @@ public class ProjectController {
     projectTeam.setTeamRole(newRole);
     projectTeam.setTimestamp(new Date());
     projectTeamFacade.update(projectTeam);
-
-    if (newRole.equals(AllowedRoles.DATA_OWNER)) {
-      hdfsUsersController.addUserToProjectGroup(project, projectTeam);
-    } else {
-      hdfsUsersController.modifyProjectMembership(user, project);
-    }
+  
+    hdfsUsersController.changeMemberRole(projectTeam);
 
     // Update privileges for online feature store
     if (projectServiceFacade.isServiceEnabledForProject(project, ProjectServiceEnum.FEATURESTORE)) {
       Featurestore featurestore = featurestoreController.getProjectFeaturestore(project);
-      onlineFeaturestoreController
-          .updateUserOnlineFeatureStoreDB(user, featurestore, newRole);
+      onlineFeaturestoreController.updateUserOnlineFeatureStoreDB(user, featurestore, newRole);
     }
   }
 
@@ -2396,12 +2397,10 @@ public class ProjectController {
   public void logActivity(String activityPerformed, Users performedBy, Project performedOn, ActivityFlag flag) {
     activityFacade.persistActivity(activityPerformed, performedOn, performedBy, flag);
   }
-
-  public String addTourFilesToProject(String username, Project project,
-                                      DistributedFileSystemOps dfso, DistributedFileSystemOps udfso,
-                                      TourProjectType projectType, ProvTypeDTO projectProvCore)
-      throws DatasetException, HopsSecurityException, ProjectException,
-      JobException, GenericException, ServiceException {
+  
+  public String addTourFilesToProject(String username, Project project, DistributedFileSystemOps dfso,
+    DistributedFileSystemOps udfso, TourProjectType projectType, ProvTypeDTO projectProvCore) throws DatasetException,
+    HopsSecurityException, ProjectException, JobException, GenericException, ServiceException {
     String tourFilesDataset = Settings.HOPS_TOUR_DATASET;
     Users user = userFacade.findByEmail(username);
     if (null != projectType) {
@@ -2409,10 +2408,9 @@ public class ProjectController {
 
       switch (projectType) {
         case SPARK:
-          datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-            true, true, dfso);
+              false, DatasetAccessPermission.EDITABLE, dfso);
           String exampleDir = settings.getSparkDir() + Settings.SPARK_EXAMPLES_DIR + "/";
           try {
             File dir = new File(exampleDir);
@@ -2441,10 +2439,9 @@ public class ProjectController {
           }
           break;
         case KAFKA:
-          datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-            true, true, dfso);
+              false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
           String kafkaExampleSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesSparkFilename();
@@ -2463,10 +2460,9 @@ public class ProjectController {
           break;
         case DEEP_LEARNING:
           tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
-          datasetController.createDataset(user, project, tourFilesDataset,
-            "sample training data for notebooks", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
-            , true, true, dfso);
+            , false, DatasetAccessPermission.EDITABLE, dfso);
           String DLDataSrc = "/user/" + settings.getHdfsSuperUser() + "/" + Settings.HOPS_DEEP_LEARNING_TOUR_DATA
             + "/*";
           String DLDataDst = projectPath + Settings.HOPS_DL_TOUR_DATASET;
@@ -2493,10 +2489,9 @@ public class ProjectController {
           }
           break;
         case FEATURESTORE:
-          datasetController.createDataset(user, project, tourFilesDataset,
-            "files for guide projects", -1,
+          datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
-            true, true, dfso);
+            false, DatasetAccessPermission.EDITABLE, dfso);
           // Get the JAR from /user/<super user>
           String featurestoreExampleJarSrc = "/user/" + settings.getSparkUser() + "/"
             + settings.getHopsExamplesFeaturestoreTourFilename();
