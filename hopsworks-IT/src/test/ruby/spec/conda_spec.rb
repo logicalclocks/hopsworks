@@ -418,11 +418,23 @@ describe "On #{ENV['OS']}" do
             expect(check_if_img_exists_locally("python36:" + getVar('hopsworks_version').value)).to be true
           end
 
-          it 'create environment from yml' do
-            skip "The feature is temporarily removed"
-            delete_env(@project[:id], python_version)
+          it 'create environment from yml with jupyter install true' do
             upload_yml
-            create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", nil, nil, true)
+            delete_env(@project[:id], python_version)
+            create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", true)
+            expect_status(201)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            @project = get_project_by_name(@project[:projectname])
+            expect(python_version).to eq "3.6"
+          end
+
+          it 'create environment from yml with jupyter install false' do
+            delete_env(@project[:id], python_version)
+            create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", false)
             expect_status(201)
 
             wait_for do

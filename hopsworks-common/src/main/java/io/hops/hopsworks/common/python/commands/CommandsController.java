@@ -160,7 +160,7 @@ public class CommandsController {
         cc.setArg(arg);
         cc.setErrorMsg(errorMessage);
         condaCommandFacade.update(cc);
-      } else if (condaStatus == CondaStatus.ONGOING){
+      } else if (condaStatus == CondaStatus.ONGOING) {
         cc.setStatus(condaStatus);
         condaCommandFacade.update(cc);
       }

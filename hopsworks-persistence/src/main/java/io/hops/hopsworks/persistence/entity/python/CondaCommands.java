@@ -178,13 +178,13 @@ public class CondaCommands implements Serializable {
   @ManyToOne(optional = false)
   private Project projectId;
   @Size(min = 1,
-          max = 6000)
+          max = 1000)
   @Column(name = "environment_yml")
   private String environmentYml;
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
-  @Size(max = 6000)
+  @Size(max = 11000)
   @Column(name = "error_message")
   private String errorMsg="";
   
@@ -322,7 +322,7 @@ public class CondaCommands implements Serializable {
   }
 
   public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg.substring(0, Math.min(errorMsg.length(), 6000));
+    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 11000), errorMsg.length());
   }
   
   @Override

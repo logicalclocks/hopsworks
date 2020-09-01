@@ -78,7 +78,7 @@ public class ProjectUtils {
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
     if(useBase && isCondaEnabled(project)) {
-      return settings.getBaseDockerImage();
+      return settings.getBaseDockerImagePythonName();
     } else {
       if(!isCondaEnabled(project)) {
         throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
@@ -127,6 +127,6 @@ public class ProjectUtils {
   }
 
   public String getFullBaseImageName() throws ServiceDiscoveryException {
-    return getRegistryURL(settings, serviceDiscoveryController) + "/" + settings.getBaseDockerImage();
+    return getRegistryURL(settings, serviceDiscoveryController) + "/" + settings.getBaseDockerImagePythonName();
   }
 }

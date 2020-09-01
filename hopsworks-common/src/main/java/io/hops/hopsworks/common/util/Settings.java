@@ -336,9 +336,12 @@ public class Settings implements Serializable {
   /*-----------------------Yarn Docker------------------------*/
   private final static String VARIABLE_YARN_RUNTIME = "yarn_runtime";
   private final static String VARIABLE_DOCKER_MOUNTS = "docker_mounts";
-  private final static String VARIABLE_DOCKER_BASE_IMAGE = "docker_base_image";
+  private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME = "docker_base_image_python_name";
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
+
+  /*----------------------- Python ------------------------*/
+  private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
   
   public enum KubeType{
     Local("local"),
@@ -724,7 +727,7 @@ public class Settings implements Serializable {
 
       YARN_RUNTIME = setStrVar(VARIABLE_YARN_RUNTIME, YARN_RUNTIME);
       DOCKER_MOUNTS = setStrVar(VARIABLE_DOCKER_MOUNTS, DOCKER_MOUNTS);
-      DOCKER_BASE_IMAGE = setStrVar(VARIABLE_DOCKER_BASE_IMAGE, DOCKER_BASE_IMAGE);
+      DOCKER_BASE_IMAGE_PYTHON_NAME = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME, DOCKER_BASE_IMAGE_PYTHON_NAME);
       DOCKER_BASE_IMAGE_PYTHON_VERSION = setStrVar(VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION,
           DOCKER_BASE_IMAGE_PYTHON_VERSION);
       YARN_APP_UID = setLongVar(VARIABLE_YARN_APP_UID, YARN_APP_UID);
@@ -734,6 +737,9 @@ public class Settings implements Serializable {
       DOCKER_NAMESPACE = setStrVar(VARIABLE_DOCKER_NAMESPACE, DOCKER_NAMESPACE);
       MANAGED_DOCKER_REGISTRY = setBoolVar(VARIABLE_MANAGED_DOCKER_REGISTRY,
           MANAGED_DOCKER_REGISTRY);
+
+      MAX_ENV_YML_BYTE_SIZE = setIntVar(VARIABLE_MAX_ENV_YML_BYTE_SIZE, MAX_ENV_YML_BYTE_SIZE);
+
       cached = true;
     }
   }
@@ -3699,11 +3705,11 @@ public class Settings implements Serializable {
     return result.substring(0, result.length() - 1);
   }
 
-  private String DOCKER_BASE_IMAGE = "python36";
+  private String DOCKER_BASE_IMAGE_PYTHON_NAME = "python36";
 
-  public synchronized String getBaseDockerImage() {
+  public synchronized String getBaseDockerImagePythonName() {
     checkCache();
-    return DOCKER_BASE_IMAGE + ":" + HOPSWORKS_VERSION;
+    return DOCKER_BASE_IMAGE_PYTHON_NAME + ":" + HOPSWORKS_VERSION;
   }
 
   private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.6";
@@ -3711,6 +3717,11 @@ public class Settings implements Serializable {
   public synchronized String getDockerBaseImagePythonVersion() {
     checkCache();
     return DOCKER_BASE_IMAGE_PYTHON_VERSION;
+  }
+
+  private final static String DOCKER_BASE_NON_PYTHON_IMAGE = "base";
+  public synchronized String getBaseNonPythonDockerImage() {
+    return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + HOPSWORKS_VERSION;
   }
 
   private long YARN_APP_UID = 1235L;
@@ -3740,6 +3751,12 @@ public class Settings implements Serializable {
   
   public synchronized String getBaseDockerImageName(){
     checkCache();
-    return DOCKER_BASE_IMAGE;
+    return DOCKER_BASE_IMAGE_PYTHON_NAME;
+  }
+
+  private int MAX_ENV_YML_BYTE_SIZE = 20000;
+  public synchronized int getMaxEnvYmlByteSize() {
+    checkCache();
+    return MAX_ENV_YML_BYTE_SIZE;
   }
 }

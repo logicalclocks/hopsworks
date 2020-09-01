@@ -86,7 +86,8 @@ public class LocalDockerRegistryMngr implements DockerRegistryMngr {
         // We do not want to remove the base image! Get arguments from command as project may have already been deleted.
         String projectDockerImage = cc.getArg();
         String projectDockerImageNoTags = projectDockerImage.split(":")[0];
-        if (!projectDockerImage.equals(settings.getBaseDockerImage())) {
+        if (!projectDockerImage.equals(settings.getBaseDockerImagePythonName()) &&
+            !projectDockerImage.equals(settings.getBaseNonPythonDockerImage())) {
           try {
             // 1. Get the tags for each repository(project)
             URI registryURL =
