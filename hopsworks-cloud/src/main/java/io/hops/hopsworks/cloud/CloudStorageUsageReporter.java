@@ -4,8 +4,8 @@
 package io.hops.hopsworks.cloud;
 
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import org.apache.hadoop.fs.ContentSummary;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -45,9 +45,9 @@ public class CloudStorageUsageReporter {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
     try {
-      ContentSummary summary = dfs.getDfsOps().getFilesystem().getLastUpdatedContentSummary(new Path("/"));
-      cloudClient.sendStorageUsage(summary.getSpaceConsumed(),
-              summary.getDirectoryCount() + summary.getFileCount());
+      LastUpdatedContentSummary summary =
+          dfs.getDfsOps().getFilesystem().getLastUpdatedContentSummary(new Path("/"));
+      cloudClient.sendStorageUsage(summary.getSpaceConsumed(), summary.getFileAndDirCount());
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, "failded to send cloud storage usage report", ex);
     }
