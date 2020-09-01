@@ -144,7 +144,7 @@ describe "On #{ENV['OS']}" do
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
           delete_project(project)
 
-          sleep(10)
+          sleep(15)
 
           project = create_project_by_name(projectname)
           create_dataset_by_name_checked(project, dsname, permission: "READ_ONLY")
@@ -314,18 +314,21 @@ describe "On #{ENV['OS']}" do
         it "should delete and recreate spark tour" do
           project = create_project_tour("spark")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("spark")
           delete_project(project)
         end
         it "should delete and recreate kafka tour" do
           project = create_project_tour("kafka")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("kafka")
           delete_project(project)
         end
         it "should delete and recreate deep_learning tour" do
           project = create_project_tour("deep_learning")
           delete_project(project)
+          sleep(15)
           project = create_project_tour("deep_learning")
           delete_project(project)
         end
@@ -341,6 +344,7 @@ describe "On #{ENV['OS']}" do
           end
           expect(wait_result["success"]).to be(true), wait_result["msg"]
           delete_project(project)
+          sleep(15)
           project = create_project_tour("featurestore")
           wait_result = wait_for_me_time do
             get_executions(project[:id], job_name, "")
