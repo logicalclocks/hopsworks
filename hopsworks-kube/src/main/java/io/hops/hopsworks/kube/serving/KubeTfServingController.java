@@ -5,6 +5,8 @@
 package io.hops.hopsworks.kube.serving;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -36,10 +38,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
-import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.kube.common.KubeClientService;
+import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -68,11 +70,13 @@ public class KubeTfServingController {
   @EJB
   private KubeClientService kubeClientService;
   @EJB
-  private HdfsLeDescriptorsFacade hdfsLEFacade;
-  @EJB
   private Settings settings;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private ProjectUtils projectUtils;
+  @EJB
+  private KubeProjectConfigMaps kubeProjectConfigMaps;
   
   private ObjectMeta getDeploymentMetadata(String servingId) {
     return new ObjectMetaBuilder()
@@ -98,24 +102,38 @@ public class KubeTfServingController {
       Serving serving) throws ServiceDiscoveryException {
 
     String servingIdStr = String.valueOf(serving.getId());
+    String projectUser = project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
+    String hadoopHome = settings.getHadoopSymbolicLinkDir();
+    String hadoopConfDir = hadoopHome + "/etc/hadoop";
 
     List<EnvVar> tfServingEnv = new ArrayList<>();
     tfServingEnv.add(new EnvVarBuilder().withName(SERVING_ID).withValue(servingIdStr).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_NAME).withValue(serving.getName()).build());
     tfServingEnv.add(new EnvVarBuilder().withName("PROJECT_NAME").withValue(project.getName().toLowerCase()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_DIR)
-        .withValue("hdfs://" + hdfsLEFacade.getRPCEndpoint() + serving.getArtifactPath()).build());
+        .withValue("hdfs://" + serviceDiscoveryController.constructServiceFQDN(
+            ServiceDiscoveryController.HopsworksService.RPC_NAMENODE) + "/" + serving.getArtifactPath()).build());
     tfServingEnv.add(new EnvVarBuilder().withName(MODEL_VERSION)
         .withValue(String.valueOf(serving.getVersion())).build());
-    tfServingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER")
-        .withValue(project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername()).build());
-    tfServingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
-    tfServingEnv.add(new EnvVarBuilder().withName("HDFS_USER")
-        .withValue(settings.getHdfsSuperUser()).build());
     tfServingEnv.add(new EnvVarBuilder().withName("TLS")
         .withValue(String.valueOf(settings.getHopsRpcTls())).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("HADOOP_PROXY_USER")
+        .withValue(projectUser).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("MATERIAL_DIRECTORY").withValue("/certs").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("HADOOP_CONF_DIR").
+        withValue(hadoopConfDir).build());
+    tfServingEnv.add(new EnvVarBuilder().withName("HDFS_USER")
+        .withValue(projectUser).build());
     tfServingEnv.add(new EnvVarBuilder().withName("ENABLE_BATCHING")
         .withValue(serving.isBatchingEnabled() ? "1" : "0").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("IS_KUBE")
+        .withValue("true").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("FILE_SYSTEM_POLLING_INTERVAL_SECS")
+        .withValue("10").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("GRPCPORT")
+        .withValue("1233").build());
+    tfServingEnv.add(new EnvVarBuilder().withName("RESTPORT")
+        .withValue("1234").build());
 
     List<EnvVar> fileBeatEnv = new ArrayList<>();
     fileBeatEnv.add(new EnvVarBuilder().withName("LOGPATH").withValue("/logs/*").build());
@@ -135,6 +153,14 @@ public class KubeTfServingController {
         .withEmptyDir(new EmptyDirVolumeSource())
         .build();
 
+    Volume hadoopConf = new VolumeBuilder()
+        .withName("hadoopconf")
+        .withConfigMap(
+            new ConfigMapVolumeSourceBuilder()
+                .withName(kubeProjectConfigMaps.getHadoopConfigMapName(project))
+                .build())
+        .build();
+
     VolumeMount secretMount = new VolumeMountBuilder()
         .withName("certs")
         .withReadOnly(true)
@@ -146,13 +172,20 @@ public class KubeTfServingController {
         .withMountPath("/logs")
         .build();
 
+    VolumeMount hadoopConfMount = new VolumeMountBuilder()
+        .withName("hadoopconf")
+        .withReadOnly(true)
+        .withMountPath(hadoopConfDir)
+        .build();
+
     Container tfContainer = new ContainerBuilder()
         .withName("tf-serving")
-        .withImage(ProjectUtils.getRegistryURL(settings,
-            serviceDiscoveryController) + "/tf:" + settings.getHopsworksVersion())
+        .withImage(projectUtils.getFullDockerImageName(project, true))
         .withImagePullPolicy(settings.getKubeImagePullPolicy())
         .withEnv(tfServingEnv)
-        .withVolumeMounts(secretMount, logMount)
+        .withSecurityContext(new SecurityContextBuilder().withRunAsUser(settings.getYarnAppUID()).build())
+        .withCommand("tfserving-launcher.sh")
+        .withVolumeMounts(secretMount, logMount, hadoopConfMount)
         .build();
 
     Container fileBeatContainer = new ContainerBuilder()
@@ -180,7 +213,7 @@ public class KubeTfServingController {
 
     PodSpec podSpec = new PodSpecBuilder()
         .withContainers(containerList)
-        .withVolumes(secretVol, logs)
+        .withVolumes(secretVol, logs, hadoopConf)
         .build();
 
     PodTemplateSpec podTemplateSpec = new PodTemplateSpecBuilder()

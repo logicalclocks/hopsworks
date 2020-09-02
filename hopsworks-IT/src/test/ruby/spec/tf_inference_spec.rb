@@ -186,6 +186,8 @@ describe "On #{ENV['OS']}" do
         with_valid_project
         with_tf_serving(@project[:id], @project[:projectname], @user[:username])
         start_serving(@project, @serving)
+        wait_for_type(@serving[:name])
+        sleep(5)
         @key = create_api_key('inferenceKey', %w(INFERENCE))
         @invalid_key = create_api_key('inferenceKey_invalid', %w(JOB DATASET_VIEW DATASET_CREATE DATASET_DELETE))
         reset_session
