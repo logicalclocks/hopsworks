@@ -13,22 +13,16 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.remote.ldap;
+package io.hops.hopsworks.common.remote;
 
-import io.hops.hopsworks.common.remote.RemoteUserDTO;
-import io.hops.hopsworks.common.remote.RemoteUsersDTO;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
-import java.util.List;
-
-public interface LdapHelper {
-  boolean isLdapAvailable();
-  List<String> getLDAPGroups(String groupQuery);
-  
-  RemoteUsersDTO getMembers(List<String> target);
-  
-  void addNewGroupProjectMapping(RemoteGroupProjectMapping remoteGroupProjectMapping);
-  
-  RemoteUserDTO getRemoteUserByUuid(String uuid) throws UserException;
+public interface RemoteUserHelper {
+  void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname, RemoteUserType type,
+    UserAccountStatus status) throws GenericException, UserException;
+  RemoteUser getRemoteUser(String uuid) throws UserException;
 }

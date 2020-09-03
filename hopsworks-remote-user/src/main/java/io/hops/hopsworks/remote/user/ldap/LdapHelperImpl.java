@@ -3,9 +3,11 @@
  */
 package io.hops.hopsworks.remote.user.ldap;
 
+import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
 import io.hops.hopsworks.common.remote.ldap.LdapHelper;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping;
 import io.hops.hopsworks.remote.user.RemoteAuthStereotype;
 
@@ -43,5 +45,10 @@ public class LdapHelperImpl implements LdapHelper {
   @Override
   public void addNewGroupProjectMapping(RemoteGroupProjectMapping remoteGroupProjectMapping) {
     ldapUserController.addNewGroupProjectMapping(remoteGroupProjectMapping);
+  }
+  
+  @Override
+  public RemoteUserDTO getRemoteUserByUuid(String uuid) throws UserException {
+    return ldapUserController.getRemoteUserByUuid(uuid);
   }
 }

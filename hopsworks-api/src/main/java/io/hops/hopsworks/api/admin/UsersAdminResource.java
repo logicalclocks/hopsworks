@@ -34,15 +34,22 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
+import io.hops.hopsworks.common.remote.RemoteUserDTO;
+import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
+import io.hops.hopsworks.common.remote.ldap.LdapHelper;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
+import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -59,11 +66,15 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Logged
@@ -87,6 +98,10 @@ public class UsersAdminResource {
   private RemoteUserFacade remoteUserFacade;
   @Inject
   private RemoteGroupMappingHelper remoteGroupMappingHelper;
+  @Inject
+  private LdapHelper ldapHelper;
+  @Inject
+  private RemoteUserHelper remoteUserHelper;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -212,5 +227,49 @@ public class UsersAdminResource {
     remoteGroupMappingHelper.syncMappingAsync();
     return Response.accepted().build();
   }
+  
+  @ApiOperation(value = "Register remote user.")
+  @POST
+  @Path("/users")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user by admin")
+  public Response registerRemoteUser(@QueryParam("uuid") String uuid, @AuditTarget(UserIdentifier.EMAIL)
+    @QueryParam("email") String email, @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
+    @QueryParam("type") RemoteUserType type, @QueryParam("status") UserAccountStatus status,
+    @Context SecurityContext sc, @Context UriInfo uriInfo) throws GenericException, UserException {
+    if (email == null || email.isEmpty()) { // email needed for audit
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Email not provided.");
+    }
+    RemoteUserDTO userDTO;
+    switch (type) {
+      case KRB:
+      case LDAP:
+        userDTO = ldapHelper.getRemoteUserByUuid(uuid);
+        break;
+      case OAUTH2:
+        //Oauth does not support querying users without access token.
+        throw new WebApplicationException("OAuth2 remote user create not supported.", Response.Status.NOT_IMPLEMENTED);
+      default:
+        throw new WebApplicationException("Remote user type not valid.", Response.Status.NOT_FOUND);
+    }
+    remoteUserHelper.createRemoteUser(userDTO, email, givenName, surname, type, status);
+    RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
+    RestRemoteUserDTO restRemoteUserDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
+      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
+    URI href = uriInfo.getAbsolutePathBuilder().path(uuid).build();
+    return Response.created(href).entity(restRemoteUserDTO).build();
+  }
+  
+  @ApiOperation(value = "Get remote user registered in hopsworks.")
+  @GET
+  @Path("/user/{uuid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getRemoteUser(@PathParam("uuid") String uuid, @Context SecurityContext sc) throws UserException {
+    RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
+    RestRemoteUserDTO userDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
+      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
+    return Response.ok(userDTO).build();
+  }
+  
   
 }

@@ -203,6 +203,19 @@ public class LdapRealm {
     return getUserGroups(userDN);
   }
   
+  public RemoteUserDTO getUserByUuid(String uuid) throws NamingException {
+    populateVars();
+    String id = OBJECTGUID.equals(entryUUIDField) ? objectGUIDUtil.convertToByteString(uuid) : uuid;
+    String userId = entryUUIDField + "=" + id;
+    String userDN = userDNSearch(userId);
+    if (userDN == null) {
+      throw new NamingException("User not found.");
+    }
+    RemoteUserDTO remoteUser = createLdapUser(userId);
+    remoteUser.setGroups(getUserGroups(remoteUser.getUid(), searchFilter));//uses search filter for uid/(sAMAccountName)
+    return remoteUser;
+  }
+  
   /**
    * Get user group
    *

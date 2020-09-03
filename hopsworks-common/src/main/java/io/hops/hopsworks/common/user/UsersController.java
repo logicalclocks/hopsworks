@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.common.user;
 
+import com.google.common.base.Strings;
 import com.google.zxing.WriterException;
 import io.hops.hopsworks.persistence.entity.user.BbcGroup;
 import io.hops.hopsworks.common.dao.user.BbcGroupFacade;
@@ -128,6 +129,7 @@ public class UsersController {
       newUser.setEmail(newUser.getEmail().toLowerCase());
     }
     userValidator.isValidNewUser(newUser);
+    newUser.setMaxNumProjects(0);//should not allow setting max project
     Users user = createNewUser(newUser, UserAccountStatus.NEW_MOBILE_ACCOUNT, UserAccountType.M_ACCOUNT_TYPE);
     addAddress(user);
     addOrg(user);
@@ -145,6 +147,26 @@ public class UsersController {
         "user: " + newUser.getUsername(), ex.getMessage(), ex);
     }
     return qrCode;
+  }
+  
+  public Users registerUser(UserDTO newUser, String role, UserAccountStatus accountStatus, UserAccountType accountType)
+    throws UserException {
+    if (!Strings.isNullOrEmpty(newUser.getEmail())) {
+      newUser.setEmail(newUser.getEmail().toLowerCase());
+    }
+    userValidator.isValidEmail(newUser.getEmail());
+    if (userFacade.findByEmail(newUser.getEmail()) != null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
+    }
+    Users user = createNewUser(newUser, accountStatus, accountType);
+    BbcGroup group = bbcGroupFacade.findByGroupName(role);
+    if (group != null) {
+      user.getBbcGroupCollection().add(group);
+    }
+    addAddress(user);
+    addOrg(user);
+    userFacade.persist(user);
+    return user;
   }
   
   public void addRole(String role, Integer id) throws UserException {
@@ -217,10 +239,11 @@ public class UsersController {
     Timestamp now = new Timestamp(new Date().getTime());
     SecurityQuestion secQuestion = SecurityQuestion.getQuestion(newUser.getSecurityQuestion());
     String secAnswer = securityUtils.getHash(newUser.getSecurityAnswer().toLowerCase());
+    int maxNumProjects = newUser.getMaxNumProjects() > 0? newUser.getMaxNumProjects() : settings.getMaxNumProjPerUser();
     Users user = new Users(uname, secret.getSha256HexDigest(), newUser.getEmail(), newUser.getFirstName(),
       newUser.getLastName(), now, "-", "-", accountStatus, otpSecret, activationKey, now, ValidationKeyType.EMAIL,
-      secQuestion, secAnswer, accountType, now, newUser.getTelephoneNum(), settings.getMaxNumProjPerUser(),
-      newUser.isTwoFactor(), secret.getSalt(), newUser.getToursState());
+      secQuestion, secAnswer, accountType, now, newUser.getTelephoneNum(), maxNumProjects, newUser.isTwoFactor(),
+      secret.getSalt(), newUser.getToursState());
     user.setBbcGroupCollection(groups);
     return user;
   }

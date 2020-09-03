@@ -9,12 +9,14 @@ import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserStateDTO;
 import io.hops.hopsworks.common.remote.RemoteUsersDTO;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import io.hops.hopsworks.remote.user.RemoteUserAuthController;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.EJBException;
@@ -133,4 +135,12 @@ public class LdapUserController {
     remoteGroupProjectMappingFacade.save(remoteGroupProjectMapping);
   }
   
+  public RemoteUserDTO getRemoteUserByUuid(String uuid) throws UserException {
+    try {
+      return ldapRealm.getUserByUuid(uuid);
+    } catch (NamingException e) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE, "Remote user not found.",
+        e.getMessage());
+    }
+  }
 }

@@ -130,4 +130,5 @@ public class OAuthController {
     }
     return new RemoteUserStateDTO(remoteUser == null, remoteUser, null);
   }
+
 }
