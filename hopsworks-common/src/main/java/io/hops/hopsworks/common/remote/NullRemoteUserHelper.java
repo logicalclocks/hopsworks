@@ -13,45 +13,32 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.remote.ldap;
+package io.hops.hopsworks.common.remote;
 
 import io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype;
-import io.hops.hopsworks.common.remote.RemoteUserDTO;
-import io.hops.hopsworks.common.remote.RemoteUsersDTO;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.UserException;
-import io.hops.hopsworks.persistence.entity.remote.group.RemoteGroupProjectMapping;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.List;
 
 @NullRemoteAuthStereotype
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class NullLdapHelper implements LdapHelper{
-  @Override
-  public boolean isLdapAvailable() {
-    return false;
-  }
+public class NullRemoteUserHelper implements RemoteUserHelper {
   
   @Override
-  public List<String> getLDAPGroups(String groupQuery) {
-    return null;
-  }
-  
-  @Override
-  public RemoteUsersDTO getMembers(List<String> target) {
-    return null;
-  }
-  
-  @Override
-  public void addNewGroupProjectMapping(RemoteGroupProjectMapping remoteGroupProjectMapping) {
+  public void createRemoteUser(RemoteUserDTO userDTO, String email, String givenName, String surname,
+    RemoteUserType type, UserAccountStatus status) throws GenericException, UserException {
     throw new UnsupportedOperationException("Remote auth not supported.");
   }
   
   @Override
-  public RemoteUserDTO getRemoteUserByUuid(String uuid) throws UserException {
-    throw new UnsupportedOperationException("Remote auth not supported.");
+  public RemoteUser getRemoteUser(String uuid) throws UserException {
+    return null;
   }
 }

@@ -111,6 +111,21 @@
             </p:column>
 
             <p:column>
+              <h:commandLink  action="registerUsers">
+
+                <p:graphicImage id="register"
+                                value="/resources/images/users/userPlus.png"
+                                width="100"
+                                height="100"
+                                title="Register User">
+                </p:graphicImage>
+              </h:commandLink>
+
+              <br></br>
+              <p:outputLabel style="text-align: left"  value="Register User"></p:outputLabel>
+            </p:column>
+
+            <p:column>
               <h:commandLink  action="#{facesContext.externalContext.redirect('/hopsworks-api/grafana')}">
 
                 <p:graphicImage id="grafana"
