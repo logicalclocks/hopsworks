@@ -14,7 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "experiment")}
   experiment_1 = "experiment_1"
   experiment_2 = "experiment_2"
   describe 'experiment' do
@@ -144,37 +144,37 @@ describe "On #{ENV['OS']}" do
         it "should get all experiments sorted by date created ascending" do
           #sort in memory and compare with query
           get_experiments(@project[:id], nil)
-          experiments = json_body[:items].map {|experiment| experiment[:start]}
+          experiments = json_body[:items].map {|experiment| experiment[:started]}
           sorted = experiments.sort
           get_experiments(@project[:id], "?sort_by=start:asc")
-          sorted_res = json_body[:items].map {|experiment| experiment[:start]}
+          sorted_res = json_body[:items].map {|experiment| experiment[:started]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all experiments sorted by date created descending" do
           #sort in memory and compare with query
           get_experiments(@project[:id], nil)
-          experiments = json_body[:items].map {|experiment| experiment[:start]}
+          experiments = json_body[:items].map {|experiment| experiment[:started]}
           sorted = experiments.sort.reverse
           get_experiments(@project[:id], "?sort_by=start:desc")
-          sorted_res = json_body[:items].map {|experiment| experiment[:start]}
+          sorted_res = json_body[:items].map {|experiment| experiment[:started]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all experiments sorted by date created ascending" do
           #sort in memory and compare with query
           get_experiments(@project[:id], nil)
-          experiments = json_body[:items].map {|experiment| experiment[:end]}
+          experiments = json_body[:items].map {|experiment| experiment[:finished]}
           sorted = experiments.sort
           get_experiments(@project[:id], "?sort_by=end:asc")
-          sorted_res = json_body[:items].map {|experiment| experiment[:end]}
+          sorted_res = json_body[:items].map {|experiment| experiment[:finished]}
           expect(sorted_res).to eq(sorted)
         end
         it "should get all experiments sorted by date created descending" do
           #sort in memory and compare with query
           get_experiments(@project[:id], nil)
-          experiments = json_body[:items].map {|experiment| experiment[:end]}
+          experiments = json_body[:items].map {|experiment| experiment[:finished]}
           sorted = experiments.sort.reverse
           get_experiments(@project[:id], "?sort_by=end:desc")
-          sorted_res = json_body[:items].map {|experiment| experiment[:end]}
+          sorted_res = json_body[:items].map {|experiment| experiment[:finished]}
           expect(sorted_res).to eq(sorted)
         end
       end

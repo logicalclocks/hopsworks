@@ -15,8 +15,8 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) do
-    clean_all_test_projects
+  after (:all) do
+    clean_all_test_projects(spec: "sklearn_inference")
     purge_all_sklearn_serving_instances
   end
   describe 'inference' do

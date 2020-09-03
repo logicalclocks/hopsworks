@@ -17,7 +17,7 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "jupyter")}
   describe "Jupyter Dataset" do
     before :all do
       with_valid_project

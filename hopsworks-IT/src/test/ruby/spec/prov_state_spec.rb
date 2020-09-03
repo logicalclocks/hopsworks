@@ -63,7 +63,7 @@ describe "On #{ENV['OS']}" do
   end
 
   after :all do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "prov_state")
     wait_result = epipe_wait_on_provenance(repeat: 5)
     expect(wait_result["success"]).to be(true), wait_result["msg"]
 

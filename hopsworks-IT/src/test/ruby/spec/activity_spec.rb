@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "activity")}
   describe "Activities" do
     describe "Activities sort, filter, offset and limit." do
       context 'with authentication' do
@@ -51,14 +51,14 @@ describe "On #{ENV['OS']}" do
               sorted = dates.sort
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              expect(sortedRes).to eq(sorted)
+              time_expect_to_be_eq(sortedRes, sorted)
             end
             it 'should return activities sorted by date created descending.' do
               flags = @activities.map { |o| "#{o[:timestamp]}" }
               sorted = flags.sort.reverse
               get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/activities?sort_by=date_created:desc"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              expect(sortedRes).to eq(sorted)
+              time_expect_to_be_eq(sortedRes, sorted)
             end
             it 'should return activities sorted by flag descending and date created descending.' do
               s = @activities.sort do |a, b|
@@ -371,14 +371,14 @@ describe "On #{ENV['OS']}" do
               sorted = dates.sort
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              expect(sortedRes).to eq(sorted)
+              time_expect_to_be_eq(sortedRes, sorted)
             end
             it 'should return activities sorted by date created descending.' do
               flags = @user_activities.map { |o| "#{o[:timestamp]}" }
               sorted = flags.sort.reverse
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              expect(sortedRes).to eq(sorted)
+              time_expect_to_be_eq(sortedRes, sorted)
             end
             it 'should return activities sorted by flag descending and date created descending.' do
               s = @activities.sort do |a, b|

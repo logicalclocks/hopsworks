@@ -14,10 +14,9 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "model")}
   experiment_1 = "experiment_1"
   describe 'model' do
-    after(:all) {clean_projects}
     context 'without authentication' do
       before :all do
         with_valid_project

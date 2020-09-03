@@ -348,8 +348,8 @@ module DatasetHelper
     expect_status_details(204)
   end
 
-  def reject_dataset(project, path, datasetType: "DATASET")
-    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=accept&type=#{datasetType}"
+  def reject_dataset_checked(project, path, datasetType: "DATASET")
+    query = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/#{path}?action=reject&type=#{datasetType}"
     pp "#{query}" if defined?(@debugOpt) && @debugOpt == true
     post "#{query}"
     expect_status_details(204)
@@ -504,6 +504,19 @@ module DatasetHelper
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
     expect(sortedRes).to eq(sorted)
+  end
+
+  def test_sort_by_date_attr(project, datasets, path, sort_by, order, sort_by_query)
+    ds = datasets.map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = ds.sort
+    else
+      sorted = ds.sort.reverse
+    end
+    get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
+    expect_status(200)
+    sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    time_expect_to_be_eq(sortedRes, sorted)
   end
 
   def test_sort_by_datasetType(project, datasets, path, sort_by, order, sort_by_query)

@@ -27,7 +27,7 @@ module ServingHelper
   def with_tf_serving(project_id, project_name, user)
     # Copy model to the project directory
     mkdir("/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750)
-    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{project_name}__#{user}", "#{project_name}__Models", 750, "#{project_name}")
+    copy(TF_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/mnist/", "#{user}", "#{project_name}__Models", 750, "#{project_name}")
 
     @serving ||= create_tf_serving(project_id, project_name)
     @topic = ProjectTopics.find(@serving[:kafka_topic_id])
@@ -42,11 +42,11 @@ module ServingHelper
           "#{project_name}__Models", 750)
     # Copy model to the servingversion dir
     copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
-         "#{project_name}__#{user}",
+         "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
     # Copy script to the servingversion dir
     copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{project_name}/Models/IrisFlowerClassifier/1/",
-         "#{project_name}__#{user}",
+         "#{user}",
          "#{project_name}__Models", 750, "#{project_name}")
 
     @serving ||= create_sklearn_serving(project_id, project_name)

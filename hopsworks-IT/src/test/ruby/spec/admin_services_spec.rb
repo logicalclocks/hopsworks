@@ -169,28 +169,28 @@ describe "On #{ENV['OS']}" do
         services = find_all_host_services.map(&:startTime).sort
         get_all_host_services("?sort_by=start_time:asc")
         res = json_body[:items].map { |i| i[:startTime] }
-        expect(res).to eq(services)
+        time_expect_to_be_eq(res, services)
       end
 
       it "sorts by start_time desc" do
         services = find_all_host_services.map(&:startTime).sort.reverse
         get_all_host_services("?sort_by=start_time:desc")
         res = json_body[:items].map { |i| i[:startTime] }
-        expect(res).to eq(services)
+        time_expect_to_be_eq(res, services)
       end
 
       it "sorts by stop_time asc" do
         services = find_all_host_services.map(&:stopTime).sort
         get_all_host_services("?sort_by=stop_time:asc")
         res = json_body[:items].map { |i| i[:stopTime] }
-        expect(res).to eq(services)
+        time_expect_to_be_eq(res, services)
       end
 
       it "sorts by stop_time desc" do
         services = find_all_host_services.map(&:stopTime).sort.reverse
         get_all_host_services("?sort_by=stop_time:desc")
         res = json_body[:items].map { |i| i[:stopTime] }
-        expect(res).to eq(services)
+        time_expect_to_be_eq(res, services)
       end
     end
   end

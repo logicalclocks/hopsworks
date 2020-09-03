@@ -18,7 +18,7 @@ require 'json'
 
 describe "On #{ENV['OS']}" do
   after (:all) do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "serving")
     purge_all_tf_serving_instances
   end
   describe 'serving' do
