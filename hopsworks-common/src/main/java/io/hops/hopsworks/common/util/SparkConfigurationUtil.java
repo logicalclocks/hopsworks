@@ -79,6 +79,10 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, new ConfigProperty(
         Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
 
+    sparkProps.put(Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, new ConfigProperty(
+      Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, HopsUtils.OVERWRITE,
+      Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT));
+
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,
       settings.getAnacondaProjectDir() + "/bin/python"));

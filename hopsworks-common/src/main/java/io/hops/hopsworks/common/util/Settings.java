@@ -946,6 +946,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_CONTAINER_RUNTIME = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_TYPE";
   public static final String SPARK_EXECUTOR_DOCKER_IMAGE = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
   public static final String SPARK_EXECUTOR_DOCKER_MOUNTS = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
+  public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK = "spark.hadoop.fs.permissions.umask-mode";
 
   //nccl
   public static final String NCCL_SOCKET_NTHREADS = "NCCL_SOCKET_NTHREADS";
@@ -1324,6 +1325,7 @@ public class Settings implements Serializable {
       = "conf/spark-blacklisted-properties.txt";
   public static final int SPARK_MIN_EXECS = 1;
   public static final int SPARK_MAX_EXECS = 2;
+  public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT = "0007";
 
   //Flink constants
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
