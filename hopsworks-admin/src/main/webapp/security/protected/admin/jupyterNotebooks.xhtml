@@ -124,12 +124,12 @@
                     <h:outputText value="#{notebookServer.getExpires()}" />
                   </p:column>
                   <p:column id="jupyterPid"
-                            filterBy="#{notebookServer.getPid()}"
-                            sortBy="#{notebookServer.getPid()}"
+                            filterBy="#{notebookServer.getCid()}"
+                            sortBy="#{notebookServer.getCid()}"
                             filterMatchMode="contains"
                             headerText="PID"
                             style=" font-size: 12px; text-align: left;">
-                    <h:outputText value="#{notebookServer.getPid()}" />
+                    <h:outputText value="#{notebookServer.getCid()}" />
                   </p:column>
 
                 <p:column id="actionColumn" headerText="Action">
