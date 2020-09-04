@@ -301,7 +301,7 @@ describe "On #{ENV['OS']}" do
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
         expect_status(400)
         expect_json(errorCode: 240003)
-        expect_json(usrMsg: "Instance is already: started")
+        expect_json(usrMsg: "Instance is already: Started")
       end
     end
 

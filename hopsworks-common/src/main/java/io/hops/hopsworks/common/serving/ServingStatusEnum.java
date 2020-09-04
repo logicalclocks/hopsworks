@@ -48,6 +48,8 @@ public enum ServingStatusEnum {
   RUNNING("Running"),
   @XmlEnumValue("Stopped")
   STOPPED("Stopped"),
+  @XmlEnumValue("Started")
+  STARTED("Started"),
   @XmlEnumValue("Starting")
   STARTING("Starting"),
   @XmlEnumValue("Updating")
@@ -69,6 +71,8 @@ public enum ServingStatusEnum {
         return ServingStatusEnum.RUNNING;
       case "Stopped":
         return ServingStatusEnum.STOPPED;
+      case "Started":
+        return ServingStatusEnum.STARTED;
       case "Starting":
         return ServingStatusEnum.STARTING;
       case "Updating":

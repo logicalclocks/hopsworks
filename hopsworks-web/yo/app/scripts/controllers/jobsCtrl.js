@@ -624,6 +624,7 @@ angular.module('hopsWorksApp')
 
                   JobService.getLog(self.projectId, jobName, executionId, type).then(
                       function (success) {
+                          self.log = {};
                           if (typeof success.data['log'] !== 'undefined') {
                               self.log = {"log" : '<html><body><text><div >' + success.data['log'] + '</div></text></body></html>' , 'type': type};
                           }
