@@ -210,7 +210,8 @@ public class LocalhostServingController implements ServingController {
       // Release lock before throwing the exception
       servingFacade.releaseLock(project, servingId);
 
-      String userMsg = "Instance is already: " + (command == ServingCommands.START ? "started" : "stopped");
+      String userMsg = "Instance is already: " + (command == ServingCommands.START ?
+        ServingStatusEnum.STARTED.toString() : ServingStatusEnum.STOPPED.toString());
       throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERROR, Level.FINE, userMsg);
     }
   }
