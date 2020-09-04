@@ -455,67 +455,62 @@ module DatasetHelper
   end
 
   def test_sort_by_str(project, datasets, path, sort_by, order, sort_by_query)
-    ds = datasets.map { |o| "#{o[:"#{sort_by}"]}" }
-    if order == 'asc'
-      sorted = ds.sort_by(&:downcase)
-    else
-      sorted = ds.sort_by(&:downcase).reverse
-    end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = sortedRes.sort_by(&:downcase)
+    else
+      sorted = sortedRes.sort_by(&:downcase).reverse
+    end
     expect(sortedRes).to eq(sorted)
   end
 
   def test_sort_by_str_attr(project, datasets, path, sort_by, order, sort_by_query)
-    ds = datasets.map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
-    if order == 'asc'
-      sorted = ds.sort_by(&:downcase)
-    else
-      sorted = ds.sort_by(&:downcase).reverse
-    end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = sortedRes.sort_by(&:downcase)
+    else
+      sorted = sortedRes.sort_by(&:downcase).reverse
+    end
     expect(sortedRes).to eq(sorted)
   end
 
   def test_sort_by(project, datasets, path, sort_by, order, sort_by_query)
-    ds = datasets.map { |o| "#{o[:"#{sort_by}"]}" }
-    if order == 'asc'
-      sorted = ds.sort
-    else
-      sorted = ds.sort.reverse
-    end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = sortedRes.sort
+    else
+      sorted = sortedRes.sort.reverse
+    end
     expect(sortedRes).to eq(sorted)
   end
 
   def test_sort_by_attr(project, datasets, path, sort_by, order, sort_by_query)
-    ds = datasets.map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
-    if order == 'asc'
-      sorted = ds.sort
-    else
-      sorted = ds.sort.reverse
-    end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = sortedRes.sort
+    else
+      sorted = sortedRes.sort.reverse
+    end
     expect(sortedRes).to eq(sorted)
   end
 
   def test_sort_by_date_attr(project, datasets, path, sort_by, order, sort_by_query)
-    ds = datasets.map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
-    if order == 'asc'
-      sorted = ds.sort
-    else
-      sorted = ds.sort.reverse
-    end
     get_datasets_in_path(project, path, query: "&sort_by=#{sort_by_query}:#{order}")
     expect_status(200)
     sortedRes = json_body[:items].map { |o| "#{o[:attributes][:"#{sort_by}"]}" }
+    if order == 'asc'
+      sorted = sortedRes.sort
+    else
+      sorted = sortedRes.sort.reverse
+    end
     time_expect_to_be_eq(sortedRes, sorted)
   end
 

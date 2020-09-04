@@ -353,119 +353,111 @@ describe "On #{ENV['OS']}" do
         describe "Activities by user" do
           describe "Activities sort" do
             it 'should return activities sorted by flag.' do
-              flags = @user_activities.map { |o| "#{o[:flag]}" }
-              sorted = flags.sort_by(&:downcase)
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag"
               sortedRes = json_body[:items].map { |o| "#{o[:flag]}" }
-              expect(sortedRes).to eq(sorted)
+              expect(sortedRes).to eq(sortedRes.sort)
             end
             it 'should return activities sorted by flag descending.' do
-              flags = @user_activities.map { |o| "#{o[:flag]}" }
-              sorted = flags.sort.reverse(&:downcase)
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc"
               sortedRes = json_body[:items].map { |o| "#{o[:flag]}" }
-              expect(sortedRes).to eq(sorted)
+              expect(sortedRes).to eq(sortedRes.sort.reverse)
             end
             it 'should return activities sorted by date created.' do
-              dates = @user_activities.map { |o| "#{o[:timestamp]}" }
-              sorted = dates.sort
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              time_expect_to_be_eq(sortedRes, sorted)
+              expect(sortedRes).to eq(sortedRes.sort)
             end
             it 'should return activities sorted by date created descending.' do
-              flags = @user_activities.map { |o| "#{o[:timestamp]}" }
-              sorted = flags.sort.reverse
               get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc"
               sortedRes = json_body[:items].map { |o| "#{o[:timestamp]}" }
-              time_expect_to_be_eq(sortedRes, sorted)
+              expect(sortedRes).to eq(sortedRes.sort.reverse)
             end
             it 'should return activities sorted by flag descending and date created descending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              s = json_body[:items].sort do |a, b|
                 res = -(a[:flag] <=> b[:flag])
                 res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:desc"
-              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by flag ascending and date created ascending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              s = json_body[:items].sort do |a, b|
                 res = (a[:flag] <=> b[:flag])
                 res = (a[:timestamp] <=> b[:timestamp]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:asc"
-              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by flag descending and date created ascending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              s = json_body[:items].sort do |a, b|
                 res = -(a[:flag] <=> b[:flag])
                 res = (a[:timestamp] <=> b[:timestamp]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:desc,date_created:asc"
-              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by flag ascending and date created descending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
+              s = json_body[:items].sort do |a, b|
                 res = (a[:flag] <=> b[:flag])
                 res = -(a[:timestamp] <=> b[:timestamp]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:flag]} #{o[:timestamp]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=flag:asc,date_created:desc"
-              sortedRes = json_body[:items].map { |o| "#{o[:flag]} #{o[:timestamp]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by date created descending and flag descending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              s = json_body[:items].sort do |a, b|
                 res = -(a[:timestamp] <=> b[:timestamp])
                 res = -(a[:flag] <=> b[:flag]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:desc"
-              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by date created ascending and flag ascending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              s = json_body[:items].sort do |a, b|
                 res = (a[:timestamp] <=> b[:timestamp])
                 res = (a[:flag] <=> b[:flag]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:asc"
-              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by date created descending and flag ascending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:asc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              s = json_body[:items].sort do |a, b|
                 res = -(a[:timestamp] <=> b[:timestamp])
                 res = (a[:flag] <=> b[:flag]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:desc,flag:asc"
-              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
               expect(sortedRes).to eq(sorted)
             end
             it 'should return activities sorted by date created ascending and flag descending.' do
-              s = @activities.sort do |a, b|
+              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:desc"
+              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
+              s = json_body[:items].sort do |a, b|
                 res = (a[:timestamp] <=> b[:timestamp])
                 res = -(a[:flag] <=> b[:flag]) if res == 0
                 res
               end
               sorted = s.map { |o| "#{o[:timestamp]} #{o[:flag]}" }
-              get "#{ENV['HOPSWORKS_API']}/users/activities?sort_by=date_created:asc,flag:desc"
-              sortedRes = json_body[:items].map { |o| "#{o[:timestamp]} #{o[:flag]}" }
               expect(sortedRes).to eq(sorted)
             end
           end

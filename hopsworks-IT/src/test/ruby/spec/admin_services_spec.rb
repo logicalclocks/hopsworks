@@ -67,130 +67,112 @@ describe "On #{ENV['OS']}" do
       end
 
       it "sorts by id asc" do
-        services = find_all_host_services.map(&:id).sort
         get_all_host_services("?sort_by=id:asc")
         res = json_body[:items].map { |i| i[:id] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by id desc" do
-        services = find_all_host_services.map(&:id).sort.reverse
         get_all_host_services("?sort_by=id:desc")
         res = json_body[:items].map { |i| i[:id] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by host_id asc" do
-        services = find_all_host_services.map(&:host_id).sort
         get_all_host_services("?sort_by=host_id:asc")
         res = json_body[:items].map { |i| i[:hostId] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by host_id desc" do
-        services = find_all_host_services.map(&:host_id).sort.reverse
         get_all_host_services("?sort_by=host_id:desc")
         res = json_body[:items].map { |i| i[:hostId] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by pid asc" do
-        services = find_all_host_services.map(&:pid).sort
         get_all_host_services("?sort_by=pid:asc")
         res = json_body[:items].map { |i| i[:pid] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by pid desc" do
-        services = find_all_host_services.map(&:pid).sort.reverse
         get_all_host_services("?sort_by=pid:desc")
         res = json_body[:items].map { |i| i[:pid] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by name asc" do
-        services = find_all_host_services.map(&:name).sort.reject { |s| s.match(/-/) || s.match(/_/)}
         get_all_host_services("?sort_by=name:asc")
         res = json_body[:items].map { |i| i[:name] }.reject { |s| s.match(/-/) || s.match(/_/)}
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by name desc" do
-        services = find_all_host_services.map(&:name).sort.reverse.reject { |s| s.match(/-/) || s.match(/_/)}
         get_all_host_services("?sort_by=name:desc")
         res = json_body[:items].map { |i| i[:name] }.reject { |s| s.match(/-/) || s.match(/_/)}
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by group_name asc" do
-        services = find_all_host_services.map(&:group_name).map(&:downcase).sort
         get_all_host_services("?sort_by=group_name:asc")
         res = json_body[:items].map { |i| i[:group] }.map(&:downcase)
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by group_name desc" do
-        services = find_all_host_services.map(&:group_name).map(&:downcase).sort.reverse
         get_all_host_services("?sort_by=group_name:desc")
         res = json_body[:items].map { |i| i[:group] }.map(&:downcase)
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by status asc" do
-        services = find_all_host_services.map(&:status).sort.map{ |i| service_status(i)}
         get_all_host_services("?sort_by=status:asc")
         res = json_body[:items].map { |i| i[:status] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
 
       it "sorts by status desc" do
-        services = find_all_host_services.map(&:status).sort.reverse.map{ |i| service_status(i)}
         get_all_host_services("?sort_by=status:desc")
         res = json_body[:items].map { |i| i[:status] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by uptime asc" do
-        services = find_all_host_services.map(&:uptime).sort
         get_all_host_services("?sort_by=uptime:asc")
         res = json_body[:items].map { |i| i[:uptime] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by uptime desc" do
-        services = find_all_host_services.map(&:uptime).sort.reverse
         get_all_host_services("?sort_by=uptime:desc")
         res = json_body[:items].map { |i| i[:uptime] }
-        expect(res).to eq(services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by start_time asc" do
-        services = find_all_host_services.map(&:startTime).sort
         get_all_host_services("?sort_by=start_time:asc")
         res = json_body[:items].map { |i| i[:startTime] }
-        time_expect_to_be_eq(res, services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by start_time desc" do
-        services = find_all_host_services.map(&:startTime).sort.reverse
         get_all_host_services("?sort_by=start_time:desc")
         res = json_body[:items].map { |i| i[:startTime] }
-        time_expect_to_be_eq(res, services)
+        expect(res).to eq(res.sort.reverse)
       end
 
       it "sorts by stop_time asc" do
-        services = find_all_host_services.map(&:stopTime).sort
         get_all_host_services("?sort_by=stop_time:asc")
         res = json_body[:items].map { |i| i[:stopTime] }
-        time_expect_to_be_eq(res, services)
+        expect(res).to eq(res.sort)
       end
 
       it "sorts by stop_time desc" do
-        services = find_all_host_services.map(&:stopTime).sort.reverse
         get_all_host_services("?sort_by=stop_time:desc")
         res = json_body[:items].map { |i| i[:stopTime] }
-        time_expect_to_be_eq(res, services)
+        expect(res).to eq(res.sort.reverse)
       end
     end
   end
