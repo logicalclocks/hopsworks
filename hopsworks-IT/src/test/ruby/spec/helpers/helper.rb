@@ -79,8 +79,8 @@ module Helper
   end
 
   def time_expect_to_be_eq(list1, list2)
-    l1 = list1.map{|o| Time.parse(o).utc}
-    l2 = list2.map{|o| Time.parse(o).utc}
+    l1 = list1.map{|o| Time.parse(o).change(:usec => 0)}
+    l2 = list2.map{|o| Time.parse(o).change(:usec => 0)}
     expect(l1).to eq(l2)
   end
 end
