@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "users")}
   describe "users" do
     describe "username_generation" do
       it 'username should only contain alfanumeric chars no matter the user email' do

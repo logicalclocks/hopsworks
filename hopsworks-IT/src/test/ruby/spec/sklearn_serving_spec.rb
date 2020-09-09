@@ -18,7 +18,7 @@ require 'json'
 
 describe "On #{ENV['OS']}" do
   after (:all) do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "sklearn_serving")
     purge_all_sklearn_serving_instances
   end
   describe 'sklearn_serving' do

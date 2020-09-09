@@ -17,7 +17,7 @@
 require 'json'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "kafka_schema")}
   describe 'schemas' do
     context 'with valid project, test subject' do
       let(:project) { get_project }
@@ -34,11 +34,6 @@ describe "On #{ENV['OS']}" do
         create_admin_role(@user)
         add_member(@user[:email], "Data owner")
         create_session(@user.email, "Pass123")
-      end
-
-      after :all do
-        with_admin_session
-        clean_projects
       end
 
       describe 'basic operations on subjects' do

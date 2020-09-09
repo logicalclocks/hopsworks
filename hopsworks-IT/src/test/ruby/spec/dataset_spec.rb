@@ -44,14 +44,11 @@ describe "On #{ENV['OS']}" do
   end
 
   after(:all) {
-    clean_all_test_projects
+    clean_all_test_projects(spec: "dataset")
   }
   describe 'dataset' do
     before(:all) {
       setVar("download_allowed", "true")
-    }
-    after(:all) {
-      clean_projects
     }
     describe "#create" do
       context 'without authentication' do
@@ -1413,16 +1410,16 @@ describe "On #{ENV['OS']}" do
           test_sort_by_attr(@project, @datasets, "", "size", "desc", "size")
         end
         it 'should return sorted datasets by modificationTime (asc)' do
-          test_sort_by_attr(@project, @datasets, "", "modificationTime", "asc", "modification_time")
+          test_sort_by_date_attr(@project, @datasets, "", "modificationTime", "asc", "modification_time")
         end
         it 'should return sorted datasets by modificationTime (desc)' do
-          test_sort_by_attr(@project, @datasets, "", "modificationTime", "desc", "modification_time")
+          test_sort_by_date_attr(@project, @datasets, "", "modificationTime", "desc", "modification_time")
         end
         it 'should return sorted datasets by accessTime (asc)' do
-          test_sort_by_attr(@project, @datasets, "", "accessTime", "asc", "access_time")
+          test_sort_by_date_attr(@project, @datasets, "", "accessTime", "asc", "access_time")
         end
         it 'should return sorted datasets by accessTime (desc)' do
-          test_sort_by_attr(@project, @datasets, "", "accessTime", "desc", "access_time")
+          test_sort_by_date_attr(@project, @datasets, "", "accessTime", "desc", "access_time")
         end
         it 'should return sorted datasets by type (asc)' do
           test_sort_by_datasetType(@project, @datasets, "", "datasetType", "asc", "type")
@@ -1459,16 +1456,16 @@ describe "On #{ENV['OS']}" do
           test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "size", "desc", "size")
         end
         it 'should return sorted dataset content by modificationTime (asc)' do
-          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "asc", "modification_time")
+          test_sort_by_date_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "asc", "modification_time")
         end
         it 'should return sorted dataset content by modificationTime (desc)' do
-          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "desc", "modification_time")
+          test_sort_by_date_attr(@project, @dataset_content, @dataset[:inode_name], "modificationTime", "desc", "modification_time")
         end
         it 'should return sorted dataset content by accessTime (asc)' do
-          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "asc", "access_time")
+          test_sort_by_date_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "asc", "access_time")
         end
         it 'should return sorted dataset content by accessTime (desc)' do
-          test_sort_by_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "desc", "access_time")
+          test_sort_by_date_attr(@project, @dataset_content, @dataset[:inode_name], "accessTime", "desc", "access_time")
         end
       end
     end

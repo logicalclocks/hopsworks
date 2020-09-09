@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "hops_util_py_it")}
   describe 'hops-util-py' do
     before :all do
       with_valid_project
@@ -23,7 +23,6 @@ describe "On #{ENV['OS']}" do
       user = get_user
       with_it_test_artifacts(project, user)
     end
-    after (:all) {clean_projects}
 
     describe "run notebook that tests distributed training, hyperparameter search, feature store API, kafka utils
               and TLS utils in hops-util-py using Python 3.6 environment" do

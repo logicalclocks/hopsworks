@@ -167,7 +167,12 @@ module ProjectHelper
       reset_session
       with_valid_project
     end
+  end
 
+  def force_remove(project)
+    with_admin_session
+    delete "#{ENV['HOPSWORKS_API']}/admin/projects/#{project[:projectname]}/force"
+    pp "Force removed project:#{project[:projectname]}. Response: #{response.code}"
   end
 
   def create_max_num_projects
@@ -190,65 +195,46 @@ module ProjectHelper
     end
   end
 
-  def on_complete(request)
+  def on_complete(request, project)
     request.on_complete do |response|
       if response.success?
         pp "Delete project response: " + response.code.to_s
       elsif response.timed_out?
-        pp "Timed out deleting project"
+        pp "Timed out deleting project: #{response.body}"
       elsif response.code == 0
         pp response.return_message
       else
-        pp "Delete project - HTTP request failed: " + response.code.to_s
+        pp "Delete project - failed with: #{response.code.to_s} body: #{response.body}."
+        force_remove(project) # multiple threads can call this.
       end
     end
   end
 
 
-  def clean_test_project(project)
-    response, headers = login_user(project[:username], "Pass123")
-    if response.code != 200
-      pp "could not login and delete project:#{project[:projectname]} with user:#{project[:username]}"
-    end
+  def clean_test_project(project, response, headers)
     request = raw_delete_project(project, response, headers)
-    on_complete(request)
+    on_complete(request, project)
     return request
   end
 
 
   # This function must be added under the first describe of each .spec file to ensure test projects are cleaned up properly
-  def clean_all_test_projects
-    pp "Cleaning up test projects"
+  def clean_all_test_projects(spec: "unknown")
+    pp "Cleaning up test projects after #{spec} spec"
 
     starting = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     hydra = Typhoeus::Hydra.new(max_concurrency: 10)
 
-    Project.where("projectname LIKE ?", 'online_fs').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'project\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'ProJect\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'demo\_%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'HOPSWORKS256%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'hopsworks256%').each{|project|
-      hydra.queue clean_test_project(project)
-    }
-
-    Project.where("projectname LIKE ?", 'prov\_proj\_%').each{|project|
-      hydra.queue clean_test_project(project)
+    Project.select('distinct(id), projectname, username')
+        .where("projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ? or projectname LIKE ?
+                or projectname LIKE ? or projectname LIKE ?", 'online_fs', 'project\_%', 'ProJect\_%', 'demo\_%',
+               'HOPSWORKS256%', 'hopsworks256%', 'prov\_proj\_%').each { |project|
+      response, headers = login_user(project[:username], "Pass123")
+      if response.code == 200
+        hydra.queue clean_test_project(project, response, headers)
+      else
+        pp "could not login and delete project:#{project[:projectname]} with user:#{project[:username]}"
+      end
     }
 
     hydra.run

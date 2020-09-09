@@ -5,7 +5,7 @@
 describe "On #{ENV['OS']}" do
   describe "Feature store tag" do
     after :all do
-      clean_all_test_projects
+      clean_all_test_projects(spec: "featurestore_tag")
     end
 
     context 'setup test' do
@@ -46,7 +46,7 @@ describe "On #{ENV['OS']}" do
 
       after :all do
         #delete projects that might contain these tags
-        clean_all_test_projects
+        clean_all_test_projects(spec: "featurestore_tag")
 
         with_admin_session
         @pre_created_tags.each do |tag|
@@ -124,9 +124,6 @@ describe "On #{ENV['OS']}" do
         after :all do
           with_admin_session
           @tags.each do |tag|
-            deleteFeatureStoreTag(tag)
-          end
-          @custom_tag.each do |tag|
             deleteFeatureStoreTag(tag)
           end
           reset_session
@@ -363,7 +360,7 @@ describe "On #{ENV['OS']}" do
 
       after :all do
         #delete projects that might contain these tags
-        clean_all_test_projects
+        clean_all_test_projects(spec: "featurestore_tag")
 
         with_admin_session
         @tags.each do |tag|

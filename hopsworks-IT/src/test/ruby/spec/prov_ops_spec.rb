@@ -24,7 +24,7 @@ describe "On #{ENV['OS']}" do
     @debugOpt = false
   end
   after :all do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "prov_ops")
     epipe_wait_on_provenance
     project_index_cleanup(@email)
     restore_cluster_prov(@new_provenance_type, @new_provenance_archive_size, @old_provenance_type, @old_provenance_archive_size)

@@ -77,4 +77,10 @@ module Helper
   def get_path_dir(project, dataset, dir_relative_path)
     "/Projects/#{project[:projectname]}/#{dataset[:inode_name]}/#{dir_relative_path}"
   end
+
+  def time_expect_to_be_eq(list1, list2)
+    l1 = list1.map{|o| Time.parse(o).change(:usec => 0)}
+    l2 = list2.map{|o| Time.parse(o).change(:usec => 0)}
+    expect(l1).to eq(l2)
+  end
 end

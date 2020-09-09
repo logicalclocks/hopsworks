@@ -14,7 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "api_key")}
   before(:all) do
     with_valid_session
     @key = create_api_key('firstKey')

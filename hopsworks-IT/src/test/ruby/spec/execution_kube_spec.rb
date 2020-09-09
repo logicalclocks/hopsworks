@@ -3,7 +3,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "execution_kube")}
   before(:all) do
     if ENV['OS'] == "ubuntu"
       skip "These tests do not run on ubuntu"

@@ -19,12 +19,12 @@ describe "On #{ENV['OS']}" do
     @debugOpt = false
   end
   after(:all) do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "ee_search")
   end
 
   context "system cleanup" do
     it "empty queues" do
-      clean_all_test_projects
+      clean_all_test_projects(spec: "ee_search")
       #make sure epipe is free of work
       wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 10)
       expect(wait_result["success"]).to be(true), wait_result["msg"]

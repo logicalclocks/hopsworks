@@ -16,7 +16,7 @@
 require 'set'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "xattrs")}
   before(:all) do
     @xattr_max_nr = 126
     @xattr_max_name_size = 255
