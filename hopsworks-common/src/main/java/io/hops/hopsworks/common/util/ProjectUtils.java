@@ -38,6 +38,7 @@
  */
 package io.hops.hopsworks.common.util;
 
+import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -77,14 +78,14 @@ public class ProjectUtils {
   }
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
-    if(useBase && isCondaEnabled(project)) {
+    if (isCondaEnabled(project) && (useBase || Strings.isNullOrEmpty(project.getDockerImage()))) {
+      // if conda enabled is true and usebase is true
+      // or as a fall back in case thhe proejct image name hasn't been set (i.e. during upgrades)
       return settings.getBaseDockerImagePythonName();
+    } else if(!isCondaEnabled(project)) {
+      throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
     } else {
-      if(!isCondaEnabled(project)) {
-        throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
-      } else {
-        return project.getDockerImage();
-      }
+      return project.getDockerImage();
     }
   }
   
