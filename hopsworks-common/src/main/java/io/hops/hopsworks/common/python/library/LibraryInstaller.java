@@ -443,7 +443,7 @@ public class LibraryInstaller {
   }
 
   private String getNextDockerImageName(Project project) {
-    String dockerImage = project.getDockerImage();
+    String dockerImage = ProjectUtils.getDockerImageName(project, settings, false);
     int indexOfLastDigit = dockerImage.lastIndexOf(".");
     int currentVersion = Integer.parseInt(dockerImage.substring(indexOfLastDigit + 1));
     int nextVersion = currentVersion + 1;
