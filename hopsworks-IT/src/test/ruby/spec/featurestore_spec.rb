@@ -17,7 +17,7 @@
 require 'uri'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "featurestore")}
   describe 'featurestore' do
     describe "list featurestores for project, get featurestore by id" do
       context 'with valid project and featurestore service enabled' do

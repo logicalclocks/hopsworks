@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "hive")}
   describe "Hive tests" do
 
     describe "Hive Scratchdir Cleaner" do

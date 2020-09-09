@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "admin_hosts")}
   describe "Admin hosts ops" do
     after :all do
       reset_session

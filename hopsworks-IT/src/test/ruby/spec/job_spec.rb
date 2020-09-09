@@ -14,7 +14,7 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "job")}
   job_spark_1 = "demo_job_1"
   job_spark_2 = "demo_job_2"
   job_spark_3 = "demo_job_3"
@@ -243,7 +243,7 @@ describe "On #{ENV['OS']}" do
           sorted = jobs.sort
           get_jobs(@project[:id], "?sort_by=date_created:asc")
           sorted_res = json_body[:items].map {|job| job[:creationTime]}
-          expect(sorted_res).to eq(sorted)
+          time_expect_to_be_eq(sorted_res, sorted)
         end
         it "should get all jobs sorted by date created descending" do
           #sort in memory and compare with query
@@ -252,7 +252,7 @@ describe "On #{ENV['OS']}" do
           sorted = jobs.sort.reverse
           get_jobs(@project[:id], "?sort_by=date_created:desc")
           sorted_res = json_body[:items].map {|job| job[:creationTime]}
-          expect(sorted_res).to eq(sorted)
+          time_expect_to_be_eq(sorted_res, sorted)
         end
         it "should get all jobs sorted by type ascending and name ascending" do
           #sort in memory and compare with query

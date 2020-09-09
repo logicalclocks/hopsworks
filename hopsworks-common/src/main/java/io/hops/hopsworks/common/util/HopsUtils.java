@@ -680,7 +680,7 @@ public class HopsUtils {
   //====================================================================================================================
   
   public static String getJupyterLogName(String hdfsUser, Integer port) {
-    return hdfsUser + "-" + port + ".log";
+    return (hdfsUser + "-" + port + ".log").toLowerCase();
   }
   
   

@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "execution")}
   describe 'execution' do
     describe "#create" do
       context 'without authentication' do
@@ -250,7 +250,7 @@ describe "On #{ENV['OS']}" do
               sorted = executions.sort
               get_executions(@project[:id], $job_spark_1, "?sort_by=submissiontime:asc")
               sorted_res = json_body[:items].map {|execution| execution[:submissionTime]}
-              expect(sorted_res).to eq(sorted)
+              time_expect_to_be_eq(sorted_res, sorted)
             end
             it "should get all executions sorted by submissiontime desc" do
               #sort in memory and compare with query
@@ -260,7 +260,7 @@ describe "On #{ENV['OS']}" do
               sorted = executions.sort.reverse
               get_executions(@project[:id], $job_spark_1, "?sort_by=submissiontime:desc")
               sorted_res = json_body[:items].map {|execution| execution[:submissionTime]}
-              expect(sorted_res).to eq(sorted)
+              time_expect_to_be_eq(sorted_res, sorted)
             end
             it "should get all executions sorted by state asc" do
               #sort in memory and compare with query

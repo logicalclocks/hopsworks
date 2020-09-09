@@ -16,7 +16,7 @@
 
 describe "On #{ENV['OS']}" do
   after (:all) do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "tf_inference")
     purge_all_tf_serving_instances
   end
   describe 'inference' do

@@ -17,7 +17,7 @@ require 'pp'
 describe "On #{ENV['OS']}" do
   after :all do
     epipe_restart_checked unless is_epipe_active
-    clean_all_test_projects
+    clean_all_test_projects(spec: "epipe")
   end
 
   describe 'epipe tests - ok in shared project' do

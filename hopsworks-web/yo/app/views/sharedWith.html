@@ -32,9 +32,9 @@
     <table class="table table-bordered table-striped text-center" style="table-layout: fixed; margin-bottom: 0px">
         <thead>
         <tr>
-            <th class="text-center" style="width: 25%">Project Name</th>
+            <th class="text-center" style="width: 20%">Project Name</th>
             <th class="text-center" style="width: 25%">Project Owner</th>
-            <th class="text-center" style="width: 30%">Permission</th>
+            <th class="text-center" style="width: 35%">Permission</th>
             <th class="text-center" style="width: 15%">Action</th>
         </tr>
         </thead>
@@ -47,9 +47,9 @@
                     <select id="company" class="form-control" ng-disabled="sharedWithCtrl.working[project.name]"
                             ng-change="sharedWithCtrl.changePermission(project)"
                             ng-model="project.permission">
-                        <option value="EDITABLE" title="Editable by everyone">Editable</option>
-                        <option value="READ_ONLY" title="Read only">Read only</option>
-                        <option value="EDITABLE_BY_OWNERS" title="Editable by Data owners">Editable by owners</option>
+                        <option value="EDITABLE" title="Editable by everyone">Everyone can edit</option>
+                        <option value="READ_ONLY" title="Read only">Everyone can read </option>
+                        <option value="EDITABLE_BY_OWNERS" title="Editable by Data owners">All Data owners can edit</option>
                     </select>
                 </td>
                 <td>

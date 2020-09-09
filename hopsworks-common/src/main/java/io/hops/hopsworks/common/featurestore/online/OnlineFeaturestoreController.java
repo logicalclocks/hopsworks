@@ -380,12 +380,14 @@ public class OnlineFeaturestoreController {
     }
     for (HdfsUsers hdfsUser: hdfsUsersController.getAllProjectHdfsUsers(project.getName())) {
       Users user = userFacade.findByUsername(hdfsUser.getUsername());
-      String dbUser = onlineDbUsername(project, user);
-      try {
-        secretsController.delete(user, dbUser);
-      } catch (UserException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-                Level.SEVERE, "Problem removing user-secret to online featurestore");
+      if (user != null) {
+        String dbUser = onlineDbUsername(project, user);
+        try {
+          secretsController.delete(user, dbUser);
+        } catch (UserException e) {
+          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
+                  Level.SEVERE, "Problem removing user-secret to online featurestore");
+        }
       }
     }
     String db = getOnlineFeaturestoreDbName(project);

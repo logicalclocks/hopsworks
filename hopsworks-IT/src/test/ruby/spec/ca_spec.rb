@@ -40,7 +40,7 @@
 require 'openssl'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "ca")}
   describe "#CA certificates" do
 
     # Test csr

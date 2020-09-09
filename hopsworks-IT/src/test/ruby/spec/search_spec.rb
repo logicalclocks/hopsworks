@@ -18,7 +18,7 @@ describe "On #{ENV['OS']}" do
     @debugOpt = false
   end
   after(:all) do
-    clean_all_test_projects
+    clean_all_test_projects(spec: "search")
   end
 
   context "featurestore" do

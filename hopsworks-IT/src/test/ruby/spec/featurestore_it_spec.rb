@@ -15,7 +15,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "featurestore_it")}
   describe 'featurestore integration tests' do
 
     describe "create feature store tour project and run example feature engineering job" do

@@ -39,7 +39,7 @@
 =end
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "project")}
   describe 'projects' do
     describe "#create" do
       context 'without authentication' do

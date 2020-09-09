@@ -16,7 +16,7 @@
 require 'jwt'
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects}
+  after(:all) {clean_all_test_projects(spec: "jwt")}
   describe "Renew service JWT" do
     before :all do
       reset_session
@@ -155,10 +155,6 @@ describe "On #{ENV['OS']}" do
   end
 
   describe "Elk JWT tokens" do
-
-    after :all do
-      clean_projects
-    end
 
     context "#users" do
       before :all do
