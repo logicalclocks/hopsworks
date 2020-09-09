@@ -103,7 +103,7 @@ public class ProjectUtils {
       ServiceDiscoveryException {
     com.logicalclocks.servicediscoverclient.service.Service registry = serviceDiscoveryController
         .getAnyAddressOfServiceWithDNSSRVOnly(ServiceDiscoveryController.HopsworksService.REGISTRY);
-    if(settings.isCloud() && settings.isManagedDockerRegistry()){
+    if(settings.isManagedDockerRegistry()){
       String registryUrl = registry.getAddress();
       String dockerNamespace = settings.getDockerNamespace();
       if(!dockerNamespace.isEmpty()){
@@ -113,17 +113,33 @@ public class ProjectUtils {
     }
     return registry.getName() + ":" + registry.getPort();
   }
-
+  
   public String getInitialDockerImageName(Project project) {
-    String initialImageTag = System.currentTimeMillis() + "-" + settings.getHopsworksVersion() + ".0";
-    if(settings.getKubeType() == Settings.KubeType.EKS && settings.isManagedDockerRegistry()){
-      return settings.getBaseDockerImageName() + ":" + project.getName().toLowerCase() + "_" + initialImageTag;
-    }else{
+    String initialImageTag =
+        System.currentTimeMillis() + "-" + settings.getHopsworksVersion() +
+            ".0";
+    if (settings.isManagedDockerRegistry()) {
+      return settings.getBaseNonPythonDockerImageWithNoTag() + ":" +
+          project.getName().toLowerCase() + "_" + initialImageTag;
+    } else {
       return project.getName().toLowerCase() + ":" + initialImageTag;
     }
   }
-
+  
   public String getFullBaseImageName() throws ServiceDiscoveryException {
-    return getRegistryURL(settings, serviceDiscoveryController) + "/" + settings.getBaseDockerImagePythonName();
+    return getRegistryURL(settings, serviceDiscoveryController) + "/" +
+        settings.getBaseDockerImagePythonName();
+  }
+  
+  public String getProjectNameFromDockerImageName(String imageName) {
+    if (settings.isManagedDockerRegistry()) {
+      return imageName.split(":")[1].split("_")[0];
+    } else {
+      return getProjectDockerRepoName(imageName);
+    }
+  }
+  
+  public String getProjectDockerRepoName(String imageName){
+    return imageName.split(":")[0];
   }
 }
