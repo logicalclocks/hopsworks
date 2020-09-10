@@ -84,8 +84,7 @@ public class JupyterServerProxy {
       throw new IllegalArgumentException("JupyterSettings is null");
     }
     Integer jupyterPort = jupyterProject.getPort();
-    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST,
-        jupyterManager.getJupyterHost(), jupyterPort));
+    HttpHost host = HttpHost.create(String.format(JUPYTER_HOST, jupyterManager.getJupyterHost(), jupyterPort));
     String path = String.format(CLONE_PATH, jupyterPort);
     String notebookDirectory = settings.getStagingDir() + Settings.PRIVATE_DIRS + jupyterSettings.getSecret();
     JupyterGitArguments args = new JupyterGitArguments(notebookDirectory, jupyterSettings.getGitConfig()

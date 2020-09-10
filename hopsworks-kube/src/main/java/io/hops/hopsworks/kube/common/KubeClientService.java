@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.kube.common;
 
+import com.google.common.base.Suppliers;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -45,17 +46,19 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
+import javax.ejb.ConcurrencyManagement;
+import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -68,9 +71,9 @@ import static io.hops.hopsworks.common.util.Settings.HOPS_USERNAME_SEPARATOR;
 import static io.hops.hopsworks.common.util.Settings.KEYSTORE_SUFFIX;
 import static io.hops.hopsworks.common.util.Settings.TRUSTSTORE_SUFFIX;
 
-
-@Stateless
+@Singleton
 @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+@ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class KubeClientService {
   
   private static final Logger LOGGER = Logger.getLogger(KubeClientService.class.getName());
@@ -79,7 +82,8 @@ public class KubeClientService {
   private Settings settings;
 
   private KubernetesClient client = null;
-  
+  private com.google.common.base.Supplier<List<String>> nodeIPListCache;
+
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
   
@@ -108,7 +112,8 @@ public class KubeClientService {
         break;
       default:
     }
-   
+
+    nodeIPListCache = Suppliers.memoizeWithExpiration(this::getReadyNodeIpListInternal, 10, TimeUnit.SECONDS);
   }
   
   public void createProjectNamespace(Project project)
@@ -493,21 +498,33 @@ public class KubeClientService {
     return project.getName() + HOPS_USERNAME_SEPARATOR + user.getUsername();
   }
 
-  public List<Node> getNodeList() throws KubernetesClientException {
+  private List<Node> getNodeList() throws KubernetesClientException {
     return handleClientException(() -> client.nodes().list().getItems());
   }
 
-  public List<String> getNodeIpList() throws KubernetesClientException {
+  private List<String> getReadyNodeIpListInternal() throws KubernetesClientException {
     // Extract node IPs
     List<String> nodeIPList = getNodeList().stream()
+        // filter only ready nodes
+        .filter(node -> node.getStatus().getConditions().stream().anyMatch(
+          nodeCondition -> nodeCondition.getType().equalsIgnoreCase("ready")
+            && nodeCondition.getStatus().equalsIgnoreCase("true")
+        ))
         .flatMap(node -> node.getStatus().getAddresses().stream())
         .filter(nodeAddress -> nodeAddress.getType().equals("InternalIP"))
         .flatMap(nodeAddress -> Stream.of(nodeAddress.getAddress()))
         .collect(Collectors.toList());
 
-    Collections.shuffle(nodeIPList);
-
     return nodeIPList;
+  }
+
+  public List<String> getReadyNodeList() {
+    return nodeIPListCache.get();
+  }
+
+  public String getRandomReadyNodeIp() {
+    List<String> nodeIPs = nodeIPListCache.get();
+    return nodeIPs.get((int) (System.currentTimeMillis() % nodeIPs.size()));
   }
   
   public ResourceRequirements buildResourceRequirements(DockerJobConfiguration dockerConfig) throws ServiceException {

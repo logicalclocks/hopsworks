@@ -570,6 +570,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
   @Override
   public String getJupyterHost() {
-    return kubeClientService.getNodeIpList().get(0);
+    return kubeClientService.getRandomReadyNodeIp();
   }
 }

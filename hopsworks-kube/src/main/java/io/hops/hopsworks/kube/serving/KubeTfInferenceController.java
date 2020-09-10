@@ -22,7 +22,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.protocol.HttpClientContext;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
@@ -32,7 +31,6 @@ import javax.ejb.Singleton;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.logging.Level;
 
 @KubeStereotype
@@ -47,13 +45,6 @@ public class KubeTfInferenceController implements TfInferenceController {
   private KubeTfServingController kubeTfServingController;
   @EJB
   private InferenceHttpClient inferenceHttpClient;
-
-  private List<String> nodeIPList;
-
-  @PostConstruct
-  public void init() {
-    nodeIPList = kubeClientService.getNodeIpList();
-  }
 
   @Override
   public Pair<Integer, String> infer(Serving serving, Integer modelVersion,
@@ -95,7 +86,7 @@ public class KubeTfInferenceController implements TfInferenceController {
     try {
       uri = new URIBuilder()
           .setScheme("http")
-          .setHost(nodeIPList.get(0))
+          .setHost(kubeClientService.getRandomReadyNodeIp())
           .setPort(serviceInfo.getSpec().getPorts().get(0).getNodePort())
           .setPath(pathBuilder.toString())
           .build();
@@ -114,8 +105,7 @@ public class KubeTfInferenceController implements TfInferenceController {
         CloseableHttpResponse response = inferenceHttpClient.execute(request, context);
         return inferenceHttpClient.handleInferenceResponse(response);
       } catch (IOException e) {
-        // Maybe the node we are trying to send requests to died. Refresh the list.
-        nodeIPList = kubeClientService.getNodeIpList();
+        // Maybe the node we are trying to send requests to died.
       } finally {
         nRetry--;
       }
