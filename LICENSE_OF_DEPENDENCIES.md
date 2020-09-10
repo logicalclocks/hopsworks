@@ -91,7 +91,6 @@ Backend Dependencies
 * com.google.zxing:javase:jar:3.0.0 [ApacheV2](https://github.com/zxing/zxing/blob/master/LICENSE)
 * com.nimbusds:oauth2-oidc-sdk:6.5 [ApacheV2](https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/src/master/LICENSE.txt)
 * com.twitter.bijection-avro [ApacheV2](https://github.com/twitter/bijection/blob/develop/LICENSE)
-* commons-beanutils:commons-beanutils:jar:1.9.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * commons-fileupload:commons-fileupload:jar:1.2.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * commons-logging:commons-logging:jar:1.2 [ApacheV2](http://www.apache.org/licenses/LICENSE-2.0.txt)
 * io.hops:hadoop-client:jar:2.8.2.10 [ApacheV2](https://github.com/hopshadoop/hops/blob/master/LICENSE.txt)
