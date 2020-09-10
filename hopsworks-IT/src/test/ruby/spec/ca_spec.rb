@@ -38,6 +38,7 @@
 =end
 
 require 'openssl'
+require 'cgi'
 
 describe "On #{ENV['OS']}" do
   after(:all) {clean_all_test_projects(spec: "ca")}
@@ -96,6 +97,26 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           check_certificate_revoked(@certs_dir + "/intermediate/", "test__#{@locality}__1", @subject)
+        end
+
+        it 'should succeed to revoke all host certificates', vm: true do
+          subjects = [
+            subject_0 = "/C=SE/ST=Stockholm/L=subject0/O=SE/OU=1/CN=host0/emailAddress=agent@hops.io",
+            subject_1 = "/C=SE/ST=Stockholm/L=subject1/O=SE/OU=1/CN=host0/emailAddress=agent@hops.io",
+            subject_2 = "/C=SE/ST=Stockholm/L=subject2/O=SE/OU=1/CN=host0/emailAddress=agent@hops.io"
+          ]
+          subjects.each{ |subject|
+            post "#{ENV['HOPSWORKS_CA']}/certificate/host", {csr: generate_csr(subject)}
+            expect_status(200)
+          }
+
+          delete "#{ENV['HOPSWORKS_CA']}/certificate/host/all?hostname=host0"
+          expect_status(200)
+
+          # Check only for one is ok-ish
+          # check_certificate_revoked function expects the certificate under test to *always* be
+          # at the last line
+          check_certificate_revoked(@certs_dir + "/intermediate/", "host0__subject2__1", subjects[2])
         end
 
         it 'should return no-content if the revokation is triggered twice'  do

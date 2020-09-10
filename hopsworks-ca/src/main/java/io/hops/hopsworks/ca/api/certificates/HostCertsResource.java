@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.ca.api.certificates;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.ca.api.filter.Audience;
 import io.hops.hopsworks.ca.api.filter.NoCacheResponse;
 import io.hops.hopsworks.ca.controllers.CAException;
@@ -55,18 +56,22 @@ import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import static io.hops.hopsworks.ca.controllers.CertificateType.HOST;
 
 @RequestScoped
 @Api(value = "Host certificate service", description = "Manage host certificates")
 public class HostCertsResource {
+
+  private static final String REVOKE_CERTIFICATES_PATTERN = "^%s__.*__[0-9]+.*";
 
   @EJB
   private OpensslOperations opensslOperations;
@@ -97,15 +102,32 @@ public class HostCertsResource {
 
   @DELETE
   @ApiOperation(value = "Revoke Host certificate")
-  //@JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
   public Response revokeCertificate(
-      @ApiParam(value = "Identifier of the Certificate to revoke", required = true) @QueryParam("certId") String certId)
-      throws IOException, CAException {
+          @ApiParam(value = "Identifier of the Certificate to revoke", required = true)
+          @QueryParam("certId") String certId)
+          throws IOException, CAException {
     if (certId == null || certId.isEmpty()) {
       throw new IllegalArgumentException("Empty certificate identifier");
     }
 
     opensslOperations.revokeCertificate(certId, HOST);
+    return Response.ok().build();
+  }
+
+  @Path("all")
+  @DELETE
+  @ApiOperation(value = "Revoke all Host certificates")
+  @JWTRequired(acceptedTokens={Audience.SERVICES}, allowedUserRoles={"AGENT"})
+  public Response revokeCertificateGlob(
+          @ApiParam(value = "Hostname of the node to revoke certificates for", required = true)
+          @QueryParam("hostname")
+          String hostname) throws IOException, CAException {
+    if (Strings.isNullOrEmpty(hostname)) {
+      throw new IllegalArgumentException("Empty hostname to revoke");
+    }
+    opensslOperations.revokeCertificateGlob(Pattern.compile(String.format(REVOKE_CERTIFICATES_PATTERN,
+            Pattern.quote(hostname))), HOST);
     return Response.ok().build();
   }
 }

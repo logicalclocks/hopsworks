@@ -51,6 +51,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.http.HttpStatus;
 
 @Stateless
@@ -61,6 +62,7 @@ public class CAProxy {
   private final static String CONTENT_TYPE_JSON = "application/json; charset=utf-8";
   private final static String CA_BASE_PATH = "/hopsworks-ca/v2/certificate/";
   private final static String CERTIFICATE_IDENTIFIER = "certId";
+  private final static String HOSTNAME = "hostname";
   
   private ObjectMapper objectMapper;
   private ResponseHandler<CSR> CA_SIGN_RESPONSE_HANDLER = new CASignCSRResponseHandler();
@@ -68,7 +70,8 @@ public class CAProxy {
   
   private enum CA_PATH {
     PROJECT_CA_PATH(CA_BASE_PATH + "project"),
-    DELA_CA_PATH(CA_BASE_PATH + "dela");
+    DELA_CA_PATH(CA_BASE_PATH + "dela"),
+    HOST_CA_PATH(CA_BASE_PATH + "host");
     
     private final String path;
     
@@ -129,21 +132,26 @@ public class CAProxy {
   }
   
   public void revokeProjectX509(String certificateIdentifier) throws HopsSecurityException, GenericException {
-    revokeX509(certificateIdentifier, CA_PATH.PROJECT_CA_PATH);
+    revokeX509(CERTIFICATE_IDENTIFIER, certificateIdentifier, CA_PATH.PROJECT_CA_PATH.path);
   }
   
   public void revokeDelaX509(String certificateIdentifier) throws HopsSecurityException, GenericException {
-    revokeX509(certificateIdentifier, CA_PATH.DELA_CA_PATH);
+    revokeX509(CERTIFICATE_IDENTIFIER, certificateIdentifier, CA_PATH.DELA_CA_PATH.path);
+  }
+
+  public void revokeHostX509(String hostname) throws HopsSecurityException, GenericException {
+    revokeX509(HOSTNAME, hostname, CA_PATH.HOST_CA_PATH.path + "/all");
   }
   
-  private void revokeX509(String certificateIdentifier, CA_PATH path) throws HopsSecurityException, GenericException {
-    if (Strings.isNullOrEmpty(certificateIdentifier)) {
+  private void revokeX509(String parameterName, String parameterValue, String path) throws HopsSecurityException,
+          GenericException {
+    if (Strings.isNullOrEmpty(parameterValue)) {
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_NOT_FOUND, Level.SEVERE,
-          null, "Certificate Identifier cannot be null or empty");
+          null, "Certificate parameter value cannot be null or empty");
     }
     try {
-      URI revokeURI = new URIBuilder(path.path)
-          .addParameter(CERTIFICATE_IDENTIFIER, certificateIdentifier)
+      URI revokeURI = new URIBuilder(path)
+          .addParameter(parameterName, parameterValue)
           .build();
       HttpDelete httpRequest = new HttpDelete(revokeURI);
       client.setAuthorizationHeader(httpRequest);
@@ -158,14 +166,14 @@ public class CAProxy {
     } catch (URISyntaxException ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, null, null, ex);
     } catch (ClientProtocolException ex) {
-      LOG.log(Level.WARNING, "Could not revoke X.509 " + certificateIdentifier, ex);
+      LOG.log(Level.WARNING, "Could not revoke X.509 " + parameterValue, ex);
       if (ex.getCause() instanceof HopsSecurityException) {
         throw (HopsSecurityException) ex.getCause();
       }
       throw new HopsSecurityException(RESTCodes.SecurityErrorCode.CERTIFICATE_REVOKATION_ERROR, Level.WARNING,
           null, null, ex);
     } catch (IOException ex) {
-      LOG.log(Level.SEVERE, "Could not revoke X.509 " + certificateIdentifier, ex);
+      LOG.log(Level.SEVERE, "Could not revoke X.509 " + parameterValue, ex);
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE,
           "Generic error while revoking X.509", null, ex);
     }
