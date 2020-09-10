@@ -371,7 +371,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
       end
 
-      it "should not be able to update the metadata of a cached featuregroup from the featurestore" do
+      it "should be able to update the metadata of an offline featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
@@ -379,14 +379,180 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "INT",
+                partition: false,
+                defaultValue: "10"
+            },
+        ]
         json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
-                                                          featuregroup_version)
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
         parsed_json = JSON.parse(json_result)
-        expect_status(400)
-        expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
-        expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270093).to be true
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10")
+      end
+
+      it "should be able to update only the description in the metadata of an offline feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 1
+        expect(parsed_json["description"]).to eql("changed description")
+      end
+
+      it "should be able to append only new features in the metadata of an offline feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+      end
+
+      it "should be able to append two features with default value in two consecutive updates to an offline feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        expect_status_details(200)
+        new_schema.push(
+            {
+                type: "FLOAT",
+                name: "testfeature3",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "FLOAT",
+                partition: false,
+                defaultValue: "30.0"
+            }
+        )
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        expect(parsed_json["features"].length).to be 3
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature3"}.first["defaultValue"]).to eql("30.0")
+      end
+
+      it "should be able to preview an offline feature group with appended features" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        expect_status_details(200)
+        get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=offline"
+        expect_status_details(200)
       end
 
       it "should be able to add a cached feature group without statistics settings to the feature store to test the defaults" do
@@ -513,83 +679,217 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("usrMsg")).to be true
         expect(parsed_json["errorCode"] == 270108).to be true
       end
-
-      it "should be able to get schema of shared feature group" do
-        project = get_project
-        create_session(project[:username], "Pass123")
-        projectname = "project_#{short_random_id}"
-        # Create a feature group in second project and share it with the first project
-        second_project = create_project_by_name(projectname)
-        featurestore_id = get_featurestore_id(second_project.id)
-        share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
-            "EDITABLE", datasetType: "&type=FEATURESTORE")
-        json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
-        featuregroup_id = JSON.parse(json_result)['id']
-        accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", datasetType: "&type=FEATURESTORE")
-
-        # Create a new user and add it only to the first project
-        member = create_user
-        add_member_to_project(project, member[:email], "Data scientist")
-        create_session(member[:email], "Pass123")
-
-        # The new member should be able to fetch the schema from Hive
-        result =
-            get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/details"
-        expect_status(200)
-        parsed_json = JSON.parse(result)
-        expect(parsed_json['schema']).to start_with "CREATE TABLE"
-      end
-
-      it "should be able to get a data preview of a shared feature group" do
-        project = get_project
-        create_session(project[:username], "Pass123")
-        projectname = "project_#{short_random_id}"
-        # Create a feature group in second project and share it with the first project
-        second_project = create_project_by_name(projectname)
-        featurestore_id = get_featurestore_id(second_project.id)
-        share_dataset(second_project, "#{projectname}_featurestore.db", @project['projectname'], permission:
-            "EDITABLE", datasetType: "&type=FEATURESTORE")
-        json_result, featuregroup_name = create_cached_featuregroup(second_project.id, featurestore_id)
-        featuregroup_id = JSON.parse(json_result)['id']
-        accept_dataset(project, "#{projectname}::#{projectname}_featurestore.db", datasetType: "&type=FEATURESTORE")
-
-        # Create a new user and add it only to the first project
-        member = create_user
-        add_member_to_project(project, member[:email], "Data scientist")
-        create_session(member[:email], "Pass123")
-
-        # The new member should be able to fetch the schema from Hive
-        get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview"
-        expect_status(200)
-      end
     end
-    context 'with shared featurestore' do
-      before :all do
-        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
-        @user1 = create_user(@user1_params)
-        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
-        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
-        @user2 = create_user(@user2_params)
-        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+  end
 
-        create_session(@user1[:email], @user1_params[:password])
-        @project1 = create_project
-        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+  describe "feature groups in shared feature store" do
+    before :all do
+      @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+      @user1 = create_user(@user1_params)
+      pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+      @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+      @user2 = create_user(@user2_params)
+      pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
 
-        create_session(@user2[:email], @user2_params[:password])
-        @project2 = create_project
-        pp @project2[:projectname] if defined?(@debugOpt) && @debugOpt
+      create_session(@user1[:email], @user1_params[:password])
+      @project1 = create_project
+      pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
 
-        create_session(@user1[:email], "Pass123")
-        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project2[:projectname], datasetType: "FEATURESTORE")
-        create_session(@user2[:email], "Pass123")
-        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
-      end
+      create_session(@user2[:email], @user2_params[:password])
+      @project2 = create_project
+      pp @project2[:projectname] if defined?(@debugOpt) && @debugOpt
+
+      create_session(@user1[:email], "Pass123")
+      share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project2[:projectname], datasetType: "FEATURESTORE")
+      create_session(@user2[:email], "Pass123")
+      accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+    end
+
+    context "for offline feature group" do
 
       it 'should be able to create fg' do
         create_session(@user2[:email], @user2_params[:password])
         fs = get_featurestore(@project2[:id], fs_project_id: @project1[:id])
         create_cached_featuregroup_checked(@project2[:id], fs["featurestoreId"], "shared_fg")
+      end
+
+      it "should be able to get schema of shared feature group" do
+        create_session(@user1[:email], "Pass123")
+        # create FG in first project
+        featurestore_id = get_featurestore_id(@project1.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id)
+        featuregroup_id = JSON.parse(json_result)['id']
+
+        # featurestore in project1 is shared already with project2 and user2 therein
+        create_session(@user2[:email], "Pass123")
+
+        # user2 should be able to fetch the schema from Hive
+        result =
+            get "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/details"
+        expect_status_details(200)
+        parsed_json = JSON.parse(result)
+        expect(parsed_json['schema']).to start_with "CREATE TABLE"
+      end
+
+      it "should be able to get a data preview of a shared feature group" do
+        create_session(@user1[:email], "Pass123")
+        # create FG in first project
+        featurestore_id = get_featurestore_id(@project1.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id)
+        featuregroup_id = JSON.parse(json_result)['id']
+
+        # featurestore in project1 is shared already with project2 and user2 therein
+        create_session(@user2[:email], "Pass123")
+
+        # User2 should be able to fetch the schema from Hive
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview"
+        expect_status_details(200)
+      end
+
+      it "should be able to append a feature to an offline feature group of a shared feature store with another user" do
+        create_session(@user1[:email], "Pass123")
+        # create FG in first project
+        featurestore_id = get_featurestore_id(@project1.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json['id']
+        featuregroup_version = parsed_json["version"]
+
+        # featurestore in project1 is shared already with project2 and user2 therein
+        create_session(@user2[:email], "Pass123")
+
+        # The new member should be able to append features
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(@project2.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+      end
+    end
+      # TODO: test can be put back once HOPSWORKS-1932 is fixed
+    # context "for online feature group" do
+    #
+    #   it "should be able to append a feature to an online feature group of a shared feature store with another user" do
+    #     create_session(@user1[:email], "Pass123")
+    #     # create FG in first project
+    #     featurestore_id = get_featurestore_id(@project1.id)
+    #     json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id, online: true)
+    #     parsed_json = JSON.parse(json_result)
+    #     featuregroup_id = parsed_json['id']
+    #     featuregroup_version = parsed_json["version"]
+    #
+    #     # featurestore in project1 is shared already with project2 and user2 therein
+    #     create_session(@user2[:email], "Pass123")
+    #
+    #     # The new member should be able to append features
+    #     new_description = "changed description"
+    #     new_schema = [
+    #         {
+    #             type: "INT",
+    #             name: "testfeature",
+    #             description: "testfeaturedescription",
+    #             primary: true,
+    #             onlineType: "INT",
+    #             partition: false
+    #         },
+    #         {
+    #             type: "DOUBLE",
+    #             name: "testfeature2",
+    #             description: "testfeaturedescription",
+    #             primary: false,
+    #             onlineType: "DOUBLE",
+    #             partition: false,
+    #             defaultValue: "10.0"
+    #         },
+    #     ]
+    #     json_result = update_cached_featuregroup_metadata(@project2.id, featurestore_id, featuregroup_id,
+    #                                                       featuregroup_version, featuregroup_name: featuregroup_name,
+    #                                                       description: new_description, features: new_schema)
+    #     parsed_json = JSON.parse(json_result)
+    #     expect_status_details(200)
+    #     expect(parsed_json["features"].length).to be 2
+    #     expect(parsed_json["description"]).to eql("changed description")
+    #     expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+    #     expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+    #   end
+    # end
+  end
+
+  describe "search cached feature groups" do
+    context 'with NEW valid project, featurestore service enabled' do
+
+      it "should be able to update the metadata of an offline featuregroup and search new features through Xattrs" do
+        project = create_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        # search
+        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+        expected_hits1 = []
+        project_search_test(project, "testfeature2", "featuregroup", expected_hits1)
+        # append feature
+        new_description = "changeddescription"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "INT",
+                partition: false,
+                defaultValue: "10"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+        # search
+        expected_hits2 = [{:name => featuregroup_name, :highlight => "features", :parent_project =>
+            project[:projectname]}]
+        project_search_test(project, "testfeature2", "featuregroup", expected_hits2)
+        expected_hits3 = [{:name => featuregroup_name, :highlight => "description", :parent_project =>
+            project[:projectname]}]
+        project_search_test(project, "changeddescription", "featuregroup", expected_hits3)
       end
     end
   end
@@ -784,7 +1084,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
       end
 
-      it "should not be able to update the metadata of a cached online featuregroup from the featurestore" do
+      it "should be able to update the metadata of a cached online featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
@@ -792,15 +1092,264 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "INT",
+                partition: false,
+                defaultValue: "10"
+            },
+        ]
         json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
-                                                          featuregroup_version)
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
         parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10")
+      end
 
-        expect_status(400)
-        expect(parsed_json.key?("errorCode")).to be true
-        expect(parsed_json.key?("errorMsg")).to be true
-        expect(parsed_json.key?("usrMsg")).to be true
-        expect(parsed_json["errorCode"] == 270093).to be true
+
+      it "should be able to update only the description in the metadata of an online feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 1
+        expect(parsed_json["description"]).to eql("changed description")
+      end
+
+      it "should be able to append only new features in the metadata of an online feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+      end
+
+      it "should be able to append two features with default value in two consecutive updates to an online feature group" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online: true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        expect_status_details(200)
+        new_schema.push(
+            {
+                type: "FLOAT",
+                name: "testfeature3",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "FLOAT",
+                partition: false,
+                defaultValue: "30.0"
+            }
+        )
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+
+        expect(parsed_json["features"].length).to be 3
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature3"}.first["defaultValue"]).to eql("30.0")
+      end
+
+      it "should be able to preview an online feature group with appended features" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:true)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        expect_status_details(200)
+        get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s +
+                "/featuregroups/" + featuregroup_id.to_s + "/preview?storage=online"
+        expect_status_details(200)
+      end
+
+      it "should be able to append features to an offline cached feature group with online serving enabled not at creation" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        expect_status(200)
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+      end
+
+      it "should be able to enable online serving for an offline cached feature group with appended features" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, online:false)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "DOUBLE",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "DOUBLE",
+                partition: false,
+                defaultValue: "10.0"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(200)
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+        enable_cached_featuregroup_online(project.id, featurestore_id, featuregroup_id, featuregroup_version)
+        expect_status(200)
       end
 
       it "should be able to enable online serving for a offline cached feature group" do

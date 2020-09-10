@@ -117,9 +117,14 @@ public class FeaturegroupController {
    * @param featurestore featurestore to query featuregroups for
    * @return list of XML/JSON DTOs of the featuregroups
    */
-  public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore) {
+  public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user)
+    throws FeaturestoreException {
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    return featuregroups.stream().map(fg -> convertFeaturegrouptoDTO(fg)).collect(Collectors.toList());
+    List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
+    for (Featuregroup featuregroup : featuregroups) {
+      featuregroupDTOS.add(convertFeaturegrouptoDTO(featuregroup, project, user));
+    }
+    return featuregroupDTOS;
   }
 
   /**
@@ -137,7 +142,7 @@ public class FeaturegroupController {
     throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
+        FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
         deleteFeaturegroup(featuregroup, project, user);
         return createFeaturegroup(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
       case ON_DEMAND_FEATURE_GROUP:
@@ -213,7 +218,7 @@ public class FeaturegroupController {
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
-    FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
+    FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
   
     if (FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroup.getFeaturegroupType())) {
       DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
@@ -222,7 +227,7 @@ public class FeaturegroupController {
           + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
         fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
       } finally {
-        if(udfso != null) {
+        if (udfso != null) {
           dfs.closeDfsClient(udfso);
         }
       }
@@ -253,12 +258,13 @@ public class FeaturegroupController {
    * @param featuregroup the entity to convert
    * @return a DTO representation of the entity
    */
-  private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup) {
+  private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
+    throws FeaturestoreException {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         CachedFeaturegroupDTO cachedFeaturegroupDTO =
-          cachedFeaturegroupController.convertCachedFeaturegroupToDTO(featuregroup);
+          cachedFeaturegroupController.convertCachedFeaturegroupToDTO(featuregroup, project, user);
         cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
         return cachedFeaturegroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
@@ -281,9 +287,14 @@ public class FeaturegroupController {
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */
-  public List<FeaturegroupDTO> getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name) {
-    List<Featuregroup> featuregroup = verifyFeaturegroupName(featurestore, name);
-    return featuregroup.stream().map(this::convertFeaturegrouptoDTO).collect(Collectors.toList());
+  public List<FeaturegroupDTO> getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name,
+    Project project, Users user) throws FeaturestoreException {
+    List<Featuregroup> featuregroups = verifyFeaturegroupName(featurestore, name);
+    List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
+    for (Featuregroup featuregroup : featuregroups) {
+      featuregroupDTOS.add(convertFeaturegrouptoDTO(featuregroup, project, user));
+    }
+    return featuregroupDTOS;
   }
 
   /**
@@ -294,9 +305,10 @@ public class FeaturegroupController {
    * @return XML/JSON DTO of the featuregroup
    */
   public FeaturegroupDTO getFeaturegroupWithNameVersionAndFeaturestore(Featurestore featurestore, String name,
-                                                                       Integer version) throws FeaturestoreException {
+                                                                       Integer version, Project project, Users user)
+      throws FeaturestoreException {
     Featuregroup featuregroup = verifyFeaturegroupNameVersion(featurestore, name, version);
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**
@@ -306,10 +318,11 @@ public class FeaturegroupController {
    * @param featurestore the featurestore that the featuregroup belongs to
    * @return XML/JSON DTO of the featuregroup
    */
-  public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id)
+  public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id, Project project,
+                                                              Users user)
       throws FeaturestoreException{
     Featuregroup featuregroup = getFeaturegroupById(featurestore, id);
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**
@@ -320,20 +333,18 @@ public class FeaturegroupController {
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  public FeaturegroupDTO updateFeaturegroupMetadata(
-      Featurestore featurestore, FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
+  public FeaturegroupDTO updateFeaturegroupMetadata(Project project, Users user, Featurestore featurestore,
+                                                    FeaturegroupDTO featuregroupDTO)
+      throws FeaturestoreException, SQLException, ProvenanceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_UPDATING_METADATA, Level.FINE,
-        ", updating metadata of feature groups is currently only supported for on-demand feature groups.");
-    }
-
     // Verify general entity related information
-    featurestoreInputValidation.verifyUserInput(featuregroupDTO);
+    featurestoreInputValidation.verifyDescription(featuregroupDTO);
+    featurestoreInputValidation.verifyFeatureGroupFeatureList(featuregroupDTO.getFeatures());
 
     // Update on-demand feature group metadata
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+      cachedFeaturegroupController.updateMetadata(project, user, featuregroup, (CachedFeaturegroupDTO) featuregroupDTO);
+    } else if (featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       onDemandFeaturegroupController.updateOnDemandFeaturegroupMetadata(featuregroup.getOnDemandFeaturegroup(),
         (OnDemandFeaturegroupDTO) featuregroupDTO);
     }
@@ -345,7 +356,25 @@ public class FeaturegroupController {
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
 
-    return convertFeaturegrouptoDTO(featuregroup);
+    // get feature group object again after alter table
+    featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
+    featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
+  
+    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+      // remove if clause when on-demand featuregroups have footprint in the file system
+      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+      DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+      try {
+        String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
+          + "/" + Utils.getFeaturegroupName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
+        fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
+      } finally {
+        if (udfso != null) {
+          dfs.closeDfsClient(udfso);
+        }
+      }
+    }
+    return featuregroupDTO;
   }
 
   /**
@@ -354,7 +383,8 @@ public class FeaturegroupController {
    * @param featurestore    the featurestore where the featuregroup resides
    * @param featuregroupDTO the updated featuregroup metadata
    */
-  public FeaturegroupDTO updateFeaturegroupJob(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
+  public FeaturegroupDTO updateFeaturegroupJob(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+    Project project, Users user)
       throws FeaturestoreException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     //Get jobs
@@ -362,7 +392,7 @@ public class FeaturegroupController {
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
 
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**
@@ -385,7 +415,7 @@ public class FeaturegroupController {
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
     cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
   
   /**
@@ -406,7 +436,7 @@ public class FeaturegroupController {
           "featuregroup with type:" + FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
     }
     cachedFeaturegroupController.disableFeaturegroupOnline(featuregroup, project, user);
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
 
   /**
@@ -417,8 +447,8 @@ public class FeaturegroupController {
    * @return DTO of the updated feature group
    * @throws FeaturestoreException
    */
-  public FeaturegroupDTO updateFeaturegroupStatsSettings(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
-    throws FeaturestoreException {
+  public FeaturegroupDTO updateFeaturegroupStatsSettings(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+    Project project, Users user) throws FeaturestoreException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if (featuregroupDTO.isDescStatsEnabled() != null) {
       // if setting is changed, check with new setting
@@ -438,12 +468,12 @@ public class FeaturegroupController {
     }
     // compare against schema from database, as client doesn't need to send schema in update request
     statisticColumnController.verifyStatisticColumnsExist(
-      featuregroupDTO, convertFeaturegrouptoDTO(featuregroup).getFeatures());
+      featuregroupDTO, convertFeaturegrouptoDTO(featuregroup, project, user).getFeatures());
     featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
     statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
     // get feature group again with persisted columns - this trip to the database can be saved
     featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    return convertFeaturegrouptoDTO(featuregroup);
+    return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
   
   /**
@@ -493,11 +523,8 @@ public class FeaturegroupController {
     }
 
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    return featuregroups.stream().filter(fg -> {
-      FeaturegroupDTO convertedFeaturegroupDTO = convertFeaturegrouptoDTO(fg);
-      return convertedFeaturegroupDTO.getName().equalsIgnoreCase(featuregroupDTO.getName()) &&
-        convertedFeaturegroupDTO.getVersion().equals(featuregroupDTO.getVersion());
-    }).findFirst();
+    return featuregroups.stream().filter(fg -> fg.getName().equalsIgnoreCase(featuregroupDTO.getName()) &&
+        fg.getVersion().equals(featuregroupDTO.getVersion())).findFirst();
   }
 
   /**
@@ -721,14 +748,16 @@ public class FeaturegroupController {
     return featuregroup;
   }
 
-  public List<FeatureGroupFeatureDTO> getFeatures(Featuregroup featuregroup) {
+  public List<FeatureGroupFeatureDTO> getFeatures(Featuregroup featuregroup, Project project, Users user)
+    throws FeaturestoreException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup().getHiveTbls());
+        return cachedFeaturegroupController.getFeaturesDTO(
+          featuregroup.getCachedFeaturegroup().getHiveTbls(), featuregroup.getFeaturestore(), project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
-            .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary()))
-            .collect(Collectors.toList());
+          .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary(), null))
+          .collect(Collectors.toList());
     }
     return new ArrayList<>();
   }

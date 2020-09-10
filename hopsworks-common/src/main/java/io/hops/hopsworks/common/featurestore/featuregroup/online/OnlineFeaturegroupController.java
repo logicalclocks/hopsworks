@@ -35,6 +35,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.math.BigInteger;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,6 +59,12 @@ public class OnlineFeaturegroupController {
       "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT");
 
   private final static String VARBINARY = "VARBINARY";
+
+  public OnlineFeaturegroupController() {}
+
+  protected OnlineFeaturegroupController(Settings settings) {
+    this.settings = settings;
+  }
 
       /**
        * Drops an online feature group, both the data-table in the database and the metadata record
@@ -85,13 +92,23 @@ public class OnlineFeaturegroupController {
     onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
   }
 
-  private String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
+  public String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
     StringBuilder createStatement = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-    createStatement.append(dbName).append(".").append(tableName).append("(");
+    createStatement.append("`" + dbName + "`").append(".").append("`" + tableName + "`").append("(");
 
     // Add all features
     for (FeatureGroupFeatureDTO feature : features) {
-      createStatement.append(feature.getName()).append(" ").append(getOnlineType(feature)).append(",");
+      createStatement.append("`" + feature.getName() + "`").append(" ").append(getOnlineType(feature));
+      // at the moment only needed for online-enabling a previously offline-only feature group with appended features
+      if (feature.getDefaultValue() != null) {
+        createStatement.append(" NOT NULL DEFAULT ");
+        if (feature.getType().equalsIgnoreCase("string")) {
+          createStatement.append("'").append(feature.getDefaultValue()).append("'");
+        } else {
+          createStatement.append(feature.getDefaultValue());
+        }
+      }
+      createStatement.append(",");
     }
 
     // add primary keys
@@ -99,10 +116,11 @@ public class OnlineFeaturegroupController {
         .filter(FeatureGroupFeatureDTO::getPrimary)
         .collect(Collectors.toList());
     if (!pkFeatures.isEmpty()) {
-      createStatement.append("PRIMARY KEY (");
+      createStatement.append("PRIMARY KEY (`");
       createStatement.append(
-          StringUtils.join(pkFeatures.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList()), ","));
-      createStatement.append(")");
+          StringUtils.join(pkFeatures.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList()),
+            "`,`"));
+      createStatement.append("`)");
     }
 
     // Closing parenthesis
@@ -120,6 +138,36 @@ public class OnlineFeaturegroupController {
     }
 
     return createStatement.toString();
+  }
+
+  public String buildAlterStatement(String tableName, String dbName, List<FeatureGroupFeatureDTO> featureDTOs) {
+    StringBuilder alterTableStatement = new StringBuilder("ALTER TABLE `" + dbName + "`.`" + tableName + "` ");
+    List<String> addColumn = new ArrayList<>();
+    for (FeatureGroupFeatureDTO featureDTO : featureDTOs) {
+      StringBuilder add =
+        new StringBuilder("ADD COLUMN `" + featureDTO.getName() + "` " + getOnlineType(featureDTO));
+      if (featureDTO.getDefaultValue() != null) {
+        add.append(" NOT NULL DEFAULT ");
+        if (featureDTO.getType().equalsIgnoreCase("string")) {
+          add.append("'" + featureDTO.getDefaultValue() + "'");
+        } else {
+          add.append(featureDTO.getDefaultValue() + "");
+        }
+      } else {
+        add.append(" DEFAULT NULL");
+      }
+      addColumn.add(add.toString());
+    }
+    alterTableStatement.append(StringUtils.join(addColumn, ", ") + ";");
+    return alterTableStatement.toString();
+  }
+
+  public void alterMySQLTableColumns(Featurestore featurestore, String tableName,
+                                     List<FeatureGroupFeatureDTO> featureDTOs, Project project, Users user)
+      throws FeaturestoreException, SQLException {
+    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
+    onlineFeaturestoreController.executeUpdateJDBCQuery(buildAlterStatement(tableName, dbName, featureDTOs), dbName,
+      project, user);
   }
 
   private String getOnlineType(FeatureGroupFeatureDTO featureGroupFeatureDTO) {

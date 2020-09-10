@@ -1446,8 +1446,6 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     ILLEGAL_ENTITY_NAME(91, "Illegal feature store entity name", Response.Status.BAD_REQUEST),
     ILLEGAL_ENTITY_DESCRIPTION(92, "Illegal featurestore entity description", Response.Status.BAD_REQUEST),
-    ERROR_UPDATING_METADATA(93, "An error occurred when trying to update feature store metadata",
-      Response.Status.BAD_REQUEST),
     FEATUREGROUP_NAME_NOT_PROVIDED(94, "Feature group name was not provided", Response.Status.BAD_REQUEST),
     TRAINING_DATASET_NAME_NOT_PROVIDED(95, "Training dataset name was not provided", Response.Status.BAD_REQUEST),
     NO_PK_JOINING_KEYS(96, "Could not find any matching feature to join", Response.Status.BAD_REQUEST),
@@ -1476,7 +1474,14 @@ public class RESTCodes {
         Response.Status.BAD_REQUEST),
     TRAINING_DATASET_NO_SCHEMA(112, "No query or feature schema provided", Response.Status.BAD_REQUEST),
     TRAINING_DATASET_QUERY_FG_DELETED(113, "Cannot generate query, some feature groups were deleted",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ILLEGAL_FEATUREGROUP_UPDATE(114, "Illegal feature group update", Response.Status.BAD_REQUEST),
+    COULD_NOT_ALTER_FEAUTURE_GROUP_METADATA(115, "Failed to alter feature group meta data",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_GET_FEATURE_GROUP_METADATA(116, "Failed to retrieve feature gorup meta data",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_CREATING_HIVE_METASTORE_CLIENT(117, "Failed to open Hive Metastore client",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

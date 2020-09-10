@@ -48,6 +48,8 @@ public class HiveKeyConstraints implements Serializable {
   @JoinColumn(name = "PARENT_TBL_ID", referencedColumnName = "TBL_ID")
   @ManyToOne(optional = false)
   private HiveTbls parentTblId;
+  @Column(name = "DEFAULT_VALUE")
+  private String defaultValue;
 
   public HiveKeyConstraints() {
   }
@@ -98,6 +100,14 @@ public class HiveKeyConstraints implements Serializable {
 
   public void setParentTblId(HiveTbls parentTblId) {
     this.parentTblId = parentTblId;
+  }
+  
+  public String getDefaultValue() {
+    return defaultValue;
+  }
+  
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
   }
 
   @Override

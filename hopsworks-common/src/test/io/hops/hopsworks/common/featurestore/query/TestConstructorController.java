@@ -26,7 +26,10 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
+import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,6 +63,9 @@ public class TestConstructorController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
 
   private ConstructorController constructorController;
+  
+  private Project project;
+  private Users user;
 
   @Rule
   public ExpectedException thrown = ExpectedException.none();
@@ -87,16 +93,16 @@ public class TestConstructorController {
     fg1Features.add(new Feature("fg1_ft2", "fg1", "", false));
 
     fg1FeaturesDTO = new ArrayList<>();
-    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, ""));
-    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("fg1_ft2", "String", "", false, false, ""));
+    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, "", null));
+    fg1FeaturesDTO.add(new FeatureGroupFeatureDTO("fg1_ft2", "String", "", false, false, "", null));
 
     fg2Features = new ArrayList<>();
     fg2Features.add(new Feature("pr", "fg2", "", true));
     fg2Features.add(new Feature("fg2_ft2", "fg2", "", false));
 
     fg2FeaturesDTO = new ArrayList<>();
-    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, ""));
-    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("fg2_ft2", "String", "", false, false, ""));
+    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("pr", "Integer", "", true, false, "", null));
+    fg2FeaturesDTO.add(new FeatureGroupFeatureDTO("fg2_ft2", "String", "", false, false, "", null));
 
     fg3Features = new ArrayList<>();
     fg3Features.add(new Feature("fg3_ft1", "fg3", "", true));
@@ -106,6 +112,8 @@ public class TestConstructorController {
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
+    project = Mockito.mock(Project.class);
+    user = Mockito.mock(Users.class);
 
     constructorController = new ConstructorController(featuregroupController, featurestoreFacade,
         featuregroupFacade, onlineFeaturestoreController);
@@ -146,7 +154,8 @@ public class TestConstructorController {
 
   @Test
   public void testExtractFeaturesBothSides() throws Exception {
-    Mockito.when(featuregroupController.getFeatures(Mockito.any())).thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
+    Mockito.when(featuregroupController.getFeatures(Mockito.any(), Mockito.any(), Mockito.any()))
+      .thenReturn(fg1FeaturesDTO, fg2FeaturesDTO);
     Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
     Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
@@ -163,7 +172,7 @@ public class TestConstructorController {
 
     QueryDTO queryDTO = new QueryDTO(fg1, requestedFeatures, Arrays.asList(joinDTO));
 
-    Query query = constructorController.convertQueryDTO(queryDTO, 1);
+    Query query = constructorController.convertQueryDTO(queryDTO, 1, project, user);
 
     List<Feature> extractedFeatures = constructorController.collectFeatures(query);
     // Make sure both features have been returned.
@@ -173,31 +182,6 @@ public class TestConstructorController {
     // Make sure the method sets the feature group name
     Assert.assertTrue(extractedFeatures.get(0).getFgAlias().equals("fg1") ||
         extractedFeatures.get(0).getFgAlias().equals("fg2") );
-  }
-
-  @Test
-  public void testExtractJoinOn() throws Exception {
-    ConstructorController constructorController = new ConstructorController();
-
-    List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1"));
-    availableLeft.add(new Feature("ft2"));
-    availableLeft.add(new Feature("fg1_ft3"));
-
-    List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1"));
-    availableRight.add(new Feature("ft2"));
-    availableRight.add(new Feature("fg2_ft3"));
-
-    List<Feature> on = new ArrayList<>();
-    on.add(new Feature("ft1"));
-    on.add(new Feature("ft2"));
-
-    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
-    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
-
-    Join join = constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
-    Assert.assertEquals(2, join.getOn().size());
   }
 
   @Test
@@ -211,14 +195,17 @@ public class TestConstructorController {
     availableRight.add(new Feature("ft1"));
     availableRight.add(new Feature("fg2_ft2"));
 
-    List<Feature> on = new ArrayList<>();
-    on.add(new Feature("ft1"));
+    List<Feature> leftOn = new ArrayList<>();
+    leftOn.add(new Feature("ft1"));
+  
+    List<Feature> rightOn = new ArrayList<>();
+    rightOn.add(new Feature("ft1"));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableRight, availableRight);
 
     thrown.expect(FeaturestoreException.class);
-    constructorController.extractOn(leftQuery, rightQuery, on, JoinType.INNER);
+    constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
 
   @Test
@@ -355,7 +342,7 @@ public class TestConstructorController {
     ConstructorController constructorController = new ConstructorController();
 
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0"));
+    availableLeft.add(new Feature("ft1", "fg0", "Float", null));
 
     Query singleSideQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableLeft, availableLeft);
     String query = constructorController.generateSQL(singleSideQuery, true).replace("\n", " ");
@@ -367,10 +354,10 @@ public class TestConstructorController {
     ConstructorController constructorController = new ConstructorController();
 
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg0"));
+    availableLeft.add(new Feature("ft1","fg0", "Float", null));
 
     List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", "fg1"));
+    availableRight.add(new Feature("ft1","fg1", "Float", null));
 
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg0", availableRight, availableRight);
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
@@ -387,10 +374,10 @@ public class TestConstructorController {
     ConstructorController constructorController = new ConstructorController();
 
     List<Feature> availableLeft = new ArrayList<>();
-    availableLeft.add(new Feature("ft1", "fg1"));
+    availableLeft.add(new Feature("ft1", "fg1", "Float", null));
 
     List<Feature> availableRight = new ArrayList<>();
-    availableRight.add(new Feature("ft1", "fg2"));
+    availableRight.add(new Feature("ft1", "fg2", "Float", null));
 
     Query leftQuery = new Query("fs1", "project_fs2", fg1, "fg1", availableLeft, availableLeft);
     Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
@@ -408,13 +395,13 @@ public class TestConstructorController {
     ConstructorController constructorController = new ConstructorController();
 
     List<Feature> availableFirst = new ArrayList<>();
-    availableFirst.add(new Feature("ft1", "fg0"));
+    availableFirst.add(new Feature("ft1", "fg0", "Float", null));
 
     List<Feature> availableSecond = new ArrayList<>();
-    availableSecond.add(new Feature("ft2", "fg1"));
+    availableSecond.add(new Feature("ft2", "fg1", "Float", null));
 
     List<Feature> availableThird = new ArrayList<>();
-    availableThird.add(new Feature("ft1", "fg2"));
+    availableThird.add(new Feature("ft1", "fg2", "Float", null));
 
     Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg0", availableFirst, availableFirst);
     Query secondQuery = new Query("fs1", "project_fs1", fg2, "fg1", availableSecond , availableSecond);
@@ -429,5 +416,45 @@ public class TestConstructorController {
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+  }
+
+  @Test
+  public void testCaseWhenDefaultStringSpark() {
+    Feature feature =
+      new Feature("feature", "", "fg", "String", false, "hello");
+    String output = constructorController.caseWhenDefault(feature)
+      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 'hello' ELSE `fg`.`feature` END";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testCaseWhenDefaultOtherHive() {
+    Feature feature =
+      new Feature("feature", "", "fg", "Float", false, "10.0");
+    String output = constructorController.caseWhenDefault(feature)
+      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testSelectWithDefaultAsSpark() {
+    Feature feature =
+      new Feature("feature", "", "fg", "Float", false, "10.0");
+    String output = constructorController.selectWithDefaultAs(feature)
+      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testSelectWithDefaultAsHive() {
+    Feature feature =
+      new Feature("feature", "", "fg", "Float", false, "10.0");
+    String output = constructorController.selectWithDefaultAs(feature)
+      .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+    String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
+    Assert.assertEquals(expected, output);
   }
 }

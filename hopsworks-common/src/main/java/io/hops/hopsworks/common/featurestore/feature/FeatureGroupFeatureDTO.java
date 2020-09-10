@@ -32,26 +32,29 @@ public class FeatureGroupFeatureDTO {
   private String description;
   private Boolean primary = false;
   private Boolean partition = false;
+  private String defaultValue = null;
 
   public FeatureGroupFeatureDTO(){}
 
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary,
-                                Boolean partition, String onlineType) {
+                                Boolean partition, String onlineType, String defaultValue) {
     this.name = name;
     this.type = type;
+    this.onlineType = onlineType;
     this.description = description;
     this.primary = primary;
     this.partition = partition;
-    this.onlineType = onlineType;
+    this.defaultValue = defaultValue;
   }
 
-  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary) {
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, String defaultValue) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
+    this.defaultValue = defaultValue;
   }
-
+  
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, Boolean partition) {
     this.name = name;
     this.type = type;
@@ -60,16 +63,27 @@ public class FeatureGroupFeatureDTO {
     this.partition = partition;
   }
 
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
+    String defaultValue) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+    this.partition = partition;
+    this.defaultValue = defaultValue;
+  }
+
   public FeatureGroupFeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
     this.description = description;
   }
 
-  public FeatureGroupFeatureDTO(String name, String type, Boolean primary) {
+  public FeatureGroupFeatureDTO(String name, String type, Boolean primary, String defaultValue) {
     this.name = name;
     this.type = type;
     this.primary = primary;
+    this.defaultValue = defaultValue;
   }
 
   public FeatureGroupFeatureDTO(String name) {
@@ -106,6 +120,11 @@ public class FeatureGroupFeatureDTO {
     return onlineType;
   }
   
+  @XmlElement(nillable = true)
+  public String getDefaultValue() {
+    return defaultValue;
+  }
+
   public void setPrimary(Boolean primary) {
     this.primary = primary;
   }
@@ -130,6 +149,10 @@ public class FeatureGroupFeatureDTO {
     this.onlineType = onlineType;
   }
 
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
+  
   @Override
   public String toString() {
     return "FeatureDTO{" +
@@ -137,8 +160,21 @@ public class FeatureGroupFeatureDTO {
       ", type='" + type + '\'' +
       ", onlineType='" + onlineType + '\'' +
       ", description='" + description + '\'' +
-      ", primary=" + primary +
-      ", partition=" + partition +
+      ", primary=" + primary + '\'' +
+      ", partition=" + partition + '\'' +
+      ", defaultValue=" + defaultValue +
       '}';
+  }
+  
+  @Override
+  public int hashCode() {
+    int result = name.hashCode();
+    result = 31 * result + type.hashCode();
+    result = 31 * result + (onlineType != null ? onlineType.hashCode() : 0);
+    result = 31 * result + (description != null ? description.hashCode() : 0);
+    result = 31 * result + primary.hashCode();
+    result = 31 * result + partition.hashCode();
+    result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
+    return result;
   }
 }
