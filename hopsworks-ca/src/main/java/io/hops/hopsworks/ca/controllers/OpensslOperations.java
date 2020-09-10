@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -46,6 +47,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 //TODO: Can we make concurrent modifications on different CAs?
 
@@ -85,22 +89,46 @@ public class OpensslOperations {
       csrFile.delete();
     }
   }
-  
+
   @Lock(LockType.WRITE)
   public void revokeCertificate(String certificateIdentifier, CertificateType certType) throws IOException,
       CAException {
 
     LOGGER.log(Level.FINE, "Revoking certificate " + certificateIdentifier + CERTIFICATE_SUFFIX);
     PKI.CAType caType = pki.getResponsibileCA(certType);
-    String openSslConfig = pki.getCAConfPath(caType).toString();
     String certsDir = pki.getCACertsDir(caType).toString();
 
     Path certificatePath = Paths.get(certsDir, certificateIdentifier + CERTIFICATE_SUFFIX);
-    File certificateFile = certificatePath.toFile();
+    revokeCertificateInternal(certificatePath.toFile(), certType);
+  }
+
+  @Lock(LockType.WRITE)
+  public void revokeCertificateGlob(Pattern filenameGlob, CertificateType certType) throws IOException, CAException {
+    PKI.CAType caType = pki.getResponsibileCA(certType);
+    Path certsDir = pki.getCACertsDir(caType);
+
+    try (Stream<Path> fileStream = Files.walk(certsDir, 1)) {
+      List<File> certificates = fileStream
+              .filter(Files::isRegularFile)
+              .filter(Files::isReadable)
+              .filter(p -> filenameGlob.matcher(p.getFileName().toString()).matches())
+              .map(Path::toFile)
+              .collect(Collectors.toList());
+      for (File certificate : certificates) {
+        LOGGER.log(Level.FINE, "Revoking certificate: " + certificate.toString());
+        revokeCertificateInternal(certificate, certType);
+      }
+    }
+  }
+
+  private void revokeCertificateInternal(File certificateFile, CertificateType certType)
+          throws CAException, IOException {
     if (!certificateFile.exists()) {
       throw new CAException(RESTCodes.CAErrorCode.CERTNOTFOUND, Level.WARNING, certType);
     }
-    
+    PKI.CAType caType = pki.getResponsibileCA(certType);
+    String openSslConfig = pki.getCAConfPath(caType).toString();
+
     List<String> command = new ArrayList<>();
     command.add(OPENSSL);
     command.add("ca");
@@ -110,7 +138,7 @@ public class OpensslOperations {
     command.add("-passin");
     command.add("pass:" + pki.getCAKeyPassword(caType));
     command.add("-revoke");
-    command.add(certificatePath.toString());
+    command.add(certificateFile.toString());
 
     executeCommand(command, false);
     createCRL(caType);
