@@ -3,6 +3,10 @@
  */
 package io.hops.hopsworks.cloud;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.hops.hopsworks.cloud.dao.HeartbeartResponse;
+import io.hops.hopsworks.cloud.dao.HttpMessage;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.util.Settings;
@@ -10,7 +14,6 @@ import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
@@ -24,14 +27,20 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @DependsOn("Settings")
 public class CloudClient {
   private final static Logger LOGGER = Logger.getLogger(CloudClient.class.getName());
+  private static final Gson GSON_SERIALIZER = new GsonBuilder()
+          .create();
 
   @EJB
   private Settings settings;
@@ -83,25 +92,37 @@ public class CloudClient {
     }
   }
 
-  public String sendHeartbeat() throws IOException {
-    if(settings.getCloudEventsEndPoint().equals("")){
+  public HeartbeartResponse sendHeartbeat(List<CloudNode> removedNodes) throws IOException {
+    List<JSONObject> removedNodesJson = new ArrayList<>();
+    for (CloudNode removed : removedNodes) {
+      JSONObject removedJson = new JSONObject();
+      removedJson.put("nodeId", removed.getNodeId());
+      removedNodesJson.add(removedJson);
+    }
+
+    JSONArray jarray = new JSONArray(removedNodesJson);
+    JSONObject entity = new JSONObject();
+    entity.put("removedNodes", jarray);
+
+    if (settings.getCloudEventsEndPoint().equals("")) {
       throw new IOException("Failed to send heartbeat endpoint not set");
     }
     URI heartBeatUrl = URI.create(settings.getCloudEventsEndPoint() + "/heartbeat");
 
-    HttpGet request = new HttpGet(heartBeatUrl);
+    HttpPost request = new HttpPost(heartBeatUrl);
     request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     request.setHeader("x-api-key", settings.getCloudEventsEndPointAPIKey());
+    request.setEntity(new StringEntity(entity.toString()));
 
     HttpHost host = new HttpHost(heartBeatUrl.getHost(),
-            heartBeatUrl.getPort(), heartBeatUrl.getScheme());
+        heartBeatUrl.getPort(), heartBeatUrl.getScheme());
     return httpClient.execute(host, request, httpResponse -> {
       if (httpResponse.getStatusLine().getStatusCode() != 200) {
         throw new IOException("Failed to send heartbeat, return status: " + httpResponse.getStatusLine().toString());
       }
-      String json = EntityUtils.toString(httpResponse.getEntity());
-      LOGGER.log(Level.INFO, json);
-      return json;
+      String json = EntityUtils.toString(httpResponse.getEntity(), Charset.defaultCharset());
+      HttpMessage message = GSON_SERIALIZER.fromJson(json, HttpMessage.class);
+      return message.getResponse();
     });
   }
 
