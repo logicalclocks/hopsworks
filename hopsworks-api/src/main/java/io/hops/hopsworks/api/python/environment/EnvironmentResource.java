@@ -28,7 +28,6 @@ import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
-import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
@@ -98,7 +97,7 @@ public class EnvironmentResource {
   }
   
   private ResourceRequest getResourceRequest(EnvironmentExpansionBeanParam expansions) throws PythonException {
-    if (!ProjectUtils.isCondaEnabled(project)) {
+    if (!project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_NOT_FOUND, Level.FINE);
     }
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.ENVIRONMENTS);

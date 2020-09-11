@@ -124,7 +124,7 @@ public class SparkController {
     String appPath = sparkConfig.getAppPath();
 
     if(job.getJobType().equals(JobType.PYSPARK)) {
-      if (Strings.isNullOrEmpty(job.getProject().getDockerImage())) {
+      if (!job.getProject().getConda()) {
         //Throw error in Hopsworks UI to notify user to enable Anaconda
         throw new JobException(RESTCodes.JobErrorCode.JOB_START_FAILED, Level.SEVERE,
             "PySpark job needs to have Python Anaconda environment enabled");
