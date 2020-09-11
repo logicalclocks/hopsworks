@@ -15,6 +15,9 @@
 =end
 
 describe "On #{ENV['OS']}" do
+  before :all do
+    @debugOpt=false
+  end
   after(:all) {clean_all_test_projects(spec: "execution")}
   describe 'execution' do
     describe "#create" do
@@ -542,6 +545,100 @@ describe "On #{ENV['OS']}" do
         create_sparktour_job(@project, "quota5", 'jar', nil)
         start_execution(@project[:id], "quota5")
         expect_status_details(201)
+      end
+    end
+
+    describe '#access' do
+      before :all do
+        @user_data_owner = create_user
+        pp @user_data_owner[:email] if defined?(@debugOpt) && @debugOpt
+        @user_data_scientist = create_user
+        @user_other = create_user
+        create_session(@user_data_owner[:email], "Pass123")
+        @project = create_project
+        add_member_to_project(@project, @user_data_scientist[:email], "Data scientist")
+        @job_name = "test_job_#{short_random_id}"
+      end
+
+      def setup_job(user, project, job_name)
+        chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+        src_dir = "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary"
+        src = "#{src_dir}/hello_world.py"
+        dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.py"
+        group = "#{project[:projectname]}__Resources"
+        copy_from_local(src, dst, user[:username], group, 750, "#{project[:projectname]}")
+        job_config = get_spark_default_py_config(project, job_name, "py")
+        create_sparktour_job(project, job_name, "py", job_config)
+        expect_status_details(201)
+      end
+
+      def get_exec(user, project, job_name)
+        get_executions(project["id"], job_name, "")
+        if job_does_not_exist || json_body[:items].count == 0
+          setup_job(user, project, job_name)
+          run_job(project, job_name)
+          get_executions(project["id"], job_name, "")
+        end
+        expect_status_details(200)
+        expect(json_body[:items].length).to be > 0
+        sleep 2
+        json_body[:items][0]
+      end
+
+      proxied_pages = [
+          {:type => "spark main",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://resourcemanager.service.consul:8088/proxy/#{app_id}"}},
+          {:type => "sql",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://resourcemanager.service.consul:8088/proxy/#{app_id}/SQL"}},
+          {:type => "all executors",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/api/v1/applications/#{app_id}/#{attempt_id}/allexecutors"}},
+          {:type => "executors",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/executors"}},
+          {:type => "envirnoment",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/environment"}},
+          {:type => "storage",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/storage"}},
+          {:type => "stages",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/stages"}},
+          {:type => "jobs",
+           :uri => lambda {|app_id, attempt_id|
+             "/hopsworks-api/yarnui/http://historyserver.spark.service.consul:18080/history/#{app_id}/#{attempt_id}/jobs"}}
+      ]
+      proxied_pages.each do |p|
+        it 'data owner should see ' + p[:type] do
+          create_session(@user_data_owner[:email], "Pass123")
+          execution = get_exec(@user_data_owner, @project, @job_name)
+          uri = p[:uri].(execution[:appId], 1)
+          pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt
+          get uri
+          expect_status_details(200)
+        end
+
+        it 'data scientist should see ' + p[:type] do
+          create_session(@user_data_scientist[:email], "Pass123")
+          execution = get_exec(@user_data_scientist, @project, @job_name)
+          uri = p[:uri].(execution[:appId], 1)
+          pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt
+          get uri
+          expect_status_details(200)
+        end
+
+        it 'other user should not see ' + p[:type] do
+          create_session(@user_data_owner[:email], "Pass123")
+          execution = get_exec(@user_data_owner, @project, @job_name)
+          create_session(@user_other[:email], "Pass123")
+          uri = p[:uri].(execution[:appId], 1)
+          pp "uri: #{uri}" if defined?(@debugOpt) && @debugOpt
+          get uri
+          expect_status_details(400)
+        end
       end
     end
   end
