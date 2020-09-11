@@ -44,7 +44,6 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Asynchronous;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
@@ -81,44 +80,20 @@ public class KubeClientService {
   @EJB
   private Settings settings;
 
+  /*
+   * When using this bean *DO NOT* use the client object directly as it might not be initialized
+   * instead call the handleClientOp method which, besides checking for authentication exceptions
+   * initialize the client
+   */
   private KubernetesClient client = null;
   private com.google.common.base.Supplier<List<String>> nodeIPListCache;
 
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
-  
-  @PostConstruct
-  private void initClient() {
-    LOGGER.info("Initialize " + settings.getKubeType() + " kube client");
-    switch (settings.getKubeType()){
-      case Local:
-        Config config = new ConfigBuilder()
-            .withUsername(settings.getKubeUser())
-            .withMasterUrl(settings.getKubeMasterUrl())
-            .withCaCertFile(settings.getKubeCaCertfile())
-            .withTrustStoreFile(settings.getKubeTruststorePath())
-            .withTrustStorePassphrase(settings.getKubeTruststoreKey())
-            .withKeyStoreFile(settings.getKubeKeystorePath())
-            .withKeyStorePassphrase(settings.getKubeKeystoreKey())
-            .withClientCertFile(settings.getKubeClientCertfile())
-            .withClientKeyFile(settings.getKubeClientKeyfile())
-            .withClientKeyPassphrase(settings.getKubeClientKeypass())
-            .build();
-        client = new DefaultKubernetesClient(config);
-        break;
-      case EKS:
-        client = new DefaultKubernetesClient();
-        updateEKSCoreDNSToUseConsul();
-        break;
-      default:
-    }
 
-    nodeIPListCache = Suppliers.memoizeWithExpiration(this::getReadyNodeIpListInternal, 10, TimeUnit.SECONDS);
-  }
-  
   public void createProjectNamespace(Project project)
       throws KubernetesClientException {
-    handleClientException(() ->
+    handleClientOp(() ->
         client.namespaces().createNew()
             .withNewMetadata()
             .withName(getKubeProjectName(project))
@@ -128,7 +103,7 @@ public class KubeClientService {
   
   public void deleteProjectNamespace(Project project)
       throws KubernetesClientException {
-    handleClientException(() ->
+    handleClientOp(() ->
         client.namespaces().withName(getKubeProjectName(project)).delete());
   }
   
@@ -172,14 +147,14 @@ public class KubeClientService {
         .withData(filenameToContent)
         .build();
     
-    handleClientException(() -> client.configMaps().inNamespace(kubeProjectNS)
+    handleClientOp(() -> client.configMaps().inNamespace(kubeProjectNS)
         .createOrReplace(configMap));
   }
   
   @Asynchronous
   public void deleteConfigMap(String namespace, String secretName)
       throws KubernetesClientException {
-    handleClientException(() -> client.configMaps().inNamespace(namespace).delete(
+    handleClientOp(() -> client.configMaps().inNamespace(namespace).delete(
             new ConfigMapBuilder()
                 .withMetadata(
                     new ObjectMetaBuilder()
@@ -226,7 +201,7 @@ public class KubeClientService {
         .collect(Collectors.toMap(Map.Entry::getKey, e -> Base64.getEncoder().encodeToString(e.getValue()))))
       .build();
     
-    handleClientException(() -> client.secrets().inNamespace(projectNamespace)
+    handleClientOp(() -> client.secrets().inNamespace(projectNamespace)
         .createOrReplace(secret));
   }
   
@@ -247,7 +222,7 @@ public class KubeClientService {
   @Asynchronous
   public void deleteSecret(String namespace, String secretName)
       throws KubernetesClientException {
-    handleClientException(() -> client.secrets().inNamespace(namespace).delete(
+    handleClientOp(() -> client.secrets().inNamespace(namespace).delete(
         new SecretBuilder()
             .withMetadata(
                 new ObjectMetaBuilder()
@@ -278,7 +253,7 @@ public class KubeClientService {
    * Returns a list of Kube secrets with potentially matching labels.
    */
   public List<Secret> getSecrets(Map<String, String> labels) {
-    return handleClientException(() -> client.secrets().inAnyNamespace().withLabels(labels).list().getItems());
+    return handleClientOp(() -> client.secrets().inAnyNamespace().withLabels(labels).list().getItems());
   }
   
   
@@ -301,7 +276,7 @@ public class KubeClientService {
   @Asynchronous
   public void deleteDeployment(String namespace, ObjectMeta deploymentMetadata)
       throws KubernetesClientException {
-    handleClientException(() -> client.apps().deployments().inNamespace(namespace)
+    handleClientOp(() -> client.apps().deployments().inNamespace(namespace)
             .delete(new DeploymentBuilder().withMetadata(deploymentMetadata).build()));
   }
 
@@ -324,14 +299,14 @@ public class KubeClientService {
   @Asynchronous
   public void deleteService(String namespace, ObjectMeta serviceMetadata)
       throws KubernetesClientException {
-    handleClientException(() -> client.services().inNamespace(namespace)
+    handleClientOp(() -> client.services().inNamespace(namespace)
         .delete(new ServiceBuilder().withMetadata(serviceMetadata).build()));
   }
   
   @Asynchronous
   public void deleteJob(String namespace, String kubeJobName)
       throws KubernetesClientException {
-    handleClientException(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).delete());
+    handleClientOp(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).delete());
   }
   
   @Asynchronous
@@ -342,20 +317,20 @@ public class KubeClientService {
   @Asynchronous
   private void stopJob(String namespace, String kubeJobName)
       throws KubernetesClientException {
-    Job job = handleClientException(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).get());
+    Job job = handleClientOp(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).get());
     if (job.getStatus().getConditions().isEmpty()) {
       JobCondition condition = new JobCondition();
       condition.setType("Failed");
       job.getStatus().getConditions().add(condition);
     }
     job.getStatus().getConditions().get(0).setType("Failed");
-    handleClientException(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).replace(job));
+    handleClientOp(() -> client.batch().jobs().inNamespace(namespace).withName(kubeJobName).replace(job));
     LOGGER.info("Stopped job: " + kubeJobName);
   }
   
   
   public List<Job> getJobs() {
-    return handleClientException(() -> client.batch().jobs().inAnyNamespace().list().getItems());
+    return handleClientOp(() -> client.batch().jobs().inAnyNamespace().list().getItems());
   }
   
   
@@ -363,20 +338,20 @@ public class KubeClientService {
   public void createOrReplaceDeployment(Project project, Deployment deployment)
       throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
-    handleClientException(() -> client.apps().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment));
+    handleClientOp(() -> client.apps().deployments().inNamespace(kubeProjectNs).createOrReplace(deployment));
   }
   
   @Asynchronous
   public void createOrReplaceService(Project project, Service service) {
     String kubeProjectNs = getKubeProjectName(project);
-    handleClientException(() -> client.services().inNamespace(kubeProjectNs)
+    handleClientOp(() -> client.services().inNamespace(kubeProjectNs)
         .createOrReplace(service));
   }
   
   public void createJob(Project project, Job job)
       throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
-    handleClientException(() -> client.batch().jobs().inNamespace(kubeProjectNs).create(job));
+    handleClientOp(() -> client.batch().jobs().inNamespace(kubeProjectNs).create(job));
   }
   
   public void waitForDeployment(Project project, String deploymentName, int maxAttempts) throws TimeoutException {
@@ -408,7 +383,7 @@ public class KubeClientService {
       throws KubernetesClientException{
     String kubeProjectNs = getKubeProjectName(project);
 
-    Deployment deployment = handleClientException(() -> client.apps().deployments().inNamespace(kubeProjectNs)
+    Deployment deployment = handleClientOp(() -> client.apps().deployments().inNamespace(kubeProjectNs)
         .withName(deploymentName).get());
     return deployment == null ? null : deployment.getStatus();
   }
@@ -427,12 +402,12 @@ public class KubeClientService {
   public Service getServiceInfo(Project project, String serviceName)
       throws KubernetesClientException {
     String kubeProjectNs = getKubeProjectName(project);
-    return handleClientException(() -> client.services().inNamespace(kubeProjectNs).withName(serviceName).get());
+    return handleClientOp(() -> client.services().inNamespace(kubeProjectNs).withName(serviceName).get());
   }
   
   public List<Service> getServices(String label)
       throws KubernetesClientException {
-    return handleClientException(() -> client.services().inAnyNamespace().withLabel(label).list().getItems());
+    return handleClientOp(() -> client.services().inAnyNamespace().withLabel(label).list().getItems());
   }
   
   public List<Pod> getPodList(Project project, Map<String, String> podLabels)
@@ -442,12 +417,12 @@ public class KubeClientService {
   
   public List<Pod> getPodList(final String kubeProjectNs,
       final Map<String, String> podLabels) throws KubernetesClientException {
-    return handleClientException(() -> client.pods().inNamespace(kubeProjectNs)
+    return handleClientOp(() -> client.pods().inNamespace(kubeProjectNs)
         .withLabels(podLabels).list().getItems());
   }
   
   public List<Pod> getPodList(Map<String, String> podLabels) throws KubernetesClientException {
-    return handleClientException(() -> client.pods().inAnyNamespace().withLabels(podLabels).list().getItems());
+    return handleClientOp(() -> client.pods().inAnyNamespace().withLabels(podLabels).list().getItems());
   }
 
   /* In Kubernetes, most of the regex to validate names do not allow the _.
@@ -499,12 +474,12 @@ public class KubeClientService {
   }
 
   private List<Node> getNodeList() throws KubernetesClientException {
-    return handleClientException(() -> client.nodes().list().getItems());
+    return handleClientOp(() -> client.nodes().list().getItems());
   }
 
   private List<String> getReadyNodeIpListInternal() throws KubernetesClientException {
     // Extract node IPs
-    List<String> nodeIPList = getNodeList().stream()
+    return getNodeList().stream()
         // filter only ready nodes
         .filter(node -> node.getStatus().getConditions().stream().anyMatch(
           nodeCondition -> nodeCondition.getType().equalsIgnoreCase("ready")
@@ -514,8 +489,6 @@ public class KubeClientService {
         .filter(nodeAddress -> nodeAddress.getType().equals("InternalIP"))
         .flatMap(nodeAddress -> Stream.of(nodeAddress.getAddress()))
         .collect(Collectors.toList());
-
-    return nodeIPList;
   }
 
   public List<String> getReadyNodeList() {
@@ -566,7 +539,7 @@ public class KubeClientService {
   
   private void updateEKSCoreDNSToUseConsul() {
     ConfigMap coreDnsConfig =
-        handleClientException(() -> client.configMaps().inNamespace("kube-system").withName("coredns").get());
+        handleClientOp(() -> client.configMaps().inNamespace("kube-system").withName("coredns").get());
     if (coreDnsConfig != null) {
       String coreFile = coreDnsConfig.getData().get("Corefile");
       if (!coreFile.contains("consul")) {
@@ -585,7 +558,7 @@ public class KubeClientService {
           
           String updatedCoreFile = coreFile + consulTemplate;
           coreDnsConfig.getData().put("Corefile", updatedCoreFile);
-          handleClientException(() -> client.configMaps().inNamespace("kube-system")
+          handleClientOp(() -> client.configMaps().inNamespace("kube-system")
               .withName("coredns").replace(coreDnsConfig));
         }
       } else {
@@ -599,19 +572,56 @@ public class KubeClientService {
   private interface KubeRunner<T> {
     T run() throws KubernetesClientException;
   }
-  
-  private <T> T handleClientException(KubeRunner<T> op) throws KubernetesClientException{
+
+  private <T> T handleClientOp(KubeRunner<T> op) throws KubernetesClientException {
+    if (client == null) {
+      // initialize client
+      initClient(false);
+    }
+
     try{
       return op.run();
-    }catch (KubernetesClientException ex){
-      if(ex.getCode() == 401 && ex.getMessage().contains("Token may have " +
-          "expired!") && settings.getKubeType() == Settings.KubeType.EKS){
+    } catch (KubernetesClientException ex){
+      if(ex.getCode() == 401 && ex.getMessage().contains("Token may have expired!")
+          && settings.getKubeType() == Settings.KubeType.EKS){
         LOGGER.info("Token may have expired! Reinitialize EKS Kube client.");
-        initClient();
+        initClient(true);
         return op.run();
       }
       LOGGER.log(Level.WARNING, "Failed to execute k8s commands", ex);
       throw ex;
     }
+  }
+
+  private synchronized void initClient(boolean forceInitialization) throws KubernetesClientException {
+    if (!forceInitialization && client != null) {
+      return;
+    }
+
+    LOGGER.info("Initialize " + settings.getKubeType() + " kube client");
+    switch (settings.getKubeType()){
+      case Local:
+        Config config = new ConfigBuilder()
+            .withUsername(settings.getKubeUser())
+            .withMasterUrl(settings.getKubeMasterUrl())
+            .withCaCertFile(settings.getKubeCaCertfile())
+            .withTrustStoreFile(settings.getKubeTruststorePath())
+            .withTrustStorePassphrase(settings.getKubeTruststoreKey())
+            .withKeyStoreFile(settings.getKubeKeystorePath())
+            .withKeyStorePassphrase(settings.getKubeKeystoreKey())
+            .withClientCertFile(settings.getKubeClientCertfile())
+            .withClientKeyFile(settings.getKubeClientKeyfile())
+            .withClientKeyPassphrase(settings.getKubeClientKeypass())
+            .build();
+        client = new DefaultKubernetesClient(config);
+        break;
+      case EKS:
+        client = new DefaultKubernetesClient();
+        updateEKSCoreDNSToUseConsul();
+        break;
+      default:
+    }
+
+    nodeIPListCache = Suppliers.memoizeWithExpiration(this::getReadyNodeIpListInternal, 10, TimeUnit.SECONDS);
   }
 }
