@@ -613,6 +613,7 @@ public class KubeClientService {
             .withClientCertFile(settings.getKubeClientCertfile())
             .withClientKeyFile(settings.getKubeClientKeyfile())
             .withClientKeyPassphrase(settings.getKubeClientKeypass())
+            .withHttp2Disable(true)
             .build();
         client = new DefaultKubernetesClient(config);
         break;
