@@ -51,7 +51,7 @@ angular.module('hopsWorksApp')
 
             self.start = function(mlId) {
 
-                startLoading("Starting TensorBoard...", "Visualizations are loaded in the background and may take a while to appear.");
+                startLoading("Starting TensorBoard...", "If you have many runs to load it may take a while to start.");
 
                 TensorBoardService.startTensorBoard(self.projectId, mlId).then(
                     function(success) {
