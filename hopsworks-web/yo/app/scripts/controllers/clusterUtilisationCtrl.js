@@ -73,6 +73,7 @@ angular.module('hopsWorksApp')
             var getClusterUtilisation = function () {
                 ClusterUtilService.getYarnMetrics().then(
                       function (success) {
+                        var totalGPUs = 0;
                         var resourceInfo = success.data.clusterMetrics.totalUsedResourcesAcrossPartition.resourceInformations.resourceInformation;
                         resourceInfo.forEach(function(item, index, array) {
                           if(item.name=="yarn.io/gpu"){
@@ -82,10 +83,11 @@ angular.module('hopsWorksApp')
                         resourceInfo = success.data.clusterMetrics.totalClusterResourcesAcrossPartition.resourceInformations.resourceInformation;
                         resourceInfo.forEach(function(item, index, array) {
                           if(item.name=="yarn.io/gpu"){
-                           self.availableGPUs = item.value; 
+                           totalGPUs = item.value;
+                           self.availableGPUs = totalGPUs - self.allocatedGPUs;
                           }
                         });
-                        self.gpusPercent = (self.allocatedGPUs/self.availableGPUs)*100;
+                        self.gpusPercent = (self.allocatedGPUs/totalGPUs)*100;
                         if (self.gpusPercent < 70) {
                           self.gpuBarClass = 'progress-bar-success';
                         } else if (self.gpusPercent < 100 ) {
