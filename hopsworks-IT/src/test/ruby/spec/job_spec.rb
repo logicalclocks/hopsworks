@@ -116,6 +116,20 @@ describe "On #{ENV['OS']}" do
         delete_job(@project[:id], job_spark_1)
         expect_status(403)
       end
+      it "should fail to create or update spark job if executor memory is less than the minimum" do
+          create_sparktour_job(@project, job_spark_1, "jar", nil)
+          #get job, change args and config params and put it.
+          get_job(@project[:id], job_spark_1, nil)
+          config = json_body[:config]
+          config[:'spark.executor.memory'] = '1023'
+          json_result = create_sparktour_job(@project, job_spark_1, "jar", config)
+          expect_status_details(400)
+          parsed_json = JSON.parse(json_result)
+          expect(parsed_json.key?("errorCode")).to be true
+          expect(parsed_json.key?("errorMsg")).to be true
+          expect(parsed_json.key?("usrMsg")).to be true
+          expect(parsed_json["errorCode"] == 130029).to be true
+      end
     end
     context 'with authentication test Flink jobs' do
       before :all do

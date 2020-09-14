@@ -91,6 +91,10 @@ angular.module('hopsWorksApp')
             self.guideKafkaTopics = [];
             self.tourService.init(null);
 
+            //Validation of spark executor memory
+            //just set some default values
+            self.sparkExecutorMemory = {minExecutorMemory:1024, hasEnoughMemory:true};
+
             self.getDockerMaxAllocation = function () {
               VariablesService.getVariable('kube_docker_max_memory_allocation')
                   .then(function (success) {
@@ -373,6 +377,10 @@ angular.module('hopsWorksApp')
               if (self.getJobType() === "SPARK") {
                 if (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === "") {
                   growl.warning("Please specify main class first", {ttl: 5000});
+                  return;
+                }
+                if(!self.sparkExecutorMemory.hasEnoughMemory) {
+                  growl.warning("Executor memory should not be less than " + self.sparkExecutorMemory.minExecutorMemory + " MB");
                   return;
                 }
               }
@@ -860,6 +868,7 @@ angular.module('hopsWorksApp')
                 return false;
             };
 
-
-
+            $scope.executorMemoryState = function (exMemory) {
+              self.sparkExecutorMemory = exMemory;
+            };
           }]);

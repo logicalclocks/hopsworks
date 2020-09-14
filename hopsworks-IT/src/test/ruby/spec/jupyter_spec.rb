@@ -92,6 +92,25 @@ describe "On #{ENV['OS']}" do
 
       end
 
+      it "should fail to start if insufficient executor memory is provided" do
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
+        expect_status(201)
+        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
+        expect_status(200)
+        shutdownLevel=6
+        settings = json_body
+        settings[:distributionStrategy] = ""
+        settings[:shutdownLevel] = shutdownLevel
+        settings[:jobConfig][:"spark.executor.memory"] = 1023
+        json_result = post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/start", JSON(settings)
+        expect_status_details(400)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json.key?("errorCode")).to be true
+        expect(parsed_json.key?("errorMsg")).to be true
+        expect(parsed_json.key?("usrMsg")).to be true
+        expect(parsed_json["errorCode"] == 130029).to be true
+      end
+
       it "should not allow starting multiple notebook servers" do
 
         post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"

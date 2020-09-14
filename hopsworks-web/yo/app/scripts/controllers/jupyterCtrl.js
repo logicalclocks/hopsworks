@@ -90,6 +90,10 @@ angular.module('hopsWorksApp')
             self.git_api_key;
             self.gitWorking = false;
             self.gitNewHeadBranchPressed = false;
+
+            //Validation of spark executor memory
+            //just set some default
+            self.sparkExecutorMemory = {minExecutorMemory:1024, hasEnoughMemory:true};
             
             self.gitRepoStatus = {
                 status: 'UNKNOWN',
@@ -610,12 +614,17 @@ angular.module('hopsWorksApp')
             };
 
             self.start = function(mode) {
-
                 // do not allow starting jupyter enterprise if invalid memory picked
                 if (self.jupyterSettings.pythonKernel === true &&
                  self.hasDockerMemory === true &&
                  self.pythonConfigForm &&
                  !self.pythonConfigForm.$valid) {
+                    return;
+                }
+
+                // do not allow starting jupyter server if executor memory is less than the minimum required
+                if(!self.sparkExecutorMemory.hasEnoughMemory) {
+                    growl.warning("Executor memory should not be less than " + self.sparkExecutorMemory.minExecutorMemory + " MB");
                     return;
                 }
 
@@ -703,6 +712,10 @@ angular.module('hopsWorksApp')
                     });
 
 
+            };
+
+            $scope.executorMemoryState = function (exMemory) {
+                self.sparkExecutorMemory = exMemory;
             };
         }
     ]);

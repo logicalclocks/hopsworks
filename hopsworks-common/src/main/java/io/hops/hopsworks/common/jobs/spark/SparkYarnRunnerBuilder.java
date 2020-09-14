@@ -39,6 +39,7 @@
 package io.hops.hopsworks.common.jobs.spark;
 
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -119,7 +120,7 @@ public class SparkYarnRunnerBuilder {
                                   final DistributedFileSystemOps dfsClient, final YarnClient yarnClient,
                                   Settings settings, String kafkaBrokersString, String hopsworksRestEndpoint,
                                   ServiceDiscoveryController serviceDiscoveryController)
-      throws IOException, ServiceDiscoveryException {
+          throws IOException, ServiceDiscoveryException, JobException {
 
     Map<String, ConfigProperty> jobHopsworksProps = new HashMap<>();
     JobType jobType = job.getJobConfig().getJobType();

@@ -40,6 +40,7 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -129,7 +130,7 @@ public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements Ju
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings js, String allowOrigin) throws ServiceException {
+    JupyterSettings js, String allowOrigin) throws ServiceException, JobException {
     
     String prog = settings.getSudoersDir() + "/jupyter.sh";
     
