@@ -582,6 +582,7 @@ public class KubeClientService {
     try{
       return op.run();
     } catch (KubernetesClientException ex){
+      // TODO(Fabio): here in case of timeout exception we should probably retry a couple of times.
       if(ex.getCode() == 401 && ex.getMessage().contains("Token may have expired!")
           && settings.getKubeType() == Settings.KubeType.EKS){
         LOGGER.info("Token may have expired! Reinitialize EKS Kube client.");
