@@ -565,7 +565,7 @@ angular.module('hopsWorksApp')
 
                 PythonService.install(self.projectId, self.pythonVersion, data).then(
                     function (success) {
-                        growl.success("Click on the 'Installed Python Libraries' tab for more info.", {
+                        growl.success("Click on the 'Manage Environment' tab for more info.", {
                             title: 'Installing',
                             ttl: 5000
                         });
