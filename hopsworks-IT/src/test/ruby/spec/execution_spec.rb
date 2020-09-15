@@ -157,7 +157,7 @@ describe "On #{ENV['OS']}" do
               #wait for log aggregation
               wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
+                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -169,7 +169,7 @@ describe "On #{ENV['OS']}" do
               #wait for log aggregation
               wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "err")
-                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for err log aggregation" }
+                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for err log aggregation" }
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -191,7 +191,7 @@ describe "On #{ENV['OS']}" do
               #wait for log aggregation
               wait_result = wait_for_me_time(60) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                { 'success' => (json_body[:log] != "No log available"), 'msg' => "wait for out log aggregation" }
+                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
 
