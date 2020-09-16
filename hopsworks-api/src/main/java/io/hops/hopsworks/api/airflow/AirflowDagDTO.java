@@ -98,11 +98,11 @@ public class AirflowDagDTO {
         if (op.getDependsOn() != null && !op.getDependsOn().isEmpty()) {
           StringBuilder sb = new StringBuilder();
           if (op.getDependsOn().size() == 1) {
-            sb.append(op.getDependsOn().get(0));
+            sb.append(AirflowOperator.sanitizeId(op.getDependsOn().get(0)));
           } else {
             sb.append("[");
             for (String dependency : op.getDependsOn()) {
-              sb.append(dependency).append(",");
+              sb.append(AirflowOperator.sanitizeId(dependency)).append(",");
             }
             sb.append("]");
           }
