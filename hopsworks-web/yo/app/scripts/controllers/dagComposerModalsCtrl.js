@@ -20,7 +20,9 @@ angular.module('hopsWorksApp')
             self = this;
             self.operator = operator;
             self.jobs = jobs;
+            self.jobNames = [];
             self.addedOperators = addedOperators;
+            self.jobCanTakeArguments = false;
 
             self.tmpDagDefinition = {
                 dependsOn: []
@@ -60,6 +62,12 @@ angular.module('hopsWorksApp')
                 }
             }
 
+            self.init = function () {
+                self.jobs.forEach(function (j) {
+                    self.jobNames.push(j.name);
+                });
+            }
+
             self.isUndefined = function(input) {
                 return typeof input === "undefined";
             }
@@ -67,5 +75,18 @@ angular.module('hopsWorksApp')
             self.close = function() {
                 $uibModalInstance.dismiss('cancel');
             }
+
+            self.checkIfJobCanTakeArguments = function () {
+                var selectedJob = self.jobs.find(function (j) {
+                    return j.name == self.operator.jobName;
+                });
+                if(selectedJob != null) {
+                    if(selectedJob.jobType.toUpperCase() !== 'FLINK') {
+                        self.jobCanTakeArguments = true;
+                    }
+                }
+            }
+
+            self.init();
         }
     ]);

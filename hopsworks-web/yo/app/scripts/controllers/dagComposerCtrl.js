@@ -69,11 +69,13 @@ angular.module('hopsWorksApp')
             this.HAS_JOB_NAME_ATTR = 0;
             this.HAS_WAIT_2_FINISH_ATTR = 1;
             this.HAS_FEATURE_GROUPS_NAME_ATTR = 2;
+            this.CAN_REQUIRE_JOB_ARGUMENTS = 3
 
             this.type = type;
             this.name = name;
             this.description = description;
             this.attributesMask = attributesMask;
+            this.jobArgs = "";
         }
 
         Operator.prototype.hasAttribute = function(attribute) {
@@ -85,7 +87,7 @@ angular.module('hopsWorksApp')
 
         var launchJobOperator = new Operator(0, "HopsworksLaunchOperator",
             "Operator to launch a Job in Hopsworks. Job should already be defined in Jobs UI "
-                + "and job name in operator must match the job name in Jobs UI.", [true, true]);
+                + "and job name in operator must match the job name in Jobs UI.", [true, true, false, true]);
         
         var jobSensor = new Operator(1, "HopsworksJobSuccessSensor",
             "Operator which waits for the completion of a specific job. Job must be defined "
@@ -135,7 +137,7 @@ angular.module('hopsWorksApp')
                         var idx = 0;
                         self.jobs = [];
                         success.data.items.forEach(function(value, key) {
-                            self.jobs[idx] = value.name;
+                            self.jobs[idx] = value
                             idx++;
                         })
                     }
