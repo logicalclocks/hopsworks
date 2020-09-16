@@ -3727,7 +3727,12 @@ public class Settings implements Serializable {
 
   public synchronized String getBaseDockerImagePythonName() {
     checkCache();
-    return DOCKER_BASE_IMAGE_PYTHON_NAME + ":" + HOPSWORKS_VERSION;
+    if(isManagedDockerRegistry()){
+      return DOCKER_BASE_NON_PYTHON_IMAGE + ":" + DOCKER_BASE_IMAGE_PYTHON_NAME +
+          "_" + HOPSWORKS_VERSION;
+    }else{
+      return DOCKER_BASE_IMAGE_PYTHON_NAME + ":" + HOPSWORKS_VERSION;
+    }
   }
 
   private String DOCKER_BASE_IMAGE_PYTHON_VERSION = "3.6";
@@ -3756,20 +3761,20 @@ public class Settings implements Serializable {
   }
   
   private String DOCKER_NAMESPACE = "";
-  public String getDockerNamespace(){
+  public synchronized String getDockerNamespace(){
     checkCache();
     return DOCKER_NAMESPACE;
   }
   
   private Boolean MANAGED_DOCKER_REGISTRY = false;
-  public Boolean isManagedDockerRegistry(){
+  public synchronized Boolean isManagedDockerRegistry(){
     checkCache();
-    return MANAGED_DOCKER_REGISTRY;
+    return MANAGED_DOCKER_REGISTRY && isCloud();
   }
 
-  public synchronized String getBaseDockerImageName(){
+  public synchronized String getBaseNonPythonDockerImageWithNoTag(){
     checkCache();
-    return DOCKER_BASE_IMAGE_PYTHON_NAME;
+    return DOCKER_BASE_NON_PYTHON_IMAGE;
   }
 
   private int MAX_ENV_YML_BYTE_SIZE = 20000;
