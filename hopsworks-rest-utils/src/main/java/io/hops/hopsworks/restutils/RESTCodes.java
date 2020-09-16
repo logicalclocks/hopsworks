@@ -184,7 +184,7 @@ public class RESTCodes {
     RESERVED_PROJECT_NAME(73, "Not allowed - reserved project name, pick another project name.",
         Response.Status.BAD_REQUEST),
     PROJECT_ANACONDA_ENABLE_ERROR(74, "Failed to enable conda.", Response.Status.INTERNAL_SERVER_ERROR),
-    PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 29 characters.",
+    PROJECT_NAME_TOO_LONG(75, "Project name is too long - cannot be longer than 25 characters.",
         Response.Status.BAD_REQUEST);
 
 

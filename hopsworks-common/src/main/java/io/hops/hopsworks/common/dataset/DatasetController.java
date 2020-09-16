@@ -181,7 +181,7 @@ public class DatasetController {
     if (user == null || project == null || dataSetName == null) {
       throw new IllegalArgumentException("User, project or dataset were not provided");
     }
-    FolderNameValidator.isValidName(dataSetName, false);
+    FolderNameValidator.isValidName(dataSetName);
     //Logic
     boolean success;
     String dsPath = Utils.getProjectPath(project.getName()) + dataSetName;
@@ -255,7 +255,6 @@ public class DatasetController {
    * <li>Such a folder already exists. </li>
    * <li>The parent folder does not exists. </li>
    * </ul>
-   * @see FolderNameValidator
    * @throws NullPointerException If any of the non-null-allowed parameters is
    * null.
    */
@@ -269,7 +268,6 @@ public class DatasetController {
 
     String folderName = dirPath.getName();
     String parentPath = dirPath.getParent().toString();
-    FolderNameValidator.isValidName(folderName, true);
 
     //Check if the given folder already exists
     if (inodeController.existsPath(dirPath.toString())) {

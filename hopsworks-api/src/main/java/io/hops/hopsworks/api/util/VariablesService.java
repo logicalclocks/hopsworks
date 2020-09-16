@@ -183,4 +183,22 @@ public class VariablesService {
     return Response.ok().entity(questions).build();
   }
 
+  @GET
+  @Path("filename-regex")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  public Response getFileNameValidatorRegex(@QueryParam("type") String type) throws GenericException {
+    FileNameRegexDTO fileNameRegexDTO = new FileNameRegexDTO();
+    if (type == null || type.equals("project")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getProjectNameRegexStr(settings.getReservedProjectNames()));
+      fileNameRegexDTO.setReservedWords(settings.getProjectNameReservedWords().toUpperCase());
+    } else if (type.equals("dataset")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getDatasetNameRegexStr());
+    } else {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Type QueryParam should be:" +
+        "project|dataset|subdir");
+    }
+    return Response.ok(fileNameRegexDTO).build();
+  }
+
 }
