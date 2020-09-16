@@ -27,6 +27,7 @@ public class AirflowOperatorDTO {
   private boolean wait;
   private List<String> dependsOn;
   private String featureGroupName;
+  private String jobArgs;
   
   public AirflowOperatorDTO() {}
   
@@ -77,4 +78,8 @@ public class AirflowOperatorDTO {
   public void setFeatureGroupName(String featureGroupName) {
     this.featureGroupName = featureGroupName;
   }
+  
+  public String getJobArgs() { return jobArgs; }
+  
+  public void setJobArgs(String jobArgs) { this.jobArgs = jobArgs; }
 }

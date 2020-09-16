@@ -82,7 +82,7 @@ public class AirflowDagDTO {
       AirflowOperator operator = null;
       switch (op.getName()) {
         case AirflowJobLaunchOperator.NAME:
-          operator = new AirflowJobLaunchOperator(project.getName(), op.getId(), op.getJobName());
+          operator = new AirflowJobLaunchOperator(project.getName(), op.getId(), op.getJobName(), op.getJobArgs());
           ((AirflowJobLaunchOperator)operator).setWait(op.isWait());
           break;
         case AirflowJobSuccessSensor.NAME:
