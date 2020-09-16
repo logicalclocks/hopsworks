@@ -16,14 +16,20 @@
 
 package io.hops.hopsworks.common.util.templates.airflow;
 
+import java.util.Arrays;
+
 public abstract class AirflowOperator {
   private final String projectName;
   private final String id;
   private String upstream;
+  private static final String[] PYTHON_KEY_WORDS = {"False", "None", "True", "and", "as", "assert",
+    "async", "await", "break", "class", "continue", "def", "del", "elif", "else", "except", "finally", "for",
+    "from", "global", "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
+    "try", "while", "with", "yield"};
   
   public AirflowOperator(String projectName, String id) {
     this.projectName = projectName;
-    this.id = id;
+    this.id = this.sanitizeId(id);
   }
   
   public String getProjectName() {
@@ -40,5 +46,16 @@ public abstract class AirflowOperator {
   
   public void setUpstream(String upstream) {
     this.upstream = upstream;
+  }
+  
+  public static String sanitizeId(String id) {
+    String sanitizedId = id.replaceAll("[^a-zA-Z0-9_]", "_");
+    if(Arrays.stream(PYTHON_KEY_WORDS).anyMatch(s -> s.equals(id))){
+      sanitizedId = "_".concat(sanitizedId);
+    }
+    if(Character.isDigit(sanitizedId.charAt(0))) {
+      sanitizedId = "_".concat(sanitizedId);
+    }
+    return sanitizedId;
   }
 }
