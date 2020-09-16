@@ -70,41 +70,40 @@ public class KubeJobsMonitor implements JobsMonitor {
           if (execution.getState() == JobState.FINISHED
             || execution.getState() == JobState.FAILED
             || execution.getState() == JobState.KILLED) {
-            cleanUpExecution(execution, pod);
+            cleanUpExecution(execution, pod, true);
           } else {
             //Get the app container
             for (ContainerStatus containerStatus : pods.get(0).getStatus().getContainerStatuses()) {
               if (containerStatus.getName().equals(JobType.PYTHON.getName().toLowerCase())) {
                 ContainerState containerState = containerStatus.getState();
                 if (containerState.getTerminated() != null) {
-                  LOGGER.log(Level.INFO, "execution: " + execution.getId() + ", kubeJobType: " +
-                      containerState.getTerminated().getReason());
+                  LOGGER.log(Level.FINEST, "execution: " + execution.getId() + ", kubeJobType: " +
+                    containerState.getTerminated().getReason());
                   execution.setState(KubeJobType.getAsJobState(containerState.getTerminated().getReason()));
-                  cleanUpExecution(execution, pod);
+                  cleanUpExecution(execution, pod, false);
                 } else if (containerState.getWaiting() != null) {
                   String reason = containerState.getWaiting().getReason();
                   String message = containerState.getWaiting().getMessage();
                   // The timeout cannot be set individually per job, it has to be done in kubelet. This is a more
                   // flexible way to fail a waiting app and get the logs
                   if (!Strings.isNullOrEmpty(reason) &&
-                      !reason.equals("ContainerCreating") &&
+                    !reason.equals("ContainerCreating") &&
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
                     execution.setState(KubeJobType.getAsJobState(reason));
-                    cleanUpExecution(execution, pod);
+                    cleanUpExecution(execution, pod, true);
                     // Write log in Logs dataset
                     DistributedFileSystemOps udfso = null;
                     try {
                       udfso = dfs.getDfsOps(execution.getHdfsUser());
                       YarnLogUtil.writeLog(udfso, execution.getStderrPath(),
-                          "Job failed with: " + reason + " - " + message);
+                        "Job failed with: " + reason + " - " + message);
                     } finally {
                       if (udfso != null) {
                         dfs.closeDfsClient(udfso);
                       }
                     }
                   }
-                }
-                else {
+                } else {
                   updateState(JobState.RUNNING, execution);
                 }
               }
@@ -133,15 +132,18 @@ public class KubeJobsMonitor implements JobsMonitor {
     }
   }
   
-  private void cleanUpExecution(Execution execution, Pod pod) {
+  private void cleanUpExecution(Execution execution, Pod pod, boolean deleteKubeJob) {
+    LOGGER.log(Level.FINER, "Execution: " + execution + ", with state:" + execution.getState() + ", pod: " + pod);
     if (execution.getExecutionStop() < 1) {
       execution.setExecutionStop(System.currentTimeMillis());
       execution.setProgress(1);
       execution = executionFacade.update(execution);
     }
-    jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
-    kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()
-      .get("job-name"));
+    if(deleteKubeJob) {
+      jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
+      kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()
+        .get("job-name"));
+    }
   }
   
   @Override

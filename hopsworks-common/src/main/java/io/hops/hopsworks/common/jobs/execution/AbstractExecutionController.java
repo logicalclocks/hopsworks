@@ -43,6 +43,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
@@ -275,7 +276,12 @@ public abstract class AbstractExecutionController implements ExecutionController
           }
         }
       } else {
-        dto.setLog("No log available");
+        String logMsg = "No log available.";
+        if ( execution.getJob().getJobType() == JobType.PYTHON){
+          logMsg+= " If job failed instantaneously, please check again later or try running the job again. Log " +
+            "aggregation can take a few minutes to complete.";
+          dto.setLog(logMsg);
+        }
         if (execution.getState().isFinalState() && execution.getAppId() != null && status) {
           dto.setRetriable(retriable);
         }
