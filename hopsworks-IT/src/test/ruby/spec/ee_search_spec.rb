@@ -1,17 +1,5 @@
 =begin
- This file is part of Hopsworks
  Copyright (C) 2020, Logical Clocks AB. All rights reserved
-
- Hopsworks is free software: you can redistribute it and/or modify it under the terms of
- the GNU Affero General Public License as published by the Free Software Foundation,
- either version 3 of the License, or (at your option) any later version.
-
- Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- PURPOSE.  See the GNU Affero General Public License for more details.
-
- You should have received a copy of the GNU Affero General Public License along with this program.
- If not, see <https://www.gnu.org/licenses/>.
 =end
 
 describe "On #{ENV['OS']}" do
@@ -22,14 +10,6 @@ describe "On #{ENV['OS']}" do
     clean_all_test_projects(spec: "ee_search")
   end
 
-  context "system cleanup" do
-    it "empty queues" do
-      clean_all_test_projects(spec: "ee_search")
-      #make sure epipe is free of work
-      wait_result = epipe_wait_on_mutations(wait_time:30, repeat: 10)
-      expect(wait_result["success"]).to be(true), wait_result["msg"]
-    end
-  end
   context "featurestore" do
     before(:all) do
       @tags = Array.new(3)
