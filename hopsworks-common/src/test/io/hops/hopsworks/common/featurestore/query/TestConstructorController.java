@@ -36,6 +36,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class TestConstructorController {
 
@@ -131,7 +132,7 @@ public class TestConstructorController {
   @Test
   public void testExtractFeaturesBothSides() throws Exception {
     Mockito.when(featuregroupController.getFeatures(Mockito.any())).thenReturn(fg1Features, fg2Features);
-    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(fg1, fg2);
+    Mockito.when(featuregroupFacade.findById(Mockito.any())).thenReturn(Optional.of(fg1), Optional.of(fg2));
     Mockito.when(featurestoreFacade.getHiveDbName(Mockito.any())).thenReturn("fg1", "fg2");
 
     FeaturegroupDTO fg1 = new FeaturegroupDTO();

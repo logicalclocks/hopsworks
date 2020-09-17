@@ -22,8 +22,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
+import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -51,25 +51,15 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   @XmlElement
   private Boolean featHistEnabled;
   @XmlElement
-  private Boolean clusterAnalysisEnabled;
-  @XmlElement
   private List<String> statisticColumns;
-  @XmlElement
-  private Integer numBins;
-  @XmlElement
-  private Integer numClusters;
-  @XmlElement
-  private String corrMethod;
 
   public FeaturegroupDTO() {
   }
 
   public FeaturegroupDTO(Featuregroup featuregroup) {
     super(featuregroup.getFeaturestore().getId(), featuregroup.getName(), featuregroup.getCreated(),
-        featuregroup.getCreator(), featuregroup.getVersion(),
-        (List) featuregroup.getStatistics(), (List) featuregroup.getJobs(),
+        featuregroup.getCreator(), featuregroup.getVersion(), (List) featuregroup.getJobs(),
         featuregroup.getId());
-    this.clusterAnalysisEnabled = featuregroup.isClusterAnalysisEnabled();
     this.descStatsEnabled = featuregroup.isDescStatsEnabled();
     this.featCorrEnabled = featuregroup.isFeatCorrEnabled();
     this.featHistEnabled = featuregroup.isFeatHistEnabled();
@@ -77,9 +67,6 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
     this.statisticColumns = statColumns.stream()
       .map(sc -> sc.getName())
       .collect(Collectors.toList());
-    this.numBins = featuregroup.getNumBins();
-    this.numClusters = featuregroup.getNumClusters();
-    this.corrMethod = featuregroup.getCorrMethod();
   }
   
   public Boolean isDescStatsEnabled() {
@@ -106,44 +93,12 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
     this.featHistEnabled = featHistEnabled;
   }
   
-  public Boolean isClusterAnalysisEnabled() {
-    return clusterAnalysisEnabled;
-  }
-  
-  public void setClusterAnalysisEnabled(boolean clusterAnalysisEnabled) {
-    this.clusterAnalysisEnabled = clusterAnalysisEnabled;
-  }
-  
   public List<String> getStatisticColumns() {
     return statisticColumns;
   }
   
   public void setStatisticColumns(List<String> statisticColumns) {
     this.statisticColumns = statisticColumns;
-  }
-  
-  public Integer getNumBins() {
-    return numBins;
-  }
-  
-  public void setNumBins(Integer numBins) {
-    this.numBins = numBins;
-  }
-  
-  public Integer getNumClusters() {
-    return numClusters;
-  }
-  
-  public void setNumClusters(Integer numClusters) {
-    this.numClusters = numClusters;
-  }
-  
-  public String getCorrMethod() {
-    return corrMethod;
-  }
-  
-  public void setCorrMethod(String corrMethod) {
-    this.corrMethod = corrMethod;
   }
 
   @Override
@@ -152,11 +107,7 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
       ", descStatsEnabled=" + descStatsEnabled +
       ", featCorrEnabled=" + featCorrEnabled +
       ", featHistEnabled=" + featHistEnabled +
-      ", clusterAnalysisEnabled=" + clusterAnalysisEnabled +
-      ", statisticColumns=" + statisticColumns +
-      ", numBins=" + numBins +
-      ", numClusters=" + numClusters +
-      ", corrMethod='" + corrMethod + '\'' +
+      ", statisticColumns=" + statisticColumns + '\'' +
       '}';
   }
 }

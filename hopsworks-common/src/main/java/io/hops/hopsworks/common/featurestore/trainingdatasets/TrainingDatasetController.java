@@ -24,7 +24,7 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeaturestoreFeatureController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
-import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticController;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
@@ -86,8 +86,6 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
-  private FeaturestoreStatisticController featurestoreStatisticController;
-  @EJB
   private FeaturestoreFeatureController featurestoreFeatureController;
   @EJB
   private JobFacade jobFacade;
@@ -121,6 +119,8 @@ public class TrainingDatasetController {
   private HdfsUsersController hdfsUsersBean;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
+  @EJB
+  private StatisticsController statisticsController;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -293,11 +293,6 @@ public class TrainingDatasetController {
         Collectors.toList()));
     trainingDatasetFacade.persist(trainingDataset);
   
-    // Store statistics
-    featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
-        trainingDatasetDTO.getFeatureCorrelationMatrix(), trainingDatasetDTO.getDescriptiveStatistics(),
-      trainingDatasetDTO.getFeaturesHistogram(), trainingDatasetDTO.getClusterAnalysis());
-    
     // Store features
     featurestoreFeatureController.updateTrainingDatasetFeatures(trainingDataset, trainingDatasetDTO.getFeatures());
   
@@ -341,12 +336,15 @@ public class TrainingDatasetController {
    * @throws FeaturestoreException
    */
   public TrainingDatasetDTO getTrainingDatasetWithIdAndFeaturestore(Featurestore featurestore, Integer id)
-      throws FeaturestoreException, ServiceException {
-    TrainingDataset trainingDataset = trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore)
+    throws FeaturestoreException, ServiceException {
+    TrainingDataset trainingDataset = getTrainingDatasetById(featurestore, id);
+    return convertTrainingDatasetToDTO(trainingDataset);
+  }
+
+  public TrainingDataset getTrainingDatasetById(Featurestore featurestore, Integer id) throws FeaturestoreException {
+    return trainingDatasetFacade.findByIdAndFeaturestore(id, featurestore)
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
             Level.FINE, "trainingDatasetId: " + id));
-
-    return convertTrainingDatasetToDTO(trainingDataset);
   }
 
   /**
@@ -402,6 +400,7 @@ public class TrainingDatasetController {
 
     featurestoreUtils.verifyUserRole(trainingDataset, featurestore, user, project);
 
+    statisticsController.deleteStatistics(project, user, trainingDataset);
     trainingDatasetFacade.removeTrainingDataset(trainingDataset);
 
     // If the training datasets was an HopsFS Training Dataset, then remove also the directory
@@ -414,8 +413,7 @@ public class TrainingDatasetController {
         // TODO(Fabio): if Data owner *In project* do operation as superuser
         udfso.rm(dsPath, true);
       } catch (IOException e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_DELETE_TRAINING_DATASET,
-            Level.WARNING, "", e.getMessage(), e);
+
       } finally {
         if (udfso != null) {
           dfs.closeDfsClient(udfso);
@@ -460,24 +458,6 @@ public class TrainingDatasetController {
   }
   
   /**
-   * Updates a training dataset with new metadata
-   *
-   * @param featurestore             the featurestore that the trainingDataset is linked to
-   * @param trainingDatasetDTO       the user input data for updating the training dataset
-   *
-   * @return a JSON/XML DTO of the updated training dataset
-   */
-  public TrainingDatasetDTO updateTrainingDatasetStats(
-    Featurestore featurestore, TrainingDatasetDTO trainingDatasetDTO) throws FeaturestoreException, ServiceException {
-    TrainingDataset trainingDataset = verifyTrainingDatasetId(trainingDatasetDTO.getId(), featurestore);
-    verifyStatisticsInput(trainingDatasetDTO);
-    featurestoreStatisticController.updateFeaturestoreStatistics(null, trainingDataset,
-      trainingDatasetDTO.getFeatureCorrelationMatrix(), trainingDatasetDTO.getDescriptiveStatistics(),
-      trainingDatasetDTO.getFeaturesHistogram(), trainingDatasetDTO.getClusterAnalysis());
-    return convertTrainingDatasetToDTO(trainingDataset);
-  }
-  
-  /**
    * Helper function that gets the Dataset where all the training dataset in the featurestore resides within the project
    *
    * @param project the project to get the dataset for
@@ -510,21 +490,7 @@ public class TrainingDatasetController {
   public String getTrainingDatasetPath(String trainingDatasetsFolderPath, String trainingDatasetName, Integer version){
     return trainingDatasetsFolderPath + "/" + trainingDatasetName + "_" + version;
   }
-  
-  /**
-   * Verifies statistics user input for a feature group
-   *
-   * @param trainingDatasetDTO DTO containing the feature group statistics
-   */
-  private void verifyStatisticsInput(TrainingDatasetDTO trainingDatasetDTO) {
-    if (trainingDatasetDTO.getFeatureCorrelationMatrix() != null &&
-      trainingDatasetDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-        FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
-      throw new IllegalArgumentException(
-        RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
-    }
-  }
-  
+
   /**
    * Verifies the id of a training dataset
    *
@@ -635,6 +601,5 @@ public class TrainingDatasetController {
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
     verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
-    verifyStatisticsInput(trainingDatasetDTO);
   }
 }

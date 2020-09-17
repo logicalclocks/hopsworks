@@ -27,7 +27,13 @@
         <div ng-if="featurestoreCtrl.showPreview" class="content-wrapper">
             <div ng-include="'views/featuregroupPreview.html'"></div>
         </div>
-        <div ng-if="!mainCtrl.showSearchPage && !featurestoreCtrl.showPreview" class="content-wrapper">
+        <div class="content-wrapper" ng-if="featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
+            <fs-statistics project-id="featurestoreCtrl.projectId"
+                           feature-group="featurestoreCtrl.fgStatistics"
+                           training-dataset="featurestoreCtrl.tdStatistics"
+                           close="featurestoreCtrl.closeStatistics()"></fs-statistics>
+        </div>
+        <div class="content-wrapper" ng-show="!featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
             <h3 id="projectBread" style="border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
@@ -138,7 +144,7 @@
                                         <select class="form-control"
                                                 ng-model="featuregroup.activeVersion"
                                                 ng-click="$event.stopPropagation();"
-                                                ng-change="featuregroupViewInfoCtrl.view(featurestoreCtrl.projectId, featurestoreCtrl.projectName, featurestoreCtrl.featurestore, featuregroup, featurestoreCtrl.settings, false); $event.stopPropagation();"
+                                                ng-change="featuregroupViewInfoCtrl.view(featurestoreCtrl, featuregroup, false); $event.stopPropagation();"
                                                 style="z-index: {{100-$index}}">
                                             <option ng-repeat="version in featuregroup.versions">{{version}}</option>
                                         </select>

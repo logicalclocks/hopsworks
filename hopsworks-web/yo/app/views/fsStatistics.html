@@ -1,0 +1,167 @@
+<!--
+ ~
+ ~ This file is part of Hopsworks
+ ~ Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ ~
+ ~ Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ ~ the GNU Affero General Public License as published by the Free Software Foundation,
+ ~ either version 3 of the License, or (at your option) any later version.
+ ~
+ ~ Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ ~ without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ ~ PURPOSE.  See the GNU Affero General Public License for more details.
+ ~
+ ~ You should have received a copy of the GNU Affero General Public License along with this program.
+ ~ If not, see <https://www.gnu.org/licenses/>.
+ ~
+ -->
+<div class="loader loader-sm" ng-show="loading" style="position: unset"></div>
+<div ng-init="maximized=false;fsStatisticsCtrl.init()" class="panel-default"
+     ng-class="{'panel-fullscreen': maximized, 'panel': !maximized, 'sidenav-open': sidenavOpen}">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-book"></i> Statistics </h3>
+        <ul class="list-inline panel-actions">
+            <li>
+              <md-button id="panel-fullscreen" role="button"
+                         title="Close Statistics"
+                         ng-click="close()"
+                         style="min-height: 20px; min-width: 35px; margin: unset">
+                <i class="fa fa-times-circle-o"></i>
+              </md-button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="panel-body" style="background-color: white; overflow: auto">
+
+        <div uib-accordion close-others="false">
+            <div uib-accordion-group class="panel-default" is-open="true">
+                <div uib-accordion-heading>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='General feature statistics'></i>
+                    <span style="margin-left: 20px">
+                        Commit: 
+                    </span>
+                </div>
+
+                <div>
+                    <select ng-show="fsStatisticsCtrl.commitTimes.length > 0" class="form-control"
+                            ng-model="fsStatisticsCtrl.commitTime"
+                            ng-click="$event.stopPropagation();"
+                            ng-change="fsStatisticsCtrl.fetchStatistics(); $event.stopPropagation();">
+                        <option ng-repeat="commitTime in fsStatisticsCtrl.commitTimes">{{commitTime}}</option>
+                    </select>
+                    <h3 class="text-muted" style="text-align: center;" ng-show="fsStatisticsCtrl.commitTimes.length < 1">
+                    No statistics commits available for this entity.
+                    </h3>
+                </div>
+            </div>
+        </div>
+        
+        <div uib-accordion close-others="false">
+            <div uib-accordion-group class="panel-default" is-open="true">
+                <div uib-accordion-heading>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='General feature statistics'></i>
+                    <span style="margin-left: 20px">
+                        General Statistics
+                    </span>
+                </div>
+
+
+                <!-- Descriptive statistics -->
+                <div ng-repeat="column in fsStatisticsCtrl.stats.columns">
+                    <div class="col-sm-2 col-md-2 col-lg-2">
+                        <h3 style="margin-top: 0px; margin-bottom: 0px;">{{column.column}}</h3>
+                        <span>{{column.dataType}}</span>
+                    </div>
+                    <div class="col-sm-6 col-md-6 col-lg-6">
+                         <div class="col-sm-6 col-md-6 col-lg-6">
+                             <table class="table">
+                                  <tbody>
+                                      <tr>
+                                          <td class="fs-table">Distinct Count</td>
+                                          <td class="fs-table">{{column.approximateNumDistinctValues}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Completeness</td>
+                                          <td class="fs-table">{{column.completeness}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Uniqueness</td>
+                                          <td class="fs-table">{{column.uniqueness}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Distinctness</td>
+                                          <td class="fs-table">{{column.distinctness}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Entropy</td>
+                                          <td class="fs-table">{{column.entropy}}</td>
+                                      </tr>
+                                  </tbody>
+                             </table>
+                         </div>
+                         <div class="col-sm-6 col-md-6 col-lg-6" ng-if="column.dataType !== 'String'">
+                             <table class="table">
+                                  <tbody>
+                                      <tr>
+                                          <td class="fs-table">Mean</td>
+                                          <td class="fs-table">{{column.mean}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Max</td>
+                                          <td class="fs-table">{{column.maximum}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Min</td>
+                                          <td class="fs-table">{{column.minimum}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Sum</td>
+                                          <td class="fs-table">{{column.sum}}</td>
+                                      </tr>
+                                      <tr>
+                                          <td class="fs-table">Standard Deviation</td>
+                                          <td class="fs-table">{{column.stdDev}}</td>
+                                      </tr>
+                                  </tbody>
+                             </table>
+                         </div>
+                    </div>
+                    <div class="col-sm-3 col-md-3 col-lg-3" style="margin-top: -30px;">
+                        <nvd3 options="fsStatisticsCtrl.distributionPlotSettings" data="column.histogram"></nvd3>
+                    </div>
+                    <hr class="col-sm-11 col-md-11 col-lg-11" />
+                </div> 
+            </div>
+
+            <div uib-accordion-group class="panel-default" is-open="false">
+                <div uib-accordion-heading>
+                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                       uib-tooltip='Pearson correlation between features in the feature group'></i>
+                    <span style="margin-left: 20px">
+                        Feature Correlation
+                    </span>
+                </div>
+
+                <!-- Correlation -->
+                <div class="col-sm-12 col-md-12 col-lg-12" style="min-height: 500px;" >
+                    <div  class="col-sm-2 col-md-2 col-lg-2" 
+                          isteven-multi-select
+                          input-model="fsStatisticsCtrl.featureNames"
+                          output-model="fsStatisticsCtrl.selectedCorrelationFeatures"
+                          button-label="name"
+                          item-label="name"
+                          tick-property="ticked"
+                          on-item-click="fsStatisticsCtrl.plotCorrelation(data)"
+                          on-select-all="fsStatisticsCtrl.plotCorrelation('all')"
+                          on-select-none="fsStatisticsCtrl.plotCorrelation('none')"
+                          helper-elements="all none filter">
+                    </div>
+                    <div id="correlation" class="col-sm-10 col-md-10 col-lg-10"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

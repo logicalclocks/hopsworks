@@ -59,16 +59,8 @@ public class TrainingDatasetJobDTO {
   private Boolean featureCorrelation;
   @XmlElement(name="feature_histograms")
   private Boolean featureHistograms;
-  @XmlElement(name="cluster_analysis")
-  private Boolean clusterAnalysis;
   @XmlElement(name="stat_columns", nillable = true)
   private List<String> statColumns;
-  @XmlElement(name="num_bins")
-  private int numBins;
-  @XmlElement(name="correlation_method")
-  private String correlationMethod;
-  @XmlElement(name="num_clusters")
-  private int numClusters;
   @XmlElement(name="fixed")
   private Boolean fixed;
   @XmlElement(name="sink", nillable = true)
@@ -90,9 +82,8 @@ public class TrainingDatasetJobDTO {
   public TrainingDatasetJobDTO(List<String> features, String sqlQuery, String trainingDataset,
     String featuregroupsVersionDict, String joinKey, String description, String featurestore, String dataFormat,
     int trainingDatasetVersion, Boolean overwrite, List<String> jobs, Boolean online, Boolean descriptiveStatistics,
-    Boolean featureCorrelation, Boolean featureHistograms, Boolean clusterAnalysis, List<String> statColumns,
-    int numBins, String correlationMethod, int numClusters, Boolean fixed, String sink, int amCores, int amMemory,
-    int executorCores, int executorMemory, int maxExecutors, String path) {
+    Boolean featureCorrelation, Boolean featureHistograms, List<String> statColumns, Boolean fixed, String sink,
+    int amCores, int amMemory, int executorCores, int executorMemory, int maxExecutors, String path) {
     this.features = features;
     this.sqlQuery = sqlQuery;
     this.trainingDataset = trainingDataset;
@@ -108,11 +99,7 @@ public class TrainingDatasetJobDTO {
     this.descriptiveStatistics = descriptiveStatistics;
     this.featureCorrelation = featureCorrelation;
     this.featureHistograms = featureHistograms;
-    this.clusterAnalysis = clusterAnalysis;
     this.statColumns = statColumns;
-    this.numBins = numBins;
-    this.correlationMethod = correlationMethod;
-    this.numClusters = numClusters;
     this.fixed = fixed;
     this.sink = sink;
     this.amCores = amCores;
@@ -246,44 +233,12 @@ public class TrainingDatasetJobDTO {
     this.featureHistograms = featureHistograms;
   }
   
-  public Boolean getClusterAnalysis() {
-    return clusterAnalysis;
-  }
-  
-  public void setClusterAnalysis(Boolean clusterAnalysis) {
-    this.clusterAnalysis = clusterAnalysis;
-  }
-  
   public List<String> getStatColumns() {
     return statColumns;
   }
   
   public void setStatColumns(List<String> statColumns) {
     this.statColumns = statColumns;
-  }
-  
-  public int getNumBins() {
-    return numBins;
-  }
-  
-  public void setNumBins(int numBins) {
-    this.numBins = numBins;
-  }
-  
-  public String getCorrelationMethod() {
-    return correlationMethod;
-  }
-  
-  public void setCorrelationMethod(String correlationMethod) {
-    this.correlationMethod = correlationMethod;
-  }
-  
-  public int getNumClusters() {
-    return numClusters;
-  }
-  
-  public void setNumClusters(int numClusters) {
-    this.numClusters = numClusters;
   }
   
   public Boolean getFixed() {

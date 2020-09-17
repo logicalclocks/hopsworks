@@ -19,7 +19,6 @@ package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.feature.FeaturestoreFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
@@ -107,8 +106,6 @@ public class TrainingDataset implements Serializable {
   @Column(name = "seed")
   private Long seed;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
-  private Collection<FeaturestoreStatistic> statistics;
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreFeature> features;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "trainingDataset")
   private Collection<FeaturestoreJob> jobs;
@@ -183,14 +180,6 @@ public class TrainingDataset implements Serializable {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public Collection<FeaturestoreStatistic> getStatistics() {
-    return statistics;
-  }
-
-  public void setStatistics(Collection<FeaturestoreStatistic> statistics) {
-    this.statistics = statistics;
   }
 
   public Collection<FeaturestoreFeature> getFeatures() {
@@ -276,7 +265,6 @@ public class TrainingDataset implements Serializable {
     if (!Objects.equals(version, that.version)) return false;
     if (!Objects.equals(dataFormat, that.dataFormat)) return false;
     if (!Objects.equals(description, that.description)) return false;
-    if (!Objects.equals(statistics, that.statistics)) return false;
     if (!Objects.equals(features, that.features)) return false;
     if (!Objects.equals(jobs, that.jobs)) return false;
     if (trainingDatasetType != that.trainingDatasetType) return false;
@@ -297,7 +285,6 @@ public class TrainingDataset implements Serializable {
     result = 31 * result + (version != null ? version.hashCode() : 0);
     result = 31 * result + (dataFormat != null ? dataFormat.hashCode() : 0);
     result = 31 * result + (description != null ? description.hashCode() : 0);
-    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
     result = 31 * result + (features != null ? features.hashCode() : 0);
     result = 31 * result + (jobs != null ? jobs.hashCode() : 0);
     result = 31 * result + (trainingDatasetType != null ? trainingDatasetType.hashCode() : 0);

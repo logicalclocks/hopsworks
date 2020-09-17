@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.featuregroup;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -109,7 +110,9 @@ public class FeaturegroupService {
   private FeatureGroupPartitionResource featureGroupPartitionResource;
   @Inject
   private FeatureGroupDetailsResource featureGroupDetailsResource;
-  
+  @Inject
+  private StatisticsResource statisticsResource;
+
   private Project project;
   private Featurestore featurestore;
   private static final Logger LOGGER = Logger.getLogger(FeaturegroupService.class.getName());
@@ -348,8 +351,6 @@ public class FeaturegroupService {
       @PathParam("featuregroupId") Integer featuregroupId,
       @ApiParam(value = "updateMetadata", example = "true")
       @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
-      @ApiParam(value = "updateStats", example = "true")
-      @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
       @ApiParam(value = "enableOnline", example = "true")
       @QueryParam("enableOnline") @DefaultValue("false") Boolean enableOnline,
       @ApiParam(value = "disableOnline", example = "true")
@@ -370,11 +371,8 @@ public class FeaturegroupService {
     if(updateMetadata) {
       updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
     }
-    if(updateStats){
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStats(featurestore, featuregroupDTO);
-    }
     if(enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
-        !featuregroup.getCachedFeaturegroup().isOnlineEnabled()){
+        !(featuregroup.getCachedFeaturegroup().isOnlineEnabled())) {
       updatedFeaturegroupDTO =
           featuregroupController.enableFeaturegroupOnline(featurestore, featuregroupDTO, project, user);
     }
@@ -606,6 +604,15 @@ public class FeaturegroupService {
     partitionResource.setFeaturestore(featurestore);
     partitionResource.setFeatureGroupId(featuregroupId);
     return partitionResource;
+  }
+
+  @Path("/{featureGroupId}/statistics")
+  public StatisticsResource statistics(@PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.statisticsResource.setProject(project);
+    this.statisticsResource.setFeaturestore(featurestore);
+    this.statisticsResource.setFeatureGroupId(featureGroupId);
+    return statisticsResource;
   }
 }
 

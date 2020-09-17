@@ -119,12 +119,9 @@ public class ConstructorController {
     if (featuregroupDTO == null) {
       throw new IllegalArgumentException("Feature group not specified");
     } else {
-      Featuregroup featuregroup = featuregroupFacade.findById(featuregroupDTO.getId());
-      if (featuregroup == null) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
-            "Could not find feature group with ID" + featuregroupDTO.getId());
-      }
-      return featuregroup;
+      return featuregroupFacade.findById(featuregroupDTO.getId())
+          .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND,
+              Level.FINE, "Could not find feature group with ID" + featuregroupDTO.getId()));
     }
   }
 

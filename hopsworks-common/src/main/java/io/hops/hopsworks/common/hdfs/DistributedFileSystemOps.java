@@ -43,10 +43,11 @@ import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.metadata.hdfs.entity.EncodingPolicy;
 import io.hops.metadata.hdfs.entity.EncodingStatus;
-import java.io.BufferedReader;
+
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
@@ -164,15 +165,15 @@ public class DistributedFileSystemOps {
    * @throws IOException
    */
   public String cat(Path file) throws IOException {
-    StringBuilder out = new StringBuilder();
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(dfs.
-            open(file)));) {
-      String line;
-      while ((line = br.readLine()) != null) {
-        out.append(line).append("\n");
+    ByteArrayOutputStream outputBuffer = new ByteArrayOutputStream();
+    byte[] buffer = new byte[64 * 1024];
+    int length;
+    try (DataInputStream dataStream = dfs.open(file)) {
+      while ((length = dataStream.read(buffer)) != -1) {
+        outputBuffer.write(buffer, 0, length);
       }
-      return out.toString();
     }
+    return outputBuffer.toString("UTF-8");
   }
 
   /**

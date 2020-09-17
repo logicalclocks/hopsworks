@@ -53,6 +53,7 @@ angular.module('hopsWorksApp')
             var FEATURESTORE_NAME = 'Featurestore.db';
             var HIVEDB_NAME = 'Hive.db';
             var TRAINING_DATASET_NAME = 'Training Datasets';
+            var STATISTICS_DATASET_NAME = 'Statistics';
             var WAREHOUSE_PATH = "/apps/hive/warehouse";
             var PROJECT_PATH = "/Projects";
             var MAX_NUM_FILES = 1000; // the limit on files to keep in memory
@@ -743,10 +744,10 @@ angular.module('hopsWorksApp')
                 });
             };
 
-            var getAssociatedTrainingDataset = function (sharedFeaturestoreName) {
+            var getAssociatedServiceDataset = function (sharedFeaturestoreName, datasetName) {
                 var fsName = sharedFeaturestoreName;
                 var index = fsName.indexOf(SHARED_DATASET_SEPARATOR);
-                return fsName.substring(0, index + SHARED_DATASET_SEPARATOR.length) + TRAINING_DATASET_NAME;
+                return fsName.substring(0, index + SHARED_DATASET_SEPARATOR.length) + datasetName;
             }
 
             /**
@@ -758,9 +759,11 @@ angular.module('hopsWorksApp')
                 var msg = getDeleteWarnMsg(dataset);
                 if (dataset.datasetType === 'FEATURESTORE' && dataset.shared && dataset.accepted) {
                     var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
-                    var tsName = getAssociatedTrainingDataset(fsName);
+                    var tsName = getAssociatedServiceDataset(fsName, TRAINING_DATASET_NAME);
+                    var statsName = getAssociatedServiceDataset(fsName, STATISTICS_DATASET_NAME);
                     msg += '<br><br><i class="fa fa-info-circle text-info"></i> ' +
-                        'Deleting <strong>' + fsName + '</strong> will also delete <strong>' + tsName + '</strong> if it exists.';
+                        'Deleting <strong>' + fsName + '</strong> will also delete <strong>' + tsName + '</strong>' +
+                        ' and <strong>' + statsName + '</strong> if it exists.';
                 }
                 ModalService.confirm('md', 'Confirm', msg).then(function (success) {
                    removeFile(dataset);
@@ -995,9 +998,11 @@ angular.module('hopsWorksApp')
                 var msg = 'Do you want to accept this dataset and add it to this project?';
                 if (dataset.datasetType === 'FEATURESTORE') {
                     var fsName = replaceName(dataset.name, FEATURESTORE_NAME);
-                    var tsName = getAssociatedTrainingDataset(fsName);
+                    var tsName = getAssociatedServiceDataset(fsName, TRAINING_DATASET_NAME);
+                    var statsName = getAssociatedServiceDataset(fsName, STATISTICS_DATASET_NAME);
                     msg += '<br><i class="fa fa-info-circle text-info"></i> ' +
-                        'Accepting this shared dataset will also add ' + tsName + ' to this project.';
+                        'Accepting this shared dataset will also add ' + tsName + ' and ' + statsName + ' to this' +
+                        ' project.';
                 }
                 ModalService.confirmShare('md', 'Accept Shared Dataset?', msg)
                   .then(function (success) {

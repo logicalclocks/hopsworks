@@ -173,10 +173,10 @@ public class DatasetController {
    * @param dfso
    * folder names, or the folder already exists.
    */
-  public void createDataset(Users user, Project project, String dataSetName, String datasetDescription, int templateId,
-    ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission, DistributedFileSystemOps dfso)
-    throws DatasetException, HopsSecurityException {
-  
+  public Dataset createDataset(Users user, Project project, String dataSetName, String datasetDescription,
+    int templateId, ProvTypeDTO metaStatus, boolean stickyBit, DatasetAccessPermission permission,
+    DistributedFileSystemOps dfso) throws DatasetException, HopsSecurityException {
+
     //Parameter checking.
     if (user == null || project == null || dataSetName == null) {
       throw new IllegalArgumentException("User, project or dataset were not provided");
@@ -191,13 +191,14 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DESTINATION_EXISTS, Level.FINE,
         "Dataset name: " + dataSetName);
     }
+    Dataset newDS = null;
     //Permission 770
     FsPermission fsPermission = new FsPermission(FsAction.ALL, FsAction.ALL, FsAction.NONE, stickyBit);
     success = createFolder(dsPath, templateId, fsPermission, dfso);
     if (success) {
       try {
         ds = inodes.findByInodePK(parent, dataSetName, HopsUtils.dataSetPartitionId(parent, dataSetName));
-        Dataset newDS = new Dataset(ds, project, permission);
+        newDS = new Dataset(ds, project, permission);
         newDS.setSearchable(isSearchable(metaStatus.getMetaStatus()));
         if (datasetDescription != null) {
           newDS.setDescription(datasetDescription);
@@ -225,6 +226,7 @@ public class DatasetController {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_OPERATION_ERROR, Level.INFO,
         "Could not create dataset: " + dataSetName);
     }
+    return newDS;
   }
   
   private boolean isSearchable(Inode.MetaStatus metaStatus) {
@@ -790,12 +792,31 @@ public class DatasetController {
           //Dataset already shared nothing to do
         }
       }
+      // If we migrate Training Datasets to remove the project prefix, these methods can be reused
+      shareFeatureStoreServiceDataset(user, project, targetProject, permission, Settings.ServiceDataset.STATISTICS);
     }
   }
   
   private Dataset getTrainingDataset(Project project) {
     String trainingDatasetName = project.getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
     Inode inode = inodes.findByParentAndName(project.getInode(), trainingDatasetName);
+    return datasetFacade.findByProjectAndInode(project, inode);
+  }
+  
+  private void shareFeatureStoreServiceDataset(Users user, Project project, Project targetProject,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(project, serviceDataset);
+    if (dataset != null) {
+      try {
+        share(targetProject, dataset, user, permission, true);
+      } catch (DatasetException de) {
+        //Dataset already shared nothing to do
+      }
+    }
+  }
+  
+  private Dataset getFeatureStoreServiceDataset(Project project, Settings.ServiceDataset serviceDataset) {
+    Inode inode = inodes.findByParentAndName(project.getInode(), serviceDataset.getName());
     return datasetFacade.findByProjectAndInode(project, inode);
   }
   
@@ -851,7 +872,8 @@ public class DatasetController {
     }
   }
 
-  public void acceptShared(Project project, DatasetSharedWith datasetSharedWith) throws DatasetException {
+  public void acceptShared(Project project, DatasetSharedWith datasetSharedWith)
+    throws DatasetException {
     acceptSharedDs(datasetSharedWith);
     if (DatasetType.FEATURESTORE.equals(datasetSharedWith.getDataset().getDsType())) {
       DatasetSharedWith trainingDataset = getOrCreateSharedTrainingDataset(project,
@@ -863,6 +885,9 @@ public class DatasetController {
           //Dataset not shared or already accepted nothing to do
         }
       }
+      // If we migrate Training Datasets to remove the project prefix, these methods can be reused
+      acceptSharedFeatureStoreServiceDataset(project, datasetSharedWith, datasetSharedWith.getPermission(),
+        Settings.ServiceDataset.STATISTICS);
     }
   }
   
@@ -876,6 +901,32 @@ public class DatasetController {
       sharedTrainingDataset = datasetSharedWithFacade.findByProjectAndDataset(project, trainingDataset);
     }
     return sharedTrainingDataset;
+  }
+  
+  private void acceptSharedFeatureStoreServiceDataset(Project project, DatasetSharedWith datasetSharedWith,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    DatasetSharedWith dataset =
+      getOrCreateSharedFeatureStoreServiceDataset(project, datasetSharedWith.getDataset().getProject(), permission,
+        serviceDataset);
+    if (dataset != null && !dataset.getAccepted()) {
+      try {
+        acceptSharedDs(dataset);
+      } catch (DatasetException de) {
+        //Dataset not shared or already accepted nothing to do
+      }
+    }
+  }
+  
+  private DatasetSharedWith getOrCreateSharedFeatureStoreServiceDataset(Project project, Project parentProject,
+    DatasetAccessPermission permission, Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(parentProject, serviceDataset);
+    DatasetSharedWith sharedDataset = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+    if (sharedDataset == null) {
+      sharedDataset = new DatasetSharedWith(project, dataset, permission, false);
+      datasetSharedWithFacade.save(sharedDataset);
+      sharedDataset = datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
+    }
+    return sharedDataset;
   }
   
   private void acceptSharedDs(DatasetSharedWith datasetSharedWith) throws DatasetException {
@@ -1186,6 +1237,8 @@ public class DatasetController {
       if (trainingDataset != null) {
         unshareDs(project, user, dataset, trainingDataset, dfso);
       }
+      unshareFeatureStoreServiceDataset(user, project, targetProject, dataset, datasetSharedWith,
+        Settings.ServiceDataset.STATISTICS);
     }
     unshareDs(project, user, dataset, datasetSharedWith, dfso);
   }
@@ -1209,6 +1262,23 @@ public class DatasetController {
     datasetSharedWithFacade.remove(datasetSharedWith);
     activityFacade.persistActivity(ActivityFacade.UNSHARED_DATA + dataset.getName() + " with project " +
       datasetSharedWith.getProject().getName(), project, user, ActivityFlag.DATASET);
+  }
+
+  private void unshareFeatureStoreServiceDataset(Users user, Project project, Project targetProject, Dataset dataset,
+    DatasetSharedWith datasetSharedWith, Settings.ServiceDataset serviceDataset) {
+    DatasetSharedWith serviceDatasetSharedWith =
+      getSharedFeatureStoreServiceDataset(targetProject, datasetSharedWith.getDataset().getProject(), serviceDataset);
+    try {
+      unshareDs(project, user, dataset, serviceDatasetSharedWith);
+    } catch (DatasetException de) {
+      //Dataset not shared nothing to do
+    }
+  }
+  
+  private DatasetSharedWith getSharedFeatureStoreServiceDataset(Project project, Project parentProject,
+    Settings.ServiceDataset serviceDataset) {
+    Dataset dataset = getFeatureStoreServiceDataset(parentProject, serviceDataset);
+    return datasetSharedWithFacade.findByProjectAndDataset(project, dataset);
   }
 
   /**

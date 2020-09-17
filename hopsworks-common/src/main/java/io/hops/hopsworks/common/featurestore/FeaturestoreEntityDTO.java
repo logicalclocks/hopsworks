@@ -20,28 +20,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatisticType;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.cluster_analysis.ClusterAnalysisDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.descriptive.DescriptiveStatsDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.descriptive.DescriptiveStatsMetricValuesDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.correlation.CorrelationValueDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.correlation.FeatureCorrelationDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.correlation.FeatureCorrelationMatrixDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.distribution.FeatureDistributionDTO;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.distribution.FeatureDistributionsDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -64,10 +52,6 @@ public abstract class FeaturestoreEntityDTO {
   private Date created;
   private String creator;
   private Integer version;
-  private DescriptiveStatsDTO descriptiveStatistics;
-  private FeatureCorrelationMatrixDTO featureCorrelationMatrix;
-  private FeatureDistributionsDTO featuresHistogram;
-  private ClusterAnalysisDTO clusterAnalysis;
   private String name;
   private Integer id;
   private List<FeatureDTO> features;
@@ -77,10 +61,8 @@ public abstract class FeaturestoreEntityDTO {
   public FeaturestoreEntityDTO() {
   }
   
-  public FeaturestoreEntityDTO(
-    Integer featurestoreId, String name, Date created,
-    Users creator, Integer version, List<FeaturestoreStatistic> featurestoreStatistics,
-    List<FeaturestoreJob> featurestoreJobs, Integer id) {
+  public FeaturestoreEntityDTO(Integer featurestoreId, String name, Date created, Users creator,
+                               Integer version, List<FeaturestoreJob> featurestoreJobs, Integer id) {
     this.featurestoreId = featurestoreId;
     this.created = created;
     this.creator = creator.getEmail();
@@ -88,76 +70,6 @@ public abstract class FeaturestoreEntityDTO {
     this.name = name;
     this.id = id;
     this.jobs = featurestoreJobs.stream().map(FeaturestoreJobDTO::new).collect(Collectors.toList());
-    this.clusterAnalysis = parseClusterAnalysis(featurestoreStatistics);
-    this.featureCorrelationMatrix = parseFeatureCorrelation(featurestoreStatistics);
-    this.descriptiveStatistics = parseDescriptiveStats(featurestoreStatistics);
-    this.featuresHistogram = parseFeatureDistributions(featurestoreStatistics);
-  }
-  
-  private ClusterAnalysisDTO parseClusterAnalysis(List<FeaturestoreStatistic> featurestoreStatistics) {
-    List<FeaturestoreStatistic> clusterAnalysisList = featurestoreStatistics.stream().filter(fss ->
-      fss.getStatisticType() == FeaturestoreStatisticType.CLUSTERANALYSIS)
-      .collect(Collectors.toList());
-    if (clusterAnalysisList.isEmpty()) {
-      return null;
-    }
-    FeaturestoreStatistic clusterAnalysisStatistic = clusterAnalysisList.get(0);
-    return (ClusterAnalysisDTO) clusterAnalysisStatistic.getValue();
-  }
-  
-  private FeatureCorrelationMatrixDTO parseFeatureCorrelation(List<FeaturestoreStatistic> featurestoreStatistics) {
-    List<FeaturestoreStatistic> featureCorrelationList =
-      featurestoreStatistics.stream().filter(fss ->
-        fss.getStatisticType() == FeaturestoreStatisticType.FEATURECORRELATIONS)
-        .collect(Collectors.toList());
-    if (featureCorrelationList.isEmpty()) {
-      return null;
-    }
-    HashMap<String, List<CorrelationValueDTO>> featureCorrelations = new HashMap<>();
-    featureCorrelationList.stream().forEach(fc -> {
-      List<CorrelationValueDTO> featureCorrelationValues =
-        featureCorrelations.getOrDefault(fc.getName(), new ArrayList());
-      featureCorrelationValues.add((CorrelationValueDTO) fc.getValue());
-      featureCorrelations.put(fc.getName(), featureCorrelationValues);
-    });
-    List<FeatureCorrelationDTO> featureCorrelationDTOS = featureCorrelations.entrySet().stream().map(entry -> {
-      FeatureCorrelationDTO featureCorrelationDTO = new FeatureCorrelationDTO();
-      featureCorrelationDTO.setFeatureName(entry.getKey());
-      featureCorrelationDTO.setCorrelationValues(entry.getValue());
-      return featureCorrelationDTO;
-    }).collect(Collectors.toList());
-    FeatureCorrelationMatrixDTO featureCorrelationMatrixDTO = new FeatureCorrelationMatrixDTO();
-    featureCorrelationMatrixDTO.setFeatureCorrelations(featureCorrelationDTOS);
-    return featureCorrelationMatrixDTO;
-  }
-  
-  private DescriptiveStatsDTO parseDescriptiveStats(List<FeaturestoreStatistic> featurestoreStatistics) {
-    List<FeaturestoreStatistic> descriptiveStatisticsList =
-      featurestoreStatistics.stream().filter(fss ->
-        fss.getStatisticType() == FeaturestoreStatisticType.DESCRIPTIVESTATISTICS)
-        .collect(Collectors.toList());
-    if (descriptiveStatisticsList.isEmpty()) {
-      return null;
-    }
-    List<DescriptiveStatsMetricValuesDTO> descriptiveStatsMetricValuesDTOS = descriptiveStatisticsList.stream()
-      .map(fss -> (DescriptiveStatsMetricValuesDTO) fss.getValue()).collect(Collectors.toList());
-    DescriptiveStatsDTO descriptiveStatsDTO = new DescriptiveStatsDTO();
-    descriptiveStatsDTO.setDescriptiveStats(descriptiveStatsMetricValuesDTOS);
-    return descriptiveStatsDTO;
-  }
-  
-  private FeatureDistributionsDTO parseFeatureDistributions(List<FeaturestoreStatistic> featurestoreStatistics) {
-    List<FeaturestoreStatistic> featureDistributions = featurestoreStatistics.stream().filter(fss ->
-      fss.getStatisticType() == FeaturestoreStatisticType.FEATUREDISTRIBUTIONS)
-      .collect(Collectors.toList());
-    if (featureDistributions.isEmpty()) {
-      return null;
-    }
-    List<FeatureDistributionDTO> featureDistributionDTOS = featureDistributions.stream()
-      .map(fss -> (FeatureDistributionDTO) fss.getValue()).collect(Collectors.toList());
-    FeatureDistributionsDTO featureDistributionsDTO = new FeatureDistributionsDTO();
-    featureDistributionsDTO.setFeatureDistributions(featureDistributionDTOS);
-    return featureDistributionsDTO;
   }
   
   @XmlElement
@@ -188,26 +100,6 @@ public abstract class FeaturestoreEntityDTO {
   @XmlElement
   public String getFeaturestoreName() {
     return featurestoreName;
-  }
-  
-  @XmlElement(nillable = true)
-  public FeatureCorrelationMatrixDTO getFeatureCorrelationMatrix() {
-    return featureCorrelationMatrix;
-  }
-  
-  @XmlElement(nillable = true)
-  public FeatureDistributionsDTO getFeaturesHistogram() {
-    return featuresHistogram;
-  }
-  
-  @XmlElement(nillable = true)
-  public ClusterAnalysisDTO getClusterAnalysis() {
-    return clusterAnalysis;
-  }
-  
-  @XmlElement(nillable = true)
-  public DescriptiveStatsDTO getDescriptiveStatistics() {
-    return descriptiveStatistics;
   }
   
   @XmlElement
@@ -255,26 +147,6 @@ public abstract class FeaturestoreEntityDTO {
     this.name = name;
   }
   
-  public void setDescriptiveStatistics(
-    DescriptiveStatsDTO descriptiveStatistics) {
-    this.descriptiveStatistics = descriptiveStatistics;
-  }
-  
-  public void setFeatureCorrelationMatrix(
-    FeatureCorrelationMatrixDTO featureCorrelationMatrix) {
-    this.featureCorrelationMatrix = featureCorrelationMatrix;
-  }
-  
-  public void setFeaturesHistogram(
-    FeatureDistributionsDTO featuresHistogram) {
-    this.featuresHistogram = featuresHistogram;
-  }
-  
-  public void setClusterAnalysis(
-    ClusterAnalysisDTO clusterAnalysis) {
-    this.clusterAnalysis = clusterAnalysis;
-  }
-  
   public void setId(Integer id) {
     this.id = id;
   }
@@ -308,10 +180,6 @@ public abstract class FeaturestoreEntityDTO {
       ", created='" + created + '\'' +
       ", creator='" + creator + '\'' +
       ", version=" + version +
-      ", descriptiveStatistics=" + descriptiveStatistics +
-      ", featureCorrelationMatrix=" + featureCorrelationMatrix +
-      ", featuresHistogram=" + featuresHistogram +
-      ", clusterAnalysis=" + clusterAnalysis +
       ", name='" + name + '\'' +
       ", id=" + id +
       '}';
