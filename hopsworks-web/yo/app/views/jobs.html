@@ -161,22 +161,22 @@
                       total-items="jobsCtrl.totalItems"
                       ng-class="{'active':$index === jobsCtrl.selectedJobs[job.name]['index']}"
                       ng-init="jobsCtrl.initJobs(job, $index)">
-                      <td id="{{job.name}}" ng-click="jobsCtrl.toggle(job, $index);">
+                      <td id="{{job.name}}" ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.name}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.creationTime| date:'medium'}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.jobType}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.creator.firstname}} {{job.creator.lastname}}
                       </td>
-                      <td ng-click="jobsCtrl.toggle(job, $index);">
+                      <td ng-click="jobsCtrl.toggle(job, $index);" style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         {{job.running}}
                       </td>
-                      <td>
+                      <td style="background-color:#ddd; padding: 20px 8px 8px 8px; box-shadow: inset 0px 10px 0px #f1efee;">
                         <div class="btn-group"  role="group">
                           <button
                                 uib-tooltip="Run"
@@ -225,7 +225,7 @@
                       </td>
                     </tr>
                   <!-- Executions -->
-                  <tr dir-paginate-end style="background: white">
+                  <tr dir-paginate-end style="background: white; box-shadow: inset 0px 0px 0px 4px #ddd;">
                     <td style="padding:0px;" colspan="12">
                       <div
                            ng-if="jobsCtrl.executions.hasOwnProperty(job.name) && !jobsCtrl.executionsEmpty(jobsCtrl.executions[job.name])"
