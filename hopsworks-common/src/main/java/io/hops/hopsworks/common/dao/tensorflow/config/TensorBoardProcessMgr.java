@@ -72,7 +72,6 @@ public class TensorBoardProcessMgr {
   private static final Logger LOGGER = Logger.getLogger(TensorBoardProcessMgr.class.getName());
 
   private static final String TENSORBOARD_HOST_TEMPLATE = "http://%s:%d";
-  private static final String PING_PATH = "/hopsworks-api/tensorboard/experiments/%s/";
 
   @EJB
   private Settings settings;
@@ -154,8 +153,10 @@ public class TensorBoardProcessMgr {
           .addCommand(port.toString())
           .addCommand(anacondaEnvironmentPath)
           .addCommand(projectUtils.getFullDockerImageName(project, true))
+          .addCommand(Integer.toString(settings.getTensorBoardMaxReloadThreads()))
           .ignoreOutErrStreams(true)
           .build();
+
         LOGGER.log(Level.FINE, processDescriptor.toString());
 
         ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -348,7 +349,7 @@ public class TensorBoardProcessMgr {
         }
       });
     } catch (Exception ex) {
-      LOGGER.log(Level.SEVERE, "Could not parse URI to ping Jupyter server", ex);
+      LOGGER.log(Level.SEVERE, "Failed to ping TensorBoard server", ex);
       return false;
     }
   }

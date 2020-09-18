@@ -259,12 +259,13 @@ public class Settings implements Serializable {
    * -------------------- Serving ---------------
    */
   private static final String VARIABLE_SERVING_MONITOR_INT = "serving_monitor_int";
-
-  /*
-   * -------------------- Serving ---------------
-   */
   private static final String VARIABLE_SERVING_CONNECTION_POOL_SIZE = "serving_connection_pool_size";
   private static final String VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS = "serving_max_route_connections";
+
+  /*
+   * -------------------- TensorBoard ---------------
+   */
+  private static final String VARIABLE_TENSORBOARD_MAX_RELOAD_THREADS = "tensorboard_max_reload_threads";
 
   /*
    * -------------------- Kubernetes ---------------
@@ -658,11 +659,13 @@ public class Settings implements Serializable {
           ",");
 
       SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
-
       SERVING_CONNECTION_POOL_SIZE = setIntVar(VARIABLE_SERVING_CONNECTION_POOL_SIZE,
         SERVING_CONNECTION_POOL_SIZE);
       SERVING_MAX_ROUTE_CONNECTIONS = setIntVar(VARIABLE_SERVING_MAX_ROUTE_CONNECTIONS,
         SERVING_MAX_ROUTE_CONNECTIONS);
+
+      TENSORBOARD_MAX_RELOAD_THREADS = setIntVar(VARIABLE_TENSORBOARD_MAX_RELOAD_THREADS,
+          TENSORBOARD_MAX_RELOAD_THREADS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
@@ -3384,6 +3387,12 @@ public class Settings implements Serializable {
   public synchronized int getServingMaxRouteConnections() {
     checkCache();
     return SERVING_MAX_ROUTE_CONNECTIONS;
+  }
+
+  private int TENSORBOARD_MAX_RELOAD_THREADS = 1;
+  public synchronized int getTensorBoardMaxReloadThreads() {
+    checkCache();
+    return TENSORBOARD_MAX_RELOAD_THREADS;
   }
 
   private String JUPYTER_HOST = "localhost";
