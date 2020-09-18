@@ -16,7 +16,10 @@
 
 package io.hops.hopsworks.common.experiments.tensorboard;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.dao.hdfs.HdfsLeDescriptorsFacade;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -53,6 +56,8 @@ public class TensorBoardController {
   private HdfsUsersFacade hdfsUsersFacade;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   private static final Logger LOGGER = Logger.getLogger(TensorBoardController.class.getName());
 
@@ -83,7 +88,7 @@ public class TensorBoardController {
    * @throws IOException
    */
   public TensorBoardDTO startTensorBoard(String mlId, Project project, Users user, String tensorBoardLogdir)
-    throws TensorBoardException {
+      throws TensorBoardException, ServiceDiscoveryException {
 
     tensorBoardLogdir = prependNameNode(tensorBoardLogdir);
 
@@ -169,8 +174,9 @@ public class TensorBoardController {
    * @param hdfsPath
    * @return HDFS path with namenode authority
    */
-  public String prependNameNode(String hdfsPath)  {
-    String endPoint = hdfsLeDescriptorsFacade.getRPCEndpoint();
-    return "hdfs://" + endPoint + hdfsPath;
+  public String prependNameNode(String hdfsPath) throws ServiceDiscoveryException {
+    Service namenode = serviceDiscoveryController
+        .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+    return "hdfs://" + namenode.getName() + ":" + namenode.getPort() + hdfsPath;
   }
 }
