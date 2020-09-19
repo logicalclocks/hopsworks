@@ -52,6 +52,7 @@ public class KubeJobsMonitor implements JobsMonitor {
     minute = "*",
     hour = "*")
   public synchronized void monitor(Timer timer) {
+    LOGGER.log(Level.FINE, "Running KubeJobsMonitor timer");
     try {
       // Get all non-finished executions of type Python, if they don't exist in kubernetes, set them to failed
       List<Execution> pendingExecutions = executionFacade.findByTypeAndStates(JobType.PYTHON,
@@ -70,17 +71,16 @@ public class KubeJobsMonitor implements JobsMonitor {
           if (execution.getState() == JobState.FINISHED
             || execution.getState() == JobState.FAILED
             || execution.getState() == JobState.KILLED) {
-            cleanUpExecution(execution, pod, true);
+            cleanUpExecution(execution, pod);
           } else {
             //Get the app container
-            for (ContainerStatus containerStatus : pods.get(0).getStatus().getContainerStatuses()) {
+            for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
               if (containerStatus.getName().equals(JobType.PYTHON.getName().toLowerCase())) {
                 ContainerState containerState = containerStatus.getState();
                 if (containerState.getTerminated() != null) {
-                  LOGGER.log(Level.FINEST, "execution: " + execution.getId() + ", kubeJobType: " +
-                    containerState.getTerminated().getReason());
+                  LOGGER.log(Level.FINEST, "reason: " + containerState.getTerminated().getReason() + ", pod: " + pod);
                   execution.setState(KubeJobType.getAsJobState(containerState.getTerminated().getReason()));
-                  cleanUpExecution(execution, pod, false);
+                  cleanUpExecution(execution, pod);
                 } else if (containerState.getWaiting() != null) {
                   String reason = containerState.getWaiting().getReason();
                   String message = containerState.getWaiting().getMessage();
@@ -89,8 +89,9 @@ public class KubeJobsMonitor implements JobsMonitor {
                   if (!Strings.isNullOrEmpty(reason) &&
                     !reason.equals("ContainerCreating") &&
                     execution.getExecutionDuration() > Settings.PYTHON_JOB_KUBE_WAITING_TIMEOUT_MS) {
+                    LOGGER.log(Level.FINEST, "reason: " + containerState.getTerminated().getReason() + ", pod: " + pod);
                     execution.setState(KubeJobType.getAsJobState(reason));
-                    cleanUpExecution(execution, pod, true);
+                    cleanUpExecution(execution, pod);
                     // Write log in Logs dataset
                     DistributedFileSystemOps udfso = null;
                     try {
@@ -132,18 +133,16 @@ public class KubeJobsMonitor implements JobsMonitor {
     }
   }
   
-  private void cleanUpExecution(Execution execution, Pod pod, boolean deleteKubeJob) {
-    LOGGER.log(Level.FINER, "Execution: " + execution + ", with state:" + execution.getState() + ", pod: " + pod);
+  private void cleanUpExecution(Execution execution, Pod pod) {
+    LOGGER.log(Level.FINEST, "Execution: " + execution + ", with state:" + execution.getState() + ", pod: " + pod);
     if (execution.getExecutionStop() < 1) {
       execution.setExecutionStop(System.currentTimeMillis());
       execution.setProgress(1);
       execution = executionFacade.update(execution);
     }
-    if(deleteKubeJob) {
-      jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
-      kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()
-        .get("job-name"));
-    }
+    jobsJWTManager.cleanJWT(new ExecutionJWT(execution));
+    kubeClientService.deleteJob(pod.getMetadata().getNamespace(), pod.getMetadata().getLabels()
+      .get("job-name"));
   }
   
   @Override
