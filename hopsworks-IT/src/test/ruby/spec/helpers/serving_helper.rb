@@ -70,9 +70,6 @@ module ServingHelper
                requestedInstances: 1
               }
     expect_status(201)
-    if kubernetes_installed
-      sleep(20)
-    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
@@ -98,10 +95,6 @@ module ServingHelper
          requestedInstances: 1
         }
     expect_status(201)
-    # Wait for pod to start
-    if kubernetes_installed
-      sleep(20)
-    end
     Serving.find_by(project_id: project_id, name: serving_name)
   end
 
@@ -129,10 +122,12 @@ module ServingHelper
 
   def wait_for_type(serving_name)
     if !kubernetes_installed
-      wait_for do
+      wait_for(60) do
         system "pgrep -f #{serving_name} -a"
         $?.exitstatus == 0
       end
+      #Wait a bit more for the actual server to start in the container
+      sleep(10)
     else
       sleep(120)
     end
@@ -140,11 +135,11 @@ module ServingHelper
 
   def check_process_running(name)
     if !kubernetes_installed
-    # check if the process is running on the host
-    system "pgrep -f #{name}"
-    if $?.exitstatus != 1
-      raise "the process is still running"
-    end
+      # check if the process is running on the host
+      system "pgrep -f #{name}"
+      if $?.exitstatus != 1
+        raise "the process is still running"
+      end
     else
       sleep(120)
     end

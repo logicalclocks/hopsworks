@@ -122,7 +122,7 @@ describe "On #{ENV['OS']}" do
             wait_for_type(@serving[:name])
           end
 
-          it "should succeeds to infer from a with kafka logging" do
+          it "should succeeds to infer from a serving with kafka logging" do
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 signature_name: 'predict_images',
                 instances: test_data
@@ -206,7 +206,7 @@ describe "On #{ENV['OS']}" do
         before(:all) do
           set_api_key_to_header(@key)
         end
-        it 'should succeeds to infer' do
+        it 'should succeed to infer' do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
               signature_name: 'predict_images',
               instances: test_data

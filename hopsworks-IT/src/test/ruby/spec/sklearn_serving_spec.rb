@@ -322,7 +322,6 @@ describe "On #{ENV['OS']}" do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(400)
           expect_json(errorCode: 240003)
-          expect_json(usrMsg: "Instance is already: Running")
           end
         end
       end
@@ -458,6 +457,7 @@ describe "On #{ENV['OS']}" do
         before :each do
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
           expect_status(200)
+          wait_for_type("sklearn_flask_server.py")
         end
 
         it "should be able to kill a running serving instance" do
@@ -505,35 +505,17 @@ describe "On #{ENV['OS']}" do
 
     describe "#delete", vm: true do
       context 'with serving and python enabled' do
-        before :all do
+        before :each do
           # Make sure no sklearn serving instance is running"
           system "pgrep -f sklearn_flask_server.py | xargs kill -9"
           with_valid_project
           with_python_enabled(@project[:id], "3.6")
-
-          # Make Serving Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Make Version Dir
-          mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1", "#{@user[:username]}",
-                "#{@project[:projectname]}__Models", 750)
-          # Copy model to the servingversion dir
-          copy(SKLEARN_MODEL_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
-          # Copy script to the servingversion dir
-          copy(SKLEARN_SCRIPT_TOUR_FILE_LOCATION, "/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/1/",
-               "#{@user[:username]}",
-               "#{@project[:projectname]}__Models", 750, "#{@project[:projectname]}")
+          with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
-        after :all do
+        after :each do
           purge_all_sklearn_serving_instances
           delete_all_sklearn_serving_instances(@project)
-        end
-
-        before :each do
-          @serving = create_sklearn_serving(@project[:id], @project[:projectname])
         end
 
         it "should be able to delete a serving instance" do
@@ -552,8 +534,9 @@ describe "On #{ENV['OS']}" do
           delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
           expect_status(200)
 
+          sleep(10)
           # Check that the process has been killed
-          wait_for_type("sklearn_flask_server.py")
+          check_process_running("sklearn_flask_server.py")
         end
       end
     end

@@ -85,6 +85,8 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             # Sleep a bit to avoid race condition and SkLearn Flask server starts
             wait_for_type("sklearn_flask_server.py")
+            # Wait for instance to start in the container
+            sleep(10)
           end
 
           after :all do

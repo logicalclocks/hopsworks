@@ -19,6 +19,7 @@ require 'open3'
 module HopsFSHelper
 
   @@hdfs_user = Variables.find_by(id: "hdfs_user").value
+  @@yarn_user = Variables.find_by(id: "yarn_user").value
   @@hadoop_home = Variables.find_by(id: "hadoop_dir").value
   @@hopsworks_user = Variables.find_by(id: "hopsworks_user").value
 
@@ -80,6 +81,15 @@ module HopsFSHelper
   def test_file(path)
     system "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -test -e #{path}\""
     return $?.exitstatus == 0
+  end
+
+  def check_dir_has_files(hdfs_user, application_id)
+    cmd = "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -count /user/#{@@yarn_user}/logs/#{hdfs_user}/logs/#{application_id}\""
+    file_count = ""
+    Open3.popen3(cmd) do |_, stdout, _, _|
+      file_count = stdout.read
+    end
+    file_count.split(" ")[1].to_i  > 0
   end
 
   def copy(src, dest, owner, group, mode, name)
