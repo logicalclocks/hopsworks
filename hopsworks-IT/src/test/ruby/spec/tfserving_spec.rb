@@ -534,14 +534,14 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
 
         # Wait until the service instance is running
-        wait_for_type("tensorflow_model_server")
+        wait_for_type(@serving[:name])
 
         delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}"
         expect_status(200)
 
         sleep(5)
 
-        wait_for_type("tensorflow_model_server")
+        check_process_running("tensorflow_model_server")
       end
     end
   end

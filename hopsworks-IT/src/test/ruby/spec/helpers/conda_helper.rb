@@ -46,8 +46,7 @@ module CondaHelper
   #the registry url and port should not change, if they do fix the tests
   @@registry = "registry.service.consul:4443"
 
-  def wait_for
-    timeout = 600
+  def wait_for(timeout=600)
     start = Time.now
     x = yield
     until x
