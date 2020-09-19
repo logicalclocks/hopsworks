@@ -113,7 +113,7 @@ describe "On #{ENV['OS']}" do
 
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
               #wait for log aggregation
-              wait_result = wait_for_me_time(60) do
+              wait_result = wait_for_me_time(120) do
                 get_execution_log(@project[:id], $job_name, execution_id, "out")
                 { 'success' => (json_body[:log] != "No log available. If job failed instantaneously, please check again later or try running the job again. Log aggregation can take a few minutes to complete."), 'msg' => "wait for out log aggregation" }
               end
@@ -125,7 +125,7 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:log]).to be_present
 
               #wait for log aggregation
-              wait_result = wait_for_me_time(60) do
+              wait_result = wait_for_me_time(120) do
                 get_execution_log(@project[:id], $job_name, execution_id, "err")
                 { 'success' => (json_body[:log] != "No log available. If job failed instantaneously, please check again later or try running the job again. Log aggregation can take a few minutes to complete."), 'msg' => "wait for err log aggregation" }
               end
