@@ -127,7 +127,7 @@ module ServingHelper
         $?.exitstatus == 0
       end
       #Wait a bit more for the actual server to start in the container
-      sleep(10)
+      sleep(20)
     else
       sleep(120)
     end
