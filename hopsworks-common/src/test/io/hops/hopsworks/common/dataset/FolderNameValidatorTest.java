@@ -88,6 +88,13 @@ public class FolderNameValidatorTest {
   }
 
   @Test
+  public void testUnderscoreInMiddleOfNumbers() {
+    Matcher m = FolderNameValidator.getProjectNameRegexValidator().matcher("0_1");
+    boolean isValid = m.find();
+    Assert.assertTrue(isValid);
+  }
+
+  @Test
   public void testProjectsOneAsProjectName() {
     Matcher m = FolderNameValidator.getProjectNameRegexValidator().matcher("Projects One");
     boolean isValid = m.find();
