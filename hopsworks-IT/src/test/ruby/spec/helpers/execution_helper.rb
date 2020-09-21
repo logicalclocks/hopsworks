@@ -48,6 +48,7 @@ module ExecutionHelper
         id = json_body[:appId]
       end
       found_state = (json_body[:state].eql? expected_active_state) || !is_execution_active(json_body)
+      pp "waiting execution active - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
       { 'success' => found_state, 'msg' => "expected:#{expected_active_state} found:#{json_body[:state]}" }
     end
     expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -62,6 +63,7 @@ module ExecutionHelper
         expect(json_body[:state]).to eq(expected_end_state), "job completed with state:#{json_body[:state]}"
       end
       found_state = json_body[:state].eql? expected_end_state
+      pp "waiting execution completed - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
       { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}" }
     end
     expect(wait_result["success"]).to be(true), wait_result["msg"]
@@ -78,6 +80,14 @@ module ExecutionHelper
   def is_execution_active(execution_dto)
     state = execution_dto["state"]
     !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
+  end
+
+  def run_job(project, job_name)
+    start_execution(project["id"], job_name)
+    execution_id = json_body[:id]
+    app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
+    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+    { app_id: app_id, execution_id: execution_id }
   end
 end
 

@@ -133,7 +133,7 @@ module SessionHelper
 
   def create_session(email, password)
     raw_create_session(email, password)
-    expect_status(200)
+    expect_status_details(200)
     expect_json(sessionID: ->(value){ expect(value).not_to be_empty})
     @user = get_user_by_mail(email)
   end

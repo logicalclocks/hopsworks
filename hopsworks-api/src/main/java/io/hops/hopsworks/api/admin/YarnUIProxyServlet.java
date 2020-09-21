@@ -140,10 +140,13 @@ public class YarnUIProxyServlet extends ProxyServlet {
       return;
     }
     if (!servletRequest.isUserInRole("HOPS_ADMIN")) {
-      if (servletRequest.getRequestURI().contains("proxy/application") || servletRequest.getRequestURI().contains(
-        "app/application") || servletRequest.getRequestURI().contains("appattempt/appattempt") || servletRequest.
-        getRequestURI().contains("container/container") || servletRequest.getRequestURI().contains(
-        "containerlogs/container") || servletRequest.getRequestURI().contains("history/application")) {
+      if (servletRequest.getRequestURI().contains("proxy/application")
+        || servletRequest.getRequestURI().contains("app/application")
+        || servletRequest.getRequestURI().contains("appattempt/appattempt")
+        || servletRequest.getRequestURI().contains("container/container")
+        || servletRequest.getRequestURI().contains("containerlogs/container")
+        || servletRequest.getRequestURI().contains("history/application")
+        || servletRequest.getRequestURI().contains("applications/application")) {
         
         String email = servletRequest.getUserPrincipal().getName();
         Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
