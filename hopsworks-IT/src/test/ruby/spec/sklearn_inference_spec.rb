@@ -85,8 +85,6 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             # Sleep a bit to avoid race condition and SkLearn Flask server starts
             wait_for_type("sklearn_flask_server.py")
-            # Wait for instance to start in the container
-            sleep(10)
           end
 
           after :all do
@@ -138,8 +136,6 @@ describe "On #{ENV['OS']}" do
 
           it "should receive an error if the input payload is malformed" do
             # Wait for pod to start
-            kubernetes_installed
-            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict", {
                 somethingwrong: test_data
             }
@@ -149,8 +145,6 @@ describe "On #{ENV['OS']}" do
 
           it "should receive an error if the input payload is empty" do
             # Wait for pod to start
-            kubernetes_installed
-            sleep(30)
             post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/inference/models/#{@serving[:name]}:predict"
             expect_json(errorCode: 250008)
             expect_status(400)
