@@ -99,29 +99,27 @@ module JobHelper
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
 
     elsif type.eql? "py"
-
-      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
-              "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+      if !test_file("/Projects/#{project[:projectname]}/Resources/#{job_name}.py")
+        if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
+          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
+                "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+          get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
+          expect_status_details(200)
+        end
       end
-
-      get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jupyter/convertIPythonNotebook/Resources/" + job_name + ".ipynb"
-      expect_status_details(200)
       if job_conf.nil?
         job_conf = get_spark_default_py_config(project, job_name, "py")
       end
-
       put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
-
     else
-        if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
-          copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
-          "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
-        end
-        if job_conf.nil?
-          job_conf = get_spark_default_py_config(project, job_name, "ipynb")
-        end
-        put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
+      if !test_file("/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb")
+        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/run_single_experiment.ipynb",
+        "/Projects/#{project[:projectname]}/Resources/" + job_name + ".ipynb", @user[:username], "#{project[:projectname]}__Resources", 750, "#{project[:projectname]}")
+      end
+      if job_conf.nil?
+        job_conf = get_spark_default_py_config(project, job_name, "ipynb")
+      end
+      put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/jobs/#{job_name}", job_conf
     end
   end
 
@@ -196,5 +194,9 @@ module JobHelper
     if !json_body.empty? && json_body[:items].present?
       json_body[:items].map{|job| job[:name]}.each{|i| delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{i}"}
     end
+  end
+
+  def job_does_not_exist()
+    response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
   end
 end
