@@ -156,11 +156,18 @@ describe "On #{ENV['OS']}" do
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
               #wait for log aggregation
-              wait_result = wait_for_me_time(60) do
+              wait_result = wait_for_me_time(120) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
                 { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+              # Check if logs are in hdfs under YARN user
+              get_execution(@project[:id], $job_name_4, execution_id)
+              application_id = json_body[:appId]
+              if !check_dir_has_files(hdfs_user, application_id)
+                raise "Log aggregation failed in YARN"
+              end
 
               #get out log
               get_execution_log(@project[:id], $job_name_4, execution_id, "out")
@@ -168,15 +175,9 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:log]).to be_present
 
               #wait for log aggregation
-              wait_result = wait_for_me_time(60) do
+              wait_result = wait_for_me_time(120) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "err")
                 { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for err log aggregation" }
-              end
-              # Check if logs are in hdfs under YARN user
-              get_execution(@project[:id], $job_name_4, execution_id)
-              application_id = json_body[:appId]
-              if !check_dir_has_files(hdfs_user, application_id)
-                raise "Log aggregation failed in YARN"
               end
               expect(wait_result["success"]).to be(true), wait_result["msg"]
 
@@ -197,7 +198,7 @@ describe "On #{ENV['OS']}" do
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
 
               #wait for log aggregation
-              wait_result = wait_for_me_time(60) do
+              wait_result = wait_for_me_time(120) do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "out")
                 { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
               end
