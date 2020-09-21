@@ -227,4 +227,31 @@ public class FolderNameValidatorTest {
     isValid = m.find();
     Assert.assertTrue(isValid);
   }
+
+  @Test
+  public void testProjectNameRegexForUnderscoreFeaturestore() {
+    Settings settings = new Settings();
+    StringTokenizer tokenizer = new StringTokenizer(settings.getProjectNameReservedWordsTest(), ",");
+    HashSet<String> tokens = new HashSet<>(tokenizer.countTokens());
+    while (tokenizer.hasMoreTokens()) {
+      tokens.add(tokenizer.nextToken().trim());
+    }
+    Pattern projectNameRegexValidator = Pattern.compile(FolderNameValidator.getProjectNameRegexStr(tokens),
+      Pattern.CASE_INSENSITIVE);
+    Matcher m = projectNameRegexValidator.matcher("a_FeaturestoreFoo");
+    boolean isValid = m.find();
+    Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("a_FEATURESTORE");
+    isValid = m.find();
+    Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("a_featurestore");
+    isValid = m.find();
+    Assert.assertFalse(isValid);
+
+    m = projectNameRegexValidator.matcher("featurestore_a");
+    isValid = m.find();
+    Assert.assertTrue(isValid);
+  }
 }
