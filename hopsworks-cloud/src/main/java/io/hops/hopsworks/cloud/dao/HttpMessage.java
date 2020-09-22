@@ -3,41 +3,34 @@
  */
 package io.hops.hopsworks.cloud.dao;
 
+import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
+
 public class HttpMessage {
-  private String status;
-  private Integer code;
-  private String message;
-  private HeartbeartResponse payload;
+  private final String status;
+  private final Integer code;
+  private final String message;
+  private HeartbeatResponse payload;
+
+  public HttpMessage(String status, Integer code, String message, HeartbeatResponse payload) {
+    this.status = status;
+    this.code = code;
+    this.message = message;
+    this.payload = payload;
+  }
 
   public String getStatus() {
     return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
   }
 
   public Integer getCode() {
     return code;
   }
 
-  public void setCode(Integer code) {
-    this.code = code;
-  }
-
   public String getMessage() {
     return message;
   }
 
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public HeartbeartResponse getResponse() {
+  public HeartbeatResponse getResponse() {
     return payload;
-  }
-
-  public void setResponse(HeartbeartResponse response) {
-    this.payload = response;
   }
 }
