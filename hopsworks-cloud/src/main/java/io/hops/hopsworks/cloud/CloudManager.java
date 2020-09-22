@@ -314,9 +314,9 @@ public class CloudManager {
 
       if (commands != null) {
         for (RemoveNodesCommand cmd : commands) {
-          if(!commandsStatus.containsKey(cmd.getId())){
-          commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
-              "Successfully started the decommission of " + decommissioning.size() + " nodes"));
+          if (!commandsStatus.containsKey(cmd.getId())) {
+            commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
+                "Successfully started the decommission of " + decommissioning.size() + " nodes"));
           }
         }
       }
@@ -451,13 +451,14 @@ public class CloudManager {
           }
           //then select nodes running no application master and the least number of containers to minimize 
           //interfering with running application
-          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecomCMD, number, (CloudNode cn1, CloudNode cn2) -> {
-            Integer cn1NumContainers
+          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecomCMD, number,
+            (CloudNode cn1, CloudNode cn2) -> {
+              Integer cn1NumContainers
                 = activeNodeReports.get(cn1.getHost()).getNumContainers();
-            Integer cn2NumContainers
+              Integer cn2NumContainers
                 = activeNodeReports.get(cn2.getHost()).getNumContainers();
-            return cn1NumContainers.compareTo(cn2NumContainers);
-          });
+              return cn1NumContainers.compareTo(cn2NumContainers);
+            });
           if (number <= 0) {
             toDecom.putAll(toDecomCMD);
             continue;
