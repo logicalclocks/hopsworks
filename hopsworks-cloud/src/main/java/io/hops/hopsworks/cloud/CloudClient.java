@@ -5,16 +5,8 @@ package io.hops.hopsworks.cloud;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
-import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponseHttpMessage;
-import io.hops.hopsworks.cloud.dao.heartbeat.Version;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommand;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandTypeDeserializer;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandsDeserializer;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
-import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommandSerializer;
+import io.hops.hopsworks.cloud.dao.HeartbeartResponse;
+import io.hops.hopsworks.cloud.dao.HttpMessage;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.util.Settings;
@@ -36,8 +28,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -45,12 +40,6 @@ import java.util.logging.Logger;
 public class CloudClient {
   private final static Logger LOGGER = Logger.getLogger(CloudClient.class.getName());
   private static final Gson GSON_SERIALIZER = new GsonBuilder()
-          // Add your new command Serializer here
-          .registerTypeAdapter(RemoveNodesCommand.class, new RemoveNodesCommandSerializer())
-
-          // Add your new command type here
-          .registerTypeAdapter(CloudCommand.class, new CloudCommandsDeserializer())
-          .registerTypeAdapter(CloudCommandType.class, new CloudCommandTypeDeserializer())
           .create();
 
   @EJB
@@ -103,19 +92,27 @@ public class CloudClient {
     }
   }
 
-  public HeartbeatResponse sendHeartbeat(HeartbeatRequest heartbeatRequest) throws IOException {
+  public HeartbeartResponse sendHeartbeat(List<CloudNode> removedNodes) throws IOException {
+    List<JSONObject> removedNodesJson = new ArrayList<>();
+    for (CloudNode removed : removedNodes) {
+      JSONObject removedJson = new JSONObject();
+      removedJson.put("nodeId", removed.getNodeId());
+      removedNodesJson.add(removedJson);
+    }
+
+    JSONArray jarray = new JSONArray(removedNodesJson);
+    JSONObject entity = new JSONObject();
+    entity.put("removedNodes", jarray);
+
     if (settings.getCloudEventsEndPoint().equals("")) {
       throw new IOException("Failed to send heartbeat endpoint not set");
     }
-    heartbeatRequest.setVersion(Version.CURRENT);
     URI heartBeatUrl = URI.create(settings.getCloudEventsEndPoint() + "/heartbeat");
 
     HttpPost request = new HttpPost(heartBeatUrl);
     request.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     request.setHeader("x-api-key", settings.getCloudEventsEndPointAPIKey());
-    String heartbeatRequestJson = GSON_SERIALIZER.toJson(heartbeatRequest);
-    LOGGER.log(Level.FINE, "HeartbeatRequest: " + heartbeatRequestJson);
-    request.setEntity(new StringEntity(heartbeatRequestJson));
+    request.setEntity(new StringEntity(entity.toString()));
 
     HttpHost host = new HttpHost(heartBeatUrl.getHost(),
         heartBeatUrl.getPort(), heartBeatUrl.getScheme());
@@ -124,14 +121,8 @@ public class CloudClient {
         throw new IOException("Failed to send heartbeat, return status: " + httpResponse.getStatusLine().toString());
       }
       String json = EntityUtils.toString(httpResponse.getEntity(), Charset.defaultCharset());
-      LOGGER.log(Level.FINE, "HeartbeatResponse: " + json);
-      HeartbeatResponseHttpMessage message = GSON_SERIALIZER.fromJson(json, HeartbeatResponseHttpMessage.class);
-      if (message.getPayload().getVersion() == null
-              || !message.getPayload().getVersion().equals(Version.CURRENT)) {
-        throw new IOException("Empty or unsupported CloudHeartbeat version. Current version is " + Version.CURRENT
-                + " and received " + message.getPayload().getVersion());
-      }
-      return message.getPayload();
+      HttpMessage message = GSON_SERIALIZER.fromJson(json, HttpMessage.class);
+      return message.getResponse();
     });
   }
 
