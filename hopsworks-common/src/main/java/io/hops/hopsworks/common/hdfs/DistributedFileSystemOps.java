@@ -794,4 +794,27 @@ public class DistributedFileSystemOps {
   public Map<String, byte[]> getXAttrs(Path path) throws IOException {
     return dfs.getXAttrs(path);
   }
+  
+  /**
+   * Overwrites nodes to the exclude nodes file
+   * files.
+   */
+  public void updateExcludeList(String nodes) throws IOException {
+    dfs.updateExcludeList(nodes);
+  }
+
+  /**
+   * Refreshes the list of hosts and excluded hosts from the configured
+   * files.
+   */
+  public void refreshNodes() throws IOException {
+    dfs.refreshNodes();
+  }
+  
+  /**
+   * Remove datanodes from hdfs
+   */
+  public void removeAndWipeNodes(List<String> nodes, boolean async) throws IOException {
+    dfs.removeAndWipeNodes(nodes, async);
+  }
 }
