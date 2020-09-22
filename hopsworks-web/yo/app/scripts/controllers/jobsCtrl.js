@@ -466,7 +466,6 @@ angular.module('hopsWorksApp')
 
               self.runJob = function (job, index) {
                   self.toggleOn(job, index);
-
                   //If type Flink, run immediately
                   if (job.jobType.toUpperCase() === 'FLINK'){
                       JobService.runJob(self.projectId, job.name).then(
@@ -481,40 +480,35 @@ angular.module('hopsWorksApp')
                           });
                   }
                    else {
-                      //Get args of last job
-                      var args = null;
-                      JobService.getAllExecutions(self.projectId, job.name, "?offset=0&limit=1&sort_by=id:desc").then(
-                          function (success) {
-                              if(success.data.count >0 && success.data.items[0].args !== '') {
-                                  args = success.data.items[0].args;
-                              } else if (StorageService.contains("tour_args_" + job.name)){
-                                  //If it's a tour job and is the first time we run it, get default args
-                                  args = StorageService.get("tour_args_" + job.name);
-                              } else if (StorageService.contains(self.projectId + "_" + job.name + "_fs_hdfs_path")){
-                                  //If it's a feature store statistics job, set input args from storage
-                                  args = '--input ' + StorageService.recover(self.projectId + "_" + job.name + "_fs_hdfs_path");
-                              }
-                              ModalService.jobArgs('md', 'Confirm', 'Input Arguments', args).then(
-                                  function (success) {
-                                      JobService.runJob(self.projectId, job.name, success.args).then(
-                                          function (success) {
-                                              self.getAllJobsStatus();
-                                              self.getJobExecutions(job.name, true);
-                                          }, function (error) {
-                                              if (typeof error.data.usrMsg !== 'undefined') {
-                                                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                                              } else {
-                                                  growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                                              }
-                                          });
-                                  });
-                          }, function (error) {
-                              if (typeof error.data.usrMsg !== 'undefined') {
-                                  growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                              } else {
-                                  growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                              }
-                          });
+                     var args;
+                     if (job.config.defaultArgs) {
+                        JobService.runJob(self.projectId, job.name, null).then(
+                            function (success) {
+                                self.getAllJobsStatus();
+                                self.getJobExecutions(job.name, true);
+                            }, function (error) {
+                                if (typeof error.data.usrMsg !== 'undefined') {
+                                    growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                } else {
+                                    growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                }
+                            });
+                     } else {
+                        ModalService.jobArgs('md', 'Confirm', 'Input Arguments', args).then(
+                            function (success) {
+                                 JobService.runJob(self.projectId, job.name, success.args).then(
+                                     function (success) {
+                                         self.getAllJobsStatus();
+                                         self.getJobExecutions(job.name, true);
+                                     }, function (error) {
+                                         if (typeof error.data.usrMsg !== 'undefined') {
+                                             growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                         } else {
+                                             growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                         }
+                                     });
+                            });
+                     }
                   }
               };
 
@@ -524,7 +518,6 @@ angular.module('hopsWorksApp')
                       }
                   );
               };
-
 
               self.stopJob = function (jobName) {
                   ModalService.confirm("sm", "Stop Job", "Do you really want to stop all runs of this job?")

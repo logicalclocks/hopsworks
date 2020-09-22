@@ -90,5 +90,5 @@ public class JobDTO extends RestDTO<JobDTO> {
   public void setExecutions(ExecutionDTO executions) {
     this.executions = executions;
   }
-  
+
 }

@@ -144,13 +144,14 @@ angular.module('hopsWorksApp')
              * @param jobName name of the job
              * @param argsPath HDFS path to input arguments
              */
-            self.setupUpdateStatsJob = function (jobName) {
+            self.setupUpdateStatsJob = function (jobName, hdfsPath) {
                 var path = self.featurestoreUtil4JExecutable
                 var mainClass = self.featurestoreUtil4jMainClass
                 var jobType = self.sparkJobType
                 var runConfig = {
                     type: "sparkJobConfiguration",
                     appName: jobName,
+                    defaultArgs: '--input ' + hdfsPath,
                     amQueue: "default",
                     amMemory: 4000,
                     amVCores: 1,
@@ -306,9 +307,7 @@ angular.module('hopsWorksApp')
                         function (success) {
                             growl.success("Featurestore util args written to HDFS", {title: 'Success', ttl: 1000});
                             var hdfsPath = success.data.successMessage;
-                            //Save path in local storage so we can retrieve it when launching the job in the UI
-                            StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
-                            var runConfig = self.setupUpdateStatsJob(jobName);
+                            var runConfig = self.setupUpdateStatsJob(jobName, hdfsPath);
                             var jobState = self.setupJobState(runConfig);
                             StorageService.store(self.newJobName, jobState);
                             $uibModalInstance.close(success);
