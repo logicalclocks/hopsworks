@@ -144,7 +144,7 @@
     <commons.lang3.version>3.8.1</commons.lang3.version>
 
     <!-- Dependencies -->
-    <hive.version>3.0.0.2</hive.version>
+    <hive.version>3.0.0.6</hive.version>
   </properties>
 
   <dependencies>
