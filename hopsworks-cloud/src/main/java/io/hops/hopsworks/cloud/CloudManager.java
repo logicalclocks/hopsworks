@@ -18,6 +18,7 @@ import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -56,6 +57,7 @@ import org.apache.hadoop.yarn.api.records.NodeReport;
 import static org.apache.hadoop.yarn.api.records.NodeState.DECOMMISSIONED;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
+import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -175,22 +177,23 @@ public class CloudManager {
   }
 
   private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
-      Map<String, CloudNode> workers) {
+      Map<String, CloudNode> workers) throws InterruptedException {
     Configuration conf = settings.getConfiguration();
     YarnClient yarnClient = yarnClientService.getYarnClientSuper(conf).getYarnClient();
     DistributedFileSystemOps dfsOps = dfsService.getDfsOps();
     //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
     return setAndGetDecommission(commands, workers, yarnClient, dfsOps, conf, caProxy, hostsController);
   }
-
+  
   @VisibleForTesting
   DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
       Map<String, CloudNode> workers, YarnClient yarnClient, DistributedFileSystemOps dfsOps, Configuration conf,
-      CAProxy caProxy, HostsController hostsController) {
+      CAProxy caProxy, HostsController hostsController) throws InterruptedException {
 
     try {
-      boolean success = true;
-      List<NodeReport> nodeReports = yarnClient.getNodeReports();
+      int nbTries = 0;
+      List<NodeReport> nodeReports = getNodeReports(yarnClient);
+      
 
       //nodes that were already decommissioned and are still decommissioned
       //we need to keep trace of them because we need to put them back in the yarn configuration
@@ -252,29 +255,6 @@ public class CloudManager {
         nodes.add(host);
       });
 
-      try {
-        //decomission nodes on yar
-        String xml = createXML(nodes);
-        execute(new RMAdminCLI(conf), new String[]{"-updateExcludeList", xml});
-        execute(new RMAdminCLI(conf), new String[]{
-          "-refreshNodes",
-          "-g",
-          "-server"});
-
-        //decomission nodes on hdfs
-        dfsOps.updateExcludeList(String.join(System.getProperty("line.separator"), nodes));
-        dfsOps.refreshNodes();
-      } catch (Exception ex) {
-        LOG.log(Level.SEVERE, "Failed to remove node.", ex);
-        success = false;
-        if (commands != null) {
-          for (RemoveNodesCommand cmd : commands) {
-            commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
-                ex.getMessage()));
-          }
-        }
-      }
-
       if (!toRemove.isEmpty()) {
         try {
           for (String node : toRemove) {
@@ -290,16 +270,33 @@ public class CloudManager {
           LOG.log(Level.SEVERE, "Failed to remove node.", ex);
         }
       }
+      
+      yarnDecommission(nodes, conf);
 
-      if (commands != null && success) {
+      try {
+        //decomission nodes on hdfs
+        dfsOps.updateExcludeList(String.join(System.getProperty("line.separator"), nodes));
+        dfsOps.refreshNodes();
+      } catch (Exception ex) {
+        LOG.log(Level.SEVERE, "Failed to decommission nodes in hdfs.", ex);
+        //The most important is to decommission in Yarn, it is ok to swallow this exception.
+      }
+
+      if (commands != null) {
         for (RemoveNodesCommand cmd : commands) {
-          commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
-              "Successfully started the decommission of " + decommissioning.size() + " nodes"));
+          if (!commandsStatus.containsKey(cmd.getId())) {
+            commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.SUCCEED,
+                "Successfully started the decommission of " + decommissioning.size() + " nodes"));
+          }
         }
       }
       return new DecommissionStatus(decommissioning.values(), decommissioned.values());
+    } catch (InterruptedException ex){
+      throw ex;
     } catch (Exception ex) {
-      LOG.log(Level.SEVERE, "Failed to remove node.", ex);
+      //if we arrive here it means that none of the decommissioning request has been correctly processed
+      //set all of them as failed
+      LOG.log(Level.SEVERE, "Failed to decommission node.", ex);
       if (commands != null) {
         for (RemoveNodesCommand cmd : commands) {
           commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
@@ -307,6 +304,46 @@ public class CloudManager {
         }
       }
       return new DecommissionStatus();
+    }
+  }
+  
+  private List<NodeReport> getNodeReports(YarnClient yarnClient) 
+      throws IOException, InterruptedException, YarnException {
+    int nbTries = 0;
+    while (true) {
+      try {
+        return yarnClient.getNodeReports();
+      } catch (IOException ex) {
+        LOG.log(Level.SEVERE, "failed to get Yarn node report", ex);
+        nbTries++;
+        if (nbTries == 3) {
+          throw ex;
+        }
+        Thread.sleep(500);
+      }
+    }
+  }
+  
+  private void yarnDecommission(List<String> nodes, Configuration conf) throws Exception {
+    int nbTries = 0;
+    while (true) {
+      try {
+        //decomission nodes on yar
+        String xml = createXML(nodes);
+        execute(new RMAdminCLI(conf), new String[]{"-updateExcludeList", xml});
+        execute(new RMAdminCLI(conf), new String[]{
+          "-refreshNodes",
+          "-g",
+          "-server"});
+        break;
+      } catch (Exception ex) {
+        LOG.log(Level.SEVERE, "Failed to decommission node in Yarn.", ex);
+        nbTries++;
+        if (nbTries == 3) {
+          throw ex;
+        }
+        Thread.sleep(500);
+      }
     }
   }
   
@@ -388,50 +425,60 @@ public class CloudManager {
       Map<String, NodeReport> activeNodeReports, Map<String, Map<Status, Set<CloudNode>>> workerPerType) {
     Map<String, CloudNode> toDecom = new HashMap<>();
     for (RemoveNodesCommand cmd : commands) {
+      Map<String, CloudNode> toDecomCMD = new HashMap<>();
       if (cmd != null && cmd.getNodesToRemove() != null) {
         for (Map.Entry<String, Integer> req : cmd.getNodesToRemove().entrySet()) {
           String type = req.getKey();
           int number = req.getValue();
           Map<Status, Set<CloudNode>> workerPerStatus = workerPerType.get(type);
           if (workerPerStatus == null) {
-            LOG.log(Level.WARNING,
+            //this should not happen. Mark this command as failed and treat the other commands
+            LOG.log(Level.SEVERE,
                 "Trying to decomission more node of type {0} than there is in the cluster missing {1}"
                 + " nodes to remove", new Object[]{type, number});
+            commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
+              "Trying to decomission more nodes of type " + type + " than there is in the cluster. Missing " + number + 
+                " nodes to remove"));
             continue;
           }
           //first try to select node that are not present in yarn
-          number -= addToRemove(Status.NOPRESENT, workerPerStatus, toDecom, number, null);
+          number -= addToRemove(Status.NOPRESENT, workerPerStatus, toDecomCMD, number, null);
           if (number <= 0) {
+            toDecom.putAll(toDecomCMD);
             continue;
           }
           //first try to select node that are unusable
-          number -= addToRemove(Status.UNUSABLE, workerPerStatus, toDecom, number, null);
+          number -= addToRemove(Status.UNUSABLE, workerPerStatus, toDecomCMD, number, null);
           if (number <= 0) {
+            toDecom.putAll(toDecomCMD);
             continue;
           }
           //then select nodes that are empty to avoid interefering with running applications
-          number -= addToRemove(Status.EMPTY, workerPerStatus, toDecom, number, null);
+          number -= addToRemove(Status.EMPTY, workerPerStatus, toDecomCMD, number, null);
           if (number <= 0) {
+            toDecom.putAll(toDecomCMD);
             continue;
           }
           //then select nodes running no application master and the least number of containers to minimize 
           //interfering with running application
-          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecom, number, (CloudNode cn1, CloudNode cn2) -> {
-            Integer cn1NumContainers
+          number -= addToRemove(Status.NOMASTER, workerPerStatus, toDecomCMD, number, 
+            (CloudNode cn1, CloudNode cn2) -> {
+              Integer cn1NumContainers
                 = activeNodeReports.get(cn1.getHost()).getNumContainers();
-            Integer cn2NumContainers
+              Integer cn2NumContainers
                 = activeNodeReports.get(cn2.getHost()).getNumContainers();
-            return cn1NumContainers.compareTo(cn2NumContainers);
-          });
+              return cn1NumContainers.compareTo(cn2NumContainers);
+            });
           if (number <= 0) {
+            toDecom.putAll(toDecomCMD);
             continue;
           }
           //finally select nodes running the least number of application masters to minimize interferences
-          number -= addToRemove(Status.OTHER, workerPerStatus, toDecom, number, (CloudNode cn1, CloudNode cn2) -> {
-            Integer cn1NumAppMaster = new Integer(activeNodeReports.get(cn1.getHost()).
-                getNumApplicationMasters());
-            Integer cn2NumAppMaster = new Integer(activeNodeReports.get(cn2.getHost()).
-                getNumApplicationMasters());
+          number -= addToRemove(Status.OTHER, workerPerStatus, toDecomCMD, number, (CloudNode cn1, CloudNode cn2) -> {
+            Integer cn1NumAppMaster = activeNodeReports.get(cn1.getHost()).
+                getNumApplicationMasters();
+            Integer cn2NumAppMaster = activeNodeReports.get(cn2.getHost()).
+                getNumApplicationMasters();
             if (cn1NumAppMaster.equals(cn2NumAppMaster)) {
               Integer cn1NumContainers
                   = activeNodeReports.get(cn1.getHost()).getNumContainers();
@@ -442,11 +489,16 @@ public class CloudManager {
             return cn1NumAppMaster.compareTo(cn2NumAppMaster);
           });
           if (number <= 0) {
+            toDecom.putAll(toDecomCMD);
             continue;
           }
-          LOG.log(Level.WARNING,
+          //this should not happen. Mark this command as failed and treat the other commands
+          LOG.log(Level.SEVERE,
               "Trying to decomission more node of type {0} than there is in the cluster missing {1} nodes to remove",
               new Object[]{type, number});
+          commandsStatus.put(cmd.getId(), new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.FAILED,
+              "Trying to decomission more nodes of type " + type + " than there is in the cluster. Missing " + number + 
+                " nodes to remove"));
         }
       }
     }
