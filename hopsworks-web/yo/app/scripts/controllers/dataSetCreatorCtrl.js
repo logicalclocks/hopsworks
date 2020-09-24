@@ -47,8 +47,8 @@
 
 
 angular.module('hopsWorksApp')
-        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'path', 'datasetType', 'isDataset',
-          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, path, datasetType, isDataset) {
+        .controller('DataSetCreatorCtrl', ['$cookies', '$uibModalInstance', 'DataSetService', 'MetadataActionService', '$routeParams', 'growl', 'VariablesService', 'ModalService', 'path', 'datasetType', 'isDataset',
+          function ($cookies, $uibModalInstance, DataSetService, MetadataActionService, $routeParams, growl, VariablesService, ModalService, path, datasetType, isDataset) {
 
             var self = this;
             self.path = path;
@@ -70,19 +70,37 @@ angular.module('hopsWorksApp')
 
             self.templates = [];
 
-            self.regex = /^(?!.*?__|.*?&|.*? |.*?\/|.*\\|.*?\?|.*?\*|.*?:|.*?\||.*?'|.*?\"|.*?<|.*?>|.*?%|.*?\(|.*?\)|.*?\;|.*?#).*$/;
+            self.datasetNameValidator = {regex: undefined, reservedWords: undefined};
+            self.subdirNameValidator = {regex: undefined, reservedWords: undefined};
+            VariablesService.getFilenameRegex("dataset").then(
+              function (success) {
+                  self.datasetNameValidator = success.data;
+                  self.datasetNameValidator.regex = new RegExp(self.datasetNameValidator.regex, 'i');
+              });
+            self.getRegex = function () {
+                if (self.path) {
+                    return self.subdirNameValidator;
+                } else {
+                    return self.datasetNameValidator;
+                }
+            };
 
-            MetadataActionService.fetchTemplates($cookies.get('email'))
-                    .then(function (response) {
-                      if (response.board != undefined && response.board !== null && response.status !== "ERROR") {
-                        var temps = JSON.parse(response.board);
-                        angular.forEach(temps.templates, function (value, key) {
-                          self.templates.push(value);
-                        });
-                      }
-                    }, function (error) {
-                      console.log("ERROR " + JSON.stringify(error));
-                    });
+            MetadataActionService.fetchTemplates($cookies.get('email')).then(function (response) {
+                if (response.board != undefined && response.board !== null && response.status !== "ERROR") {
+                  var temps = JSON.parse(response.board);
+                  angular.forEach(temps.templates, function (value, key) {
+                      self.templates.push(value);
+                  });
+                }
+            }, function (error) {
+                console.log("ERROR " + JSON.stringify(error));
+            });
+
+            var showError = function (error, msg, id) {
+              var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : error.data.errorMsg;
+              var refId = typeof id === "undefined"? 444:id;
+              growl.error(errorMsg, {title: msg, ttl: 5000, referenceId: refId});
+            };
 
             var createDataSetDir = function (dataSet) {
               self.working = true;
@@ -92,7 +110,7 @@ angular.module('hopsWorksApp')
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
+                        showError(error, "Error");
                       });
             };
 
@@ -104,7 +122,7 @@ angular.module('hopsWorksApp')
                         $uibModalInstance.close(success);
                       },function (error) {
                         self.working = false;
-                        growl.error(error.data.usrMsg, {title: 'Error', ttl: 5000, referenceId: 444});
+                        showError(error, "Error");
                       });
             };
 

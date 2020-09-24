@@ -43,54 +43,51 @@ import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FolderNameValidator {
-
+  
+  private static String PLACE_HOLDER = "%%s%%";
+  private static String PROJECT_NAME_REGEX = "^(?!^Projects$)" + PLACE_HOLDER + "(?!^[0-9]*$)[a-zA-Z0-9]((?!__)" +
+    "(?!_featurestore)[_a-zA-Z0-9]){0,22}[a-zA-Z0-9]$";
+  private static String DATASET_NAME_REGEX =
+    "^((?!__)(?!^Projects$)" + PLACE_HOLDER + "[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$";
   /**
    * Check if the given String is a valid folder name.
    * <p/>
-   * @param name
-   * @param subdir Indicates a directory under a top-level dataset
    */
-  private static Pattern datasetNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9\\.]){1,87}[-_a-zA-Z0-9]$");
-  private static Pattern subDirNameRegex = Pattern.compile("^((?!__)[-_a-zA-Z0-9 \\.]){0,87}[-_a-zA-Z0-9]$");
-
-  public static void isValidName(String name, boolean subdir) throws DatasetException {
+  private static Pattern projectNameRegexValidator =
+    Pattern.compile(PROJECT_NAME_REGEX.replace(PLACE_HOLDER, ""), Pattern.CASE_INSENSITIVE);
+  private static Pattern datasetNameRegex =
+    Pattern.compile(DATASET_NAME_REGEX.replace(PLACE_HOLDER, ""), Pattern.CASE_INSENSITIVE);
+  
+  public static void isValidName(String name) throws DatasetException {
     if (name == null) {
       throw new IllegalArgumentException("Dataset name is null");
     }
-
-    Matcher m;
-    if (subdir) {
-      m = subDirNameRegex.matcher(name);
-    } else {
-      m = datasetNameRegex.matcher(name);
-    }
-
+    Matcher m = datasetNameRegex.matcher(name);
     if (!m.find()) {
       throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NAME_INVALID, Level.FINE);
     }
   }
-
-  private static Pattern projectNameRegexValidator = Pattern.compile(
-      "^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,61}[a-zA-Z0-9]$");
-
+  
   /**
    * Check if the given String is a valid Project name.
    * <p/>
+   *
    * @param name
    */
   public static void isValidProjectName(ProjectUtils projectUtils, String name) throws ProjectException {
     if (name == null) {
       throw new IllegalArgumentException("Project name is null");
     }
-    if (name.length() > 30) {
+    if (name.length() > 25) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NAME_TOO_LONG, Level.FINE);
     }
-
+    
     if (projectUtils.isReservedProjectName(name)) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.RESERVED_PROJECT_NAME, Level.FINE);
     }
@@ -99,5 +96,25 @@ public class FolderNameValidator {
     if (!m.find()) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.INVALID_PROJECT_NAME, Level.FINE);
     }
+  }
+  
+  public static Pattern getProjectNameRegexValidator() {
+    return projectNameRegexValidator;
+  }
+  
+  public static Pattern getDatasetNameRegex() {
+    return datasetNameRegex;
+  }
+  
+  public static String getProjectNameRegexStr(Set<String> reservedProjectNames) {
+    StringBuilder reservedProjectNamesStr = new StringBuilder();
+    for (String word : reservedProjectNames) {
+      reservedProjectNamesStr.append("(?!^" + word + "$)");
+    }
+    return PROJECT_NAME_REGEX.replace(PLACE_HOLDER, reservedProjectNamesStr.toString());
+  }
+  
+  public static String getDatasetNameRegexStr() {
+    return DATASET_NAME_REGEX.replace(PLACE_HOLDER, "");
   }
 }

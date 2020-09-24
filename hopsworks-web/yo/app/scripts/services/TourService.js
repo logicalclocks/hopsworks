@@ -49,8 +49,8 @@ angular.module('hopsWorksApp')
                 tourService.kafkaTopicName = "DemoKafkaTopic";
                 tourService.kafkaProjectPrefix = "demo_kafka";
                 tourService.sparkProjectPrefix = "demo_spark";
-                tourService.deepLearningProjectPrefix = "demo_deep_learning";
-                tourService.featurestoreProjectPrefix = "demo_featurestore";
+                tourService.deepLearningProjectPrefix = "demo_ml";
+                tourService.featurestoreProjectPrefix = "demo_fs";
                 tourService.featurestoreTourJobName = "featurestore_tour_job";
                 tourService.deepLearningRunTip = "";
                 tourService.showTips = false;
@@ -116,7 +116,7 @@ angular.module('hopsWorksApp')
                 };
 
                 tourService.getDeepLearningJobTip = function(){
-                  if(tourService.activeTour === "deep_learning"){
+                  if(tourService.activeTour === "ml"){
                     tourService.deepLearningRunTip = "An inference job was created for you! Go on and run it after the model is finished.";
                   }
                   return tourService.deepLearningRunTip;

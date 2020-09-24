@@ -41,23 +41,33 @@ package io.hops.hopsworks.common.project;
 import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 
 public enum TourProjectType {
-  SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}),
-  KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.KAFKA}),
-  DEEP_LEARNING("deep_learning", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
-    ProjectServiceEnum.SERVING, ProjectServiceEnum.FEATURESTORE}),
-  FEATURESTORE("featurestore", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
-      ProjectServiceEnum.HIVE, ProjectServiceEnum.FEATURESTORE});
+  SPARK("spark", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS}, "spark"),
+  KAFKA("kafka", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.KAFKA}, "kafka"),
+  ML("ml", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
+    ProjectServiceEnum.SERVING, ProjectServiceEnum.FEATURESTORE}, "deep learning"),
+  FS("fs", new ProjectServiceEnum[]{ProjectServiceEnum.JOBS, ProjectServiceEnum.JUPYTER,
+      ProjectServiceEnum.HIVE, ProjectServiceEnum.FEATURESTORE}, "featurestore");
 
   private final String tourName;
   private final ProjectServiceEnum[] activeServices;
+  private final String description;
 
-  TourProjectType(String tourName, ProjectServiceEnum[] activeServices) {
+  TourProjectType(String tourName, ProjectServiceEnum[] activeServices, String description) {
     this.tourName = tourName;
     this.activeServices = activeServices;
+    this.description = description;
+  }
+  
+  public static TourProjectType fromString(String tourName) {
+    return valueOf(tourName.toUpperCase());
   }
 
   public String getTourName() {
     return tourName;
+  }
+  
+  public String getDescription() {
+    return this.description;
   }
 
   public ProjectServiceEnum[] getActiveServices() {

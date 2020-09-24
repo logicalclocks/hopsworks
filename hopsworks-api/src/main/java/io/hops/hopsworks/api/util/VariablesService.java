@@ -45,7 +45,9 @@ import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.remote.oauth.OauthClientFacade;
+import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
@@ -65,6 +67,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
@@ -145,7 +148,6 @@ public class VariablesService {
     AuthStatus authStatus = new AuthStatus(settings.getTwoFactorAuth(), settings.getLDAPAuthStatus(), settings.
       getKRBAuthStatus(), settings.isPasswordLoginDisabled(), settings.isRegistrationDisabled(), providers);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(authStatus).build();
-  
   }
 
   @GET
@@ -185,5 +187,23 @@ public class VariablesService {
     };
     return Response.ok().entity(questions).build();
   }
-
+  
+  @GET
+  @Path("filename-regex")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  public Response getFileNameValidatorRegex(@QueryParam("type") String type) throws GenericException {
+    FileNameRegexDTO fileNameRegexDTO = new FileNameRegexDTO();
+    if (type == null || type.equals("project")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getProjectNameRegexStr(settings.getReservedProjectNames()));
+      fileNameRegexDTO.setReservedWords(settings.getProjectNameReservedWords().toUpperCase());
+    } else if (type.equals("dataset")) {
+      fileNameRegexDTO.setRegex(FolderNameValidator.getDatasetNameRegexStr());
+    } else {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Type QueryParam should be:" +
+        "project|dataset|subdir");
+    }
+    return Response.ok(fileNameRegexDTO).build();
+  }
+  
 }

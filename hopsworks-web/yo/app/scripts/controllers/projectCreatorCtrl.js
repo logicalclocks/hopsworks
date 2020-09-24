@@ -40,8 +40,8 @@
 'use strict';
 
 angular.module('hopsWorksApp')
-        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', '$rootScope', 'ProjectService', 'UserService', 'growl',
-          function ($uibModalInstance, $scope, $rootScope, ProjectService, UserService, growl) {
+        .controller('ProjectCreatorCtrl', ['$uibModalInstance', '$scope', '$rootScope', 'ProjectService', 'UserService', 'VariablesService', 'ModalService', 'growl',
+          function ($uibModalInstance, $scope, $rootScope, ProjectService, UserService, VariablesService, ModalService, growl) {
 
             var self = this;
 
@@ -68,7 +68,11 @@ angular.module('hopsWorksApp')
             self.projectName = '';
             self.projectDesc = '';
 
-            self.regex = /^[a-zA-Z0-9]((?!__)[_a-zA-Z0-9]){0,62}$/;
+            VariablesService.getFilenameRegex("project").then(
+              function (success) {
+                  self.projectNameValidator = success.data;
+                  self.projectNameValidator.regex = new RegExp(self.projectNameValidator.regex, 'i');
+              });
 
             UserService.profile().then(
                 function (success) {

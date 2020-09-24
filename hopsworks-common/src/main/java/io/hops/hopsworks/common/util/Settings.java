@@ -492,6 +492,25 @@ public class Settings implements Serializable {
 
     return defaultValue;
   }
+  
+  private Set<String> setStringHashSet(String varName, String defaultValue, String separator) {
+    String value = setStrVar(varName, defaultValue);
+    return setStringHashSetLowerCase(value, separator, false);
+  }
+  
+  private Set<String> setStringHashSetLowerCase(String varName, String defaultValue, String separator) {
+    RESERVED_PROJECT_NAMES_STR = setStrVar(varName, defaultValue);
+    return setStringHashSetLowerCase(RESERVED_PROJECT_NAMES_STR, separator, true);
+  }
+  
+  private Set<String> setStringHashSetLowerCase(String values, String separator, boolean toLowerCase) {
+    StringTokenizer tokenizer = new StringTokenizer(values, separator);
+    HashSet<String> tokens = new HashSet<>(tokenizer.countTokens());
+    while (tokenizer.hasMoreTokens()) {
+      tokens.add(toLowerCase? tokenizer.nextToken().trim().toLowerCase() : tokenizer.nextToken().trim());
+    }
+    return tokens;
+  }
 
   private boolean cached = false;
 
@@ -719,13 +738,9 @@ public class Settings implements Serializable {
   
       KIBANA_MULTI_TENANCY_ENABELED = setBoolVar(VARIABLE_KIBANA_MULTI_TENANCY_ENABLED,
           KIBANA_MULTI_TENANCY_ENABELED);
-      
-      String reservedProjectNamesRaw = setStrVar(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES);
-      StringTokenizer tokenizer = new StringTokenizer(reservedProjectNamesRaw, ",");
-      RESERVED_PROJECT_NAMES = new HashSet<>(tokenizer.countTokens());
-      while (tokenizer.hasMoreTokens()) {
-        RESERVED_PROJECT_NAMES.add(tokenizer.nextToken());
-      }
+  
+      RESERVED_PROJECT_NAMES =
+        setStringHashSetLowerCase(VARIABLE_RESERVED_PROJECT_NAMES, DEFAULT_RESERVED_PROJECT_NAMES, ",");
   
       CLOUD_EVENTS_ENDPOINT = setStrVar(VARIABLE_CLOUD_EVENTS_ENDPOINT,
           CLOUD_EVENTS_ENDPOINT);
@@ -1448,14 +1463,48 @@ public class Settings implements Serializable {
   public static final String DIR_META_TEMPLATES = Path.SEPARATOR + "user" + Path.SEPARATOR + "metadata"
     + Path.SEPARATOR + "uploads" + Path.SEPARATOR;
   public static final String PROJECT_STAGING_DIR = "Resources";
-  
+  // Any word added to reserved words in DEFAULT_RESERVED_PROJECT_NAMES and DEFAULT_RESERVED_HIVE_NAMES should
+  // also be added in the documentation in:
+  // https://hopsworks.readthedocs.io/en/<hopsworksDocVersion>/user_guide/hopsworks/newProject.html
   private final static String DEFAULT_RESERVED_PROJECT_NAMES = "hops-system,hopsworks,information_schema,airflow," +
     "glassfish_timers,grafana,hops,metastore,mysql,ndbinfo,performance_schema,sqoop,sys";
+  //Hive reserved words can be found at:
+  //https://cwiki.apache.org/confluence/display/hive/LanguageManual+DDL#LanguageManualDDL-Keywords,Non-
+  //reservedKeywordsandReservedKeywords
+  private final static String DEFAULT_RESERVED_HIVE_NAMES = "ALL, ALTER, AND, ARRAY, AS, AUTHORIZATION, BETWEEN, " +
+    "BIGINT, BINARY, BOOLEAN, BOTH, BY, CASE, CAST, CHAR, COLUMN, CONF, CREATE, CROSS, CUBE, CURRENT, CURRENT_DATE, " +
+    "CURRENT_TIMESTAMP, CURSOR, DATABASE, DATE, DECIMAL, DELETE, DESCRIBE, DISTINCT, DOUBLE, DROP, ELSE, END, " +
+    "EXCHANGE, EXISTS, EXTENDED, EXTERNAL, FALSE, FETCH, FLOAT, FOLLOWING, FOR, FROM, FULL, FUNCTION, GRANT, GROUP, " +
+    "GROUPING, HAVING, IF, IMPORT, IN, INNER, INSERT, INT, INTERSECT, INTERVAL, INTO, IS, JOIN, LATERAL, LEFT, LESS, " +
+    "LIKE, LOCAL, MACRO, MAP, MORE, NONE, NOT, NULL, OF, ON, OR, ORDER, OUT, OUTER, OVER, PARTIALSCAN, PARTITION, " +
+    "PERCENT, PRECEDING, PRESERVE, PROCEDURE, RANGE, READS, REDUCE, REVOKE, RIGHT, ROLLUP, ROW, ROWS, SELECT, SET, " +
+    "SMALLINT, TABLE, TABLESAMPLE, THEN, TIMESTAMP, TO, TRANSFORM, TRIGGER, TRUE, TRUNCATE, UNBOUNDED, UNION, " +
+    "UNIQUEJOIN, UPDATE, USER, USING, UTC_TMESTAMP, VALUES, VARCHAR, WHEN, WHERE, WINDOW, WITH, COMMIT, ONLY, " +
+    "REGEXP, RLIKE, ROLLBACK, START, CACHE, CONSTRAINT, FOREIGN, PRIMARY, REFERENCES, DAYOFWEEK, EXTRACT, FLOOR, " +
+    "INTEGER, PRECISION, VIEWS, TIME, NUMERIC, SYNC";
+  
   private Set<String> RESERVED_PROJECT_NAMES;
+  private String RESERVED_PROJECT_NAMES_STR;
   
   public synchronized Set<String> getReservedProjectNames() {
     checkCache();
-    return RESERVED_PROJECT_NAMES != null ? RESERVED_PROJECT_NAMES : new HashSet<>();
+    RESERVED_PROJECT_NAMES = RESERVED_PROJECT_NAMES != null ? RESERVED_PROJECT_NAMES : new HashSet<>();
+    RESERVED_PROJECT_NAMES.addAll(getReservedHiveNames());
+    return RESERVED_PROJECT_NAMES;
+  }
+  
+  public synchronized Set<String> getReservedHiveNames() {
+    return setStringHashSetLowerCase(DEFAULT_RESERVED_HIVE_NAMES, ",", true);
+  }
+  
+  public synchronized String getProjectNameReservedWords() {
+    checkCache();
+    return (RESERVED_PROJECT_NAMES_STR + ", " + DEFAULT_RESERVED_HIVE_NAMES).toLowerCase();
+  }
+  
+  //Only for unit test
+  public synchronized String getProjectNameReservedWordsTest() {
+    return (DEFAULT_RESERVED_PROJECT_NAMES + ", " + DEFAULT_RESERVED_HIVE_NAMES).toLowerCase();
   }
   
   // Elasticsearch

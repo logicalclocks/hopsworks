@@ -54,7 +54,6 @@ import io.hops.hopsworks.common.dao.metadata.db.TemplateFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
-import io.hops.hopsworks.common.dataset.FolderNameValidator;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
@@ -234,7 +233,6 @@ public class UploadService {
           parent = inodes.findByInodePK(parent, dirName, partitionId);
           depth += 1;
         } else {
-          FolderNameValidator.isValidName(dirName, true);
           exist = false;
         }
       }

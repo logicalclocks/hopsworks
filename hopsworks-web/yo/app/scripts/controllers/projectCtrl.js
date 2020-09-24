@@ -130,11 +130,11 @@ angular.module('hopsWorksApp')
               } else if (angular.equals(self.currentProject.projectName
                       .substr(0, self.tourService.deepLearningProjectPrefix.length),
                       self.tourService.deepLearningProjectPrefix)) {
-                self.tourService.setActiveTour('deep_learning');
+                self.tourService.setActiveTour('ml');
               } else if (angular.equals(self.currentProject.projectName
                       .substr(0, self.tourService.featurestoreProjectPrefix.length),
                   self.tourService.featurestoreProjectPrefix)) {
-                  self.tourService.setActiveTour('featurestore');
+                  self.tourService.setActiveTour('fs');
               }
 
               // Angular adds '#' symbol to the url when click on the home logo
@@ -369,7 +369,7 @@ angular.module('hopsWorksApp')
                           }
                       );
                   }, function (error) {
-                      if (self.currentProject.projectName.startsWith("demo_deep_learning")) {
+                      if (self.currentProject.projectName.startsWith("demo_ml")) {
                           self.goToUrl('jupyter');
                       } else {
                           ModalService.confirm('sm', 'Enable Anaconda First', 'You need to enable Anaconda before running Jupyter!')

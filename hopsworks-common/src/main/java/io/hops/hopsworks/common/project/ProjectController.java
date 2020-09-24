@@ -2456,7 +2456,7 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case DEEP_LEARNING:
+        case ML:
           tourFilesDataset = Settings.HOPS_DL_TOUR_DATASET;
           datasetController.createDataset(user, project, tourFilesDataset, "sample training data for notebooks", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET)
@@ -2486,7 +2486,7 @@ public class ProjectController {
               "project: " + project.getName(), ex.getMessage(), ex);
           }
           break;
-        case FEATURESTORE:
+        case FS:
           datasetController.createDataset(user, project, tourFilesDataset, "files for guide projects", -1,
             Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET),
             false, DatasetAccessPermission.EDITABLE, dfso);
