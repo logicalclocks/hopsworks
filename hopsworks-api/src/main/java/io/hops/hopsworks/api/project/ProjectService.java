@@ -529,46 +529,50 @@ public class ProjectService {
     throws DatasetException, GenericException, KafkaException, ProjectException, UserException, ServiceException,
     HopsSecurityException, FeaturestoreException, JobException, IOException, ElasticException, SchemaException,
     ProvenanceException {
-    if (!Arrays.asList(TourProjectType.values()).contains(TourProjectType.valueOf(type.toUpperCase()))) {
+    TourProjectType demoType;
+    try {
+      demoType = TourProjectType.fromString(type);
+    } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
-
     ProjectDTO projectDTO = new ProjectDTO();
     Project project = null;
-    projectDTO.setDescription("A demo project for getting started with " + type);
+    projectDTO.setDescription("A demo project for getting started with " + demoType.getDescription());
 
     Users user = jWTHelper.getUserPrincipal(sc);
-    String username = usersController.generateUsername(user.getEmail());
+    String username = user.getUsername();
     List<String> projectServices = new ArrayList<>();
     //save the project
 
-    TourProjectType demoType = null;
     String readMeMessage = null;
-    if (TourProjectType.SPARK.getTourName().equalsIgnoreCase(type)) {
-      // It's a Spark guide
-      demoType = TourProjectType.SPARK;
-      projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.SPARK);
-      readMeMessage = "jar file to demonstrate the creation of a spark batch job";
-    } else if (TourProjectType.KAFKA.getTourName().equalsIgnoreCase(type)) {
-      // It's a Kafka guide
-      demoType = TourProjectType.KAFKA;
-      projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.KAFKA);
-      readMeMessage = "jar file to demonstrate Kafka streaming";
-    } else if (TourProjectType.DEEP_LEARNING.getTourName().equalsIgnoreCase(type)) {
-      // It's a TensorFlow guide
-      demoType = TourProjectType.DEEP_LEARNING;
-      projectDTO.setProjectName("demo_" + TourProjectType.DEEP_LEARNING.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.DEEP_LEARNING);
-      readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
-    } else if (TourProjectType.FEATURESTORE.getTourName().equalsIgnoreCase(type)) {
-      // It's a Featurestore guide
-      demoType = TourProjectType.FEATURESTORE;
-      projectDTO.setProjectName("demo_" + TourProjectType.FEATURESTORE.getTourName() + "_" + username);
-      populateActiveServices(projectServices, TourProjectType.FEATURESTORE);
-      readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for "
+    switch (demoType) {
+      case KAFKA:
+        // It's a Kafka guide
+        projectDTO.setProjectName("demo_" + TourProjectType.KAFKA.getTourName() + "_" + username);
+        populateActiveServices(projectServices, TourProjectType.KAFKA);
+        readMeMessage = "jar file to demonstrate Kafka streaming";
+        break;
+      case SPARK:
+        // It's a Spark guide
+        projectDTO.setProjectName("demo_" + TourProjectType.SPARK.getTourName() + "_" + username);
+        populateActiveServices(projectServices, TourProjectType.SPARK);
+        readMeMessage = "jar file to demonstrate the creation of a spark batch job";
+        break;
+      case FS:
+        // It's a Featurestore guide
+        projectDTO.setProjectName("demo_" + TourProjectType.FS.getTourName() + "_" + username);
+        populateActiveServices(projectServices, TourProjectType.FS);
+        readMeMessage = "Dataset containing a jar file and data that can be used to run a sample spark-job for "
           + "inserting data in the feature store.";
+        break;
+      case ML:
+        // It's a TensorFlow guide
+        projectDTO.setProjectName("demo_" + TourProjectType.ML.getTourName() + "_" + username);
+        populateActiveServices(projectServices, TourProjectType.ML);
+        readMeMessage = "Jupyter notebooks and training data for demonstrating how to run Deep Learning";
+        break;
+      default:
+        throw new IllegalArgumentException("Type must be one of: " + Arrays.toString(TourProjectType.values()));
     }
     projectDTO.setServices(projectServices);
 

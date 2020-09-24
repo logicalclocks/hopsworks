@@ -30,7 +30,7 @@ describe "On #{ENV['OS']}" do
     end
     context 'with authentication create, get' do
       before :all do
-        with_valid_tour_project("deep_learning")
+        with_valid_tour_project("ml")
       end
       it "should not find any models" do
         get_models(@project[:id], nil)
@@ -72,7 +72,7 @@ describe "On #{ENV['OS']}" do
   describe 'models sort, filter, offset and limit' do
     context 'with authentication' do
       before :all do
-        with_valid_tour_project("deep_learning")
+        with_valid_tour_project("ml")
         create_model_job(@project, experiment_1)
         run_experiment_blocking(@project, experiment_1)
       end

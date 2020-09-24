@@ -1366,7 +1366,7 @@ describe "On #{ENV['OS']}" do
       it 'should not allow :: in file name' do
         with_valid_dataset
         create_dir(@project, "#{@dataset[:inode_name]}/test::dir_#{short_random_id}", query: "&type=DATASET")
-        expect_status_details(400)
+        expect_status_details(422)
         featurestore_dataset_name = "#{@project[:projectname]}_featurestore.db".downcase
         create_dir(@project, "#{featurestore_dataset_name}/test::dir_#{short_random_id}", query: "&type=FEATURESTORE")
         expect_status_details(400)
