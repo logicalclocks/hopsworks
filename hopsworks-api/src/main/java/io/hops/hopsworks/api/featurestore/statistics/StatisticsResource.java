@@ -57,6 +57,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 
+@Logged
 @Api(value = "Feature store statistics Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
