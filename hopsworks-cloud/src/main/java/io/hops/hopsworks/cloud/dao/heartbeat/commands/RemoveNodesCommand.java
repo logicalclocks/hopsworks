@@ -16,4 +16,11 @@ public class RemoveNodesCommand extends CloudCommand {
   public Map<String, Integer> getNodesToRemove() {
     return nodesToRemove;
   }
+  
+  @Override
+  public String toString() {
+    return "RemoveNodesCommand{" +
+        "nodesToRemove=" + nodesToRemove +
+        '}';
+  }
 }

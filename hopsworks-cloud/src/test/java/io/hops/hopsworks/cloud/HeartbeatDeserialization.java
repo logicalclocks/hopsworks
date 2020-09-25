@@ -8,8 +8,6 @@ import com.google.gson.GsonBuilder;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponseHttpMessage;
-import io.hops.hopsworks.cloud.dao.heartbeat.RegistrationRequest;
-import io.hops.hopsworks.cloud.dao.heartbeat.RegistrationResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.Version;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommand;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
@@ -39,26 +37,7 @@ public class HeartbeatDeserialization {
             .registerTypeAdapter(CloudCommandType.class, new CloudCommandTypeDeserializer())
             .create();
   }
-
-  @Test
-  public void testRegistrationRequest() {
-    RegistrationRequest rr = constructRegistrationRequest();
-    String rrJson = gson.toJson(rr);
-
-    RegistrationRequest rrDes = gson.fromJson(rrJson, RegistrationRequest.class);
-    Assert.assertEquals(rrJson, gson.toJson(rrDes));
-  }
-
-  @Test
-  public void testRegistrationResponse() {
-    RegistrationResponse rr = constructRegistrationResponse();
-    String rrJson = gson.toJson(rr);
-
-    RegistrationResponse rrDes = gson.fromJson(rrJson, RegistrationResponse.class);
-    String rrDesJson = gson.toJson(rrDes);
-    Assert.assertEquals(rrJson, rrDesJson);
-  }
-
+  
   @Test
   public void testHeartbeatRequest() {
     HeartbeatRequest hr = constructHeartbeatRequest();
@@ -133,32 +112,7 @@ public class HeartbeatDeserialization {
     String messageDesJson = gson.toJson(messageDes);
     Assert.assertEquals(messageJson, messageDesJson);
   }
-
-  private RegistrationRequest constructRegistrationRequest() {
-    final RegistrationRequest rr = new RegistrationRequest();
-    rr.setVersion(Version.V010);
-    return rr;
-  }
-
-  private RegistrationResponse constructRegistrationResponse() {
-    Map<String, Integer> nodesToRemove0 = new HashMap<>();
-    nodesToRemove0.put("instance.type.20", 3);
-    nodesToRemove0.put("instance.type.10", 2);
-    CloudCommand command0 = new RemoveNodesCommand(1L, nodesToRemove0);
-
-    Map<String, Integer> nodesToRemove1 = new HashMap<>();
-    nodesToRemove1.put("instance.type.40", 1);
-    nodesToRemove1.put("instance.type.30", 6);
-    CloudCommand command1 = new RemoveNodesCommand(2L, nodesToRemove1);
-    List<CloudCommand> commands = new ArrayList<>(2);
-    commands.add(command0);
-    commands.add(command1);
-
-    final RegistrationResponse rr = new RegistrationResponse(commands);
-    rr.setVersion(Version.V010);
-    return rr;
-  }
-
+  
   private HeartbeatRequest constructHeartbeatRequest() {
     List<CloudNode> decommissioningNodes = new ArrayList<>(2);
     decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType"));

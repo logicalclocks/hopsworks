@@ -29,4 +29,12 @@ public class DecommissionStatus {
   public Collection<CloudNode> getDecommissioned() {
     return decommissioned;
   }
+  
+  @Override
+  public String toString() {
+    return "DecommissionStatus{" +
+        "decommissioning=" + decommissioning +
+        ", decommissioned=" + decommissioned +
+        '}';
+  }
 }

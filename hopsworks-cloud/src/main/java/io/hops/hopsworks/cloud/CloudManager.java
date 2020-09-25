@@ -54,7 +54,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.yarn.api.records.NodeReport;
-import static org.apache.hadoop.yarn.api.records.NodeState.DECOMMISSIONED;
 import org.apache.hadoop.yarn.client.api.YarnClient;
 import org.apache.hadoop.yarn.client.cli.RMAdminCLI;
 import org.apache.hadoop.yarn.exceptions.YarnException;
@@ -87,6 +86,7 @@ public class CloudManager {
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
   private final Map<Long, CommandStatus> commandsStatus = new HashMap<>();
+  private boolean firstHeartbeat = true;
   
   @PostConstruct
   public void init() {
@@ -100,8 +100,15 @@ public class CloudManager {
     try {
       //send heartbeat to hopsworks-cloud
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
-          new ArrayList<>(toSend.getDecommissioning()), commandsStatus);
-      HeartbeatResponse response = cloudClient.sendHeartbeat(request);
+          new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat);
+      
+      HeartbeatResponse response;
+      try{
+        response = cloudClient.sendHeartbeat(request);
+      }catch (Exception ex){
+        firstHeartbeat = true;
+        throw ex;
+      }
 
       for (Map.Entry<Long, CommandStatus> commandStatus : commandsStatus.entrySet()) {
         if (CommandStatus.isFinal(commandStatus.getValue().getStatus())) {
@@ -133,8 +140,12 @@ public class CloudManager {
       final List<RemoveNodesCommand> requests = response.getCommands().stream()
           .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
           .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
-
+      
       toSend = setAndGetDecommission(requests, workers);
+  
+      if(firstHeartbeat){
+        firstHeartbeat = false;
+      }
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, "Error in Cloud Heartbeat", ex);
     }
@@ -145,7 +156,8 @@ public class CloudManager {
     UNUSABLE,
     EMPTY,
     NOMASTER,
-    OTHER
+    OTHER,
+    ONGOING
   }
 
   Set<CloudNode> getAndSet(Status status, Map<Status, Set<CloudNode>> workerPerStatus) {
@@ -229,7 +241,8 @@ public class CloudManager {
         }
       });
 
-      Map<String, CloudNode> toDecom =selectNodeToDecommission(commands, activeNodeReports, workerPerType);
+      Map<String, CloudNode> toDecom = selectNodeToDecommission(commands,
+          activeNodeReports, workerPerType);
       
 
       //as we overwrite the config files for yarn and hdfs we need a list of all the nodes that should still be in
@@ -381,14 +394,28 @@ public class CloudManager {
       oldDecommissioned.put(worker.getHost(), worker);
       return;
     }
+    
+    Map<Status, Set<CloudNode>> workerPerStatus = workerPerType.get(worker.getInstanceType());
+    if (workerPerStatus == null) {
+      workerPerStatus = new HashMap<>();
+      workerPerType.put(worker.getInstanceType(), workerPerStatus);
+    }
+    
     switch (report.getNodeState()) {
       case DECOMMISSIONED:
         //the node is decommissioned in yarn and was not previously.
         decommissionedNodes.add(worker);
         decommissioned.put(worker.getHost(), worker);
+        if(firstHeartbeat){
+          getAndSet(Status.ONGOING, workerPerStatus).add(worker);
+        }
         break;
       case DECOMMISSIONING:
         decommissioning.put(worker.getHost(), worker);
+        if(firstHeartbeat){
+          getAndSet(Status.ONGOING, workerPerStatus).add(worker);
+        }
+        break;
       case LOST:
       case SHUTDOWN:
       case NEW:
@@ -397,11 +424,6 @@ public class CloudManager {
       case UNHEALTHY:
         activeNodeReports.put(report.getNodeId().getHost(), report);
         
-        Map<Status, Set<CloudNode>> workerPerStatus = workerPerType.get(worker.getInstanceType());
-        if (workerPerStatus == null) {
-          workerPerStatus = new HashMap<>();
-          workerPerType.put(worker.getInstanceType(), workerPerStatus);
-        }
         if (report.getNodeState().isUnusable()) {
           //the node is either lost, shutdown or unhealthy and no container will be allocated to it
           getAndSet(Status.UNUSABLE, workerPerStatus).add(worker);
@@ -441,6 +463,20 @@ public class CloudManager {
                 " nodes to remove"));
             continue;
           }
+          
+          if(firstHeartbeat){
+            // check if there are already decommissioning requests
+            Map<String, CloudNode> toRemoveOngoing = new HashMap<>();
+            number -= addToRemove(Status.ONGOING, workerPerStatus, toRemoveOngoing, number, null);
+            if(workerPerStatus.get(Status.ONGOING) != null){
+              workerPerStatus.get(Status.ONGOING).removeAll(
+                  toRemoveOngoing.values());
+            }
+            if(number <=0){
+              continue;
+            }
+          }
+          
           //first try to select node that are not present in yarn
           number -= addToRemove(Status.NOPRESENT, workerPerStatus, toDecomCMD, number, null);
           if (number <= 0) {
