@@ -55,21 +55,9 @@ public class FeaturegroupImportJobDTO implements Serializable {
   @XmlElement(name = "feature_histograms")
   @SerializedName("feature_histograms")
   private Boolean featureHistograms;
-  @XmlElement(name = "cluster_analysis")
-  @SerializedName("cluster_analysis")
-  private Boolean clusterAnalysis;
   @XmlElement(name = "stats_column")
   @SerializedName("stats_column")
   private List<String> statsColumn;
-  @XmlElement(name = "num_bins")
-  @SerializedName("num_bins")
-  private Integer numBins;
-  @XmlElement(name = "corr_method")
-  @SerializedName("corr_method")
-  private String corrMethod;
-  @XmlElement(name = "num_clusters")
-  @SerializedName("num_clusters")
-  private Integer num_clusters;
   @XmlElement(name = "partition_by")
   @SerializedName("partition_by")
   private List<String> partitionBy;
@@ -100,8 +88,7 @@ public class FeaturegroupImportJobDTO implements Serializable {
   public FeaturegroupImportJobDTO(ImportType type, String storageConnector, String path, String featuregroup,
                                   List<String> primaryKey, String description, String featurestore,
                                   Integer featuregroupVersion, String jobs, Boolean descriptiveStatistics,
-                                  Boolean featureCorrelation, Boolean featureHistograms, Boolean clusterAnalysis,
-                                  List<String> statsColumn, Integer numBins, String corrMethod, Integer num_clusters,
+                                  Boolean featureCorrelation, Boolean featureHistograms, List<String> statsColumn,
                                   List<String> partitionBy, String dataFormat, boolean online,
                                   Map<String, String> onlineTypes, boolean offline, int amCores, int amMemory,
                                   int executorCores, int executorMemory, int maxExecutors) {
@@ -117,11 +104,7 @@ public class FeaturegroupImportJobDTO implements Serializable {
     this.descriptiveStatistics = descriptiveStatistics;
     this.featureCorrelation = featureCorrelation;
     this.featureHistograms = featureHistograms;
-    this.clusterAnalysis = clusterAnalysis;
     this.statsColumn = statsColumn;
-    this.numBins = numBins;
-    this.corrMethod = corrMethod;
-    this.num_clusters = num_clusters;
     this.partitionBy = partitionBy;
     this.dataFormat = dataFormat;
     this.online = online;
@@ -230,44 +213,12 @@ public class FeaturegroupImportJobDTO implements Serializable {
     this.featureHistograms = featureHistograms;
   }
 
-  public Boolean getClusterAnalysis() {
-    return clusterAnalysis;
-  }
-
-  public void setClusterAnalysis(Boolean clusterAnalysis) {
-    this.clusterAnalysis = clusterAnalysis;
-  }
-
   public List<String> getStatsColumn() {
     return statsColumn;
   }
 
   public void setStatsColumn(List<String> statsColumn) {
     this.statsColumn = statsColumn;
-  }
-
-  public Integer getNumBins() {
-    return numBins;
-  }
-
-  public void setNumBins(Integer numBins) {
-    this.numBins = numBins;
-  }
-
-  public String getCorrMethod() {
-    return corrMethod;
-  }
-
-  public void setCorrMethod(String corrMethod) {
-    this.corrMethod = corrMethod;
-  }
-
-  public Integer getNum_clusters() {
-    return num_clusters;
-  }
-
-  public void setNum_clusters(Integer num_clusters) {
-    this.num_clusters = num_clusters;
   }
 
   public List<String> getPartitionBy() {

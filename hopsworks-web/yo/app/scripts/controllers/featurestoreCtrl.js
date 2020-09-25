@@ -111,6 +111,11 @@ angular.module('hopsWorksApp')
             self.queryVersion = $location.search()['version'];
 
 
+            // Statistics
+            self.showStatistics = false;
+            self.fgStatistics = null;
+            self.tdStatistics = null;
+
             /**
              * Boolean parameter in the feature search that indicates whether features inside feature groups should
              * be included
@@ -1094,6 +1099,12 @@ angular.module('hopsWorksApp')
                     function (success) {
                     }, function (error) {
                     });
+            };
+
+            self.closeStatistics = function() {
+                self.showStatistics = false;
+                self.fgStatistics = null;
+                self.tdStatistics = null;
             };
 
             /**

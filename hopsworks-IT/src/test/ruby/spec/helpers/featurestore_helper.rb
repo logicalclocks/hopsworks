@@ -35,7 +35,8 @@ module FeaturestoreHelper
   end
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
-                                 default_stats_settings: true, version: 1, featuregroup_description: nil)
+                                 version: 1, featuregroup_description: nil, desc_stats: nil, histograms: true,
+                                 correlations: true, statistic_columns: [])
     type = "cachedFeaturegroupDTO"
     if features == nil
       features = [
@@ -68,15 +69,11 @@ module FeaturestoreHelper
         type: type,
         onlineEnabled: online
     }
-    unless default_stats_settings
-      json_data['numBins'] = 10
-      json_data['numClusters'] = 10
-      json_data['corrMethod'] = "spearman"
-      json_data['featHistEnabled'] = false
-      json_data['featCorrEnabled'] = false
-      json_data['clusterAnalysisEnabled'] = false
-      json_data['statisticColumns'] = ["testfeature"]
-      json_data['descStatsEnabled'] = false
+    if desc_stats != nil
+      json_data["featHistEnabled"] = histograms
+      json_data["descStatsEnabled"] = desc_stats
+      json_data["featCorrEnabled"] = correlations
+      json_data["statisticColumns"] = statistic_columns
     end
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
@@ -335,7 +332,8 @@ module FeaturestoreHelper
     return json_result
   end
 
-  def update_cached_featuregroup_stats_settings(project_id, featurestore_id, featuregroup_id, featuregroup_version)
+  def update_cached_featuregroup_stats_settings(project_id, featurestore_id, featuregroup_id, featuregroup_version,
+                                                illegal: false, statisticColumns: ["testfeature"])
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateStatsSettings=true"
@@ -343,15 +341,16 @@ module FeaturestoreHelper
         type: type,
         featuregroupType: featuregroupType,
         version: featuregroup_version,
-        numBins: 10,
-        numClusters: 10,
-        corrMethod: "spearman",
         featHistEnabled: false,
         featCorrEnabled: false,
-        clusterAnalysisEnabled: false,
-        statisticColumns: ["testfeature"],
+        statisticColumns: statisticColumns,
         descStatsEnabled: false
     }
+    if illegal
+      json_data["descStatsEnabled"] = false
+      json_data["featHistEnabled"] = true
+      json_data["featCorrEnabled"] = true
+    end
     json_data = json_data.to_json
     json_result = put update_featuregroup_metadata_endpoint, json_data
     return json_result

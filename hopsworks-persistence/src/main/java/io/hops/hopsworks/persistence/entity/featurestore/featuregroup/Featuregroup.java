@@ -17,11 +17,10 @@
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.jobs.FeaturestoreJob;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.FeaturestoreStatistic;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.persistence.Basic;
@@ -110,24 +109,6 @@ public class Featuregroup implements Serializable {
   @NotNull
   @Column(name = "feat_hist_enabled")
   private boolean featHistEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "cluster_analysis_enabled")
-  private boolean clusterAnalysisEnabled = true;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "num_bins")
-  private Integer numBins = 5;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "num_clusters")
-  private Integer numClusters = 20;
-  @Basic(optional = false)
-  @NotNull
-  @Column(name = "corr_method")
-  private String corrMethod = "pearson";
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featuregroup")
-  private Collection<FeaturestoreStatistic> statistics;
   @NotNull
   @Enumerated(EnumType.ORDINAL)
   @Column(name = "feature_group_type")
@@ -233,46 +214,6 @@ public class Featuregroup implements Serializable {
     this.featHistEnabled = featHistEnabled;
   }
 
-  public boolean isClusterAnalysisEnabled() {
-    return clusterAnalysisEnabled;
-  }
-
-  public void setClusterAnalysisEnabled(boolean clusterAnalysisEnabled) {
-    this.clusterAnalysisEnabled = clusterAnalysisEnabled;
-  }
-  
-  public Integer getNumBins() {
-    return numBins;
-  }
-  
-  public void setNumBins(Integer numBins) {
-    this.numBins = numBins;
-  }
-  
-  public Integer getNumClusters() {
-    return numClusters;
-  }
-  
-  public void setNumClusters(Integer numClusters) {
-    this.numClusters = numClusters;
-  }
-  
-  public String getCorrMethod() {
-    return corrMethod;
-  }
-  
-  public void setCorrMethod(String corrMethod) {
-    this.corrMethod = corrMethod;
-  }
-
-  public Collection<FeaturestoreStatistic> getStatistics() {
-    return statistics;
-  }
-
-  public void setStatistics(Collection<FeaturestoreStatistic> statistics) {
-    this.statistics = statistics;
-  }
-  
   public FeaturegroupType getFeaturegroupType() {
     return featuregroupType;
   }
@@ -323,7 +264,6 @@ public class Featuregroup implements Serializable {
     if (descStatsEnabled != that.descStatsEnabled) return false;
     if (featCorrEnabled != that.featCorrEnabled) return false;
     if (featHistEnabled != that.featHistEnabled) return false;
-    if (clusterAnalysisEnabled != that.clusterAnalysisEnabled) return false;
     if (!Objects.equals(id, that.id)) return false;
     if (!Objects.equals(name, that.name)) return false;
     if (!Objects.equals(featurestore, that.featurestore)) return false;
@@ -331,10 +271,6 @@ public class Featuregroup implements Serializable {
     if (!Objects.equals(created, that.created)) return false;
     if (!Objects.equals(creator, that.creator)) return false;
     if (!Objects.equals(version, that.version)) return false;
-    if (!Objects.equals(numBins, that.numBins)) return false;
-    if (!Objects.equals(numClusters, that.numClusters)) return false;
-    if (!Objects.equals(corrMethod, that.corrMethod)) return false;
-    if (!Objects.equals(statistics, that.statistics)) return false;
     if (featuregroupType != that.featuregroupType) return false;
     if (!Objects.equals(onDemandFeaturegroup, that.onDemandFeaturegroup))
       return false;
@@ -356,11 +292,6 @@ public class Featuregroup implements Serializable {
     result = 31 * result + (descStatsEnabled ? 1 : 0);
     result = 31 * result + (featCorrEnabled ? 1 : 0);
     result = 31 * result + (featHistEnabled ? 1 : 0);
-    result = 31 * result + (clusterAnalysisEnabled ? 1 : 0);
-    result = 31 * result + (numBins != null ? numBins.hashCode() : 0);
-    result = 31 * result + (numClusters != null ? numClusters.hashCode() : 0);
-    result = 31 * result + (corrMethod != null ? corrMethod.hashCode() : 0);
-    result = 31 * result + (statistics != null ? statistics.hashCode() : 0);
     result = 31 * result + (featuregroupType != null ? featuregroupType.hashCode() : 0);
     result = 31 * result + (onDemandFeaturegroup != null ? onDemandFeaturegroup.hashCode() : 0);
     result = 31 * result + (cachedFeaturegroup != null ? cachedFeaturegroup.hashCode() : 0);

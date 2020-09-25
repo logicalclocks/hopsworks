@@ -27,6 +27,7 @@ angular.module('hopsWorksApp')
              */
             var self = this;
             //Controller Inputs
+            self.featurestoreCtrl = null;
             self.tgState = false;
             self.projectId = null;
             self.selectedTrainingDataset = null;
@@ -182,6 +183,7 @@ angular.module('hopsWorksApp')
 
                 self.selectedTrainingDataset = trainingDatasets.versionToGroups[trainingDatasets.activeVersion];
 
+                self.featurestoreCtrl = featurestoreCtrl;
                 self.projectId = featurestoreCtrl.projectId;
                 self.projectName = featurestoreCtrl.projectName;
                 self.featurestore = featurestoreCtrl.featurestore;
@@ -263,11 +265,8 @@ angular.module('hopsWorksApp')
              *
              */
             self.viewTrainingDatasetStatistics = function () {
-                ModalService.viewTrainingDatasetStatistics('lg', self.projectId, self.selectedTrainingDataset, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
+                self.featurestoreCtrl.showStatistics = true;
+                self.featurestoreCtrl.tdStatistics = self.selectedTrainingDataset;
             };
 
             /**
@@ -328,4 +327,3 @@ angular.module('hopsWorksApp')
             };
 
         }]);
-

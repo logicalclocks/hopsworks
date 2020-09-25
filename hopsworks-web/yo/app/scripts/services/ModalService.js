@@ -1211,39 +1211,7 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            viewFeaturegroupStatistics: function (size, projectId, featuregroup, projectName, featurestore, settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/featuregroupStatistics.html',
-                    controller: 'featuregroupStatisticsCtrl as featuregroupStatisticsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
-                        },
-                        featuregroup: function () {
-                            return featuregroup;
-                        },
-                        projectName: function () {
-                            return projectName;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
+
             viewFeaturestoreStatistic: function (size, projectId, featuregroup, statisticType, statisticData, trainingDataset) {
                 var modalInstance = $uibModal.open({
                     templateUrl: 'views/featurestoreStatisticModal.html',
@@ -1297,40 +1265,6 @@ angular.module('hopsWorksApp')
                         },
                         featuregroup: function () {
                             return featuregroup;
-                        },
-                        trainingDataset: function () {
-                            return trainingDataset;
-                        },
-                        featurestore: function () {
-                            return featurestore;
-                        },
-                        projectName: function () {
-                            return projectName;
-                        },
-                        settings: function () {
-                            return settings;
-                        }
-                    }
-                });
-                return modalInstance.result;
-            },
-            viewTrainingDatasetStatistics: function (size, projectId, trainingDataset, projectName, featurestore,
-                                                     settings) {
-                var modalInstance = $uibModal.open({
-                    templateUrl: 'views/trainingDatasetStatistics.html',
-                    controller: 'trainingDatasetStatisticsCtrl as trainingDatasetStatisticsCtrl',
-                    size: size,
-                    resolve: {
-                        auth: ['$q','AuthGuardService',
-                            function ($q, AuthGuardService) {
-                                return AuthGuardService.guardSession($q).then(
-                                    function(success){
-                                    }, function (error) {
-                                        return $q.reject(error)
-                                    });
-                            }],
-                        projectId: function () {
-                            return projectId;
                         },
                         trainingDataset: function () {
                             return trainingDataset;

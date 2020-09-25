@@ -74,7 +74,7 @@ describe "On #{ENV['OS']}" do
       expect(parsed_result["items"][0]["xattrs"]["entry"][0]["key"]).to eq "featurestore"
       td1 = JSON[parsed_result["items"][0]["xattrs"]["entry"][0]["value"]]
       expect(td1["td_features"].length).to eq(1)
-      expect(td1["td_features"][0]["fg_features"].length).to eq(5)
+      expect(td1["td_features"][0]["fg_features"].length).to eq(6)
     end
 
     it 'featurestore - training dataset with features' do

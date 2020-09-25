@@ -2113,6 +2113,7 @@ public class Settings implements Serializable {
     SERVING("Models", "Contains models to be used for serving."),
     EXPERIMENTS("Experiments", "Contains experiments from using the hops python api"),
     TRAININGDATASETS("Training_Datasets", "Contains curated training datasets created from the feature store"),
+    STATISTICS("Statistics", "Contains the statistics for feature groups and training datasets"),
     DATAVALIDATION("DataValidation",
         "Contains rules and results for Features validation");
 
