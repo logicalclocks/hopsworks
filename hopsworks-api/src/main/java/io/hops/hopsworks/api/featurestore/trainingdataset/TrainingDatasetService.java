@@ -19,6 +19,7 @@ package io.hops.hopsworks.api.featurestore.trainingdataset;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -102,6 +103,8 @@ public class TrainingDatasetService {
   private TagsBuilder tagBuilder;
   @Inject
   private TrainingDatasetTagControllerIface tagController;
+  @Inject
+  private StatisticsResource statisticsResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -295,11 +298,9 @@ public class TrainingDatasetService {
                                         @ApiParam(value = "Id of the training dataset", required = true)
                                         @PathParam("trainingdatasetid") Integer trainingdatasetid,
                                         @ApiParam(value = "updateMetadata", example = "true")
-                                          @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
-                                        @ApiParam(value = "updateStats", example = "true")
-                                          @QueryParam("updateStats") @DefaultValue("false") Boolean updateStats,
+                                        @QueryParam("updateMetadata") @DefaultValue("false") Boolean updateMetadata,
                                         TrainingDatasetDTO trainingDatasetDTO)
-      throws FeaturestoreException, ServiceException {
+    throws FeaturestoreException, ServiceException {
     if(trainingDatasetDTO == null){
       throw new IllegalArgumentException("Input JSON for updating a Training Dataset cannot be null");
     }
@@ -314,12 +315,6 @@ public class TrainingDatasetService {
       activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
           project, user, ActivityFlag.SERVICE);
     }
-    if(updateStats) {
-      oldTrainingDatasetDTO = trainingDatasetController.updateTrainingDatasetStats(featurestore, trainingDatasetDTO);
-      activityFacade.persistActivity(ActivityFacade.EDITED_TRAINING_DATASET + trainingDatasetDTO.getName(),
-          project, user, ActivityFlag.SERVICE);
-    }
-
     GenericEntity<TrainingDatasetDTO> trainingDatasetDTOGenericEntity =
       new GenericEntity<TrainingDatasetDTO>(oldTrainingDatasetDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(trainingDatasetDTOGenericEntity)
@@ -454,6 +449,16 @@ public class TrainingDatasetService {
     tagController.deleteSingle(project, user, featurestore, trainingdatasetid, name);
 
     return Response.noContent().build();
+  }
+
+  @Path("/{trainingDatasetId}/statistics")
+  @Logged(logLevel = LogLevel.OFF)
+  public StatisticsResource statistics(@PathParam("trainingDatasetId") Integer trainingDatsetId)
+      throws FeaturestoreException {
+    this.statisticsResource.setProject(project);
+    this.statisticsResource.setFeaturestore(featurestore);
+    this.statisticsResource.setTrainingDatasetId(trainingDatsetId);
+    return statisticsResource;
   }
   
   /**

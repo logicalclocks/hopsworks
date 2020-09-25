@@ -56,12 +56,13 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param id id of the featuregroup
    * @return a single Featuregroup entity
    */
-  public Featuregroup findById(Integer id) {
+  public Optional<Featuregroup> findById(Integer id) {
     try {
-      return em.createNamedQuery("Featuregroup.findById", Featuregroup.class)
-        .setParameter("id", id).getSingleResult();
+      return Optional.of(em.createNamedQuery("Featuregroup.findById", Featuregroup.class)
+              .setParameter("id", id)
+              .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
   
@@ -72,14 +73,14 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
    * @param featurestore featurestore of the featuregroup
    * @return a single Featuregroup entity
    */
-  public Featuregroup findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<Featuregroup> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("Featuregroup.findByFeaturestoreAndId", Featuregroup.class)
+      return Optional.of(em.createNamedQuery("Featuregroup.findByFeaturestoreAndId", Featuregroup.class)
         .setParameter("featurestore", featurestore)
         .setParameter("id", id)
-        .getSingleResult();
+        .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
     }
   }
 

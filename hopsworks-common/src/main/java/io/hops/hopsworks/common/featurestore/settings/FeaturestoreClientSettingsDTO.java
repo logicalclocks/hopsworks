@@ -33,7 +33,6 @@ import java.util.List;
 @XmlRootElement
 public class FeaturestoreClientSettingsDTO {
   
-  private int featurestoreStatisticsMaxCorrelations = FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS;
   private String featurestoreRegex = FeaturestoreConstants.FEATURESTORE_REGEX.toString();
   private int featurestoreEntityNameMaxLength = FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH;
   private int featurestoreEntityDescriptionMaxLength = FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH;
@@ -82,15 +81,6 @@ public class FeaturestoreClientSettingsDTO {
   
   public FeaturestoreClientSettingsDTO() {
     //For JAXB
-  }
-  
-  @XmlElement
-  public int getFeaturestoreStatisticsMaxCorrelations() {
-    return featurestoreStatisticsMaxCorrelations;
-  }
-  
-  public void setFeaturestoreStatisticsMaxCorrelations(int featurestoreStatisticsMaxCorrelations) {
-    this.featurestoreStatisticsMaxCorrelations = featurestoreStatisticsMaxCorrelations;
   }
   
   @XmlElement

@@ -14,7 +14,7 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.persistence.entity.featurestore.statistics.columns;
+package io.hops.hopsworks.persistence.entity.featurestore;
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
@@ -41,12 +41,12 @@ import java.util.Objects;
 @Table(name = "statistic_columns", catalog = "hopsworks")
 @XmlRootElement
 @NamedQueries({
-  @NamedQuery(name = "StatisticColumn.findAll", query = "SELECT statscolumn FROM StatisticColumn statscolumn"),
-  @NamedQuery(name = "StatisticColumn.findById",
-    query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.id = :id"),
-  @NamedQuery(name = "StatisticColumn.findByFeaturegroup",
-    query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.featuregroup =" +
-      ":feature_group")})
+    @NamedQuery(name = "StatisticColumn.findAll", query = "SELECT statscolumn FROM StatisticColumn statscolumn"),
+    @NamedQuery(name = "StatisticColumn.findById",
+        query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.id = :id"),
+    @NamedQuery(name = "StatisticColumn.findByFeaturegroup",
+        query = "SELECT statscolumn FROM StatisticColumn statscolumn WHERE statscolumn.featuregroup =" +
+            ":feature_group")})
 public class StatisticColumn implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -60,35 +60,35 @@ public class StatisticColumn implements Serializable {
   @Column(name = "name")
   @Basic(optional = false)
   private String name;
-  
+
   public static long getSerialVersionUID() {
     return serialVersionUID;
   }
-  
+
   public Integer getId() {
     return id;
   }
-  
+
   public void setId(Integer id) {
     this.id = id;
   }
-  
+
   public Featuregroup getFeaturegroup() {
     return featuregroup;
   }
-  
+
   public void setFeaturegroup(Featuregroup featuregroup) {
     this.featuregroup = featuregroup;
   }
-  
+
   public String getName() {
     return name;
   }
-  
+
   public void setName(String name) {
     this.name = name;
   }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -99,12 +99,13 @@ public class StatisticColumn implements Serializable {
     }
     StatisticColumn that = (StatisticColumn) o;
     return Objects.equals(id, that.id) &&
-      Objects.equals(featuregroup, that.featuregroup) &&
-      Objects.equals(name, that.name);
+        Objects.equals(featuregroup, that.featuregroup) &&
+        Objects.equals(name, that.name);
   }
-  
+
   @Override
   public int hashCode() {
     return Objects.hash(id, featuregroup, name);
   }
 }
+

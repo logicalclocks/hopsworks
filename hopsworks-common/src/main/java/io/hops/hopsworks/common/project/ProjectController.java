@@ -766,6 +766,7 @@ public class ProjectController {
           Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.FEATURE));
         addServiceDataset(project, user, Settings.ServiceDataset.DATAVALIDATION, dfso, udfso,
           Provenance.getDatasetProvCore(projectProvCore, Provenance.MLType.DATASET));
+        addServiceDataset(project, user, Settings.ServiceDataset.STATISTICS, dfso, udfso, Provenance.Type.DISABLED.dto);
         //Enable Jobs service at the same time as featurestore
         if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JOBS)) {
           if (!projectServicesFacade.isServiceEnabledForProject(project, ProjectServiceEnum.JUPYTER)) {

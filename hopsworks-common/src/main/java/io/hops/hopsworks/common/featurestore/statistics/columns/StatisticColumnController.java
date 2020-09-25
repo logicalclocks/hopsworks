@@ -16,12 +16,19 @@
 
 package io.hops.hopsworks.common.featurestore.statistics.columns;
 
+import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.statistics.columns.StatisticColumn;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the statistic_columns table and required business logic
@@ -80,5 +87,25 @@ public class StatisticColumnController {
    */
   public boolean isEntityToBeDropped(StatisticColumn entity, List<String> statisticColumns) {
     return statisticColumns.stream().noneMatch(statisticColumn -> statisticColumn.equals(entity.getName()));
+  }
+
+  public void verifyStatisticColumnsExist(FeaturegroupDTO featuregroupDTO) throws FeaturestoreException {
+    verifyStatisticColumnsExist(featuregroupDTO, featuregroupDTO.getFeatures());
+  }
+
+  public void verifyStatisticColumnsExist(FeaturegroupDTO featuregroupDTO, List<FeatureDTO> features)
+    throws FeaturestoreException {
+    if (featuregroupDTO.getStatisticColumns() != null) {
+      List<String> featureNames = features.stream().map(FeatureDTO::getName).collect(
+        Collectors.toList());
+      // verify all statistic columns exist
+      Optional<String> nonExistingStatColumn =
+        featuregroupDTO.getStatisticColumns().stream().filter(statCol -> !featureNames.contains(statCol)).findAny();
+      if (nonExistingStatColumn.isPresent()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STATISTICS_CONFIG,
+          Level.FINE, "statistic column: " + nonExistingStatColumn.get() + " is not part of feature group "
+          + featuregroupDTO.getName() + " with version " + featuregroupDTO.getVersion());
+      }
+    }
   }
 }

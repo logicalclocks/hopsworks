@@ -1329,8 +1329,6 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     HIVE_READ_QUERY_ERROR(21, "Hive Read Query failed",
         Response.Status.INTERNAL_SERVER_ERROR),
-    CORRELATION_MATRIX_EXCEED_MAX_SIZE(22,
-      "The size of the provided correlation matrix exceed the maximum size of 50 columns", Response.Status.BAD_REQUEST),
     FEATURESTORE_NAME_NOT_PROVIDED(23, "Featurestore name was not provided", Response.Status.BAD_REQUEST),
     UNAUTHORIZED_FEATURESTORE_OPERATION(24, "Only data owners are allowed to delete or update feature groups/" +
       "training datasets that are not created by themself.", Response.Status.UNAUTHORIZED),
@@ -1467,8 +1465,12 @@ public class RESTCodes {
     ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY(105, "Illegal server encryption key provided",
       Response.Status.BAD_REQUEST),
     TRAINING_DATASET_DUPLICATE_SPLIT_NAMES(106, "Duplicate split names in training dataset provided.",
-      Response.Status.BAD_REQUEST);
-    
+      Response.Status.BAD_REQUEST),
+    STATISTICS_READ_ERROR(107, "Error reading the statistics", Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_STATISTICS_CONFIG(108, "Illegal statistics config", Response.Status.BAD_REQUEST),
+    ERROR_DELETING_STATISTICS(109, "Error deleting the statistics of a feature store entity",
+      Response.Status.INTERNAL_SERVER_ERROR);
+
     private int code;
     private String message;
     private Response.Status respStatus;

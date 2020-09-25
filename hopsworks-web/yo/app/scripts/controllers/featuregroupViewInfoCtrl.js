@@ -29,6 +29,7 @@ angular.module('hopsWorksApp')
 
             //Controller State
             self.tgState = false;
+            self.featurestoreCtrl = null;
             self.projectName = null;
             self.projectId = null;
             self.selectedFeaturegroup = null;
@@ -259,7 +260,6 @@ angular.module('hopsWorksApp')
                     self.fetchTags();
                     self.getGeneratedTDLinks(self.selectedFeaturegroup.name, self.selectedFeaturegroup.version);
                 }
-
             };
 
             $scope.$on('featuregroupSelected', function (event, args) {
@@ -347,11 +347,8 @@ angular.module('hopsWorksApp')
              *
              */
             self.viewFeaturegroupStatistics = function () {
-                ModalService.viewFeaturegroupStatistics('lg', self.projectId, self.selectedFeaturegroup, self.projectName,
-                    self.featurestore, self.settings).then(
-                    function (success) {
-                    }, function (error) {
-                    });
+                self.featurestoreCtrl.fgStatistics = self.selectedFeaturegroup;
+                self.featurestoreCtrl.showStatistics = true;
             };
 
             self.fgLocation = function() {

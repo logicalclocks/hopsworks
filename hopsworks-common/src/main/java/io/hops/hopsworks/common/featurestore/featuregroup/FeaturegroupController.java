@@ -20,7 +20,6 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
 import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
@@ -30,8 +29,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPre
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobDTO;
-import io.hops.hopsworks.common.featurestore.statistics.FeaturestoreStatisticController;
 import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
+import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
@@ -80,8 +79,6 @@ public class FeaturegroupController {
   @EJB
   private HdfsUsersController hdfsUsersController;
   @EJB
-  private FeaturestoreStatisticController featurestoreStatisticController;
-  @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
   private OnDemandFeaturegroupController onDemandFeaturegroupController;
@@ -103,6 +100,8 @@ public class FeaturegroupController {
   private HopsFSProvenanceController fsController;
   @EJB
   private ActivityFacade activityFacade;
+  @EJB
+  private StatisticsController statisticsController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -127,7 +126,7 @@ public class FeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO clearFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
+    throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup);
@@ -200,11 +199,6 @@ public class FeaturegroupController {
     statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
     featuregroup.setStatisticColumns(statisticColumnFacade.findByFeaturegroup(featuregroup));
 
-    // Store statistics
-    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
-        featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
-        featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
-  
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
     
@@ -399,24 +393,6 @@ public class FeaturegroupController {
   }
 
   /**
-   * Updates stats for a featuregroup
-   *
-   * @param featurestore    the featurestore where the featuregroup resides
-   * @param featuregroupDTO a DTO containing the updated featuregroup stats
-   * @return DTO of the updated feature group
-   * @throws FeaturestoreException
-   */
-  public FeaturegroupDTO updateFeaturegroupStats(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException {
-    Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    verifyStatisticsInput(featuregroupDTO);
-    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
-      featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
-      featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
-    return convertFeaturegrouptoDTO(featuregroup);
-  }
-  
-  /**
    * Updates statistics settings for a featuregroup
    *
    * @param featurestore    the featurestore where the featuregroup resides
@@ -425,57 +401,49 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO updateFeaturegroupStatsSettings(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException {
+    throws FeaturestoreException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
-    featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
-    // update the settings and persist, if setting not define keep previous value
-    verifyAndSetFeaturegroupStatsSettings(featuregroupDTO, featuregroup);
+    if (featuregroupDTO.isDescStatsEnabled() != null) {
+      // if setting is changed, check with new setting
+      verifyFeaturegroupStatsSettings(featuregroupDTO.isDescStatsEnabled(), featuregroupDTO.isFeatCorrEnabled(),
+        featuregroupDTO.isFeatHistEnabled());
+      featuregroup.setDescStatsEnabled(featuregroupDTO.isDescStatsEnabled());
+    } else {
+      // check with old setting, assuming previous state was valid
+      verifyFeaturegroupStatsSettings(featuregroup.isDescStatsEnabled(), featuregroupDTO.isFeatCorrEnabled(),
+        featuregroupDTO.isFeatHistEnabled());
+    }
+    if (featuregroupDTO.isFeatHistEnabled() != null) {
+      featuregroup.setFeatHistEnabled(featuregroupDTO.isFeatHistEnabled());
+    }
+    if (featuregroupDTO.isFeatCorrEnabled() != null) {
+      featuregroup.setFeatCorrEnabled(featuregroupDTO.isFeatCorrEnabled());
+    }
+    // compare against schema from database, as client doesn't need to send schema in update request
+    statisticColumnController.verifyStatisticColumnsExist(
+      featuregroupDTO, convertFeaturegrouptoDTO(featuregroup).getFeatures());
     featuregroupFacade.updateFeaturegroupMetadata(featuregroup);
+    statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
+    // get feature group again with persisted columns - this trip to the database can be saved
+    featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     return convertFeaturegrouptoDTO(featuregroup);
   }
   
   /**
    * Verifies if statistics settings were provided and else sets it to the default or keeps the current settings
    *
-   * @param featuregroupDTO
-   * @param featuregroup
+   * @param generalStatistics
+   * @param correlations
+   * @param histograms
    */
-  public void verifyAndSetFeaturegroupStatsSettings(FeaturegroupDTO featuregroupDTO, Featuregroup featuregroup) {
-    if(featuregroupDTO.isDescStatsEnabled() != null) {
-      featuregroup.setDescStatsEnabled(featuregroupDTO.isDescStatsEnabled());
-    }
-    if(featuregroupDTO.isFeatCorrEnabled() != null) {
-      featuregroup.setFeatCorrEnabled(featuregroupDTO.isFeatCorrEnabled());
-    }
-    if(featuregroupDTO.isFeatHistEnabled() != null) {
-      featuregroup.setFeatHistEnabled(featuregroupDTO.isFeatHistEnabled());
-    }
-    if(featuregroupDTO.isClusterAnalysisEnabled() != null) {
-      featuregroup.setClusterAnalysisEnabled(featuregroupDTO.isClusterAnalysisEnabled());
-    }
-    if(featuregroupDTO.getNumBins() != null) {
-      featuregroup.setNumBins(featuregroupDTO.getNumBins());
-    }
-    if(featuregroupDTO.getNumClusters() != null) {
-      featuregroup.setNumClusters(featuregroupDTO.getNumClusters());
-    }
-    if(featuregroupDTO.getCorrMethod() != null) {
-      featuregroup.setCorrMethod(featuregroupDTO.getCorrMethod());
-    }
-  }
-  
-  /**
-   * Verifies statistics user input for a feature group
-   *
-   * @param featuregroupDTO DTO containing the feature group statistics
-   */
-  public void verifyStatisticsInput(FeaturegroupDTO featuregroupDTO) {
-    if (featuregroupDTO.getFeatureCorrelationMatrix() != null &&
-        featuregroupDTO.getFeatureCorrelationMatrix().getFeatureCorrelations().size() >
-          FeaturestoreConstants.FEATURESTORE_STATISTICS_MAX_CORRELATIONS) {
-      throw new IllegalArgumentException(
-          RESTCodes.FeaturestoreErrorCode.CORRELATION_MATRIX_EXCEED_MAX_SIZE.getMessage());
+  public void verifyFeaturegroupStatsSettings(Boolean generalStatistics, Boolean correlations, Boolean histograms)
+    throws FeaturestoreException {
+    if (generalStatistics != null && !generalStatistics) {
+      // if general statistics is null we assume it defaults to true for new feature groups
+      if ((correlations != null && correlations) || (histograms != null && histograms)) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STATISTICS_CONFIG, Level.FINE,
+          "correlations and histograms can only be enabled with statistics generally enabled.");
+      }
     }
   }
 
@@ -527,9 +495,11 @@ public class FeaturegroupController {
    * @throws IOException
    */
   public void deleteFeaturegroup(Featuregroup featuregroup, Project project, Users user)
-      throws SQLException, FeaturestoreException, ServiceException, IOException {
+    throws SQLException, FeaturestoreException, ServiceException, IOException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
+        // Statistics files need to be deleted explicitly
+        statisticsController.deleteStatistics(project, user, featuregroup);
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
@@ -617,17 +587,9 @@ public class FeaturegroupController {
    */
   public Featuregroup getFeaturegroupById(Featurestore featurestore, Integer featuregroupId)
       throws FeaturestoreException {
-    Featuregroup featuregroup = null;
-    if(featurestore != null){
-      featuregroup = featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore);
-    } else {
-      featuregroup = featuregroupFacade.findById(featuregroupId);
-    }
-    if (featuregroup == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
-        "featuregroupId: " + featuregroupId);
-    }
-    return featuregroup;
+    return featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE,
+            "Feature group id: " + featuregroupId));
   }
 
   /**
@@ -678,9 +640,8 @@ public class FeaturegroupController {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
           + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
     }
-
     verifyFeatureGroupInput(featuregroupDTO);
-  
+
     //Extract metadata
     String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
@@ -691,11 +652,6 @@ public class FeaturegroupController {
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
       cachedFeaturegroup, null);
-  
-    // Store statistics
-    featurestoreStatisticController.updateFeaturestoreStatistics(featuregroup, null,
-      featuregroupDTO.getFeatureCorrelationMatrix(), featuregroupDTO.getDescriptiveStatistics(),
-      featuregroupDTO.getFeaturesHistogram(), featuregroupDTO.getClusterAnalysis());
   
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
@@ -728,14 +684,22 @@ public class FeaturegroupController {
     featuregroup.setVersion(featuregroupDTO.getVersion());
 
     featuregroup.setFeaturegroupType(
-        featuregroupDTO instanceof CachedFeaturegroupDTO ?
-            FeaturegroupType.CACHED_FEATURE_GROUP :
-            FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
+      featuregroupDTO instanceof CachedFeaturegroupDTO ?
+        FeaturegroupType.CACHED_FEATURE_GROUP :
+        FeaturegroupType.ON_DEMAND_FEATURE_GROUP);
 
     featuregroup.setCachedFeaturegroup(cachedFeaturegroup);
     featuregroup.setOnDemandFeaturegroup(onDemandFeaturegroup);
-    // check if null to handle old clients and use entity defaults
-    verifyAndSetFeaturegroupStatsSettings(featuregroupDTO, featuregroup);
+    if (featuregroupDTO.isDescStatsEnabled() != null) {
+      featuregroup.setDescStatsEnabled(featuregroupDTO.isDescStatsEnabled());
+      featuregroup.setFeatHistEnabled(
+        featuregroupDTO.isFeatHistEnabled() != null && featuregroupDTO.isFeatHistEnabled() &&
+          featuregroupDTO.isDescStatsEnabled());
+      featuregroup.setFeatCorrEnabled(
+        featuregroupDTO.isFeatCorrEnabled() != null && featuregroupDTO.isFeatCorrEnabled() &&
+          featuregroupDTO.isDescStatsEnabled());
+    }
+
     featuregroupFacade.persist(featuregroup);
     return featuregroup;
   }
@@ -763,7 +727,9 @@ public class FeaturegroupController {
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(featureGroupDTO);
     verifyFeatureGroupVersion(featureGroupDTO.getVersion());
-    verifyStatisticsInput(featureGroupDTO);
+    verifyFeaturegroupStatsSettings(featureGroupDTO.isDescStatsEnabled(), featureGroupDTO.isFeatCorrEnabled(),
+      featureGroupDTO.isFeatHistEnabled());
+    statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO);
   }
   
   /**

@@ -28,6 +28,7 @@ public class ResourceRequest {
   private Integer limit;
   private Set<? extends AbstractFacade.SortBy> sort;
   private Set<? extends AbstractFacade.FilterBy> filter;
+  private Set<String> field;
   private Set<ResourceRequest> expansions;
   
   //Only for internal use by child classes
@@ -101,7 +102,15 @@ public class ResourceRequest {
   public void setFilter(Set<? extends AbstractFacade.FilterBy> filter) {
     this.filter = filter;
   }
-  
+
+  public Set<String> getField() {
+    return field;
+  }
+
+  public void setField(Set<String> field) {
+    this.field = field;
+  }
+
   public Set<ResourceRequest> getExpansions() {
     return expansions;
   }
@@ -109,7 +118,7 @@ public class ResourceRequest {
   public void setExpansions(Set<ResourceRequest> expansions) {
     this.expansions = expansions;
   }
-  
+
   public boolean contains(Name name) {
     if(this.name == name){
       return true;
@@ -175,8 +184,9 @@ public class ResourceRequest {
     QUERY,
     TAGS,
     SERVICES,
-    TRAININGDATASETS;
-    
+    TRAININGDATASETS,
+    STATISTICS;
+
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
     }

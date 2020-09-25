@@ -83,7 +83,7 @@ public class FeaturestoreJob implements Serializable {
   public void setTrainingDataset(TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
   }
-  
+
   public Featuregroup getFeaturegroup() {
     return featuregroup;
   }

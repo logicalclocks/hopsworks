@@ -19,7 +19,7 @@
  * Service for the feature store page
  */
 angular.module('hopsWorksApp')
-        .factory('FeaturestoreService', ['$http', 'TransformRequest', function ($http, TransformRequest) {
+        .factory('FeaturestoreService', ['$http', function ($http) {
             return {
 
                 /**

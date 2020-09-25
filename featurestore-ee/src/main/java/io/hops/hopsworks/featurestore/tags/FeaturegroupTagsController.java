@@ -4,7 +4,7 @@
 
 package io.hops.hopsworks.featurestore.tags;
 
-import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
@@ -36,7 +36,7 @@ import java.util.logging.Level;
 public class FeaturegroupTagsController implements FeaturegroupTagControllerIface {
 
   @EJB
-  private FeaturegroupFacade featuregroupFacade;
+  private FeaturegroupController featuregroupController;
   @EJB
   private XAttrsController xAttrsController;
   @EJB
@@ -178,7 +178,7 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
    */
   private Featuregroup validateFeaturegroup(int featuregroupId, Featurestore featurestore)
       throws FeaturestoreException {
-    Featuregroup featuregroup = featuregroupFacade.findByIdAndFeaturestore(featuregroupId, featurestore);
+    Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
 
     if(!featuregroup.getFeaturegroupType().equals(FeaturegroupType.CACHED_FEATURE_GROUP)) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_ALLOWED,

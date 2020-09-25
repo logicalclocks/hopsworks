@@ -106,6 +106,7 @@ RSpec.configure do |config|
   config.include EpipeHelper
   config.include ProvHelper
   config.include ProvOpsHelper
+  config.include FeatureStoreStatisticsHelper
 
   # uncomment next line if you need to clean hdfs and hopsworks db before test.
   # config.before(:suite) { clean_test_data }

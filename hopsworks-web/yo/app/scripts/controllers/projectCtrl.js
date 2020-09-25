@@ -450,7 +450,8 @@ angular.module('hopsWorksApp')
               } else {
                   var msg = 'Do you want to accept this dataset and add it to this project?';
                   if (dataset.datasetType === 'FEATURESTORE') {
-                      msg = msg + '<br> This will also accept and add the Training Dataset to this project.'
+                      msg = msg + '<br> This will also accept and add the Training Dataset and Statistics to this' +
+                          ' project.'
                   }
                   ModalService.confirmShare('sm', 'Accept Shared Dataset?', msg)
                         .then(function (success) {
