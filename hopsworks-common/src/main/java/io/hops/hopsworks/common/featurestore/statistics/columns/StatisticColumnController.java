@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.statistics.columns;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.StatisticColumn;
@@ -93,10 +93,10 @@ public class StatisticColumnController {
     verifyStatisticColumnsExist(featuregroupDTO, featuregroupDTO.getFeatures());
   }
 
-  public void verifyStatisticColumnsExist(FeaturegroupDTO featuregroupDTO, List<FeatureDTO> features)
+  public void verifyStatisticColumnsExist(FeaturegroupDTO featuregroupDTO, List<FeatureGroupFeatureDTO> features)
     throws FeaturestoreException {
     if (featuregroupDTO.getStatisticColumns() != null) {
-      List<String> featureNames = features.stream().map(FeatureDTO::getName).collect(
+      List<String> featureNames = features.stream().map(FeatureGroupFeatureDTO::getName).collect(
         Collectors.toList());
       // verify all statistic columns exist
       Optional<String> nonExistingStatColumn =
