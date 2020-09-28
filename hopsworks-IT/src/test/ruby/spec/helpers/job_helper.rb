@@ -36,6 +36,7 @@ module JobHelper
       "jobType": "PYSPARK",
       "appPath": "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".#{type}",
       "mainClass": "org.apache.spark.deploy.PythonRunner",
+      "defaultArgs": "10",
       "spark.executor.instances": 1,
       "spark.executor.cores": 1,
       "spark.executor.memory": 1500,
@@ -85,6 +86,7 @@ module JobHelper
             "jobType": "SPARK",
             "appPath": "hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar",
             "mainClass": "org.apache.spark.examples.SparkPi",
+            "defaultArgs": "10",
             "spark.executor.instances": 1,
             "spark.executor.cores": 1,
             "spark.executor.memory": 1024,
@@ -139,6 +141,7 @@ module JobHelper
           "cores" => 1,
           "jobType" => "PYTHON",
           "appPath" => "hdfs:///Projects/#{project[:projectname]}/Resources/" + job_name + ".py",
+          "defaultArgs" => "10",
           "files" => "hdfs:///Projects/#{project[:projectname]}/Resources/README.md,hdfs:///Projects/#{project[:projectname]}/TestJob/spark-examples.jar"
       }
     end

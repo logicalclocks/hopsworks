@@ -2538,6 +2538,7 @@ public class ProjectController {
           sparkJobConfiguration.setAmVCores(1);
           sparkJobConfiguration.setAppPath("hdfs://" + featurestoreExampleJarDst);
           sparkJobConfiguration.setMainClass(Settings.HOPS_FEATURESTORE_TOUR_JOB_CLASS);
+          sparkJobConfiguration.setDefaultArgs("--input TestJob/data");
           sparkJobConfiguration.setExecutorInstances(1);
           sparkJobConfiguration.setExecutorCores(1);
           sparkJobConfiguration.setExecutorMemory(2024);

@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.jobs.executions;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
@@ -156,7 +157,14 @@ public class ExecutionsResource {
     @Context UriInfo uriInfo) throws JobException, GenericException, ServiceException, ProjectException {
   
     Users user = jWTHelper.getUserPrincipal(sc);
-    Execution exec = executionController.start(job, args, user);
+
+    Execution exec;
+    if(!Strings.isNullOrEmpty(job.getJobConfig().getDefaultArgs()) && Strings.isNullOrEmpty(args)) {
+      exec = executionController.start(job, job.getJobConfig().getDefaultArgs(), user);
+    } else {
+      exec = executionController.start(job, args, user);
+    }
+
     UriBuilder uriBuilder = uriInfo.getAbsolutePathBuilder();
     uriBuilder.path(Integer.toString(exec.getId()));
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);

@@ -136,9 +136,22 @@ describe "On #{ENV['OS']}" do
               start_execution(@project[:id], $job_name_3)
               expect_status_details(201)
             end
-            it "should start a job with args 123" do
+            it "should start a job and use default args" do
               $job_name_3 = "demo_job_3_" + type
               create_sparktour_job(@project, $job_name_3, type, nil)
+              default_args = json_body[:config][:defaultArgs]
+              start_execution(@project[:id], $job_name_3, nil)
+              execution_id = json_body[:id]
+              expect_status_details(201)
+              get_execution(@project[:id], $job_name_3, execution_id)
+              expect_status_details(200)
+              expect(json_body[:args]).not_to be_nil
+              expect(default_args).not_to be_nil
+              expect(json_body[:args]).to eq default_args
+            end
+            it "should start a job with args 123" do
+              $job_name_3 = "demo_job_3_" + type
+              job = create_sparktour_job(@project, $job_name_3, type, nil)
               args = "123"
               start_execution(@project[:id], $job_name_3, args)
               execution_id = json_body[:id]

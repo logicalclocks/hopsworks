@@ -94,6 +94,19 @@ describe "On #{ENV['OS']}" do
               wait_for_execution_completed(@project[:id], $job_name, execution_id_1, "FINISHED")
               wait_for_execution_completed(@project[:id], $job_name, execution_id_2, "FINISHED")
             end
+            it "should start a job with default args" do
+              create_python_job(@project, $job_name, type)
+              default_args = json_body[:config][:defaultArgs]
+              start_execution(@project[:id], $job_name, nil)
+              execution_id = json_body[:id]
+              expect_status(201)
+              get_execution(@project[:id], $job_name, execution_id)
+              expect_status(200)
+              expect(json_body[:args]).not_to be_nil
+              expect(default_args).not_to be_nil
+              expect(json_body[:args]).to eq default_args
+              wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
+            end
             it "should start a job with args 123" do
               create_python_job(@project, $job_name, type)
               args = "123"
