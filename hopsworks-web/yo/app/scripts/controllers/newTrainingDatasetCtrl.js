@@ -525,8 +525,7 @@ angular.module('hopsWorksApp')
                     FeaturestoreService.writeUtilArgstoHdfs(self.projectId, utilArgs).then(
                         function (success) {
                             var hdfsPath = success.data.successMessage;
-                            StorageService.store(self.projectId + "_" + jobName + "_fs_hdfs_path", hdfsPath);
-                            var runConfig = self.setupHopsworksCreateTdJob(jobName);
+                            var runConfig = self.setupHopsworksCreateTdJob(jobName, hdfsPath);
                             FeaturestoreService.createTrainingDataset(self.projectId, trainingDatasetJson, self.featurestore).then(
                                 function (success) {
                                     self.working = false;
@@ -670,10 +669,11 @@ angular.module('hopsWorksApp')
              * @param jobName name of the job
              * @returns the configured json
              */
-            self.setupHopsworksCreateTdJob = function (jobName) {
+            self.setupHopsworksCreateTdJob = function (jobName, hdfsPath) {
                 return {
                     type: "sparkJobConfiguration",
                     appName: jobName,
+                    defaultArgs: '--input ' + hdfsPath,
                     amQueue: "default",
                     amMemory: 4000,
                     amVCores: 1,

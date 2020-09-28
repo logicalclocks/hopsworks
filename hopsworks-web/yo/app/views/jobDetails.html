@@ -120,6 +120,10 @@
           <div class="text-right col-md-4">Main class name <i class="fa fa-info-circle" uib-tooltip="The name of the main class to run." style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.mainClass}}</div>
         </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.defaultArgs">
+          <div class="text-right col-md-4">Default args <i class="fa fa-info-circle" uib-tooltip="The default arguments used to run this job" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.defaultArgs}}</div>
+        </div>
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.experimentType === 'EXPERIMENT' || jobDetailCtrl.job.runConfig.experimentType === 'PARALLEL_EXPERIMENTS' || jobDetailCtrl.job.runConfig.experimentType === 'DISTRIBUTED_TRAINING'">
           <div class="text-right col-md-4">Experiment Type <i class="fa fa-info-circle" uib-tooltip="The type of Machine Learning experiment" style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.experimentType}}</div>
@@ -223,6 +227,10 @@
         <div class="row" ng-show="jobDetailCtrl.job.runConfig.appPath.endsWith('.ipynb')">
           <div class="text-right col-md-4">Notebook file <i class="fa fa-info-circle" uib-tooltip="The path to the notebook to run as a python executable for this job" style="margin-left: 10px"></i></div>
           <div class="col-md-8">{{jobDetailCtrl.job.runConfig.appPath}}</div>
+        </div>
+        <div class="row" ng-show="jobDetailCtrl.job.runConfig.defaultArgs">
+          <div class="text-right col-md-4">Default args <i class="fa fa-info-circle" uib-tooltip="The default arguments used to run this job" style="margin-left: 10px"></i></div>
+          <div class="col-md-8">{{jobDetailCtrl.job.runConfig.defaultArgs}}</div>
         </div>
         <div class="row">
           <div class="text-right col-md-4">Memory (MB)

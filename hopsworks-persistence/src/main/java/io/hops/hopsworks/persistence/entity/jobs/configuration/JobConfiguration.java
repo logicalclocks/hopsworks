@@ -68,6 +68,8 @@ public abstract class JobConfiguration {
 
   protected String appName;
 
+  protected String defaultArgs;
+
   protected ScheduleDTO schedule;
 
   protected JobConfiguration() {
@@ -109,6 +111,14 @@ public abstract class JobConfiguration {
   @Override
   public int hashCode() {
     return ThreadLocalRandom.current().nextInt(0, 999999999 + 1);
+  }
+
+  public String getDefaultArgs() {
+    return defaultArgs;
+  }
+
+  public void setDefaultArgs(String defaultArgs) {
+    this.defaultArgs = defaultArgs;
   }
 
   public static class JobConfigurationFactory {

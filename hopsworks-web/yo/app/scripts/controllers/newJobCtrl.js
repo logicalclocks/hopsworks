@@ -366,15 +366,6 @@ angular.module('hopsWorksApp')
                   self.tourService.currentStep_TourSix = 1;
                   self.kafkaGuideTransition();
                 }
-                if(self.jobname === "SparkPi") {
-                  StorageService.store("tour_args_" + self.jobname, "10");
-                } else if(self.jobname === "KafkaDemoProducer") {
-                  StorageService.store("tour_args_" + self.jobname, "producer " + self.tourService.kafkaTopicName + "-" + self.projectId);
-                } else if(self.jobname === "KafkaDemoConsumer") {
-                  StorageService.store("tour_args_" + self.jobname, "consumer " + self.tourService.kafkaTopicName + "-" + self.projectId);
-                } else if(self.jobname === "featurestore_tour_job") {
-                  StorageService.store("tour_args_" + self.jobname, "--input TestJob/data");
-                }
               }
 
               self.runConfig.appName = self.jobname;
@@ -572,6 +563,7 @@ angular.module('hopsWorksApp')
               if (self.jobtype === 1 && self.projectIsGuide &&
                       (typeof self.runConfig.mainClass === 'undefined' || self.runConfig.mainClass === '')) {
                 self.runConfig.mainClass = 'org.apache.spark.examples.SparkPi';
+                self.runConfig.defaultArgs = '10';
               }
               // For Kafka tour
               if (self.projectIsGuide) {
@@ -584,6 +576,11 @@ angular.module('hopsWorksApp')
             };
 
             self.populateKafkaJobParameters = function () {
+              if(self.jobname === "KafkaDemoProducer") {
+                self.runConfig.defaultArgs = "producer " + self.tourService.kafkaTopicName + "-" + self.projectId;
+              } else if(self.jobname === "KafkaDemoConsumer") {
+                self.runConfig.defaultArgs = "consumer " + self.tourService.kafkaTopicName + "-" + self.projectId;
+              }
               self.runConfig.mainClass = 'io.hops.examples.spark.kafka.StructuredStreamingKafka';
               var jobState = self.tourService.kafkaJobCreationState;
             };
