@@ -443,7 +443,7 @@ angular.module('hopsWorksApp')
                 jobConfig.jobType = "SPARK";
                 jobConfig.appPath = dataValidationSettings.executablePath;
                 jobConfig.mainClass = dataValidationSettings.executableMainClass;
-                jobConfig.args = cmdArgs;
+                jobConfig.defaultArgs = cmdArgs;
                 jobConfig['spark.blacklist.enabled'] = false;
                 jobConfig['spark.dynamicAllocation.enabled'] = true;
                 jobConfig['spark.dynamicAllocation.minExecutors'] = 2;

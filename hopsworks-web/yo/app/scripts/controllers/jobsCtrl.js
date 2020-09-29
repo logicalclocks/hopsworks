@@ -654,7 +654,7 @@ angular.module('hopsWorksApp')
             };
 
             self.deleteJob = function (jobName) {
-              ModalService.confirm("sm", "Delete Job (" + jobName + ")",
+              ModalService.confirm("md", "Delete Job (" + jobName + ")",
                       "Do you really want to delete this job? This action cannot be undone. All runs will stop!")
                       .then(function (success) {
                         JobService.deleteJob(self.projectId, jobName).then(
