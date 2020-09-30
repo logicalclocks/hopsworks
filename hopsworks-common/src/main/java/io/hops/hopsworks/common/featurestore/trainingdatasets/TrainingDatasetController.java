@@ -173,7 +173,6 @@ public class TrainingDatasetController {
         .stream()
         .map(f -> new TrainingDatasetFeatureDTO(f.getName(), f.getType(),
             f.getFeatureGroup() != null ?
-                // Don't call the full constructor as it sends also the statistics
                 new FeaturegroupDTO(f.getFeatureGroup().getFeaturestore().getId(),
                     fsLookupTable.get(f.getFeatureGroup().getFeaturestore().getId()),
                     f.getFeatureGroup().getId(),
