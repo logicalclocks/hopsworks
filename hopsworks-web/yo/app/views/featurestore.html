@@ -661,10 +661,10 @@
         </div>
         <tour class="ng-scope" step="featurestoreCtrl.tourService.currentStep_TourNine"
               post-tour="closeTour()"
-              ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'&& featurestoreCtrl.tourService.showTips
+              ng-if="featurestoreCtrl.tourService.activeTour === 'fs' && featurestoreCtrl.tourService.showTips
               && !featurestoreCtrl.loading && !projectCtrl.loading">
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This is the feature store registry where you can list and search for
                     features/feature groups/training datasets in the feature store as well as edit their metadata."
@@ -675,7 +675,7 @@
                     on-proceed=""
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab displays the available feature groups in the feature store.
                     A feature group is a logical grouping of a set of features."
@@ -686,7 +686,7 @@
                     on-proceed="featurestoreCtrl.goToTab(1)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab displays the available training datasets in the feature store.
                     A training dataset is an immutable dataset of a set of features to use in machine
@@ -699,7 +699,7 @@
                     on-proceed="featurestoreCtrl.goToTab(2)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab allows you to search for individual features in feature groups"
                     tourtip-step="3"
@@ -709,7 +709,7 @@
                     on-proceed="featurestoreCtrl.goToTab(3)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab gives you an overview of the Feature Store."
                     tourtip-step="4"
@@ -719,7 +719,7 @@
                     on-proceed="featurestoreCtrl.goToTab(4)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="This tab lists the storage connectors for the Feature Store."
                     tourtip-step="5"
@@ -729,7 +729,7 @@
                     on-proceed="featurestoreCtrl.goToTab(0)"
             ></virtual-step>
             <virtual-step
-                    ng-if="featurestoreCtrl.tourService.activeTour === 'featurestore'"
+                    ng-if="featurestoreCtrl.tourService.activeTour === 'fs'"
                     class="ng-scope"
                     tourtip="You can find the feature store datasets here."
                     tourtip-step="6"
