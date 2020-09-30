@@ -767,12 +767,12 @@ angular.module('hopsWorksApp')
                   if (StorageService.contains(self.projectId + "_jobsPageSize")) {
                       self.pageSize = StorageService.get(self.projectId + "_jobsPageSize");
                   } else {
-                      self.pageSize = 8;
+                      self.pageSize = 10;
                   }
                   if (StorageService.contains(self.projectId + "_executionsPageSize")) {
                       self.executionsPageSize = StorageService.get(self.projectId + "_executionsPageSize");
                   } else {
-                      self.pageSize = 5;
+                      self.executionsPageSize = 5;
                   }
               }
             };
