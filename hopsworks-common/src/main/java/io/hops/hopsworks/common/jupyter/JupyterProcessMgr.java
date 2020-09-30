@@ -166,7 +166,7 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
             .addCommand(projectUtils.getFullDockerImageName(project, false))
             .redirectErrorStream(true)
             .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
-            .setWaitTimeout(20L, TimeUnit.SECONDS)
+            .setWaitTimeout(60L, TimeUnit.SECONDS)
             .build();
 
         String pidfile = jp.getRunDirPath() + "/jupyter.pid";
