@@ -521,10 +521,10 @@
   </tour>
     <tour class="ng-scope" step="jobsCtrl.tourService.currentStep_TourNine"
           post-tour="closeTour()"
-          ng-if="jobsCtrl.tourService.activeTour === 'featurestore'
+          ng-if="jobsCtrl.tourService.activeTour === 'fs'
           && jobsCtrl.tourService.showTips && !projectCtrl.loading && !getAllJobsStatusIsPending ">
       <virtual-step
-              ng-if="jobsCtrl.tourService.activeTour === 'featurestore'"
+              ng-if="jobsCtrl.tourService.activeTour === 'fs'"
               class="ng-scope"
               tourtip="The tour includes a sample job that does feature engineering and creates some example feature groups,
             this job typically takes 5-15 minutes depending on how busy the cluster is.
