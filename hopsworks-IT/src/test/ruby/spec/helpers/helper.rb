@@ -34,7 +34,7 @@ module Helper
     return x
   end
 
-  #modified variant of expect_status where we print a mode detailed error msg
+  #modified variant of expect_status where we print a more detailed error msg
   #and we also have the ability to check for hopsworks error_code
   def expect_status_details(expected_status, error_code: nil)
     #204 doesn't have a response body - treat differently

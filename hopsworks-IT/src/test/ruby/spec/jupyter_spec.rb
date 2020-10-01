@@ -204,7 +204,7 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
 
         notebook = json_body[:content].detect { |content| content[:path] == "shared_notebook.ipynb" }
-        expect(notebook).not_to be nil
+        expect(notebook).not_to be_nil
 
       end
 

@@ -46,12 +46,12 @@ module CondaHelper
   #the registry url and port should not change, if they do fix the tests
   @@registry = "registry.service.consul:4443"
 
-  def wait_for(timeout=600)
+  def wait_for(timeout=600, error_msg="Timed out waiting for Anaconda to finish.")
     start = Time.now
     x = yield
     until x
       if Time.now - start > timeout
-        raise "Timed out waiting for Anaconda to finish. Timeout #{timeout} sec"
+        raise "#{error_msg} Timeout #{timeout} sec"
       end
       sleep(1)
       x = yield
