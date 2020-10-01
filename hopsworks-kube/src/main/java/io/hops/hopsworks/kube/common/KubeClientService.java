@@ -603,7 +603,7 @@ public class KubeClientService {
     switch (settings.getKubeType()){
       case Local:
         Config config = new ConfigBuilder()
-            .withUsername(settings.getKubeUser())
+            .withUsername(settings.getKubeHopsworksUser())
             .withMasterUrl(settings.getKubeMasterUrl())
             .withCaCertFile(settings.getKubeCaCertfile())
             .withTrustStoreFile(settings.getKubeTruststorePath())

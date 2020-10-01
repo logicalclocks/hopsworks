@@ -118,6 +118,24 @@ describe "On #{ENV['OS']}" do
               expect(json_body[:args]).to eq args
               wait_for_execution_completed(@project[:id], $job_name, execution_id, "FINISHED")
             end
+            it "should start an execution and delete it while running" do
+              create_python_job(@project, $job_name, type)
+              expect_status(201)
+              #start execution
+              start_execution(@project[:id], $job_name)
+              execution_id = json_body[:id]
+              expect_status(201)
+              #Wait a few seconds for kubernetes to start the job
+              wait_for_kube_job($job_name)
+              delete_execution(@project[:id], $job_name, execution_id)
+              expect_status(204)
+
+              #check database
+              num_executions = count_executions($job_name)
+              expect(num_executions).to eq 0
+
+              wait_for_kube_job($job_name, should_exist=false)
+            end
             it "should run job and get out and err logs" do
               create_python_job(@project, $job_name, type)
               start_execution(@project[:id], $job_name)

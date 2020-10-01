@@ -63,6 +63,8 @@ public interface ExecutionController {
   
   Execution stopExecution(Execution execution) throws JobException;
   
+  void delete(Execution execution) throws JobException;
+  
   Execution authorize(Jobs job, Integer executionId) throws JobException;
   
   JobLogDTO getLog(Execution execution, JobLogDTO.LogType type) throws JobException;

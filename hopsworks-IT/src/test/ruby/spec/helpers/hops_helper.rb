@@ -16,9 +16,10 @@
 
 require 'open3'
 
-module HopsFSHelper
+module HopsHelper
 
   @@hdfs_user = Variables.find_by(id: "hdfs_user").value
+  @@rmyarn_user = Variables.find_by(id: "rmyarn_user").value
   @@yarn_user = Variables.find_by(id: "yarn_user").value
   @@hadoop_home = Variables.find_by(id: "hadoop_dir").value
   @@hopsworks_user = Variables.find_by(id: "hopsworks_user").value
@@ -83,13 +84,13 @@ module HopsFSHelper
     return $?.exitstatus == 0
   end
 
-  def check_dir_has_files(hdfs_user, application_id)
+  def check_log_dir_has_files(hdfs_user, application_id)
     cmd = "sudo su #{@@hdfs_user} /bin/bash -c \"#{@@hadoop_home}/bin/hdfs dfs -count /user/#{@@yarn_user}/logs/#{hdfs_user}/logs/#{application_id}\""
     file_count = ""
     Open3.popen3(cmd) do |_, stdout, _, _|
       file_count = stdout.read
     end
-    file_count.split(" ")[1].to_i  > 0
+    file_count.split(" ")[1].to_i > 0
   end
 
   def copy(src, dest, owner, group, mode, name)
@@ -139,4 +140,20 @@ module HopsFSHelper
       raise "Failed to change owner: #{path} to #{owner}:#{group}"
     end
   end
+
+  ################################################### YARN helpers #####################################################
+
+  def get_application_state(app_id, states)
+    cmd = "sudo su #{@@rmyarn_user} /bin/bash -c \"#{@@hadoop_home}/bin/yarn app -list -appStates #{states} | grep #{app_id}\""
+    state = ""
+    Open3.popen3(cmd) do |_, stdout, _, _|
+      state = stdout.read
+    end
+    # state looks like
+    # application_1600882170037_0008	      demo_job_5_jar	      Hopsworks-Yarn	demo_spark_deb57f91__deb57f97	   default	            KILLED	            KILLED	           100%	http://resourcemanager.service.consul:8088/cluster/app/application_1600882170037_0008
+    state.split[5]
+  end
+
+  ######################################################################################################################
+
 end

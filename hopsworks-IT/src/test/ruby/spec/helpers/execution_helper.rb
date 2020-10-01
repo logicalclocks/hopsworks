@@ -34,6 +34,10 @@ module ExecutionHelper
     put "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/status", stateDTO
   end
 
+  def delete_execution(project_id, job_name, execution_id)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}"
+  end
+
   def get_execution_log(project_id, job_name, execution_id, type)
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/executions/#{execution_id}/log/#{type}"
   end
@@ -88,6 +92,38 @@ module ExecutionHelper
     app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
     wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
     { app_id: app_id, execution_id: execution_id }
+  end
+
+  def wait_for_yarn_app_state(app_id, state)
+    app_state = ""
+    wait_for(60, "YARN app did not transition to #{state}") do
+      app_state = get_application_state(app_id, state)
+      app_state == state
+    end
+    expect(app_state).to eq state
+  end
+
+  def wait_for_kube_job(job_name, should_exist=true, timeout=10)
+    kube_user = Variables.find_by(id: "kube_user").value
+    output = nil
+    wait_for(timeout, "Kubernetes job was not removed") do
+      #Check Kubernetes that the job has been removed
+      cmd = "sudo su #{kube_user} /bin/bash -c \"kubectl get jobs -A\""
+      Open3.popen3(cmd) do |_, stdout, _, _|
+        output = stdout.read
+      end
+      puts "should_exist: #{should_exist}, output: #{output}"
+      if should_exist
+        output != "No resources found" and output != ""
+      else
+        output == "No resources found" or output == ""
+      end
+    end
+    if should_exist
+      expect(output).to include(job_name.gsub("_","-"))
+    else
+      expect(output).not_to include(job_name.gsub("_","-"))
+    end
   end
 end
 

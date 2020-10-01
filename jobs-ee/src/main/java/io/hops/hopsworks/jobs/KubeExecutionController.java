@@ -466,6 +466,16 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
   
   @Override
+  public void delete(Execution execution) throws JobException {
+    if (execution.getJob().getJobType() == JobType.PYTHON) {
+      stopExecution(execution);
+    } else {
+      super.stopExecution(execution);
+    }
+    super.delete(execution);
+  }
+  
+  @Override
   public JobLogDTO retryLogAggregation(Execution execution, JobLogDTO.LogType type) throws JobException {
     if (execution.getJob().getJobType() != JobType.PYTHON) {
       return super.retryLogAggregation(execution, type);

@@ -45,7 +45,7 @@ describe "On #{ENV['OS']}" do
         register_user(user_params)
 
         user = User.find_by(email: email.downcase)
-        expect(user).not_to be nil
+        expect(user).not_to be_nil
       end
 
       it 'should fail to register user with same email different collate' do
@@ -55,7 +55,7 @@ describe "On #{ENV['OS']}" do
         register_user(user_params)
 
         user = User.find_by(email: email.downcase)
-        expect(user).not_to be nil
+        expect(user).not_to be_nil
 
         email = "tolower@hopsworks.se"
         user_params[:email] = email

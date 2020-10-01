@@ -272,6 +272,7 @@ public class Settings implements Serializable {
    */
   private static final String VARIABLE_KUBEMASTER_URL = "kube_master_url";
   private static final String VARIABLE_KUBE_USER = "kube_user";
+  private static final String VARIABLE_KUBE_HOPSWORKS_USER = "kube_hopsworks_user";
   private static final String VARIABLE_KUBE_CA_CERTFILE = "kube_ca_certfile";
   private static final String VARIABLE_KUBE_CLIENT_KEYFILE = "kube_client_keyfile";
   private static final String VARIABLE_KUBE_CLIENT_CERTFILE = "kube_client_certfile";
@@ -687,6 +688,7 @@ public class Settings implements Serializable {
           TENSORBOARD_MAX_RELOAD_THREADS);
 
       KUBE_USER = setStrVar(VARIABLE_KUBE_USER, KUBE_USER);
+      KUBE_HOPSWORKS_USER = setStrVar(VARIABLE_KUBE_HOPSWORKS_USER, KUBE_HOPSWORKS_USER);
       KUBEMASTER_URL = setStrVar(VARIABLE_KUBEMASTER_URL, KUBEMASTER_URL);
       KUBE_CA_CERTFILE = setStrVar(VARIABLE_KUBE_CA_CERTFILE, KUBE_CA_CERTFILE);
       KUBE_CLIENT_KEYFILE = setStrVar(VARIABLE_KUBE_CLIENT_KEYFILE, KUBE_CLIENT_KEYFILE);
@@ -1167,7 +1169,7 @@ public class Settings implements Serializable {
   }
 
   //User under which yarn is run
-  private String YARN_SUPERUSER = "rmyarn";
+  private String YARN_SUPERUSER = "yarn";
 
   public synchronized String getYarnSuperUser() {
     checkCache();
@@ -3282,11 +3284,18 @@ public class Settings implements Serializable {
   }
 
   // -------------------------------- Kubernetes ----------------------------------------------//
-  private String KUBE_USER = "hopsworks";
+  private String KUBE_USER = "kubernetes";
 
   public synchronized String getKubeUser() {
     checkCache();
     return KUBE_USER;
+  }
+  
+  private String KUBE_HOPSWORKS_USER = "hopsworks";
+  
+  public synchronized String getKubeHopsworksUser() {
+    checkCache();
+    return KUBE_HOPSWORKS_USER;
   }
 
   private String KUBEMASTER_URL = "https://192.168.68.102:6443";

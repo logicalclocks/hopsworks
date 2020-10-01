@@ -109,7 +109,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   @EJB
   private Settings settings;
   @EJB
-  private ExecutionFacade execFacade;
+  private ExecutionFacade executionFacade;
   @EJB
   private YarnClientService ycs;
   @EJB
@@ -178,12 +178,12 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution stop(Jobs job) throws JobException {
     //Get all the executions that are in a non-final state
-    List<Execution> executions = execFacade.findByJobAndNotFinished(job);
+    List<Execution> executions = executionFacade.findByJobAndNotFinished(job);
     if (executions != null && !executions.isEmpty()) {
       for (Execution execution : executions) {
         stopExecution(execution);
       }
-      return execFacade.findById(executions.get(0).getId())
+      return executionFacade.findById(executions.get(0).getId())
         .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
           FINE, "Execution: " + executions.get(0).getId()));
     }
@@ -193,7 +193,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution stopExecution(Integer id) throws JobException {
     return stopExecution(
-      execFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
+      executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
         FINE, "Execution: " + id)));
   }
   
@@ -205,7 +205,7 @@ public abstract class AbstractExecutionController implements ExecutionController
         yarnClientWrapper = ycs.getYarnClientSuper(settings.getConfiguration());
         yarnClientWrapper.getYarnClient().killApplication(ApplicationId.fromString(execution.getAppId()));
         yarnExecutionFinalizer.removeAllNecessary(execution);
-        return execFacade.findById(execution.getId())
+        return executionFacade.findById(execution.getId())
           .orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
             FINE, "Execution: " + execution.getId()));
       } catch (IOException | YarnException ex) {
@@ -221,7 +221,7 @@ public abstract class AbstractExecutionController implements ExecutionController
   
   public Execution authorize(Jobs job, Integer id) throws JobException {
     Execution execution =
-      execFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
+      executionFacade.findById(id).orElseThrow(() -> new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND,
       FINE, "Execution: " + id));
     if (execution == null) {
       throw new JobException(RESTCodes.JobErrorCode.JOB_EXECUTION_NOT_FOUND, Level.FINE,
@@ -232,6 +232,11 @@ public abstract class AbstractExecutionController implements ExecutionController
       }
     }
     return execution;
+  }
+  
+  @Override
+  public void delete(Execution execution) throws JobException {
+    executionFacade.remove(execution);
   }
   
   //====================================================================================================================
