@@ -11,11 +11,13 @@ import java.util.List;
 public class HeartbeatResponse extends BaseMessage {
   private final List<CloudNode> workers;
   private final List<CloudCommand> commands;
+  private final List<String> blockedUsers;
 
   public HeartbeatResponse(List<CloudNode> workers,
-          List<CloudCommand> commands) {
+          List<CloudCommand> commands, List<String> blockedUsers) {
     this.workers = workers;
     this.commands = commands;
+    this.blockedUsers = blockedUsers;
   }
 
   public List<CloudNode> getWorkers() {
@@ -24,5 +26,9 @@ public class HeartbeatResponse extends BaseMessage {
 
   public List<CloudCommand> getCommands() {
     return commands;
+  }
+
+  public List<String> getBlockedUsers() {
+    return blockedUsers;
   }
 }

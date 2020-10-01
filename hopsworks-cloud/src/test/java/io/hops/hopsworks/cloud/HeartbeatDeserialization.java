@@ -165,7 +165,8 @@ public class HeartbeatDeserialization {
   }
 
   private HeartbeatResponse constructEmptyHeartbeatResponse() {
-    final HeartbeatResponse hr = new HeartbeatResponse(Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    final HeartbeatResponse hr = new HeartbeatResponse(Collections.EMPTY_LIST, Collections.EMPTY_LIST,
+        Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);
     return hr;
   }
@@ -175,13 +176,13 @@ public class HeartbeatDeserialization {
     workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType"));
     workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1"));
 
-    final HeartbeatResponse hr = new HeartbeatResponse(workers, Collections.EMPTY_LIST);
+    final HeartbeatResponse hr = new HeartbeatResponse(workers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);
     return hr;
   }
 
   private HeartbeatResponse constructHeartbeatResponse(List<CloudNode> workers, List<CloudCommand> commands) {
-    final HeartbeatResponse hr = new HeartbeatResponse(workers, commands);
+    final HeartbeatResponse hr = new HeartbeatResponse(workers, commands, Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);
     return hr;
   }

@@ -12,12 +12,15 @@ import com.google.common.annotations.VisibleForTesting;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
+import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import java.io.IOException;
 
 import javax.annotation.PostConstruct;
@@ -82,6 +85,8 @@ public class CloudManager {
   private Settings settings;
   @EJB
   private DistributedFsService dfsService;
+  @EJB
+  private UserFacade userFacade;
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
@@ -116,23 +121,10 @@ public class CloudManager {
         }
       }
 
-      Map<String, CloudNode> workers = new HashMap<>(response.getWorkers().size());
+      Map<String, CloudNode> workers = addWorkers(response);
       
-      //add worker nodes to host table if they are not present
-      for (CloudNode worker : response.getWorkers()) {
-        workers.put(worker.getHost(), worker);
-        // Do not put back nodes that were removed by the previous heartbeat
-        // but not yet shutdown
-        if (!decommissionedNodes.contains(worker) &&
-                !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
-          HostDTO hostDTO = new HostDTO();
-          hostDTO.setHostname(worker.getHost());;
-          hostDTO.setHostIp(worker.getIp());
-          hostDTO.setNumGpus(worker.getNumGPUs());
-          hostsController.addOrUpdateClusterNode(worker.getHost(), hostDTO);
-        }
-      }
-
+      checkUsers(response.getBlockedUsers());
+      
       // If it's finally removed by the list of cluster nodes, it's safe to forget them
       // from decommissionedNodes
       decommissionedNodes.removeIf(host -> !response.getWorkers().contains(host));
@@ -149,6 +141,38 @@ public class CloudManager {
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, "Error in Cloud Heartbeat", ex);
     }
+  }
+  
+  private void checkUsers(List<String> blockedUsers) {
+    for (String email : blockedUsers) {
+      Users user = userFacade.findByEmail(email);
+      if (user != null && !user.getStatus().equals(UserAccountStatus.BLOCKED_ACCOUNT)) {
+        LOG.log(Level.INFO, "Blocking user " + user.getEmail());
+        user.setStatus(UserAccountStatus.BLOCKED_ACCOUNT);
+        userFacade.update(user);
+      }
+    }
+  }
+  
+  /**
+   * add worker nodes to host table if they are not present
+   *
+   */
+  private Map<String, CloudNode> addWorkers(HeartbeatResponse response) {
+    Map<String, CloudNode> workers = new HashMap<>(response.getWorkers().size());
+    for (CloudNode worker : response.getWorkers()) {
+      workers.put(worker.getHost(), worker);
+      // Do not put back nodes that were removed by the previous heartbeat
+      // but not yet shutdown
+      if (!decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
+        HostDTO hostDTO = new HostDTO();
+        hostDTO.setHostname(worker.getHost());;
+        hostDTO.setHostIp(worker.getIp());
+        hostDTO.setNumGpus(worker.getNumGPUs());
+        hostsController.addOrUpdateClusterNode(worker.getHost(), hostDTO);
+      }
+    }
+    return workers;
   }
 
   enum Status {
