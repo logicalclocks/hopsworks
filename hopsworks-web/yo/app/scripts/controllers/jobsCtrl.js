@@ -569,6 +569,25 @@ angular.module('hopsWorksApp')
                       });
               };
 
+              self.deleteExecution = function (jobName, executionId) {
+                  ModalService.confirm("lg", "Delete run", "Do you really want to delete this run?" +
+                      " If it is still ongoing, it will stop abruptly. If it is finished already, logs will" +
+                      " remain in the Logs dataset.")
+                      .then(function (success) {
+                          JobService.deleteExecution(self.projectId, jobName, executionId).then(
+                              function (success) {
+                                  growl.success("Run is being deleted...", {title: 'Success', ttl: 5000});
+                              }, function (error) {
+                                  if (typeof error.data.usrMsg !== 'undefined') {
+                                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                                  } else {
+                                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                                  }
+                              });
+                      }, function (cancelled) {
+                      });
+              };
+
             /**
              * Navigate to the new job page.
              * @returns {undefined}

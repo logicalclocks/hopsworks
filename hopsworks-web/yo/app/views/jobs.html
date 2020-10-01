@@ -412,7 +412,7 @@
                                       uib-tooltip="Real-time logs"
                                       ng-if="job.jobType === 'PYTHON'"
                                       ng-disabled = "execution.state === 'INITIALIZING'"
-                                      type="button" class="btn btn-default fa fa-refresh"
+                                      type="button" class="btn btn-default fa fa-eye"
                                       ng-click="jobsCtrl.showExecutionUI(execution);$event.stopPropagation();">
                               </button>
 
@@ -428,6 +428,12 @@
                                       ng-disabled="jobsCtrl.isRunningState(execution.state)"
                                       type="button" class="btn btn-default fa fa-file-text" style="color:#d9534f"
                                       ng-click="jobsCtrl.getLog(job.name, execution.id, 'err');$event.stopPropagation();">
+                              </button>
+
+                              <button
+                                      uib-tooltip="Delete run"
+                                      ng-click="jobsCtrl.deleteExecution(job.name, execution.id);$event.stopPropagation();"
+                                      class="btn btn-danger fa fa-trash">
                               </button>
 
                             </div>

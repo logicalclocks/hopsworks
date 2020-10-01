@@ -43,4 +43,11 @@ public class YARNExecutionController extends AbstractExecutionController impleme
     return super.start(job, args, user);
   }
   
+  @Override
+  public void delete(Execution execution) throws JobException {
+    if (!execution.getState().isFinalState()) {
+      stopExecution(execution);
+    }
+    super.delete(execution);
+  }
 }

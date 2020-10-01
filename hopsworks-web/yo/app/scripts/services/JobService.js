@@ -170,6 +170,9 @@ angular.module('hopsWorksApp')
                   };
                   return $http(req);
               },
+              deleteExecution: function (projectId, name, execId) {
+                  return $http.delete('/api/project/' + projectId + '/jobs/' + name + '/executions/' + execId);
+              },
               /**
                * Get the latest app Id of the given job.
                * @param {type} projectId

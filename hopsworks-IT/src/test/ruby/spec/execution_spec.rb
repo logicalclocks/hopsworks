@@ -160,7 +160,28 @@ describe "On #{ENV['OS']}" do
               expect_status_details(200)
               expect(json_body[:args]).to eq args
             end
-            it "should run job and get out and err logs" do
+            it "should start an execution and delete it while running" do
+              job_name = "demo_job_5_" + type
+              create_sparktour_job(@project, job_name, type, nil)
+              expect_status_details(201)
+              #start execution
+              start_execution(@project[:id], job_name)
+              execution_id = json_body[:id]
+              expect_status_details(201)
+              wait_for_execution_active(@project[:id], job_name, execution_id, "ACCEPTED", "appId")
+              get_execution(@project[:id], job_name, execution_id)
+              app_id = json_body[:appId]
+              delete_execution(@project[:id], job_name, execution_id)
+              expect_status_details(204)
+
+              #check database
+              num_executions = count_executions(job_name)
+              expect(num_executions).to eq 0
+
+              #Check YARN that the app_id was killed
+              wait_for_yarn_app_state(app_id, "KILLED")
+            end
+            it "should run a job and get out and err logs" do
               $job_name_4 = "demo_job_4_" + type
               create_sparktour_job(@project, $job_name_4, type, nil)
               project = get_project
@@ -170,37 +191,30 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
-
-              #wait for log aggregation
-              wait_result = wait_for_me_time(120) do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
-              end
-              expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-              # Check if logs are in hdfs under YARN user
               get_execution(@project[:id], $job_name_4, execution_id)
               application_id = json_body[:appId]
-              if !check_dir_has_files(hdfs_user, application_id)
+
+              #wait for out log aggregation
+              wait_for(60, "Timed-out waiting for out logs") do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+                json_body[:log] != "No log available."
+              end
+              # Check if logs are in hdfs under YARN user
+              if !check_log_dir_has_files(hdfs_user, application_id)
                 raise "Log aggregation failed in YARN"
               end
-
-              #get out log
-              get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+              expect(json_body[:log]).not_to eq("No log available.")
+              puts "execution1 json_body: #{json_body}"
               expect(json_body[:type]).to eq "OUT"
-              expect(json_body[:log]).to be_present
 
-              #wait for log aggregation
-              wait_result = wait_for_me_time(120) do
+              #wait for error log aggregation
+              wait_for(60, "Timed-out waiting for err logs") do
                 get_execution_log(@project[:id], $job_name_4, execution_id, "err")
-                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for err log aggregation" }
+                json_body[:log] != "No log available."
               end
-              expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-              #get err log
-              get_execution_log(@project[:id], $job_name_4, execution_id, "err")
+              expect(json_body[:log]).not_to eq("No log available.")
+              puts "execution2 json_body: #{json_body}"
               expect(json_body[:type]).to eq "ERR"
-              expect(json_body[:log]).to be_present
 
               member = create_user
               add_member_to_project(project, member[:email], "Data scientist")
@@ -212,24 +226,29 @@ describe "On #{ENV['OS']}" do
               expect_status_details(201)
 
               wait_for_execution_completed(@project[:id], $job_name_4, execution_id, "FINISHED")
-
-              #wait for log aggregation
-              wait_result = wait_for_me_time(120) do
-                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
-                { 'success' => (json_body[:log] != "No log available."), 'msg' => "wait for out log aggregation" }
-              end
-              # Check if logs are in hdfs under YARN user
               get_execution(@project[:id], $job_name_4, execution_id)
               application_id = json_body[:appId]
-              if !check_dir_has_files(hdfs_user, application_id)
+
+              #wait for out log aggregation
+              wait_for(60, "Timed-out waiting for out logs") do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+                json_body[:log] != "No log available."
+              end
+              # Check if logs are in hdfs under YARN user
+              if !check_log_dir_has_files(hdfs_user, application_id)
                 raise "Log aggregation failed in YARN"
               end
-              expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-              #get out log
-              get_execution_log(@project[:id], $job_name_4, execution_id, "out")
+              expect(json_body[:log]).not_to eq("No log available.")
+              puts "execution3 json_body: #{json_body}"
               expect(json_body[:type]).to eq "OUT"
-              expect(json_body[:log]).to be_present
+
+              #wait for error log aggregation
+              wait_for(60, "Timed-out waiting for err logs") do
+                get_execution_log(@project[:id], $job_name_4, execution_id, "err")
+                json_body[:log] != "No log available."
+              end
+              expect(json_body[:log]).not_to eq("No log available.")
+              expect(json_body[:type]).to eq "ERR"
             end
           end
         end

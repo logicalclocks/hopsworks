@@ -83,7 +83,7 @@ RSpec.configure do |config|
   config.include KafkaHelper
   config.include KafkaAclHelper
   config.include ServingHelper
-  config.include HopsFSHelper
+  config.include HopsHelper
   config.include JobHelper
   config.include ExecutionHelper
   config.include FeaturestoreHelper

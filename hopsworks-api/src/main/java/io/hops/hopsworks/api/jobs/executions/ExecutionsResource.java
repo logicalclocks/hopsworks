@@ -44,6 +44,7 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -166,6 +167,20 @@ public class ExecutionsResource {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.EXECUTIONS);
     return Response.created(uriBuilder.build()).entity(executionsBuilder.build(uriInfo, resourceRequest, exec))
       .build();
+  }
+  
+  @ApiOperation(value = "Delete an execution of a job by Id", response = ExecutionDTO.class)
+  @DELETE
+  @Path("{id}")
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response delete(@ApiParam(value = "execution id", required = true) @PathParam("id") Integer id,
+    @Context UriInfo uriInfo, @Context SecurityContext sc) throws JobException {
+    //If requested execution does not belong to job
+    Execution execution = executionController.authorize(job, id);
+    executionController.delete(execution);
+    return Response.noContent().build();
   }
   
   @ApiOperation(value = "Retrieve log of given execution and type", response = JobLogDTO.class)
