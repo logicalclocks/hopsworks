@@ -166,7 +166,6 @@ public class CloudManager {
       // but not yet shutdown
       if (!worker.getInstanceState().equals("error") && 
           !decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
-            worker.getInstanceState());
         HostDTO hostDTO = new HostDTO();
         hostDTO.setHostname(worker.getHost());
         hostDTO.setHostIp(worker.getIp());
