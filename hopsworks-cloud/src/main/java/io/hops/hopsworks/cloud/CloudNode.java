@@ -10,13 +10,15 @@ public class CloudNode {
   private String ip;
   private Integer numGPUs;
   private String instanceType;
+  private String instanceState;
 
-  public CloudNode(String nodeId, String host, String ip, Integer numGPUs, String instanceType) {
+  public CloudNode(String nodeId, String host, String ip, Integer numGPUs, String instanceType, String instanceState) {
     this.nodeId = nodeId;
     this.host = host;
     this.ip = ip;
     this.numGPUs = numGPUs;
     this.instanceType = instanceType;
+    this.instanceState = instanceState;
   }
 
   public String getNodeId() {
@@ -59,6 +61,14 @@ public class CloudNode {
     this.instanceType = instanceType;
   }
 
+  public String getInstanceState() {
+    return instanceState;
+  }
+
+  public void setInstanceState(String instanceState) {
+    this.instanceState = instanceState;
+  }
+
   @Override
   public boolean equals(Object other) {
     if (this == other) {
@@ -84,6 +94,7 @@ public class CloudNode {
             ", ip='" + ip + '\'' +
             ", numGPUs=" + numGPUs +
             ", instanceType='" + instanceType + '\'' +
+            ", instanceState='" + instanceState + '\'' +
             '}';
   }
 }

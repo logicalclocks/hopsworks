@@ -164,7 +164,9 @@ public class CloudManager {
       workers.put(worker.getHost(), worker);
       // Do not put back nodes that were removed by the previous heartbeat
       // but not yet shutdown
-      if (!decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
+      if (!worker.getInstanceState().equals("error") && 
+          !decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
+            worker.getInstanceState());
         HostDTO hostDTO = new HostDTO();
         hostDTO.setHostname(worker.getHost());;
         hostDTO.setHostIp(worker.getIp());

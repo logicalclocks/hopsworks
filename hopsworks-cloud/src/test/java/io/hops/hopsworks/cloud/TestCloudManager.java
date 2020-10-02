@@ -36,7 +36,7 @@ public class TestCloudManager {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
     
     Configuration conf = new Configuration();
 
@@ -130,10 +130,10 @@ public class TestCloudManager {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1"));
-    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1"));
-    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
+    workers.put("host3", new CloudNode("id", "host3", "ip3", 0, "type1", "running"));
+    workers.put("host4", new CloudNode("id", "host4", "ip4", 0, "type1", "running"));
     
     Configuration conf = new Configuration();
 
@@ -321,8 +321,8 @@ public class TestCloudManager {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
 
     Configuration conf = new Configuration();
 
@@ -377,8 +377,8 @@ public class TestCloudManager {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
     Map<String, CloudNode> workers = new HashMap<>();
-    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1"));
-    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1"));
+    workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
+    workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
 
     Configuration conf = new Configuration();
 

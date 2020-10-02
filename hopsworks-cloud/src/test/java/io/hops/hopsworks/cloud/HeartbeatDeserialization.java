@@ -115,12 +115,12 @@ public class HeartbeatDeserialization {
   
   private HeartbeatRequest constructHeartbeatRequest() {
     List<CloudNode> decommissioningNodes = new ArrayList<>(2);
-    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType"));
-    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1"));
+    decommissioningNodes.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
+    decommissioningNodes.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
 
     List<CloudNode> decommissionedNodes = new ArrayList<>(2);
-    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType"));
-    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5"));
+    decommissionedNodes.add(new CloudNode("node2", "host23", "ip", 0, "instanceType", "running"));
+    decommissionedNodes.add(new CloudNode("node3", "host24", "ip2", 5, "instanceType5", "running"));
 
     Map<Long, CommandStatus> commandsStatus = new HashMap<>(2);
     commandsStatus.put(1L, new CommandStatus(CommandStatus.CLOUD_COMMAND_STATUS.NEW, "message"));
@@ -142,8 +142,8 @@ public class HeartbeatDeserialization {
 
   private HeartbeatResponse constructHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType"));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1"));
+    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
 
     Map<String, Integer> nodesToRemove0 = new HashMap<>();
     nodesToRemove0.put("instance.type.20", 3);
@@ -173,8 +173,8 @@ public class HeartbeatDeserialization {
 
   private HeartbeatResponse constructWorkersHeartbeatResponse() {
     List<CloudNode> workers = new ArrayList<>(2);
-    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType"));
-    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1"));
+    workers.add(new CloudNode("node0", "host0", "ip", 0, "instanceType", "running"));
+    workers.add(new CloudNode("node1", "host1", "ip", 2, "instanceType1", "running"));
 
     final HeartbeatResponse hr = new HeartbeatResponse(workers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
     hr.setVersion(Version.V010);
