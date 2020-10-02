@@ -72,9 +72,12 @@ public class FeaturestoreInputValidation {
     // features
     if (featurestoreEntityDTO instanceof FeaturegroupDTO) {
       verifyFeatureGroupFeatureList(((FeaturegroupDTO)featurestoreEntityDTO).getFeatures());
-    } else if (featurestoreEntityDTO instanceof TrainingDatasetDTO &&
-        ((TrainingDatasetDTO)featurestoreEntityDTO).getQueryDTO() == null) {
-      verifyTrainingDatasetFeatureList(((TrainingDatasetDTO)featurestoreEntityDTO).getFeatures());
+    } else if (featurestoreEntityDTO instanceof TrainingDatasetDTO) {
+      TrainingDatasetDTO trainingDatasetDTO = (TrainingDatasetDTO)featurestoreEntityDTO;
+      if (trainingDatasetDTO.getQueryDTO() == null && trainingDatasetDTO.getFeatures() != null) {
+        // during updates the features are null
+        verifyTrainingDatasetFeatureList(((TrainingDatasetDTO) featurestoreEntityDTO).getFeatures());
+      }
     }
   }
   
