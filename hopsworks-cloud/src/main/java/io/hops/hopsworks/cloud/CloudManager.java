@@ -168,7 +168,7 @@ public class CloudManager {
           !decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
             worker.getInstanceState());
         HostDTO hostDTO = new HostDTO();
-        hostDTO.setHostname(worker.getHost());;
+        hostDTO.setHostname(worker.getHost());
         hostDTO.setHostIp(worker.getIp());
         hostDTO.setNumGpus(worker.getNumGPUs());
         hostsController.addOrUpdateClusterNode(worker.getHost(), hostDTO);
