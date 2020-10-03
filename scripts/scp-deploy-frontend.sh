@@ -3,7 +3,6 @@
 export SERVER=dev0_vagrant
 export LAST="/tmp/deploy-frontend-timestamp"
 user=vagrant
-
 #run only once
 if [ -f "$LAST" ]
 then
