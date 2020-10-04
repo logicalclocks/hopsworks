@@ -92,6 +92,7 @@ public class LibraryController {
     }
     proj.setPythonDepCollection(depsInProj);
     projectFacade.update(proj);
+    projectFacade.flushEm();
   }
   
   public PythonDep addLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,

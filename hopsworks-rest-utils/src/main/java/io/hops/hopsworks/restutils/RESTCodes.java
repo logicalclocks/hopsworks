@@ -1608,7 +1608,9 @@ public class RESTCodes {
     INSTALL_TYPE_NOT_SUPPORTED(7, "The provided install type is not supported", Response.Status.BAD_REQUEST),
     CONDA_COMMAND_NOT_FOUND(8, "Command not found.", Response.Status.BAD_REQUEST),
     MACHINE_TYPE_NOT_SPECIFIED(9, "Machine type not specified.", Response.Status.BAD_REQUEST),
-    VERSION_NOT_SPECIFIED(10, "Version not specified.", Response.Status.BAD_REQUEST);
+    VERSION_NOT_SPECIFIED(10, "Version not specified.", Response.Status.BAD_REQUEST),
+    ANACONDA_ENVIRONMENT_INITIALIZING(11, "The project's Python environment is currently being initialized. Please " +
+      "try again later.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

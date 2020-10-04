@@ -15,11 +15,12 @@
  */
 package io.hops.hopsworks.common.python.environment;
 
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 
 import java.io.IOException;
 
 public interface DockerRegistryMngr {
 
-  void gc() throws IOException, ServiceException;
+  void gc() throws IOException, ServiceException, ProjectException;
 }
