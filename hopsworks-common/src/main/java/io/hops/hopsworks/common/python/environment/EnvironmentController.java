@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -122,12 +123,21 @@ public class EnvironmentController {
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void createProjectDockerImage(Project project, Users user) {
+    // Check if there is no pending CREATE op for this project
+    List<CondaStatus> statuses = new ArrayList<>();
+    statuses.add(CondaStatus.NEW);
+    statuses.add(CondaStatus.ONGOING);
+    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.CREATE, project).isEmpty()) {
+      LOGGER.log(Level.INFO, "There is already a " + CondaOp.CREATE.name() + " operation for this project.");
+      return;
+    }
     condaEnvironmentOp(CondaOp.CREATE, project.getPythonVersion(), project, user,
       project.getPythonVersion(), null, false);
     project.setConda(true);
     project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
     project.setDockerImage(settings.getBaseDockerImagePythonName());
     projectFacade.update(project);
+    projectFacade.flushEm();
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -156,6 +166,7 @@ public class EnvironmentController {
     project.setConda(false);
     project.setPythonVersion(null);
     projectFacade.update(project);
+    projectFacade.flushEm();
   }
 
   /**
@@ -186,7 +197,13 @@ public class EnvironmentController {
           + " for project: " + project.getName());
       return;
     }
-
+    List<CondaStatus> statuses = new ArrayList<>();
+    statuses.add(CondaStatus.NEW);
+    statuses.add(CondaStatus.ONGOING);
+    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses, CondaOp.REMOVE, project).isEmpty()) {
+      LOGGER.log(Level.INFO, "There is already a " + CondaOp.REMOVE.name() + " operation for this project.");
+      return;
+    }
     condaEnvironmentOp(CondaOp.REMOVE, "", project, user,
         project.getDockerImage(), null, false);
   }
@@ -220,6 +237,13 @@ public class EnvironmentController {
   
   public void createEnv(Project project, boolean createBaseEnv) throws PythonException,
       ServiceException {
+    List<CondaStatus> statuses = new ArrayList<>();
+    statuses.add(CondaStatus.NEW);
+    statuses.add(CondaStatus.ONGOING);
+    if(!condaCommandFacade.findByStatusAndCondaOpAndProject(statuses,
+      CondaOp.CREATE, project).isEmpty()) {
+      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_INITIALIZING, Level.INFO);
+    }
     if (project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }

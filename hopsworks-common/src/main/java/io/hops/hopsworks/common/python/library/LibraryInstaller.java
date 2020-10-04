@@ -29,6 +29,7 @@ import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -36,6 +37,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 
 import javax.annotation.PostConstruct;
@@ -56,15 +58,16 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -102,10 +105,9 @@ public class LibraryInstaller {
   @Inject
   private DockerRegistryMngr registry;
   private ManagedExecutorService executorService;
-  private Collection<PythonDep> envDeps;
   @EJB
   private DistributedFsService dfs;
-
+  
   @PostConstruct
   public void init() {
     prog =  settings.getSudoersDir() + "/dockerImage.sh";
@@ -153,14 +155,12 @@ public class LibraryInstaller {
           LOG.log(Level.WARNING, "Could not run conda remove commands", ex);
         }
       } else {
-        // Group new commands by project and run it parallel
-        final List<CondaCommands> allCondaCommandsNew = condaCommandFacade.findByStatus(CondaStatus.NEW);
-        final Map<Project, List<CondaCommands>> allCondaCommandsNewByProject = allCondaCommandsNew
-            .stream()
-            .collect(Collectors.groupingBy(CondaCommands::getProjectId));
-        final Map<Project, List<CondaCommands>> allCondaCommandsOngoingByProject = allCondaCommandsOngoing
-            .stream()
-            .collect(Collectors.groupingBy(CondaCommands::getProjectId));
+        // Group new commands by project and run in parallel
+        Map<Project, List<CondaCommands>> allCondaCommandsNewByProject =
+          getCondaCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.NEW));
+        Map<Project, List<CondaCommands>> allCondaCommandsOngoingByProject =
+          getCondaCommandsByProject(condaCommandFacade.findByStatus(CondaStatus.ONGOING));
+        
         LOG.log(Level.FINE, "allCondaCommandsOngoingByProject:" + allCondaCommandsOngoingByProject);
         for (Project project : allCondaCommandsNewByProject.keySet()) {
           if (!allCondaCommandsOngoingByProject.containsKey(project)) {
@@ -214,7 +214,7 @@ public class LibraryInstaller {
           }
           commandsController.updateCondaCommandStatus(
               cc.getId(), CondaStatus.SUCCESS, cc.getArg(), cc.getOp());
-        } catch (ServiceException ex) {
+        } catch (ServiceException | ProjectException ex) {
           LOG.log(Level.WARNING, "Could not update command with ID: " + cc.getId(), ex);
         }
       }
@@ -267,10 +267,11 @@ public class LibraryInstaller {
           writer.write(dockerCondaCmd);
         }
       }
-
-      Project project = cc.getProjectId();
+  
+      Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+        RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
       String initialDockerImage = projectUtils.getInitialDockerImageName(project);
-
+      LOG.log(Level.FINEST, "project-initialDockerImage:" + initialDockerImage);
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(prog)
@@ -290,21 +291,26 @@ public class LibraryInstaller {
       } else {
         project.setDockerImage(initialDockerImage);
         projectFacade.update(project);
-
+        projectFacade.flushEm();
         Collection<PythonDep> envDeps = libraryController.
-            listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
-        libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
+          listLibraries(projectUtils.getFullDockerImageName(project, false));
+        project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+          RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+        libraryController.addPythonDepsForProject(project, envDeps);
       }
-    } catch (ServiceException e) {
+    } catch (ServiceException | ProjectException e) {
       LOG.log(Level.SEVERE, "Failed to persist python deps", e);
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
   }
 
-  private void installLibrary(CondaCommands cc) throws IOException, ServiceException, ServiceDiscoveryException {
+  private void installLibrary(CondaCommands cc)
+    throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
+    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
     try {
       File home = new File(System.getProperty("user.home"));
       File condarc = new File(home, ".condarc");
@@ -315,7 +321,7 @@ public class LibraryInstaller {
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
         writer.write("# syntax=docker/dockerfile:experimental");
         writer.newLine();
-        writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false));
+        writer.write("FROM " + projectUtils.getFullDockerImageName(project, false));
         writer.newLine();
         writer.write(
             "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
@@ -335,9 +341,10 @@ public class LibraryInstaller {
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
       }
-
-      String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
-
+      
+      String nextDockerImageName = getNextDockerImageName(project);
+      LOG.log(Level.FINEST, "project-nextDockerImageName:" + nextDockerImageName);
+  
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
           .addCommand(prog)
@@ -355,20 +362,22 @@ public class LibraryInstaller {
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       } else {
-        Project project = cc.getProjectId();
+        
         project.setDockerImage(nextDockerImageName);
         projectFacade.update(project);
+        projectFacade.flushEm();
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
-
+    project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
     Collection<PythonDep> envDeps =
-        libraryController.listLibraries(projectUtils.getFullDockerImageName(cc.getProjectId(), false));
-    libraryController.addPythonDepsForProject(cc.getProjectId(), envDeps);
+      libraryController.listLibraries(projectUtils.getFullDockerImageName(project, false));
+    libraryController.addPythonDepsForProject(project, envDeps);
   }
-
-  private void uninstallLibrary(CondaCommands cc) throws IOException, ServiceDiscoveryException {
+  
+  private void uninstallLibrary(CondaCommands cc) throws IOException, ServiceDiscoveryException, ProjectException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     try {
@@ -389,8 +398,10 @@ public class LibraryInstaller {
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
       }
-
-      String nextDockerImageName = getNextDockerImageName(cc.getProjectId());
+  
+      Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+        RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+      String nextDockerImageName = getNextDockerImageName(project);
 
       ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
           .addCommand("/usr/bin/sudo")
@@ -409,9 +420,11 @@ public class LibraryInstaller {
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       } else {
-        Project project = cc.getProjectId();
+        project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+          RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
         project.setDockerImage(nextDockerImageName);
         projectFacade.update(project);
+        projectFacade.flushEm();
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -420,13 +433,16 @@ public class LibraryInstaller {
 
 
 
-  public void exportLibraries(CondaCommands cc) throws IOException, ServiceException, ServiceDiscoveryException {
-
+  public void exportLibraries(CondaCommands cc)
+    throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {
+  
+    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
     ProcessDescriptor processDescriptor = new ProcessDescriptor.Builder()
         .addCommand("/usr/bin/sudo")
         .addCommand(prog)
         .addCommand("export")
-        .addCommand(projectUtils.getFullDockerImageName(cc.getProjectId(), false))
+        .addCommand(projectUtils.getFullDockerImageName(project, false))
         .redirectErrorStream(true)
         .setWaitTimeout(300L, TimeUnit.SECONDS)
         .build();
@@ -437,7 +453,7 @@ public class LibraryInstaller {
           + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
       throw new IOException(errorMsg);
     } else {
-      environmentController.uploadYmlInProject(cc.getProjectId(), cc.getUserId(), processResult.getStdout(),
+      environmentController.uploadYmlInProject(project, cc.getUserId(), processResult.getStdout(),
           cc.getArg());
     }
   }
@@ -449,7 +465,27 @@ public class LibraryInstaller {
     int nextVersion = currentVersion + 1;
     return dockerImage.substring(0, indexOfLastDigit) + "." + nextVersion;
   }
-
+  
+  private Map<Project, List<CondaCommands>> getCondaCommandsByProject(List<CondaCommands> condaCommands) {
+    Map<Project, List<CondaCommands>> condaCommandsByProject = new HashMap<>();
+    for (CondaCommands condacommand : condaCommands) {
+      // If it is a command of a project that has been deleted, delete the command (do not delete an environment
+      //"REMOVE" command as it needs to be processed even after the project has been deleted
+      if (condacommand.getOp() != CondaOp.REMOVE &&
+        (condacommand.getProjectId() == null || !condacommand.getProjectId().getConda())) {
+        LOG.log(Level.FINEST, "Removing condacommand: " + condacommand);
+        condaCommandFacade.remove(condacommand);
+      } else {
+        Project project = condacommand.getProjectId();
+        if (!condaCommandsByProject.containsKey(project)) {
+          condaCommandsByProject.put(project, new ArrayList<>());
+        }
+        condaCommandsByProject.get(project).add(condacommand);
+      }
+    }
+    return condaCommandsByProject;
+  }
+  
   private static class CommandsComparator<T> implements Comparator<T> {
 
     @Override
