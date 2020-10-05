@@ -44,13 +44,13 @@
   <parent>
     <groupId>io.hops</groupId>
     <artifactId>hopsworks</artifactId>
-    <version>1.4.1-SNAPSHOT</version>
+    <version>1.4.1</version>
     <relativePath>..</relativePath>
   </parent>
   
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>hopsworks-ear</artifactId>
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.4.1</version>
   <packaging>ear</packaging>
 
   <name>hopsworks-ear:1.4.0</name>
@@ -129,7 +129,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-cluster</artifactId>
-          <version>1.4.1-SNAPSHOT</version>
+          <version>1.4.1</version>
           <type>war</type>
         </dependency>
       </dependencies>
@@ -144,7 +144,7 @@
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
           <artifactId>hopsworks-testing</artifactId>
-          <version>1.4.1-SNAPSHOT</version>
+          <version>1.4.1</version>
           <type>war</type>
         </dependency>
       </dependencies>
