@@ -126,12 +126,12 @@ public class CommandsController {
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg,
-                                       CondaOp opType) throws ServiceException {
+                                       CondaOp opType) throws ServiceException, ProjectException {
     updateCondaCommandStatus(commandId, condaStatus, arg, opType, null);
   }
   
   public void updateCondaCommandStatus(int commandId, CondaStatus condaStatus, String arg, CondaOp opType,
-                                       String errorMessage) throws ServiceException {
+                                       String errorMessage) throws ServiceException, ProjectException {
     CondaCommands cc = condaCommandFacade.findCondaCommand(commandId);
     if (cc != null) {
       if (condaStatus == CondaStatus.SUCCESS) {
@@ -142,9 +142,11 @@ public class CommandsController {
         // the CondaEnv operation is finished implicitly (no condaOperations are
         // returned => CondaEnv operation is finished).
         if (!CondaOp.isEnvOp(opType)) {
+          Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+            RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
           PythonDep dep = libraryFacade.getOrCreateDep(libraryFacade.getRepo(cc.getChannelUrl(), false),
               cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
-          Collection<PythonDep> deps = cc.getProjectId().getPythonDepCollection();
+          Collection<PythonDep> deps = project.getPythonDepCollection();
 
           if (opType.equals(CondaOp.INSTALL)) {
             deps.remove(dep);
@@ -152,8 +154,10 @@ public class CommandsController {
           } else if (opType.equals(CondaOp.UNINSTALL)) {
             deps.remove(dep);
           }
-          cc.getProjectId().setPythonDepCollection(deps);
-          projectFacade.update(cc.getProjectId());
+          
+          project.setPythonDepCollection(deps);
+          projectFacade.update(project);
+          projectFacade.flushEm();
         }
       } else if(condaStatus == CondaStatus.FAILED) {
         cc.setStatus(condaStatus);
