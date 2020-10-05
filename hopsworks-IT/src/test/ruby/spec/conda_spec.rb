@@ -279,9 +279,14 @@ describe "On #{ENV['OS']}" do
           it 'install libraries' do
             @project = create_env_and_update_project(@project, python_version)
             install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', conda_channel)
+            install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', conda_channel)
             expect_status(201)
 
             get_library_commands(@project[:id], python_version, 'imageio')
+            expect_status(200)
+            expect(json_body[:count]).to be == 1
+
+            get_library_commands(@project[:id], python_version, 'tflearn')
             expect_status(200)
             expect(json_body[:count]).to be == 1
 
@@ -293,8 +298,9 @@ describe "On #{ENV['OS']}" do
             expect_status(200)
             expect(json_body[:count]).to be == 0
 
-            install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', conda_channel)
-            expect_status(201)
+            get_library_commands(@project[:id], python_version, 'tflearn')
+            expect_status(200)
+            expect(json_body[:count]).to be == 0
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?

@@ -112,12 +112,18 @@ import javax.xml.bind.annotation.XmlRootElement;
   @NamedQuery(name = "CondaCommands.findByStatusAndCondaOp",
           query
           = "SELECT c FROM CondaCommands c WHERE c.status = :status AND c.op = :op"),
+  @NamedQuery(name = "CondaCommands.findByStatusListAndCondaOpAndProject",
+    query
+      = "SELECT c FROM CondaCommands c WHERE c.status IN :statuses AND c.op = :op AND c.projectId = :project"),
   @NamedQuery(name = "CondaCommands.findByCreated",
           query
           = "SELECT c FROM CondaCommands c WHERE c.created = :created"),
   @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
           query
-          = "DELETE FROM CondaCommands c WHERE c.status = :status")})
+          = "DELETE FROM CondaCommands c WHERE c.status = :status"),
+  @NamedQuery(name = "CondaCommands.deleteAllFailedCommands",
+    query
+      = "DELETE FROM CondaCommands c WHERE c.status = :status")})
 public class CondaCommands implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -348,7 +354,8 @@ public class CondaCommands implements Serializable {
 
   @Override
   public String toString() {
-    return "[ id=" + id + ", proj=" + projectId.getName()  + ", op=" + op + ", installType=" + installType 
+    String projectName = projectId != null ? projectId.getName() : "unknown";
+    return "[ id=" + id + ", proj=" + projectName  + ", op=" + op + ", installType=" + installType
         + ", lib=" + lib + ", version=" + version + ", arg=" + arg
         + ", channel=" + channelUrl + "]";
   }
