@@ -19,7 +19,10 @@ package io.hops.hopsworks.common.featurestore.utils;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -67,32 +70,58 @@ public class FeaturestoreInputValidation {
     }
     
     // features
-    verifyFeatureList(featurestoreEntityDTO.getFeatures());
+    if (featurestoreEntityDTO instanceof FeaturegroupDTO) {
+      verifyFeatureGroupFeatureList(((FeaturegroupDTO)featurestoreEntityDTO).getFeatures());
+    } else if (featurestoreEntityDTO instanceof TrainingDatasetDTO) {
+      TrainingDatasetDTO trainingDatasetDTO = (TrainingDatasetDTO)featurestoreEntityDTO;
+      if (trainingDatasetDTO.getQueryDTO() == null && trainingDatasetDTO.getFeatures() != null) {
+        // during updates the features are null
+        verifyTrainingDatasetFeatureList(((TrainingDatasetDTO) featurestoreEntityDTO).getFeatures());
+      }
+    }
   }
   
   /**
-   * Verifies the user input feature list for a feature store entity
-   *
-   * @param featureDTOs the feature list to verify
+   * Verifies the user input feature list for a feature group entity
+   * @param featureGroupFeatureDTOS the feature list to verify
    */
-  private void verifyFeatureList(List<FeatureDTO> featureDTOs) throws FeaturestoreException {
-    if (featureDTOs != null && !featureDTOs.isEmpty()) {
-      Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
-      for (FeatureDTO featureDTO : featureDTOs) {
-        if (!namePattern.matcher(featureDTO.getName()).matches()) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
-            ", the provided feature name " + featureDTO.getName() + " is invalid. Feature names can only contain " +
-              "lower case characters, numbers and underscores and cannot be longer than " +
-              FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
-        }
-        if (!Strings.isNullOrEmpty(featureDTO.getDescription()) &&
-          featureDTO.getDescription().length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
-          throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
-            ", the provided feature description of " + featureDTO.getName() + " is too long with " +
-              featureDTO.getDescription().length() + " characters. Feature descriptions cannot be longer than " +
-              FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
-        }
+  private void verifyFeatureGroupFeatureList(List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS)
+      throws FeaturestoreException {
+    if (featureGroupFeatureDTOS != null && !featureGroupFeatureDTOS.isEmpty()) {
+      for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {
+        nameValidation(featureGroupFeatureDTO.getName());
+        descriptionValidation(featureGroupFeatureDTO.getName(), featureGroupFeatureDTO.getDescription());
       }
+    }
+  }
+  /**
+   * Verifies the user input feature list for a training dataset entity with no query
+   * @param trainingDatasetFeatureDTOS the feature list to verify
+   */
+  private void verifyTrainingDatasetFeatureList(List<TrainingDatasetFeatureDTO> trainingDatasetFeatureDTOS)
+      throws FeaturestoreException {
+    for (TrainingDatasetFeatureDTO trainingDatasetFeatureDTO : trainingDatasetFeatureDTOS) {
+      nameValidation(trainingDatasetFeatureDTO.getName());
+    }
+  }
+
+  private void nameValidation(String name) throws FeaturestoreException {
+    Pattern namePattern = FeaturestoreConstants.FEATURESTORE_REGEX;
+    if (!namePattern.matcher(name).matches()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME, Level.FINE,
+          ", the provided feature name " + name + " is invalid. Feature names can only contain lower case " +
+              "characters, numbers and underscores and cannot be longer than " +
+              FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
+    }
+  }
+
+  private void descriptionValidation(String name, String description) throws FeaturestoreException {
+    if (!Strings.isNullOrEmpty(description) &&
+        description.length() > FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION, Level.FINE,
+          ", the provided feature description of " + name + " is too long with " +
+              description + " characters. Feature descriptions cannot " +
+              "be longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
     }
   }
 }

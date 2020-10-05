@@ -50,12 +50,13 @@ public class FsQueryConstructorResource {
   private FsQueryBuilder fsQueryBuilder;
 
   private Project project;
+
   public FsQueryConstructorResource setProject(Project project) {
     this.project = project;
     return this;
   }
 
-  /**
+ /**
    * TODO(Fabio): here probably a GET request is better as we are not changing any entity in the backend system.
    * For the moment as we are in a rush I'll let the PUT method, but I'll try to fix it before the final release
    * is done.
@@ -80,4 +81,6 @@ public class FsQueryConstructorResource {
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, queryDto);
     return Response.ok().entity(fsQueryDTO).build();
   }
+
+
 }

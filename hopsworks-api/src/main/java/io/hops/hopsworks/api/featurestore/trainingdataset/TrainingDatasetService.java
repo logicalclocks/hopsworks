@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -25,6 +26,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -102,6 +104,8 @@ public class TrainingDatasetService {
   private TrainingDatasetTagControllerIface tagController;
   @Inject
   private StatisticsResource statisticsResource;
+  @EJB
+  private FsQueryBuilder fsQueryBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -453,6 +457,23 @@ public class TrainingDatasetService {
     this.statisticsResource.setFeaturestore(featurestore);
     this.statisticsResource.setTrainingDatasetId(trainingDatsetId);
     return statisticsResource;
+  }
+
+  @ApiOperation(value = "Get the query used to generated the training dataset", response = FsQueryDTO.class)
+  @GET
+  @Path("/{trainingdatasetid}/query")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response getQuery(@Context SecurityContext sc,
+                           @Context UriInfo uriInfo,
+                           @ApiParam(value = "Id of the trainingdatasetid", required = true)
+                           @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
+    verifyIdProvided(trainingdatasetid);
+
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, featurestore, trainingdatasetid);
+    return Response.ok().entity(fsQueryDTO).build();
   }
   
   /**

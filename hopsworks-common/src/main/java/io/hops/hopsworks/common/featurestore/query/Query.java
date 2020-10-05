@@ -16,8 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import java.util.List;
@@ -28,12 +26,17 @@ import java.util.List;
  * This is to avoid hitting the db too many times.
  */
 public class Query {
-  private List<FeatureDTO> features;
+
+  private List<Feature> features;
+  // feature store from which the feature group comes from
+  // to build the FROM part of the offline query
   private String featureStore;
+  // project from which the feature group comes from
+  // to build the FROM part of the online query
   private String project;
   private Featuregroup featuregroup;
   private String as;
-  private List<FeatureDTO> availableFeatures;
+  private List<Feature> availableFeatures;
 
   private List<Join> joins;
 
@@ -48,13 +51,20 @@ public class Query {
   }
 
   public Query(String featureStore, String project, Featuregroup featuregroup, String as,
-               List<FeatureDTO> features, List<FeatureDTO> availableFeatures) {
+               List<Feature> features, List<Feature> availableFeatures) {
     this.featureStore = featureStore;
     this.project = project;
     this.featuregroup = featuregroup;
     this.as = as;
     this.features = features;
     this.availableFeatures = availableFeatures;
+  }
+
+  public Query(String featureStore, String project, Featuregroup featuregroup, String as) {
+    this.featureStore = featureStore;
+    this.project = project;
+    this.featuregroup = featuregroup;
+    this.as = as;
   }
 
   public String getFeatureStore() {
@@ -65,11 +75,11 @@ public class Query {
     this.featureStore = featureStore;
   }
 
-  public List<FeatureDTO> getFeatures() {
+  public List<Feature> getFeatures() {
     return features;
   }
 
-  public void setFeatures(List<FeatureDTO> features) {
+  public void setFeatures(List<Feature> features) {
     this.features = features;
   }
 
@@ -89,11 +99,11 @@ public class Query {
     this.featuregroup = featuregroup;
   }
 
-  public List<FeatureDTO> getAvailableFeatures() {
+  public List<Feature> getAvailableFeatures() {
     return availableFeatures;
   }
 
-  public void setAvailableFeatures(List<FeatureDTO> availableFeatures) {
+  public void setAvailableFeatures(List<Feature> availableFeatures) {
     this.availableFeatures = availableFeatures;
   }
 

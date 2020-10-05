@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -26,19 +26,19 @@ import java.util.Objects;
 @XmlRootElement
 public class QueryDTO {
   private FeaturegroupDTO leftFeatureGroup;
-  private List<FeatureDTO> leftFeatures;
+  private List<FeatureGroupFeatureDTO> leftFeatures;
 
   // Recursively merge QueryDTOs
   private List<JoinDTO> joins;
 
-  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureDTO> leftFeatures,
+  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
                   List<JoinDTO> joins) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
     this.joins = joins;
   }
 
-  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureDTO> leftFeatures) {
+  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
   }
@@ -54,11 +54,11 @@ public class QueryDTO {
     this.leftFeatureGroup = leftFeatureGroup;
   }
 
-  public List<FeatureDTO> getLeftFeatures() {
+  public List<FeatureGroupFeatureDTO> getLeftFeatures() {
     return leftFeatures;
   }
 
-  public void setLeftFeatures(List<FeatureDTO> leftFeatures) {
+  public void setLeftFeatures(List<FeatureGroupFeatureDTO> leftFeatures) {
     this.leftFeatures = leftFeatures;
   }
 

@@ -19,7 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -129,7 +129,7 @@ public class OfflineFeatureGroupController {
   }
 
   public void createHiveTable(Featurestore featurestore, String tableName, String tableDesc,
-                         List<FeatureDTO> featureDTOList, Project project, Users user)
+                              List<FeatureGroupFeatureDTO> featureGroupFeatureDTOList, Project project, Users user)
       throws FeaturestoreException, ServiceException, IOException {
     String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
     Table table = getEmptyTable(dbName, tableName, hdfsUsersController.getHdfsUserName(project, user));
@@ -140,19 +140,19 @@ public class OfflineFeatureGroupController {
     // Create Schema
     List<SQLPrimaryKey> primaryKeys = new ArrayList<>();
     int constraintId = 0;
-    for (FeatureDTO featureDTO : featureDTOList) {
-      FieldSchema fieldSchema =
+    for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOList) {
+      FieldSchema fieldSchema = new FieldSchema(featureGroupFeatureDTO.getName(),
           // need to lowercase the type
-          new FieldSchema(featureDTO.getName(), featureDTO.getType().toLowerCase(), featureDTO.getDescription());
-      if (featureDTO.getPartition()) {
+          featureGroupFeatureDTO.getType().toLowerCase(), featureGroupFeatureDTO.getDescription());
+      if (featureGroupFeatureDTO.getPartition()) {
         table.addToPartitionKeys(fieldSchema);
       } else {
         table.getSd().addToCols(fieldSchema);
       }
 
-      if (featureDTO.getPrimary()) {
-        primaryKeys.add(new SQLPrimaryKey(dbName, tableName, featureDTO.getName(), constraintId++,
-            dbName + "_" + tableName + "_" + featureDTO.getName() + "_pk",
+      if (featureGroupFeatureDTO.getPrimary()) {
+        primaryKeys.add(new SQLPrimaryKey(dbName, tableName, featureGroupFeatureDTO.getName(), constraintId++,
+            dbName + "_" + tableName + "_" + featureGroupFeatureDTO.getName() + "_pk",
             false, false, false));
       }
     }

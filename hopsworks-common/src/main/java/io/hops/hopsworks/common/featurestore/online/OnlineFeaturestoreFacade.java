@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.online;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -93,19 +93,19 @@ public class OnlineFeaturestoreFacade {
    * @param db the name of the mysql database
    * @return list of featureDTOs with name,type,comment
    */
-  public List<FeatureDTO> getMySQLFeatures(String tableName, String db) {
+  public List<FeatureGroupFeatureDTO> getMySQLFeatures(String tableName, String db) {
     List<Object[]> featureObjects = em.createNativeQuery("SELECT `COLUMNS`.`COLUMN_NAME`, `COLUMNS`.`COLUMN_TYPE`, " +
       "`COLUMNS`.`COLUMN_COMMENT` FROM " +
       "INFORMATION_SCHEMA.`COLUMNS` WHERE `COLUMNS`.`TABLE_NAME`=? AND `COLUMNS`.`TABLE_SCHEMA`=?;")
       .setParameter(1, tableName)
       .setParameter(2, db).getResultList();
-    ArrayList<FeatureDTO> featureDTOs = new ArrayList<>();
+    ArrayList<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     for (Object[] featureObject : featureObjects) {
-      FeatureDTO featureDTO = new FeatureDTO((String) featureObject[0], (String) featureObject[1],
-        (String) featureObject[2]);
-      featureDTOs.add(featureDTO);
+      FeatureGroupFeatureDTO featureGroupFeatureDTO = new FeatureGroupFeatureDTO((String) featureObject[0],
+          (String) featureObject[1], (String) featureObject[2]);
+      featureGroupFeatureDTOS.add(featureGroupFeatureDTO);
     }
-    return featureDTOs;
+    return featureGroupFeatureDTOS;
   }
 
   /**

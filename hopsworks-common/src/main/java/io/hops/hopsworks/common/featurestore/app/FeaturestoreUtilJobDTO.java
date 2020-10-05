@@ -17,7 +17,7 @@
 
 package io.hops.hopsworks.common.featurestore.app;
 
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -31,7 +31,7 @@ import java.util.List;
 public class FeaturestoreUtilJobDTO {
 
   private String fileName;
-  private List<FeatureDTO> features;
+  private List<TrainingDatasetFeatureDTO> features;
   private List<FeaturegroupDTO> featuregroups;
   private String featurestore;
   private String trainingDataset;
@@ -55,11 +55,11 @@ public class FeaturestoreUtilJobDTO {
   private String path;
 
   public FeaturestoreUtilJobDTO(
-      List<FeatureDTO> features, List<FeaturegroupDTO> featuregroups, String featurestore, String trainingDataset,
-      String featuregroup, String joinKey, String description, String dataFormat, int version, Boolean descriptiveStats,
-      Boolean featureCorrelation, Boolean clusterAnalysis, Boolean featureHistograms, List<String> statColumns,
-      String operation, String sqlQuery, String hiveDatabase, String jdbcString, List<String> jdbcArguments,
-      String fileName, Boolean online, String sink, String path) {
+      List<TrainingDatasetFeatureDTO> features, List<FeaturegroupDTO> featuregroups, String featurestore,
+      String trainingDataset, String featuregroup, String joinKey, String description, String dataFormat,
+      int version, Boolean descriptiveStats, Boolean featureCorrelation, Boolean clusterAnalysis,
+      Boolean featureHistograms, List<String> statColumns, String operation, String sqlQuery, String hiveDatabase,
+      String jdbcString, List<String> jdbcArguments, String fileName, Boolean online, String sink, String path) {
     this.features = features;
     this.featuregroups = featuregroups;
     this.featurestore = featurestore;
@@ -89,11 +89,11 @@ public class FeaturestoreUtilJobDTO {
   }
 
   @XmlElement
-  public List<FeatureDTO> getFeatures() {
+  public List<TrainingDatasetFeatureDTO> getFeatures() {
     return features;
   }
 
-  public void setFeatures(List<FeatureDTO> features) {
+  public void setFeatures(List<TrainingDatasetFeatureDTO> features) {
     this.features = features;
   }
 

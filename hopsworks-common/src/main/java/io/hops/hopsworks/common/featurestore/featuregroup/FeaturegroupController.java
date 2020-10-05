@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupFacade;
@@ -704,13 +704,13 @@ public class FeaturegroupController {
     return featuregroup;
   }
 
-  public List<FeatureDTO> getFeatures(Featuregroup featuregroup) {
+  public List<FeatureGroupFeatureDTO> getFeatures(Featuregroup featuregroup) {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         return cachedFeaturegroupController.getFeaturesDTO(featuregroup.getCachedFeaturegroup().getHiveTbls());
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
-            .map(f -> new FeatureDTO(f.getName(), f.getType(), f.getPrimary()))
+            .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary()))
             .collect(Collectors.toList());
     }
     return new ArrayList<>();

@@ -18,7 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.online;
 
 import com.google.common.base.Strings;
 import com.logicalclocks.shaded.org.apache.commons.lang3.StringUtils;
-import io.hops.hopsworks.common.featurestore.feature.FeatureDTO;
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreFacade;
@@ -77,7 +77,7 @@ public class OnlineFeaturegroupController {
         project, user);
   }
   
-  public void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureDTO> features,
+  public void createMySQLTable(Featurestore featurestore, String tableName, List<FeatureGroupFeatureDTO> features,
                                              Project project, Users user)
       throws FeaturestoreException, SQLException{
     String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject());
@@ -85,21 +85,23 @@ public class OnlineFeaturegroupController {
     onlineFeaturestoreController.executeUpdateJDBCQuery(createStatement, dbName, project, user);
   }
 
-  private String buildCreateStatement(String dbName, String tableName, List<FeatureDTO> features) {
+  private String buildCreateStatement(String dbName, String tableName, List<FeatureGroupFeatureDTO> features) {
     StringBuilder createStatement = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
     createStatement.append(dbName).append(".").append(tableName).append("(");
 
     // Add all features
-    for (FeatureDTO feature : features) {
+    for (FeatureGroupFeatureDTO feature : features) {
       createStatement.append(feature.getName()).append(" ").append(getOnlineType(feature)).append(",");
     }
 
     // add primary keys
-    List<FeatureDTO> pkFeatures = features.stream().filter(FeatureDTO::getPrimary).collect(Collectors.toList());
+    List<FeatureGroupFeatureDTO> pkFeatures = features.stream()
+        .filter(FeatureGroupFeatureDTO::getPrimary)
+        .collect(Collectors.toList());
     if (!pkFeatures.isEmpty()) {
       createStatement.append("PRIMARY KEY (");
       createStatement.append(
-          StringUtils.join(pkFeatures.stream().map(FeatureDTO::getName).collect(Collectors.toList()), ","));
+          StringUtils.join(pkFeatures.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList()), ","));
       createStatement.append(")");
     }
 
@@ -120,18 +122,18 @@ public class OnlineFeaturegroupController {
     return createStatement.toString();
   }
 
-  private String getOnlineType(FeatureDTO featureDTO) {
-    if (!Strings.isNullOrEmpty(featureDTO.getOnlineType())) {
+  private String getOnlineType(FeatureGroupFeatureDTO featureGroupFeatureDTO) {
+    if (!Strings.isNullOrEmpty(featureGroupFeatureDTO.getOnlineType())) {
       // TODO(Fabio): Check that it's a valid online type
-      return featureDTO.getOnlineType().toLowerCase();
+      return featureGroupFeatureDTO.getOnlineType().toLowerCase();
     }
 
-    if (MYSQL_TYPES.contains(featureDTO.getType().toUpperCase())) {
+    if (MYSQL_TYPES.contains(featureGroupFeatureDTO.getType().toUpperCase())) {
       // Hive type and MySQL type match
-      return featureDTO.getType().toLowerCase();
-    } else if (featureDTO.getType().equalsIgnoreCase("boolean")) {
+      return featureGroupFeatureDTO.getType().toLowerCase();
+    } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("boolean")) {
       return "tinyint";
-    } else if (featureDTO.getType().equalsIgnoreCase("string")) {
+    } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("string")) {
       return "varchar(1000)";
     } else {
       return VARBINARY;
@@ -177,7 +179,7 @@ public class OnlineFeaturegroupController {
    * @param featuregroup the online featuregroup to get type information for
    * @return a list of Feature DTOs with the type information
    */
-  public List<FeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) {
+  public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) {
     return onlineFeaturestoreFacade.getMySQLFeatures(
         getTblName(featuregroup),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));

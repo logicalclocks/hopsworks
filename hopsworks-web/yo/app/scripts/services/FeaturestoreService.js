@@ -378,6 +378,11 @@ angular.module('hopsWorksApp')
                  */
                 getTags: function(query) {
                     return $http.get('/api/tags' + query);
-                }
+                },
+
+                getTdQuery: function(projectId, featureStore, td) {
+                    return $http.get("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + td.id + "/query");
+                },
+            
             };
           }]);
