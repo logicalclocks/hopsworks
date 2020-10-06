@@ -54,7 +54,7 @@
             self.rows = [];
 
             var partitionName = null;
-            if (self.partitionSelected != "ALL PARTITIONS") {
+            if (self.storageType == "offline" && self.partitionSelected != "ALL PARTITIONS") {
                 partitionName = self.partitionSelected;
             }
 
