@@ -43,6 +43,8 @@ import java.io.Serializable;
       "fsjdbc"),
     @NamedQuery(name = "FeaturestoreJdbcConnector.findById",
         query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.id = :id"),
+    @NamedQuery(name = "FeaturestoreJdbcConnector.findByName",
+        query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.name = :name"),
     @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestore", query = "SELECT fsjdbc " +
         "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore"),
     @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestoreAndId", query = "SELECT fsjdbc " +
