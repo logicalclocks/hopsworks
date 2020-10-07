@@ -34,8 +34,12 @@ import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -102,6 +106,10 @@ public class FeaturegroupController {
   private ActivityFacade activityFacade;
   @EJB
   private StatisticsController statisticsController;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private Settings settings;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -177,9 +185,9 @@ public class FeaturegroupController {
     verifyFeatureGroupInput(featuregroupDTO);
 
     //Extract metadata
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-
+  
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
     CachedFeaturegroup cachedFeaturegroup = null;
@@ -206,9 +214,18 @@ public class FeaturegroupController {
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup);
-    
-    if(FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroup.getFeaturegroupType())) {
-      fsController.featuregroupAttachXAttrs(user, featurestore.getProject(), completeFeaturegroupDTO);
+  
+    if (FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroup.getFeaturegroupType())) {
+      DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+      try {
+        String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
+          + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
+        fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
+      } finally {
+        if(udfso != null) {
+          dfs.closeDfsClient(udfso);
+        }
+      }
     }
     return completeFeaturegroupDTO;
   }

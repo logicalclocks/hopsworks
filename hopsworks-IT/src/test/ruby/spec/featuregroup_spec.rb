@@ -14,7 +14,9 @@
 #
 
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "featuregroup")}
+  after :all do
+    clean_all_test_projects(spec: "featuregroup")
+  end
 
   describe "cached feature groups" do
     context 'with valid project, featurestore service enabled' do
@@ -559,6 +561,35 @@ describe "On #{ENV['OS']}" do
         # The new member should be able to fetch the schema from Hive
         get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/preview"
         expect_status(200)
+      end
+    end
+    context 'with shared featurestore' do
+      before :all do
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user(@user1_params)
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user(@user2_params)
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1[:email], @user1_params[:password])
+        @project1 = create_project
+        pp @project1[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user2[:email], @user2_params[:password])
+        @project2 = create_project
+        pp @project2[:projectname] if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user1[:email], "Pass123")
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project2[:projectname], datasetType: "FEATURESTORE")
+        create_session(@user2[:email], "Pass123")
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+      end
+
+      it 'should be able to create fg' do
+        create_session(@user2[:email], @user2_params[:password])
+        fs = get_featurestore(@project2[:id], fs_project_id: @project1[:id])
+        create_cached_featuregroup_checked(@project2[:id], fs["featurestoreId"], "shared_fg")
       end
     end
   end

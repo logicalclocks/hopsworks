@@ -105,20 +105,6 @@ public class HopsFSProvenanceController {
     }
   }
   
-  public ProvCoreDTO getDatasetProvCore(Users user, Dataset dataset)
-    throws ProvenanceException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(dataset.getProject(), user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-    String datasetPath = Utils.getFileSystemDatasetPath(dataset, settings);
-    try {
-      return getProvCoreXAttr(datasetPath, udfso);
-    } finally {
-      if(udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
-    }
-  }
-
   public ProvTypeDTO getProjectProvType(Users user, Project project) throws ProvenanceException {
     String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
@@ -238,38 +224,28 @@ public class HopsFSProvenanceController {
     }
   }
   
-  public void featuregroupAttachXAttrs(Users user, Project project, FeaturegroupDTO featuregroup)
+  public void featuregroupAttachXAttrs(String fgPath, FeaturegroupDTO featuregroup, DistributedFileSystemOps udfso)
     throws ProvenanceException {
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+    FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
     try {
-      String path = Utils.getFeaturestorePath(project, settings)
-        + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
-      FeaturegroupXAttr.FullDTO fg = fromFeaturegroup(featuregroup);
-      try {
-        byte[] xattrVal = converter.marshal(fg).getBytes();
-        try{
-          xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-        } catch (MetadataException e) {
-          if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
-            LOGGER.log(Level.INFO,
-              "xattr is too large to attach - featuregroup:{0} will not have features attached", path);
-            fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
-              featuregroup.getCreated(), featuregroup.getCreator());
-            xattrVal = converter.marshal(fg).getBytes();
-            xattrCtrl.upsertProvXAttr(udfso, path, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
-          } else {
-            throw e;
-          }
+      byte[] xattrVal = converter.marshal(fg).getBytes();
+      try{
+        xattrCtrl.upsertProvXAttr(udfso, fgPath, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+      } catch (MetadataException e) {
+        if (RESTCodes.MetadataErrorCode.METADATA_MAX_SIZE_EXCEEDED.equals(e.getErrorCode())) {
+          LOGGER.log(Level.INFO,
+            "xattr is too large to attach - featuregroup:{0} will not have features attached", fgPath);
+          fg = new FeaturegroupXAttr.FullDTO(featuregroup.getFeaturestoreId(), featuregroup.getDescription(),
+            featuregroup.getCreated(), featuregroup.getCreator());
+          xattrVal = converter.marshal(fg).getBytes();
+          xattrCtrl.upsertProvXAttr(udfso, fgPath, FeaturestoreXAttrsConstants.FEATURESTORE, xattrVal);
+        } else {
+          throw e;
         }
-      } catch (GenericException | MetadataException | DatasetException e) {
-        throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
-          "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
       }
-    } finally {
-      if(udfso != null) {
-        dfs.closeDfsClient(udfso);
-      }
+    } catch (GenericException | MetadataException | DatasetException e) {
+      throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.FS_ERROR, Level.WARNING,
+        "hopsfs - set xattr - featuregroup - error", "hopsfs - set xattr - featuregroup - error", e);
     }
   }
 
