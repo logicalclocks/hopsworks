@@ -61,7 +61,8 @@ public class FeaturestoreStorageConnectorController {
    * @param featurestore the featurestore to query
    * @return List of JSON/XML DTOs of the storage connectors
    */
-  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Featurestore featurestore) {
+  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Featurestore featurestore)
+      throws FeaturestoreException{
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
     featurestoreStorageConnectorDTOS.addAll(
         featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore));
@@ -79,7 +80,8 @@ public class FeaturestoreStorageConnectorController {
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestoreWithType(
-      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType) {
+      Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType)
+      throws FeaturestoreException {
     switch(featurestoreStorageConnectorType) {
       case S3:
         return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(featurestore);

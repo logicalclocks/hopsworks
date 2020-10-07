@@ -37,7 +37,6 @@ import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.importjob.FeaturegroupImportJobDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
@@ -108,8 +107,6 @@ public class FeaturestoreService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
-  @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
@@ -278,20 +275,6 @@ public class FeaturestoreService {
     FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector = null;
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
-    if(settings.isOnlineFeaturestore()
-      && onlineFeaturestoreController.checkIfDatabaseExists(
-          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-      Users user = jWTHelper.getUserPrincipal(sc);
-      String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-      String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
-      onlineFeaturestoreConnector =
-        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-          dbUsername, featurestore, dbName);
-      featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
-      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
-      featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
-      featurestoreDTO.setOnlineEnabled(true);
-    }
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
         featurestoreClientSettingsDTO, storageConnectors, onlineFeaturestoreConnector);

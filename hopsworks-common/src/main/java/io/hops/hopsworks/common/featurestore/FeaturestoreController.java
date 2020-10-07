@@ -253,7 +253,7 @@ public class FeaturestoreController {
    * @param featurestore the featurestore entity
    * @return a DTO representation of the featurestore
    */
-  public FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
+  private FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
     String hiveDbDescription = featurestoreFacade.getHiveDatabaseDescription(featurestore.getHiveDbId());
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
     featurestoreDTO.setFeaturestoreDescription(hiveDbDescription);
@@ -270,7 +270,7 @@ public class FeaturestoreController {
       if (settings.isOnlineFeaturestore() &&
           onlineFeaturestoreController.checkIfDatabaseExists(
               onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-        featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
+        featurestoreDTO.setMysqlServerEndpoint(onlineFeaturestoreController.getJdbcURL());
         featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);

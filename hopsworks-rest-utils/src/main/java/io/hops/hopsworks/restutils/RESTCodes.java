@@ -1467,8 +1467,10 @@ public class RESTCodes {
     ILLEGAL_S3_CONNECTOR_SERVER_ENCRYPTION_KEY(105, "Illegal server encryption key provided",
       Response.Status.BAD_REQUEST),
     TRAINING_DATASET_DUPLICATE_SPLIT_NAMES(106, "Duplicate split names in training dataset provided.",
-      Response.Status.BAD_REQUEST);
-    
+      Response.Status.BAD_REQUEST),
+    STORAGE_CONNECTOR_GET_ERROR(114, "Error retrieving the storage connector",
+        Response.Status.INTERNAL_SERVER_ERROR);
+
     private int code;
     private String message;
     private Response.Status respStatus;

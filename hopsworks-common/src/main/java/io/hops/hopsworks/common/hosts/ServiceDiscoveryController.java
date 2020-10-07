@@ -62,7 +62,8 @@ public class ServiceDiscoveryController {
     HOPSWORKS_APP("hopsworks.glassfish"),
     JUPYTER_LOGSTASH("jupyter.logstash"),
     REGISTRY("registry"),
-    CONSUL_SERVER("consul");
+    CONSUL_SERVER("consul"),
+    MYSQL("mysql");
     
     private String name;
     HopsworksService(String name) {

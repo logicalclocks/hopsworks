@@ -310,7 +310,6 @@ public class Settings implements Serializable {
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
   private static final String VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT = "featurestore_default_storage_format";
-  private static final String VARIABLE_FEATURESTORE_JDBC_URL = "featurestore_jdbc_url";
   private static final String VARIABLE_ONLINE_FEATURESTORE = "featurestore_online_enabled";
   private static final String VARIABLE_FG_PREVIEW_LIMIT = "fg_preview_limit";
   private static final String VARIABLE_ONLINE_FEATURESTORE_TS = "featurestore_online_tablespace";
@@ -701,7 +700,6 @@ public class Settings implements Serializable {
       FEATURESTORE_DB_DEFAULT_QUOTA = setStrVar(VARIABLE_FEATURESTORE_DEFAULT_QUOTA, FEATURESTORE_DB_DEFAULT_QUOTA);
       FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT =
           setStrVar(VARIABLE_FEATURESTORE_DEFAULT_STORAGE_FORMAT, FEATURESTORE_DB_DEFAULT_STORAGE_FORMAT);
-      FEATURESTORE_JDBC_URL = setStrVar(VARIABLE_FEATURESTORE_JDBC_URL, FEATURESTORE_JDBC_URL);
       ONLINE_FEATURESTORE = setBoolVar(VARIABLE_ONLINE_FEATURESTORE, ONLINE_FEATURESTORE);
       ONLINE_FEATURESTORE_TS = setStrVar(VARIABLE_ONLINE_FEATURESTORE_TS, ONLINE_FEATURESTORE_TS);
 
@@ -3550,13 +3548,6 @@ public class Settings implements Serializable {
 
   public Boolean isHopsUtilInsecure() {
     return isCloud() || isLocalHost();
-  }
-  
-  private String FEATURESTORE_JDBC_URL = "jdbc:mysql://" + HOPSWORKS_IP + ":3306/";
-  
-  public synchronized String getFeaturestoreJdbcUrl() {
-    checkCache();
-    return FEATURESTORE_JDBC_URL;
   }
   
   private Boolean REQUESTS_VERIFY = false;

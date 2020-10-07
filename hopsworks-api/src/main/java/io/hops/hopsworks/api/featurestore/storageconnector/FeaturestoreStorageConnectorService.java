@@ -130,7 +130,7 @@ public class FeaturestoreStorageConnectorService {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get all storage connectors of a feature store",
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
-  public Response getStorageConnectors(@Context SecurityContext sc) {
+  public Response getStorageConnectors(@Context SecurityContext sc) throws FeaturestoreException {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(featurestore);
     GenericEntity<List<FeaturestoreStorageConnectorDTO>> featurestoreStorageConnectorsGeneric =
@@ -157,7 +157,8 @@ public class FeaturestoreStorageConnectorService {
     response = FeaturestoreStorageConnectorDTO.class, responseContainer = "List")
   public Response getStorageConnectorsOfType(
     @ApiParam(value = "storage connector type", example = "JDBC")
-    @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType, @Context SecurityContext sc) {
+    @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType, @Context SecurityContext sc)
+      throws FeaturestoreException {
     verifyStorageConnectorType(connectorType);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestoreWithType(featurestore,
