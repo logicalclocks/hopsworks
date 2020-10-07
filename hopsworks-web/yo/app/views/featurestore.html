@@ -33,7 +33,8 @@
                            training-dataset="featurestoreCtrl.tdStatistics"
                            close="featurestoreCtrl.closeStatistics()"></fs-statistics>
         </div>
-        <div class="content-wrapper" ng-show="!featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
+        <div class="content-wrapper" 
+             ng-show="!featurestoreCtrl.showPreview && !featurestoreCtrl.showStatistics && !mainCtrl.showSearchPage">
             <h3 id="projectBread" style="border-bottom: none"></h3>
             <div ng-if="featurestoreCtrl.loading" class="loadingwrap" style="z-index: 105">
                 <div class="loading-content">
