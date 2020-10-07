@@ -29,6 +29,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.validation.ConstraintViolationException;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,6 +90,16 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
           .getSingleResult();
     } catch (NoResultException e) {
       return null;
+    }
+  }
+
+  public Optional<FeaturestoreJdbcConnector> findByName(String name) {
+    try {
+      return Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByName", FeaturestoreJdbcConnector.class)
+          .setParameter("name", name)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
 
