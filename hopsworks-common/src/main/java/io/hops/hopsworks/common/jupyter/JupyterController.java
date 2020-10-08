@@ -112,6 +112,8 @@ public class JupyterController {
     File conversionDir = new File(baseDir, DigestUtils.
         sha256Hex(Integer.toString(ThreadLocalRandom.current().nextInt())));
     conversionDir.mkdir();
+    notebookPath = notebookPath.replace(" ", "\\ ");
+    pyPath = pyPath.replace(" " , "\\ ");
 
     HdfsUsers user = hdfsUsersFacade.findByName(hdfsUsername);
     try{

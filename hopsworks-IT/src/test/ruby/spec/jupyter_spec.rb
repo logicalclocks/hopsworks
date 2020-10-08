@@ -229,33 +229,6 @@ describe "On #{ENV['OS']}" do
         python_file = json_body[:items].detect { |d| d[:attributes][:name] == "export_model.py" }
         expect(python_file).to be_present
       end
-
-      it "should convert .ipynb file to .py file if the filename has special symbols or space" do
-        copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
-                        "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
-
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
-        expect_status(200)
-        notebook_file = json_body[:items].detect { |d| d[:attributes][:name] == "export_model.ipynb" }
-        expect(notebook_file).to be_present
-
-        create_dir(@project, "Resources/test_dir", query: "&type=DATASET")
-        expect_status(201)
-
-        copy_dataset(@project, "Resources/export_model.ipynb", "/Projects/#{@project[:projectname]}/Resources/test_dir/[export model].ipynb", datasetType: "&type=DATASET")
-        expect_status_details(204)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/convertIPythonNotebook/Resources/test_dir/%5Bexport%20model%5D.ipynb"
-        expect_status(200)
-
-        get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/test_dir/?action=listing&expand=inodes"
-        expect_status(200)
-        python_file = json_body[:items].detect { |d| d[:attributes][:name] == "[export model].py" }
-        expect(python_file).to be_present
-      end
     end
   end
 
