@@ -73,7 +73,7 @@ public class ElasticClient {
   private void init() {
     try {
       getClient();
-    } catch (ElasticException ex) {
+    } catch (Exception ex) {
       LOG.log(Level.SEVERE, null, ex);
     }
   }
@@ -82,7 +82,7 @@ public class ElasticClient {
   private void close() {
     try {
       shutdownClient();
-    } catch (ElasticException ex) {
+    } catch (Exception ex) {
       LOG.log(Level.SEVERE, null, ex);
     }
   }
