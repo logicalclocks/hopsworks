@@ -63,7 +63,7 @@ public class KafkaBrokers {
   private void init() {
     try {
       setKafkaBrokers(getBrokerEndpoints());
-    } catch (IOException | KeeperException | InterruptedException ex) {
+    } catch (Exception ex) {
       LOGGER.log(Level.SEVERE, null, ex);
     }
   }
