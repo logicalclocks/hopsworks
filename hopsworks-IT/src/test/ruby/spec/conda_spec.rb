@@ -43,8 +43,8 @@ describe "On #{ENV['OS']}" do
 
     let(:num_hosts) {Host.count}
     let(:conda_channel) {Variables.find_by(id: "conda_default_repo").value}
-    let(:python_version) {'3.6'}
-    let(:python_version_2) {'3.7'}
+    let(:python_version) {'3.7'}
+    let(:python_version_2) {'3.8'}
 
     describe "#create" do
       context 'without authentication' do
@@ -278,7 +278,8 @@ describe "On #{ENV['OS']}" do
 
           it 'install libraries' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'imageio', 'conda', '2.2.0', conda_channel)
+
+            install_library(@project[:id], python_version, 'imageio', 'conda', '2.9.0', conda_channel)
             install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', conda_channel)
             expect_status(201)
 
@@ -322,7 +323,7 @@ describe "On #{ENV['OS']}" do
             expect(hops_library[:packageManager]).to eq ("PIP")
 
             expect(imageio_library[:packageManager]).to eq("CONDA")
-            expect(imageio_library[:version]).to eq ("2.2.0")
+            expect(imageio_library[:version]).to eq ("2.9.0")
 
           end
 
@@ -330,16 +331,6 @@ describe "On #{ENV['OS']}" do
             @project = create_env_and_update_project(@project, python_version)
             uninstall_library(@project[:id], python_version, 'imageio')
             expect_status(204)
-
-            wait_for do
-              CondaCommands.find_by(project_id: @project[:id]).nil?
-            end
-          end
-
-          it 'export environment' do
-            @project = create_env_and_update_project(@project, python_version)
-            export_env(@project[:id], python_version)
-            expect_status(200)
 
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
@@ -413,14 +404,14 @@ describe "On #{ENV['OS']}" do
             end
 
             # Enabling anaconda will not create an environment yet
-            expect(check_if_img_exists_locally("python36:" + getVar('hopsworks_version').value)).to be true
+            expect(check_if_img_exists_locally("python37:" + getVar('hopsworks_version').value)).to be true
 
             delete_env(@project[:id], python_version)
             expect_status(204)
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
-            expect(check_if_img_exists_locally("python36:" + getVar('hopsworks_version').value)).to be true
+            expect(check_if_img_exists_locally("python37:" + getVar('hopsworks_version').value)).to be true
           end
 
           it 'create environment from yml with jupyter install true' do
@@ -434,7 +425,7 @@ describe "On #{ENV['OS']}" do
             end
 
             @project = get_project_by_name(@project[:projectname])
-            expect(python_version).to eq "3.6"
+            expect(python_version).to eq "3.7"
           end
 
           it 'create environment from yml with jupyter install false' do
@@ -447,7 +438,18 @@ describe "On #{ENV['OS']}" do
             end
 
             @project = get_project_by_name(@project[:projectname])
-            expect(python_version).to eq "3.6"
+            expect(python_version).to eq "3.7"
+          end
+        end
+        
+        it 'export environment' do
+          delete_env(@project[:id], python_version)
+          @project = create_env_and_update_project(@project, python_version)
+          export_env(@project[:id], python_version)
+          expect_status(200)
+
+          wait_for do
+            CondaCommands.find_by(project_id: @project[:id]).nil?
           end
         end
       end
