@@ -16,6 +16,26 @@
 
 module FeaturestoreHelper
 
+  def get_featurestores(project_id)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/"
+    get endpoint
+    JSON.parse(response.body)
+  end
+
+  def get_featurestores_checked(project_id)
+    result = get_featurestores(project_id)
+    expect_status_details(200)
+    result
+  end
+
+  def get_featurestore(user_project_id, fs_project_id:nil)
+    featurestores = get_featurestores_checked(user_project_id)
+    fs_project_id = user_project_id if fs_project_id.nil?
+    fs = featurestores.select{|fs| fs["projectId"] == fs_project_id}
+    expect(fs.length).to eq(1)
+    fs[0]
+  end
+
   def get_featurestore_id(project_id)
     get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/"
     parsed_json = JSON.parse(response.body)
