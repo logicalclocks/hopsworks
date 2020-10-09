@@ -76,7 +76,7 @@ module CondaHelper
   def upload_yml
     chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
     chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
-    copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.6.yml",
+    copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.7.yml",
                     "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", @user[:username],
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end

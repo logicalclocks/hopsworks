@@ -30,12 +30,12 @@ describe "On #{ENV['OS']}" do
     end
   end
 
-  python_versions = ['3.6']
+  python_versions = ['3.7']
   python_versions.each do |version|
     describe "Jupyter basic operations - python " + version do
       before :each do
         with_valid_project
-        delete_env(@project[:id], '3.6')
+        delete_env(@project[:id], '3.7')
       end
 
       it "should start, get logs and stop a notebook server" do
