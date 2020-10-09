@@ -292,7 +292,7 @@ describe "On #{ENV['OS']}" do
         end
         it "should delete project" do
           # Start Jupyter to put X.509 to HDFS
-          @project = create_env_and_update_project(@project, "3.6")
+          @project = create_env_and_update_project(@project, "3.7")
           get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
           expect_status(200)
           settings = json_body

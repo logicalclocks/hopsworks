@@ -86,7 +86,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication, and python enabled but with a non-existent HDFS-script path' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
         end
 
         after :all do
@@ -109,7 +109,7 @@ describe "On #{ENV['OS']}" do
       context 'with authentication and python enabled', vm: true do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
 
           # Make Serving Dir
           mkdir("/Projects/#{@project[:projectname]}/Models/IrisFlowerClassifier/", "#{@user[:username]}",
@@ -285,10 +285,10 @@ describe "On #{ENV['OS']}" do
     end
 
     describe "#start", vm: true do
-      context 'with serving and python 3.6' do
+      context 'with serving and python 3.7' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           sleep(5)
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
           sleep(5)
@@ -331,7 +331,7 @@ describe "On #{ENV['OS']}" do
       context 'with serving and python enabled' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
 
           post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/serving/#{@serving[:id]}?action=start"
@@ -445,7 +445,7 @@ describe "On #{ENV['OS']}" do
       context 'with serving and python enabled' do
         before :all do
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 
@@ -509,7 +509,7 @@ describe "On #{ENV['OS']}" do
           # Make sure no sklearn serving instance is running"
           system "pgrep -f sklearn_flask_server.py | xargs kill -9"
           with_valid_project
-          with_python_enabled(@project[:id], "3.6")
+          with_python_enabled(@project[:id], "3.7")
           with_sklearn_serving(@project[:id], @project[:projectname], @user[:username])
         end
 

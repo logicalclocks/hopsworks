@@ -95,9 +95,9 @@ import java.util.logging.Logger;
  */
 @Stateless
 @LocalhostStereotype
-public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterManager {
+public class LocalHostJupyterProcessMgr extends JupyterManagerImpl implements JupyterManager {
 
-  private static final Logger LOGGER = Logger.getLogger(JupyterProcessMgr.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(LocalHostJupyterProcessMgr.class.getName());
   private static final int TOKEN_LENGTH = 48;
   private static final String JUPYTER_HOST_TEMPLATE = "http://%s:%d";
   private static final String PING_PATH = "/hopsworks-api/jupyter/%d/api/status";
@@ -164,6 +164,7 @@ public class JupyterProcessMgr extends JupyterManagerImpl implements JupyterMana
             .addCommand(token)
             .addCommand(js.getMode().getValue())
             .addCommand(projectUtils.getFullDockerImageName(project, false))
+            .addCommand(Boolean.toString(js.isGitBackend()))
             .redirectErrorStream(true)
             .setCurrentWorkingDirectory(new File(jp.getNotebookPath()))
             .setWaitTimeout(60L, TimeUnit.SECONDS)
