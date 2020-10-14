@@ -123,6 +123,9 @@ public class ApplicationConfig extends ResourceConfig {
     
     //search
     register(io.hops.hopsworks.api.elastic.ElasticResource.class);
+    
+    //uncomment to allow Cross-Origin Resource Sharing
+    //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);
