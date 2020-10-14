@@ -125,6 +125,19 @@ You should also add the chef recipe to the end of your Vagrantfile (or Karamel c
  hopsworks::dev
 ```
 
+To allow Cross-Origin Resource Sharing for development uncomment the AllowCORSFilter registration line in
+io.hops.hopsworks.rest.application.config.ApplicationConfig then build and redeploy hopsworks-ear
+ ```
+ package io.hops.hopsworks.rest.application.config;
+ ...
+ public class ApplicationConfig extends ResourceConfig {
+   ...
+   public ApplicationConfig() {
+    ...
+    //uncomment to allow Cross-Origin Resource Sharing
+    //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
+    ...
+ ```
 
 #### For development
 
