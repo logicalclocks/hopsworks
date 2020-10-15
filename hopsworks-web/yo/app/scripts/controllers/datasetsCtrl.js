@@ -234,8 +234,21 @@ angular.module('hopsWorksApp')
               };
 
               self.paginatedFiles = [];
+
+              var getPaginatedSubDir = function () {
+                  var filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.searchTerm");
+                  self.filesCount = filtered.length;
+                  return getPaginated(self.datasetBrowserPagination, filtered);
+              }
+
+              var getPaginatedDataset = function () {
+                  var filtered = $scope.$eval("datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, accepted:datasetsCtrl.status, publicDataset: datasetsCtrl.isPublic} | filter:datasetsCtrl.searchTerm");
+                  self.filesCount = filtered.length;
+                  return getPaginated(self.datasetPagination, filtered);
+              }
+
               self.getPaginatedItems = function () {
-                  return getPaginated(self.datasetBrowserPagination, self.files);
+                  return getPaginatedSubDir();
               };
 
               var setPaginated = function () {
@@ -358,13 +371,11 @@ angular.module('hopsWorksApp')
             function getFilteredResults() {
                 var filtered;
                 if ($routeParams.datasetName) {
-                  filtered = $scope.$eval("datasetsCtrl.files | orderBy:sortKey:reverse | filter:datasetsCtrl.searchTerm");
-                  filtered = getPaginated(self.datasetBrowserPagination, filtered);
-                  self.paginatedFiles = filtered;
+                    filtered = getPaginatedSubDir();
+                    self.paginatedFiles = filtered;
                 } else {
-                  filtered = $scope.$eval("datasetsCtrl.files | filter:{shared: datasetsCtrl.shared, accepted: datasetsCtrl.status, publicDataset: datasetsCtrl.isPublic} | filter:datasetsCtrl.searchTerm");
-                  filtered = getPaginated(self.datasetPagination, filtered);
-                  self.sortedDataset = filtered;
+                    filtered = getPaginatedDataset();
+                    self.sortedDataset = filtered;
                 }
                 return filtered;
             }
