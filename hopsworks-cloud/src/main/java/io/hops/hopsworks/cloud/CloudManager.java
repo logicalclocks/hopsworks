@@ -9,6 +9,8 @@ import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CommandStatus;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.RemoveNodesCommand;
 import com.google.common.annotations.VisibleForTesting;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.cloud.dao.heartbeat.DecommissionStatus;
 import io.hops.hopsworks.common.dao.host.HostDTO;
 import io.hops.hopsworks.common.dao.host.HostsFacade;
@@ -16,6 +18,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hosts.HostsController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
@@ -87,6 +90,8 @@ public class CloudManager {
   private DistributedFsService dfsService;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   private DecommissionStatus toSend = new DecommissionStatus();
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
@@ -107,6 +112,8 @@ public class CloudManager {
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
           new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat);
       
+      toSend = new DecommissionStatus();
+          
       HeartbeatResponse response;
       try{
         response = cloudClient.sendHeartbeat(request);
@@ -128,15 +135,28 @@ public class CloudManager {
       // If it's finally removed by the list of cluster nodes, it's safe to forget them
       // from decommissionedNodes
       decommissionedNodes.removeIf(host -> !response.getWorkers().contains(host));
-
-      final List<RemoveNodesCommand> requests = response.getCommands().stream()
-          .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
-          .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
       
-      toSend = setAndGetDecommission(requests, workers);
-  
-      if(firstHeartbeat){
-        firstHeartbeat = false;
+      try {
+        //check if the resource manager and the namenode are up
+        Service rm = serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RESOURCEMANAGER);
+        Service nm = serviceDiscoveryController
+            .getAnyAddressOfServiceWithDNS(ServiceDiscoveryController.HopsworksService.RPC_NAMENODE);
+        
+        final List<RemoveNodesCommand> requests = response.getCommands().stream()
+            .filter(cc -> cc.getType().equals(CloudCommandType.REMOVE_NODES))
+            .map(cc -> (RemoveNodesCommand) cc).collect(Collectors.toList());
+
+        toSend = setAndGetDecommission(requests, workers);
+
+        if (firstHeartbeat) {
+          firstHeartbeat = false;
+        }
+      } catch (ServiceDiscoveryException ex) {
+        //the resource manager or the namenode is not up
+        LOG.log(Level.WARNING, "The NN or RM is not up yet, not handling commands");
+        // we could not handle the request trigger the recovery mechanism
+        firstHeartbeat = true;
       }
     } catch (Exception ex) {
       LOG.log(Level.SEVERE, "Error in Cloud Heartbeat", ex);
@@ -166,6 +186,7 @@ public class CloudManager {
       // but not yet shutdown
       if (!worker.getInstanceState().equals("error") && 
           !decommissionedNodes.contains(worker) && !hostsFacade.findByHostIp(worker.getIp()).isPresent()) {
+        LOG.log(Level.INFO, "Adding new worker to the database " + worker.getHost());
         HostDTO hostDTO = new HostDTO();
         hostDTO.setHostname(worker.getHost());
         hostDTO.setHostIp(worker.getIp());
@@ -230,7 +251,6 @@ public class CloudManager {
     try {
       int nbTries = 0;
       List<NodeReport> nodeReports = getNodeReports(yarnClient);
-      
 
       //nodes that were already decommissioned and are still decommissioned
       //we need to keep trace of them because we need to put them back in the yarn configuration
@@ -345,21 +365,9 @@ public class CloudManager {
     }
   }
   
-  private List<NodeReport> getNodeReports(YarnClient yarnClient) 
+  private List<NodeReport> getNodeReports(YarnClient yarnClient)
       throws IOException, InterruptedException, YarnException {
-    int nbTries = 0;
-    while (true) {
-      try {
-        return yarnClient.getNodeReports();
-      } catch (IOException ex) {
-        LOG.log(Level.SEVERE, "failed to get Yarn node report", ex);
-        nbTries++;
-        if (nbTries == 3) {
-          throw ex;
-        }
-        Thread.sleep(500);
-      }
-    }
+    return yarnClient.getNodeReports();
   }
   
   private void yarnDecommission(List<String> nodes, Configuration conf) throws Exception {
@@ -408,6 +416,7 @@ public class CloudManager {
        * the node was shut down but yarn has not detected it yet.
        * we should remove it from yarn and hdfs
        */
+      LOG.log(Level.INFO, "Removing worker " + report.getNodeId().getHost());
       toRemove.add(report.getNodeId().getHost());
       return;
     }
