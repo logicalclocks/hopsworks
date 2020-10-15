@@ -40,7 +40,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Hiv
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitionKeys;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -341,7 +340,7 @@ public class CachedFeaturegroupController {
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getDefaultStorage());
+    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled);
   }
   
   /**
@@ -371,7 +370,6 @@ public class CachedFeaturegroupController {
     }
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
-    cachedFeaturegroupDTO.setDefaultStorage(featuregroup.getCachedFeaturegroup().getDefaultStorage());
     cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
             .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
 
@@ -587,7 +585,7 @@ public class CachedFeaturegroupController {
           "in the Hive metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, false, Storage.OFFLINE);
+    return persistCachedFeaturegroupMetadata(hiveTbls, false);
   }
 
   /**
@@ -596,12 +594,10 @@ public class CachedFeaturegroupController {
    * @param hiveTable the id of the Hive table in the Hive metastore
    * @return Entity of the created cached feature group
    */
-  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable,
-                                                               boolean onlineEnabled, Storage defaultStorage) {
+  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, boolean onlineEnabled) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTbls(hiveTable);
     cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
-    cachedFeaturegroup.setDefaultStorage(defaultStorage);
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     return cachedFeaturegroup;
   }

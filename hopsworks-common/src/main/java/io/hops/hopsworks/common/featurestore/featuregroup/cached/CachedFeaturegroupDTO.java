@@ -19,7 +19,6 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -34,7 +33,6 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   private Boolean onlineEnabled = false;
   private Boolean hudiEnabled = false;
-  private Storage defaultStorage;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -53,14 +51,6 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     this.onlineEnabled = onlineEnabled;
   }
 
-  public Storage getDefaultStorage() {
-    return defaultStorage;
-  }
-
-  public void setDefaultStorage(Storage defaultStorage) {
-    this.defaultStorage = defaultStorage;
-  }
-
   public Boolean getHudiEnabled() {
     return hudiEnabled;
   }
@@ -74,7 +64,6 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
       ", hudiEnabled =" + hudiEnabled +
-      ", defaultStorage=" + defaultStorage +
       '}';
   }
 }
