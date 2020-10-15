@@ -387,7 +387,7 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             style="overflow-x: auto">
+             style="overflow-x: auto; display: table;">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='The Feature Group Schema'></i>
@@ -400,11 +400,12 @@
                    ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.features.length > 0 &&
                    !featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 <thead style="border:none;" class="fs-table">
-                <th class="fs-table" style="width: 20%">Feature Name</th>
-                <th class="fs-table" style="width: 20%">Feature Type</th>
-                <th class="fs-table" style="width: 20%">Feature Description</th>
-                <th class="fs-table" style="width: 20%">Primary Key</th>
-                <th class="fs-table" style="width: 20%">Partition Key</th>
+                <th class="fs-table" style="width: 16%">Feature Name</th>
+                <th class="fs-table" style="width: 16%">Feature Type</th>
+                <th class="fs-table" style="width: 16%">Feature Description</th>
+                <th class="fs-table" style="width: 16%">Primary Key</th>
+                <th class="fs-table" style="width: 16%">Partition Key</th>
+                <th class="fs-table" style="width: 16%">Default Value</th>
                 </thead>
                 <tbody>
                 <tr class="fs-table" data-ng-repeat="feature in featuregroupViewInfoCtrl.selectedFeaturegroup.features">
@@ -413,6 +414,7 @@
                     <td class="fs-table"> {{feature.description}}</td>
                     <td class="fs-table"> {{feature.primary}}</td>
                     <td class="fs-table"> {{feature.partition}}</td>
+                    <td class="fs-table"> {{feature.defaultValue || "-"}}</td>
                 </tr>
                 </tbody>
             </table>
@@ -420,12 +422,13 @@
                    ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.features.length > 0 &&
                    featuregroupViewInfoCtrl.selectedFeaturegroup.onlineEnabled">
                 <thead style="border:none;" class="fs-table">
-                <th class="fs-table" style="width: 16%">Feature Name</th>
-                <th class="fs-table" style="width: 16%">Offline Feature Type</th>
-                <th class="fs-table" style="width: 16%">Online Feature Type</th>
-                <th class="fs-table" style="width: 16%">Feature Description</th>
-                <th class="fs-table" style="width: 16%">Primary Key</th>
-                <th class="fs-table" style="width: 16%">Partition Key</th>
+                <th class="fs-table" style="width: 14%">Feature Name</th>
+                <th class="fs-table" style="width: 14%">Offline Feature Type</th>
+                <th class="fs-table" style="width: 14%">Online Feature Type</th>
+                <th class="fs-table" style="width: 14%">Feature Description</th>
+                <th class="fs-table" style="width: 14%">Primary Key</th>
+                <th class="fs-table" style="width: 14%">Partition Key</th>
+                <th class="fs-table" style="width: 14%">Default Value</th>
                 </thead>
                 <tbody>
                 <tr class="fs-table" data-ng-repeat="feature in featuregroupViewInfoCtrl.selectedFeaturegroup.features">
@@ -435,6 +438,7 @@
                     <td class="fs-table"> {{feature.description}}</td>
                     <td class="fs-table"> {{feature.primary}}</td>
                     <td class="fs-table"> {{feature.partition}}</td>
+                    <td class="fs-table"> {{feature.defaultValue || "-"}}</td>
                 </tr>
                 </tbody>
             </table>

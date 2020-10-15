@@ -16,19 +16,31 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
+import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
+
 public class Feature {
   private String name;
   private String featureGroup;
   private String fgAlias;
   private String type;
   private boolean primary;
+  private String defaultValue;
 
-  public Feature(String name, String featureGroup, String fgAlias, String type, boolean primary) {
+  public Feature(String name, String featureGroup, String fgAlias, String type, boolean primary, String defaultValue) {
     this.name = name;
     this.featureGroup = featureGroup;
     this.fgAlias = fgAlias;
     this.type = type;
     this.primary = primary;
+    this.defaultValue = defaultValue;
+  }
+  
+  public Feature(FeatureGroupFeatureDTO featureGroupFeatureDTO, String fgAlias) {
+    this.name = featureGroupFeatureDTO.getName();
+    this.fgAlias = fgAlias;
+    this.type = featureGroupFeatureDTO.getType();
+    this.primary = featureGroupFeatureDTO.getPrimary();
+    this.defaultValue = featureGroupFeatureDTO.getDefaultValue();
   }
 
   // For testing purposes
@@ -39,11 +51,14 @@ public class Feature {
     this.primary = primary;
   }
 
-  public Feature(String name, String fgAlias) {
+  public Feature(String name, String fgAlias, String type, String defaultValue) {
     this.name = name;
     this.fgAlias = fgAlias;
+    this.type = type;
+    this.defaultValue = defaultValue;
   }
 
+  // For testing purposes only
   public Feature(String name, boolean primary) {
     this.name = name;
     this.primary = primary;
@@ -91,5 +106,13 @@ public class Feature {
 
   public void setPrimary(boolean primary) {
     this.primary = primary;
+  }
+  
+  public String getDefaultValue() {
+    return defaultValue;
+  }
+  
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
   }
 }

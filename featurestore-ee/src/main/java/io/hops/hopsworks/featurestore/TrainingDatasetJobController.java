@@ -70,9 +70,10 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @throws FeaturestoreException
    */
   public void verifyFeatureExistence(List<String> featureList, Featurestore featurestore,
-    String featuregroupsVersionDict) throws FeaturestoreException {
+    String featuregroupsVersionDict, Project project, Users user) throws FeaturestoreException {
     
-    List<FeaturegroupDTO> featuregroupDTOs = featuregroupController.getFeaturegroupsForFeaturestore(featurestore);
+    List<FeaturegroupDTO> featuregroupDTOs = featuregroupController.getFeaturegroupsForFeaturestore(featurestore,
+      project, user);
     HashMap<String, Integer> featureCount = new HashMap<>();
     featureList.forEach(f -> featureCount.put(f, 0));
     
@@ -234,7 +235,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
   
     if (!sql) {
       verifyFeatureExistence(trainingDatasetJobDTO.getFeatures(), featurestore,
-        trainingDatasetJobDTO.getFeaturegroupsVersionDict());
+        trainingDatasetJobDTO.getFeaturegroupsVersionDict(), project, user);
     }
     
     // Create the job if it doesn't exists.

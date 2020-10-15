@@ -275,7 +275,8 @@ public class FeaturestoreService {
     FeaturestoreDTO featurestoreDTO =
       featurestoreController.getFeaturestoreForProjectWithName(project, featurestoreName);
     Featurestore featurestore = featurestoreController.getFeaturestoreWithId(featurestoreDTO.getFeaturestoreId());
-    List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore);
+    List<FeaturegroupDTO> featuregroups = featuregroupController.getFeaturegroupsForFeaturestore(featurestore,
+      project, user);
     List<TrainingDatasetDTO> trainingDatasets =
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
@@ -311,6 +312,7 @@ public class FeaturestoreService {
   @Logged(logLevel = LogLevel.OFF)
   @Path("{featureStoreId}/datavalidation")
   public DataValidationResource dataValidation(@PathParam("featureStoreId") Integer featureStoreId) {
+    dataValidationService.setProject(project);
     return this.dataValidationService.setFeatureStore(featureStoreId);
   }
 

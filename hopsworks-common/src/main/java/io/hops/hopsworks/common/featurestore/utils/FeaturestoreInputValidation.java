@@ -60,14 +60,7 @@ public class FeaturestoreInputValidation {
     }
     
     // description - can be empty
-    if (!Strings.isNullOrEmpty(featurestoreEntityDTO.getDescription()) &&
-      featurestoreEntityDTO.getDescription().length() >
-        FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ENTITY_DESCRIPTION, Level.FINE,
-        ", the provided description for the entity " + featurestoreEntityDTO.getName() + " is too long with "
-          + featurestoreEntityDTO.getDescription().length() + " characters. Entity descriptions cannot be longer than "
-          + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
-    }
+    verifyDescription(featurestoreEntityDTO);
     
     // features
     if (featurestoreEntityDTO instanceof FeaturegroupDTO) {
@@ -81,11 +74,22 @@ public class FeaturestoreInputValidation {
     }
   }
   
+  public void verifyDescription(FeaturestoreEntityDTO featurestoreEntityDTO) throws FeaturestoreException {
+    if (!Strings.isNullOrEmpty(featurestoreEntityDTO.getDescription()) &&
+      featurestoreEntityDTO.getDescription().length() >
+        FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_ENTITY_DESCRIPTION, Level.FINE,
+        ", the provided description for the entity " + featurestoreEntityDTO.getName() + " is too long with "
+          + featurestoreEntityDTO.getDescription().length() + " characters. Entity descriptions cannot be longer than "
+          + FeaturestoreConstants.FEATURESTORE_ENTITY_DESCRIPTION_MAX_LENGTH + " characters.");
+    }
+  }
+  
   /**
    * Verifies the user input feature list for a feature group entity
    * @param featureGroupFeatureDTOS the feature list to verify
    */
-  private void verifyFeatureGroupFeatureList(List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS)
+  public void verifyFeatureGroupFeatureList(List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS)
       throws FeaturestoreException {
     if (featureGroupFeatureDTOS != null && !featureGroupFeatureDTOS.isEmpty()) {
       for (FeatureGroupFeatureDTO featureGroupFeatureDTO : featureGroupFeatureDTOS) {

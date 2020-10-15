@@ -576,6 +576,75 @@ describe "On #{ENV['OS']}" do
            "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
 
+        it "should succeed to replay the query from a query based training dataset with default values" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_a_name = "test_fg_#{short_random_id}"
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+          # append column with default
+          features.push(
+              {
+                  type: "DOUBLE",
+                  name: "a_testfeature_appended",
+                  defaultValue: "10.0"
+              },
+          )
+          json_result = update_cached_featuregroup_metadata(@project.id, featurestore_id, fg_id, 1,
+                                                            featuregroup_name: fg_a_name, features: features)
+          expect_status_details(200)
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_b_name = "test_fg_#{short_random_id}"
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature1'}, {name: 'a_testfeature_appended'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id_b
+                              },
+                              leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                          },
+                          leftOn: [{name: "a_testfeature_appended"}],
+                          rightOn: [{name: "a_testfeature"}],
+                          type: "INNER"
+                      }
+              ]
+          }
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature1`, " +
+                                        "CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END `a_testfeature_appended`, " +
+                                        "`fg1`.`a_testfeature`, " +
+                                        "`fg1`.`b_testfeature1`\n" +
+                                        "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
+                                        "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` " +
+                                            "ON CASE WHEN `fg0`.`a_testfeature_appended` IS NULL THEN 10.0 ELSE `fg0`.`a_testfeature_appended` END = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature1`, `fg0`.`a_testfeature_appended`, `fg1`.`a_testfeature`, `fg1`.`b_testfeature1`\n" +
+                                                  "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+                                                  "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature_appended` = `fg1`.`a_testfeature`")
+        end
+
         it "should be able to replay a query for a dataset with a feature group joined with itself" do
           project_name = @project.projectname
           featurestore_id = get_featurestore_id(@project.id)

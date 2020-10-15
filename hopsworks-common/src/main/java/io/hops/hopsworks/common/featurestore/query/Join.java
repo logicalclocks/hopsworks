@@ -17,13 +17,7 @@
 package io.hops.hopsworks.common.featurestore.query;
 
 import org.apache.calcite.sql.JoinType;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Join {
@@ -100,72 +94,5 @@ public class Join {
 
   public List<Feature> getRightOn() {
     return rightOn;
-  }
-
-  /**
-   * Generate the condition node for the join node. At this stage, primary keys joins are treated as `on` joins.
-   * @return
-   */
-  public SqlNode getCondition() {
-    if (on != null) {
-      return getOnCondition();
-    } else {
-      return getLeftRightCondition();
-    }
-  }
-
-  /**
-   * Iterate over the on list to generate the on condition node
-   * @return
-   */
-  private SqlNode getOnCondition() {
-    if (on.size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (Feature f : on) {
-        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), f, f));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
-      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), on.get(0), on.get(0));
-    }
-  }
-
-  /**
-   * Iterate over the leftOn and rightOn to generate the on condition node
-   * @return
-   */
-  private SqlNode getLeftRightCondition()  {
-    if (leftOn.size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (int i = 0; i < leftOn.size(); i++) {
-        conditionList.add(generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(),
-            leftOn.get(i), rightOn.get(i)));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
-      return generateEqualityCondition(leftQuery.getAs(), rightQuery.getAs(), leftOn.get(0), rightOn.get(0));
-    }
-  }
-
-  /**
-   * Generate equality node between 2 single feature. The feature name will have the fully qualified domain name.
-   * fg_alias.ft_name
-   * @param leftFgAs
-   * @param rightFgAs
-   * @param leftOn
-   * @param rightOn
-   * @return
-   */
-  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, Feature leftOn, Feature rightOn) {
-    SqlIdentifier leftHandside =
-        new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"), SqlParserPos.ZERO);
-    SqlIdentifier rightHandside =
-        new SqlIdentifier(Arrays.asList("`" + rightFgAs + "`", "`" + rightOn.getName() + "`"), SqlParserPos.ZERO);
-
-    SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);
-    equalityList.add(leftHandside);
-    equalityList.add(rightHandside);
-
-    return SqlStdOperatorTable.EQUALS.createCall(equalityList);
   }
 }

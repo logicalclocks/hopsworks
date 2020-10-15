@@ -34,6 +34,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
@@ -82,11 +83,22 @@ public class DataValidationResource {
   
   private Featurestore featurestore;
   private String path2hopsverification;
+  private Project project;
   
   @Logged(logLevel = LogLevel.OFF)
   public DataValidationResource setFeatureStore(Integer featureStoreId) {
     this.featurestore = featurestoreFacade.findById(featureStoreId);
     return this;
+  }
+  
+  /**
+   * Set the project of the featurestore (provided by parent resource)
+   *
+   * @param project the project where the featurestore resides
+   */
+  @Logged(logLevel = LogLevel.OFF)
+  public void setProject(Project project) {
+    this.project = project;
   }
   
   @Logged(logLevel = LogLevel.OFF)
@@ -106,7 +118,7 @@ public class DataValidationResource {
       @Context SecurityContext sc) throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featureGroupId);
+        featureGroupId, project, user);
   
     String rulesPath = dataValidationController.writeRulesToFile(user, featurestore.getProject(), featureGroup,
         constraintGroups.toConstraintGroups());
@@ -128,7 +140,7 @@ public class DataValidationResource {
       @Context SecurityContext sc) throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featureGroupId);
+        featureGroupId, project, user);
     List<ConstraintGroup> constraintGroups = dataValidationController.readRulesForFeatureGroup(user,
         featurestore.getProject(), featureGroup);
     ConstraintGroupDTO response = ConstraintGroupDTO.fromConstraintGroups(constraintGroups);
@@ -143,7 +155,7 @@ public class DataValidationResource {
       @Context SecurityContext sc) throws FeaturestoreException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
-        featureGroupId);
+        featureGroupId, project, user);
     ValidationResult result = dataValidationController.getValidationResultForFeatureGroup(user,
         featurestore.getProject(), featureGroup);
     return Response.ok(result).build();

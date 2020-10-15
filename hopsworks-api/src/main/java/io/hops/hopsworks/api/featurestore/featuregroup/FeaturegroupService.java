@@ -156,9 +156,10 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc) {
+  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc) throws FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturegroupDTO> featuregroups = featuregroupController.
-        getFeaturegroupsForFeaturestore(featurestore);
+        getFeaturegroupsForFeaturestore(featurestore, project, user);
     GenericEntity<List<FeaturegroupDTO>> featuregroupsGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroups) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupsGeneric).build();
@@ -221,9 +222,10 @@ public class FeaturegroupService {
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
                                   @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
       throws FeaturestoreException {
+    Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
-        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId);
+        featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore, featuregroupId, project, user);
     GenericEntity<FeaturegroupDTO> featuregroupGeneric =
         new GenericEntity<FeaturegroupDTO>(featuregroupDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(featuregroupGeneric).build();
@@ -250,13 +252,15 @@ public class FeaturegroupService {
                                   @ApiParam(value = "Filter by a specific version")
                                   @QueryParam("version") Integer version, @Context SecurityContext sc)
       throws FeaturestoreException{
+    Users user = jWTHelper.getUserPrincipal(sc);
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
     if (version == null) {
-      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(featurestore, name);
+      featuregroupDTO = featuregroupController.getFeaturegroupWithNameAndFeaturestore(
+        featurestore, name, project, user);
     } else {
       featuregroupDTO = Arrays.asList(featuregroupController
-          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version));
+          .getFeaturegroupWithNameVersionAndFeaturestore(featurestore, name, version, project, user));
     }
     GenericEntity<List<FeaturegroupDTO>> featuregroupGeneric =
         new GenericEntity<List<FeaturegroupDTO>>(featuregroupDTO) {};
@@ -363,8 +367,7 @@ public class FeaturegroupService {
       @ApiParam(value = "updateStatsSettings", example = "true")
       @QueryParam("updateStatsSettings") @DefaultValue("false") Boolean updateStatsSettings,
       @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
-      FeaturegroupDTO featuregroupDTO) throws FeaturestoreException, SQLException {
-
+      FeaturegroupDTO featuregroupDTO) throws FeaturestoreException, SQLException, ProvenanceException {
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }
@@ -374,7 +377,8 @@ public class FeaturegroupService {
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     FeaturegroupDTO updatedFeaturegroupDTO = null;
     if(updateMetadata) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(featurestore, featuregroupDTO);
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupMetadata(project, user, featurestore,
+        featuregroupDTO);
     }
     if(enableOnline && featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         !(featuregroup.getCachedFeaturegroup().isOnlineEnabled())) {
@@ -386,10 +390,12 @@ public class FeaturegroupService {
       updatedFeaturegroupDTO = featuregroupController.disableFeaturegroupOnline(featuregroup, project, user);
     }
     if(updateStatsSettings) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(featurestore, featuregroupDTO);
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupStatsSettings(
+        featurestore, featuregroupDTO, project, user);
     }
     if (updateJob) {
-      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(featurestore, featuregroupDTO);
+      updatedFeaturegroupDTO = featuregroupController.updateFeaturegroupJob(
+        featurestore, featuregroupDTO, project, user);
     }
 
     if(updatedFeaturegroupDTO != null) {
