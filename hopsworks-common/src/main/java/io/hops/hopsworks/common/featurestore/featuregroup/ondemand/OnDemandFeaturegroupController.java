@@ -83,6 +83,7 @@ public class OnDemandFeaturegroupController {
     FeaturestoreJdbcConnector featurestoreJdbcConnector =
       verifyOnDemandFeaturegroupJdbcConnector(onDemandFeaturegroupDTO.getJdbcConnectorId());
     verifyOnDemandFeaturegroupSqlQuery(onDemandFeaturegroupDTO.getQuery());
+    // TODO(Moritz) do we want to do the same validation as for cached FGs of newly added features?
     
     // Update metadata in entity
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());

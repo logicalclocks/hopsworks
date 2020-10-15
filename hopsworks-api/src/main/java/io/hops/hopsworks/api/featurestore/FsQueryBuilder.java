@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetCon
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -49,15 +50,16 @@ public class FsQueryBuilder {
         .path(ResourceRequest.Name.QUERY.toString().toLowerCase()).build();
   }
 
-  public FsQueryDTO build(UriInfo uriInfo, Project project, QueryDTO queryDTO) throws FeaturestoreException {
-    FsQueryDTO dto = constructorController.construct(queryDTO);
+  public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, QueryDTO queryDTO)
+    throws FeaturestoreException {
+    FsQueryDTO dto = constructorController.construct(queryDTO, project, user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }
 
-  public FsQueryDTO build(UriInfo uriInfo, Project project, Featurestore featurestore, Integer trainingDatasetId)
-      throws FeaturestoreException {
-    Query query = trainingDatasetController.getQuery(featurestore, trainingDatasetId);
+  public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, Featurestore featurestore,
+    Integer trainingDatasetId) throws FeaturestoreException {
+    Query query = trainingDatasetController.getQuery(featurestore, trainingDatasetId, project, user);
     FsQueryDTO dto = constructorController.construct(query);
     dto.setHref(uri(uriInfo, project));
     return dto;

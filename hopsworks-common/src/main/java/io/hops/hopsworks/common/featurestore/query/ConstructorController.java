@@ -24,6 +24,8 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -35,6 +37,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
+import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
@@ -45,6 +48,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -76,8 +80,9 @@ public class ConstructorController {
     this.onlineFeaturestoreController = onlineFeaturestoreController;
   }
 
-  public FsQueryDTO construct(QueryDTO queryDTO) throws FeaturestoreException {
-    Query query = convertQueryDTO(queryDTO, 0);
+  public FsQueryDTO construct(QueryDTO queryDTO, Project project, Users user)
+    throws FeaturestoreException {
+    Query query = convertQueryDTO(queryDTO, 0, project, user);
     // Generate SQL
     return construct(query);
   }
@@ -96,7 +101,8 @@ public class ConstructorController {
    * @param fgId each feature group will be aliased as fg[Integer] where [integer] is going to be an incremental id
    * @return
    */
-  public Query convertQueryDTO(QueryDTO queryDTO, int fgId) throws FeaturestoreException {
+  public Query convertQueryDTO(QueryDTO queryDTO, int fgId, Project project, Users user)
+    throws FeaturestoreException {
     Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
     String fgAs = generateAs(fgId++);
 
@@ -104,20 +110,20 @@ public class ConstructorController {
     // used to build the online query - needs to respect the online db format name
     String projectName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(fg.getFeaturestore().getProject());
 
-    List<Feature> availableFeatures = featuregroupController.getFeatures(fg).stream()
+    List<Feature> availableFeatures = featuregroupController.getFeatures(fg, project, user).stream()
         // Set the type as well, as the same code is used when parsing the query to generate a training dataset
         // in that case we would like to show the type of the feature in the UI.
         // it's easier and faster to return the training dataset schema if we store the type in the
-        // training training dataset features table.
-        .map(f -> new Feature(f.getName(), fg.getName(), fgAs, f.getType(), f.getPrimary()))
+        // training dataset features table.
+        .map(f -> new Feature(f.getName(), fg.getName(), fgAs, f.getType(), f.getPrimary(), f.getDefaultValue()))
         .collect(Collectors.toList());
 
     List<Feature> requestedFeatures = validateFeatures(fg, queryDTO.getLeftFeatures(), availableFeatures);
 
     Query query = new Query(featureStore, projectName, fg, fgAs, requestedFeatures, availableFeatures);
-    // If there are any join, recursively conver the Join's QueryDTO into the internal Query representation
+    // If there are any joins, recursively convert the Join's QueryDTO into the internal Query representation
     if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
-      query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId));
+      query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId, project, user));
       // remove duplicated join columns
       removeDuplicateColumns(query);
     }
@@ -186,19 +192,22 @@ public class ConstructorController {
    * @param fgId
    * @return
    */
-  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId) throws FeaturestoreException {
+  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId, Project project, Users user)
+    throws FeaturestoreException {
     List<Join> joins = new ArrayList<>();
     for (JoinDTO joinDTO : joinDTOS) {
       if (joinDTO.getQuery() == null) {
         throw new IllegalArgumentException("Subquery not specified");
       }
       // Recursively convert the QueryDTO. Currently we don't support Joins of Joins
-      Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgId++);
+      Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgId++, project, user);
 
       if (joinDTO.getOn() != null && !joinDTO.getOn().isEmpty()) {
-        List<Feature> on = joinDTO.getOn().stream().map(f -> new Feature(f.getName())).collect(Collectors.toList());
+        List<Feature> leftOn = joinDTO.getOn().stream().map(f -> new Feature(f.getName())).collect(Collectors.toList());
+        List<Feature> rightOn =
+          joinDTO.getOn().stream().map(f -> new Feature(f.getName())).collect(Collectors.toList());
 
-        joins.add(extractOn(leftQuery, rightQuery, on, joinDTO.getType()));
+        joins.add(extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, joinDTO.getType()));
       } else if (joinDTO.getLeftOn() != null && !joinDTO.getLeftOn().isEmpty()) {
         List<Feature> leftOn = joinDTO.getLeftOn().stream()
             .map(f -> new Feature(f.getName())).collect(Collectors.toList());
@@ -216,24 +225,6 @@ public class ConstructorController {
   }
 
   /**
-   * If the user has specified the `on` field in the JoinDTO check that the features in it are present on both feature
-   * groups (name check)
-   * @param leftQuery
-   * @param rightQuery
-   * @param on
-   * @param joinType
-   * @return
-   */
-  protected Join extractOn(Query leftQuery, Query rightQuery, List<Feature> on, JoinType joinType)
-      throws FeaturestoreException {
-    for (Feature joinFeature : on) {
-      checkFeatureExists(leftQuery, joinFeature);
-      checkFeatureExists(rightQuery, joinFeature);
-    }
-    return new Join(leftQuery, rightQuery, on, joinType);
-  }
-
-  /**
    * If the user has specified the `leftOn` and `rightOn` make sure that both list have the same length, that the leftOn
    * features are present in the left feature group, the rightOn features in the right feature group.
    *
@@ -244,7 +235,7 @@ public class ConstructorController {
    * @param joinType
    * @return
    */
-  protected Join extractLeftRightOn(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn,
+  public Join extractLeftRightOn(Query leftQuery, Query rightQuery, List<Feature> leftOn, List<Feature> rightOn,
                                     JoinType joinType)
       throws FeaturestoreException {
     // Make sure that they 2 list have the same length
@@ -254,12 +245,12 @@ public class ConstructorController {
 
     // Check that all the left features exist in the left query
     for (Feature feature : leftOn) {
-      checkFeatureExists(leftQuery, feature);
+      checkFeatureExistsAndSetAttributes(leftQuery, feature);
     }
 
     // Check that all the right features exist in the right query
     for (Feature feature : rightOn) {
-      checkFeatureExists(rightQuery, feature);
+      checkFeatureExistsAndSetAttributes(rightQuery, feature);
     }
 
     return new Join(leftQuery, rightQuery, leftOn, rightOn, joinType);
@@ -291,11 +282,17 @@ public class ConstructorController {
     return new Join(leftQuery, rightQuery, joinFeatures, joinType);
   }
 
-  private void checkFeatureExists(Query query, Feature feature) throws FeaturestoreException {
-    if (query.getAvailableFeatures().stream().noneMatch(f -> (f.getName().equals(feature.getName())))) {
+  private void checkFeatureExistsAndSetAttributes(Query query, Feature feature) throws FeaturestoreException {
+    Optional<Feature> availableFeature =
+      query.getAvailableFeatures().stream().filter(f -> (f.getName().equals(feature.getName()))).findAny();
+    if (!availableFeature.isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURE_DOES_NOT_EXIST, Level.FINE,
           "Could not find Join feature " + feature.getName() + " in feature group: "
               + query.getFeaturegroup().getName());
+    } else {
+      feature.setDefaultValue(availableFeature.get().getDefaultValue());
+      feature.setType(availableFeature.get().getType());
+      feature.setFgAlias(availableFeature.get().getFgAlias());
     }
   }
 
@@ -338,8 +335,12 @@ public class ConstructorController {
     for (Feature f : collectFeatures(query)) {
       // Build the select part. List of features selected by the user. Each feature will be fg_alias.fg_name
       // we should use the ` to avoid syntax errors on reserved keywords used as feature names (e.g. date)
-      selectList.add(new SqlIdentifier(Arrays.asList("`" + f.getFgAlias() + "`",
-          "`" + f.getName() + "`"), SqlParserPos.ZERO));
+      if (f.getDefaultValue() == null || online) {
+        selectList.add(new SqlIdentifier(Arrays.asList("`" + f.getFgAlias() + "`", "`" + f.getName() + "`"),
+          SqlParserPos.ZERO));
+      } else {
+        selectList.add(selectWithDefaultAs(f));
+      }
     }
 
     SqlNode joinNode = null;
@@ -355,6 +356,37 @@ public class ConstructorController {
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
         null, null, null, null, null, null, null);
     return select.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
+  }
+
+  public SqlNode caseWhenDefault(Feature feature) {
+    SqlIdentifier featureIdentifier = new SqlIdentifier(Arrays.asList("`" + feature.getFgAlias() + "`",
+      "`" + feature.getName() + "`"), SqlParserPos.ZERO);
+
+    SqlNode featureIsNull = SqlStdOperatorTable.IS_NULL.createCall(
+      SqlParserPos.ZERO, featureIdentifier);
+
+    // most type can be implicitly converted from string, in question are complex types
+    // https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes
+    // -AllowedImplicitConversions
+    SqlNode defaultValue;
+    if (feature.getType().equalsIgnoreCase("string")) {
+      defaultValue = SqlLiteral.createCharString(feature.getDefaultValue(), SqlParserPos.ZERO);
+    } else {
+      defaultValue = new SqlIdentifier(feature.getDefaultValue(), SqlParserPos.ZERO);
+    }
+    
+    return new SqlCase(SqlParserPos.ZERO, null,
+      // when
+      new SqlNodeList(Arrays.asList(featureIsNull), SqlParserPos.ZERO),
+      // then
+      new SqlNodeList(Arrays.asList(defaultValue), SqlParserPos.ZERO),
+      // else
+      featureIdentifier);
+  }
+
+  public SqlNode selectWithDefaultAs(Feature feature) {
+    return SqlStdOperatorTable.AS.createCall(new SqlNodeList(Arrays.asList(caseWhenDefault(feature),
+      new SqlIdentifier("`" + feature.getName() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO));
   }
 
   /**
@@ -373,7 +405,7 @@ public class ConstructorController {
           SqlLiteral.createSymbol(query.getJoins().get(i).getJoinType(), SqlParserPos.ZERO),
           generateTableNode(query.getJoins().get(i).getRightQuery(), online),
           SqlLiteral.createSymbol(JoinConditionType.ON, SqlParserPos.ZERO),
-          query.getJoins().get(i).getCondition());
+          getCondition(query.getJoins().get(i), online));
     }
 
   }
@@ -410,5 +442,87 @@ public class ConstructorController {
         new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO);
 
     return SqlStdOperatorTable.AS.createCall(asNodeList);
+  }
+  
+  
+  /**
+   * Generate the condition node for the join node. At this stage, primary keys joins are treated as `on` joins.
+   * @return
+   */
+  public SqlNode getCondition(Join join, boolean online) {
+    if (join.getOn() != null) {
+      return getOnCondition(join, online);
+    } else {
+      return getLeftRightCondition(join, online);
+    }
+  }
+  
+  /**
+   * Iterate over the on list to generate the on condition node
+   * @return
+   */
+  private SqlNode getOnCondition(Join join, boolean online) {
+    if (join.getOn().size() > 1) {
+      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+      for (Feature f : join.getOn()) {
+        conditionList.add(generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(), f, f,
+          online));
+      }
+      return  SqlStdOperatorTable.AND.createCall(conditionList);
+    } else {
+      return generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(), join.getOn().get(0),
+        join.getOn().get(0), online);
+    }
+  }
+  
+  /**
+   * Iterate over the leftOn and rightOn to generate the on condition node
+   * @return
+   */
+  private SqlNode getLeftRightCondition(Join join, boolean online)  {
+    if (join.getLeftOn().size() > 1) {
+      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+      for (int i = 0; i < join.getLeftOn().size(); i++) {
+        conditionList.add(generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(),
+          join.getLeftOn().get(i), join.getRightOn().get(i), online));
+      }
+      return  SqlStdOperatorTable.AND.createCall(conditionList);
+    } else {
+      return generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(),
+        join.getLeftOn().get(0), join.getRightOn().get(0), online);
+    }
+  }
+  
+  /**
+   * Generate equality node between 2 single feature. The feature name will have the fully qualified domain name.
+   * fg_alias.ft_name
+   * @param leftFgAs
+   * @param rightFgAs
+   * @param leftOn
+   * @param rightOn
+   * @return
+   */
+  private SqlNode generateEqualityCondition(String leftFgAs, String rightFgAs, Feature leftOn, Feature rightOn,
+                                            boolean online ) {
+    SqlNode leftHandside;
+    SqlNode rightHandside;
+    if (leftOn.getDefaultValue() == null || online) {
+      leftHandside = new SqlIdentifier(Arrays.asList("`" + leftFgAs + "`", "`" + leftOn.getName() + "`"),
+        SqlParserPos.ZERO);
+    } else {
+      leftHandside = caseWhenDefault(leftOn);
+    }
+    if (rightOn.getDefaultValue() == null || online) {
+      rightHandside = new SqlIdentifier(Arrays.asList("`" + rightFgAs + "`", "`" + rightOn.getName() + "`"),
+        SqlParserPos.ZERO);
+    } else {
+      rightHandside = caseWhenDefault(rightOn);
+    }
+    
+    SqlNodeList equalityList = new SqlNodeList(SqlParserPos.ZERO);
+    equalityList.add(leftHandside);
+    equalityList.add(rightHandside);
+    
+    return SqlStdOperatorTable.EQUALS.createCall(equalityList);
   }
 }

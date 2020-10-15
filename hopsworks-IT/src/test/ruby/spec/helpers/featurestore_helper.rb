@@ -176,15 +176,26 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
-  def update_cached_featuregroup_metadata(project_id, featurestore_id, featuregroup_id, featuregroup_version)
+  def update_cached_featuregroup_metadata(project_id, featurestore_id, featuregroup_id, featuregroup_version,
+                                          featuregroup_name: nil, description: nil, features: nil)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     update_featuregroup_metadata_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
+    default_features = [
+        {
+            type: "INT",
+            name: "testfeature",
+            description: "testfeaturedescription",
+            primary: true,
+            onlineType: "INT",
+            partition: false
+        },
+    ]
     json_data = {
-        name: "",
+        name: featuregroup_name != nil ? featuregroup_name : "",
         jobs: [],
-        features: [],
-        description: "",
+        features: features != nil ? features : default_features,
+        description: description != nil ? description : "testfeaturegroupdescription",
         version: featuregroup_version,
         type: type,
         featuregroupType: featuregroupType

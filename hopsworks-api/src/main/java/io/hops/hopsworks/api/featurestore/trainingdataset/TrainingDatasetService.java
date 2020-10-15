@@ -471,8 +471,9 @@ public class TrainingDatasetService {
                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
                            @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
+    Users user = jWTHelper.getUserPrincipal(sc);
 
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, featurestore, trainingdatasetid);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid);
     return Response.ok().entity(fsQueryDTO).build();
   }
   

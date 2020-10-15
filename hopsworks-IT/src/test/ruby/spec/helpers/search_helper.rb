@@ -100,7 +100,7 @@ module SearchHelper
     wait_result = wait_for_me_time(15) do
       search_hits = local_featurestore_search(project, search_type, term)["#{result_type}"]
       pp search_hits if defined?(@debugOpt) && @debugOpt
-      error_msg = "expected:#{items.length}, found:#{search_hits.length}"
+      error_msg = "search expected:#{items.length}, found:#{search_hits.length}"
       if search_hits.length != items.length
         { 'success' => false, 'msg' => error_msg }
       else
