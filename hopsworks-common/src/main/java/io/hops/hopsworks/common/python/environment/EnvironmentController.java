@@ -115,7 +115,7 @@ public class EnvironmentController {
         for (PythonDep dep : defaultEnvDeps) {
           dep.setBaseEnv(envName);
         }
-        defaultEnvDeps = agentController.persistAndMarkUnmutable(defaultEnvDeps);
+        defaultEnvDeps = agentController.persistAndMarkImmutable(defaultEnvDeps);
       }
     }
     libraryController.addPythonDepsForProject(project, defaultEnvDeps);
