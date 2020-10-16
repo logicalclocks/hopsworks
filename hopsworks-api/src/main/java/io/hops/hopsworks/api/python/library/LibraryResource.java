@@ -157,7 +157,7 @@ public class LibraryResource {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
     environmentController.checkCondaEnabled(project, pythonVersion);
-    if (settings.getUnmutablePythonLibraryNames().contains(library)) {
+    if (settings.getImmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
     }
