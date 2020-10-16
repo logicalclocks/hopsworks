@@ -669,8 +669,8 @@ public class Settings implements Serializable {
       HOPS_VERIFICATION_VERSION = setStrVar(VARIABLE_HOPS_VERIFICATION_VERSION, HOPS_VERIFICATION_VERSION);
 
       PYPI_REST_ENDPOINT = setStrVar(VARIABLE_PYPI_REST_ENDPOINT, PYPI_REST_ENDPOINT);
-      UNMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
-          setStrVar(VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES),
+      IMMUTABLE_PYTHON_LIBRARY_NAMES = toSetFromCsv(
+          setStrVar(VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES, DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES),
           ",");
 
       SERVING_MONITOR_INT = setStrVar(VARIABLE_SERVING_MONITOR_INT, SERVING_MONITOR_INT);
@@ -3112,15 +3112,14 @@ public class Settings implements Serializable {
   }
 
   // Libraries that should not be uninstallable
-  private Set<String> UNMUTABLE_PYTHON_LIBRARY_NAMES;
-  private static final String VARIABLE_UNMUTABLE_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
-  private static final String DEFAULT_UNMUTABLE_PYTHON_LIBRARY_NAMES = 
-      "tensorflow, pydoop, pyspark, tensorboard, jupyterlab, sparkmagic, hdfscontents, pyjks, hops-apache-beam, " +
-          "pyopenssl";
+  private Set<String> IMMUTABLE_PYTHON_LIBRARY_NAMES;
+  private static final String VARIABLE_IMMUTABLE_PYTHON_LIBRARY_NAMES = "preinstalled_python_lib_names";
+  private static final String DEFAULT_IMMUTABLE_PYTHON_LIBRARY_NAMES = "pydoop, pyspark, jupyterlab, sparkmagic, " +
+      "hdfscontents, pyjks, hops-apache-beam, pyopenssl";
 
-  public synchronized Set<String> getUnmutablePythonLibraryNames() {
+  public synchronized Set<String> getImmutablePythonLibraryNames() {
     checkCache();
-    return UNMUTABLE_PYTHON_LIBRARY_NAMES;
+    return IMMUTABLE_PYTHON_LIBRARY_NAMES;
   }
 
   private String HOPSWORKS_VERSION;

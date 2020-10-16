@@ -504,13 +504,21 @@
                       <td class="col-sm-2">
                         <div class="row" style="margin-left: 10px;"><b>{{row.packageManager}}</b></div>
                       </td>
-                      <td class="col-sm-1">
-                        <div ng-show="pythonCtrl.getStatus(row) === 'INSTALLED'">
-                          <b>{{pythonCtrl.getStatus(row)}}</b></div>
-                        <div ng-show="pythonCtrl.getStatus(row) === 'FAILED'"style="color: #880000 ">
-                          <b>{{pythonCtrl.getStatus(row)}}</b></div>
-                        <div ng-show="pythonCtrl.getStatus(row) === 'ONGOING'" class="text-muted">
-                          <b>{{pythonCtrl.getStatus(row)}}</b>
+                      <td class="col-sm-2">
+                        <div class="row">
+                          <div class="col-sm-4">
+                            <div ng-show="pythonCtrl.getStatus(row) === 'INSTALLED'">
+                              <b>{{pythonCtrl.getStatus(row)}}</b></div>
+                            <div ng-show="pythonCtrl.getStatus(row) === 'FAILED'"style="color: #880000 ">
+                              <b>{{pythonCtrl.getStatus(row)}}</b></div>
+                            <div ng-show="pythonCtrl.getStatus(row) === 'ONGOING'" class="text-muted">
+                              <b>{{pythonCtrl.getStatus(row)}}</b>
+                            </div>
+                          </div>
+                          <div ng-show="row.library === 'tensorflow' && row.version !== pythonCtrl.tensorflowVersion" style="margin-top:3px;">
+                            <i class="fa fa-warning" style="color:orange;" uib-tooltip="TensorFlow {{row.version}} is not the supported TensorFlow version for this installation.
+                            Please revert to version {{pythonCtrl.tensorflowVersion}} if you encounter issues."></i>
+                          </div>
                         </div>
                       </td>
                       <td class="col-sm-2 text-center">
