@@ -625,7 +625,6 @@ public class FeaturegroupService {
   }
   
   @Path("/{featureGroupId}/provenance")
-  @Logged(logLevel = LogLevel.OFF)
   public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
     throws FeaturestoreException {
     this.provenanceResource.setProject(project);

@@ -96,7 +96,6 @@ public class ProjectProvenanceResource {
     this.project = projectFacade.find(projectId);
   }
   
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }

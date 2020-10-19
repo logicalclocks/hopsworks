@@ -20,8 +20,6 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ops.ProvOpsBeanParams;
 import io.hops.hopsworks.api.provenance.ops.ProvUsageParams;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsParams;
@@ -50,7 +48,6 @@ import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.HashSet;
 
-@Logged
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @Api(value = "Artifact Provenance Service", description = "Artifact Provenance Service")
@@ -65,17 +62,14 @@ public class ProvArtifactResource {
   private Project project;
   private String artifactId;
   
-  @Logged(logLevel = LogLevel.OFF)
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
   }
   
-  @Logged(logLevel = LogLevel.OFF)
   public void setProject(Project project) {
     this.project = project;
   }
   
-  @Logged(logLevel = LogLevel.OFF)
   public void setArtifactId(String name, Integer version) {
     this.artifactId = name + "_" + version;
   }

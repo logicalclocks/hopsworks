@@ -506,7 +506,6 @@ public class TrainingDatasetService {
   }
   
   @Path("/{trainingDatasetId}/provenance")
-  @Logged(logLevel = LogLevel.OFF)
   public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
     throws FeaturestoreException {
     this.provenanceResource.setProject(project);
