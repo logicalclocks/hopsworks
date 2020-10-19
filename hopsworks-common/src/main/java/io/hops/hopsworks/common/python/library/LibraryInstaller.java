@@ -382,7 +382,12 @@ public class LibraryInstaller {
     baseDir.mkdirs();
     try {
       File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
+      File home = new File(System.getProperty("user.home"));
+      FileUtils.copyFileToDirectory(new File(home, ".condarc"), baseDir);
+      FileUtils.copyDirectoryToDirectory(new File(home, ".pip"), baseDir);
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
+        writer.write("# syntax=docker/dockerfile:experimental");
+        writer.newLine();
         writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false) + "\n");
         writer.newLine();
         writer.write(
@@ -390,12 +395,11 @@ public class LibraryInstaller {
                 + " --mount=type=bind,source=.pip,target=/root/.pip ");
         switch (cc.getInstallType()) {
           case CONDA:
-            writer.write("RUN " + anaconda_dir + "/bin/conda remove -y -n " +
+            writer.write(anaconda_dir + "/bin/conda remove -y -n " +
                 settings.getCurrentCondaEnvironment() + " " + cc.getLib() + "\n");
             break;
           case PIP:
-            writer.write("RUN " + anaconda_project_dir + "/bin/pip uninstall -y " +
-                cc.getLib() + "\n");
+            writer.write(anaconda_project_dir + "/bin/pip uninstall -y " + cc.getLib() + "\n");
             break;
           case ENVIRONMENT:
           default:
