@@ -32,6 +32,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import javax.ejb.EJB;
@@ -39,6 +40,8 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -55,13 +58,21 @@ public class ProvAppController {
   private ProvElasticController client;
   
   public Map<String, Map<Provenance.AppState, ProvAppStateElastic>> provAppState(
-    Map<ProvParser.Field, ProvParser.FilterVal> appStateFilters)
+    Map<ProvParser.Field, ProvParser.FilterVal> filterBy) throws ProvenanceException {
+    return provAppState(filterBy, new LinkedList<>(), 0, Settings.PROVENANCE_ELASTIC_PAGE_DEFAULT_SIZE);
+  }
+  
+  public Map<String, Map<Provenance.AppState, ProvAppStateElastic>> provAppState(
+    Map<ProvParser.Field, ProvParser.FilterVal> filterBy, List<Pair<ProvParser.Field, SortOrder>> sortBy,
+    Integer offset, Integer limit)
     throws ProvenanceException {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper.scrollingSearchRequest(
         Settings.ELASTIC_INDEX_APP_PROVENANCE,
         settings.getElasticDefaultScrollPageSize())
-        .andThen(provAppStateQB(appStateFilters));
+        .andThen(provAppStateQB(filterBy))
+        .andThen(ElasticHelper.sortBy(sortBy))
+        .andThen(ElasticHelper.withPagination(offset, limit, settings.getElasticMaxScrollPageSize()));
     SearchRequest request = srF.get();
     Pair<Long, Try<ElasticAppStatesObj>> searchResult;
     try {
@@ -115,10 +126,10 @@ public class ProvAppController {
   }
   
   private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> provAppStateQB(
-    Map<ProvParser.Field, ProvParser.FilterVal> appStateFilters) {
+    Map<ProvParser.Field, ProvParser.FilterVal> filterBy) {
     return (SearchRequest sr) -> {
       BoolQueryBuilder query = boolQuery();
-      query = ElasticHelper.filterByBasicFields(query, appStateFilters);
+      query = ElasticHelper.filterByBasicFields(query, filterBy);
       sr.source().query(query);
       return sr;
     };

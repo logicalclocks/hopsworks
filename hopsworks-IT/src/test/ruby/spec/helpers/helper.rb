@@ -83,4 +83,12 @@ module Helper
     l2 = list2.map{|o| Time.parse(o).change(:usec => 0)}
     expect(l1).to eq(l2)
   end
+
+  def append_to_query(query, value)
+    if query.nil? || query == ""
+      "?#{value}"
+    else
+      query + "&#{value}"
+    end
+  end
 end

@@ -252,7 +252,9 @@ public class ProvElasticController {
     response = searchBasicInt(request);
     
     long totalHits = response.getHits().getTotalHits().value;
-    leftover = totalHits - response.getHits().getHits().length;
+    long requested = request.source().size();
+    leftover = Math.min(requested, totalHits);
+    leftover = leftover - response.getHits().getHits().length;
     Try<S> result = handler.apply(response.getHits().getHits());
     
     while (leftover > 0 & result.isSuccess()) {

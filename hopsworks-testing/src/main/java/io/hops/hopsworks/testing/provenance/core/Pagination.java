@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2018, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -13,52 +13,47 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.util;
+package io.hops.hopsworks.testing.provenance.core;
 
-import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.swagger.annotations.ApiParam;
+
 import javax.ws.rs.QueryParam;
 
-public class Pagination implements PaginationParams {
-
+public class Pagination {
+  
   @QueryParam("offset")
   @ApiParam(required = false)
   private Integer offset;
-
+  
   @QueryParam("limit")
   @ApiParam(required = false)
   private Integer limit;
-
+  
   public Pagination(
-      @QueryParam("offset") Integer offset,
-      @QueryParam("limit") Integer limit) {
+    @QueryParam("offset") Integer offset,
+    @QueryParam("limit") Integer limit) {
     this.offset = offset;
     this.limit = limit;
   }
-
-  public Pagination() {}
   
-  @Override
   public Integer getOffset() {
     return offset;
   }
-
+  
   public void setOffset(Integer offset) {
     this.offset = offset;
   }
   
-  @Override
   public Integer getLimit() {
     return limit;
   }
-
+  
   public void setLimit(Integer limit) {
     this.limit = limit;
   }
-
+  
   @Override
   public String toString() {
     return "Pagination{" + "offset=" + offset + ", limit=" + limit + '}';
   }
-
 }

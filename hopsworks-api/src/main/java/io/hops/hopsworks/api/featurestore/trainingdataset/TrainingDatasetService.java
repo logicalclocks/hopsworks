@@ -26,6 +26,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -42,6 +43,7 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -78,6 +80,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
@@ -106,6 +109,8 @@ public class TrainingDatasetService {
   private StatisticsResource statisticsResource;
   @EJB
   private FsQueryBuilder fsQueryBuilder;
+  @Inject
+  private ProvArtifactResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -498,6 +503,19 @@ public class TrainingDatasetService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
           TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
     }
+  }
+  
+  @Path("/{trainingDatasetId}/provenance")
+  @Logged(logLevel = LogLevel.OFF)
+  public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
+    throws FeaturestoreException {
+    this.provenanceResource.setProject(project);
+    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+    if(td == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND, Level.FINE);
+    }
+    this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
+    return provenanceResource;
   }
 }
 

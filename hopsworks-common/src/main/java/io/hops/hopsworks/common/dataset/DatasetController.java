@@ -577,6 +577,14 @@ public class DatasetController {
     return getByProjectAndInode(currentProject, dsInode);
   }
   
+  public Dataset getByProjectAndInodeId(Project project, Long dsInodeId) throws DatasetException {
+    Inode inode = inodes.findById(dsInodeId);
+    if(inode == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
+    }
+    return getByProjectAndInode(project, inode);
+  }
+  
   public Dataset getByProjectAndInode(Project project, Inode inode) {
     Dataset dataset = datasetFacade.findByInode(inode);
     if (dataset != null && !dataset.getProject().equals(project)) { //not owned by project check shared

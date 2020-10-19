@@ -791,7 +791,7 @@ describe "On #{ENV['OS']}" do
           # delete feature group
           delete_featuregroup_checked(@project.id, featurestore_id, fg_id_b)
 
-          training_dataset = get_trainingdataset(@project.id, featurestore_id, training_dataset_name, 1)
+          training_dataset = get_trainingdataset_checked(@project.id, training_dataset_name)
           # without the feature group we cannot re-create the query
           expect(training_dataset['fromQuery']).to be true
 

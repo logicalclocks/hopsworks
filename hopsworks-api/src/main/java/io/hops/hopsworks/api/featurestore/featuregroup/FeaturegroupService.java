@@ -25,6 +25,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
@@ -112,6 +113,8 @@ public class FeaturegroupService {
   private FeatureGroupDetailsResource featureGroupDetailsResource;
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private ProvArtifactResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -619,6 +622,19 @@ public class FeaturegroupService {
     this.statisticsResource.setFeaturestore(featurestore);
     this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
+  }
+  
+  @Path("/{featureGroupId}/provenance")
+  @Logged(logLevel = LogLevel.OFF)
+  public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    this.provenanceResource.setProject(project);
+    Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+    if(fg == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE);
+    }
+    this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
+    return provenanceResource;
   }
 }
 
