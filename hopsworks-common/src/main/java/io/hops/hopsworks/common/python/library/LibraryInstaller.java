@@ -384,6 +384,10 @@ public class LibraryInstaller {
       File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
         writer.write("FROM " + projectUtils.getFullDockerImageName(cc.getProjectId(), false) + "\n");
+        writer.newLine();
+        writer.write(
+            "RUN --mount=type=bind,source=.condarc,target=/root/.condarc"
+                + " --mount=type=bind,source=.pip,target=/root/.pip ");
         switch (cc.getInstallType()) {
           case CONDA:
             writer.write("RUN " + anaconda_dir + "/bin/conda remove -y -n " +
