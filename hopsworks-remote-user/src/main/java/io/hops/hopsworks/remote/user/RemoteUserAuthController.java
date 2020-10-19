@@ -60,6 +60,8 @@ public class RemoteUserAuthController {
   private RemoteUserGroupMapper remoteUserGroupMapper;
   @EJB
   private SecurityUtils securityUtils;
+  @EJB
+  private Settings settings;
   
   /**
    * Checks if the user is a remote user and returns the user password with salt
@@ -119,6 +121,7 @@ public class RemoteUserAuthController {
     RemoteUserStateDTO remoteUserStateDTO;
     if (remoteUser == null) {
       if (consent) {
+        validateRemoteUser(userDTO, chosenEmail);
         remoteUser = createNewRemoteUser(userDTO, chosenEmail, type, status);
         persistRemoteUser(remoteUser);
       }
@@ -136,15 +139,6 @@ public class RemoteUserAuthController {
   
   private RemoteUser createNewRemoteUser(RemoteUserDTO userDTO, String chosenEmail, RemoteUserType type,
     UserAccountStatus status) throws LoginException {
-    if (userDTO.getEmail().size() != 1 && (chosenEmail == null || chosenEmail.isEmpty())) {
-      throw new LoginException("Could not register user. Email not chosen.");
-    }
-    if (!userDTO.getEmail().contains(chosenEmail)) {
-      throw new LoginException("Could not register user. Chosen email not in user email list.");
-    }
-    if (!userDTO.isEmailVerified()) {
-      throw new LoginException("Email not verified.");
-    }
     String email = userDTO.getEmail().size() == 1 ? userDTO.getEmail().get(0) : chosenEmail;
     Users u = userFacade.findByEmail(email);
     if (u != null) {
@@ -239,4 +233,29 @@ public class RemoteUserAuthController {
   private void persistRemoteUser(RemoteUser remoteUser) {
     remoteUserFacade.save(remoteUser);
   }
+  
+  private void validateRemoteUser(RemoteUserDTO user, String chosenEmail) throws LoginException {
+    if (user.getUuid() == null || user.getUuid().isEmpty()) {
+      throw new LoginException("Could not find UUID for Ldap user.");
+    }
+    if (user.getEmail() == null || user.getEmail().isEmpty()) {
+      throw new LoginException("Could not find email for Ldap user.");
+    }
+    if (user.getEmail().size() != 1 && (chosenEmail == null || chosenEmail.isEmpty())) {
+      throw new LoginException("Could not register user. Email not chosen.");
+    }
+    if (!user.getEmail().contains(chosenEmail)) {
+      throw new LoginException("Could not register user. Chosen email not in user email list.");
+    }
+    if (user.getGivenName() == null || user.getGivenName().isEmpty()) {
+      throw new LoginException("Could not find givenName for Ldap user.");
+    }
+    if (user.getSurname() == null || user.getSurname().isEmpty()) {
+      throw new LoginException("Could not find surname for Ldap user.");
+    }
+    if (!user.isEmailVerified() && settings.shouldValidateEmailVerified()) {
+      throw new LoginException("User email not yet verified.");
+    }
+  }
+  
 }

@@ -148,9 +148,7 @@ public class LdapRealm {
       bindAsUser(userDN, pwd); // if ldap try login
     }
     RemoteUserDTO user = createLdapUser(userId);
-    user.setEmailVerified(true);
     user.setGroups(getUserGroups(username, searchFilter));
-    validateLdapUser(user);
     return user;
   }
   
@@ -187,9 +185,7 @@ public class LdapRealm {
     }
     bindAsUser(userDN, pwd); // try login
     RemoteUserDTO remoteUser = createLdapUser(userId);
-    remoteUser.setEmailVerified(true);
     remoteUser.setGroups(getUserGroups(remoteUser.getUid(), searchFilter));//uses search filter for uid/(sAMAccountName)
-    validateLdapUser(remoteUser);
     return remoteUser;
   }
   
@@ -520,25 +516,6 @@ public class LdapRealm {
       sb.replace(i, i + target.length(), value);
       i = sb.indexOf(target);
     }
-  }
-  
-  private void validateLdapUser(RemoteUserDTO user) throws LoginException {
-    if (user.getUuid() == null || user.getUuid().isEmpty()) {
-      throw new LoginException("Could not find UUID for Ldap user.");
-    }
-    if (user.getEmail() == null || user.getEmail().isEmpty()) {
-      throw new LoginException("Could not find email for Ldap user.");
-    }
-    if (user.getGivenName() == null || user.getGivenName().isEmpty()) {
-      throw new LoginException("Could not find givenName for Ldap user.");
-    }
-    if (user.getSurname() == null || user.getSurname().isEmpty()) {
-      throw new LoginException("Could not find surname for Ldap user.");
-    }
-    if (!user.isEmailVerified()) {
-      throw new LoginException("User email not yet verified.");
-    }
-    
   }
   
 }

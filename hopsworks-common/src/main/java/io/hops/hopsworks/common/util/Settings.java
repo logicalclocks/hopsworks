@@ -2783,6 +2783,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DISABLE_PASSWORD_LOGIN = "disable_password_login";
   private static final String VARIABLE_DISABLE_REGISTRATION = "disable_registration";
   private static final String VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL = "ldap_group_mapping_sync_interval";
+  
+  private static final String VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED = "validate_email_verified";
 
   private String KRB_AUTH = "false";
   private String LDAP_AUTH = "false";
@@ -2816,6 +2818,7 @@ public class Settings implements Serializable {
   
   private boolean DISABLE_PASSWORD_LOGIN = false;
   private boolean DISABLE_REGISTRATION = false;
+  private boolean VALIDATE_REMOTE_USER_EMAIL_VERIFIED = false;
 
   private void populateLDAPCache() {
     KRB_AUTH = setVar(VARIABLE_KRB_AUTH, KRB_AUTH);
@@ -2851,6 +2854,9 @@ public class Settings implements Serializable {
   
     LDAP_GROUP_MAPPING_SYNC_INTERVAL = setLongVar(VARIABLE_LDAP_GROUP_MAPPING_SYNC_INTERVAL,
       LDAP_GROUP_MAPPING_SYNC_INTERVAL);
+  
+    VALIDATE_REMOTE_USER_EMAIL_VERIFIED =
+      setBoolVar(VARIABLE_VALIDATE_REMOTE_USER_EMAIL_VERIFIED, VALIDATE_REMOTE_USER_EMAIL_VERIFIED);
   }
 
   public synchronized String getKRBAuthStatus() {
@@ -2981,6 +2987,11 @@ public class Settings implements Serializable {
   public synchronized int getOAuthAccountStatus() {
     checkCache();
     return OAUTH_ACCOUNT_STATUS;
+  }
+  
+  public synchronized  boolean shouldValidateEmailVerified() {
+    checkCache();
+    return VALIDATE_REMOTE_USER_EMAIL_VERIFIED;
   }
 
   public synchronized String getVarLdapAccountStatus() {

@@ -41,6 +41,7 @@ import java.util.logging.Logger;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class RemoteUserGroupMapper {
   private static final Logger LOGGER = Logger.getLogger(RemoteUserGroupMapper.class.getName());
+  private static final String ANY_GROUP = "ANY_GROUP";
   private static final String GROUP_SEPARATOR = ",";
   private static final String MAPPING_SEPARATOR = "->";
   private static final String GROUP_MAPPING_SEPARATOR = ";";
@@ -89,10 +90,10 @@ public class RemoteUserGroupMapper {
   /**
    * Returns a list of local group names based on the group mapping in getMappingStr()
    *
-   * @param groups
+   * @param userGroups
    * @return
    */
-  public List<String> getMappedGroups(List<String> groups, RemoteUserType type) {
+  public List<String> getMappedGroups(List<String> userGroups, RemoteUserType type) {
     List<String> mappedGroups = new ArrayList<>();
     Map<String, List<String>> mappings;
     switch (type) {
@@ -106,10 +107,14 @@ public class RemoteUserGroupMapper {
       default:
         mappings = getGroupMappings("");
     }
-    if (mappings == null || mappings.isEmpty() || groups == null || groups.isEmpty()) {
+    if (mappings == null || mappings.isEmpty()) {
       return mappedGroups;
     }
-    for (String group : groups) {
+    addUnique(mappings.get(ANY_GROUP), mappedGroups);
+    if (userGroups == null || userGroups.isEmpty()) {
+      return mappedGroups;
+    }
+    for (String group : userGroups) {
       addUnique(mappings.get(group), mappedGroups);
     }
     return mappedGroups;
