@@ -4,6 +4,7 @@
 package io.hops.hopsworks.api.tags;
 
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -11,6 +12,7 @@ import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.exceptions.FeatureStoreTagException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.tag.TagType;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -38,6 +40,7 @@ import java.util.logging.Logger;
 @Path("/tags")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
+@ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN"})
 @Api(value = "Feature store tag")
 @Produces(MediaType.APPLICATION_JSON)
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -52,6 +55,7 @@ public class TagsResource {
   @ApiOperation(value = "Get all tags", response = TagsDTO.class)
   @GET
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response getAll(@Context SecurityContext sc, @Context UriInfo uriInfo,
     @BeanParam Pagination pagination, @BeanParam TagsBeanParam tagsBeanParam) {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
@@ -67,6 +71,7 @@ public class TagsResource {
   @GET
   @Path("{name}")
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo, @PathParam("name") String name)
     throws FeatureStoreTagException {
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.TAGS);
