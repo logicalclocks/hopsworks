@@ -41,6 +41,8 @@ package io.hops.hopsworks.common.jobs;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.common.util.SparkConfigurationUtil;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -91,12 +93,18 @@ public class JobController {
   private ExecutionController executionController;
   @EJB
   private HdfsUsersController hdfsUsersController;
-
+  @EJB
+  private Settings settings;
   
   private static final Logger LOGGER = Logger.getLogger(JobController.class.getName());
   
   public Jobs putJob(Users user, Project project, Jobs job, JobConfiguration config) throws JobException {
     try {
+      if(config.getJobType() == JobType.SPARK || config.getJobType() == JobType.PYSPARK) {
+        SparkConfigurationUtil sparkConfigurationUtil = new SparkConfigurationUtil();
+        SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)config;
+        sparkConfigurationUtil.validateExecutorMemory(sparkJobConfiguration.getExecutorMemory(), settings);
+      }
       job = jobFacade.put(user, project, config, job);
     } catch (IllegalStateException ise) {
       if (ise.getCause() instanceof JAXBException) {

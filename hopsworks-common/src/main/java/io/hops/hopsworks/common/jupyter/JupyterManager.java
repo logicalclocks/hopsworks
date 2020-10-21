@@ -17,6 +17,7 @@
 package io.hops.hopsworks.common.jupyter;
 
 import io.hops.hopsworks.common.dao.jupyter.config.JupyterDTO;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterProject;
 import io.hops.hopsworks.persistence.entity.jupyter.JupyterSettings;
@@ -30,7 +31,7 @@ import java.util.logging.Logger;
 public interface JupyterManager {
   
   JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings js, String allowOrigin) throws ServiceException;
+    JupyterSettings js, String allowOrigin) throws ServiceException, JobException;
   
   String getJupyterHome(String hdfsUser, Project project, String secret) throws ServiceException;
   

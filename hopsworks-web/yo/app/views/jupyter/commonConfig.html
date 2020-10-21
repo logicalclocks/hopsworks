@@ -37,7 +37,10 @@
 <div class="form-group">
     <label class="control-label col-sm-3" for="spark-exec-mem" uib-tooltip="Memory to allocate for the executors">Executor memory (MB): </label>
     <div class="col-sm-6">
-        <input type="number" class="form-control" id="spark-exec-mem" step="1" min="1024"
-               ng-model="sparkConfigCtrl.jobConfig['spark.executor.memory']">
+        <input type="number" class="form-control" id="spark-exec-mem" step="1"
+               ng-model="sparkConfigCtrl.jobConfig['spark.executor.memory']" ng-change="sparkConfigCtrl.validateExecutorMemory()">
+        <div ng-if="sparkConfigCtrl.jobConfig['spark.executor.memory'] != ''" style="color: #ff0000">
+            {{sparkConfigCtrl.executorMemoryWarning}}
+        </div>
     </div>
 </div>

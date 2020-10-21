@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.util;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -27,11 +28,13 @@ import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.common.util.templates.ConfigProperty;
 import io.hops.hopsworks.common.util.templates.ConfigReplacementPolicy;
+import io.hops.hopsworks.restutils.RESTCodes;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class SparkConfigurationUtil extends ConfigurationUtil {
   public Map<String, String> setFrameworkProperties(Project project, JobConfiguration jobConfiguration,
@@ -39,8 +42,11 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
                                                     Map<String, String> extraJavaOptions,
                                                     String kafkaBrokersString, String hopsworksRestEndpoint,
                                                     ServiceDiscoveryController serviceDiscoveryController)
-      throws IOException, ServiceDiscoveryException {
+          throws IOException, ServiceDiscoveryException, JobException {
     SparkJobConfiguration sparkJobConfiguration = (SparkJobConfiguration)jobConfiguration;
+
+    validateExecutorMemory(sparkJobConfiguration.getExecutorMemory(), settings);
+
     ExperimentType experimentType = sparkJobConfiguration.getExperimentType();
     DistributionStrategy distributionStrategy = sparkJobConfiguration.getDistributionStrategy();
     String userSparkProperties = sparkJobConfiguration.getProperties();
@@ -522,6 +528,19 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     // Merge system and user defined properties
     return HopsUtils.mergeHopsworksAndUserParams(sparkProps,
         validatedSparkProperties);
+  }
+
+  /**
+   * Checks provided executor memory if sufficient
+   * @param executorMemory
+   * @param settings
+   * @throws JobException
+   */
+  public void validateExecutorMemory(int executorMemory, Settings settings) throws JobException {
+    if(executorMemory < settings.getSparkExecutorMinMemory()) {
+      throw new JobException(RESTCodes.JobErrorCode.INSUFFICIENT_EXECUTOR_MEMORY, Level.SEVERE,
+              ". Executor memory should not be less than " +  settings.getSparkExecutorMinMemory());
+    }
   }
 
   private void addToSparkEnvironment(Map<String, ConfigProperty> sparkProps, String envName,
