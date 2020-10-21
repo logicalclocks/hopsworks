@@ -206,4 +206,13 @@ public class VariablesService {
     return Response.ok(fileNameRegexDTO).build();
   }
   
+  @GET
+  @Path("cloud")
+  @Produces(MediaType.APPLICATION_JSON)
+  @JWTNotRequired
+  public Response getCloud() {
+    RESTApiJsonResponse json = new RESTApiJsonResponse();
+    json.setSuccessMessage(settings.getCloudProvider());
+    return Response.ok().entity(json).build();
+  }
 }
