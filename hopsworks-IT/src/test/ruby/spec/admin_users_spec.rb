@@ -52,7 +52,7 @@ describe "On #{ENV['OS']}" do
       let(:user) { create_validated_user() }
 
       it "gets the list of all users" do
-        id = user[:id] 
+        id = user[:uid] 
         admin_get_users()
         expect_status(200)
         expect(json_body[:count]).to be > 0
@@ -60,7 +60,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "gets user by id" do
-        id = user[:id]
+        id = user[:uid]
         admin_get_user_by_id(id)
         expect_status(200)
         expect_json(id: id)
@@ -68,7 +68,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "updates user's status by id" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "DEACTIVATED_ACCOUNT"}
         admin_update_user(id, data)
         expect_status(200)
@@ -78,7 +78,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "updates user's max num projects by id" do
-        id = user[:id]
+        id = user[:uid]
         data = {maxNumProjects: 77}
         admin_update_user(id, data)
         expect_status(200)
@@ -88,7 +88,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "accepts a verified user by its id" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -100,7 +100,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "fails to accept a user with status different than verified" do 
-        id = user[:id]
+        id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -116,7 +116,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "rejects user" do
-        id = user[:id]
+        id = user[:uid]
         admin_reject_user(id)
         expect_status(204)
         admin_get_user_by_id(id)
@@ -131,7 +131,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "resends a confirmation email" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "NEW_MOBILE_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)
@@ -140,7 +140,7 @@ describe "On #{ENV['OS']}" do
       end
 
       it "fails to pend user with status other than new account" do
-        id = user[:id]
+        id = user[:uid]
         data = {status: "VERIFIED_ACCOUNT"}
         admin_update_user(id, data)
 	      expect_status(200)

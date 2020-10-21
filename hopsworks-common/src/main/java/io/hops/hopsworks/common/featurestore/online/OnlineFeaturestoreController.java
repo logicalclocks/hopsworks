@@ -60,7 +60,7 @@ import java.util.logging.Logger;
 public class OnlineFeaturestoreController {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreController.class.getName());
-  private static final String MYSQL_DRIVER = "com.mysql.jdbc.Driver";
+  private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
   
   @EJB
   private SecretsFacade secretsFacade;
@@ -108,7 +108,7 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
         Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
     }
-    jdbcString = settings.getFeaturestoreJdbcUrl() + databaseName;
+    jdbcString = settings.getFeaturestoreJdbcUrl() + databaseName + "?allowPublicKeyRetrieval=true&useSSL=false";
     try {
       return DriverManager.getConnection(jdbcString, dbUsername, password);
     } catch (SQLException e) {
