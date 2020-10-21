@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.cloud;
 
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.LastUpdatedContentSummary;
@@ -44,12 +45,15 @@ public class CloudStorageUsageReporter {
   @Timeout
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void reportStorageUsage() {
+    DistributedFileSystemOps dfso = null;
     try {
-      LastUpdatedContentSummary summary =
-          dfs.getDfsOps().getFilesystem().getLastUpdatedContentSummary(new Path("/"));
+      dfso = dfs.getDfsOps();
+      LastUpdatedContentSummary summary = dfso.getFilesystem().getLastUpdatedContentSummary(new Path("/"));
       cloudClient.sendStorageUsage(summary.getSpaceConsumed(), summary.getFileAndDirCount());
     } catch (IOException ex) {
       LOG.log(Level.SEVERE, "failded to send cloud storage usage report", ex);
+    } finally {
+      dfs.closeDfsClient(dfso);
     }
   }
 }

@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
+import io.hops.hopsworks.common.yarn.YarnClientWrapper;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import java.io.IOException;
@@ -237,10 +238,18 @@ public class CloudManager {
   private DecommissionStatus setAndGetDecommission(List<RemoveNodesCommand> commands,
       Map<String, CloudNode> workers) throws InterruptedException {
     Configuration conf = settings.getConfiguration();
-    YarnClient yarnClient = yarnClientService.getYarnClientSuper(conf).getYarnClient();
-    DistributedFileSystemOps dfsOps = dfsService.getDfsOps();
-    //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
-    return setAndGetDecommission(commands, workers, yarnClient, dfsOps, conf, caProxy, hostsController);
+    YarnClientWrapper yarnClientWrapper = null;
+    DistributedFileSystemOps dfsOps = null;
+    try {
+      dfsOps = dfsService.getDfsOps();
+      yarnClientWrapper = yarnClientService.getYarnClientSuper(conf);
+      //we pass yarnClient, dfsOps, caProxy and hostsController as argument to be able to mock them in testing
+      return setAndGetDecommission(commands, workers, yarnClientWrapper.getYarnClient(),
+          dfsOps, conf, caProxy, hostsController);
+    } finally {
+      dfsService.closeDfsClient(dfsOps);
+      yarnClientService.closeYarnClient(yarnClientWrapper);
+    }
   }
   
   @VisibleForTesting
