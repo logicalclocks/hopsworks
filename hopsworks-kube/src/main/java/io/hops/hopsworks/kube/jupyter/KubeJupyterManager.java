@@ -55,6 +55,7 @@ import io.hops.hopsworks.common.util.templates.jupyter.JupyterNotebookConfigTemp
 import io.hops.hopsworks.common.util.templates.jupyter.KernelTemplate;
 import io.hops.hopsworks.common.util.templates.jupyter.SparkMagicConfigTemplate;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.kube.common.KubeClientService;
 import io.hops.hopsworks.kube.common.KubeStereotype;
 import io.hops.hopsworks.kube.project.KubeProjectConfigMaps;
@@ -138,7 +139,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public JupyterDTO startJupyterServer(Project project, String secretConfig, String hdfsUser, Users user,
-    JupyterSettings jupyterSettings, String allowOrigin) throws ServiceException {
+    JupyterSettings jupyterSettings, String allowOrigin) throws ServiceException, JobException {
 
     JupyterPaths jupyterPaths = jupyterConfigFilesGenerator.generateJupyterPaths(project, hdfsUser, secretConfig);
     String kubeProjectUser = kubeClientService.getKubeDeploymentName(project, user);

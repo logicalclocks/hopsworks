@@ -421,7 +421,8 @@ public class RESTCodes {
     UNAUTHORIZED_EXECUTION_ACCESS(26, "This execution does not belong to a job of this project. ",
       Response.Status.FORBIDDEN),
     APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND),
-    JOB_PROGRAM_VERSIONING_FAILED(28, "Failed to version application program", Response.Status.INTERNAL_SERVER_ERROR);
+    JOB_PROGRAM_VERSIONING_FAILED(28, "Failed to version application program", Response.Status.INTERNAL_SERVER_ERROR),
+    INSUFFICIENT_EXECUTOR_MEMORY(29, "Insufficient executor memory provided.", Response.Status.BAD_REQUEST);
     private Integer code;
     private String message;
     private Response.StatusType respStatus;

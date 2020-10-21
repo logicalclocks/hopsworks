@@ -20,9 +20,9 @@
  */
 angular.module('hopsWorksApp')
     .controller('SparkConfigCtrl', ['$scope', '$routeParams', '$route',
-        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', '$location', '$timeout',
+        'growl', 'ModalService', '$interval', 'JupyterService', 'StorageService', 'VariablesService', '$location', '$timeout',
         function($scope, $routeParams, $route, growl, ModalService, $interval, JupyterService,
-            StorageService, $location, $timeout) {
+            StorageService, VariablesService, $location, $timeout) {
 
             var self = this;
 
@@ -40,6 +40,18 @@ angular.module('hopsWorksApp')
 
             self.experimentType = '';
             $scope.indextab = 0;
+
+            self.executorMemoryWarning = "";
+            //just set some default
+            self.MIN_EXECUTOR_MEMORY = 1024;
+
+            self.init = function () {
+                VariablesService.getVariable('spark_executor_min_memory')
+                    .then(function (success) {
+                        self.MIN_EXECUTOR_MEMORY = parseInt(success.data.successMessage);
+                    });
+            }
+            self.init();
 
             $scope.$watch('jobConfig', function (jobConfig, oldConfig) {
                 if (jobConfig) {
@@ -144,6 +156,10 @@ angular.module('hopsWorksApp')
                             self.archives.push(archives[i]);
                         }
                     }
+                }
+
+                if(self.jobConfig["spark.executor.memory"]) {
+                    self.validateExecutorMemory();
                 }
             };
 
@@ -452,6 +468,17 @@ angular.module('hopsWorksApp')
                   if(currentElemHeight < scrollHeight) {
                     element.style.height = scrollHeight + "px";
                   }
+            };
+
+            self.validateExecutorMemory = function () {
+                if(!self.jobConfig['spark.executor.memory']  ||
+                    (self.jobConfig['spark.executor.memory'] < self.MIN_EXECUTOR_MEMORY)) {
+                    self.executorMemoryWarning = "Executor memory should not be less than " + self.MIN_EXECUTOR_MEMORY + " MB";
+                    $scope.$parent.executorMemoryState({minExecutorMemory:self.MIN_EXECUTOR_MEMORY, hasEnoughMemory:false});
+                } else {
+                    self.executorMemoryWarning = "";
+                    $scope.$parent.executorMemoryState({minExecutorMemory:self.MIN_EXECUTOR_MEMORY, hasEnoughMemory:true});
+                }
             };
         }
     ]);

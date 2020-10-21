@@ -166,6 +166,7 @@ public class Settings implements Serializable {
       = "max_num_proj_per_user";
   private static final String VARIABLE_RESERVED_PROJECT_NAMES = "reserved_project_names";
   private static final String VARIABLE_HOPSWORKS_ENTERPRISE = "hopsworks_enterprise";
+  private static final String VARIABLE_SPARK_EXECUTOR_MIN_MEMORY = "spark_executor_min_memory";
   
   // HIVE configuration variables
   private static final String VARIABLE_HIVE_SUPERUSER = "hive_superuser";
@@ -768,6 +769,7 @@ public class Settings implements Serializable {
           MANAGED_DOCKER_REGISTRY);
 
       MAX_ENV_YML_BYTE_SIZE = setIntVar(VARIABLE_MAX_ENV_YML_BYTE_SIZE, MAX_ENV_YML_BYTE_SIZE);
+      SPARK_EXECUTOR_MIN_MEMORY = setIntVar(VARIABLE_SPARK_EXECUTOR_MIN_MEMORY, SPARK_EXECUTOR_MIN_MEMORY);
 
       cached = true;
     }
@@ -850,6 +852,12 @@ public class Settings implements Serializable {
   public synchronized boolean getHopsRpcTls() {
     checkCache();
     return HOPS_RPC_TLS.toLowerCase().equals("true");
+  }
+
+  //Spark executor minimum memory
+  public synchronized int getSparkExecutorMinMemory() {
+    checkCache();
+    return SPARK_EXECUTOR_MIN_MEMORY;
   }
 
   /**
@@ -974,7 +982,7 @@ public class Settings implements Serializable {
   public static final String SPARK_EXECUTOR_DOCKER_IMAGE = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_IMAGE";
   public static final String SPARK_EXECUTOR_DOCKER_MOUNTS = SPARK_EXECUTOR_ENV + "YARN_CONTAINER_RUNTIME_DOCKER_MOUNTS";
   public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK = "spark.hadoop.fs.permissions.umask-mode";
-  
+
   //nccl
   public static final String NCCL_SOCKET_NTHREADS = "NCCL_SOCKET_NTHREADS";
   public static final String NCCL_NSOCKS_PERTHREAD = "NCCL_NSOCKS_PERTHREAD";
@@ -1353,6 +1361,8 @@ public class Settings implements Serializable {
   public static final int SPARK_MIN_EXECS = 1;
   public static final int SPARK_MAX_EXECS = 2;
   public static final String SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT = "0007";
+  // Spark executor min memory
+  private int SPARK_EXECUTOR_MIN_MEMORY = 1024;
 
   //Flink constants
   public static final String FLINK_LOCRSC_FLINK_JAR = "flink.jar";
