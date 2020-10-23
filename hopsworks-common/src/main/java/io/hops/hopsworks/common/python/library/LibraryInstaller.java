@@ -396,10 +396,10 @@ public class LibraryInstaller {
         switch (cc.getInstallType()) {
           case CONDA:
             writer.write(anaconda_dir + "/bin/conda remove -y -n " +
-                settings.getCurrentCondaEnvironment() + " " + cc.getLib() + "\n");
+                settings.getCurrentCondaEnvironment() + " " + cc.getLib() + " || true\n");
             break;
           case PIP:
-            writer.write(anaconda_project_dir + "/bin/pip uninstall -y " + cc.getLib() + "\n");
+            writer.write(anaconda_project_dir + "/bin/pip uninstall -y " + cc.getLib() + " || true\n");
             break;
           case ENVIRONMENT:
           default:
