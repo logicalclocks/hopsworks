@@ -193,8 +193,6 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
           jupyterPaths.getCertificatesDir(),
           hdfsUser,
           token,
-          settings.getFlinkConfDir(),
-          settings.getSparkConfDir(),
           (DockerJobConfiguration)jupyterSettings.getDockerConfig(),
           nodePort,
           jupyterSettings.getMode().getValue(),
@@ -242,10 +240,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   }
 
   private List<Container> buildContainer(JupyterPaths jupyterPaths, String anacondaEnv, String pythonKernelName,
-      String secretDir, String certificatesDir, String hdfsUser, String token, String flinkConfDir,
-      String sparkConfDir, ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode,
-      boolean isGit, Project project, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
-
+      String secretDir, String certificatesDir, String hdfsUser, String token,
+      ResourceRequirements resourceRequirements, Integer nodePort, String jupyterMode, boolean isGit,
+      Project project, Map<String, String> filebeatEnv) throws ServiceDiscoveryException {
     String jupyterHome = jupyterPaths.getNotebookPath();
     String hadoopHome = settings.getHadoopSymbolicLinkDir();
     String hadoopConfDir = hadoopHome + "/etc/hadoop";
@@ -271,7 +268,8 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     environment.add(new EnvVarBuilder().withName("ANACONDA_ENV").withValue(anacondaEnv).build());
     environment.add(new EnvVarBuilder().withName("PYTHONHASHSEED").withValue("0").build());
     environment.add(new EnvVarBuilder().withName("IS_GIT").withValue(Boolean.toString(isGit)).build());
-  
+    environment.add(new EnvVarBuilder().withName("FLINK_LIB_DIR").withValue(settings.getFlinkLibDir()).build());
+
     List<Container> containers = new ArrayList<>();
     VolumeMount logMount = new VolumeMountBuilder()
       .withName("logs")
@@ -320,12 +318,12 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
         new VolumeMountBuilder()
           .withName(FLINK)
           .withReadOnly(true)
-          .withMountPath(flinkConfDir)
+          .withMountPath(settings.getFlinkConfDir())
           .build(),
         new VolumeMountBuilder()
           .withName(SPARK)
           .withReadOnly(true)
-          .withMountPath(sparkConfDir)
+          .withMountPath(settings.getSparkConfDir())
           .build(),
         logMount)
       .withPorts(
@@ -416,8 +414,9 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
   
   private Deployment buildDeployment(String name, String kubeProjectUser, JupyterPaths jupyterPaths, String anacondaEnv,
     String pythonKernelName, String secretDir, String certificatesDir, String hadoopUser, String token,
-    String flinkConfDir, String sparkConfDir, DockerJobConfiguration dockerConfig, Integer nodePort, String jupyterMode,
-    boolean isGit, Project project, Users user) throws ServiceException, ServiceDiscoveryException {
+    DockerJobConfiguration dockerConfig, Integer nodePort, String jupyterMode, boolean isGit, Project project,
+    Users user)
+    throws ServiceException, ServiceDiscoveryException {
 
     ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(dockerConfig);
   
@@ -432,8 +431,7 @@ public class KubeJupyterManager extends JupyterManagerImpl implements JupyterMan
     filebeatEnv.put("LOGSTASH", logstashAddr);
   
     List<Container> containers = buildContainer(jupyterPaths, anacondaEnv, pythonKernelName, secretDir, certificatesDir,
-      hadoopUser, token, flinkConfDir, sparkConfDir, resourceRequirements, nodePort, jupyterMode, isGit,
-        project, filebeatEnv);
+      hadoopUser, token, resourceRequirements, nodePort, jupyterMode, isGit, project, filebeatEnv);
     
     return new DeploymentBuilder()
       .withMetadata(new ObjectMetaBuilder()

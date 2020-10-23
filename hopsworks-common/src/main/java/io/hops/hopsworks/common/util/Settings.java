@@ -1019,6 +1019,7 @@ public class Settings implements Serializable {
   }
 
   private final String FLINK_CONF_DIR = "conf";
+  // Remember to change this in docker-images as well
   private String FLINK_DIR = "/srv/hops/flink";
 
   public synchronized String getFlinkDir() {
@@ -1029,6 +1030,13 @@ public class Settings implements Serializable {
   public String getFlinkConfDir() {
     String flinkDir = getFlinkDir();
     return flinkDir + File.separator + FLINK_CONF_DIR + File.separator;
+  }
+  
+  private final String FLINK_LIB_DIR = "lib";
+  
+  public String getFlinkLibDir() {
+    String flinkDir = getFlinkDir();
+    return flinkDir + File.separator + FLINK_LIB_DIR + File.separator;
   }
 
   private final String FLINK_CONF_FILE = "flink-conf.yaml";
@@ -1459,6 +1467,8 @@ public class Settings implements Serializable {
                   + " Error: " + result.getStderr());
             }
             HADOOP_CLASSPATH_GLOB = result.getStdout();
+          } else {
+            HADOOP_CLASSPATH_GLOB = classpathGlob;
           }
         }
       }

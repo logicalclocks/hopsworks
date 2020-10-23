@@ -64,6 +64,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -186,7 +187,6 @@ public class KubeExecutionController extends AbstractExecutionController impleme
             secretDir,
             certificatesDir,
             hdfsUser,
-            settings.getFlinkConfDir(),
             pythonJobConfiguration.getAppPath(),
             execution.getArgs(),
             pythonJobConfiguration,
@@ -220,10 +220,10 @@ public class KubeExecutionController extends AbstractExecutionController impleme
   }
   
   private Job buildJob(String name, String secretsName, String kubeProjectUser, String anacondaEnv,
-                       String secretsDir, String certificatesDir, String hadoopUser, String flinkConfDir,
+                       String secretsDir, String certificatesDir, String hadoopUser,
                        String appPath, String args, PythonJobConfiguration pythonJobConfiguration,
                        Execution execution, Project project)
-      throws ServiceException, ServiceDiscoveryException {
+    throws ServiceException, ServiceDiscoveryException, IOException {
   
     ResourceRequirements resourceRequirements = kubeClientService.buildResourceRequirements(pythonJobConfiguration);
     Map<String, String> jobEnv = new HashMap<>();
@@ -261,7 +261,9 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         Paths.get(certificatesDir, hadoopUser + Settings.TRUSTSTORE_SUFFIX).toString());
     jobEnv.put( "SECRETS_DIR", secretsDir);
     jobEnv.put( "CERTS_DIR", certificatesDir);
-    jobEnv.put("FLINK_CONF_DIR", flinkConfDir);
+    jobEnv.put("FLINK_CONF_DIR", settings.getFlinkConfDir());
+    jobEnv.put("FLINK_LIB_DIR", settings.getFlinkLibDir());
+    jobEnv.put("HADOOP_CLASSPATH_GLOB", settings.getHadoopClasspathGlob());
     jobEnv.put("SPARK_CONF_DIR", settings.getSparkConfDir());
     jobEnv.put("ANACONDA_ENV", anacondaEnv);
     jobEnv.put("APP_PATH", appPath);
@@ -277,7 +279,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
     filebeatEnv.put("EXECUTION", executionId);
     filebeatEnv.put("PROJECT", project.getName().toLowerCase());
     
-    List<Container> containers = buildContainers(secretsDir, certificatesDir, flinkConfDir, resourceRequirements,
+    List<Container> containers = buildContainers(secretsDir, certificatesDir, resourceRequirements,
       jobEnv, filebeatEnv, project);
   
     //Selector is disabled due to https://github.com/kubernetes/kubernetes/issues/26202 and
@@ -364,7 +366,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
       .build();
   }
   
-  private List<Container> buildContainers(String secretDir, String certificatesDir, String flinkConfDir,
+  private List<Container> buildContainers(String secretDir, String certificatesDir,
     ResourceRequirements resourceRequirements, Map<String, String> jobEnv, Map<String, String> filebeatEnv,
     Project project) throws ServiceDiscoveryException {
   
@@ -402,7 +404,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         new VolumeMountBuilder()
           .withName(FLINK)
           .withReadOnly(true)
-          .withMountPath(flinkConfDir)
+          .withMountPath(settings.getFlinkConfDir())
           .build(),
         new VolumeMountBuilder()
           .withName(SPARK)
