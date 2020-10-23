@@ -38,6 +38,8 @@ public class JupyterNotebookConfigTemplateBuilder {
   private String apiKey;
   private String gitBackend;
   private String flinkConfDirectory;
+  private String flinkLibDirectory;
+  private String hadoopClasspathGlob;
   private Boolean requestsVerify;
   private String domainCATruststore;
   private String serviceDiscoveryDomain = "consul";
@@ -210,6 +212,23 @@ public class JupyterNotebookConfigTemplateBuilder {
     return this;
   }
   
+  public String getFlinkLibDirectory() {
+    return flinkLibDirectory;
+  }
+  
+  public JupyterNotebookConfigTemplateBuilder setFlinkLibDirectory(String flinkLibDirectory) {
+    this.flinkLibDirectory = flinkLibDirectory;
+    return this;
+  }
+  
+  public String getHadoopClasspathGlob() {
+    return hadoopClasspathGlob;
+  }
+  
+  public JupyterNotebookConfigTemplateBuilder setHadoopClasspathGlob(String hadoopClasspathGlob) {
+    this.hadoopClasspathGlob = hadoopClasspathGlob;
+    return this;
+  }
   public Boolean getRequestsVerify() {
     return requestsVerify;
   }
