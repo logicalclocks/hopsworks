@@ -40,6 +40,8 @@ angular.module('hopsWorksApp')
             $scope.activeForm;
             $scope.indextab = 0;
 
+            self.tensorflowVersion = "";
+
             self.condaResultsMsgShowing = false;
 
             self.condaResultsMsg = "";
@@ -127,6 +129,15 @@ angular.module('hopsWorksApp')
 
             self.getMachineCount = function (row) {
                 return 1;
+            };
+
+            var getInstalledTensorFlowVersion = function () {
+              VariablesService.getVariable('tensorflow_version')
+                .then(function (success) {
+                  self.tensorflowVersion = success.data.successMessage;
+                }, function (error) {
+                  growl.error(error, {title: "Failed to get installed TensorFlow version", ttl: 10000});
+              });
             };
 
             self.getStatus = function (row) {
@@ -239,6 +250,7 @@ angular.module('hopsWorksApp')
             });
 
             self.init = function () {
+                getInstalledTensorFlowVersion();
                 VariablesService.getCondaDefaultRepo(self.projectId).then(
                     function (success) {
                         self.condaChannel = success.data;
@@ -589,6 +601,12 @@ angular.module('hopsWorksApp')
 
             self.uninstall = function (lib) {
                 self.uninstalling[lib.library] = true;
+
+                if(lib.library === 'tensorflow' && lib.version === self.tensorflowVersion) {
+                    growl.warning("You are uninstalling TensorFlow " + self.tensorflowVersion + " which is the supported version for this installation, if you encounter issues please install it again"
+                     , {title: 'Uninstalling TensorFlow', ttl: 20000});
+                }
+
                 PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, lib.library).then(
                     function (success) {
                         self.getInstalled();
