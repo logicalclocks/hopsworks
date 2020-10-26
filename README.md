@@ -163,6 +163,33 @@ cd scripts
 ```
 
 
+## Setup Testing VM
+1. Install ruby
+  * Ubuntu comes with ruby 2.5.1 preinstalled correctly
+  * Centos - run lines 66-73 https://github.com/logicalclocks/karamel-chef/blob/master/recipes/test.rb#L66
+2. Ensure correct PATH:
+  * Ubuntu - export variables - lines 143-145 - https://github.com/logicalclocks/karamel-chef/blob/master/recipes/test.rb#L143
+  * Centos - export variables - lines 200-203 - https://github.com/logicalclocks/karamel-chef/blob/master/recipes/test.rb#L200
+3. Clone hopsworks-ee repository
+`git clone https://${GIT_TOKEN}@github.com/${GIT_USER}/hopsworks-ee hopsworks`
+4. Setup ruby env:
+  * `cd hopsworks/hopsworks-IT/src/test/ruby`
+  * `cp .env.example .env
+  * .env setup - PROJECT_DIR=/home/vagrant/hopsworks 
+  * .env setup - OS=centos or ubuntu as necessary
+5. 
+  * Setup as root
+    * `sudo su`
+    * `bundle install`
+  * If step above fails
+    * ubuntu - `apt-get install bundler`
+    * centos - `gem install bundler`
+  * Rerun step above
+6. To run a single test
+  * `rspec ./spec/some_spec.rb:60`
+7. If test uses hdfs and it fails on copy files 
+  * `chmod 705 /home/vagrant`
+
 ## Testing Guide
 The following steps must be taken to run Hopsworks integration tests:
 
