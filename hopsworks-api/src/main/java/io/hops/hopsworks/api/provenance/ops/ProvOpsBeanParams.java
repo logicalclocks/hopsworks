@@ -15,7 +15,7 @@
  */
 package io.hops.hopsworks.api.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.ops.ProvOpsParams;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsReturnType;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.DefaultValue;
@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 import java.util.List;
 import java.util.Set;
 
-public class ProvOpsBeanParams implements ProvOpsParams {
+public class ProvOpsBeanParams {
   @QueryParam("filter_by")
   @ApiParam(value = "ex. filter_by=FILE_NAME:file1, filter_by=PROJECT_I_ID:id1, filter_by=FILE_I_ID:id1, " +
     "filter_by=FILE_NAME:file1, filter_by=FILE_NAME_LIKE:fil, " +
@@ -41,9 +41,9 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     allowMultiple = true)
   private List<String> fileOpsSortBy;
   
-  @QueryParam("expand")
-  @ApiParam(value = "ex. expand=APP_STATE&expand=DIR_TREE", allowableValues = "expand=appState&expand=DIR_TREE")
-  private Set<String> expansions;
+  @QueryParam("prov_expand")
+  @ApiParam(value = "ex. prov_expand=APP_STATE")
+  private Set<String> provExpansions;
   
   @QueryParam("app_filter_by")
   @ApiParam(value = "app_filter_by=APP_ID:appId, app_filter_by=APP_STATE:state",
@@ -58,7 +58,7 @@ public class ProvOpsBeanParams implements ProvOpsParams {
   
   @QueryParam("return_type")
   @DefaultValue("LIST")
-  private ProvOpsParams.ReturnType returnType;
+  private ProvOpsReturnType returnType;
   
   public ProvOpsBeanParams(
     @QueryParam("filter_by") Set<String> fileOpsFilterBy,
@@ -66,11 +66,11 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     @QueryParam("expand") Set<String> expansions,
     @QueryParam("app_filter_by") Set<String> appExpansionParams,
     @QueryParam("aggregations") Set<String> aggregations,
-    @QueryParam("return_type") @DefaultValue("LIST") ProvOpsParams.ReturnType returnType) {
+    @QueryParam("return_type") @DefaultValue("LIST") ProvOpsReturnType returnType) {
     
     this.fileOpsFilterBy = fileOpsFilterBy;
     this.fileOpsSortBy = fileOpsSortBy;
-    this.expansions = expansions;
+    this.provExpansions = expansions;
     this.appExpansionParams = appExpansionParams;
     this.aggregations = aggregations;
     this.returnType = returnType;
@@ -78,7 +78,6 @@ public class ProvOpsBeanParams implements ProvOpsParams {
   
   public ProvOpsBeanParams() {}
   
-  @Override
   public Set<String> getFileOpsFilterBy() {
     return fileOpsFilterBy;
   }
@@ -87,7 +86,6 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     this.fileOpsFilterBy = fileOpsFilterBy;
   }
   
-  @Override
   public List<String> getFileOpsSortBy() {
     return fileOpsSortBy;
   }
@@ -96,16 +94,14 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     this.fileOpsSortBy = fileOpsSortBy;
   }
   
-  @Override
-  public Set<String> getExpansions() {
-    return expansions;
+  public Set<String> getProvExpansions() {
+    return provExpansions;
   }
   
-  public void setExpansions(Set<String> expansions) {
-    this.expansions = expansions;
+  public void setProvExpansions(Set<String> provExpansions) {
+    this.provExpansions = provExpansions;
   }
   
-  @Override
   public Set<String> getAppExpansionParams() {
     return appExpansionParams;
   }
@@ -114,7 +110,6 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     this.appExpansionParams = appExpansionParams;
   }
   
-  @Override
   public Set<String> getAggregations() {
     return aggregations;
   }
@@ -123,12 +118,11 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     this.aggregations = aggregations;
   }
   
-  @Override
-  public ProvOpsParams.ReturnType getReturnType() {
+  public ProvOpsReturnType getReturnType() {
     return returnType;
   }
   
-  public void setReturnType(ProvOpsParams.ReturnType returnType) {
+  public void setReturnType(ProvOpsReturnType returnType) {
     this.returnType = returnType;
   }
 }

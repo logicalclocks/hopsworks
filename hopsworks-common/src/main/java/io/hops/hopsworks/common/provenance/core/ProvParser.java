@@ -384,12 +384,12 @@ public class ProvParser {
     return keyj.toString();
   }
   
-  public enum Expansions {
+  public enum ElasticExpansions {
     APP("APP");
     
     public final String queryParamName;
     
-    Expansions(String queryParamName) {
+    ElasticExpansions(String queryParamName) {
       this.queryParamName = queryParamName;
     }
     
@@ -420,15 +420,15 @@ public class ProvParser {
     }
   }
   
-  public static void withExpansions(Set<Expansions> expansions, Set<String> params)
+  public static void withExpansions(Set<ElasticExpansions> expansions, Set<String> params)
     throws ProvenanceException {
     for(String param : params) {
       try {
-        expansions.add(ProvParser.Expansions.valueOf(param));
+        expansions.add(ElasticExpansions.valueOf(param));
       } catch (NullPointerException | IllegalArgumentException e) {
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
           "param " + param + " not supported - supported params:"
-            + EnumSet.allOf(ProvParser.Expansions.class),
+            + EnumSet.allOf(ElasticExpansions.class),
           "exception extracting FilterBy param", e);
       }
     }

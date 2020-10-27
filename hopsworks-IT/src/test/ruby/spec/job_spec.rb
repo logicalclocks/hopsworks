@@ -119,7 +119,7 @@ describe "On #{ENV['OS']}" do
       it "should fail to create or update spark job if executor memory is less than the minimum" do
           create_sparktour_job(@project, job_spark_1, "jar", nil)
           #get job, change args and config params and put it.
-          get_job(@project[:id], job_spark_1, nil)
+          get_job(@project[:id], job_spark_1)
           config = json_body[:config]
           config[:'spark.executor.memory'] = '1023'
           json_result = create_sparktour_job(@project, job_spark_1, "jar", config)

@@ -46,9 +46,8 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
   private ProvParser.DocSubType docSubType;
   private String mlId;
   private ProvAppStateDTO appState;
-  /** upgraded by hopsworks - not in elastic */
-  private Integer jobId;
-  private String jobName;
+  
+  private String aggregation;
   
   public ProvOpsDTO() {}
   
@@ -238,19 +237,11 @@ public class ProvOpsDTO extends RestDTO<ProvOpsDTO> {
     return this;
   }
   
-  public Integer getJobId() {
-    return jobId;
+  public String getAggregation() {
+    return aggregation;
   }
   
-  public void setJobId(Integer jobId) {
-    this.jobId = jobId;
-  }
-  
-  public String getJobName() {
-    return jobName;
-  }
-  
-  public void setJobName(String jobName) {
-    this.jobName = jobName;
+  public void setAggregation(String aggregation) {
+    this.aggregation = aggregation;
   }
 }
