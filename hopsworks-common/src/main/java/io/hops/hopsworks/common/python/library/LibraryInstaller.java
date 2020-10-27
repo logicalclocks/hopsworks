@@ -21,9 +21,11 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.dao.python.CondaCommandFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.python.commands.CommandsController;
 import io.hops.hopsworks.common.python.environment.DockerRegistryMngr;
 import io.hops.hopsworks.common.python.environment.EnvironmentController;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
@@ -31,12 +33,14 @@ import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
+import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
-import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 
@@ -58,8 +62,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -107,6 +111,10 @@ public class LibraryInstaller {
   private ManagedExecutorService executorService;
   @EJB
   private DistributedFsService dfs;
+  @EJB
+  private SecretsController secretsController;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   
   @PostConstruct
   public void init() {
@@ -247,15 +255,7 @@ public class LibraryInstaller {
           // Materialize YML
           String projectEnvYml = "environment.yml";
           // Copy from hdfs
-          DistributedFileSystemOps dfso = null;
-          try {
-            dfso = dfs.getDfsOps();
-            dfso.copyToLocal(cc.getEnvironmentYml(), baseDir + File.separator + projectEnvYml);
-          } finally {
-            if (dfso != null) {
-              dfso.close();
-            }
-          }
+          copyCondaArtifactToLocal(cc.getEnvironmentYml(), baseDir + File.separator + projectEnvYml);
           // Mount in Dockerfile
           writer.write("RUN rm -f /root/.condarc");
           writer.newLine();
@@ -292,11 +292,7 @@ public class LibraryInstaller {
         project.setDockerImage(initialDockerImage);
         projectFacade.update(project);
         projectFacade.flushEm();
-        Collection<PythonDep> envDeps = libraryController.
-          listLibraries(projectUtils.getFullDockerImageName(project, false));
-        project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-          RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
-        libraryController.addPythonDepsForProject(project, envDeps);
+        environmentController.updateInstalledDependencies(project);
       }
     } catch (ServiceException | ProjectException e) {
       LOG.log(Level.SEVERE, "Failed to persist python deps", e);
@@ -306,7 +302,7 @@ public class LibraryInstaller {
   }
 
   private void installLibrary(CondaCommands cc)
-    throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {
+      throws IOException, ServiceException, ServiceDiscoveryException, ProjectException, UserException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
@@ -318,6 +314,7 @@ public class LibraryInstaller {
       FileUtils.copyFileToDirectory(condarc, baseDir);
       FileUtils.copyDirectoryToDirectory(pip, baseDir);
       File dockerFile = new File(baseDir, "dockerFile_" + cc.getProjectId().getName());
+      String apiToken = null;
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(dockerFile))) {
         writer.write("# syntax=docker/dockerfile:experimental");
         writer.newLine();
@@ -336,10 +333,43 @@ public class LibraryInstaller {
             writer.write(anaconda_project_dir + "/bin/pip install --upgrade " +
                 cc.getLib() + "==" + cc.getVersion());
             break;
+          case EGG:
+            String eggName = cc.getLib();
+            String localEggPath = baseDir + File.separator + eggName;
+            copyCondaArtifactToLocal(cc.getArg(), localEggPath);
+            writer.write("--mount=type=bind,source="+eggName+",target=/root/" + eggName + " ");
+            writer.write(anaconda_project_dir + "/bin/easy_install --upgrade /root/" + eggName);
+            break;
+          case WHEEL:
+            String wheelName = cc.getLib();
+            String localWheelPath = baseDir + File.separator + wheelName;
+            copyCondaArtifactToLocal(cc.getArg(), localWheelPath);
+            writer.write("--mount=type=bind,source="+wheelName+",target=/root/" + wheelName + " ");
+            writer.write(anaconda_project_dir + "/bin/pip install --upgrade /root/" + wheelName);
+            break;
+          case GIT:
+            if(cc.getGitBackend() != null && cc.getGitApiKeyName() != null) {
+              apiToken = this.secretsController.get
+                  (cc.getUserId(), cc.getGitApiKeyName()).getPlaintext();
+              URL repoUrl = new URL(cc.getArg());
+              if(cc.getGitBackend().equals(GitBackend.GITHUB)) {
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+https://"
+                    + apiToken + ":x-oauth-basic@" + repoUrl.getHost() + repoUrl.getPath());
+              } else if(cc.getGitBackend().equals(GitBackend.GITLAB)) {
+                writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+https://oauth2:"
+                    + apiToken  + "@" + repoUrl.getHost() + repoUrl.getPath());
+              }
+            } else {
+              writer.write(anaconda_project_dir + "/bin/pip install --upgrade git+" + cc.getArg());
+            }
+            break;
           case ENVIRONMENT:
           default:
             throw new UnsupportedOperationException("install type unknown: " + cc.getInstallType());
         }
+        //Installing faulty libraries like broken .egg files can cause the list operation to fail
+        //As we find library names and versions using that command we need to make sure it does not break
+        writer.write(" && " + anaconda_dir + "/bin/conda list -n theenv");
       }
       
       String nextDockerImageName = getNextDockerImageName(project);
@@ -358,26 +388,38 @@ public class LibraryInstaller {
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (processResult.getExitCode() != 0) {
-        String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
-            + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
-        throw new IOException(errorMsg);
+        //Avoid leeking the apitoken in the error logs by replacing it with the name
+        if(cc.getInstallType().equals(CondaInstallType.GIT) && !Strings.isNullOrEmpty(apiToken)) {
+          String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode();
+          String stdout = processResult.getStdout();
+          if(stdout != null) {
+            errorMsg = errorMsg + " out: " + stdout.replaceAll(apiToken, cc.getGitApiKeyName() + "_token");
+          }
+          String stderr = processResult.getStderr();
+          if(stderr != null) {
+            errorMsg = errorMsg + "\n err: " + stderr.replaceAll(apiToken, cc.getGitApiKeyName() + "_token");
+          }
+          errorMsg = errorMsg + "||\n";
+          throw new IOException(errorMsg);
+        } else {
+          String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
+              + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
+          throw new IOException(errorMsg);
+        }
       } else {
-        
         project.setDockerImage(nextDockerImageName);
         projectFacade.update(project);
         projectFacade.flushEm();
+        environmentController.updateInstalledDependencies(project);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
-    project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
-      RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
-    Collection<PythonDep> envDeps =
-      libraryController.listLibraries(projectUtils.getFullDockerImageName(project, false));
-    libraryController.addPythonDepsForProject(project, envDeps);
   }
   
-  private void uninstallLibrary(CondaCommands cc) throws IOException, ServiceDiscoveryException, ProjectException {
+  private void uninstallLibrary(CondaCommands cc)
+      throws IOException, ServiceDiscoveryException, ProjectException, ServiceException {
+
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     try {
@@ -433,13 +475,24 @@ public class LibraryInstaller {
         project.setDockerImage(nextDockerImageName);
         projectFacade.update(project);
         projectFacade.flushEm();
+        environmentController.updateInstalledDependencies(project);
       }
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
   }
 
-
+  private void copyCondaArtifactToLocal(String source, String destPath) throws IOException {
+    DistributedFileSystemOps dfso = null;
+    try {
+      dfso = dfs.getDfsOps();
+      dfso.copyToLocal(source, destPath);
+    } finally {
+      if (dfso != null) {
+        dfso.close();
+      }
+    }
+  }
 
   public void exportLibraries(CondaCommands cc)
     throws IOException, ServiceException, ServiceDiscoveryException, ProjectException {

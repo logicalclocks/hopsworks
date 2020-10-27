@@ -13,13 +13,18 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
 
-public enum CondaInstallType {
-  ENVIRONMENT,
+package io.hops.hopsworks.common.python.library;
+
+public enum PackageSource {
   CONDA,
   PIP,
   EGG,
   WHEEL,
-  GIT
+  GIT;
+
+  public static PackageSource fromString(String param) {
+    return valueOf(param.toUpperCase());
+  }
+
 }

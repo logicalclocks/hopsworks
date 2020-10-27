@@ -73,10 +73,16 @@ module CondaHelper
     end
   end
 
+  def upload_wheel
+      chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
+      chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/lark_parser-0.10.1-py2.py3-none-any.whl",
+                      "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl", @user[:username],
+                      "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def upload_yml
-    chmod_local_dir("#{ENV['PROJECT_DIR']}".gsub("/hopsworks", ""), 701, false)
-    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
-    copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.7.yml",
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/python3.7.yml",
                     "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", @user[:username],
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
@@ -133,8 +139,16 @@ module CondaHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries"
   end
 
-  def install_library(projectId, version, lib, package_manager, lib_version, channel)
-    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}?package_manager=#{package_manager}&version=#{lib_version}&channel=#{channel}"
+  def install_library(projectId, version, lib, package_source, lib_version, channel, dependency_url=nil)
+
+    lib_spec = {
+      "version": lib_version,
+      "packageSource": package_source,
+      "channelUrl": channel,
+      "dependencyUrl": dependency_url
+    }
+
+    post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}", lib_spec
   end
 
   def search_library(projectId, version, package_manager, lib, conda_channel="")
