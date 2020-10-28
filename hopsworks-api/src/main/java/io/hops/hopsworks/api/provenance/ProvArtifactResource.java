@@ -41,6 +41,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
 @Logged
@@ -73,9 +74,9 @@ public class ProvArtifactResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
   public Response status(
-    @BeanParam
-      ProvUsageBeanParams params,
-    @Context UriInfo uriInfo)
+    @BeanParam ProvUsageBeanParams params,
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc)
     throws ProvenanceException, GenericException {
     ProvArtifactUsageParentDTO status = usageBuilder.buildAccessible(uriInfo, userProject, targetEndpoint, artifactId,
       params.getUsageType());

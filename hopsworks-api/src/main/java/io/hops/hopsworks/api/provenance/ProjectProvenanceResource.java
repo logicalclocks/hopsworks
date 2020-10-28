@@ -149,10 +149,10 @@ public class ProjectProvenanceResource {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
-    @BeanParam
-      ProvStateBeanParams params,
+    @BeanParam ProvStateBeanParams params,
     @BeanParam Pagination pagination,
-    @Context HttpServletRequest req) throws ProvenanceException {
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) throws ProvenanceException {
     ProvStateDTO result = stateBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
@@ -184,7 +184,8 @@ public class ProjectProvenanceResource {
   public Response getLinks(
     @BeanParam ProvLinksBeanParams params,
     @BeanParam Pagination pagination,
-    @Context HttpServletRequest req) throws ProvenanceException, GenericException {
+    @Context HttpServletRequest req,
+    @Context SecurityContext sc) throws ProvenanceException, GenericException {
     ProvLinksDTO result = linksBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
   }
@@ -199,9 +200,9 @@ public class ProjectProvenanceResource {
     @QueryParam("artifact_id") String artifactId,
     @QueryParam("endpoint_id") Integer endpointId,
     @QueryParam("artifact_type") DatasetAccessType accessType,
-    @BeanParam
-      ProvUsageBeanParams params,
-    @Context UriInfo uriInfo) throws ProvenanceException, GenericException {
+    @BeanParam ProvUsageBeanParams params,
+    @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws ProvenanceException, GenericException {
     if(artifactId == null) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "artifactId id cannot be null");
