@@ -24,5 +24,5 @@ import javax.ejb.TransactionAttributeType;
 @Stateless
 @CommunityStereotype
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProvOpsBuilderImpl implements ProvOpsBuilderIface {
+public class ProvUsageBuilderImpl implements ProvUsageBuilderIface {
 }

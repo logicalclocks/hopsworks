@@ -22,13 +22,10 @@ import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
 
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 public interface ProvOpsBuilderIface {
-  default ProvOpsDTO build(Project project, ProvOpsParams opsParams, PaginationParams pagParams)
+  default ProvOpsDTO build(Project project, ProvOpsParams opsParams, PaginationParams pagParams, boolean withJobInfo)
     throws ProvenanceException, GenericException {
     throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
   }

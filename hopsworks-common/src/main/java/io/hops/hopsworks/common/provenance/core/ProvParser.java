@@ -96,7 +96,7 @@ public class ProvParser {
     
     @Override
     public String toString() {
-      return name().toLowerCase();
+      return name().toUpperCase();
     }
     
     public DocSubType getPart() {
@@ -113,6 +113,25 @@ public class ProvParser {
           return DATASET_PART;
         case HIVE:
           return HIVE_PART;
+        default:
+          return this;
+      }
+    }
+  
+    public DocSubType upgradeIfPart() {
+      switch(this) {
+        case FEATURE_PART:
+          return FEATURE;
+        case TRAINING_DATASET_PART:
+          return TRAINING_DATASET;
+        case MODEL_PART:
+          return MODEL;
+        case EXPERIMENT_PART:
+          return EXPERIMENT;
+        case DATASET_PART:
+          return DATASET;
+        case HIVE_PART:
+          return HIVE;
         default:
           return this;
       }

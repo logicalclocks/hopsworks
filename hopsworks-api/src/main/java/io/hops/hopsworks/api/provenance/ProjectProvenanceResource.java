@@ -20,6 +20,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
 import io.hops.hopsworks.api.provenance.ops.ProvOpsBeanParams;
+import io.hops.hopsworks.api.provenance.ops.ProvUsageParams;
 import io.hops.hopsworks.api.provenance.state.ProvStateBeanParams;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -28,6 +29,10 @@ import io.hops.hopsworks.common.provenance.core.dto.ProvDatasetDTO;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.provenance.ops.ProvLinksBuilderIface;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsBuilderIface;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsParams;
+import io.hops.hopsworks.common.provenance.ops.ProvUsageBuilderIface;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvArtifactUsageParentDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateBuilder;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
@@ -58,6 +63,8 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,11 +87,17 @@ public class ProjectProvenanceResource {
   private ProvOpsBuilderIface opsBuilder;
   @Inject
   private ProvLinksBuilderIface linksBuilder;
+  @Inject
+  private ProvUsageBuilderIface usageBuilder;
   
   private Project project;
   
   public void setProjectId(Integer projectId) {
     this.project = projectFacade.find(projectId);
+  }
+  
+  public void setProject(Project project) {
+    this.project = project;
   }
   
   @GET
@@ -141,7 +154,7 @@ public class ProjectProvenanceResource {
     @BeanParam ProvOpsBeanParams params,
     @BeanParam Pagination pagination,
     @Context HttpServletRequest req) throws ProvenanceException, GenericException {
-    ProvOpsDTO result = opsBuilder.build(project, params, pagination);
+    ProvOpsDTO result = opsBuilder.build(project, params, pagination, false);
     return Response.ok().entity(result).build();
   }
   
@@ -159,5 +172,34 @@ public class ProjectProvenanceResource {
     @Context HttpServletRequest req) throws ProvenanceException, GenericException {
     ProvLinksDTO result = linksBuilder.build(project, params, pagination);
     return Response.ok().entity(result).build();
+  }
+  
+  @GET
+  @Path("usage")
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
+  public Response usage(
+    @QueryParam("artifact_id") String artifactId,
+    @BeanParam ProvUsageParams params,
+    @Context HttpServletRequest req) throws ProvenanceException, GenericException {
+    if(artifactId == null) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "artifactId id cannot be null");
+    }
+    ProvOpsBeanParams opsParams = getUsageOpsParams(artifactId);
+    ProvArtifactUsageParentDTO status = usageBuilder.build(project, artifactId, opsParams, params.getUsageType());
+    return Response.ok().entity(status).build();
+  }
+  
+  private ProvOpsBeanParams getUsageOpsParams(String mlId) {
+    ProvOpsBeanParams params = new ProvOpsBeanParams();
+    params.setFileOpsFilterBy(new HashSet<>(Arrays.asList(
+      "ML_ID:" + mlId
+    )));
+    params.setAggregations(new HashSet<>(Arrays.asList(ProvOpsElasticComm.Aggregations.APP_USAGE.toString())));
+    params.setReturnType(ProvOpsParams.ReturnType.AGGREGATIONS);
+    return params;
   }
 }

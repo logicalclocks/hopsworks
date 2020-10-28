@@ -76,6 +76,8 @@ public class ProvOpsBeanParams implements ProvOpsParams {
     this.returnType = returnType;
   }
   
+  public ProvOpsBeanParams() {}
+  
   @Override
   public Set<String> getFileOpsFilterBy() {
     return fileOpsFilterBy;

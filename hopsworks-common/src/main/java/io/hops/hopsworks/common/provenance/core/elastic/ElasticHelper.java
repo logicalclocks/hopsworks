@@ -79,14 +79,6 @@ public class ElasticHelper {
     };
   }
   
-  public static CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> sortBy(
-    String field, SortOrder order) {
-    return (SearchRequest sr) -> {
-      sr.source().sort(field, order);
-      return sr;
-    };
-  }
-  
   public static CheckedSupplier<SearchRequest, ProvenanceException> baseSearchRequest(String index, int pageSize) {
     return () -> {
       SearchRequest sr = new SearchRequest(index);
@@ -164,6 +156,17 @@ public class ElasticHelper {
     }
     return query;
   }
+  
+  public static CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> sortBy(
+    List<Pair<ProvParser.Field, SortOrder>> sortBy) {
+    return (SearchRequest sr) -> {
+      for (Pair<ProvParser.Field, SortOrder> sb : sortBy) {
+        sr.source().sort(SortBuilders.fieldSort(sb.getValue0().elasticFieldName()).order(sb.getValue1()));
+      }
+      return sr;
+    };
+  }
+  
   
   public static boolean indexNotFound(Throwable t) {
     if(t instanceof IndexNotFoundException) {

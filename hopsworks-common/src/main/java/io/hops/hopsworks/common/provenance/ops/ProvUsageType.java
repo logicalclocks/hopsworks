@@ -15,14 +15,11 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-@Stateless
-@CommunityStereotype
-@TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProvOpsBuilderImpl implements ProvOpsBuilderIface {
+public enum ProvUsageType {
+  READ_LAST,
+  WRITE_LAST,
+  READ_CURRENT,
+  WRITE_CURRENT,
+  READ_HISTORY,
+  WRITE_HISTORY
 }

@@ -13,16 +13,29 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.provenance.ops;
+package io.hops.hopsworks.api.provenance.ops;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.common.provenance.ops.ProvUsageType;
+import io.swagger.annotations.ApiParam;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.QueryParam;
+import java.util.Set;
 
-@Stateless
-@CommunityStereotype
-@TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProvOpsBuilderImpl implements ProvOpsBuilderIface {
+public class ProvUsageParams {
+  @QueryParam("type")
+  @ApiParam(allowMultiple = true)
+  private Set<ProvUsageType> usageType;
+  
+  public ProvUsageParams(
+    @QueryParam("type") Set<ProvUsageType> usageType) {
+    this.usageType = usageType;
+  }
+  
+  public Set<ProvUsageType> getUsageType() {
+    return usageType;
+  }
+  
+  public void setUsageType(Set<ProvUsageType> usageType) {
+    this.usageType = usageType;
+  }
 }

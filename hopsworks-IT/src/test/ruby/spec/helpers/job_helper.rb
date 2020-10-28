@@ -173,7 +173,7 @@ module JobHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs#{query}"
   end
 
-  def get_job(project_id, job_name, query)
+  def get_job(project_id, job_name, query: "")
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/jobs/#{job_name}/#{query}"
   end
 
@@ -201,5 +201,16 @@ module JobHelper
 
   def job_does_not_exist()
     response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
+  end
+
+  def job_exists(project_id, job_name, query: "")
+    get_job(project_id, job_name, query: query)
+    if response.code == resolve_status(200, response.code)
+      true
+    elsif response.code == resolve_status(404, response.code) && json_body[:errorCode] == 130009
+      false
+    else
+      expect_status_details(200)
+    end
   end
 end

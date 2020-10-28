@@ -429,23 +429,59 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
-  def get_featuregroup(project_id, featurestore_id, name, version)
-    get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{name}?version=#{version}"
-    pp "get #{get_featuregroup_endpoint}" if defined?(@debugOpt) && @debugOpt
-    result = get get_featuregroup_endpoint
-    expect_status(200)
-    parsed_result = JSON.parse(result)
-    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
-    parsed_result
+  def get_featuregroup(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    fs_project_id = project_id if fs_project_id.nil?
+    fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
+    get_fg_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{fs_id}/featuregroups/#{name}?version=#{version}"
+    pp "get #{get_fg_endpoint}" if defined?(@debugOpt) && @debugOpt
+    result = get get_fg_endpoint
+    JSON.parse(result)
   end
 
-  def get_trainingdataset(project_id, featurestore_id, name, version)
-    get_trainingdataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/trainingdatasets/#{name}?version=#{version}"
+  def get_featuregroup_checked(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    result = get_featuregroup(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
+    expect_status_details(200)
+    result
+  end
+
+  def featuregroup_exists(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    get_featuregroup(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
+    if response.code == resolve_status(200, response.code)
+      true
+    elsif response.code == resolve_status(400, response.code)  && json_body[:errorCode] == 270009
+      false
+    else
+      expect_status_details(200)
+    end
+  end
+
+  def featuregroup_usage(project_id, fg_id, fs_id: nil, fs_project_id: nil, type: [])
+    fs_project_id = project_id if fs_project_id.nil?
+    fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
+    usage_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{fs_id}/featuregroups/#{fg_id}/provenance/usage"
+    query = ''
+    type.each do |t|
+      query = query + '&type=' + t;
+    end
+    query[0] = '?'
+    pp "#{usage_endpoint}#{query}" if defined?(@debugOpt) && @debugOpt
+    result = get "#{usage_endpoint}#{query}"
+    expect_status_details(200)
+    JSON.parse(result)
+  end
+
+  def get_trainingdataset(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    fs_project_id = project_id if fs_project_id.nil?
+    fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
+    get_trainingdataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{fs_id}/trainingdatasets/#{name}?version=#{version}"
     pp "get #{get_trainingdataset_endpoint}" if defined?(@debugOpt) && @debugOpt
-    result = get get_trainingdataset_endpoint
+    get get_trainingdataset_endpoint
+  end
+
+  def get_trainingdataset_checked(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    result = get_trainingdataset(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
     expect_status(200)
     parsed_result = JSON.parse(result)
-    pp parsed_result if (defined?(@debugOpt)) && @debugOpt
     parsed_result[0]
   end
 
@@ -461,5 +497,31 @@ module FeaturestoreHelper
     pp "delete #{delete_trainingdataset_endpoint}" if defined?(@debugOpt) && @debugOpt
     delete delete_trainingdataset_endpoint
     expect_status_details(200)
+  end
+
+  def trainingdataset_exists(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)
+    get_trainingdataset(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
+    if response.code == resolve_status(200, response.code)
+      true
+    elsif response.code == resolve_status(400, response.code) && json_body[:errorCode] == 270012
+      false
+    else
+      expect_status_details(200)
+    end
+  end
+
+  def trainingdataset_usage(project_id, td_id, fs_id: nil, fs_project_id: nil, type: [])
+    fs_project_id = project_id if fs_project_id.nil?
+    fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
+    usage_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{fs_id}/trainingdatasets/#{td_id}/provenance/usage"
+    query = ''
+    type.each do |t|
+      query = query + '&type=' + t;
+    end
+    query[0] = '?'
+    pp "#{usage_endpoint}#{query}" if defined?(@debugOpt) && @debugOpt
+    result = get "#{usage_endpoint}#{query}"
+    expect_status_details(200)
+    JSON.parse(result)
   end
 end

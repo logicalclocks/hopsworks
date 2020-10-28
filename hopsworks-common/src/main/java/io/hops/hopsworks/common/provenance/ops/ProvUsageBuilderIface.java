@@ -15,14 +15,19 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvArtifactUsageParentDTO;
+import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import java.util.Set;
+import java.util.logging.Level;
 
-@Stateless
-@CommunityStereotype
-@TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProvOpsBuilderImpl implements ProvOpsBuilderIface {
+public interface ProvUsageBuilderIface {
+  default ProvArtifactUsageParentDTO build(Project project, String artifactId, ProvOpsParams params,
+    Set<ProvUsageType> type)
+    throws ProvenanceException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+  }
 }
