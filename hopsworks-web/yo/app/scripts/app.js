@@ -175,7 +175,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
@@ -185,7 +185,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
@@ -195,7 +195,7 @@ angular.module('hopsWorksApp', [
                         resolve: {
                             auth: ['$q','AuthGuardService',
                                 function ($q, AuthGuardService) {
-                                    return AuthGuardService.guardRegister($q);
+                                    return AuthGuardService.guardSession($q);
                                 }]
                         }
                     })
