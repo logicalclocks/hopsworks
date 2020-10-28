@@ -214,7 +214,30 @@ angular.module('hopsWorksApp')
                     return $http.delete('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/featuregroups/" + featuregroup.id + "/tags/" + tagName);
                 },
-
+                getFeaturegroupUsage: function(projectId, featurestore, fg, usageTypes) {
+                    var query = '';
+                    usageTypes.forEach(function(usageType) {
+                        if(query === '') {
+                            query = '?type=' + usageType;
+                        } else {
+                            query = query + '&type=' + usageType;
+                        }
+                    });
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + '/featuregroups/' + fg.id + '/provenance/usage' + query);
+                },
+                getTrainingDatasetUsage: function(projectId, featurestore, td, usageTypes) {
+                    var query = '';
+                    usageTypes.forEach(function(usageType)  {
+                        if(query === '') {
+                            query = '?type=' + usageType;
+                        } else {
+                            query = query + '&type=' + usageType;
+                        }
+                    });
+                    return $http.get('/api/project/' + projectId + '/featurestores/' +
+                        featurestore.featurestoreId + '/trainingdatasets/' + td.id + '/provenance/usage' + query);
+                },
                 getTrainingDatasetTags: function(projectId, featurestore, td) {
                     return $http.get('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/trainingdatasets/" + td.id + "/tags");
@@ -382,7 +405,6 @@ angular.module('hopsWorksApp')
 
                 getTdQuery: function(projectId, featureStore, td) {
                     return $http.get("/api/project/" + projectId + "/featurestores/" + featureStore.featurestoreId + "/trainingdatasets/" + td.id + "/query");
-                },
-            
+                }
             };
           }]);

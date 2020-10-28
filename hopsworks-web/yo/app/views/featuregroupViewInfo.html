@@ -89,6 +89,24 @@
                     </td>
                 </tr>
 
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Last Read
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.readLast.timestamp | date:'medium'}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table">
+                    <td style="font-weight:700;" class="fs-table">
+                        Last Modified
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.writeLast.timestamp | date:'medium'}}
+                    </td>
+                </tr>
+
                 <tr class="fs-table" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'cachedFeaturegroupDTO'">
                     <td style="font-weight:700;" class="fs-table">
                         Default Storage 
@@ -295,56 +313,28 @@
              style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
-                   uib-tooltip='Hopsworks Jobs that update the feature group in some way'></i>
+                   uib-tooltip='Hopsworks Jobs that update the Feature Group in some way'></i>
                 <span style="margin-left: 20px">
                     Jobs
                 </span>
             </div>
 
-            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.jobs.length === 0">
-                No jobs have been linked to this feature group
+            <h3 style="margin-left: 10px" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.writeHistory.length === 0">
+                No jobs have written to this Feature Group
             </h3>
 
-            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.jobs.length > 0">
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.writeHistory.length > 0">
                 <thead style="border:none;" class="fs-table">
                 <th class="fs-table" style="width: 50%">Job Name</th>
-                <th class="fs-table" style="width: 50%">Last Computed</th>
+                <th class="fs-table" style="width: 25%">Status</th>
+                <th class="fs-table" style="width: 25%">Date</th>
                 </thead>
                 <tbody class="fs-table">
-                <tr class="fs-table" data-ng-repeat="job in featuregroupViewInfoCtrl.selectedFeaturegroup.jobs">
-                    <td class="fs-table">
-                            <span style="cursor:pointer;color:black;text-decoration:underline;"
-                                  ng-click="featuregroupViewInfoCtrl.launchJob(job.jobName); $event.stopPropagation();">
-                                {{job.jobName}}
-                            </span>
-                    </td>
-                    <td class="fs-table">
-                        <div ng-if="job.lastComputed === null">
-                            -
-                        </div>
-                        <div ng-if="job.lastComputed !== null">
-                      <span
-                              ng-if="job.jobStatus === 'Undefined'"
-                              style="color: #0066bb ">
-                        {{job.lastComputed | date:'medium'}}
-                      </span>
-                            <span
-                                    ng-if="job.jobStatus === 'Succeeded'"
-                                    style="color: #00A000 ">
-                        {{job.lastComputed | date:'medium'}}
-                      </span>
-                            <span
-                                    ng-if="job.jobStatus === 'Failed'"
-                                    style="color: #880000 ">
-                        {{job.lastComputed | date:'medium'}}
-                      </span>
-                            <span
-                                    ng-if="job.jobStatus === 'Killed'"
-                                    style="color: #880000 ">
-                        {{job.lastComputed | date:'medium'}}
-                      </span>
-                        </div>
-                    </td>
+                <tr class="fs-table"
+                    data-ng-repeat="usage in featuregroupViewInfoCtrl.selectedFeaturegroup.writeHistory">
+                    <td class="fs-table"> <span> {{usage.job.name}} </span> </td>
+                    <td class="fs-table"> <span> {{usage.execution.state}} </span> </td>
+                    <td class="fs-table"> <span> {{usage.execution.submissionTime | date:'medium'}} </span> </td>
                 </tr>
                 </tbody>
             </table>
@@ -387,7 +377,7 @@
         </div>
 
         <div uib-accordion-group class="panel-default"
-             style="overflow-x: auto; display: table;">
+             style="overflow-x: auto">
             <div uib-accordion-heading>
                 <i class="fa fa-info-circle" tooltip-placement="auto left"
                    uib-tooltip='The Feature Group Schema'></i>

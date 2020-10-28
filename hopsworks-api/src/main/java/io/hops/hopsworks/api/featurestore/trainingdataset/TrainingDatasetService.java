@@ -26,6 +26,8 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.ProvArtifactResource;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.audit.logger.LogLevel;
@@ -36,14 +38,18 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -80,6 +86,7 @@ import javax.ws.rs.core.UriInfo;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
@@ -109,6 +116,10 @@ public class TrainingDatasetService {
   private StatisticsResource statisticsResource;
   @EJB
   private FsQueryBuilder fsQueryBuilder;
+  @Inject
+  private ProvArtifactResource provenanceResource;
+  @EJB
+  private DatasetController datasetController;
 
   private Project project;
   private Featurestore featurestore;
@@ -504,6 +515,23 @@ public class TrainingDatasetService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
           TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
     }
+  }
+  
+  @Path("/{trainingDatasetId}/provenance")
+  @Logged(logLevel = LogLevel.OFF)
+  public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
+    throws FeaturestoreException, GenericException {
+    String tdName = featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+    Dataset targetEndpoint;
+    try {
+      targetEndpoint = datasetController.getByName(featurestore.getProject(), tdName);
+    } catch (DatasetException ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
+    }
+    this.provenanceResource.setContext(project, targetEndpoint);
+    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+    this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
+    return provenanceResource;
   }
 }
 

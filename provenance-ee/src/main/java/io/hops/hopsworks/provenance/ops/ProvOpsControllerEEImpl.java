@@ -4,6 +4,8 @@
 package io.hops.hopsworks.provenance.ops;
 
 import com.lambdista.util.Try;
+import io.hops.hopsworks.common.provenance.ops.ProvLinksParamBuilder;
+import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.provenance.app.ProvAppController;
 import io.hops.hopsworks.common.provenance.app.ProvAppHelper;
 import io.hops.hopsworks.common.provenance.app.dto.ProvAppStateDTO;
@@ -15,6 +17,10 @@ import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
 import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
+import io.hops.hopsworks.common.provenance.ops.ProvLinks;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.common.provenance.state.ProvStateParamBuilder;
@@ -25,6 +31,7 @@ import io.hops.hopsworks.common.provenance.util.functional.CheckedFunction;
 import io.hops.hopsworks.common.provenance.util.functional.CheckedSupplier;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ElasticException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -53,9 +60,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public class ProvOpsController {
-  private final static Logger LOGGER = Logger.getLogger(ProvOpsController.class.getName());
+@EnterpriseStereotype
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
+  private final static Logger LOGGER = Logger.getLogger(ProvOpsControllerEEImpl.class.getName());
   
   @EJB
   private Settings settings;
@@ -68,18 +76,19 @@ public class ProvOpsController {
   
   public ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException {
-    if(!params.aggregations.isEmpty()) {
+    if(!params.getAggregations().isEmpty()) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "aggregations currently only allowed with count");
     }
-    if(params.pagination == null || params.pagination.getValue0() == null || params.pagination.getValue1() == null) {
+    if(params.getPagination() == null
+      || params.getPagination().getValue0() == null || params.getPagination().getValue1() == null) {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.UNSUPPORTED, Level.INFO,
         "all searches should be paginated");
     }
   
     ProvOpsDTO fileOps = provFileOpsBase(project.getInode().getId(),
-        params.fileOpsFilterBy, params.fileOpsSortBy,
-        params.pagination.getValue0(), params.pagination.getValue1());
+        params.getFileOpsFilterBy(), params.getFileOpsSortBy(),
+        params.getPagination().getValue0(), params.getPagination().getValue1());
     
     if (params.hasAppExpansion()) {
       //If withAppStates, update params based on appIds of items files and do a appState index query.
@@ -91,7 +100,7 @@ public class ProvOpsController {
         }
       }
       Map<String, Map<Provenance.AppState, ProvAppStateElastic>> appExps
-        = appCtrl.provAppState(params.appStateFilter);
+        = appCtrl.provAppState(params.getAppStateFilter());
       Iterator<ProvOpsDTO> fileOpIt = fileOps.getItems().iterator();
       while (fileOpIt.hasNext()) {
         ProvOpsDTO fileOp = fileOpIt.next();
@@ -110,19 +119,20 @@ public class ProvOpsController {
   public ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException {
     return provFileOpsCount(project.getInode().getId(),
-      params.fileOpsFilterBy, params.aggregations);
+      params.getFileOpsFilterBy(), params.getAggregations());
   }
   
   public ProvOpsDTO provFileOpsCount(Long projectIId,
     Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
-    Set<ProvOpsElastic.Aggregations> aggregations)
+    Set<ProvOpsElasticComm.Aggregations> aggregations)
     throws ProvenanceException {
     
-    Map<ProvOpsElastic.Aggregations, ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
+    Map<ProvOpsElasticComm.Aggregations,
+      ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
     List<AggregationBuilder> aggBuilders = new ArrayList<>();
-    for(ProvOpsElastic.Aggregations aggregation : aggregations) {
-      aggParsers.put(aggregation, ProvOpsElastic.getAggregationParser(aggregation));
-      aggBuilders.add(ProvOpsElastic.getAggregationBuilder(aggregation));
+    for(ProvOpsElasticComm.Aggregations aggregation : aggregations) {
+      aggParsers.put(aggregation, ProvOpsElasticEE.getAggregationParser(aggregation));
+      aggBuilders.add(ProvOpsElasticEE.getAggregationBuilder(aggregation));
     }
     
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
@@ -132,7 +142,7 @@ public class ProvOpsController {
         .andThen(ElasticHelper.withAggregations(aggBuilders));
     SearchRequest request = srF.get();
     
-    Pair<Long, Map<ProvOpsElastic.Aggregations, List>> result;
+    Pair<Long, Map<ProvOpsElasticComm.Aggregations, List>> result;
     try {
       result = client.searchCount(request, aggParsers);
     } catch (ElasticException e) {
@@ -142,6 +152,56 @@ public class ProvOpsController {
     ProvOpsDTO container = new ProvOpsDTO();
     container.setCount(result.getValue0());
     return container;
+  }
+  
+  public ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException {
+    if(params.getAggregations().size() > 1) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
+        "currently multiple aggregations in one request are not supported");
+    }
+    Map<ProvOpsElasticComm.Aggregations, List> aggregations = provFileOpsAggs(project.getInode().getId(),
+      params.getFileOpsFilterBy(), params.getAggregations());
+    ProvOpsDTO allAggregations = new ProvOpsDTO();
+    List<ProvOpsDTO> aggregationItems = new ArrayList<>();
+    allAggregations.setItems(aggregationItems);
+    for(Map.Entry<ProvOpsElasticComm.Aggregations, List> agg : aggregations.entrySet()) {
+      ProvOpsDTO aggregation = new ProvOpsDTO();
+      aggregation.setAggregation(agg.getKey().toString());
+      aggregation.setItems(agg.getValue());
+      aggregationItems.add(aggregation);
+    }
+    return allAggregations;
+  }
+  
+  public Map<ProvOpsElasticComm.Aggregations, List> provFileOpsAggs(Long projectIId,
+    Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
+    Set<ProvOpsElasticComm.Aggregations> aggregations)
+    throws ProvenanceException {
+    
+    Map<ProvOpsElasticComm.Aggregations,
+      ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
+    List<AggregationBuilder> aggBuilders = new ArrayList<>();
+    for(ProvOpsElasticComm.Aggregations aggregation : aggregations) {
+      aggParsers.put(aggregation, ProvOpsElasticEE.getAggregationParser(aggregation));
+      aggBuilders.add(ProvOpsElasticEE.getAggregationBuilder(aggregation));
+    }
+    
+    CheckedSupplier<SearchRequest, ProvenanceException> srF =
+      ElasticHelper.baseSearchRequest(
+        settings.getProvFileIndex(projectIId), 0)
+        .andThen(filterByOpsParams(fileOpsFilters))
+        .andThen(ElasticHelper.withAggregations(aggBuilders));
+    SearchRequest request = srF.get();
+    
+    Pair<Long, Map<ProvOpsElasticComm.Aggregations, List>> result;
+    try {
+      result = client.searchCount(request, aggParsers);
+    } catch (ElasticException e) {
+      String msg = "provenance - elastic query problem";
+      throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
+    }
+    return result.getValue1();
   }
   
   private Optional<String> getAppId(ProvOpsDTO fileOp) {
@@ -203,8 +263,8 @@ public class ProvOpsController {
     HandlerFactory.AppIdMlIdMap linkHandlerFactory = new HandlerFactory.AppIdMlIdMap();
     ProvLinksDTO.Builder inLinks;
     ProvLinksDTO.Builder outLinks;
-    if(params.inArtifactDefined) {
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.inFilterBy, linkHandlerFactory));
+    if(params.isInArtifactDefined()) {
+      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
       if(inLinks.getAppLinks().isEmpty()) {
         //if the artifacts (in) were not used in any application, there will not be any out artifacts of interest
         return new ProvLinksDTO();
@@ -213,14 +273,14 @@ public class ProvOpsController {
        * if an app was not defined in the query, we refine step 2 with appIds where the artifacts defined by in query
        * were used as source
        */
-      if(!params.appIdDefined) {
+      if(!params.isAppIdDefined()) {
         for (Map.Entry<String, ProvLinksDTO> app : inLinks.getAppLinks().entrySet()) {
           if(!app.getValue().getIn().isEmpty()) {
-            params.outFilterByField(ProvLinksParser.FieldsPF.APP_ID, app.getKey());
+            params.outFilterByField(ProvLinks.FieldsPF.APP_ID, app.getKey());
           }
         }
       }
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.outFilterBy, linkHandlerFactory));
+      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
       if(outLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
@@ -228,9 +288,9 @@ public class ProvOpsController {
       if(filterAlive) {
         outAlive = getLinksAlive(project, splitOutLinks(outLinks));
       }
-      return mergeLinks(inLinks, outLinks, null, outAlive, params.fullLink);
-    } else if(params.outArtifactDefined) {
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.outFilterBy, linkHandlerFactory));
+      return mergeLinks(inLinks, outLinks, null, outAlive, params.isFullLink());
+    } else if(params.isOutArtifactDefined()) {
+      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
       if(outLinks.getAppLinks().isEmpty()) {
         //if the artifacts (out) were not generated in any application, there will not be any in artifacts of interest
         return new ProvLinksDTO();
@@ -239,14 +299,14 @@ public class ProvOpsController {
        * if an app was not defined in the query, we refine step 2 with appIds where the artifacts defined by out query
        * were generated
        */
-      if(!params.appIdDefined) {
+      if(!params.isAppIdDefined()) {
         for (Map.Entry<String, ProvLinksDTO> app : outLinks.getAppLinks().entrySet()) {
           if(!app.getValue().getIn().isEmpty()) {
-            params.inFilterByField(ProvLinksParser.FieldsPF.APP_ID, app.getKey());
+            params.inFilterByField(ProvLinks.FieldsPF.APP_ID, app.getKey());
           }
         }
       }
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.inFilterBy, linkHandlerFactory));
+      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
       if(inLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
@@ -254,13 +314,13 @@ public class ProvOpsController {
       if(filterAlive) {
         inAlive = getLinksAlive(project, splitInLinks(inLinks));
       }
-      return mergeLinks(inLinks, outLinks, inAlive, null, params.fullLink);
-    } else if(params.appIdDefined){
-      inLinks = provInLinks(provLinks(project.getInode().getId(), params.inFilterBy, linkHandlerFactory));
+      return mergeLinks(inLinks, outLinks, inAlive, null, params.isFullLink());
+    } else if(params.isAppIdDefined()){
+      inLinks = provInLinks(provLinks(project.getInode().getId(), params.getInFilterBy(), linkHandlerFactory));
       if(inLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
-      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.outFilterBy, linkHandlerFactory));
+      outLinks = provOutLinks(provLinks(project.getInode().getId(), params.getOutFilterBy(), linkHandlerFactory));
       if(outLinks.getAppLinks().isEmpty()) {
         return new ProvLinksDTO();
       }
@@ -270,7 +330,7 @@ public class ProvOpsController {
         inAlive = getLinksAlive(project, splitInLinks(inLinks));
         outAlive = getLinksAlive(project, splitOutLinks(outLinks));
       }
-      return mergeLinks(inLinks, outLinks, inAlive, outAlive, params.fullLink);
+      return mergeLinks(inLinks, outLinks, inAlive, outAlive, params.isFullLink());
     } else {
       throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
         "query too vague - please define at least one of APP_ID, IN_ARTIFACT, OUT_ARTIFACT",

@@ -19,6 +19,7 @@ import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.ProvParser;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
+import org.elasticsearch.search.sort.SortOrder;
 import org.javatuples.Pair;
 
 import java.util.EnumSet;
@@ -109,7 +110,7 @@ public class ProvAParser {
     return Pair.with(field, val);
   }
   
-  public static ProvParser.Field extractField(String val) throws ProvenanceException {
+  public static ProvAParser.Field extractField(String val) throws ProvenanceException {
     try {
       return Field.valueOf(val.toUpperCase());
     } catch(NullPointerException | IllegalArgumentException e) {
@@ -119,5 +120,21 @@ public class ProvAParser {
         "sort param" + val + " not supported - supported:" + supported,
         "exception extracting SortBy param", e);
     }
+  }
+  
+  public static Pair<ProvParser.Field, SortOrder> extractSort(String param) throws ProvenanceException {
+    String rawSortField;
+    String rawSortOrder;
+    if (param.contains(":")) {
+      int aux = param.indexOf(':');
+      rawSortField = param.substring(0, aux);
+      rawSortOrder = param.substring(aux+1);
+    } else {
+      rawSortField = param;
+      rawSortOrder = "ASC";
+    }
+    Field field = extractField(rawSortField);
+    SortOrder sortOrder = ProvParser.extractSortOrder(rawSortOrder);
+    return Pair.with(field, sortOrder);
   }
 }

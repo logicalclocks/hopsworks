@@ -29,6 +29,7 @@ describe "On #{ENV['OS']}" do
   describe 'provenance state notebook - 1 project' do
     def prov_run_job(project, job_name)
       start_execution(project[:id], job_name)
+      expect_status(201)
       execution_id = json_body[:id]
       app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
       wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
@@ -37,10 +38,9 @@ describe "On #{ENV['OS']}" do
 
     #check that the job create the 2 featuregroups and the training dataset
     def check_job_success(project, fg1_name, fg2_name, td_name)
-      fs_id = get_featurestore_id(project[:id])
-      get_featuregroup(project[:id], fs_id, fg1_name, 1)
-      get_featuregroup(project[:id], fs_id, fg2_name, 1)
-      get_trainingdataset(project[:id], fs_id, td_name, 1)
+      get_featuregroup(project[:id], fg1_name)
+      get_featuregroup(project[:id], fg2_name)
+      get_trainingdataset_checked(project[:id], td_name)
     end
 
     def check_prov_states(project)

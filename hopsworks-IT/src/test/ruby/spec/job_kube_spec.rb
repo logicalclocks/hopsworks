@@ -20,7 +20,7 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail" do
-        get_job(@project[:id], 1, nil)
+        get_job(@project[:id], 1)
         expect_json(errorCode: 200003)
         expect_status(401)
       end
@@ -42,12 +42,12 @@ describe "On #{ENV['OS']}" do
       end
       it "should get a single python job" do
         create_python_job(@project, job_python_1, "py")
-        get_job(@project[:id], job_python_1, nil)
+        get_job(@project[:id], job_python_1)
         expect_status(200)
       end
       it "should get python job dto with href" do
         create_python_job(@project, job_python_1, "py")
-        get_job(@project[:id], job_python_1, nil)
+        get_job(@project[:id], job_python_1)
         expect_status(200)
         #validate href
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jobs/" + job_python_1

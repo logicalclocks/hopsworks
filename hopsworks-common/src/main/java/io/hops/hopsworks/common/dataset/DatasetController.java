@@ -551,6 +551,9 @@ public class DatasetController {
   
   public Dataset getDatasetByInodeId(Long inodeId) {
     Inode inode = inodes.findById(inodeId);
+    if(inode == null) {
+      return null;
+    }
     return datasetFacade.findByInode(inode);
   }
   
@@ -575,6 +578,19 @@ public class DatasetController {
       return null;
     }
     return getByProjectAndInode(currentProject, dsInode);
+  }
+  
+  public Dataset getByName(Project project, String dsName) throws DatasetException {
+    String nativeDatasetPath = Utils.getProjectPath(project.getName()) + dsName;
+    return getByProjectAndFullPath(project, nativeDatasetPath);
+  }
+  
+  public Dataset getByProjectAndInodeId(Project project, Long dsInodeId) throws DatasetException {
+    Inode inode = inodes.findById(dsInodeId);
+    if(inode == null) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DATASET_NOT_FOUND, Level.FINE);
+    }
+    return getByProjectAndInode(project, inode);
   }
   
   public Dataset getByProjectAndInode(Project project, Inode inode) {

@@ -43,7 +43,7 @@ describe "On #{ENV['OS']}" do
 
       it "should have created an example feature engineering job when the tour was started" do
         project = get_project
-        get_job(project.id, get_featurestore_tour_job_name, nil)
+        get_job(project.id, get_featurestore_tour_job_name)
         parsed_json = JSON.parse(response.body)
         expect_status(200)
         expect(parsed_json["name"] == get_featurestore_tour_job_name).to be true

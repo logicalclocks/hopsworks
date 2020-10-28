@@ -138,6 +138,10 @@ public class DatasetBuilder {
     return dto;
   }
   
+  public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Dataset dataset) {
+    return build(uriInfo, resourceRequest, dataset.getProject(), dataset, null, null, false);
+  }
+  
   public DatasetDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Dataset dataset,
     String parentPath, Users dirOwner, boolean expandSharedWith) {
     DatasetDTO dto = new DatasetDTO();

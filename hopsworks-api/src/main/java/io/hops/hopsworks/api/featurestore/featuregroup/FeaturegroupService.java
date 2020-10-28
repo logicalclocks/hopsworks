@@ -25,6 +25,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
@@ -41,6 +42,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -115,6 +117,8 @@ public class FeaturegroupService {
   private FeatureGroupDetailsResource featureGroupDetailsResource;
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private ProvArtifactResource provenanceResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -628,6 +632,17 @@ public class FeaturegroupService {
     this.statisticsResource.setFeaturestore(featurestore);
     this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
+  }
+  
+  @Path("/{featureGroupId}/provenance")
+  @Logged(logLevel = LogLevel.OFF)
+  public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
+    throws FeaturestoreException {
+    Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
+    this.provenanceResource.setContext(project, targetEndpoint);
+    Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
+    this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
+    return provenanceResource;
   }
 }
 

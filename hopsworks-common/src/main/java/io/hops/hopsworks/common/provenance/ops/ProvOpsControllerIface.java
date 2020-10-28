@@ -15,20 +15,32 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.core.PaginationParams;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
+import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.restutils.RESTCodes;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import java.util.logging.Level;
 
-public interface ProvLinksBuilderIface {
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  default ProvLinksDTO build(Project project, ProvLinksParams linksParams, PaginationParams pagParams)
+public interface ProvOpsControllerIface {
+  default ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+  }
+  
+  default ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+  }
+  
+  default ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
+    throws ProvenanceException, GenericException {
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+  }
+  
+  default ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
     throws ProvenanceException, GenericException {
     throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
   }

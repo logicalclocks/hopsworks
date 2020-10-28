@@ -211,6 +211,7 @@ angular.module('hopsWorksApp')
                 self.getSourceFGLinks(self.selectedTrainingDataset.name, self.selectedTrainingDataset.version);
                 self.getExperimentsLinks(self.selectedTrainingDataset.name, self.selectedTrainingDataset.version);
                 self.fetchQuery();
+                self.getUsage();
             };
 
             $scope.$on('trainingDatasetSelected', function (event, args) {
@@ -470,4 +471,15 @@ angular.module('hopsWorksApp')
                     }
                 )
             };
+
+            self.getUsage = function() {
+                FeaturestoreService.getTrainingDatasetUsage(self.projectId, self.featurestore, self.selectedTrainingDataset, ['READ_LAST', 'WRITE_LAST', 'READ_CURRENT', 'WRITE_CURRENT', 'WRITE_HISTORY']).then(
+                    function(success) {
+                        self.selectedTrainingDataset.readLast = success.data.readLast;
+                        self.selectedTrainingDataset.writeLast = success.data.writeLast;
+                        self.selectedTrainingDataset.readCurrent = success.data.readCurrent;
+                        self.selectedTrainingDataset.writeCurrent = success.data.writeCurrent;
+                        self.selectedTrainingDataset.writeHistory = success.data.writeHistory;
+                    }, self.errorPrint);
+            }
         }]);

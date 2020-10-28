@@ -13,33 +13,29 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.api.provenance.ops;
+package io.hops.hopsworks.api.provenance.app;
 
 import io.swagger.annotations.ApiParam;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
+import java.util.List;
 import java.util.Set;
 
-public class ProvLinksBeanParams {
+public class ProvAppBeanParams {
   @QueryParam("filter_by")
-  @ApiParam(value = "ex filter_by=APP_ID:app1, filter_by=IN_ARTIFACT:mnist_1, filter_by=OUT_ARTIFACT:mnist_1",
-    allowMultiple = true)
+  @ApiParam(allowMultiple = true)
   private Set<String> filterBy;
-  @DefaultValue("false")
-  @QueryParam("only_apps")
-  private boolean onlyApps;
-  @DefaultValue("true")
-  @QueryParam("full_link")
-  private boolean fullLink;
+  @QueryParam("sort_by")
+  @ApiParam(allowMultiple = true)
+  private List<String> sortBy;
   
-  public ProvLinksBeanParams(@QueryParam("filter_by") Set<String> linksFilterBy,
-    @QueryParam("only_apps") boolean onlyApps,
-    @QueryParam("full_link") boolean fullLink){
-    this.filterBy = linksFilterBy;
-    this.onlyApps = onlyApps;
-    this.fullLink = fullLink;
+  public ProvAppBeanParams(@QueryParam("filter_by") Set<String> filterBy,
+    @QueryParam("sort_by") List<String> sortBy) {
+    this.filterBy = filterBy;
+    this.sortBy = sortBy;
   }
+  
+  public ProvAppBeanParams() {}
   
   public Set<String> getFilterBy() {
     return filterBy;
@@ -49,19 +45,11 @@ public class ProvLinksBeanParams {
     this.filterBy = filterBy;
   }
   
-  public boolean isOnlyApps() {
-    return onlyApps;
+  public List<String> getSortBy() {
+    return sortBy;
   }
   
-  public void setOnlyApps(boolean onlyApps) {
-    this.onlyApps = onlyApps;
-  }
-  
-  public boolean isFullLink() {
-    return fullLink;
-  }
-  
-  public void setFullLink(boolean fullLink) {
-    this.fullLink = fullLink;
+  public void setSortBy(List<String> sortBy) {
+    this.sortBy = sortBy;
   }
 }

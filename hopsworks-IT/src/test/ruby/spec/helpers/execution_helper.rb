@@ -86,8 +86,11 @@ module ExecutionHelper
     !(state == "FINISHED" || state == "FAILED" || state == "KILLED" || state == "INITIALIZATION_FAILED")
   end
 
-  def run_job(project, job_name)
-    start_execution(project["id"], job_name)
+  def run_job(project, job_name, args: nil)
+    arguments = nil
+    arguments = args.join(' ') unless args.nil?
+    start_execution(project[:id], job_name, arguments)
+    expect_status(201)
     execution_id = json_body[:id]
     app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
     wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")

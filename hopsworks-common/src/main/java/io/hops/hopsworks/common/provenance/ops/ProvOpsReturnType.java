@@ -15,21 +15,8 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.core.PaginationParams;
-import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
-
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import java.util.logging.Level;
-
-public interface ProvOpsBuilderIface {
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  default ProvOpsDTO build(Project project, ProvOpsParams opsParams, PaginationParams pagParams)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
-  }
+public enum ProvOpsReturnType {
+  LIST,
+  COUNT,
+  AGGREGATIONS;
 }

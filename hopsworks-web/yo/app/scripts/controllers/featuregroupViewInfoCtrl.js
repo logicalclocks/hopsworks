@@ -259,6 +259,7 @@ angular.module('hopsWorksApp')
                     }
                     self.fetchTags();
                     self.getGeneratedTDLinks(self.selectedFeaturegroup.name, self.selectedFeaturegroup.version);
+                    self.getUsage();
                 }
             };
 
@@ -428,5 +429,15 @@ angular.module('hopsWorksApp')
                 /** fg -> app -> td */
                 self.getOutArtifacts(name, version, 'FEATURE', 'TRAINING_DATASET', self.getLinkInfo, self.selectedFeaturegroup.tdLinks);
             };
+            self.getUsage = function() {
+                FeaturestoreService.getFeaturegroupUsage(self.projectId, self.featurestore, self.selectedFeaturegroup, ['READ_LAST', 'WRITE_LAST', 'READ_CURRENT', 'WRITE_CURRENT', 'WRITE_HISTORY']).then(
+                    function(success) {
+                        self.selectedFeaturegroup.readLast = success.data.readLast;
+                        self.selectedFeaturegroup.writeLast = success.data.writeLast;
+                        self.selectedFeaturegroup.readCurrent = success.data.readCurrent;
+                        self.selectedFeaturegroup.writeCurrent = success.data.writeCurrent;
+                        self.selectedFeaturegroup.writeHistory = success.data.writeHistory;
+                    }, self.errorPrint);
+            }
         }]);
 
