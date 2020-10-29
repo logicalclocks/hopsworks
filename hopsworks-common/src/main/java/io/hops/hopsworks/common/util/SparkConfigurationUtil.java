@@ -68,54 +68,57 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
           HopsUtils.OVERWRITE,
           "true"));
     }
-
+  
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_CONTAINER_RUNTIME, new ConfigProperty(
-        Settings.SPARK_YARN_APPMASTER_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
+      Settings.SPARK_YARN_APPMASTER_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, new ConfigProperty(
-        Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, serviceDiscoveryController, false)));
+      Settings.SPARK_YARN_APPMASTER_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
+      settings, serviceDiscoveryController, false)));
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, new ConfigProperty(
-        Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
-
+      Settings.SPARK_YARN_APPMASTER_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
+  
     sparkProps.put(Settings.SPARK_EXECUTOR_CONTAINER_RUNTIME, new ConfigProperty(
-        Settings.SPARK_EXECUTOR_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
+      Settings.SPARK_EXECUTOR_CONTAINER_RUNTIME, HopsUtils.OVERWRITE, settings.getYarnRuntime()));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_IMAGE, new ConfigProperty(
-        Settings.SPARK_EXECUTOR_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
-            settings, serviceDiscoveryController, false)));
+      Settings.SPARK_EXECUTOR_DOCKER_IMAGE, HopsUtils.OVERWRITE, ProjectUtils.getFullDockerImageName(project,
+      settings, serviceDiscoveryController, false)));
     sparkProps.put(Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, new ConfigProperty(
-        Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
-
+      Settings.SPARK_EXECUTOR_DOCKER_MOUNTS, HopsUtils.OVERWRITE, settings.getDockerMounts()));
+  
     sparkProps.put(Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, new ConfigProperty(
       Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, HopsUtils.OVERWRITE,
       Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT));
-
+  
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_IS_DRIVER, new ConfigProperty(Settings.SPARK_YARN_APPMASTER_IS_DRIVER,
+      HopsUtils.IGNORE, "true"));
+  
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,
       settings.getAnacondaProjectDir() + "/bin/python"));
-
+  
     //https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html
     //Needs to be set for CUDA libraries to not initialize GPU context
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_CUDA_DEVICES,
-            new ConfigProperty(Settings.SPARK_YARN_APPMASTER_CUDA_DEVICES,
-                    HopsUtils.IGNORE, ""));
-
+      new ConfigProperty(Settings.SPARK_YARN_APPMASTER_CUDA_DEVICES,
+        HopsUtils.IGNORE, ""));
+  
     //https://rocm-documentation.readthedocs.io/en/latest/Other_Solutions/Other-Solutions.html
     //Needs to be set for ROCm libraries to not initialize GPU context
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_HIP_DEVICES,
-            new ConfigProperty(Settings.SPARK_YARN_APPMASTER_HIP_DEVICES,
-                    HopsUtils.IGNORE, "-1"));
-
+      new ConfigProperty(Settings.SPARK_YARN_APPMASTER_HIP_DEVICES,
+        HopsUtils.IGNORE, "-1"));
+  
     sparkProps.put(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
-        new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
-            HopsUtils.IGNORE, "0"));
-
+      new ConfigProperty(Settings.SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS,
+        HopsUtils.IGNORE, "0"));
+  
     sparkProps.put(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
-        new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
-            HopsUtils.IGNORE, Integer.toString(sparkJobConfiguration.getExecutorGpus())));
-
+      new ConfigProperty(Settings.SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS",
+        HopsUtils.IGNORE, Integer.toString(sparkJobConfiguration.getExecutorGpus())));
+  
     sparkProps.put(Settings.SPARK_SUBMIT_DEPLOYMODE, new ConfigProperty(Settings.SPARK_SUBMIT_DEPLOYMODE,
       HopsUtils.OVERWRITE,"cluster"));
-
+    
     if(experimentType != null) {
       if(sparkJobConfiguration.getExecutorGpus() == 0) {
         addToSparkEnvironment(sparkProps, "HIP_VISIBLE_DEVICES", "-1", HopsUtils.IGNORE);

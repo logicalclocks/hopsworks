@@ -27,15 +27,15 @@ import java.util.logging.Level;
 @OnPremiseStereotype
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
-public class NullSecurityTokenService implements SecurityTokenService {
+public class NullAWSSecurityTokenService implements AWSSecurityTokenService {
   @Override
-  public boolean isCloud() {
+  public boolean isAWSCloud() {
     return false;
   }
 
   @Override
   public Credentials assumeRole(String roleARN, String roleSessionName, int durationSeconds) throws CloudException {
-    throw new CloudException(RESTCodes.CloudErrorCode.CLOUD_FEATURE, Level.FINE, "This method is not allowed in an " +
-      "on-premise installation.");
+    throw new CloudException(RESTCodes.CloudErrorCode.CLOUD_FEATURE, Level.FINE, "This method is not allowed in a " +
+      "non AWS installation.");
   }
 }

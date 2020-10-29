@@ -18,6 +18,8 @@ package io.hops.hopsworks.common.dao.cloud;
 import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.persistence.entity.cloud.CloudRoleMapping;
+import io.hops.hopsworks.persistence.entity.cloud.CloudRoleMappingDefault;
+import io.hops.hopsworks.persistence.entity.cloud.ProjectRoles;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
 import javax.ejb.EJB;
@@ -49,6 +51,11 @@ public class CloudRoleMappingFacade extends AbstractFacade<CloudRoleMapping> {
     return em;
   }
 
+  public List<CloudRoleMapping> findAllOrderById() {
+    TypedQuery<CloudRoleMapping> query = em.createNamedQuery("CloudRoleMapping.findAll", CloudRoleMapping.class);
+    return query.getResultList();
+  }
+
   public List<CloudRoleMapping> findByCloudRole(String cloudRole) {
     TypedQuery<CloudRoleMapping> query = em.createNamedQuery("CloudRoleMapping.findByCloudRole", CloudRoleMapping.class)
       .setParameter("cloudRole", cloudRole);
@@ -76,6 +83,35 @@ public class CloudRoleMappingFacade extends AbstractFacade<CloudRoleMapping> {
       return query.getSingleResult();
     } catch (NoResultException e) {
       return null;
+    }
+  }
+
+  public CloudRoleMapping findDefaultForRole(Project project, ProjectRoles projectRole) {
+    TypedQuery<CloudRoleMappingDefault> query =
+      em.createNamedQuery("CloudRoleMappingDefault.findDefaultByProjectAndProjectRole", CloudRoleMappingDefault.class)
+        .setParameter("projectId", project)
+        .setParameter("projectRole", projectRole.getDisplayName());
+    try {
+      return query.getSingleResult().getCloudRoleMapping();
+    } catch (NoResultException e) {
+      return null;
+    }
+  }
+
+  public void changeDefault(CloudRoleMapping fromCloudRoleMapping, CloudRoleMapping toCloudRoleMapping) {
+    CloudRoleMappingDefault cloudRoleMappingDefault = fromCloudRoleMapping.getCloudRoleMappingDefault();
+    cloudRoleMappingDefault.setCloudRoleMapping(toCloudRoleMapping);
+    em.merge(em.merge(cloudRoleMappingDefault));
+  }
+
+  public void setDefault(CloudRoleMapping cloudRoleMapping, boolean defaultRole) {
+    CloudRoleMappingDefault cloudRoleMappingDefault;
+    if (defaultRole) {
+      cloudRoleMappingDefault = new CloudRoleMappingDefault(cloudRoleMapping);
+      em.persist(cloudRoleMappingDefault);
+    } else if (cloudRoleMapping.getCloudRoleMappingDefault() != null) {
+      cloudRoleMappingDefault = cloudRoleMapping.getCloudRoleMappingDefault();
+      em.remove(em.merge(cloudRoleMappingDefault));
     }
   }
 

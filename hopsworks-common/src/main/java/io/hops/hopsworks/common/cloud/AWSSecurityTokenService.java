@@ -17,7 +17,7 @@ package io.hops.hopsworks.common.cloud;
 
 import io.hops.hopsworks.exceptions.CloudException;
 
-public interface SecurityTokenService {
-  boolean isCloud();
+public interface AWSSecurityTokenService {
+  boolean isAWSCloud();
   Credentials assumeRole(String roleARN, String roleSessionName, int durationSeconds) throws CloudException;
 }

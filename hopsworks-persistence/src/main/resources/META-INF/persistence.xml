@@ -45,6 +45,7 @@
     <class>io.hops.hopsworks.persistence.entity.airflow.MaterializedJWT</class>
     <class>io.hops.hopsworks.persistence.entity.certificates.UserCerts</class>
     <class>io.hops.hopsworks.persistence.entity.cloud.CloudRoleMapping</class>
+    <class>io.hops.hopsworks.persistence.entity.cloud.CloudRoleMappingDefault</class>
     <class>io.hops.hopsworks.persistence.entity.command.SystemCommand</class>
     <class>io.hops.hopsworks.persistence.entity.command.SystemCommandArguments</class>
     <class>io.hops.hopsworks.persistence.entity.dataset.Dataset</class>
