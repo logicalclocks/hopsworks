@@ -123,6 +123,7 @@ public class UsersBuilder {
       dto.setNumCreatedProjects(user.getNumCreatedProjects());
       dto.setNumActiveProjects(user.getNumActiveProjects());
       dto.setToursState(user.getToursState());
+      dto.setActivated(user.getActivated());
     }
     return dto;
   }
