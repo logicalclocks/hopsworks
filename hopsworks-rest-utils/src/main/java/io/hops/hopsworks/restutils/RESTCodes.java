@@ -422,7 +422,9 @@ public class RESTCodes {
       Response.Status.FORBIDDEN),
     APPID_NOT_FOUND(27, "AppId not found.", Response.Status.NOT_FOUND),
     JOB_PROGRAM_VERSIONING_FAILED(28, "Failed to version application program", Response.Status.INTERNAL_SERVER_ERROR),
-    INSUFFICIENT_EXECUTOR_MEMORY(29, "Insufficient executor memory provided.", Response.Status.BAD_REQUEST);
+    INSUFFICIENT_EXECUTOR_MEMORY(29, "Insufficient executor memory provided.", Response.Status.BAD_REQUEST),
+    NODEMANAGERS_OFFLINE(30, "Nodemanagers are offline", Response.Status.SERVICE_UNAVAILABLE);
+
     private Integer code;
     private String message;
     private Response.StatusType respStatus;

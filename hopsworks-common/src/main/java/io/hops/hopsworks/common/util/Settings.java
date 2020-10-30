@@ -40,6 +40,7 @@ package io.hops.hopsworks.common.util;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -102,6 +103,8 @@ public class Settings implements Serializable {
   private UserFacade userFacade;
   @EJB
   private OSProcessExecutor osProcessExecutor;
+  @EJB
+  private HostServicesFacade hostServicesFacade;
 
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
@@ -342,6 +345,9 @@ public class Settings implements Serializable {
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_NAME = "docker_base_image_python_name";
   private final static String VARIABLE_DOCKER_BASE_IMAGE_PYTHON_VERSION = "docker_base_image_python_version";
   private final static String VARIABLE_YARN_APP_UID = "yarn_app_uid";
+
+  /*----------------------Yarn Nodemanager status------------*/
+  private static final String VARIABLE_CHECK_NODEMANAGERS_STATUS = "check_nodemanagers_status";
 
   /*----------------------- Python ------------------------*/
   private final static String VARIABLE_MAX_ENV_YML_BYTE_SIZE = "max_env_yml_byte_size";
@@ -640,6 +646,7 @@ public class Settings implements Serializable {
       tensorBoardMaxLastAccessed = setIntVar(TENSORBOARD_MAX_LAST_ACCESSED, tensorBoardMaxLastAccessed);
       sparkUILogsOffset = setIntVar(SPARK_UI_LOGS_OFFSET, sparkUILogsOffset);
       jupyterShutdownTimerInterval = setStrVar(JUPYTER_SHUTDOWN_TIMER_INTERVAL, jupyterShutdownTimerInterval);
+      checkNodemanagersStatus = setBoolVar(VARIABLE_CHECK_NODEMANAGERS_STATUS, checkNodemanagersStatus);
 
       populateDelaCache();
       populateLDAPCache();
@@ -1223,6 +1230,7 @@ public class Settings implements Serializable {
     checkCache();
     return YARN_DEFAULT_QUOTA;
   }
+
 
   private String HDFS_DEFAULT_QUOTA_MBs = "200000";
 
@@ -3781,7 +3789,14 @@ public class Settings implements Serializable {
     checkCache();
     return YARN_RUNTIME;
   }
-  
+
+  //----------------------------YARN NODEMANAGER--------------------------------------------//
+  private boolean checkNodemanagersStatus = false;
+  public synchronized boolean isCheckingForNodemanagerStatusEnabled() {
+    checkCache();
+    return checkNodemanagersStatus;
+  }
+
   private static String DOCKER_MOUNTS = 
       "/srv/hops/hadoop/etc/hadoop,/srv/hops/spark,/srv/hops/flink";
   
