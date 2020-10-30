@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.jobs.quota.YarnProjectsQuotaFacade;
+import io.hops.hopsworks.common.dao.kagent.HostServicesFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -43,6 +44,7 @@ import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
+import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobFinalStatus;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.history.JobState;
@@ -120,6 +122,8 @@ public abstract class AbstractExecutionController implements ExecutionController
   private YarnProjectsQuotaFacade yarnProjectsQuotaFacade;
   @EJB
   private YarnExecutionFinalizer yarnExecutionFinalizer;
+  @EJB
+  private HostServicesFacade hostServicesFacade;
   
   @Override
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
@@ -133,7 +137,15 @@ public abstract class AbstractExecutionController implements ExecutionController
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_QUOTA_ERROR, Level.FINE);
       }
     }
-  
+
+    //Check if checking for nodemanager status is enabled
+    //If enabled and nodemanagers are all offline throw an JobException exception
+    if(settings.isCheckingForNodemanagerStatusEnabled() && job.getJobType() != JobType.PYTHON) {
+      hostServicesFacade.findServices("nodemanager").stream().filter(s -> s.getStatus()
+              == ServiceStatus.Started).findFirst().orElseThrow(() ->
+              new JobException(RESTCodes.JobErrorCode.NODEMANAGERS_OFFLINE, Level.SEVERE));
+    }
+
     Execution exec;
     switch (job.getJobType()) {
       case FLINK:

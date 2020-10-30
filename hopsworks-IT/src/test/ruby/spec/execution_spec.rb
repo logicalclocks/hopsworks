@@ -32,7 +32,7 @@ describe "On #{ENV['OS']}" do
           expect_json(errorCode: 200003)
         end
       end
-      job_types = ['py', 'jar', 'ipynb']
+      job_types = ['jar', 'py', 'ipynb']
       job_types.each do |type|
         context 'with authentication and executable ' + type do
           before :all do
@@ -253,6 +253,60 @@ describe "On #{ENV['OS']}" do
           end
         end
       end
+
+      describe 'execution with checking nodemanager status enabled' do
+        context 'with authentication and executable'  do
+          oldStatus = nil
+          hostnames = Array.new
+          before :all do
+            with_valid_tour_project("spark")
+            oldStatus = getVar("check_nodemanagers_status")
+            expect_status(200)
+            with_admin_session()
+            nodemanagers_request = get "#{ENV['HOPSWORKS_API']}/services/nodemanager"
+            expect_status(200)
+            nodemanagers = JSON.parse(nodemanagers_request)["items"]
+            expect_status(200)
+            expect(nodemanagers != nil)
+            nodemanagers.each do |nodemanager|
+              hostnames.push(find_by_host_id(nodemanager["hostId"]).hostname)
+            end
+            reset_session
+          end
+          after :each do
+            setVar("check_nodemanagers_status", oldStatus.value.to_s)
+            with_admin_session()
+            hostnames.each do |hostname|
+              hosts_update_host_service(hostname, "nodemanager", "SERVICE_START")
+              expect_status(200)
+            end
+            reset_session
+            create_session(@project[:username],"Pass123")
+            clean_jobs(@project[:id])
+            reset_session
+          end
+          it 'Should fail to run a job if nodemanager is disabled and checking of nodemanager status is enabled' do
+            type = job_types[0]
+            job_name_3 = "demo_job_3_" + type
+            create_session(@project[:username],"Pass123")
+            create_sparktour_job(@project, job_name_3, type, nil)
+            expect_status_details(201)
+            reset_session
+            with_admin_session()
+            hostnames.each do |hostname|
+              hosts_update_host_service(hostname, "nodemanager", "SERVICE_STOP")
+            end
+            setVar("check_nodemanagers_status", 'true')
+            sleep(20)
+            reset_session
+            create_session(@project[:username],"Pass123")
+            start_execution(@project[:id], job_name_3)
+            expect_status_details(503)
+            expect(json_body[:errorCode]).to eq 130030
+          end
+        end
+      end
+
       describe 'execution sort, filter, offset and limit' do
         $job_spark_1 = "demo_job_1"
         $execution_ids = []
