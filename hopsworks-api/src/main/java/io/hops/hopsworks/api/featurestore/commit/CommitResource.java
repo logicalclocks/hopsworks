@@ -19,8 +19,6 @@ package io.hops.hopsworks.api.featurestore.commit;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.util.Pagination;
-import io.hops.hopsworks.audit.logger.LogLevel;
-import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -49,7 +47,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
 
-@Logged
 @Api(value = "Feature Group commit Resource")
 @RequestScoped
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -65,12 +62,10 @@ public class CommitResource {
   private Featurestore featurestore;
   private Featuregroup featuregroup;
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeaturestore(Featurestore featurestore) {
     this.featurestore = featurestore;
   }
 
-  @Logged(logLevel = LogLevel.OFF)
   public void setFeatureGroup(Integer featureGroupId) throws FeaturestoreException {
     this.featuregroup = featuregroupController.getFeaturegroupById(this.featurestore, featureGroupId);
   }
