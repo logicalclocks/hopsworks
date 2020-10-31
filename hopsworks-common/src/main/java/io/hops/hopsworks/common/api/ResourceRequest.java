@@ -185,7 +185,8 @@ public class ResourceRequest {
     TAGS,
     SERVICES,
     TRAININGDATASETS,
-    STATISTICS;
+    STATISTICS,
+    COMMITS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
@@ -198,4 +199,3 @@ public class ResourceRequest {
   }
   
 }
-

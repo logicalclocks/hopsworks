@@ -1485,7 +1485,11 @@ public class RESTCodes {
     COULD_NOT_GET_FEATURE_GROUP_METADATA(116, "Failed to retrieve feature gorup meta data",
       Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_CREATING_HIVE_METASTORE_CLIENT(117, "Failed to open Hive Metastore client",
-      Response.Status.INTERNAL_SERVER_ERROR);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE(118, "No data is available for feature group with this "
+                                                  +  "commit date", Response.Status.NOT_FOUND),
+    PROVIDED_DATE_FORMAT_NOT_SUPPORTED(119, "Invalid date format",
+        Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

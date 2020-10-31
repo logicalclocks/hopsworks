@@ -60,7 +60,7 @@ public class FsQueryBuilder {
   public FsQueryDTO build(UriInfo uriInfo, Project project, Users user, Featurestore featurestore,
     Integer trainingDatasetId) throws FeaturestoreException {
     Query query = trainingDatasetController.getQuery(featurestore, trainingDatasetId, project, user);
-    FsQueryDTO dto = constructorController.construct(query);
+    FsQueryDTO dto = constructorController.construct(query, project, user);
     dto.setHref(uri(uriInfo, project));
     return dto;
   }

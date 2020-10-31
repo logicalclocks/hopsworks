@@ -35,6 +35,11 @@ public class Query {
   // to build the FROM part of the online query
   private String project;
   private Featuregroup featuregroup;
+  private String leftFeatureGroupStartTime;
+  private String leftFeatureGroupEndTime;
+  private Long leftFeatureGroupStartTimestamp;
+  private Long leftFeatureGroupEndTimestamp;
+  private Long leftFeatureGroupEndCommitId;
   private String as;
   private List<Feature> availableFeatures;
 
@@ -97,6 +102,47 @@ public class Query {
 
   public void setFeaturegroup(Featuregroup featuregroup) {
     this.featuregroup = featuregroup;
+  }
+
+  public String getLeftFeatureGroupStartTime() {
+    return leftFeatureGroupStartTime;
+  }
+
+  public void setLeftFeatureGroupStartTime(String leftFeatureGroupStartTime) {
+    this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
+  }
+
+  public String getLeftFeatureGroupEndTime() {
+    return leftFeatureGroupEndTime;
+  }
+
+  public void setLeftFeatureGroupEndTime(String leftFeatureGroupEndTime) {
+    this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
+  }
+
+  public Long getLeftFeatureGroupStartTimestamp() {
+    return leftFeatureGroupStartTimestamp;
+  }
+
+  public void setLeftFeatureGroupStartTimestamp(Long leftFeatureGroupStartTimestamp) {
+    this.leftFeatureGroupStartTimestamp = leftFeatureGroupStartTimestamp;
+  }
+
+  public Long getLeftFeatureGroupEndTimestamp() {
+    return leftFeatureGroupEndTimestamp;
+  }
+
+  public void setLeftFeatureGroupEndTimestamp(Long leftFeatureGroupEndTimestamp) {
+    this.leftFeatureGroupEndTimestamp = leftFeatureGroupEndTimestamp;
+  }
+
+
+  public Long getLeftFeatureGroupEndCommitId() {
+    return leftFeatureGroupEndCommitId;
+  }
+
+  public void setLeftFeatureGroupEndCommitId(Long leftFeatureGroupEndCommitId) {
+    this.leftFeatureGroupEndCommitId = leftFeatureGroupEndCommitId;
   }
 
   public List<Feature> getAvailableFeatures() {

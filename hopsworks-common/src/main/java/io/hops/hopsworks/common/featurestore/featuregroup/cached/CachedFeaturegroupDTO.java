@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
-
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -35,6 +35,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   private Boolean onlineEnabled = false;
   private Boolean hudiEnabled = false;
   private Storage defaultStorage;
+  private TimeTravelFormat timeTravelFormat;
 
   public CachedFeaturegroupDTO() {
     super();
@@ -61,6 +62,10 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
     this.defaultStorage = defaultStorage;
   }
 
+  public TimeTravelFormat getTimeTravelFormat () { return timeTravelFormat; }
+
+  public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) { this.timeTravelFormat = timeTravelFormat; }
+
   public Boolean getHudiEnabled() {
     return hudiEnabled;
   }
@@ -73,6 +78,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
   public String toString() {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
+      ", timeTravelFormat =" + timeTravelFormat +
       ", hudiEnabled =" + hudiEnabled +
       ", defaultStorage=" + defaultStorage +
       '}';

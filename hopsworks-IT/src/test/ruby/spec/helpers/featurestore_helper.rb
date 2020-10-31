@@ -60,7 +60,7 @@ module FeaturestoreHelper
 
   def create_cached_featuregroup(project_id, featurestore_id, features: nil, featuregroup_name: nil, online:false,
                                  version: 1, featuregroup_description: nil, desc_stats: nil, histograms: true,
-                                 correlations: true, statistic_columns: [])
+                                 correlations: true, statistic_columns: [], time_travel_format: "NONE")
     type = "cachedFeaturegroupDTO"
     if features == nil
       features = [
@@ -91,7 +91,8 @@ module FeaturestoreHelper
         description: featuregroup_description,
         version: version,
         type: type,
-        onlineEnabled: online
+        onlineEnabled: online,
+        timeTravelFormat: time_travel_format
     }
     if desc_stats != nil
       json_data["featHistEnabled"] = histograms
@@ -395,7 +396,7 @@ module FeaturestoreHelper
     return "featurestore_tour_job"
   end
 
-  def create_cached_featuregroup_with_partition(project_id, featurestore_id)
+  def create_cached_featuregroup_with_partition(project_id, featurestore_id, time_travel_format: "NONE")
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
@@ -422,7 +423,8 @@ module FeaturestoreHelper
         description: "testfeaturegroupdescription",
         version: 1,
         type: type,
-        featuregroupType: featuregroupType
+        featuregroupType: featuregroupType,
+        timeTravelFormat: time_travel_format
     }
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
@@ -497,6 +499,16 @@ module FeaturestoreHelper
     pp "delete #{delete_trainingdataset_endpoint}" if defined?(@debugOpt) && @debugOpt
     delete delete_trainingdataset_endpoint
     expect_status_details(200)
+  end
+
+  def commit_cached_featuregroup(project_id, featurestore_id, featuregroup_id, commit_metadata_string: nil)
+    create_featuregroup_commit_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/"  + featuregroup_id.to_s + "/commits"
+    if commit_metadata_string == nil
+        commit_metadata_string = '{"commitDateString":"20201024221125","rowsInserted":4,"rowsUpdated":0,"rowsDeleted":0}'
+    end
+    commit_metadata  = JSON.parse(commit_metadata_string)
+    json_result = post create_featuregroup_commit_endpoint, commit_metadata
+    return json_result
   end
 
   def trainingdataset_exists(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)

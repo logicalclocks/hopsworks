@@ -48,6 +48,9 @@ public class TrainingDatasetJoin implements Serializable {
   @NotNull
   @Column(name = "idx")
   private Integer index;
+  @Basic(optional = false)
+  @Column(name = "feature_group_commit_id")
+  private Long featureGroupCommitId;
   @JoinColumn(name = "training_dataset", referencedColumnName = "id")
   private TrainingDataset trainingDataset;
   @JoinColumn(name = "feature_group", referencedColumnName = "id")
@@ -65,6 +68,15 @@ public class TrainingDatasetJoin implements Serializable {
   public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, short type, int index) {
     this.trainingDataset = trainingDataset;
     this.featureGroup = featureGroup;
+    this.type = type;
+    this.index = index;
+  }
+
+  public TrainingDatasetJoin(TrainingDataset trainingDataset, Featuregroup featureGroup, Long featureGroupCommitId,
+                             short type, int index) {
+    this.trainingDataset = trainingDataset;
+    this.featureGroup = featureGroup;
+    this.featureGroupCommitId = featureGroupCommitId;
     this.type = type;
     this.index = index;
   }
@@ -107,6 +119,14 @@ public class TrainingDatasetJoin implements Serializable {
 
   public void setTrainingDataset(TrainingDataset trainingDataset) {
     this.trainingDataset = trainingDataset;
+  }
+
+  public Long getFeatureGroupCommitId() {
+    return featureGroupCommitId;
+  }
+
+  public void setFeatureGroupCommitId(Long featureGroupCommitId) {
+    this.featureGroupCommitId = featureGroupCommitId;
   }
 
   public Featuregroup getFeatureGroup() {

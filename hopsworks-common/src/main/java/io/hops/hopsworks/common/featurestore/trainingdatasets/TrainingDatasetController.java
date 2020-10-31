@@ -53,6 +53,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
@@ -381,7 +382,10 @@ public class TrainingDatasetController {
     if (query.getJoins() != null) {
       for (Join join : query.getJoins()) {
         joinIndex++;
-        features.addAll(collectFeatures(join.getRightQuery(), trainingDataset, featureIndex, tdJoins, joinIndex));
+        List<TrainingDatasetFeature> joinFeatures
+            = collectFeatures(join.getRightQuery(), trainingDataset, featureIndex, tdJoins, joinIndex);
+        features.addAll(joinFeatures);
+        featureIndex += joinFeatures.size();
       }
     }
     return features;
@@ -391,17 +395,28 @@ public class TrainingDatasetController {
     List<TrainingDatasetJoin> joins = new ArrayList<>();
     // add the first feature group
     int index = 0;
-    joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++));
+    if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(),
+          query.getLeftFeatureGroupEndCommitId() , (short) 0, index++));
+    } else {
+      joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(), (short) 0, index++));
+    }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
-        TrainingDatasetJoin tdJoin = new TrainingDatasetJoin(trainingDataset,
-            join.getRightQuery().getFeaturegroup(),
-            (short) join.getJoinType().ordinal(),
-            index++);
-
+        TrainingDatasetJoin tdJoin;
+        if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+          tdJoin = new TrainingDatasetJoin(trainingDataset,
+              join.getRightQuery().getFeaturegroup(), join.getRightQuery().getLeftFeatureGroupEndCommitId(),
+              (short) join.getJoinType().ordinal(),
+              index++);
+        } else {
+          tdJoin = new TrainingDatasetJoin(trainingDataset,
+              join.getRightQuery().getFeaturegroup(),
+              (short) join.getJoinType().ordinal(),
+              index++);
+        }
         tdJoin.setConditions(collectJoinConditions(join, tdJoin));
-
         joins.add(tdJoin);
       }
     }
