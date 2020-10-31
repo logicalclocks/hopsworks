@@ -640,7 +640,6 @@ public class FeaturegroupService {
   }
 
   @Path("/{featureGroupId}/commits")
-  @Logged(logLevel = LogLevel.OFF)
   public CommitResource timetravel (
       @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
