@@ -27,9 +27,28 @@ import java.util.Objects;
 public class QueryDTO {
   private FeaturegroupDTO leftFeatureGroup;
   private List<FeatureGroupFeatureDTO> leftFeatures;
+  private String leftFeatureGroupStartTime;
+  private String leftFeatureGroupEndTime;
 
   // Recursively merge QueryDTOs
   private List<JoinDTO> joins;
+
+  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
+                  String leftFeatureGroupStartTime, String leftFeatureGroupEndTime, List<JoinDTO> joins) {
+    this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = leftFeatures;
+    this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
+    this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
+    this.joins = joins;
+  }
+
+  public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
+                  String leftFeatureGroupEndTime, List<JoinDTO> joins) {
+    this.leftFeatureGroup = leftFeatureGroup;
+    this.leftFeatures = leftFeatures;
+    this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
+    this.joins = joins;
+  }
 
   public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
                   List<JoinDTO> joins) {
@@ -60,6 +79,22 @@ public class QueryDTO {
 
   public void setLeftFeatures(List<FeatureGroupFeatureDTO> leftFeatures) {
     this.leftFeatures = leftFeatures;
+  }
+
+  public String getLeftFeatureGroupStartTime() {
+    return leftFeatureGroupStartTime;
+  }
+
+  public void setLeftFeatureGroupStartTime(String leftFeatureGroupStartTime) {
+    this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
+  }
+
+  public String getLeftFeatureGroupEndTime() {
+    return leftFeatureGroupEndTime;
+  }
+
+  public void setLeftFeatureGroupEndTime(String leftFeatureGroupEndTime) {
+    this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
   }
 
   public List<JoinDTO> getJoins() {

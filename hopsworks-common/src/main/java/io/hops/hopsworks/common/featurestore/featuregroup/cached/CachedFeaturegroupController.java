@@ -41,6 +41,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Hiv
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -104,6 +105,8 @@ public class CachedFeaturegroupController {
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
+  private static final List<String> HUDI_SPEC_FEATURE_NAMES = Arrays.asList("_hoodie_record_key",
+      "_hoodie_partition_path", "_hoodie_commit_time", "_hoodie_file_name", "_hoodie_commit_seqno");
 
   @PostConstruct
   public void init() {
@@ -253,9 +256,9 @@ public class CachedFeaturegroupController {
         selectList.add(constructorController.selectWithDefaultAs(new Feature(feature, tbl)));
       }
     }
-    
+
     SqlNode whereClause = getWhereCondition(partition, features);
-  
+
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList,
       new SqlIdentifier("`" + tbl + "`", SqlParserPos.ZERO),
       whereClause, null, null, null, null, null,
@@ -317,13 +320,17 @@ public class CachedFeaturegroupController {
    */
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
-    throws FeaturestoreException, ServiceException, IOException, SQLException {
+      throws FeaturestoreException, ServiceException, IOException, SQLException {
 
     verifyPrimaryKeyNotPartitionKey(cachedFeaturegroupDTO.getFeatures());
 
+    // add hudi specific metadata features, as user doesn't provide it
+    if (cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      cachedFeaturegroupDTO.setFeatures(addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()));
+    }
+
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
         cachedFeaturegroupDTO.getFeatures(), project, user);
 
@@ -341,7 +348,8 @@ public class CachedFeaturegroupController {
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getDefaultStorage());
+    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled,
+            cachedFeaturegroupDTO.getDefaultStorage(), cachedFeaturegroupDTO.getTimeTravelFormat());
   }
   
   /**
@@ -372,6 +380,7 @@ public class CachedFeaturegroupController {
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setDefaultStorage(featuregroup.getCachedFeaturegroup().getDefaultStorage());
+    cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
     cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
             .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
 
@@ -587,7 +596,8 @@ public class CachedFeaturegroupController {
           "in the Hive metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, false, Storage.OFFLINE);
+    return persistCachedFeaturegroupMetadata(hiveTbls, false,
+            Storage.OFFLINE, cachedFeaturegroupDTO.getTimeTravelFormat());
   }
 
   /**
@@ -597,11 +607,14 @@ public class CachedFeaturegroupController {
    * @return Entity of the created cached feature group
    */
   private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable,
-                                                               boolean onlineEnabled, Storage defaultStorage) {
+                                                               boolean onlineEnabled,
+                                                               Storage defaultStorage,
+                                                               TimeTravelFormat timeTravelFormat) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTbls(hiveTable);
     cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
     cachedFeaturegroup.setDefaultStorage(defaultStorage);
+    cachedFeaturegroup.setTimeTravelFormat(timeTravelFormat);
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     return cachedFeaturegroup;
   }
@@ -618,7 +631,7 @@ public class CachedFeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
                                                   Project project, Users user)
-    throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
@@ -654,7 +667,7 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
@@ -695,12 +708,12 @@ public class CachedFeaturegroupController {
       offlineFeatureGroupController.alterHiveTableDescription(
         featuregroup.getFeaturestore(), tableName, cachedFeaturegroupDTO.getDescription(), project, user);
     }
-    
+
     // alter table
     if (!newFeatures.isEmpty()) {
       offlineFeatureGroupController.alterHiveTableFeatures(
         featuregroup.getFeaturestore(), tableName, newFeatures, project, user);
-      
+
       // if online feature group
       if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
         onlineFeaturegroupController.alterMySQLTableColumns(
@@ -708,7 +721,23 @@ public class CachedFeaturegroupController {
       }
     }
   }
-  
+
+  private List<FeatureGroupFeatureDTO> addHudiSpecFeatures(List<FeatureGroupFeatureDTO> features)  {
+
+    for (String hudiSpecFeature : HUDI_SPEC_FEATURE_NAMES){
+      // 1st check if hudi specific metadata exists in feature dataframe. If not add
+      if (!features.stream().anyMatch(o -> o.getName().equals(hudiSpecFeature))){
+        features.add(new FeatureGroupFeatureDTO(hudiSpecFeature, "string",
+            "hudi spec metadata feature", false, false));
+      }
+    }
+    return features;
+  }
+
+  public List<String> getHudiSpecFeatures(){
+    return HUDI_SPEC_FEATURE_NAMES;
+  }
+
   public void verifyPreviousSchemaUnchanged(List<FeatureGroupFeatureDTO> previousSchema,
     List<FeatureGroupFeatureDTO> newSchema) throws FeaturestoreException {
     for (FeatureGroupFeatureDTO feature : previousSchema) {
@@ -724,7 +753,7 @@ public class CachedFeaturegroupController {
       }
     }
   }
-  
+
   public List<FeatureGroupFeatureDTO> verifyAndGetNewFeatures (List<FeatureGroupFeatureDTO> previousSchema,
                                                                List<FeatureGroupFeatureDTO> newSchema)
       throws FeaturestoreException {

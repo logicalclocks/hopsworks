@@ -21,10 +21,14 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
+import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
@@ -49,18 +53,24 @@ public class TestConstructorController {
   private Featuregroup fg1;
   private Featuregroup fg2;
   private Featuregroup fg3;
+  private Featuregroup fg4;
+
+  private CachedFeaturegroup cachedFeaturegroup;
 
   private List<Feature> fg1Features = new ArrayList<>();
   private List<Feature> fg2Features = new ArrayList<>();
   private List<Feature> fg3Features = new ArrayList<>();
+  private List<Feature> fg4Features = new ArrayList<>();
 
   private List<FeatureGroupFeatureDTO> fg1FeaturesDTO = new ArrayList<>();
   private List<FeatureGroupFeatureDTO> fg2FeaturesDTO = new ArrayList<>();
+  private List<FeatureGroupFeatureDTO> fg4FeaturesDTO = new ArrayList<>();
 
   private FeaturegroupController featuregroupController;
   private FeaturestoreFacade featurestoreFacade;
   private FeaturegroupFacade featuregroupFacade;
   private OnlineFeaturestoreController onlineFeaturestoreController;
+  private CachedFeaturegroupController cachedFeaturegroupController;
 
   private ConstructorController constructorController;
   
@@ -75,18 +85,28 @@ public class TestConstructorController {
     fs = new Featurestore();
     fs.setHiveDbId(1l);
     fs.setProject(new Project("test_proj"));
+    cachedFeaturegroup = new CachedFeaturegroup();
+    cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.NONE);
     fg1 = new Featuregroup(1);
     fg1.setName("fg1");
     fg1.setVersion(1);
+    fg1.setCachedFeaturegroup(cachedFeaturegroup);
     fg1.setFeaturestore(fs);
     fg2 = new Featuregroup(2);
     fg2.setName("fg2");
     fg2.setVersion(1);
+    fg2.setCachedFeaturegroup(cachedFeaturegroup);
     fg2.setFeaturestore(fs);
     fg3 = new Featuregroup(3);
     fg3.setName("fg3");
     fg3.setVersion(1);
+    fg3.setCachedFeaturegroup(cachedFeaturegroup);
     fg3.setFeaturestore(fs);
+    fg4 = new Featuregroup(4);
+    fg4.setName("fg4");
+    fg4.setVersion(1);
+    fg4.setCachedFeaturegroup(cachedFeaturegroup);
+    fg4.setFeaturestore(fs);
 
     fg1Features = new ArrayList<>();
     fg1Features.add(new Feature("pr", "fg1", "", true));
@@ -108,15 +128,25 @@ public class TestConstructorController {
     fg3Features.add(new Feature("fg3_ft1", "fg3", "", true));
     fg3Features.add(new Feature("fg3_ft2", "fg3", "", false));
 
+    fg4Features = new ArrayList<>();
+    fg4Features.add(new Feature("pr", "fg4", "Integer", ""));
+    fg4Features.add(new Feature("fg4_ft4", "fg4", "String", ""));
+    fg4Features.add(new Feature("_hoodie_record_key", "fg4", "String", ""));
+    fg4Features.add(new Feature("_hoodie_partition_path", "fg4", "String", ""));
+    fg4Features.add(new Feature("_hoodie_commit_time", "fg4", "String", ""));
+    fg4Features.add(new Feature("_hoodie_file_name", "fg4", "String", ""));
+    fg4Features.add(new Feature("_hoodie_commit_seqno", "fg4", "String", ""));
+
     featuregroupController = Mockito.mock(FeaturegroupController.class);
     featuregroupFacade = Mockito.mock(FeaturegroupFacade.class);
     featurestoreFacade = Mockito.mock(FeaturestoreFacade.class);
     onlineFeaturestoreController = Mockito.mock(OnlineFeaturestoreController.class);
+    cachedFeaturegroupController = Mockito.mock(CachedFeaturegroupController.class);
     project = Mockito.mock(Project.class);
     user = Mockito.mock(Users.class);
 
     constructorController = new ConstructorController(featuregroupController, featurestoreFacade,
-        featuregroupFacade, onlineFeaturestoreController);
+        featuregroupFacade, onlineFeaturestoreController, cachedFeaturegroupController);
   }
 
   @Test
@@ -248,7 +278,6 @@ public class TestConstructorController {
     thrown.expect(FeaturestoreException.class);
     constructorController.extractLeftRightOn(leftQuery, rightQuery, leftOn, rightOn, JoinType.INNER);
   }
-
 
   @Test
   public void testExtractJoinLeftRightMissingFeature() throws Exception {
@@ -456,5 +485,18 @@ public class TestConstructorController {
       .toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
     Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testFilterHudiMetadataFeatures() throws Exception {
+    Query query = new Query();
+    query.setFeatures(fg4Features);
+    cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.HUDI);
+    fg4.setCachedFeaturegroup(cachedFeaturegroup);
+    query.setFeaturegroup(fg4);
+
+    List<Feature> filteredFeatures = constructorController.collectFeatures(query);
+    Assert.assertFalse(filteredFeatures.stream().anyMatch(o ->
+        o.getName().equals(cachedFeaturegroupController.getHudiSpecFeatures())));
   }
 }
