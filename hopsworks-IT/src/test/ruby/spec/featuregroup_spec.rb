@@ -679,6 +679,101 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json.key?("usrMsg")).to be true
         expect(parsed_json["errorCode"] == 270108).to be true
       end
+
+      it "should be able to add a hudi enabled offline cached featuregroup to the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json.key?("id")).to be true
+        expect(parsed_json.key?("featurestoreName")).to be true
+        expect(parsed_json.key?("name")).to be true
+        expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
+        expect(parsed_json["name"] == featuregroup_name).to be true
+        expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
+        expect(parsed_json["timeTravelFormat"] == "HUDI").to be true
+      end
+
+      it "should be able to bulk insert into existing hudi enabled offline cached featuregroup" do
+        hopsworks_user = getHopsworksUser()
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
+        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
+        json_result = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+        expect(parsed_json.key?("commitID")).to be true
+        expect(parsed_json["commitID"] == 1603577485000).to be true
+        expect(parsed_json["commitDateString"] == "1603577485000").to be true
+        expect(parsed_json["committime"] == 1603577485000).to be true
+        expect(parsed_json["rowsInserted"] == 4).to be true
+        expect(parsed_json["rowsUpdated"] == 0).to be true
+        expect(parsed_json["rowsDeleted"] == 0).to be true
+      end
+
+      it "should be able to upsert into existing hudi enabled offline cached featuregroup" do
+        hopsworks_user = getHopsworksUser()
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
+        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
+        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
+        json_result = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+        expect(parsed_json.key?("commitID")).to be true
+        expect(parsed_json["commitID"] == 1603650176000).to be true
+        expect(parsed_json["commitDateString"] == "1603650176000").to be true
+        expect(parsed_json["committime"] == 1603650176000).to be true
+        expect(parsed_json["rowsInserted"] == 3).to be true
+        expect(parsed_json["rowsUpdated"] == 1).to be true
+        expect(parsed_json["rowsDeleted"] == 0).to be true
+      end
+
+      it "should be able to find latest commit timestamp for existing hudi enabled offline cached featuregroup" do
+        hopsworks_user = getHopsworksUser()
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        featurestore_name = project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
+        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
+        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores" + "/query"
+        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
+        json_result = put create_query_endpoint, json_fs_query
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+        hudi_fg = parsed_json["hudiCachedFeatureGroups"].first
+        start_timestamp = hudi_fg["leftFeatureGroupStartTimestamp"]
+        end_timestamp = hudi_fg["leftFeatureGroupEndTimestamp"]
+        expect(start_timestamp == 0).to be true
+        expect(end_timestamp == 1603650176000).to be true
+      end
     end
   end
 

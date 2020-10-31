@@ -20,6 +20,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
+import io.hops.hopsworks.api.featurestore.commit.CommitResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -113,6 +114,8 @@ public class FeaturegroupService {
   private FeatureGroupDetailsResource featureGroupDetailsResource;
   @Inject
   private StatisticsResource statisticsResource;
+  @Inject
+  private CommitResource commitResource;
   @Inject
   private ProvArtifactResource provenanceResource;
 
@@ -623,7 +626,7 @@ public class FeaturegroupService {
     this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
   }
-  
+
   @Path("/{featureGroupId}/provenance")
   public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
     throws FeaturestoreException {
@@ -635,5 +638,14 @@ public class FeaturegroupService {
     this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
     return provenanceResource;
   }
-}
 
+  @Path("/{featureGroupId}/commits")
+  @Logged(logLevel = LogLevel.OFF)
+  public CommitResource timetravel (
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.commitResource.setFeaturestore(featurestore);
+    this.commitResource.setFeatureGroup(featureGroupId);
+    return commitResource;
+  }
+}

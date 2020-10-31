@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.dao.hdfs.inode.NavigationPath;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
+import org.apache.commons.lang3.ArrayUtils;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -274,6 +275,10 @@ public class InodeController {
     String[] p;
     if (path.charAt(0) == '/') {
       p = path.substring(1).split("/");
+    } else if(path.startsWith("hopsfs")){
+      //In case path looks like "hopsfs://namenode.service.consul:8020/apps/hive/warehouse/test_proj_fs.db/fg1_1"
+      p = path.split("/");
+      p = ArrayUtils.subarray(p,3,p.length);
     } else {
       p = path.split("/");
     }
