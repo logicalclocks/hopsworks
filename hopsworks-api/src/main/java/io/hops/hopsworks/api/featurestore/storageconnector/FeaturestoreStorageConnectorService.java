@@ -81,8 +81,6 @@ public class FeaturestoreStorageConnectorService {
   @EJB
   private FeaturestoreController featurestoreController;
   @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
-  @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
@@ -92,10 +90,13 @@ public class FeaturestoreStorageConnectorService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   private Project project;
   private Featurestore featurestore;
-  
+
+
   /**
    * Set the project of the featurestore (provided by parent resource)
    *
@@ -341,8 +342,7 @@ public class FeaturestoreStorageConnectorService {
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
       .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
-  
-  
+
   /**
    * This method returns the JDBC connector for the online featurestore for this user.
    * The JDBC connector is generated from the MySQL Server host:port, the user's username
@@ -359,32 +359,27 @@ public class FeaturestoreStorageConnectorService {
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get online featurestore storage connector for this feature store",
-    response = FeaturestoreStorageConnectorDTO.class)
-  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc)
-    throws FeaturestoreException {
+          response = FeaturestoreStorageConnectorDTO.class)
+  public Response getOnlineFeaturestoreStorageConnector(@Context SecurityContext sc) throws FeaturestoreException {
     if (!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
+              Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
     }
     if (!onlineFeaturestoreController.checkIfDatabaseExists(
-        onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
+            onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
-        Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store, talk to an " +
-        "administrator.");
+              Level.FINE, "Online Featurestore is not enabled for this project. To enable online feature store," +
+              " talk to an administrator.");
     }
     Users user = jWTHelper.getUserPrincipal(sc);
     String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-    String dbName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(project);
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
-      featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project,
-      dbUsername, featurestore, dbName);
+            featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, dbUsername, featurestore);
     GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {
-      };
+            new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreJdbcConnectorDTO) {};
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+            .entity(featurestoreStorageConnectorDTOGenericEntity).build();
   }
-  
   /**
    * Verify path parameters (storage connector type and id)
    *

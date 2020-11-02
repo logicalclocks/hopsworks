@@ -1489,7 +1489,9 @@ public class RESTCodes {
     NO_DATA_AVAILABLE_FEATUREGROUP_COMMITDATE(118, "No data is available for feature group with this "
                                                   +  "commit date", Response.Status.NOT_FOUND),
     PROVIDED_DATE_FORMAT_NOT_SUPPORTED(119, "Invalid date format",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND(120, "Online featurestore JDBC connector not found",
+            Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
