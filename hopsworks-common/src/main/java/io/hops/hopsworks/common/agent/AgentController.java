@@ -145,14 +145,11 @@ public class AgentController {
    */
   public Collection<PythonDep> persistAndMarkImmutable(Collection<PythonDep> pyDepsInImage) {
     Collection<PythonDep> deps = new ArrayList();
-
     for (PythonDep dep: pyDepsInImage) {
-
       String libraryName = dep.getDependency();
-
       if (settings.getImmutablePythonLibraryNames().contains(libraryName)) {
         PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), libraryName,
-            dep.getVersion(), true, true, dep.getBaseEnv());
+            dep.getVersion(), true, true);
         deps.add(pyDep);
       } else {
         PythonDep pyDep = libraryFacade.getOrCreateDep(dep);

@@ -435,7 +435,7 @@ public class ProjectController {
       }
   
       try {
-        environmentController.createEnv(project, true);
+        environmentController.createEnv(project);
       } catch (PythonException | EJBException ex) {
         cleanup(project, sessionId, projectCreationFutures);
         throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_ANACONDA_ENABLE_ERROR, Level.SEVERE,

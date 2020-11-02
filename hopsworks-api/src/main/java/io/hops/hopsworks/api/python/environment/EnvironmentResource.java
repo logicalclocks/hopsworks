@@ -154,7 +154,7 @@ public class EnvironmentResource {
         dto = buildEnvDTO(uriInfo, null, version);
         return Response.ok().entity(dto).build();
       case CREATE:
-        environmentController.createEnv(project, false);
+        environmentController.createEnv(project);
         dto = buildEnvDTO(uriInfo,null, version);
         return Response.created(dto.getHref()).entity(dto).build();
       default:
