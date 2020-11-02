@@ -21,8 +21,8 @@ import io.hops.hopsworks.restutils.RESTException;
 import java.util.logging.Level;
 
 public class CloudException extends RESTException {
-
-  protected CloudException(RESTCodes.CloudErrorCode errorCode, Level level) {
+  
+  public CloudException(RESTCodes.CloudErrorCode errorCode, Level level) {
     super(errorCode, level);
   }
 
