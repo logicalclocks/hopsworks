@@ -23,7 +23,6 @@ import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
-import java.util.Collection;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -73,17 +72,11 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
 
   public PythonDep getOrCreateDep(PythonDep dep) {
     return getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), dep.getDependency(), dep.
-        getVersion(), true, dep.isPreinstalled(), dep.getBaseEnv());
-  }
-  
-  public PythonDep getOrCreateDep(AnacondaRepo repo, CondaInstallType installType, String dependency, String version,
-                                  boolean persist, boolean preinstalled) {
-    return getOrCreateDep(repo, installType, dependency, version, persist, preinstalled, null);
+        getVersion(), true, dep.isPreinstalled());
   }
   
   public PythonDep getOrCreateDep(AnacondaRepo repo, CondaInstallType installType,
-                                  String dependency, String version, boolean persist, boolean preinstalled,
-                                  String baseEnv) {
+                                  String dependency, String version, boolean persist, boolean preinstalled) {
     TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findUniqueDependency", PythonDep.class);
     deps.setParameter("dependency", dependency);
     deps.setParameter("version", version);
@@ -99,19 +92,12 @@ public class LibraryFacade extends AbstractFacade<PythonDep> {
       dep.setVersion(version);
       dep.setPreinstalled(preinstalled);
       dep.setInstallType(installType);
-      dep.setBaseEnv(baseEnv);
       if (persist) {
         em.persist(dep);
         em.flush();
       }
     }
     return dep;
-  }
-  
-  public Collection<PythonDep> getBaseEnvDeps(String baseEnvName){
-    TypedQuery<PythonDep> deps = em.createNamedQuery("PythonDep.findBaseEnv", PythonDep.class);
-    deps.setParameter("baseEnv", baseEnvName);
-    return deps.getResultList();
   }
   
   public PythonDep findByDependencyAndProject(String dependency, Project project) {
