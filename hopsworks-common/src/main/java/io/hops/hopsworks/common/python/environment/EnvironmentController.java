@@ -101,24 +101,16 @@ public class EnvironmentController {
     }
   }
 
-  public void synchronizeDependencies(Project project, boolean createBaseEnv) throws ServiceException {
-    String envName = ProjectUtils.getDockerImageName(project, settings, false);
-    Collection<PythonDep> defaultEnvDeps = libraryFacade.getBaseEnvDeps(envName);
-    if (defaultEnvDeps == null || defaultEnvDeps.isEmpty()) {
-      try {
-        defaultEnvDeps = libraryController.listLibraries(projectUtils.getFullDockerImageName(project, true));
-      } catch (ServiceDiscoveryException e) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
-            getMessage(), e);
-      }
-      if (createBaseEnv) {
-        for (PythonDep dep : defaultEnvDeps) {
-          dep.setBaseEnv(envName);
-        }
-        defaultEnvDeps = agentController.persistAndMarkImmutable(defaultEnvDeps);
-      }
+  public void updateInstalledDependencies(Project project) throws ServiceException {
+    try {
+      Collection<PythonDep> defaultEnvDeps = libraryController.listLibraries(
+          projectUtils.getFullDockerImageName(project, false));
+      defaultEnvDeps = agentController.persistAndMarkImmutable(defaultEnvDeps);
+      libraryController.addPythonDepsForProject(project, defaultEnvDeps);
+    } catch (ServiceDiscoveryException e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
+          getMessage(), e);
     }
-    libraryController.addPythonDepsForProject(project, defaultEnvDeps);
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
@@ -235,7 +227,7 @@ public class EnvironmentController {
     return new String[]{ymlPath};
   }
   
-  public void createEnv(Project project, boolean createBaseEnv) throws PythonException,
+  public void createEnv(Project project) throws PythonException,
       ServiceException {
     List<CondaStatus> statuses = new ArrayList<>();
     statuses.add(CondaStatus.NEW);
@@ -251,7 +243,7 @@ public class EnvironmentController {
     project.setPythonVersion(settings.getDockerBaseImagePythonVersion());
     project.setDockerImage(settings.getBaseDockerImagePythonName());
     projectFacade.update(project);
-    synchronizeDependencies(project, createBaseEnv);
+    updateInstalledDependencies(project);
   }
   
   private String validateYml(Path fullPath, String username) throws ServiceException {

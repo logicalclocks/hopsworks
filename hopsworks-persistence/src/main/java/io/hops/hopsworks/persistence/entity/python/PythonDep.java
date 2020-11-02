@@ -86,10 +86,7 @@ import org.codehaus.jackson.annotate.JsonIgnore;
                   "AND p.installType = :installType AND p.repoUrl = :repoUrl"),
   @NamedQuery(name = "PythonDep.findByVersion",
           query
-          = "SELECT p FROM PythonDep p WHERE p.version = :version"),
-  @NamedQuery(name = "PythonDep.findBaseEnv",
-      query
-      = "SELECT p FROM PythonDep p WHERE p.baseEnv = :baseEnv")})
+          = "SELECT p FROM PythonDep p WHERE p.version = :version")})
 public class PythonDep implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -124,9 +121,6 @@ public class PythonDep implements Serializable {
   @Column(name = "install_type")
   @Enumerated(EnumType.ORDINAL)
   private CondaInstallType installType;
-  
-  @Column(name = "base_env")
-  private String baseEnv;
 
   public PythonDep() {
   }
@@ -158,15 +152,7 @@ public class PythonDep implements Serializable {
   public void setVersion(String version) {
     this.version = version;
   }
-  
-  public void setBaseEnv(String baseEnv){
-    this.baseEnv = baseEnv;
-  }
 
-  public String getBaseEnv(){
-    return baseEnv;
-  }
-  
   @XmlTransient
   @JsonIgnore
   public Collection<Project> getProjectCollection() {

@@ -234,7 +234,9 @@ public class LibraryResource {
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response search(@PathParam("search") String search,
                          @QueryParam("query") String query,
-                         @QueryParam("channel") String channel, @Context UriInfo uriInfo, @Context SecurityContext sc)
+                         @QueryParam("channel") String channel,
+                         @Context UriInfo uriInfo,
+                         @Context SecurityContext sc)
     throws ServiceException, PythonException {
     validatePattern(query);
     environmentController.checkCondaEnabled(project, pythonVersion);
