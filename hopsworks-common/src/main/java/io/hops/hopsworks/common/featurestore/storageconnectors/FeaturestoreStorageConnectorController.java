@@ -24,11 +24,9 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.Featurestore
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
-import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
@@ -39,7 +37,6 @@ import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 /**
  * Controller class for operations on storage controller in the Hopsworks Feature Store
@@ -53,8 +50,6 @@ public class FeaturestoreStorageConnectorController {
   @EJB
   private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
   @EJB
-  private SecretsController secretsController;
-  @EJB
   private ProjectTeamFacade projectTeamFacade;
 
   /**
@@ -66,11 +61,10 @@ public class FeaturestoreStorageConnectorController {
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Users user,
-    Featurestore featurestore)
-    throws FeaturestoreException {
+    Featurestore featurestore) throws FeaturestoreException {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
     featurestoreStorageConnectorDTOS.addAll(
-        featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore));
+        featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore));
     featurestoreStorageConnectorDTOS.addAll(
         featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore));
     featurestoreStorageConnectorDTOS.addAll(featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore));
@@ -92,7 +86,7 @@ public class FeaturestoreStorageConnectorController {
       case S3:
         return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore);
       case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
+        return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore);
       default:
@@ -120,7 +114,7 @@ public class FeaturestoreStorageConnectorController {
         return featurestoreS3ConnectorController.getS3ConnectorWithIdAndFeaturestore(user, featurestore,
           storageConnectorId);
       case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorWithIdAndFeaturestore(featurestore,
+        return featurestoreJdbcConnectorController.getJdbcConnectorWithIdAndFeaturestore(user, featurestore,
             storageConnectorId);
       case HOPSFS:
         return featurestoreHopsfsConnectorController.getHopsFsConnectorWithIdAndFeaturestore(featurestore,
@@ -231,41 +225,20 @@ public class FeaturestoreStorageConnectorController {
    * from other connectors in that it includes a password reference to the secretsmanager that needs to be resolved.
    *
    * @param user         the user making the request
-   * @param project      the project of the user
    * @param dbUsername   the database username
    * @param featurestore the featurestore metadata
    * @return a JDBC DTO connector for the online featurestore.
    * @throws FeaturestoreException
    */
   @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector(Users user, Project project, String dbUsername,
-    Featurestore featurestore, String dbName) throws FeaturestoreException {
-    
-    //Step 1 Get the connector from the database
-    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = null;
+  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector(Users user, String dbUsername,
+    Featurestore featurestore) throws FeaturestoreException {
     String onlineFeaturestoreConnectorName = dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
-    List<FeaturestoreStorageConnectorDTO> jdbcConnectorDTOS =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(featurestore);
-    List<FeaturestoreStorageConnectorDTO> matchingConnectors = jdbcConnectorDTOS.stream().filter(connector ->
-      connector.getName().equalsIgnoreCase(onlineFeaturestoreConnectorName)).collect(Collectors.toList());
-    if(matchingConnectors.isEmpty()) {
-      featurestoreJdbcConnectorDTO =
-        featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbUsername,
-        featurestore, dbName);
-    } else {
-      featurestoreJdbcConnectorDTO = (FeaturestoreJdbcConnectorDTO) matchingConnectors.get(0);
-    }
-    
-    //Step 2: replace the placeholder with the password and return it
-    try {
-      String password = secretsController.get(user, dbUsername).getPlaintext();
-      featurestoreJdbcConnectorDTO.setArguments(featurestoreJdbcConnectorDTO.getArguments()
-        .replaceFirst(FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE, password));
-    } catch (UserException e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
-        Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
-    }
-    return featurestoreJdbcConnectorDTO;
+    return (FeaturestoreJdbcConnectorDTO) this.getAllStorageConnectorsForFeaturestoreWithType(user, featurestore,
+            FeaturestoreStorageConnectorType.JDBC).stream().filter(dto -> dto.getName()
+            .equalsIgnoreCase(onlineFeaturestoreConnectorName)).findFirst().orElseThrow(() ->
+            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND,
+                    Level.SEVERE, "Cannot get online featurestore JDBC connector"));
   }
   
   /**
@@ -277,8 +250,7 @@ public class FeaturestoreStorageConnectorController {
   private void validateUser(Users user, Featurestore featurestore) throws UserException {
     if (!projectTeamFacade.isUserMemberOfProject(featurestore.getProject(), user)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.FINE,
-        "Action not allowed. User " + user.getUsername() + " is" +
-          " not member of project ");
+              "Action not allowed. User " + user.getUsername() + " is" + " not member of project ");
     }
   }
 }

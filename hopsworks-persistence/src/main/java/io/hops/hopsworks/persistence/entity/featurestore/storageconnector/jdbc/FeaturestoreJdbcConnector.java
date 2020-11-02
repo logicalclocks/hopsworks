@@ -46,7 +46,9 @@ import java.io.Serializable;
     @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestore", query = "SELECT fsjdbc " +
         "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore"),
     @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestoreAndId", query = "SELECT fsjdbc " +
-        "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore AND fsjdbc.id = :id")})
+        "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore AND fsjdbc.id = :id"),
+    @NamedQuery(name = "FeaturestoreJdbcConnector.findByName", query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector " +
+        "fsjdbc WHERE lower(fsjdbc.name)  = lower(:name)")})
 public class FeaturestoreJdbcConnector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
