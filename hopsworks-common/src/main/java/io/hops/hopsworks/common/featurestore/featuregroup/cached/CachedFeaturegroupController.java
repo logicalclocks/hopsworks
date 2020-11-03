@@ -40,7 +40,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Hiv
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitionKeys;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.Storage;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -348,8 +347,7 @@ public class CachedFeaturegroupController {
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled,
-            cachedFeaturegroupDTO.getDefaultStorage(), cachedFeaturegroupDTO.getTimeTravelFormat());
+    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getTimeTravelFormat());
   }
   
   /**
@@ -379,7 +377,6 @@ public class CachedFeaturegroupController {
     }
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
-    cachedFeaturegroupDTO.setDefaultStorage(featuregroup.getCachedFeaturegroup().getDefaultStorage());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
     cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
             .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
@@ -596,8 +593,7 @@ public class CachedFeaturegroupController {
           "in the Hive metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, false,
-            Storage.OFFLINE, cachedFeaturegroupDTO.getTimeTravelFormat());
+    return persistCachedFeaturegroupMetadata(hiveTbls, false, cachedFeaturegroupDTO.getTimeTravelFormat());
   }
 
   /**
@@ -606,14 +602,11 @@ public class CachedFeaturegroupController {
    * @param hiveTable the id of the Hive table in the Hive metastore
    * @return Entity of the created cached feature group
    */
-  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable,
-                                                               boolean onlineEnabled,
-                                                               Storage defaultStorage,
+  private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, boolean onlineEnabled,
                                                                TimeTravelFormat timeTravelFormat) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTbls(hiveTable);
     cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
-    cachedFeaturegroup.setDefaultStorage(defaultStorage);
     cachedFeaturegroup.setTimeTravelFormat(timeTravelFormat);
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     return cachedFeaturegroup;
