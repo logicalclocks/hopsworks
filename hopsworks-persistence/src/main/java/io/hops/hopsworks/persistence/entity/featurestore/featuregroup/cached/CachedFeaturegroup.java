@@ -57,8 +57,6 @@ public class CachedFeaturegroup implements Serializable {
   private HiveTbls hiveTbls;
   @Column(name = "online_enabled")
   private boolean onlineEnabled;
-  @Column(name = "default_storage")
-  private Storage defaultStorage;
   @Basic(optional = false)
   @NotNull
   @Enumerated(EnumType.ORDINAL)
@@ -89,14 +87,6 @@ public class CachedFeaturegroup implements Serializable {
 
   public void setOnlineEnabled(boolean onlineEnabled) {
     this.onlineEnabled = onlineEnabled;
-  }
-
-  public Storage getDefaultStorage() {
-    return defaultStorage;
-  }
-
-  public void setDefaultStorage(Storage defaultStorage) {
-    this.defaultStorage = defaultStorage;
   }
 
   public TimeTravelFormat getTimeTravelFormat() {
