@@ -84,6 +84,14 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   public void setCommands(CommandDTO commands) {
     this.commands = commands;
   }
+
+  public PackageSource getPackageSource() {
+    return packageSource;
+  }
+
+  public void setPackageSource(PackageSource packageSource) {
+    this.packageSource = packageSource;
+  }
   
   @Override
   public boolean equals(Object o) {
@@ -129,11 +137,4 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
       '}';
   }
 
-  public PackageSource getPackageSource() {
-    return packageSource;
-  }
-
-  public void setPackageSource(PackageSource packageSource) {
-    this.packageSource = packageSource;
-  }
 }
