@@ -222,6 +222,12 @@
     </navigation-case>
 
     <navigation-case>
+      <from-outcome>cloudRoleMappings</from-outcome>
+      <to-view-id>/security/protected/admin/cloudRoleMappings.xhtml</to-view-id>
+      <redirect/>
+    </navigation-case>
+
+    <navigation-case>
       <from-outcome>adminIndex</from-outcome>
       <to-view-id>/security/protected/admin/adminIndex.xhtml</to-view-id>
       <redirect/>

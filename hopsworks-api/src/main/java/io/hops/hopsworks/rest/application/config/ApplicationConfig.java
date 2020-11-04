@@ -103,6 +103,7 @@ public class ApplicationConfig extends ResourceConfig {
     register(io.hops.hopsworks.api.admin.security.CredentialsResource.class);
     register(io.hops.hopsworks.api.admin.security.X509Resource.class);
     register(io.hops.hopsworks.api.admin.services.ServicesResource.class);
+    register(io.hops.hopsworks.api.admin.cloud.CloudRoleMappingResource.class);
 
     register(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
 
@@ -126,6 +127,9 @@ public class ApplicationConfig extends ResourceConfig {
     
     //uncomment to allow Cross-Origin Resource Sharing
     //register(io.hops.hopsworks.api.filter.AllowCORSFilter.class);
+    
+    //cloud
+    register(io.hops.hopsworks.api.cloud.SecurityTokenResource.class);
 
     //swagger
     register(io.swagger.jaxrs.listing.ApiListingResource.class);

@@ -973,7 +973,8 @@ public class Settings implements Serializable {
   public static final String SPARK_YARN_APPMASTER_HIP_DEVICES = SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES";
   public static final String SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS = SPARK_YARN_APPMASTER_ENV + "EXECUTOR_GPUS";
   public static final String SPARK_YARN_APPMASTER_LIBHDFS_OPTS = SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS";
-
+  
+  public static final String SPARK_YARN_APPMASTER_IS_DRIVER = SPARK_YARN_APPMASTER_ENV + "IS_HOPS_DRIVER";
   public static final String SPARK_EXECUTOR_SPARK_USER = SPARK_EXECUTOR_ENV + "SPARK_USER";
   public static final String SPARK_EXECUTOR_ENV_EXECUTOR_GPUS = SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS";
   public static final String SPARK_EXECUTOR_LIBHDFS_OPTS = SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS";
@@ -3653,6 +3654,25 @@ public class Settings implements Serializable {
   public synchronized boolean isIAMRoleConfigured() {
     checkCache();
     return IAM_ROLE_CONFIGURED;
+  }
+
+  public synchronized CLOUD_TYPES getCloudType() {
+    checkCache();
+    if (CLOUD.isEmpty()) {
+      return CLOUD_TYPES.NONE;
+    }
+    return CLOUD_TYPES.fromString(CLOUD);
+  }
+  
+  public static enum CLOUD_TYPES {
+    NONE,
+    AWS,
+    GCP,
+    AZURE;
+    
+    public static CLOUD_TYPES fromString(String type) {
+      return CLOUD_TYPES.valueOf(type.toUpperCase());
+    }
   }
 
   public Boolean isHopsUtilInsecure() {

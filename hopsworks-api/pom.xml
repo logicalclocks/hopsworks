@@ -59,12 +59,12 @@
     <maven.deploy.skip>true</maven.deploy.skip>
     <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
     <jupyter.stereotype>io.hops.hopsworks.common.integrations.NullJupyterNbVCSStereotype</jupyter.stereotype>
-    <cloud.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</cloud.stereotype>
+    <managed.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</managed.stereotype>
     <remote-auth.stereotype>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</remote-auth.stereotype>
+    <cloud.stereotype>io.hops.hopsworks.common.integrations.OnPremiseStereotype</cloud.stereotype>
   </properties>
     
   <dependencies>
-    
     <dependency>
       <groupId>io.hops</groupId>
       <artifactId>service-proxy-core</artifactId>
@@ -321,11 +321,15 @@
             </replacement>
             <replacement>
               <token>io.hops.hopsworks.common.integrations.UnmanagedStereotype</token>
-              <value>${cloud.stereotype}</value>
+              <value>${managed.stereotype}</value>
             </replacement>
             <replacement>
               <token>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</token>
               <value>${remote-auth.stereotype}</value>
+            </replacement>
+            <replacement>
+              <token>io.hops.hopsworks.common.integrations.OnPremiseStereotype</token>
+              <value>${cloud.stereotype}</value>
             </replacement>
           </replacements>
         </configuration>
@@ -355,12 +359,12 @@
     </profile>
 
     <profile>
-      <id>hopsworks-cloud</id>
+      <id>managed-cloud</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
-        <cloud.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</cloud.stereotype>
+        <managed.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</managed.stereotype>
       </properties>
     </profile>
 
@@ -371,6 +375,16 @@
       </activation>
       <properties>
         <remote-auth.stereotype>io.hops.hopsworks.remote.user.RemoteAuthStereotype</remote-auth.stereotype>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <cloud.stereotype>io.hops.hopsworks.common.integrations.CloudStereotype</cloud.stereotype>
       </properties>
     </profile>
   </profiles>

@@ -44,7 +44,7 @@ angular.module('hopsWorksApp')
             return $resource(
                     "/api/project/:id",
                     {id: "@id", projectName: "@projectName", inodeId: "@inodeId", type: "@type",
-                      provStateType: "@provStateType"},
+                      provStateType: "@provStateType", cloudMappingId: "@cloudMappingId"},
             {
               "save": {
                 method: "POST",
@@ -129,6 +129,20 @@ angular.module('hopsWorksApp')
               "provStates": {
                 url: '/api/project/:id/provenance/states?filter_by=ML_TYPE::provStateType&return_type=COUNT',
                 method: 'GET'
+              },
+              "getCloudRoleMappings": {
+                url: '/api/project/:id/cloud/role-mappings?sort_by=ID',
+                method: 'GET'
+              },
+              "setAsDefault": {
+                method: 'PUT',
+                url: '/api/project/:id/cloud/role-mappings/:cloudMappingId?defaultRole=true',
+                hasBody: false
+              },
+              "unsetAsDefault": {
+                method: 'PUT',
+                url: '/api/project/:id/cloud/role-mappings/:cloudMappingId?defaultRole=false',
+                hasBody: false
               }
             }
             );

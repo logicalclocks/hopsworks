@@ -70,6 +70,9 @@ angular.module('hopsWorksApp')
               "subjectAccessRights": "",
               "risks": ""
             };
+            self.cloudRoleMappings = undefined;
+            self.setDefaultWorking = false;
+
             var getPia = function () {
               ProjectService.getPia({id: self.projectId}).$promise.then(
                 function (success) {
@@ -80,6 +83,20 @@ angular.module('hopsWorksApp')
               });
             };
             getPia();
+
+            var getCloudRoleMappings = function () {
+              ProjectService.getCloudRoleMappings({id: self.projectId}).$promise.then(
+                  function (success) {
+                    self.cloudRoleMappings = success.items;
+                    self.setDefaultWorking = false;
+                  });
+            };
+            getCloudRoleMappings();
+
+            self.onSuccess = function (e) {
+              growl.success("Copied to clipboard", {title: '', ttl: 1000});
+              e.clearSelection();
+            };
             
             self.savePia = function () {
               var forms = document.getElementsByClassName('needs-validation');
@@ -144,6 +161,22 @@ angular.module('hopsWorksApp')
               var quotaInt = quota.substring(0, pos);
 
               return convertSeconds(parseInt(quotaInt));
+            };
+
+            self.setDefault = function(mapping) {
+              self.setDefaultWorking = true;
+              if (mapping.defaultRole) {
+                ProjectService.setAsDefault({id: self.projectId, cloudMappingId: mapping.id}).$promise.then(
+                    function (success) {
+                      getCloudRoleMappings();
+                    });
+              } else {
+                ProjectService.unsetAsDefault({id: self.projectId, cloudMappingId: mapping.id}).$promise.then(
+                    function (success) {
+                      getCloudRoleMappings();
+                    });
+              }
+
             };
             
             var getVersions = function () {

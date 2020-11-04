@@ -271,3 +271,7 @@ ui-panelgrid td {
   background-image: none !important;
   color: #000000 !important;
 }
+
+td.centeredColumnContent{
+  text-align: center;
+}

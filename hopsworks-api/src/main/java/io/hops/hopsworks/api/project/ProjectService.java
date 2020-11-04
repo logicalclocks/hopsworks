@@ -40,6 +40,7 @@ package io.hops.hopsworks.api.project;
 
 import io.hops.hopsworks.api.activities.ProjectActivitiesResource;
 import io.hops.hopsworks.api.airflow.AirflowService;
+import io.hops.hopsworks.api.cloud.RoleMappingResource;
 import io.hops.hopsworks.api.dataset.DatasetResource;
 import io.hops.hopsworks.api.dela.DelaProjectService;
 import io.hops.hopsworks.api.elastic.ElasticResource;
@@ -113,6 +114,7 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -223,6 +225,8 @@ public class ProjectService {
   private ProjectProvenanceResource provenance;
   @Inject
   private ElasticResource elastic;
+  @Inject
+  private RoleMappingResource roleMappingResource;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
 
@@ -878,5 +882,12 @@ public class ProjectService {
   public ElasticResource elastic(@PathParam("projectId") Integer id) {
     this.elastic.setProjectId(id);
     return elastic;
+  }
+  
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("{projectId}/cloud")
+  public RoleMappingResource cloud(@PathParam("projectId") Integer id) {
+    this.roleMappingResource.setProjectId(id);
+    return this.roleMappingResource;
   }
 }

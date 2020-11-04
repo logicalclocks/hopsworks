@@ -466,7 +466,7 @@
     </profile>
 
    <profile>
-     <id>hopsworks-cloud</id>
+     <id>managed-cloud</id>
      <activation>
        <activeByDefault>false</activeByDefault>
      </activation>

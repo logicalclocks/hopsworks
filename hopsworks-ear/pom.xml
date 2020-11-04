@@ -223,14 +223,28 @@
       </dependencies>
     </profile>
     <profile>
-      <id>hopsworks-cloud</id>
+      <id>managed-cloud</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
       <dependencies>
         <dependency>
           <groupId>io.hops.hopsworks</groupId>
-          <artifactId>hopsworks-cloud</artifactId>
+          <artifactId>managed-cloud</artifactId>
+          <version>${project.version}</version>
+          <type>ejb</type>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>io.hops.hopsworks</groupId>
+          <artifactId>hopsworks-aws-cloud</artifactId>
           <version>${project.version}</version>
           <type>ejb</type>
         </dependency>

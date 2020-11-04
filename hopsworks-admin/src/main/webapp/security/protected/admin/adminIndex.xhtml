@@ -316,12 +316,19 @@
 
             <p:column>
               <h:commandLink action="fs_tags">
-                <i class="fa fa-tags fa-5x" title="Add Feature store tags" style="color: gray;"></i>
+                <i class="fa fa-tags fa-5x" title="Add Feature store tags" style="color: gray; margin: 22px"></i>
               </h:commandLink>
               <br></br>
               <p:outputLabel style="text-align: left" value="Add Feature store tags"></p:outputLabel>
             </p:column>
 
+            <p:column rendered="#{cloudRoleMappingBean.cloud}">
+              <h:commandLink action="cloudRoleMappings">
+                <i class="fa fa-cloud fa-5x" title="Cloud role mapping" style="color: gray; margin: 22px"></i>
+              </h:commandLink>
+              <br></br>
+              <p:outputLabel style="text-align: left" value="Cloud role mapping"></p:outputLabel>
+            </p:column>
           </h:panelGrid>
         </h:form>
       </div>

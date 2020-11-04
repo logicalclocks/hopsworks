@@ -88,6 +88,9 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
     sparkProps.put(Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, new ConfigProperty(
       Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK, HopsUtils.OVERWRITE,
       Settings.SPARK_HADOOP_FS_PERMISSIONS_UMASK_DEFAULT));
+  
+    sparkProps.put(Settings.SPARK_YARN_APPMASTER_IS_DRIVER, new ConfigProperty(Settings.SPARK_YARN_APPMASTER_IS_DRIVER,
+      HopsUtils.IGNORE, "true"));
     
     sparkProps.put(Settings.SPARK_PYSPARK_PYTHON_OPTION, new ConfigProperty(
       Settings.SPARK_PYSPARK_PYTHON_OPTION, HopsUtils.IGNORE,

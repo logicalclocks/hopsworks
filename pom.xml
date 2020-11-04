@@ -123,12 +123,21 @@
       </modules>
     </profile>
     <profile>
-      <id>hopsworks-cloud</id>
+      <id>managed-cloud</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
       <modules>
-        <module>hopsworks-cloud</module>
+        <module>managed-cloud</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>cloud</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <modules>
+        <module>hopsworks-aws-cloud</module>
       </modules>
     </profile>
   </profiles>

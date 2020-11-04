@@ -1980,4 +1980,42 @@ public class RESTCodes {
       return range;
     }
   }
+  
+  public enum CloudErrorCode implements RESTErrorCode {
+    CLOUD_FEATURE(0, "This method is only available in cloud deployments.", Response.Status.METHOD_NOT_ALLOWED),
+    FAILED_TO_ASSUME_ROLE(1, "Failed to assume role.", Response.Status.BAD_REQUEST),
+    ACCESS_CONTROL_EXCEPTION(2, "You are not allowed to assume this role.", Response.Status.FORBIDDEN),
+    MAPPING_NOT_FOUND(3, "Mapping not found.", Response.Status.BAD_REQUEST),
+    MAPPING_ALREADY_EXISTS(4, "Mapping for the given project and role already exists.", Response.Status.BAD_REQUEST);
+  
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 380000;
+  
+    CloudErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+  
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+  
+    @Override
+    public String getMessage() {
+      return message;
+    }
+  
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+  
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
 }

@@ -59,8 +59,9 @@
   <properties>
     <maven.deploy.skip>true</maven.deploy.skip>
     <kube.stereotype>io.hops.hopsworks.common.integrations.LocalhostStereotype</kube.stereotype>
-    <cloud.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</cloud.stereotype>
+    <managed.stereotype>io.hops.hopsworks.common.integrations.UnmanagedStereotype</managed.stereotype>
     <remote-auth.stereotype>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</remote-auth.stereotype>
+    <cloud.stereotype>io.hops.hopsworks.common.integrations.OnPremiseStereotype</cloud.stereotype>
   </properties>
   
   <dependencies>
@@ -204,7 +205,7 @@
             </replacement>
             <replacement>
               <token>io.hops.hopsworks.common.integrations.UnmanagedStereotype</token>
-              <value>${cloud.stereotype}</value>
+              <value>${managed.stereotype}</value>
             </replacement>
             <replacement>
               <token>io.hops.hopsworks.common.integrations.NullRemoteAuthStereotype</token>
@@ -235,12 +236,12 @@
       </properties>
     </profile>
     <profile>
-      <id>hopsworks-cloud</id>
+      <id>managed-cloud</id>
       <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
-        <cloud.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</cloud.stereotype>
+        <managed.stereotype>io.hops.hopsworks.cloud.ManagedStereotype</managed.stereotype>
       </properties>
     </profile>
     <profile>

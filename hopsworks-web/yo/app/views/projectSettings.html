@@ -58,16 +58,10 @@
       <section>
         <div class="content-wrapper">
           <h3 id="projectSettings" style="display: none;"> {{ projectCtrl.currentProject.projectName}} Settings</h3>
-
-
-          <div ng-controller="PythonCtrl as pythonCtrl"  ng-init="indextab = 0">
-
+          <div ng-init="indextab = 0">
             <uib-tabset active="indextab">
               <uib-tab index="0" heading="Project Settings">
-
-
                 <form role="form" name="projectForm" ng-submit="projectCtrl.saveProject()">
-
                   <h2>Project Settings</h2>
                   <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;">
                     <div class="panel-body">
@@ -237,8 +231,6 @@
                 </form>
 
               </uib-tab>
-
-
               <uib-tab index="1" heading="PIA">
                 <h2>Privacy Impact Assessment</h2>
 
@@ -366,9 +358,7 @@
                   </div>
                 </form>
               </uib-tab>
-
               <uib-tab index="2" heading="Versions">
-
                 <h3>Hopsworks Software Versions</h3>
                 <table st-table="rowCollection" class="table table-striped" ng-show="projectSettingsCtrl.versions.length > 0">
                   <thead>
@@ -389,13 +379,11 @@
                   </tbody>
                 </table>
               </uib-tab>
-
               <uib-tab index="3" heading="Provenance">
-
                 <h3>Hopsworks Provenance Settings</h3>
                 <div class="panel panel-default"  style="width: 800px; background-color: #F7F7F7;" ng-controller="ProvenanceCtrl as provenanceCtrl">
                   <div class="panel-body">
-                    <b id="projectProvenance">
+                    <div id="projectProvenance">
                       <div class="control-group col-md-offset-1">
                         <fieldset>
                           <table st-table="rowCollection" class="table table-striped">
@@ -477,14 +465,58 @@
                     </div>
                   </div>
                 </div>
-              </div>
-            </uib-tab>
-          </uib-tabset>
+              </uib-tab>
+              <uib-tab index="4" heading="Cloud Roles"
+                     ng-if="projectSettingsCtrl.cloudRoleMappings != undefined && projectSettingsCtrl.cloudRoleMappings.length > 0">
+                <h3>Cloud Roles accessible from this project</h3>
+                <div class="panel panel-default" style="width: 800px; background-color: #F7F7F7;">
+                  <div class="panel-body">
+                      <div ng-repeat="mapping in projectSettingsCtrl.cloudRoleMappings"
+                           ng-style="projectSettingsCtrl.cloudRoleMappings.length > 1 && {'border-bottom' : 'solid #eee 5px'}">
+                        <div class="input-group" style="width: 100%">
+                          <md-switch id="faultTolerance" class="md-primary pull-right"
+                                     aria-label="Fault-tolerant"
+                                     style="margin: 0px"
+                                     ng-disabled="projectSettingsCtrl.setDefaultWorking"
+                                     ng-model="mapping.defaultRole"
+                                     ng-change="projectSettingsCtrl.setDefault(mapping)">
+                            <md-tooltip ng-if="mapping.defaultRole" md-direction="right">
+                              Used as default role when calling the assume role end-point
+                            </md-tooltip>
+                            <md-tooltip ng-if="!mapping.defaultRole" md-direction="right">Make the default role
+                              for {{mapping.projectRole}} {{mapping.projectRole === 'ALL'? ' project roles.': '.'}}
+                            </md-tooltip>
+                            Default
+                          </md-switch>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 5px; margin-top: 10px">
+                          <span class="input-group-addon" id="role_id" style="padding-right: 43px;">Role id</span>
+                          <input type="text" class="form-control" placeholder="Role id"
+                                 aria-describedby="project-role" value="{{mapping.id}}" readonly>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 5px">
+                          <span class="input-group-addon" id="project-role">Project Role</span>
+                          <input type="text" class="form-control" placeholder="Project Role"
+                                 aria-describedby="project-role" value="{{mapping.projectRole}}" readonly>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 10px">
+                          <span class="input-group-addon" style="padding-right: 20px;">Cloud Role</span>
+                          <input id="fileRef" type="text" class="form-control" aria-label="Cloud role"
+                                 value="{{mapping.cloudRole}}" readonly>
+                          <botton class="btn btn-default input-group-addon"
+                                  ngclipboard data-clipboard-target="#fileRef"
+                                  ngclipboard-success="projectSettingsCtrl.onSuccess(e);"
+                                  title="Copy role"><i class="fa fa-copy"></i></botton>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </uib-tab>
+            </uib-tabset>
+          </div>
         </div>
-
-
       </section>
-
     </div>
   </div>
 </div>
