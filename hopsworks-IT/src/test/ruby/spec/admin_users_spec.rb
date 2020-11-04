@@ -160,6 +160,70 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(json_body[:count]).to be > 0
       end
+
+      it "should register new user" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", password: "Pass123", maxNumProjects: "5",
+                               securityQuestion: "PET", securityAnswer: "CAT", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).to be_nil
+        expect(json_body[:securityQuestion]).to be_nil
+        expect(json_body[:securityAnswer]).to be_nil
+      end
+      it "should register new user with no password" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", securityQuestion: "PET",
+                               securityAnswer: "CAT", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).to be_nil
+        expect(json_body[:securityAnswer]).to be_nil
+      end
+      it "should register new user with no security question" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", maxNumProjects: "5", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 5
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).not_to be_nil
+        expect(json_body[:securityAnswer]).not_to be_nil
+      end
+      it "should register new user with no number of projects" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last", status: "ACTIVATED_ACCOUNT")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 2
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).not_to be_nil
+        expect(json_body[:securityAnswer]).not_to be_nil
+      end
+      it "should register new user with no status" do
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).not_to be_nil
+        expect(json_body[:securityAnswer]).not_to be_nil
+      end
+      it "should fail to register new user with no name" do
+        register_user_as_admin("#{random_id}@email.com", "", "")
+        expect_status(400)
+      end
+      it "should register new user with api key" do
+        key = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS))
+        reset_session
+        set_api_key_to_header(key)
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).not_to be_nil
+        expect(json_body[:securityAnswer]).not_to be_nil
+      end
     end
   end
 end

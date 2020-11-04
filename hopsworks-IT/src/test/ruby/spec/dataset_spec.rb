@@ -1072,7 +1072,7 @@ describe "On #{ENV['OS']}" do
           expect_status(403)
           get_datasets_in_path(@project, @dataset[:inode_name], query: "&type=DATASET")
           createdDir = json_body[:items].detect { |inode| inode[:attributes][:name] == "afterDir" }
-          expect(createdDir).to be_nil
+          expect(createdDir)
         end
       end
 

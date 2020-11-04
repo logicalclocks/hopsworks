@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
@@ -26,15 +27,24 @@ import io.hops.hopsworks.api.user.UsersBuilder;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
+import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.common.user.UserValidator;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
+import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -52,11 +62,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.util.logging.Logger;
 
 @Path("/admin")
@@ -79,6 +92,12 @@ public class UsersAdminResource {
   private RemoteUserFacade remoteUserFacade;
   @Inject
   private RemoteGroupMappingHelper remoteGroupMappingHelper;
+  @EJB
+  private SecurityUtils securityUtils;
+  @EJB
+  protected UsersController usersController;
+  @EJB
+  private UserValidator userValidator;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -192,6 +211,68 @@ public class UsersAdminResource {
   public Response syncRemoteGroup(@Context SecurityContext sc) {
     remoteGroupMappingHelper.syncMappingAsync();
     return Response.accepted().build();
+  }
+  
+  @ApiOperation(value = "Register new user by admin.")
+  @POST
+  @Path("/users")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response registerUser(@QueryParam("accountType") UserAccountType accountType,
+    @QueryParam("uuid") String uuid, @QueryParam("email") String email, @QueryParam("password") String password,
+    @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
+    @QueryParam("maxNumProjects") int maxNumProjects, @QueryParam("securityQuestion") SecurityQuestion securityQuestion,
+    @QueryParam("securityAnswer") String securityAnswer, @QueryParam("type") RemoteUserType type,
+    @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
+    throws GenericException, UserException {
+    switch (accountType) {
+      case M_ACCOUNT_TYPE:
+        return createUser(email, password, givenName, surname,  maxNumProjects, securityQuestion, securityAnswer,
+          status, uriInfo);
+      case REMOTE_ACCOUNT_TYPE:
+        return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
+      default:
+        throw new WebApplicationException("User account type not valid.", Response.Status.NOT_FOUND);
+    }
+  }
+  
+  private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
+    SecurityQuestion securityQuestion, String securityAnswer, UserAccountStatus status, UriInfo uriInfo)
+    throws UserException {
+    UserDTO newUser = new UserDTO();
+    newUser.setEmail(email);
+    newUser.setFirstName(givenName);
+    newUser.setLastName(surname);
+    newUser.setMaxNumProjects(maxNumProjects > 0 ? maxNumProjects : settings.getMaxNumProjPerUser());
+    String passwordGen = password != null && !password.isEmpty()? password :
+      securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
+    newUser.setChosenPassword(passwordGen);
+    newUser.setRepeatedPassword(passwordGen);
+    SecurityQuestion securityQuestionGen = securityQuestion != null? securityQuestion :
+      SecurityQuestion.randomQuestion();
+    newUser.setSecurityQuestion(securityQuestionGen.getValue());
+    String securityAnswerGen = securityAnswer != null && !securityAnswer.isEmpty()? securityAnswer :
+      securityUtils.generateSecureRandomString(Settings.DEFAULT_SECURITY_ANSWER_LEN);
+    newUser.setSecurityAnswer(securityAnswerGen);
+    newUser.setTos(true);
+    userValidator.isValidNewUser(newUser, passwordGen.equals(password));
+    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.NEW_MOBILE_ACCOUNT;
+    Users user =
+      usersController.registerUser(newUser, Settings.DEFAULT_ROLE, statusDefault, UserAccountType.M_ACCOUNT_TYPE);
+    NewUserDTO newUserDTO = new NewUserDTO(user);
+    URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
+    if (!passwordGen.equals(password)) {
+      newUserDTO.setPassword(passwordGen);
+    }
+    if (!securityQuestionGen.equals(securityQuestion) || !securityAnswerGen.equals(securityAnswer)) {
+      newUserDTO.setSecurityQuestion(securityQuestionGen);
+      newUserDTO.setSecurityAnswer(securityAnswerGen);
+    }
+    return Response.created(href).entity(newUserDTO).build();
+  }
+  
+  private Response createRemoteUser(String uuid, String email, String givenName, String surname, RemoteUserType type,
+    UserAccountStatus status, UriInfo uriInfo) throws GenericException, UserException {
+    throw new UnsupportedOperationException("Remote auth not supported.");
   }
   
 }

@@ -29,7 +29,8 @@ public enum ApiScope {
   FEATURESTORE(false),
   PROJECT(false),
   ADMIN(true),
-  KAFKA(false);
+  KAFKA(false),
+  ADMINISTER_USERS(true);
 
   private final boolean privileged;
 

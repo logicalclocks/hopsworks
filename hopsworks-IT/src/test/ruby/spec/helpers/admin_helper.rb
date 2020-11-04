@@ -43,6 +43,17 @@ module AdminHelper
     get "#{ENV['HOPSWORKS_API']}/admin/users/groups"
   end
 
+  def register_user_as_admin(email, givenName, surname, password: nil, maxNumProjects: nil, securityQuestion: nil,
+                             securityAnswer: nil, status: nil, accountType: "M_ACCOUNT_TYPE")
+    query = (password.nil? || password.empty?) ?  "" : "&password=#{password}"
+    query += (maxNumProjects.nil? || maxNumProjects.empty?) ?  "" : "&maxNumProjects=#{maxNumProjects}"
+    query += (securityQuestion.nil? || securityQuestion.empty?) ?  "" : "&securityQuestion=#{securityQuestion}"
+    query += (securityAnswer.nil? || securityAnswer.empty?) ?  "" : "&securityAnswer=#{securityAnswer}"
+    query += (status.nil? || status.empty?) ?  "" : "&status=#{status}"
+
+    post "#{ENV['HOPSWORKS_API']}/admin/users?accountType=#{accountType}&email=#{email}&givenName=#{givenName}&surname=#{surname}#{query}"
+  end
+
   def service_status(status)
     case status
     when 0
