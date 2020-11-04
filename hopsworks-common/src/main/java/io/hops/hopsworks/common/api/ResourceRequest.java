@@ -186,8 +186,8 @@ public class ResourceRequest {
     SERVICES,
     TRAININGDATASETS,
     STATISTICS,
-    COMMITS;
-
+    COMMITS,
+    CLOUD;
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
     }
