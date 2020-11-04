@@ -1491,7 +1491,9 @@ public class RESTCodes {
     PROVIDED_DATE_FORMAT_NOT_SUPPORTED(119, "Invalid date format",
         Response.Status.BAD_REQUEST),
     ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND(120, "Online featurestore JDBC connector not found",
-            Response.Status.INTERNAL_SERVER_ERROR);
+            Response.Status.INTERNAL_SERVER_ERROR),
+    PRIMARY_KEY_PARTITION_KEY_REQUIRED(121, "Primary key and partition key are required " +
+        "when using Hudi time travel format", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

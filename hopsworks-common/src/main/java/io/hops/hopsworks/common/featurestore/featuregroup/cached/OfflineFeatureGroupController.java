@@ -134,10 +134,11 @@ public class OfflineFeatureGroupController {
   }
 
   public void createHiveTable(Featurestore featurestore, String tableName, String tableDesc,
-                              List<FeatureGroupFeatureDTO> featureGroupFeatureDTOList, Project project, Users user)
+                              List<FeatureGroupFeatureDTO> featureGroupFeatureDTOList, Project project,
+                              Users user, Formats format)
       throws FeaturestoreException, ServiceException, IOException {
     String dbName = featurestoreController.getOfflineFeaturestoreDbName(featurestore.getProject());
-    Table table = getEmptyTable(dbName, tableName, hdfsUsersController.getHdfsUserName(project, user));
+    Table table = getEmptyTable(dbName, tableName, hdfsUsersController.getHdfsUserName(project, user), format);
 
     // add table description
     table.getParameters().put(COMMENT, tableDesc);
@@ -402,9 +403,7 @@ public class OfflineFeatureGroupController {
     return client;
   }
 
-  private Table getEmptyTable(String databaseName, String tableName, String username) {
-    Formats format = Formats.valueOf(settings.getFeaturestoreDbDefaultStorageFormat());
-
+  private Table getEmptyTable(String databaseName, String tableName, String username, Formats format) {
     StorageDescriptor sd = new StorageDescriptor();
     {
       sd.setSerdeInfo(new SerDeInfo());

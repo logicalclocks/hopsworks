@@ -19,6 +19,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.dialect.HiveSqlDialect;
 import org.junit.Assert;
@@ -167,13 +168,40 @@ public class TestCachedFeatureGroupController {
     thrown.expect(FeaturestoreException.class);
     cachedFeaturegroupController.verifyAndGetNewFeatures(features, newSchema);
   }
-  
+
+  @Test
+  public void testVerifyPrimaryKeyNotPartitionKeyValid() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "Integer", "", false, true));
+
+    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.NONE);
+  }
+
   @Test
   public void testVerifyPrimaryKeyNotPartitionKey() throws Exception {
     List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
     newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, true));
     
     thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyPrimaryKeyNotPartitionKey(newSchema);
+    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.NONE);
+  }
+
+  @Test
+  public void testVerifyPrimaryKeyHudi() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
+
+    thrown.expect(FeaturestoreException.class);
+    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.HUDI);
+  }
+
+  @Test
+  public void testVerifyPartitionKeyHudi() throws Exception {
+    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
+    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
+
+    thrown.expect(FeaturestoreException.class);
+    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.HUDI);
   }
 }
