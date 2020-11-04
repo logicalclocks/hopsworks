@@ -323,21 +323,17 @@ public class CachedFeaturegroupController {
 
     verifyPrimaryKeyNotPartitionKey(cachedFeaturegroupDTO.getFeatures());
 
-    // add hudi specific metadata features, as user doesn't provide it
-    if (cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      cachedFeaturegroupDTO.setFeatures(addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()));
-    }
-
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
-        cachedFeaturegroupDTO.getFeatures(), project, user);
+        cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI ?
+        addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()) : cachedFeaturegroupDTO.getFeatures(), project, user);
 
     //Create MySQL Table for Online Cached Feature Group
     boolean onlineEnabled = false;
     if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled()){
-      onlineFeaturegroupController
-          .createMySQLTable(featurestore, tableName, cachedFeaturegroupDTO.getFeatures(), project, user);
+      onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
+          cachedFeaturegroupDTO.getFeatures(), project, user);
       onlineEnabled = true;
     }
     
@@ -640,6 +636,9 @@ public class CachedFeaturegroupController {
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
     List<FeatureGroupFeatureDTO> features =
       getFeaturesDTO(cachedFeaturegroup.getHiveTbls(), featurestore, project, user);
+    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      features = dropHudiSpecFeatureGroupFeature(features);
+    }
     if(!cachedFeaturegroup.isOnlineEnabled()) {
       onlineFeaturegroupController.createMySQLTable(featurestore, tableName, features, project, user);
     }
@@ -727,8 +726,14 @@ public class CachedFeaturegroupController {
     return features;
   }
 
-  public List<String> getHudiSpecFeatures(){
-    return HUDI_SPEC_FEATURE_NAMES;
+  private List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features)  {
+    return features.stream()
+        .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())) .collect(Collectors.toList());
+  }
+
+  public List<Feature> dropHudiSpecFeatures(List<Feature> features)  {
+    return features.stream()
+        .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())) .collect(Collectors.toList());
   }
 
   public void verifyPreviousSchemaUnchanged(List<FeatureGroupFeatureDTO> previousSchema,

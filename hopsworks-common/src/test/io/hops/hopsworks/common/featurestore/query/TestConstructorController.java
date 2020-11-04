@@ -486,17 +486,4 @@ public class TestConstructorController {
     String expected = "CASE WHEN `fg`.`feature` IS NULL THEN 10.0 ELSE `fg`.`feature` END `feature`";
     Assert.assertEquals(expected, output);
   }
-
-  @Test
-  public void testFilterHudiMetadataFeatures() throws Exception {
-    Query query = new Query();
-    query.setFeatures(fg4Features);
-    cachedFeaturegroup.setTimeTravelFormat(TimeTravelFormat.HUDI);
-    fg4.setCachedFeaturegroup(cachedFeaturegroup);
-    query.setFeaturegroup(fg4);
-
-    List<Feature> filteredFeatures = constructorController.collectFeatures(query);
-    Assert.assertFalse(filteredFeatures.stream().anyMatch(o ->
-        o.getName().equals(cachedFeaturegroupController.getHudiSpecFeatures())));
-  }
 }

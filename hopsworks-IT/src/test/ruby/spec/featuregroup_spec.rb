@@ -774,6 +774,29 @@ describe "On #{ENV['OS']}" do
         expect(start_timestamp == 0).to be true
         expect(end_timestamp == 1603650176000).to be true
       end
+
+      it "should be able to enable hudi featuregroup as online and retrieve correct online/offline queries" do
+        hopsworks_user = getHopsworksUser()
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        project_name = project['projectname']
+        featurestore_name = project_name.downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI", online: true)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
+        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores" + "/query"
+        json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
+        json_result = put create_query_endpoint, json_fs_query
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `fg0` `fg0`")
+        expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_#{featuregroup_version}` `fg0`")
+      end
     end
   end
 
