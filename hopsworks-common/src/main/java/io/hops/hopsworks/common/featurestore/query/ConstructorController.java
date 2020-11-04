@@ -457,9 +457,7 @@ public class ConstructorController {
     }
     // Remove hudi spec metadata features if any
     if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      features = features.stream()
-          .filter(feature -> !cachedFeaturegroupController.getHudiSpecFeatures().contains(feature.getName()))
-          .collect(Collectors.toList());
+      features = cachedFeaturegroupController.dropHudiSpecFeatures(features);
     }
     return features;
   }
@@ -468,25 +466,15 @@ public class ConstructorController {
     List<String> tableIdentifierStr = new ArrayList<>();
     if (online) {
       tableIdentifierStr.add("`" + query.getProject() + "`");
-    } else {
+      tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
+          + "`");
+    } else if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() != TimeTravelFormat.HUDI) {
       tableIdentifierStr.add("`" + query.getFeatureStore() + "`");
+      tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion()
+          + "`");
+    } else {
+      tableIdentifierStr.add("`" + query.getAs() + "`");
     }
-
-    tableIdentifierStr.add("`" + query.getFeaturegroup().getName() + "_" + query.getFeaturegroup().getVersion() + "`");
-
-    SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
-        new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO);
-
-    return SqlStdOperatorTable.AS.createCall(asNodeList);
-  }
-
-  private SqlNode generateHudiCachedTableNode(Query query, boolean online) {
-    List<String> tableIdentifierStr = new ArrayList<>();
-    if (online) {
-      tableIdentifierStr.add("`" + query.getProject() + "`");
-    }
-
-    tableIdentifierStr.add("`" + query.getAs() + "`");
 
     SqlNodeList asNodeList = new SqlNodeList(Arrays.asList(new SqlIdentifier(tableIdentifierStr, SqlParserPos.ZERO),
         new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO)), SqlParserPos.ZERO);
@@ -501,11 +489,7 @@ public class ConstructorController {
    * @return
    */
   private SqlNode generateTableNode(Query query, boolean online) {
-    if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      return generateHudiCachedTableNode(query, online);
-    } else {
-      return generateCachedTableNode(query, online);
-    }
+    return generateCachedTableNode(query, online);
   }
 
   /**
