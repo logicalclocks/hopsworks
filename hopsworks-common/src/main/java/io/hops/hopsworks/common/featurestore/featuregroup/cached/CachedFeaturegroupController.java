@@ -320,6 +320,11 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
       throws FeaturestoreException, ServiceException, IOException, SQLException {
+    
+    // explicitly set the time travel format if client sends null
+    if (cachedFeaturegroupDTO.getTimeTravelFormat() == null) {
+      cachedFeaturegroupDTO.setTimeTravelFormat(TimeTravelFormat.NONE);
+    }
 
     verifyPrimaryKeyNotPartitionKey(cachedFeaturegroupDTO.getFeatures());
 
