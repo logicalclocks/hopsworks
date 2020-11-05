@@ -17,6 +17,7 @@ package io.hops.hopsworks.api.python.library;
 
 import io.hops.hopsworks.api.python.command.CommandDTO;
 import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.common.python.library.PackageSource;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
 
@@ -26,7 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class LibraryDTO extends RestDTO<LibraryDTO> {
 
   private String channel;
-  private PackageManager packageManager;
+  private PackageSource packageSource;
   private String library;
   private String version;
   private CondaStatus status;
@@ -42,14 +43,6 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   
   public void setChannel(String channel) {
     this.channel = channel;
-  }
-  
-  public PackageManager getPackageManager() {
-    return packageManager;
-  }
-  
-  public void setPackageManager(PackageManager packageManager) {
-    this.packageManager = packageManager;
   }
   
   public String getLibrary() {
@@ -91,13 +84,21 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
   public void setCommands(CommandDTO commands) {
     this.commands = commands;
   }
+
+  public PackageSource getPackageSource() {
+    return packageSource;
+  }
+
+  public void setPackageSource(PackageSource packageSource) {
+    this.packageSource = packageSource;
+  }
   
   @Override
   public boolean equals(Object o) {
     if (o instanceof LibraryDTO) {
       LibraryDTO pd = (LibraryDTO) o;
       if (pd.getChannel().compareToIgnoreCase(this.channel) == 0
-          && pd.getPackageManager().equals(this.packageManager)
+          && pd.getPackageSource().equals(this.getPackageSource())
           && pd.getLibrary().compareToIgnoreCase(this.library) == 0
           && pd.getVersion().compareToIgnoreCase(this.version) == 0
           && pd.getPreinstalled().compareToIgnoreCase(this.preinstalled) == 0) {
@@ -107,7 +108,7 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     if (o instanceof PythonDep) {
       PythonDep pd = (PythonDep) o;
       if (pd.getRepoUrl().getUrl().compareToIgnoreCase(this.channel) == 0
-          && pd.getInstallType().name().equalsIgnoreCase(this.packageManager.name())
+          && pd.getInstallType().name().equalsIgnoreCase(this.getPackageSource().name())
           && pd.getDependency().compareToIgnoreCase(this.library) == 0
           && pd.getVersion().compareToIgnoreCase(this.version) == 0
           && Boolean.toString(pd.isPreinstalled()).compareToIgnoreCase(this.preinstalled) == 0) {
@@ -122,22 +123,12 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
     return (this.channel.hashCode() / 3 + this.library.hashCode()
         + this.version.hashCode()) / 2;
   }
-
-  public enum PackageManager {
-    CONDA,
-    PIP;
-    
-    public static PackageManager fromString(String param) {
-      return valueOf(param.toUpperCase());
-    }
-    
-  }
   
   @Override
   public String toString() {
     return "LibraryDTO{" +
       "channel='" + channel + '\'' +
-      ", packageManager=" + packageManager +
+      ", packageSource=" + getPackageSource() +
       ", library='" + library + '\'' +
       ", version='" + version + '\'' +
       ", status=" + status +
@@ -145,4 +136,5 @@ public class LibraryDTO extends RestDTO<LibraryDTO> {
       ", commands=" + commands +
       '}';
   }
+
 }
