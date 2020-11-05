@@ -207,6 +207,13 @@ public class CondaCommands implements Serializable {
 
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
+                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
+    this(user, userId, op, status, installType, project, lib, version, channelUrl, created, arg,
+        environmentYml, installJupyter, null, null);
+  }
+
+  public CondaCommands(String user, Users userId, CondaOp op,
+                       CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
                        GitBackend gitBackend, String gitApiKeyName) {
     if (op  == null || user == null || project == null) { 

@@ -177,7 +177,7 @@ public class EnvironmentController {
     }
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
         user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj, pythonVersion, "", "defaults",
-        new Date(), arg, environmentYml, installJupyter, null, null);
+        new Date(), arg, environmentYml, installJupyter);
     condaCommandFacade.save(cc);
   }
 
