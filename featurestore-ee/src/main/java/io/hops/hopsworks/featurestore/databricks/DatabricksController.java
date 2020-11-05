@@ -1,0 +1,355 @@
+/*
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ */
+
+package io.hops.hopsworks.featurestore.databricks;
+
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.service.Service;
+import io.hops.hopsworks.common.dao.certificates.CertsFacade;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.common.security.CertificateMaterializer;
+import io.hops.hopsworks.common.security.CertificatesMgmService;
+import io.hops.hopsworks.common.security.secrets.SecretsController;
+import io.hops.hopsworks.common.util.HopsUtils;
+import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.featurestore.DatabricksInstanceFacade;
+import io.hops.hopsworks.featurestore.databricks.client.DbCluster;
+import io.hops.hopsworks.featurestore.databricks.client.DatabricksClient;
+import io.hops.hopsworks.featurestore.databricks.client.DbClusterStart;
+import io.hops.hopsworks.featurestore.databricks.client.DbInitScriptInfo;
+import io.hops.hopsworks.featurestore.databricks.client.DbLibrary;
+import io.hops.hopsworks.featurestore.databricks.client.DbLibraryInstall;
+import io.hops.hopsworks.featurestore.databricks.client.DbPyPiLibrary;
+import io.hops.hopsworks.featurestore.databricks.client.DbfsCreate;
+import io.hops.hopsworks.featurestore.databricks.client.DbfsPut;
+import io.hops.hopsworks.featurestore.databricks.client.DbfsStorageInfo;
+import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
+import io.hops.hopsworks.persistence.entity.integrations.DatabricksInstance;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
+import io.hops.hopsworks.restutils.RESTCodes;
+import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.hadoop.net.HopsSSLSocketFactory;
+import org.apache.hadoop.security.ssl.SSLFactory;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+@Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class DatabricksController {
+
+  public static final String HOPSWORKS_PROJECT_TAG = "hopsworks_project_id";
+  public static final String HOPSWORKS_USER_TAG = "hopsworks_user";
+
+  private static final String TOKEN_PREFIX = "db_";
+  private static final String METASTORE_JAR_DIR = "/hopsworks_metastore_jar";
+  private static final String DBFS_SCHEME = "dbfs://";
+  private static final String DBFS_VM = "/dbfs";
+  private static final Logger LOGGER = Logger.getLogger(DatabricksController.class.getName());
+
+  private static final String SPARK_CONF_PREFIX = "spark.hadoop.";
+
+  private static final String CLIENTS_FILE_NAME = "clients.tar.gz";
+
+  private static final String INIT_SCRIPT =
+      "#!/bin/sh\n" +
+      "tar -xf {0} -C /tmp\n" +
+      "tar -xf /tmp/client/apache-hive-*-bin.tar.gz -C /tmp\n" +
+      "mv /tmp/apache-hive-*-bin {1}\n" +
+      "chmod -R +xr {1}\n" +
+      "cp /tmp/client/hopsfs-client*.jar /databricks/jars/";
+
+  @EJB
+  private SecretsController secretsController;
+  @EJB
+  private DatabricksClient databricksClient;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private Settings settings;
+  @EJB
+  private CertsFacade certsFacade;
+  @EJB
+  private CertificatesMgmService certificatesMgmService;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private DatabricksInstanceFacade databricksInstanceFacade;
+
+  public List<DbCluster> listClusters(Users user, String dbInstanceUrl) throws UserException, FeaturestoreException {
+    String token = secretsController.get(user, TOKEN_PREFIX + dbInstanceUrl).getPlaintext();
+    return databricksClient.listClusters(dbInstanceUrl, token);
+  }
+
+  public DbCluster getCluster(Users user, String dbInstanceUrl, String clusterId)
+      throws UserException, FeaturestoreException {
+    String token = secretsController.get(user, TOKEN_PREFIX + dbInstanceUrl).getPlaintext();
+    return databricksClient.getCluster(dbInstanceUrl, clusterId, token);
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public DatabricksInstance registerInstance(Users user, String dbInstanceUrl, String apiKey)
+      throws FeaturestoreException, UserException {
+    Optional<DatabricksInstance> dbInstanceOpt = databricksInstanceFacade.getInstance(user, dbInstanceUrl);
+    if (dbInstanceOpt.isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATABRICKS_INSTANCE_ALREADY_EXISTS,
+          Level.FINE, "Instance URL: " + dbInstanceUrl);
+    }
+
+    Secret secret = secretsController
+        .add(user, TOKEN_PREFIX + dbInstanceUrl, apiKey, VisibilityType.PRIVATE, null);
+    DatabricksInstance dbInstance = new DatabricksInstance(dbInstanceUrl, secret, user);
+    databricksInstanceFacade.add(dbInstance);
+    return dbInstance;
+  }
+
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public void deleteInstance(Users user, String dbInstanceUrl) throws FeaturestoreException, UserException {
+    String secretName = TOKEN_PREFIX + dbInstanceUrl;
+    secretsController.delete(user, secretName);
+    DatabricksInstance dbInstance = databricksInstanceFacade.getInstance(user, dbInstanceUrl)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATABRICKS_INSTANCE_NOT_EXISTS,
+            Level.FINE, "Instance URL: " + dbInstanceUrl));
+    databricksInstanceFacade.delete(dbInstance);
+  }
+
+  // Configuring a Databricks cluster requires the following steps:
+  // - Upload artifacts (client.tgz and initScript.sh)
+  // - Configure the Spark properties and initScript
+  // - Install Python HSFS library
+  // - Restart the cluster
+  public DbCluster configureCluster(String dbInstanceUrl, String clusterId, Users user,
+                                    Users targetUser, Project project)
+      throws UserException, IOException, ServiceDiscoveryException, FeaturestoreException, ServiceException {
+    String token = secretsController.get(user, TOKEN_PREFIX + dbInstanceUrl).getPlaintext();
+    Path baseDbfsPath = buildBaseDbfsPath(project, targetUser);
+    Path baseClientDbfsPath = buildClientBaseDbfsPath();
+
+    DbCluster dbCluster = databricksClient.getCluster(dbInstanceUrl, clusterId, token);
+
+    // Upload or refresh init script
+    uploadInitScript(dbInstanceUrl, baseDbfsPath, baseClientDbfsPath, token);
+
+    // Upload or refresh the certificates on dbfs
+    uploadCertificastes(dbInstanceUrl, targetUser, project, baseDbfsPath, token);
+
+    // Upload client jars
+    uploadClientJars(dbInstanceUrl, baseClientDbfsPath, token);
+
+    // edit cluster configuration
+    editCluster(dbInstanceUrl, dbCluster, project, targetUser, baseDbfsPath, token);
+
+    // Start cluster before installing libraries
+    if (dbCluster.getState().equalsIgnoreCase("TERMINATED")) {
+      startCluster(dbInstanceUrl, dbCluster, token);
+    }
+
+    waitForCuster(dbInstanceUrl, clusterId, token);
+
+    // installing libraries requires a running cluster (?)
+    installLibraries(dbInstanceUrl, dbCluster.getId(), token);
+
+    return databricksClient.getCluster(dbInstanceUrl, dbCluster.getId(), token);
+  }
+
+  private void waitForCuster(String dbInstanceUrl, String clusterId, String token)
+      throws IOException, FeaturestoreException {
+    // wait for cluster to start
+    int i = 5;
+    while (i > 0) {
+      try {
+        Thread.sleep(5000);
+      } catch (InterruptedException e) { }
+
+      DbCluster dbCluster = databricksClient.getCluster(dbInstanceUrl, clusterId, token);
+      if (!dbCluster.getState().equalsIgnoreCase("TERMINATED")) {
+        break;
+      }
+      i--;
+    }
+    if (i == 0) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.DATABRICKS_CANNOT_START_CLUSTER, Level.FINE);
+    }
+  }
+
+  private void uploadInitScript(String dbInstanceUrl, Path baseDbfsPath,
+                                Path baseClientDbfsPath, String token) throws FeaturestoreException, IOException {
+    Map<String, String> paths = new HashMap<>();
+    // On the VMs, dbfs is mounted in /dbfs/
+    paths.put("0", DBFS_VM + baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString());
+    paths.put("1", METASTORE_JAR_DIR);
+    StrSubstitutor sub = new StrSubstitutor(paths, "{", "}");
+    String scriptContent = sub.replace(INIT_SCRIPT);
+
+    String initScriptPath = baseDbfsPath.resolve("initScript.sh").toString();
+    DbfsPut initScriptPut = new DbfsPut(initScriptPath, scriptContent.getBytes(), true);
+    databricksClient.uploadOneShot(dbInstanceUrl, initScriptPut, token);
+  }
+
+  private void uploadCertificastes(String dbInstanceUrl, Users user, Project project,
+                                   Path baseDbfsPath, String token) throws FeaturestoreException, IOException {
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    CertificateMaterializer.CryptoMaterial certs = getCertificates(user, project);
+
+    DbfsPut keyStorePut = new DbfsPut(baseDbfsPath.resolve(projectUser + Settings.KEYSTORE_SUFFIX).toString(),
+        certs.getKeyStore().array(), true);
+    databricksClient.uploadOneShot(dbInstanceUrl, keyStorePut, token);
+
+    DbfsPut trustStorePut = new DbfsPut(baseDbfsPath.resolve(projectUser + Settings.TRUSTSTORE_SUFFIX).toString(),
+        certs.getTrustStore().array(), true);
+    databricksClient.uploadOneShot(dbInstanceUrl, trustStorePut, token);
+
+    DbfsPut passwordPut = new DbfsPut(baseDbfsPath.resolve(projectUser + Settings.CERT_PASS_SUFFIX).toString(),
+        new String(certs.getPassword()).getBytes(), true);
+    databricksClient.uploadOneShot(dbInstanceUrl, passwordPut, token);
+  }
+
+  private void uploadClientJars(String dbInstanceUrl, Path baseClientDbfsPath, String token)
+      throws FeaturestoreException, IOException {
+    if (databricksClient.fileExists(dbInstanceUrl, baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString(), token)) {
+      return;
+    }
+
+    DbfsCreate dbfsCreate = new DbfsCreate(baseClientDbfsPath.resolve(CLIENTS_FILE_NAME).toString(), false);
+    try (InputStream inputStream = new FileInputStream(new File(settings.getClientPath()))){
+      databricksClient.uploadLarge(dbInstanceUrl, dbfsCreate, inputStream, token);
+    }
+  }
+
+  private void editCluster(String dbInstanceUrl, DbCluster dbCluster, Project project,
+                           Users user, Path baseDbfsPath, String token)
+      throws FeaturestoreException, IOException, ServiceDiscoveryException {
+    if (dbCluster.getSparkConfiguration() == null) {
+      dbCluster.setSparkConfiguration(new HashMap<>());
+    }
+    dbCluster.getSparkConfiguration().putAll(getSparkProperties(project, user, baseDbfsPath));
+    dbCluster.setInitScripts(
+        Arrays.asList(new DbInitScriptInfo(
+            new DbfsStorageInfo(DBFS_SCHEME + baseDbfsPath.resolve("initScript.sh").toString()))));
+
+    if (dbCluster.getTags() == null) {
+      dbCluster.setTags(new HashMap<>());
+    }
+    dbCluster.getTags().put(HOPSWORKS_PROJECT_TAG, String.valueOf(project.getId()));
+    dbCluster.getTags().put(HOPSWORKS_USER_TAG, user.getUsername());
+    databricksClient.editCluster(dbInstanceUrl, dbCluster, token);
+  }
+
+  private Map<String, String> getSparkProperties(Project project, Users user,
+                                                 Path baseDbfsPath) throws ServiceDiscoveryException {
+    String projectUser = hdfsUsersController.getHdfsUserName(project, user);
+    return getSparkProperties(DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.KEYSTORE_SUFFIX).toString(),
+        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.TRUSTSTORE_SUFFIX).toString(),
+        DBFS_VM + baseDbfsPath.resolve(projectUser + Settings.CERT_PASS_SUFFIX).toString(),
+        METASTORE_JAR_DIR + "/lib/*");
+  }
+
+  public Map<String, String> getSparkProperties(String keyStorePath, String trustStorePath,
+                                                String passwordPath, String jarPath) throws ServiceDiscoveryException {
+    Map<String, String> sparkConfiguration = new HashMap<>();
+    sparkConfiguration.put("spark.hadoop.fs.hopsfs.impl", "io.hops.hopsfs.client.HopsFileSystem");
+    sparkConfiguration.put("spark.hadoop.hops.ipc.server.ssl.enabled", "true");
+    sparkConfiguration.put("spark.hadoop.hops.ssl.hostname.verifier", "ALLOW_ALL");
+    sparkConfiguration.put("spark.hadoop.hops.rpc.socket.factory.class.default",
+        "io.hops.hadoop.shaded.org.apache.hadoop.net.HopsSSLSocketFactory");
+    sparkConfiguration.put(SPARK_CONF_PREFIX + HopsSSLSocketFactory.CryptoKeys.SOCKET_ENABLED_PROTOCOL.getValue(),
+        "TLSv1.2");
+    sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_PASSWD_FILE_PATH_KEY, passwordPath);
+    sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_KEYSTORE_FILE_PATH_KEY, keyStorePath);
+    sparkConfiguration.put(SPARK_CONF_PREFIX + SSLFactory.LOCALIZED_TRUSTSTORE_FILE_PATH_KEY, trustStorePath);
+
+    sparkConfiguration.put("spark.sql.hive.metastore.jars", jarPath);
+
+    Service hiveMetastoreService = serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+        ServiceDiscoveryController.HopsworksService.HIVE_METASTORE);
+
+    sparkConfiguration.put("spark.hadoop.hive.metastore.uris",
+        "thrift://" + hiveMetastoreService.getAddress() + ":" + hiveMetastoreService.getPort());
+
+    return sparkConfiguration;
+  }
+
+  private void startCluster(String dbInstanceUrl, DbCluster dbCluster, String token)
+      throws FeaturestoreException, IOException {
+    DbClusterStart dbClusterStart = new DbClusterStart(dbCluster.getId());
+    databricksClient.startCluster(dbInstanceUrl, dbClusterStart, token);
+  }
+
+  private void installLibraries(String dbInstanceUrl, String clusterId, String token)
+      throws FeaturestoreException, IOException {
+    DbLibraryInstall dbLibraryInstall = new DbLibraryInstall(clusterId);
+
+    DbLibrary hopsPy = new DbLibrary(new DbPyPiLibrary("hops==" + getPyPiLibraryVersion()));
+    DbLibrary hsfsPy = new DbLibrary(new DbPyPiLibrary("hsfs==" + getPyPiLibraryVersion()));
+    dbLibraryInstall.setLibraries(Arrays.asList(hopsPy, hsfsPy));
+    databricksClient.installLibraries(dbInstanceUrl, dbLibraryInstall, token);
+  }
+
+  private String getPyPiLibraryVersion() {
+    String[] versionDigits = settings.getHopsworksVersion().split("\\.");
+    return versionDigits[0] + "." + versionDigits[1] + ".~";
+  }
+
+  private CertificateMaterializer.CryptoMaterial getCertificates(Users user, Project project) throws IOException {
+    UserCerts projectCerts = certsFacade.findUserCert(project.getName(), user.getUsername());
+    ByteBuffer keyStore = ByteBuffer.wrap(projectCerts.getUserKey());
+    ByteBuffer trustStore = ByteBuffer.wrap(projectCerts.getUserCert());
+    String decryptedPassword;
+    try {
+      decryptedPassword = HopsUtils.decrypt(user.getPassword(), projectCerts.getUserKeyPwd(),
+          certificatesMgmService.getMasterEncryptionPassword());
+    } catch (Exception e) {
+      LOGGER.log(Level.SEVERE, "Error while decrypting certificate password for user <" + user.getUsername() + ">");
+      throw new IOException(e);
+    }
+
+    return new CertificateMaterializer.CryptoMaterial(keyStore, trustStore, decryptedPassword.toCharArray());
+  }
+
+  private Path buildBaseDbfsPath(Project project, Users user) throws ServiceException {
+    try {
+      return Paths.get("/hopsworks",
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP).getAddress(),
+          hdfsUsersController.getHdfsUserName(project, user));
+    } catch (ServiceDiscoveryException se) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE,
+          "Cannot resolve Hopsworks service", se.getMessage(), se);
+    }
+  }
+
+  private Path buildClientBaseDbfsPath() throws ServiceException {
+    try {
+      return Paths.get("/hopsworks",
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.HOPSWORKS_APP).getAddress());
+    } catch (ServiceDiscoveryException se) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE,
+          "Cannot resolve Hopsworks service", se.getMessage(), se);
+    }
+  }
+}

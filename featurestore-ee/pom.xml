@@ -6,42 +6,48 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>hopsworks</artifactId>
     <groupId>io.hops</groupId>
     <version>2.0.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
-  <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.hops.hopsworks</groupId>
   <artifactId>featurestore-ee</artifactId>
   <version>2.0.0-SNAPSHOT</version>
+  <name>featurestore-ee</name>
   <packaging>ejb</packaging>
 
   <dependencies>
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
+      <artifactId>hopsworks-persistence</artifactId>
+      <version>${project.version}</version>
+      <exclusions>
+        <!-- exclude all transitive dependencies -->
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-common</artifactId>
-      <version>2.0.0-SNAPSHOT</version>
+      <version>${project.version}</version>
       <type>ejb</type>
       <scope>provided</scope>
       <exclusions>
-        <exclusion>
-          <groupId>com.nimbusds</groupId>
-          <artifactId>nimbus-jose-jwt</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>javax.servlet</groupId>
           <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.sun.jersey</groupId>
-          <artifactId>jersey-core</artifactId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.flink</groupId>
@@ -73,6 +79,24 @@
       <groupId>org.eclipse.persistence</groupId>
       <artifactId>eclipselink</artifactId>
       <version>${persistence.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <version>3.2.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.damnhandy</groupId>
+      <artifactId>handy-uri-templates</artifactId>
+      <version>2.1.8</version>
     </dependency>
   </dependencies>
 

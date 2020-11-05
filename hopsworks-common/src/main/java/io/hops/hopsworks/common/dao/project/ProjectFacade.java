@@ -307,9 +307,13 @@ public class ProjectFacade extends AbstractFacade<Project> {
   }
   
   public Optional<Project> findById(Integer id) {
-    return Optional.ofNullable(em.createNamedQuery("Project.findById", Project.class)
-        .setParameter("id", id)
-        .getSingleResult());
+    try {
+      return Optional.ofNullable(em.createNamedQuery("Project.findById", Project.class)
+          .setParameter("id", id)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
 
   public Project findByName(String name) {

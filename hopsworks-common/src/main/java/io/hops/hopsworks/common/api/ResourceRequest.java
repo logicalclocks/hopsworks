@@ -187,7 +187,12 @@ public class ResourceRequest {
     TRAININGDATASETS,
     STATISTICS,
     COMMITS,
-    CLOUD;
+    CLOUD,
+    INTEGRATIONS,
+    DATABRICKS,
+    SPARK,
+    CONFIGURATION;
+
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());
     }

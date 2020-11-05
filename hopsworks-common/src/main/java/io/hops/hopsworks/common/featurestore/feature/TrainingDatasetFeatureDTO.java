@@ -24,6 +24,7 @@ public class TrainingDatasetFeatureDTO {
   private String type;
   private FeaturegroupDTO featuregroup;
   private Integer index;
+  private Boolean label;
 
   public TrainingDatasetFeatureDTO() {
   }
@@ -65,5 +66,13 @@ public class TrainingDatasetFeatureDTO {
 
   public void setIndex(Integer index) {
     this.index = index;
+  }
+
+  public Boolean getLabel() {
+    return label;
+  }
+
+  public void setLabel(Boolean label) {
+    this.label = label;
   }
 }

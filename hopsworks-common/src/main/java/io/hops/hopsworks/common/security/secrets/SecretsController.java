@@ -80,8 +80,9 @@ public class SecretsController {
    * @throws UserException
    */
   @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-  public void add(Users user, String secretName, String secret, VisibilityType visibilityType,
-      Integer projectIdScope) throws UserException {
+  public Secret add(Users user, String secretName, String secret,
+                    VisibilityType visibilityType, Integer projectIdScope) throws UserException {
+
     SecretId secretId = new SecretId(user.getUid(), secretName);
     if(secretsFacade.findById(secretId) != null) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
@@ -89,6 +90,7 @@ public class SecretsController {
     }
     Secret storedSecret = validateAndCreateSecret(secretId, user, secret, visibilityType, projectIdScope);
     secretsFacade.persist(storedSecret);
+    return storedSecret;
   }
   
   /**

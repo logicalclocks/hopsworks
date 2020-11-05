@@ -50,6 +50,7 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.integrations.IntegrationsResource;
 import io.hops.hopsworks.api.jobs.JobsResource;
 import io.hops.hopsworks.api.jupyter.JupyterService;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -87,6 +88,7 @@ import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -134,7 +136,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -229,6 +230,8 @@ public class ProjectService {
   private RoleMappingResource roleMappingResource;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
+  @Inject
+  private IntegrationsResource integrationsResource;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -741,23 +744,11 @@ public class ProjectService {
     String clientPath = settings.getClientPath();
     File clientFile = new File(clientPath);
     InputStream stream = new FileInputStream(clientFile);
-    Response.ResponseBuilder response = Response.ok(buildOutputStream(stream));
-    response.header("Content-disposition", "attachment;");
+    Response.ResponseBuilder response = Response.ok(HopsUtils.buildOutputStream(stream));
+    response.header("Content-disposition", "attachment; filename=client.tar.gz");
     return response.build();
   }
-  
-  private StreamingOutput buildOutputStream(final InputStream stream) {
-    return out -> {
-      int length;
-      byte[] buffer = new byte[1024];
-      while ((length = stream.read(buffer)) != -1) {
-        out.write(buffer, 0, length);
-      }
-      out.flush();
-      stream.close();
-    };
-  }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/kafka")
   public KafkaResource kafka(@PathParam("projectId") Integer id) {
@@ -883,11 +874,18 @@ public class ProjectService {
     this.elastic.setProjectId(id);
     return elastic;
   }
-  
+
   @Logged(logLevel = LogLevel.OFF)
   @Path("{projectId}/cloud")
   public RoleMappingResource cloud(@PathParam("projectId") Integer id) {
     this.roleMappingResource.setProjectId(id);
     return this.roleMappingResource;
+  }
+
+  @Logged(logLevel = LogLevel.OFF)
+  @Path("{projectId}/integrations")
+  public IntegrationsResource integration(@PathParam("projectId") Integer id) {
+    this.integrationsResource.setProjectId(id);
+    return integrationsResource;
   }
 }

@@ -1191,7 +1191,7 @@ public class CertificateMaterializer {
     char[] password = decryptMaterialPassword(key.getExtendedUsername(), projectSpecificCerts.getUserKeyPwd());
     return new CryptoMaterial(keyStore, trustStore, password);
   }
-  
+
   private char[] decryptMaterialPassword(String certificateIdentifier, String encryptedPassword) throws IOException {
 
     // Project specific certificates
@@ -1216,7 +1216,7 @@ public class CertificateMaterializer {
   }
   
   
-  public class CryptoMaterial {
+  public static class CryptoMaterial {
     private final ByteBuffer keyStore;
     private final ByteBuffer trustStore;
     private final char[] password;

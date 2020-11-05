@@ -159,6 +159,13 @@
 
     <dependency>
       <groupId>io.hops.hopsworks</groupId>
+      <artifactId>featurestore-ee</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.hops.hopsworks</groupId>
       <artifactId>hopsworks-rest-utils</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
@@ -222,6 +229,7 @@
       <artifactId>commons-httpclient</artifactId>
       <version>3.1</version>
     </dependency>
+
   </dependencies>
 
   <build>

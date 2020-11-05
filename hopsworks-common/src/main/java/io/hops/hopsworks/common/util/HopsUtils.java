@@ -64,8 +64,10 @@ import org.json.JSONObject;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.security.SecureRandom;
@@ -681,6 +683,18 @@ public class HopsUtils {
   
   public static String getJupyterLogName(String hdfsUser, Integer port) {
     return (hdfsUser + "-" + port + ".log").toLowerCase();
+  }
+
+  public static StreamingOutput buildOutputStream(final InputStream stream) {
+    return out -> {
+      int length;
+      byte[] buffer = new byte[1024];
+      while ((length = stream.read(buffer)) != -1) {
+        out.write(buffer, 0, length);
+      }
+      out.flush();
+      stream.close();
+    };
   }
   
   

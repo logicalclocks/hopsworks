@@ -387,6 +387,7 @@
                                   featurestore="featurestoreCtrl.featurestore"
                                   selected-feature="featurestoreCtrl.selectedFeature"></feature-list>
                 </uib-tab>
+
                 <uib-tab index="3" heading="Feature Store Details" class="fs-tab"
                          uib-tooltip="View Details of the Feature Store."
                          select="featurestoreCtrl.overviewTab()"
@@ -543,6 +544,7 @@
                         </div>
                     </div>
                 </uib-tab>
+
                 <uib-tab index="4" heading="Storage Connectors"
                          class="fs-tab"
                          uib-tooltip="Connectors (e.g JDBC, HopsFS or S3)."
@@ -657,6 +659,13 @@
                             direction-links="true"
                             boundary-links="true">
                     </dir-pagination-controls>
+                </uib-tab>
+
+                <uib-tab index="5" heading="Integrations"
+                         class="fs-tab"
+                         uib-tooltip="Configure external integrations (Databricks, SageMaker)"
+                         id="integrationsTab">
+                    <div ng-include="'views/fsIntegration.html'"></div>
                 </uib-tab>
             </uib-tabset>
         </div>
