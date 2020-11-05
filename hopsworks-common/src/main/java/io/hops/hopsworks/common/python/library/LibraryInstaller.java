@@ -280,7 +280,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + initialDockerImage)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(30, TimeUnit.MINUTES)
+          .setWaitTimeout(1, TimeUnit.HOURS)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -383,7 +383,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(300L, TimeUnit.SECONDS)
+          .setWaitTimeout(10, TimeUnit.MINUTES)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -461,7 +461,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(300L, TimeUnit.SECONDS)
+          .setWaitTimeout(5, TimeUnit.MINUTES)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
