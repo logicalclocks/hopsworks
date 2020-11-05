@@ -143,7 +143,7 @@ public class SparkController {
       String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
       sparkConfig.setAppPath(pyAppPath);
       jupyterController.convertIPythonNotebook(username, appPath, job.getProject(), pyAppPath,
-          JupyterController.NotebookConversion.PY);
+          jupyterController.getNotebookConversionType(appPath, user, job.getProject()));
     }
 
     submitter.startExecution(sparkjob, args);
