@@ -22,6 +22,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
@@ -39,6 +40,7 @@ import javax.ejb.TransactionAttributeType;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,8 +58,18 @@ public class CommandsController {
   @EJB
   private LibraryFacade libraryFacade;
   
-  public void deleteCommands(Project project, String lib) {
-    condaCommandFacade.deleteCommandsForLibrary(project, lib);
+  public void deleteCommands(Project project, String library) {
+    //Failed installation commands should remove
+    List<CondaCommands> commands = condaCommandFacade.getFailedCommandsForProjectAndLib(project, library);
+    Optional<CondaCommands> command = commands.stream()
+        .filter(d -> d.getStatus().equals(CondaStatus.FAILED))
+        .findFirst();
+    if(command.isPresent()) {
+      Collection<PythonDep> projectLibs = project.getPythonDepCollection();
+      projectLibs.removeIf(lib -> lib.getDependency().equals(library));
+      projectFacade.update(project);
+    }
+    condaCommandFacade.deleteCommandsForLibrary(project, library);
   }
   
   public void deleteCommands(Project project) {
@@ -91,7 +103,7 @@ public class CommandsController {
   }
 
   public PythonDep condaOp(CondaOp op, Users user, CondaInstallType installType, Project proj, String channelUrl,
-                           String lib, String version)
+                           String lib, String version, String arg, GitBackend gitBackend, String apiKeyName)
     throws GenericException {
     
     PythonDep dep;
@@ -116,7 +128,7 @@ public class CommandsController {
 
       CondaCommands cc = new CondaCommands(settings.getAnacondaUser(), user, op,
           CondaStatus.NEW, installType, proj, lib, version, channelUrl,
-          new Date(), "", null, false);
+          new Date(), arg, null, false, gitBackend, apiKeyName);
       condaCommandFacade.save(cc);
     } catch (Exception ex) {
       throw new GenericException(RESTCodes.GenericErrorCode.UNKNOWN_ERROR, Level.SEVERE, "condaOp failed",
@@ -148,10 +160,10 @@ public class CommandsController {
               cc.getInstallType(), cc.getLib(), cc.getVersion(), true, false);
           Collection<PythonDep> deps = project.getPythonDepCollection();
 
-          if (opType.equals(CondaOp.INSTALL)) {
-            deps.remove(dep);
-            deps.add(dep);
-          } else if (opType.equals(CondaOp.UNINSTALL)) {
+          if(cc.getInstallType().equals(CondaInstallType.GIT) ||
+              cc.getInstallType().equals(CondaInstallType.EGG) ||
+              cc.getInstallType().equals(CondaInstallType.WHEEL) ||
+              opType.equals(CondaOp.UNINSTALL)) {
             deps.remove(dep);
           }
           

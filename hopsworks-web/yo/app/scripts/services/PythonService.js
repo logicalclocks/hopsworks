@@ -32,8 +32,8 @@ angular.module('hopsWorksApp')
               getLibraries: function (projectId, pythonVersion) {
                 return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries?expand=commands');
               },
-              getLibrary: function (projectId, pythonVersion, lib) {
-                return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + lib);
+              getLibrary: function (projectId, pythonVersion, library) {
+                return $http.get('/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + library);
               },
               createEnvironmentFromVersion: function (projectId, version) {
                 return $http.post('/api/project/' + projectId + '/python/environments/' + version + '?action=create');
@@ -66,25 +66,17 @@ angular.module('hopsWorksApp')
               exportEnvironment: function (projectId, pythonVersion) {
                 return $http.post('/api/project/' + projectId + '/python/environments/' + pythonVersion + '?action=export');
               },
-              install: function (projectId, pythonVersion, data) {
-                if(data.installType.toUpperCase() === 'PIP') {
+              install: function (projectId, pythonVersion, library) {
                   var regReq = {
                     method: 'POST',
-                    url: '/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + data.lib +
-                    '?package_manager=' + data.installType + '&version=' + data.version
+                    url: '/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + library.library,
+                    headers: {'Content-Type': 'application/json'},
+                    data: library
                   };
                   return $http(regReq);
-                } else {
-                  var regReq = {
-                    method: 'POST',
-                    url: '/api/project/' + projectId + '/python/environments/' + pythonVersion + '/libraries/' + data.lib +
-                    '?package_manager=' + data.installType + '&version=' + data.version + '&channel=' + data.channelUrl
-                  };
-                  return $http(regReq);
-                }
               },
-              uninstall: function (projectId, version, lib) {
-                return $http.delete('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + lib);
+              uninstall: function (projectId, version, library) {
+                return $http.delete('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library);
               },
               deleteLibraryCommands: function (projectId, version, library) {
                 return $http.delete('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library + '/commands');
@@ -93,10 +85,10 @@ angular.module('hopsWorksApp')
                 return $http.put('/api/project/' + projectId + '/python/environments/' + version + '/libraries/' + library + '/commands');
               },
               search: function (projectId, selected) {
-                if(selected.installType === 'PIP') {
-                    return $http.get('/api/project/' + projectId + '/python/environments/' + selected.version + '/libraries/pip?query=' + selected.lib);
+                if(selected.packageSource === 'PIP') {
+                    return $http.get('/api/project/' + projectId + '/python/environments/' + selected.version + '/libraries/pip?query=' + selected.library);
                 } else {
-                    return $http.get('/api/project/' + projectId + '/python/environments/' + selected.version + '/libraries/conda?query=' + selected.lib + '&channel=' + selected.channelUrl);
+                    return $http.get('/api/project/' + projectId + '/python/environments/' + selected.version + '/libraries/conda?query=' + selected.library + '&channel=' + selected.channelUrl);
                 }
               }
             };

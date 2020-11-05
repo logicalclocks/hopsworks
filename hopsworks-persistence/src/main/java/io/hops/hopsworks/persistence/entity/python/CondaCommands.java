@@ -39,6 +39,7 @@
 
 package io.hops.hopsworks.persistence.entity.python;
 
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
@@ -153,6 +154,13 @@ public class CondaCommands implements Serializable {
   @Size(max = 52)
   @Column(name = "version")
   private String version = "";
+  @Size(max = 125)
+  @Column(name = "git_api_key_name")
+  private String gitApiKeyName = "";
+  @Size(max = 45)
+  @Column(name = "git_backend")
+  @Enumerated(EnumType.STRING)
+  private GitBackend gitBackend;
   @Basic(optional = false)
   @NotNull
   @Size(min = 1,
@@ -190,7 +198,7 @@ public class CondaCommands implements Serializable {
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
-  @Size(max = 11000)
+  @Size(max = 10000)
   @Column(name = "error_message")
   private String errorMsg="";
   
@@ -200,6 +208,14 @@ public class CondaCommands implements Serializable {
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
                        String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
+    this(user, userId, op, status, installType, project, lib, version, channelUrl, created, arg,
+        environmentYml, installJupyter, null, null);
+  }
+
+  public CondaCommands(String user, Users userId, CondaOp op,
+                       CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
+                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
+                       GitBackend gitBackend, String gitApiKeyName) {
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
     }
@@ -216,6 +232,8 @@ public class CondaCommands implements Serializable {
     this.arg = arg;
     this.environmentYml = environmentYml;
     this.installJupyter = installJupyter;
+    this.gitBackend = gitBackend;
+    this.gitApiKeyName = gitApiKeyName;
   }
 
   public Integer getId() {
@@ -328,7 +346,7 @@ public class CondaCommands implements Serializable {
   }
 
   public void setErrorMsg(String errorMsg) {
-    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 11000), errorMsg.length());
+    this.errorMsg = errorMsg.substring(Math.max(0, errorMsg.length() - 10000), errorMsg.length());
   }
   
   @Override
@@ -366,5 +384,21 @@ public class CondaCommands implements Serializable {
 
   public void setUserId(Users userId) {
     this.userId = userId;
+  }
+
+  public String getGitApiKeyName() {
+    return gitApiKeyName;
+  }
+
+  public void setGitApiKeyName(String gitApiKeyName) {
+    this.gitApiKeyName = gitApiKeyName;
+  }
+
+  public GitBackend getGitBackend() {
+    return gitBackend;
+  }
+
+  public void setGitBackend(GitBackend gitBackend) {
+    this.gitBackend = gitBackend;
   }
 }
