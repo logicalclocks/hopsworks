@@ -47,6 +47,8 @@ describe "On #{ENV['OS']}" do
     context "with admin authentication and validated user" do
       before :all do
         with_admin_session()
+        @key = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS))
+        @key_register = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS_REGISTER))
       end
 
       let(:user) { create_validated_user() }
@@ -213,9 +215,19 @@ describe "On #{ENV['OS']}" do
         expect_status(400)
       end
       it "should register new user with api key" do
-        key = create_api_key("admin_user#{random_id_len(4)}", %w(ADMINISTER_USERS))
         reset_session
-        set_api_key_to_header(key)
+        set_api_key_to_header(@key)
+        register_user_as_admin("#{random_id}@email.com", "name", "last")
+        expect_status(201)
+        expect(json_body[:maxNumProjects]).to be == 10
+        expect(json_body[:status]).to be == 0
+        expect(json_body[:password]).not_to be_nil
+        expect(json_body[:securityQuestion]).not_to be_nil
+        expect(json_body[:securityAnswer]).not_to be_nil
+      end
+      it "should register new user with api key scope register" do
+        reset_session
+        set_api_key_to_header(@key_register)
         register_user_as_admin("#{random_id}@email.com", "name", "last")
         expect_status(201)
         expect(json_body[:maxNumProjects]).to be == 10

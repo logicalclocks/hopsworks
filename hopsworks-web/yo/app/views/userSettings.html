@@ -462,11 +462,12 @@
                         </div>
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <label class="text-muted">Choose scopes:</label>
-                            <div class="checkbox c-checkbox" ng-repeat="scope in profileCtrl.keyScopes track by $index">
+                            <div class="checkbox c-checkbox"
+                                 ng-repeat="scope in profileCtrl.keyScopes | orderBy : 'value' track by $index">
                                 <label>
                                     <input name="scope.value" ng-model="profileCtrl.keyScopes[$index].selected"
                                            value="true" type="checkbox">
-                                    <span class="fa fa-check"></span> {{scope.value.toLowerCase().replace("_", ".")}}
+                                    <span class="fa fa-check"></span> {{scope.value.toLowerCase().replaceAll("_", ".")}}
                                 </label>
                             </div>
                         </div>

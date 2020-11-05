@@ -213,10 +213,12 @@ public class UsersAdminResource {
     return Response.accepted().build();
   }
   
-  @ApiOperation(value = "Register new user by admin.")
+  @ApiOperation(value = "Register new user as admin.")
   @POST
   @Path("/users")
   @Produces(MediaType.APPLICATION_JSON)
+  @ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN, ApiScope.ADMINISTER_USERS, ApiScope.ADMINISTER_USERS_REGISTER},
+    allowedUserRoles = {"HOPS_ADMIN"})
   public Response registerUser(@QueryParam("accountType") UserAccountType accountType,
     @QueryParam("uuid") String uuid, @QueryParam("email") String email, @QueryParam("password") String password,
     @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
