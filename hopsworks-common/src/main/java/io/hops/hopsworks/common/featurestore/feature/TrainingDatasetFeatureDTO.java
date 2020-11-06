@@ -24,16 +24,18 @@ public class TrainingDatasetFeatureDTO {
   private String type;
   private FeaturegroupDTO featuregroup;
   private Integer index;
-  private Boolean label;
+  private Boolean label = false;
 
   public TrainingDatasetFeatureDTO() {
   }
 
-  public TrainingDatasetFeatureDTO(String name, String type, FeaturegroupDTO featuregroupDTO, Integer index) {
+  public TrainingDatasetFeatureDTO(String name, String type, FeaturegroupDTO featuregroupDTO, Integer index,
+                                   Boolean label) {
     this.name = name;
     this.type = type;
     this.featuregroup = featuregroupDTO;
     this.index = index;
+    this.label = label;
   }
 
   public String getName() {
