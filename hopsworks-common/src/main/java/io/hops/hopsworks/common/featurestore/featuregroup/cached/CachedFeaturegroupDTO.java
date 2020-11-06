@@ -33,7 +33,7 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   private Boolean onlineEnabled = false;
   private Boolean hudiEnabled = false;
-  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.HUDI;
+  private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
 
   public CachedFeaturegroupDTO() {
     super();
