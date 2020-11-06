@@ -54,4 +54,4 @@ angular.module('hopsWorksApp').factory('FsIntegrationService', ['$http', functio
             return $http.get('/api/project/' + projectId + '/integrations/spark/client/configuration');
         }
     }
-}])
+}]);

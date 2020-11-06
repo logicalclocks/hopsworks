@@ -14,6 +14,8 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
+'use strict';
+
 angular.module('hopsWorksApp')
     .controller('FsIntegrationCtrl', ['$scope', '$routeParams', 'growl', 'FsIntegrationService', 'UserService', 'MembersService', 'FileSaver',
         function ($scope, $routeParams, growl, FsIntegrationService, UserService, MembersService, FileSaver) {
