@@ -16,7 +16,9 @@
 package io.hops.hopsworks.common.util;
 
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -34,5 +36,23 @@ public class AccessController {
     }
     return targetDataset.getDatasetSharedWithCollection().stream()
       .anyMatch(sds -> sds.getProject().equals(userProject));
+  }
+  
+  public boolean hasExtendedAccess(Users user, Project project) {
+    boolean result = project.getProjectTeamCollection().stream()
+      .anyMatch(pt -> pt.getUser().equals(user));
+    if(result) {
+      return true;
+    }
+    result = project.getDatasetSharedWithCollection().stream()
+      .filter(DatasetSharedWith::getAccepted)
+      .anyMatch(sds -> sds.getProject().getProjectTeamCollection().stream().anyMatch(t -> t.getUser().equals(user)));
+    if(result) {
+      return true;
+    }
+    return project.getDatasetCollection().stream()
+      .flatMap(ds -> ds.getDatasetSharedWithCollection().stream())
+      .filter(DatasetSharedWith::getAccepted)
+      .anyMatch(sds -> sds.getProject().getProjectTeamCollection().stream().anyMatch(t -> t.getUser().equals(user)));
   }
 }

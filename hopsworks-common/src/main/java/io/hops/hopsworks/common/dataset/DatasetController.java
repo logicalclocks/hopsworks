@@ -105,10 +105,12 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Contains business logic pertaining DataSet management.
@@ -583,6 +585,28 @@ public class DatasetController {
   public Dataset getByName(Project project, String dsName) throws DatasetException {
     String nativeDatasetPath = Utils.getProjectPath(project.getName()) + dsName;
     return getByProjectAndFullPath(project, nativeDatasetPath);
+  }
+  
+  /**
+   * @param project
+   * @param dsName
+   * @return The list of datasets that match the name, including the datasets shared with this project
+   */
+  public List<Dataset> getAllByName(Project project, String dsName) {
+    List<Dataset> result = new ArrayList<>();
+    try {
+      Dataset nativeDataset = getByName(project, dsName);
+      result.add(nativeDataset);
+    } catch(DatasetException e) {
+      //not found, don't do anything
+    }
+    List<Dataset> sharedDatasets = project.getDatasetSharedWithCollection().stream()
+      .filter(DatasetSharedWith::getAccepted)
+      .filter((sds) -> sds.getDataset().getName().equals(dsName))
+      .map((sds) -> sds.getDataset())
+      .collect(Collectors.toCollection(ArrayList::new));
+    result.addAll(sharedDatasets);
+    return result;
   }
   
   public Dataset getByProjectAndInodeId(Project project, Long dsInodeId) throws DatasetException {

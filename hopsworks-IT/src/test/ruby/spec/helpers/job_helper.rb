@@ -224,6 +224,7 @@ module JobHelper
       job_config = get_spark_default_py_config(project, job_name, job_type)
       job_config["amMemory"] = 2048
       job_config["spark.executor.memory"] = 4096
+      job_config["defaultArgs"] = nil
     end
     create_sparktour_job(project, job_name, job_type, job_config)
     expect_status_details(201)

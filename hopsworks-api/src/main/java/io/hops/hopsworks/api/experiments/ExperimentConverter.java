@@ -32,58 +32,87 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ExperimentConverter {
-
-  private static JAXBContext jaxbExperimentSummaryContext;
-  private static JAXBContext jaxbExperimentResultsWrapperContext;
-
+  
+  private static JAXBContext jaxbExperimentContext;
+  
   @PostConstruct
   public void init() {
     try {
-      jaxbExperimentSummaryContext = JAXBContextFactory.
-          createContext(new Class[] {ExperimentDTO.class}, null);
-    } catch (JAXBException e) {
-      e.printStackTrace();
-    }
-    try {
-      jaxbExperimentResultsWrapperContext = JAXBContextFactory.
-          createContext(new Class[] {ExperimentResultSummaryDTO.class}, null);
+      Class[] serializedClasses = new Class[]{
+        ExperimentDTO.class,
+        ModelXAttr.class,
+        ExperimentResultSummaryDTO.class
+      };
+      jaxbExperimentContext = JAXBContextFactory.createContext(serializedClasses, null);
     } catch (JAXBException e) {
       e.printStackTrace();
     }
   }
-
+  
+  private Marshaller createMarshaller() throws ExperimentsException {
+    try {
+      Marshaller marshaller = jaxbExperimentContext.createMarshaller();
+      marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+      marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+      return marshaller;
+    } catch(JAXBException e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.INFO,
+        "Failed to unmarshal", "Error occurred during unmarshalling setup", e);
+    }
+  }
+  
+  private Unmarshaller createUnmarshaller() throws ExperimentsException {
+    try {
+      Unmarshaller unmarshaller = jaxbExperimentContext.createUnmarshaller();
+      unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+      unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+      return unmarshaller;
+    } catch(JAXBException e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.INFO,
+        "Failed to unmarshal", "Error occurred during unmarshalling setup", e);
+    }
+  }
+  
+  public byte[] marshal(Object value) throws ExperimentsException {
+    Marshaller marshaller = createMarshaller();
+    try(StringWriter sw = new StringWriter()) {
+      marshaller.marshal(value, sw);
+      return sw.toString().getBytes(StandardCharsets.UTF_8);
+    } catch (JAXBException | IOException e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
+        "Failed to marshal", "Failed to marshal:" + value.toString(), e);
+    }
+  }
+  
+  public <O> O unmarshal(String value, Class<O> resultClass) throws ExperimentsException {
+    Unmarshaller unmarshaller = createUnmarshaller();
+    try (StringReader sr = new StringReader(value)) {
+      StreamSource json = new StreamSource(sr);
+      return unmarshaller.unmarshal(json, resultClass).getValue();
+    } catch (JAXBException e) {
+      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
+        "Failed to unmarshal", "Error occurred during unmarshalling:" + value, e);
+    }
+  }
+  
   public ExperimentDTO unmarshalDescription(String jsonConfig) throws ExperimentsException {
-    try {
-      Unmarshaller unmarshaller = jaxbExperimentSummaryContext.createUnmarshaller();
-      StreamSource json = new StreamSource(new StringReader(jsonConfig));
-      unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-      unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return unmarshaller.unmarshal(json, ExperimentDTO.class).getValue();
-    } catch(Exception e) {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
-          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonConfig, e);
-    }
+    return unmarshal(jsonConfig, ExperimentDTO.class);
   }
-
+  
   public ExperimentResultSummaryDTO unmarshalResults(String jsonResults) throws ExperimentsException {
-    try {
-      Unmarshaller unmarshaller = jaxbExperimentResultsWrapperContext.createUnmarshaller();
-      StreamSource json = new StreamSource(new StringReader(jsonResults));
-      unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-      unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return unmarshaller.unmarshal(json, ExperimentResultSummaryDTO.class).getValue();
-    } catch(Exception e) {
-      throw new ExperimentsException(RESTCodes.ExperimentsErrorCode.EXPERIMENT_MARSHALLING_FAILED, Level.FINE,
-          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonResults, e);
-    }
+    return unmarshal(jsonResults, ExperimentResultSummaryDTO.class);
   }
 }
