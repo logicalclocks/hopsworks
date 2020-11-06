@@ -649,7 +649,7 @@ angular.module('hopsWorksApp')
 
                 PythonService.install(self.projectId, self.pythonVersion, data).then(
                     function (success) {
-                        growl.success("Started installing library " + library + ". Click on the 'Manage Environment' tab for installation status.", {
+                        growl.success("Started installing library " + library + ". Click on the 'Ongoing Operations' tab for installation status.", {
                             title: 'Installing',
                             ttl: 10000
                         });
