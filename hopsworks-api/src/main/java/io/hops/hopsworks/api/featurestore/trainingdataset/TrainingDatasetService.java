@@ -18,9 +18,9 @@ package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
-import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
@@ -53,8 +53,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import java.io.IOException;
-
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
@@ -77,6 +75,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -474,11 +473,14 @@ public class TrainingDatasetService {
   public Response getQuery(@Context SecurityContext sc,
                            @Context UriInfo uriInfo,
                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
+                           @PathParam("trainingdatasetid") Integer trainingdatasetid,
+                           @ApiParam(value = "get query with label features", example = "true")
+                           @QueryParam("withLabel") @DefaultValue("true") boolean withLabel)
+      throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid, withLabel);
     return Response.ok().entity(fsQueryDTO).build();
   }
   
