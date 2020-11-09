@@ -928,7 +928,8 @@ public class RESTCodes {
     ACCOUNT_NOT_ACTIVE(51, "This account is not active", Response.Status.BAD_REQUEST),
     ACCOUNT_ACTIVATION_FAILED(52, "Account activation failed", Response.Status.BAD_REQUEST),
     ROLE_NOT_FOUND(53, "Role not found", Response.Status.BAD_REQUEST),
-    ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST);
+    ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
+    USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;

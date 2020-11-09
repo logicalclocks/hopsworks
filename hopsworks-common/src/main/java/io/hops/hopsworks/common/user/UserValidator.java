@@ -122,6 +122,24 @@ public class UserValidator {
     }
     return true;
   }
+  
+  public void isValidNewUser(UserDTO newUser, boolean checkPassword) throws UserException {
+    isValidEmail(newUser.getEmail());
+    if (checkPassword) {
+      isValidPassword(newUser.getChosenPassword(), newUser.getRepeatedPassword());
+    }
+    isValidsecurityQA(newUser.getSecurityQuestion(), newUser.getSecurityAnswer());
+    if (userBean.findByEmail(newUser.getEmail()) != null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_EXISTS, Level.FINE);
+    }
+    if (!newUser.getTos()) {
+      throw new UserException(RESTCodes.UserErrorCode.TOS_NOT_AGREED, Level.FINE);
+    }
+    if (newUser.getFirstName() == null || newUser.getFirstName().isEmpty() || newUser.getLastName() == null ||
+      newUser.getLastName().isEmpty()) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_NAME_NOT_SET, Level.FINE, "User name is required");
+    }
+  }
 
   private boolean isValid(String u, String inPattern) {
     Pattern pattern = Pattern.compile(inPattern);

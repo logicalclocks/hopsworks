@@ -1983,6 +1983,8 @@ public class Settings implements Serializable {
   // Strating user id from 1000 to create a POSIX compliant username: meb1000
   public static final int STARTING_USER = 1000;
   public static final int PASSWORD_MIN_LENGTH = 6;
+  public static final int DEFAULT_SECURITY_ANSWER_LEN = 16;
+  public static final String DEFAULT_ROLE = "HOPS_USER";
 
   // POSIX compliant usernake length
   public static final int ACCOUNT_VALIDATION_TRIES = 5;

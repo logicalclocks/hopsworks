@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.api.admin;
 
+import io.hops.hopsworks.api.admin.dto.NewUserDTO;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.user.BbcGroupDTO;
@@ -31,13 +32,18 @@ import io.hops.hopsworks.audit.auditor.annotation.AuditedList;
 import io.hops.hopsworks.audit.helper.AuditAction;
 import io.hops.hopsworks.audit.helper.UserIdentifier;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
+import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.remote.user.RemoteUserFacade;
+import io.hops.hopsworks.common.dao.user.UserDTO;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.remote.RemoteUserDTO;
 import io.hops.hopsworks.common.remote.RemoteUserHelper;
 import io.hops.hopsworks.common.remote.group.mapping.RemoteGroupMappingHelper;
 import io.hops.hopsworks.common.remote.ldap.LdapHelper;
+import io.hops.hopsworks.common.security.utils.SecurityUtils;
+import io.hops.hopsworks.common.user.UserValidator;
+import io.hops.hopsworks.common.user.UsersController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -47,7 +53,9 @@ import io.hops.hopsworks.persistence.entity.remote.user.RemoteUser;
 import io.hops.hopsworks.persistence.entity.remote.user.RemoteUserType;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
+import io.hops.hopsworks.persistence.entity.user.security.ua.SecurityQuestion;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
+import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountType;
 import io.hops.hopsworks.persistence.entity.util.FormatUtils;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
@@ -81,7 +89,7 @@ import java.util.logging.Logger;
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
-@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN}, allowedUserRoles = {"HOPS_ADMIN"})
+@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN, ApiScope.ADMINISTER_USERS}, allowedUserRoles = {"HOPS_ADMIN"})
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersAdminResource {
@@ -102,6 +110,12 @@ public class UsersAdminResource {
   private LdapHelper ldapHelper;
   @Inject
   private RemoteUserHelper remoteUserHelper;
+  @EJB
+  private SecurityUtils securityUtils;
+  @EJB
+  protected UsersController usersController;
+  @EJB
+  private UserValidator userValidator;
   
   @ApiOperation(value = "Get all users profiles.", response = UserProfileDTO.class)
   @GET
@@ -228,15 +242,80 @@ public class UsersAdminResource {
     return Response.accepted().build();
   }
   
-  @ApiOperation(value = "Register remote user.")
+  @ApiOperation(value = "Get remote user registered in hopsworks.")
+  @GET
+  @Path("/user/{uuid}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getRemoteUser(@PathParam("uuid") String uuid, @Context SecurityContext sc) throws UserException {
+    RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
+    RestRemoteUserDTO userDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
+      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
+    return Response.ok(userDTO).build();
+  }
+  
+  @ApiOperation(value = "Register new user as admin.")
   @POST
   @Path("/users")
   @Produces(MediaType.APPLICATION_JSON)
-  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user by admin")
-  public Response registerRemoteUser(@QueryParam("uuid") String uuid, @AuditTarget(UserIdentifier.EMAIL)
-    @QueryParam("email") String email, @QueryParam("givenName") String givenName, @QueryParam("surname") String surname,
-    @QueryParam("type") RemoteUserType type, @QueryParam("status") UserAccountStatus status,
-    @Context SecurityContext sc, @Context UriInfo uriInfo) throws GenericException, UserException {
+  @ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN, ApiScope.ADMINISTER_USERS, ApiScope.ADMINISTER_USERS_REGISTER},
+    allowedUserRoles = {"HOPS_ADMIN"})
+  @Audited(type = AuditType.ACCOUNT_AUDIT, action = AuditAction.REGISTRATION, message = "Register new user as admin")
+  public Response registerUser(@QueryParam("accountType") UserAccountType accountType, @QueryParam("uuid") String uuid,
+    @AuditTarget(UserIdentifier.EMAIL) @QueryParam("email") String email,
+    @QueryParam("password") @Secret String password, @QueryParam("givenName") String givenName,
+    @QueryParam("surname") String surname, @QueryParam("maxNumProjects") int maxNumProjects,
+    @QueryParam("securityQuestion") @Secret SecurityQuestion securityQuestion,
+    @QueryParam("securityAnswer") @Secret String securityAnswer, @QueryParam("type") RemoteUserType type,
+    @QueryParam("status") UserAccountStatus status, @Context SecurityContext sc, @Context UriInfo uriInfo)
+    throws GenericException, UserException {
+    switch (accountType) {
+      case M_ACCOUNT_TYPE:
+        return createUser(email, password, givenName, surname,  maxNumProjects, securityQuestion, securityAnswer,
+          status, uriInfo);
+      case REMOTE_ACCOUNT_TYPE:
+        return createRemoteUser(uuid, email, givenName, surname, type, status, uriInfo);
+      default:
+        throw new WebApplicationException("User account type not valid.", Response.Status.NOT_FOUND);
+    }
+  }
+  
+  private Response createUser(String email, String password, String givenName, String surname, int maxNumProjects,
+    SecurityQuestion securityQuestion, String securityAnswer, UserAccountStatus status, UriInfo uriInfo)
+    throws UserException {
+    UserDTO newUser = new UserDTO();
+    newUser.setEmail(email);
+    newUser.setFirstName(givenName);
+    newUser.setLastName(surname);
+    newUser.setMaxNumProjects(maxNumProjects > 0 ? maxNumProjects : settings.getMaxNumProjPerUser());
+    String passwordGen = password != null && !password.isEmpty()? password :
+      securityUtils.generateRandomString(UserValidator.TEMP_PASSWORD_LENGTH);
+    newUser.setChosenPassword(passwordGen);
+    newUser.setRepeatedPassword(passwordGen);
+    SecurityQuestion securityQuestionGen = securityQuestion != null? securityQuestion :
+      SecurityQuestion.randomQuestion();
+    newUser.setSecurityQuestion(securityQuestionGen.getValue());
+    String securityAnswerGen = securityAnswer != null && !securityAnswer.isEmpty()? securityAnswer :
+      securityUtils.generateSecureRandomString(Settings.DEFAULT_SECURITY_ANSWER_LEN);
+    newUser.setSecurityAnswer(securityAnswerGen);
+    newUser.setTos(true);
+    userValidator.isValidNewUser(newUser, passwordGen.equals(password));
+    UserAccountStatus statusDefault = status != null ? status : UserAccountStatus.NEW_MOBILE_ACCOUNT;
+    Users user =
+      usersController.registerUser(newUser, Settings.DEFAULT_ROLE, statusDefault, UserAccountType.M_ACCOUNT_TYPE);
+    NewUserDTO newUserDTO = new NewUserDTO(user);
+    URI href = uriInfo.getAbsolutePathBuilder().path(user.getUid().toString()).build();
+    if (!passwordGen.equals(password)) {
+      newUserDTO.setPassword(passwordGen);
+    }
+    if (!securityQuestionGen.equals(securityQuestion) || !securityAnswerGen.equals(securityAnswer)) {
+      newUserDTO.setSecurityQuestion(securityQuestionGen);
+      newUserDTO.setSecurityAnswer(securityAnswerGen);
+    }
+    return Response.created(href).entity(newUserDTO).build();
+  }
+  
+  private Response createRemoteUser(String uuid, String email, String givenName, String surname, RemoteUserType type,
+    UserAccountStatus status, UriInfo uriInfo) throws GenericException, UserException {
     if (email == null || email.isEmpty()) { // email needed for audit
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "Email not provided.");
     }
@@ -259,17 +338,4 @@ public class UsersAdminResource {
     URI href = uriInfo.getAbsolutePathBuilder().path(uuid).build();
     return Response.created(href).entity(restRemoteUserDTO).build();
   }
-  
-  @ApiOperation(value = "Get remote user registered in hopsworks.")
-  @GET
-  @Path("/user/{uuid}")
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getRemoteUser(@PathParam("uuid") String uuid, @Context SecurityContext sc) throws UserException {
-    RemoteUser remoteUser = remoteUserHelper.getRemoteUser(uuid);
-    RestRemoteUserDTO userDTO = new RestRemoteUserDTO(remoteUser.getUuid(), remoteUser.getUid().getFname(),
-      remoteUser.getUid().getLname(), remoteUser.getUid().getEmail());
-    return Response.ok(userDTO).build();
-  }
-  
-  
 }
