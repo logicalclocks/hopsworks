@@ -459,6 +459,25 @@ module FeaturestoreHelper
     end
   end
 
+  #eventual consistency - epipe+elastic - retry a number of times
+  def check_featuregroup_usage(project_id, fg_id, check, fs_id: nil, fs_project_id: nil, type: [], retries: 10)
+    wait_result = wait_for_me_time(retries) do
+      result = featuregroup_usage(project_id, fg_id, fs_id: fs_id, fs_project_id: fs_project_id, type: type)
+      pp result if defined?(@debugOpt) && @debugOpt
+      begin
+        expect(result["readLast"]).not_to be_nil if check["readLast"]
+        expect(result["writeLast"]).not_to be_nil if check["writeLast"]
+        expect(result["readHistory"].length).to eq(check["readHistory"]) if check["readHistory"]
+        expect(result["writeHistory"].length).to eq(check["writeHistory"]) if check["writeHistory"]
+        expect(result["readCurrent"].length).to eq(check["readCurrent"]) if check["readCurrent"]
+        expect(result["writeCurrent"].length).to eq(check["writeCurrent"]) if check["writeCurrent"]
+        { 'success' => true }
+      rescue
+        { 'success' => false, 'msg' => "usage not meeting expectation: " + result }
+      end
+    end
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
+  end
   def featuregroup_usage(project_id, fg_id, fs_id: nil, fs_project_id: nil, type: [])
     fs_project_id = project_id if fs_project_id.nil?
     fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?
@@ -524,6 +543,25 @@ module FeaturestoreHelper
     end
   end
 
+  #eventual consistency - epipe+elastic - retry a number of times
+  def check_trainingdataset_usage(project_id, td_id, check, fs_id: nil, fs_project_id: nil, type: [], retries: 10)
+    wait_result = wait_for_me_time(retries) do
+      result = trainingdataset_usage(project_id, td_id, fs_id: fs_id, fs_project_id: fs_project_id, type: type)
+      pp result if defined?(@debugOpt) && @debugOpt
+      begin
+        expect(result["readLast"]).not_to be_nil if check["readLast"]
+        expect(result["writeLast"]).not_to be_nil if check["writeLast"]
+        expect(result["readHistory"].length).to eq(check["readHistory"]) if check["readHistory"]
+        expect(result["writeHistory"].length).to eq(check["writeHistory"]) if check["writeHistory"]
+        expect(result["readCurrent"].length).to eq(check["readCurrent"]) if check["readCurrent"]
+        expect(result["writeCurrent"].length).to eq(check["writeCurrent"]) if check["writeCurrent"]
+        { 'success' => true }
+      rescue
+        { 'success' => false, 'msg' => "usage not meeting expectation: " + result }
+      end
+    end
+    expect(wait_result["success"]).to be(true), wait_result["msg"]
+  end
   def trainingdataset_usage(project_id, td_id, fs_id: nil, fs_project_id: nil, type: [])
     fs_project_id = project_id if fs_project_id.nil?
     fs_id = get_featurestore(project_id, fs_project_id: fs_project_id)["featurestoreId"] if fs_id.nil?

@@ -42,7 +42,25 @@ module ModelHelper
     get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models#{query}"
   end
 
-  def get_model(project_id, ml_id, query)
-    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}/#{query}"
+  def get_model(project_id, ml_id, query: "")
+    get_model_request = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/models/#{ml_id}/#{query}"
+    pp get_model_request if defined?(@debugOpt) && @debugOpt
+    get get_model_request
+  end
+
+  def model_exists(project, name, version: 1)
+    result = wait_for_me_time(10) do
+      artifact_id = "#{name}_#{version}"
+      get_model(project[:id], artifact_id)
+      terminate = response.code == resolve_status(200, response.code) || (response.code == resolve_status(404, response.code) && json_body[:errorCode] == 360000)
+      { 'success' => terminate, 'msg' => "wait for model in elastic", 'resp_code' => response.code, 'error_code' => json_body[:errorCode]}
+    end
+    if result['resp_code'] == resolve_status(200, result['resp_code'])
+      true
+    elsif result['resp_code'] == resolve_status(404, result['resp_code'])  && result['error_code'] == 360000
+      false
+    else
+      expect_status_details(200)
+    end
   end
 end

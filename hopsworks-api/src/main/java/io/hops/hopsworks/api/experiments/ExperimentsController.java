@@ -17,8 +17,13 @@
 package io.hops.hopsworks.api.experiments;
 
 import io.hops.hopsworks.api.experiments.dto.ExperimentDTO;
+import io.hops.hopsworks.api.experiments.dto.ExperimentsEndpointDTO;
+import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.jobs.JobController;
@@ -30,34 +35,28 @@ import io.hops.hopsworks.common.provenance.state.ProvStateController;
 import io.hops.hopsworks.common.provenance.state.dto.ProvStateDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
+import io.hops.hopsworks.exceptions.ExperimentsException;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
 import org.apache.parquet.Strings;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -66,8 +65,6 @@ public class ExperimentsController {
   private static final Logger LOGGER = Logger.getLogger(ExperimentsController.class.getName());
 
   @EJB
-  private DistributedFsService dfs;
-  @EJB
   private ProvStateController provenanceController;
   @EJB
   private JobController jobController;
@@ -75,81 +72,88 @@ public class ExperimentsController {
   private JupyterController jupyterController;
   @EJB
   private XAttrsController xattrCtrl;
-
-  public void attachExperiment(String id, Project project, Users user,
-    String usersFullName, ExperimentDTO experimentSummary, ExperimentDTO.XAttrSetFlag xAttrSetFlag)
-    throws DatasetException, ProvenanceException, MetadataException {
-
+  @EJB
+  private DatasetController datasetController;
+  @EJB
+  private DatasetHelper datasetHelper;
+  @EJB
+  private ExperimentConverter experimentConverter;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private DistributedFsService dfs;
+  
+  public void attachExperiment(Users user, Project project, String id, ExperimentDTO experimentSummary)
+    throws DatasetException, ProvenanceException, MetadataException, ExperimentsException {
+    
+    String usersFullName = user.getFname() + " " + user.getLname();
     experimentSummary.setUserFullName(usersFullName);
     String experimentPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
-
-    if(xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.REPLACE)
-        && experimentSummary.getFinished() == null
-        && experimentSummary.getDuration() != null) {
+    
+    if(experimentSummary.getFinished() == null && experimentSummary.getDuration() != null) {
       ProvStateDTO fileState = getExperiment(project, id);
       if(fileState != null) {
         experimentSummary.setFinished(fileState.getCreateTime() + experimentSummary.getDuration());
       }
     }
-  
-    if(!Strings.isNullOrEmpty(experimentSummary.getAppId()) &&
-        xAttrSetFlag.equals(ExperimentDTO.XAttrSetFlag.CREATE)) {
+    
+    if(!Strings.isNullOrEmpty(experimentSummary.getAppId())) {
       byte[] appIdBytes = experimentSummary.getAppId().getBytes(StandardCharsets.UTF_8);
       xattrCtrl.upsertProvXAttr(project, user, experimentPath,
         ExperimentsBuilder.EXPERIMENT_APP_ID_XATTR_NAME, appIdBytes);
     }
   
-    byte[] experiment;
+    String hdfsUserName = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUserName);
     try {
-      JAXBContext sparkJAXBContext = JAXBContextFactory.createContext(new Class[] {ExperimentDTO.class},
-          null);
-      Marshaller marshaller = sparkJAXBContext.createMarshaller();
-      marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
-      marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      StringWriter sw = new StringWriter();
-      marshaller.marshal(experimentSummary, sw);
-      experiment = sw.toString().getBytes(StandardCharsets.UTF_8);
-    } catch(JAXBException ex) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.ATTACH_XATTR_ERROR, Level.SEVERE,
-        "path: " + experimentPath, ex.getMessage(), ex);
-    }
-
-    xattrCtrl.upsertProvXAttr(project, user, experimentPath,
-      ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME, experiment);
-  }
-
-  public void attachModel(String id, Project project, Users user, String model)
-    throws DatasetException, MetadataException {
-    String experimentPath = Utils.getProjectPath(project.getName()) +
-        Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
-    byte[] experiment = model.getBytes(StandardCharsets.UTF_8);
-    xattrCtrl.upsertProvXAttr(project, user, experimentPath,
-        ExperimentsBuilder.EXPERIMENT_MODEL_XATTR_NAME, experiment);
-  }
-
-  public void delete(String id, Project project, String hdfsUser) throws DatasetException {
-    boolean success = false;
-    DistributedFileSystemOps dfso = null;
-    String experimentPath = Utils.getProjectPath(project.getName()) + Settings.HOPS_EXPERIMENTS_DATASET + "/" + id;
-    try {
-      dfso = dfs.getDfsOps(hdfsUser);
-      Path path = new Path(experimentPath);
-      if(!dfso.exists(path)) {
-        return;
+      byte[] storedExpB = xattrCtrl.getProvXAttr(udfso, experimentPath,
+        ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME);
+      ExperimentDTO storedExp = null;
+      if(storedExpB != null) {
+        storedExp = experimentConverter.unmarshal(new String(storedExpB, StandardCharsets.UTF_8), ExperimentDTO.class);
       }
-      success = dfso.rm(path, true);
-    } catch (IOException ioe) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.SEVERE,
-          "path: " + experimentPath, "Error occurred during deletion of experiment", ioe);
+      ExperimentDTO experiment = ExperimentDTO.mergeExperiment(experimentSummary, storedExp);
+      byte[] experimentB = experimentConverter.marshal(experiment);
+      xattrCtrl.upsertProvXAttr(udfso, experimentPath, ExperimentsBuilder.EXPERIMENT_SUMMARY_XATTR_NAME, experimentB);
     } finally {
-      if (dfso != null) {
-        dfs.closeDfsClient(dfso);
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
       }
     }
-    if (!success) {
-      throw new DatasetException(RESTCodes.DatasetErrorCode.INODE_DELETION_ERROR, Level.FINE,
-          "path: " + experimentPath);
+  }
+  
+  public void attachModel(Users user, Project experimentProject, String experimentId, Project modelProject,
+    String modelId)
+    throws DatasetException, MetadataException, ExperimentsException {
+    String experimentPath = Utils.getProjectPath(experimentProject.getName()) +
+      Settings.HOPS_EXPERIMENTS_DATASET + "/" + experimentId;
+    ModelXAttr modelSummary = new ModelXAttr(modelId, modelProject.getName());
+    byte[] modelSummaryB = experimentConverter.marshal(modelSummary);
+    xattrCtrl.upsertProvXAttr(experimentProject, user, experimentPath,
+      ExperimentsBuilder.EXPERIMENT_MODEL_XATTR_NAME, modelSummaryB);
+  }
+  
+  public void delete(Users user, Project userProject, Project parentProject, String experimentId)
+    throws DatasetException {
+    if(userProject.getId().equals(parentProject.getId())) {
+      delete(user, userProject, experimentId);
+    } else {
+      String experimentPath = Utils.getProjectPath(userProject.getName())
+        + parentProject.getName() + "::" + Settings.HOPS_EXPERIMENTS_DATASET + "/" + experimentId;
+      deleteInternal(user, userProject, experimentPath);
     }
+  }
+  
+  public void delete(Users user, Project project, String experimentId) throws DatasetException {
+    String experimentPath = Utils.getProjectPath(project.getName())
+      + Settings.HOPS_EXPERIMENTS_DATASET + "/" + experimentId;
+    deleteInternal(user, project, experimentPath);
+  }
+  
+  private void deleteInternal(Users user, Project project, String path) throws DatasetException {
+    DatasetPath datasetPath = datasetHelper.getDatasetPath(project, path, DatasetType.DATASET);
+    datasetController.delete(project, user, datasetPath.getFullPath(), datasetPath.getDataset(),
+      datasetPath.isTopLevelDataset());
   }
 
   public ProvStateDTO getExperiment(Project project, String mlId) throws ProvenanceException {
@@ -190,5 +194,15 @@ public class ExperimentsController {
       jupyterController.versionProgram(project, user, kernelId, path);
       return relativePath;
     }
+  }
+  
+  public List<ExperimentsEndpointDTO> getExperimentsEndpoints(Project project) {
+    return datasetController.getAllByName(project, Settings.HOPS_EXPERIMENTS_DATASET).stream()
+      .map(ExperimentsEndpointDTO::fromDataset)
+      .collect(Collectors.toCollection(ArrayList::new));
+  }
+  
+  public ExperimentsEndpointDTO getExperimentsEndpoint(Project project) throws DatasetException {
+    return ExperimentsEndpointDTO.fromDataset(datasetController.getByName(project, Settings.HOPS_EXPERIMENTS_DATASET));
   }
 }

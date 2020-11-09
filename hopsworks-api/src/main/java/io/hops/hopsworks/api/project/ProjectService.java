@@ -83,6 +83,7 @@ import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.provenance.core.dto.ProvTypeDTO;
 import io.hops.hopsworks.common.user.AuthController;
 import io.hops.hopsworks.common.user.UsersController;
+import io.hops.hopsworks.common.util.AccessController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.ElasticException;
@@ -215,6 +216,8 @@ public class ProjectService {
   private ElasticResource elastic;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
+  @EJB
+  private AccessController accessCtrl;
 
   private final static Logger LOGGER = Logger.getLogger(ProjectService.class.getName());
 
@@ -251,7 +254,25 @@ public class ProjectService {
     ProjectDTO proj = projectController.getProjectByName(projectName);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(proj).build();
   }
-
+  
+  @GET
+  @Path("/asShared/getProjectInfo/{projectName}")
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB},
+    allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @Produces(MediaType.APPLICATION_JSON)
+  public Response getProjectByNameAsShared(@PathParam("projectName") String projectName, @Context SecurityContext sc)
+    throws ProjectException, GenericException {
+    Users user = jWTHelper.getUserPrincipal(sc);
+    Project project = projectController.findProjectByName(projectName);
+    if(accessCtrl.hasExtendedAccess(user, project)) {
+      ProjectDTO proj = projectController.getProjectByID(project.getId());
+      return Response.ok().entity(proj).build();
+    } else {
+      throw new GenericException(RESTCodes.GenericErrorCode.NOT_AUTHORIZED_TO_ACCESS, Level.INFO);
+    }
+  }
+  
   @GET
   @Path("/getMoreInfo/proj/{projectId}")
   @Produces(MediaType.APPLICATION_JSON)

@@ -14,7 +14,10 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 describe "On #{ENV['OS']}" do
-  after(:all) {clean_all_test_projects(spec: "model")}
+  before :all do
+    @debugOpt = true
+  end
+  # after :all {clean_all_test_projects(spec: "model")}
   experiment_1 = "experiment_1"
   describe 'model' do
     context 'without authentication' do
@@ -23,7 +26,7 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail" do
-        get_model(@project[:id], "mnist_1", nil)
+        get_model(@project[:id], "mnist_1")
         expect_json(errorCode: 200003)
         expect_status(401)
       end
@@ -40,7 +43,7 @@ describe "On #{ENV['OS']}" do
         expect(URI(json_body[:href]).path).to eq "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/models"
       end
       it "should not find specific model" do
-        get_model(@project[:id], "app_id_4254316623_1", nil)
+        get_model(@project[:id], "app_id_4254316623_1")
         expect_status(404)
       end
       it "should produce 4 models and check items, count and href" do
@@ -55,7 +58,7 @@ describe "On #{ENV['OS']}" do
       it "should get all existing models" do
         get_models(@project[:id], nil)
         json_body[:items].each {|model|
-        get_model(@project[:id], model[:id], "")
+        get_model(@project[:id], model[:id])
         expect_status(200)}
       end
       it "should delete models by deleting Models dataset" do

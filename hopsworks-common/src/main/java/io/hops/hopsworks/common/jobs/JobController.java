@@ -211,16 +211,23 @@ public class JobController {
     try {
       String username = hdfsUsersController.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
-      udfso.copyInHdfs(new Path(job.getAppPath()), path);
-    } catch (IOException ioe) {
-      throw new JobException(RESTCodes.JobErrorCode.JOB_PROGRAM_VERSIONING_FAILED, Level.FINEST, "path: " +
-          job.getAppPath(), "versioning failed", ioe);
+      versionProgram(job, udfso, path);
     } finally {
       if (udfso != null) {
         dfs.closeDfsClient(udfso);
       }
     }
   }
+  
+  public void versionProgram(SparkJobConfiguration job, DistributedFileSystemOps udfso, Path path) throws JobException {
+    try {
+      udfso.copyInHdfs(new Path(job.getAppPath()), path);
+    } catch (IOException ioe) {
+      throw new JobException(RESTCodes.JobErrorCode.JOB_PROGRAM_VERSIONING_FAILED, Level.FINEST, "path: " +
+        job.getAppPath(), "versioning failed", ioe);
+    }
+  }
+  
   
   private String getJobNameForActivity(String jobName) {
     String activityJobMsg = jobName;
