@@ -30,6 +30,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A facade for the feature_group_commit table in the Hopsworks database,
@@ -88,15 +89,24 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
         .setParameter("requestedPointInTime", requestedPointInTime)
         .setMaxResults(limit);
     return q.getResultList();
-
   }
 
-  public List<FeatureGroupCommit> getCommitDetails(Integer featureGroupId, Integer limit) {
-    TypedQuery<FeatureGroupCommit> q = em.createNamedQuery("FeatureGroupCommit.findByFeatureGroupId",
-        FeatureGroupCommit.class)
-        .setParameter("featureGroupId", featureGroupId)
-        .setMaxResults(limit);
-    return q.getResultList();
+  public CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
+                                                   Set<? extends SortBy> sort) {
+    String queryStr = buildQuery("SELECT fgc FROM FeatureGroupCommit fgc ", null, sort,
+        "fgc.featureGroupCommitPK.featureGroupId = :featureGroupId");
+    Query query = em.createQuery(queryStr, FeatureGroupCommit.class)
+        .setParameter("featureGroupId", featureGroupId);
+    String queryCountStr = buildQuery("SELECT COUNT(fgc.featureGroupCommitPK.commitId) FROM " +
+        "FeatureGroupCommit fgc ", null, sort, "fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"
+    );
+    Query queryCount = em.createQuery(queryCountStr, FeatureGroupCommit.class)
+        .setParameter("featureGroupId", featureGroupId);
+    query.setFirstResult(offset);
+    if (limit != null){
+      query.setMaxResults(limit);
+    }
+    return new CollectionInfo((Long) queryCount.getSingleResult(), query.getResultList());
   }
 
   /**
@@ -107,5 +117,36 @@ public class FeatureGroupCommitFacade extends AbstractFacade<FeatureGroupCommit>
   @Override
   protected EntityManager getEntityManager() {
     return em;
+  }
+
+  public enum Sorts {
+    COMMITTED_ON("COMMITTED_ON", " fgc.committedOn ", "DESC");
+
+    private final String value;
+    private final String sql;
+    private final String defaultParam;
+
+    Sorts(String value, String sql, String defaultParam) {
+      this.value = value;
+      this.sql = sql;
+      this.defaultParam = defaultParam;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public String getSql() {
+      return sql;
+    }
+
+    public String getDefaultParam() {
+      return defaultParam;
+    }
+
+    @Override
+    public String toString() {
+      return value;
+    }
   }
 }

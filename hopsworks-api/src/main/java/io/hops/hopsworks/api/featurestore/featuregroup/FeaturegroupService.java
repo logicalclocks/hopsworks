@@ -653,6 +653,7 @@ public class FeaturegroupService {
   public CommitResource timetravel (
       @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
+    this.commitResource.setProject(project);
     this.commitResource.setFeaturestore(featurestore);
     this.commitResource.setFeatureGroup(featureGroupId);
     return commitResource;

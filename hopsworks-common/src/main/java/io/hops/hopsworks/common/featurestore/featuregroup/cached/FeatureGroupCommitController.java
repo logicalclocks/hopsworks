@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.featuregroup.cached;
 
+import io.hops.hopsworks.common.dao.AbstractFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.util.Settings;
@@ -37,8 +38,8 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -103,8 +104,9 @@ public class FeatureGroupCommitController {
         + featuregroup.getName() + " version " + featuregroup.getVersion()));
   }
 
-  public List<FeatureGroupCommit> getCommitDetails(Integer featureGroupId, Integer limit) {
-    return featureGroupCommitFacade.getCommitDetails(featureGroupId, limit);
+  public AbstractFacade.CollectionInfo getCommitDetails(Integer featureGroupId, Integer limit, Integer offset,
+                                                        Set<? extends AbstractFacade.SortBy> sort) {
+    return featureGroupCommitFacade.getCommitDetails(featureGroupId, limit, offset, sort);
   }
 
   protected Long getTimeStampFromDateString(String inputDate) throws FeaturestoreException {
