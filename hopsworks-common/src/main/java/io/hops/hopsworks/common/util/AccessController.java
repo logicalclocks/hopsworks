@@ -13,23 +13,26 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.provenance.ops;
+package io.hops.hopsworks.common.util;
 
-import io.hops.hopsworks.common.provenance.core.PaginationParams;
-import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
 
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public interface ProvLinksBuilderIface {
-  default ProvLinksDTO build(Project project, ProvLinksParams linksParams, PaginationParams pagParams)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+@Stateless
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class AccessController {
+  private static final Logger LOGGER = Logger.getLogger(AccessController.class.getName());
+  
+  public boolean hasAccess(Project userProject, Dataset targetDataset) {
+    if(targetDataset.getProject().equals(userProject)) {
+      return true;
+    }
+    return targetDataset.getDatasetSharedWithCollection().stream()
+      .anyMatch(sds -> sds.getProject().equals(userProject));
   }
 }

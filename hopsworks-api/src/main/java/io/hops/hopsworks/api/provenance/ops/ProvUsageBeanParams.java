@@ -13,21 +13,29 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.provenance.ops;
+package io.hops.hopsworks.api.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.ops.dto.ProvArtifactUsageParentDTO;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.common.provenance.ops.ProvUsageType;
+import io.swagger.annotations.ApiParam;
 
+import javax.ws.rs.QueryParam;
 import java.util.Set;
-import java.util.logging.Level;
 
-public interface ProvUsageBuilderIface {
-  default ProvArtifactUsageParentDTO build(Project project, String artifactId, ProvOpsParams params,
-    Set<ProvUsageType> type)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+public class ProvUsageBeanParams {
+  @QueryParam("type")
+  @ApiParam(allowMultiple = true)
+  private Set<ProvUsageType> usageType;
+  
+  public ProvUsageBeanParams(
+    @QueryParam("type") Set<ProvUsageType> usageType) {
+    this.usageType = usageType;
+  }
+  
+  public Set<ProvUsageType> getUsageType() {
+    return usageType;
+  }
+  
+  public void setUsageType(Set<ProvUsageType> usageType) {
+    this.usageType = usageType;
   }
 }

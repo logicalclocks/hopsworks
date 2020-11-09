@@ -103,7 +103,20 @@ public class FeaturestoreController {
       throw ex;
     }
   }
-
+  
+  /**
+   * Return the feature store dataset for the specific project. not the shared ones.
+   * @param project
+   * @return
+   */
+  public Dataset getProjectFeaturestoreDataset(Project project) throws FeaturestoreException {
+    return  project.getDatasetCollection().stream()
+      .filter(ds -> ds.getDsType() == DatasetType.FEATURESTORE)
+      .findFirst()
+      .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_NOT_FOUND,
+        Level.INFO, "Could not find feature store for project: " + project.getName()));
+  }
+  
   /**
    * Return the feature store for the specific project. not the shared ones.
    * @param project

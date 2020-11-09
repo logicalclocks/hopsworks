@@ -27,6 +27,7 @@ import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -35,13 +36,16 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -110,6 +114,8 @@ public class TrainingDatasetService {
   private FsQueryBuilder fsQueryBuilder;
   @Inject
   private ProvArtifactResource provenanceResource;
+  @EJB
+  private DatasetController datasetController;
 
   private Project project;
   private Featurestore featurestore;
@@ -509,12 +515,16 @@ public class TrainingDatasetService {
   
   @Path("/{trainingDatasetId}/provenance")
   public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
-    throws FeaturestoreException {
-    this.provenanceResource.setProject(project);
-    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    if(td == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND, Level.FINE);
+    throws FeaturestoreException, GenericException {
+    String tdName = featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+    Dataset targetEndpoint;
+    try {
+      targetEndpoint = datasetController.getByName(featurestore.getProject(), tdName);
+    } catch (DatasetException ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
     }
+    this.provenanceResource.setContext(project, targetEndpoint);
+    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
     return provenanceResource;
   }

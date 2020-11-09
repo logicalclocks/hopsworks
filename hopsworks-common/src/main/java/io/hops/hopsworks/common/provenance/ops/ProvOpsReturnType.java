@@ -15,14 +15,8 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
-
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-@Stateless
-@CommunityStereotype
-@TransactionAttribute(TransactionAttributeType.NEVER)
-public class ProvUsageBuilderImpl implements ProvUsageBuilderIface {
+public enum ProvOpsReturnType {
+  LIST,
+  COUNT,
+  AGGREGATIONS;
 }

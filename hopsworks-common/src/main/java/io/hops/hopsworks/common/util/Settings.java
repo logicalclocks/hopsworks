@@ -2060,7 +2060,7 @@ public class Settings implements Serializable {
     ".*_" + ELASTIC_BEAMSDKWORKER + "-\\d{4}.\\d{2}.\\d{2}";
 
   //Other Elastic indexes
-  public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_prov";
+  public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_provenance";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
