@@ -75,7 +75,7 @@ import java.util.logging.Logger;
 @Path("/admin")
 @Stateless
 @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN"})
-@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN}, allowedUserRoles = {"HOPS_ADMIN"})
+@ApiKeyRequired(acceptedScopes = {ApiScope.ADMIN, ApiScope.ADMINISTER_USERS}, allowedUserRoles = {"HOPS_ADMIN"})
 @Api(value = "Admin")
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class UsersAdminResource {
