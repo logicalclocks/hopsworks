@@ -1917,7 +1917,9 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     MODEL_MARSHALLING_FAILED(4,
         "Error occurred during marshalling/unmarshalling of model json.",
-        Response.Status.INTERNAL_SERVER_ERROR);;
+        Response.Status.INTERNAL_SERVER_ERROR),
+    HOPS_ERROR(5, "Error accessing hops storage",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

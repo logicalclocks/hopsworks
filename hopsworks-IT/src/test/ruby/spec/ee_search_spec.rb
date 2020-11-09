@@ -5,9 +5,13 @@
 describe "On #{ENV['OS']}" do
   before(:all) do
     @debugOpt = false
+    epipe_wait_on_provenance(repeat: 2)
+    epipe_wait_on_mutations(repeat: 2)
   end
   after(:all) do
     clean_all_test_projects(spec: "ee_search")
+    epipe_wait_on_provenance(repeat: 2)
+    epipe_wait_on_mutations(repeat: 2)
   end
 
   context "featurestore" do

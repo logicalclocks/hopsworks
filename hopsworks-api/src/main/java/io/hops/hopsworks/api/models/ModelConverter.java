@@ -21,6 +21,7 @@ import io.hops.hopsworks.exceptions.ModelsException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
+import org.json.JSONObject;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
@@ -31,38 +32,118 @@ import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 
 @Singleton
 @TransactionAttribute(TransactionAttributeType.NEVER)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class ModelConverter {
-
-  private JAXBContext jaxbExperimentSummaryContext;
-
+  
+  private JAXBContext jaxbModelsContext;
+  
   @PostConstruct
   public void init() {
     try {
-      jaxbExperimentSummaryContext = JAXBContextFactory.
-          createContext(new Class[] {ModelDTO.class}, null);
+      Class[] serializedClasses = new Class[] {
+        ModelDTO.class
+      };
+      jaxbModelsContext = JAXBContextFactory.
+        createContext(serializedClasses, null);
     } catch (JAXBException e) {
       e.printStackTrace();
     }
   }
-
-  public ModelDTO unmarshalDescription(String jsonConfig) throws ModelsException {
+  
+  private Marshaller createMarshaller() throws ModelsException {
     try {
-      Unmarshaller unmarshaller = jaxbExperimentSummaryContext.createUnmarshaller();
-      StreamSource json = new StreamSource(new StringReader(jsonConfig));
+      Marshaller marshaller = jaxbModelsContext.createMarshaller();
+      marshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+      marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+      return marshaller;
+    } catch(JAXBException e) {
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.INFO,
+        "Failed to marshal", "Error occurred during marshalling setup", e);
+    }
+  }
+  
+  private Unmarshaller createUnmarshaller() throws ModelsException {
+    try {
+      Unmarshaller unmarshaller = jaxbModelsContext.createUnmarshaller();
       unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
       unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return unmarshaller.unmarshal(json, ModelDTO.class).getValue();
-    } catch(Exception e) {
-      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
-          "Failed to unmarshal json", "Error occurred during unmarshalling of " + jsonConfig, e);
+      return unmarshaller;
+    } catch(JAXBException e) {
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.INFO,
+        "Failed to unmarshal", "Error occurred during unmarshalling setup", e);
     }
+  }
+  
+  private String marshalInt(Object value) throws ModelsException {
+    Marshaller marshaller = createMarshaller();
+    try(StringWriter sw = new StringWriter()) {
+      marshaller.marshal(value, sw);
+      return sw.toString();
+    } catch (JAXBException | IOException e) {
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
+        "Failed to marshal value", "Failed to marshal value:" + value.toString(), e);
+    }
+  }
+  
+  public byte[] marshal(Object value) throws ModelsException {
+    return marshalInt(value).getBytes(StandardCharsets.UTF_8);
+  }
+  
+  public <O> O unmarshal(String value, Class<O> resultClass) throws ModelsException {
+    Unmarshaller unmarshaller = createUnmarshaller();
+    try (StringReader sr = new StringReader(value)) {
+      StreamSource json = new StreamSource(sr);
+      return unmarshaller.unmarshal(json, resultClass).getValue();
+    } catch (JAXBException e) {
+      throw new ModelsException(RESTCodes.ModelsErrorCode.MODEL_MARSHALLING_FAILED, Level.FINE,
+        "Failed to unmarshal value", "Failed to unmarshal value:" + value, e);
+    }
+  }
+  
+  public byte[] marshalDescription(ModelDTO modelDTO) throws ModelsException {
+    String modelSummaryStr = marshalInt(modelDTO);
+    if(modelDTO.getMetrics() != null && !modelDTO.getMetrics().getAttributes().isEmpty()) {
+      modelSummaryStr = castMetricsToDouble(modelSummaryStr);
+    }
+    return modelSummaryStr.getBytes(StandardCharsets.UTF_8);
+  }
+  
+  public ModelDTO unmarshalDescription(String jsonConfig) throws ModelsException {
+    return unmarshal(jsonConfig, ModelDTO.class);
+  }
+  
+  private String castMetricsToDouble(String modelSummaryStr) throws ModelsException {
+    JSONObject modelSummary = new JSONObject(modelSummaryStr);
+    if(modelSummary.has("metrics")) {
+      JSONObject metrics = modelSummary.getJSONObject("metrics");
+      for(Object metric: metrics.keySet()) {
+        String metricKey = null;
+        try {
+          metricKey = (String) metric;
+        } catch (Exception e) {
+          throw new ModelsException(RESTCodes.ModelsErrorCode.KEY_NOT_STRING, Level.FINE,
+            "keys in metrics dict must be string", e.getMessage(), e);
+        }
+        try {
+          metrics.put(metricKey, Double.valueOf(metrics.getString(metricKey)));
+        } catch (Exception e) {
+          throw new ModelsException(RESTCodes.ModelsErrorCode.METRIC_NOT_NUMBER, Level.FINE,
+            "Provided value for metric " + metricKey + " is not a number" , e.getMessage(), e);
+        }
+      }
+      modelSummary.put("metrics", metrics);
+    }
+    return modelSummary.toString();
   }
 }

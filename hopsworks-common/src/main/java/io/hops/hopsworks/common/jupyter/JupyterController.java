@@ -288,10 +288,21 @@ public class JupyterController {
 
   public void versionProgram(Project project, Users user, String sessionKernelId, Path outputPath)
       throws ServiceException {
-
-    String hdfsUser = hdfsUsersController.getHdfsUserName(project, user);
+  
+    DistributedFileSystemOps udfso = null;
+    try {
+      String username = hdfsUsersController.getHdfsUserName(project, user);
+      udfso = dfs.getDfsOps(username);
+      versionProgram(username, sessionKernelId, outputPath, udfso);
+    } finally {
+      if (udfso != null) {
+        dfs.closeDfsClient(udfso);
+      }
+    }
+  }
+  public void versionProgram(String hdfsUser, String sessionKernelId, Path outputPath,
+    DistributedFileSystemOps udfso) throws ServiceException {
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
-
     String relativeNotebookPath = null;
     try {
       JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
@@ -327,18 +338,11 @@ public class JupyterController {
             .method("GET")
             .readEntity(String.class));
         JSONObject notebookJSON = (JSONObject)notebookContents.get("content");
-        DistributedFileSystemOps udfso = null;
         try {
-          String username = hdfsUsersController.getHdfsUserName(project, user);
-          udfso = dfs.getDfsOps(username);
           udfso.create(outputPath, notebookJSON.toString());
         } catch(IOException e) {
           throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
               Level.FINE, "failed to save notebook content", e.getMessage(), e);
-        } finally {
-          if (udfso != null) {
-            dfs.closeDfsClient(udfso);
-          }
         }
       }
     } catch(Exception e) {

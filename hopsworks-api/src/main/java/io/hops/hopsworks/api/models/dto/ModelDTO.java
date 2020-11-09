@@ -34,6 +34,8 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private String name;
 
   private int version;
+  
+  private String projectName;
 
   private String userFullName;
 
@@ -46,8 +48,10 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   private String[] environment;
 
   private String program;
-
+  
   private String experimentId;
+  
+  private String experimentProjectName;
 
   private String kernelId;
 
@@ -68,7 +72,15 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public void setVersion(int version) {
     this.version = version;
   }
-
+  
+  public String getProjectName() {
+    return projectName;
+  }
+  
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
+  
   public String getUserFullName() {
     return userFullName;
   }
@@ -124,15 +136,23 @@ public class ModelDTO extends RestDTO<ModelDTO> {
   public void setProgram(String program) {
     this.program = program;
   }
-
+  
   public String getExperimentId() {
     return experimentId;
   }
-
+  
   public void setExperimentId(String experimentId) {
     this.experimentId = experimentId;
   }
-
+  
+  public String getExperimentProjectName() {
+    return experimentProjectName;
+  }
+  
+  public void setExperimentProjectName(String experimentProjectName) {
+    this.experimentProjectName = experimentProjectName;
+  }
+  
   public String getKernelId() {
     return kernelId;
   }
