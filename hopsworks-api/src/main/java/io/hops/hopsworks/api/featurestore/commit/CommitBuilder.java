@@ -17,75 +17,67 @@
 package io.hops.hopsworks.api.featurestore.commit;
 
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
+import io.hops.hopsworks.common.dao.AbstractFacade;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
-import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class CommitBuilder {
 
-  @EJB
-  FeatureGroupCommitController featureGroupCommitController;
+  private URI uri(UriInfo uriInfo, Project project, Featuregroup featuregroup) {
+    return uriInfo.getBaseUriBuilder().path(ResourceRequest.Name.PROJECT.toString().toLowerCase())
+        .path(Integer.toString(project.getId()))
+        .path(ResourceRequest.Name.FEATURESTORES.toString().toLowerCase())
+        .path(Integer.toString(featuregroup.getFeaturestore().getId()))
+        .path(ResourceRequest.Name.FEATUREGROUPS.toString().toLowerCase())
+        .path(Integer.toString(featuregroup.getId()))
+        .path(ResourceRequest.Name.COMMITS.toString().toLowerCase())
+        .build();
+  }
 
   private boolean expand(ResourceRequest resourceRequest) {
     return resourceRequest != null && resourceRequest.contains(ResourceRequest.Name.COMMITS);
   }
 
   public CommitDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                         FeatureGroupCommit featureGroupCommit) {
-    URI href = uriInfo.getBaseUriBuilder()
-        .path(ResourceRequest.Name.COMMITS.toString().toLowerCase())
-        .path(Integer.toString(project.getId()))
-        .build();
+                         Featuregroup featuregroup, FeatureGroupCommit featureGroupCommit) {
+    CommitDTO commitDTO = new CommitDTO();
+    commitDTO.setHref(uri(uriInfo, project, featuregroup));
+    commitDTO.setExpand(expand(resourceRequest));
 
-    CommitDTO dto = new CommitDTO();
-    dto.setHref(href);
-    dto.setExpand(expand(resourceRequest));
-    if (dto.isExpand()) {
-      dto = convertFeatureGroupCommitToDTO(featureGroupCommit,dto);
+    if (commitDTO.isExpand()) {
+      commitDTO.setCommitID(featureGroupCommit.getFeatureGroupCommitPK().getCommitId());
+      commitDTO.setCommitDateString(featureGroupCommit.getCommittedOn().toString());
+      commitDTO.setCommittime(featureGroupCommit.getCommittedOn());
+      commitDTO.setRowsUpdated(featureGroupCommit.getNumRowsUpdated());
+      commitDTO.setRowsInserted(featureGroupCommit.getNumRowsInserted());
+      commitDTO.setRowsDeleted(featureGroupCommit.getNumRowsDeleted());
     }
-
-    return dto;
-  }
-
-  public List<CommitDTO> build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project,
-                               List<FeatureGroupCommit> featureGroupCommits) {
-    URI href = uriInfo.getBaseUriBuilder()
-        .path(Integer.toString(project.getId()))
-        .path(ResourceRequest.Name.COMMITS.toString().toLowerCase())
-        .build();
-
-    List<CommitDTO> dtos = new ArrayList<>();
-    for (FeatureGroupCommit featureGroupCommit : featureGroupCommits){
-      CommitDTO dto = new CommitDTO();
-      dto.setHref(href);
-      dto.setExpand(expand(resourceRequest));
-      if (dto.isExpand()) {
-        dtos.add(convertFeatureGroupCommitToDTO(featureGroupCommit,dto));
-      }
-    }
-
-    return dtos;
-  }
-
-  private CommitDTO convertFeatureGroupCommitToDTO(FeatureGroupCommit featureGroupCommit, CommitDTO commitDTO) {
-    commitDTO.setCommitID(featureGroupCommit.getFeatureGroupCommitPK().getCommitId());
-    commitDTO.setCommitDateString(featureGroupCommit.getCommittedOn().toString());
-    commitDTO.setCommittime(featureGroupCommit.getCommittedOn());
-    commitDTO.setRowsUpdated(featureGroupCommit.getNumRowsUpdated());
-    commitDTO.setRowsInserted(featureGroupCommit.getNumRowsInserted());
-    commitDTO.setRowsDeleted(featureGroupCommit.getNumRowsDeleted());
     return commitDTO;
   }
 
+  public CommitDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, Featuregroup featuregroup,
+                         AbstractFacade.CollectionInfo featureGroupCommits) {
+    CommitDTO commitDTO = new CommitDTO();
+    commitDTO.setHref(uri(uriInfo, project, featuregroup));
+    commitDTO.setExpand(expand(resourceRequest));
+    if (commitDTO.isExpand()) {
+
+      commitDTO.setItems((List<CommitDTO>) featureGroupCommits.getItems().stream()
+          .map(c -> build(uriInfo, resourceRequest, project, featuregroup, (FeatureGroupCommit) c))
+          .collect(Collectors.toList()));
+      commitDTO.setCount(featureGroupCommits.getCount());
+    }
+    return commitDTO;
+  }
 }
