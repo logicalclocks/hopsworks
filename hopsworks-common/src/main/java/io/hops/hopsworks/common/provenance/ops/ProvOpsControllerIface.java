@@ -27,21 +27,21 @@ import java.util.logging.Level;
 public interface ProvOpsControllerIface {
   default ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
   }
   
   default ProvOpsDTO provFileOpsCount(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
   }
   
   default ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
   }
   
   default ProvLinksDTO provLinks(Project project, ProvLinksParamBuilder params, boolean filterAlive)
     throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
+    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.FINE);
   }
 }
