@@ -52,10 +52,8 @@ import java.util.Date;
             "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
     @NamedQuery(name = "FeatureGroupCommit.findByCommittedOn",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = " +
-            ":featureGroupId AND fgc.committedOn <= :requestedPointInTime ORDER BY fgc.committedOn DESC"),
-    @NamedQuery(name = "FeatureGroupCommit.findByFeatureGroupId", query = "SELECT fgc FROM FeatureGroupCommit fgc " +
-        "WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId ORDER BY fgc.committedOn DESC")
-    }
+            ":featureGroupId AND fgc.committedOn <= :requestedPointInTime ORDER BY fgc.committedOn DESC")
+     }
     )
 
 public class FeatureGroupCommit implements Serializable {
