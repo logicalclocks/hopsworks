@@ -44,6 +44,7 @@ import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
+import io.hops.hopsworks.api.project.ProjectRestDTO;
 import io.hops.hopsworks.api.util.RESTApiJsonResponse;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
@@ -88,6 +89,7 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -277,4 +279,30 @@ public class ProjectsAdmin {
     permissionsCleaner.fixPermissions();
     return Response.accepted().build();
   }
+  
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/projects/user/{id: [0-9]*}")
+  public Response getProjectsAdminInfo(@PathParam("id") Integer id, @Context UriInfo uriInfo,
+    @Context SecurityContext sc) throws UserException {
+    Users users = userFacade.find(id);
+    if (users == null) {
+      throw new UserException(RESTCodes.UserErrorCode.USER_WAS_NOT_FOUND, Level.FINE);
+    }
+    ProjectRestDTO dto = builder(users, uriInfo);
+    return Response.ok(dto).build();
+  }
+  
+  private ProjectRestDTO builder(Users users, UriInfo uriInfo) {
+    List<Project> projects = projectFacade.findByUser(users);
+    ProjectRestDTO dto = new ProjectRestDTO(uriInfo.getAbsolutePathBuilder().build());
+    projects.forEach(project -> dto.addItem(
+      new ProjectRestDTO(uriInfo.getBaseUriBuilder()
+        .path("admin")
+        .path("projects")
+        .path(project.getId().toString())
+        .build(), project.getId(), project.getName(), project.getCreated())));
+    return dto;
+  }
+  
 }
