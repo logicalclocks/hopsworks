@@ -398,10 +398,11 @@ module FeaturestoreHelper
     return "featurestore_tour_job"
   end
 
-  def create_cached_featuregroup_with_partition(project_id, featurestore_id, time_travel_format: "NONE")
+  def create_cached_featuregroup_with_partition(project_id, featurestore_id, time_travel_format: "NONE", online: false)
     type = "cachedFeaturegroupDTO"
     featuregroupType = "CACHED_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
+
     featuregroup_name = "featuregroup_#{random_id}"
     json_data = {
         name: featuregroup_name,
@@ -426,7 +427,8 @@ module FeaturestoreHelper
         version: 1,
         type: type,
         featuregroupType: featuregroupType,
-        timeTravelFormat: time_travel_format
+        timeTravelFormat: time_travel_format,
+        onlineEnabled: online
     }
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data

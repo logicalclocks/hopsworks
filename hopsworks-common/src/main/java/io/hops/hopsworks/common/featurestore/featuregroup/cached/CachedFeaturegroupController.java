@@ -321,23 +321,21 @@ public class CachedFeaturegroupController {
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
       throws FeaturestoreException, ServiceException, IOException, SQLException {
 
-    verifyPrimaryKeyNotPartitionKey(cachedFeaturegroupDTO.getFeatures());
-
-    // add hudi specific metadata features, as user doesn't provide it
-    if (cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI){
-      cachedFeaturegroupDTO.setFeatures(addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()));
-    }
+    verifyPrimaryAndPartitionKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
 
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
     offlineFeatureGroupController.createHiveTable(featurestore, tableName, cachedFeaturegroupDTO.getDescription(),
-        cachedFeaturegroupDTO.getFeatures(), project, user);
+        cachedFeaturegroupDTO.getTimeTravelFormat() == TimeTravelFormat.HUDI ?
+            addHudiSpecFeatures(cachedFeaturegroupDTO.getFeatures()) :
+            cachedFeaturegroupDTO.getFeatures(),
+        project, user, getTableFormat(cachedFeaturegroupDTO.getTimeTravelFormat()));
 
     //Create MySQL Table for Online Cached Feature Group
     boolean onlineEnabled = false;
     if(settings.isOnlineFeaturestore() && cachedFeaturegroupDTO.getOnlineEnabled()){
-      onlineFeaturegroupController
-          .createMySQLTable(featurestore, tableName, cachedFeaturegroupDTO.getFeatures(), project, user);
+      onlineFeaturegroupController.createMySQLTable(featurestore, tableName,
+          cachedFeaturegroupDTO.getFeatures(), project, user);
       onlineEnabled = true;
     }
     
@@ -640,6 +638,9 @@ public class CachedFeaturegroupController {
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
     List<FeatureGroupFeatureDTO> features =
       getFeaturesDTO(cachedFeaturegroup.getHiveTbls(), featurestore, project, user);
+    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      features = dropHudiSpecFeatureGroupFeature(features);
+    }
     if(!cachedFeaturegroup.isOnlineEnabled()) {
       onlineFeaturegroupController.createMySQLTable(featurestore, tableName, features, project, user);
     }
@@ -719,7 +720,7 @@ public class CachedFeaturegroupController {
 
     for (String hudiSpecFeature : HUDI_SPEC_FEATURE_NAMES){
       // 1st check if hudi specific metadata exists in feature dataframe. If not add
-      if (!features.stream().anyMatch(o -> o.getName().equals(hudiSpecFeature))){
+      if (features.stream().noneMatch(o -> o.getName().equals(hudiSpecFeature))){
         features.add(new FeatureGroupFeatureDTO(hudiSpecFeature, "string",
             "hudi spec metadata feature", false, false));
       }
@@ -727,8 +728,23 @@ public class CachedFeaturegroupController {
     return features;
   }
 
-  public List<String> getHudiSpecFeatures(){
-    return HUDI_SPEC_FEATURE_NAMES;
+  private List<FeatureGroupFeatureDTO> dropHudiSpecFeatureGroupFeature(List<FeatureGroupFeatureDTO> features)  {
+    return features.stream()
+        .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())).collect(Collectors.toList());
+  }
+
+  public List<Feature> dropHudiSpecFeatures(List<Feature> features)  {
+    return features.stream()
+        .filter(feature -> !HUDI_SPEC_FEATURE_NAMES.contains(feature.getName())).collect(Collectors.toList());
+  }
+
+  private OfflineFeatureGroupController.Formats getTableFormat(TimeTravelFormat timeTravelFormat) {
+    switch (timeTravelFormat) {
+      case HUDI:
+        return OfflineFeatureGroupController.Formats.HUDI;
+      default:
+        return OfflineFeatureGroupController.Formats.valueOf(settings.getFeaturestoreDbDefaultStorageFormat());
+    }
   }
 
   public void verifyPreviousSchemaUnchanged(List<FeatureGroupFeatureDTO> previousSchema,
@@ -771,15 +787,26 @@ public class CachedFeaturegroupController {
     return newFeatures;
   }
 
-  public void verifyPrimaryKeyNotPartitionKey(List<FeatureGroupFeatureDTO> features) throws FeaturestoreException {
-    List<FeatureGroupFeatureDTO> primaryKeys = features.stream().filter(FeatureGroupFeatureDTO::getPrimary)
-      .collect(Collectors.toList());
-    for (FeatureGroupFeatureDTO primaryKey : primaryKeys) {
-      if(primaryKey.getPartition()){
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.FINE,
-          "The primary key column: " + primaryKey.getName() + " was specified as a partition column, which is not " +
-            "allowed.");
-      }
+  public void verifyPrimaryAndPartitionKey(List<FeatureGroupFeatureDTO> features,
+                                           TimeTravelFormat timeTravelFormat) throws FeaturestoreException {
+    // Verify that primary keys are not also a partition key
+    String invalidPrimaryKeys = features.stream()
+        .filter(FeatureGroupFeatureDTO::getPrimary)
+        .filter(FeatureGroupFeatureDTO::getPartition)
+        .map(FeatureGroupFeatureDTO::getName)
+        .collect(Collectors.joining(","));
+
+    if (!Strings.isNullOrEmpty(invalidPrimaryKeys)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.FINE,
+          "The primary key columns: " + invalidPrimaryKeys + " were specified as a partition columns, which is not " +
+              "allowed.");
+    }
+
+    // Currently the Hudi implementation requires having both at last a primary key and a partition key
+    if (timeTravelFormat == TimeTravelFormat.HUDI &&
+        (features.stream().noneMatch(FeatureGroupFeatureDTO::getPrimary) ||
+            features.stream().noneMatch(FeatureGroupFeatureDTO::getPartition))) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_PARTITION_KEY_REQUIRED, Level.FINE);
     }
   }
 }

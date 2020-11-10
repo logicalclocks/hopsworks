@@ -693,6 +693,11 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "cachedFeaturegroupDTO").to be true
         expect(parsed_json["timeTravelFormat"] == "HUDI").to be true
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project['id']}/featurestores/#{featurestore_id}/featuregroups/#{parsed_json['id']}/details"
+        expect_status(200)
+        fg_details = JSON.parse(json_result)
+        expect(fg_details["inputFormat"]).to eql("org.apache.hudi.hadoop.HoodieParquetInputFormat")
       end
 
       it "should fail when creating hudi cached featuregroup without primary key" do
