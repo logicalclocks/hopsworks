@@ -137,6 +137,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_REQUESTS_VERIFY = "requests_verify";
   private static final String VARIABLE_CLOUD= "cloud";
   private static final String VARIABLE_AWS_INSTANCE_ROLE = "aws_instance_role";
+  private static final String VARIABLE_CLOUD_TYPE = "cloud_type";
   private static final String VARIABLE_ELASTIC_IP = "elastic_ip";
   private static final String VARIABLE_ELASTIC_PORT = "elastic_port";
   private static final String VARIABLE_ELASTIC_REST_PORT = "elastic_rest_port";
@@ -769,6 +770,8 @@ public class Settings implements Serializable {
       MAX_ENV_YML_BYTE_SIZE = setIntVar(VARIABLE_MAX_ENV_YML_BYTE_SIZE, MAX_ENV_YML_BYTE_SIZE);
       SPARK_EXECUTOR_MIN_MEMORY = setIntVar(VARIABLE_SPARK_EXECUTOR_MIN_MEMORY, SPARK_EXECUTOR_MIN_MEMORY);
 
+      CLOUD_TYPE = setStrVar(VARIABLE_CLOUD_TYPE, CLOUD_TYPE);
+
       cached = true;
     }
   }
@@ -966,7 +969,8 @@ public class Settings implements Serializable {
   public static final String SPARK_YARN_APPMASTER_HIP_DEVICES = SPARK_YARN_APPMASTER_ENV + "HIP_VISIBLE_DEVICES";
   public static final String SPARK_YARN_APPMASTER_ENV_EXECUTOR_GPUS = SPARK_YARN_APPMASTER_ENV + "EXECUTOR_GPUS";
   public static final String SPARK_YARN_APPMASTER_LIBHDFS_OPTS = SPARK_YARN_APPMASTER_ENV + "LIBHDFS_OPTS";
-
+  
+  public static final String SPARK_YARN_APPMASTER_IS_DRIVER = SPARK_YARN_APPMASTER_ENV + "IS_HOPS_DRIVER";
   public static final String SPARK_EXECUTOR_SPARK_USER = SPARK_EXECUTOR_ENV + "SPARK_USER";
   public static final String SPARK_EXECUTOR_ENV_EXECUTOR_GPUS = SPARK_EXECUTOR_ENV + "EXECUTOR_GPUS";
   public static final String SPARK_EXECUTOR_LIBHDFS_OPTS = SPARK_EXECUTOR_ENV + "LIBHDFS_OPTS";
@@ -1975,6 +1979,8 @@ public class Settings implements Serializable {
   // Strating user id from 1000 to create a POSIX compliant username: meb1000
   public static final int STARTING_USER = 1000;
   public static final int PASSWORD_MIN_LENGTH = 6;
+  public static final int DEFAULT_SECURITY_ANSWER_LEN = 16;
+  public static final String DEFAULT_ROLE = "HOPS_USER";
 
   // POSIX compliant usernake length
   public static final int ACCOUNT_VALIDATION_TRIES = 5;
@@ -2054,7 +2060,7 @@ public class Settings implements Serializable {
     ".*_" + ELASTIC_BEAMSDKWORKER + "-\\d{4}.\\d{2}.\\d{2}";
 
   //Other Elastic indexes
-  public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_prov";
+  public static final String ELASTIC_INDEX_APP_PROVENANCE = "app_provenance";
   
   public String getHopsworksTmpCertDir() {
     return Paths.get(getCertsDir(), "transient").toString();
@@ -3632,6 +3638,19 @@ public class Settings implements Serializable {
   public synchronized boolean isIAMRoleConfigured() {
     checkCache();
     return IAM_ROLE_CONFIGURED;
+  }
+
+  private String CLOUD_TYPE = CLOUD_TYPES.NONE.name();
+  public synchronized CLOUD_TYPES getCloudType() {
+    checkCache();
+    return CLOUD_TYPES.valueOf(CLOUD_TYPE.toUpperCase());
+  }
+
+  public static enum CLOUD_TYPES {
+    NONE,
+    AWS,
+    GCP,
+    AZURE
   }
 
   public Boolean isHopsUtilInsecure() {

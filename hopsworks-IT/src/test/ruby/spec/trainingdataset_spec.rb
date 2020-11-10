@@ -64,10 +64,12 @@ describe "On #{ENV['OS']}" do
           expect(td_features.select{|feature| feature['index'] == 0}[0]['name']).to eql("testfeature")
           expect(td_features.select{|feature| feature['index'] == 0}[0]['featuregroup']).to be nil
           expect(td_features.select{|feature| feature['index'] == 0}[0]['type']).to eql("int")
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be false
 
           expect(td_features.select{|feature| feature['index'] == 1}[0]['name']).to eql("testfeature1")
           expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']).to be nil
           expect(td_features.select{|feature| feature['index'] == 1}[0]['type']).to eql("int")
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
 
           # Make sure the location contains the scheme (hopsfs) and the authority
           uri = URI(parsed_json["location"])
@@ -239,6 +241,60 @@ describe "On #{ENV['OS']}" do
           parsed_json = JSON.parse(json_result)
           expect_status(201)
           expect(parsed_json["storageConnectorName"] == "#{project['projectname']}_Training_Datasets")
+        end
+
+        it "should be able to add a new hopsfs training dataset with a single feature label to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          features = [
+              {
+                  type: "INT",
+                  name: "testfeature",
+                  label: true
+              },
+              {
+                  type: "INT",
+                  name: "testfeature2",
+                  label: false
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              name: "no_version_td", version: nil,
+                                                                              features: features)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          td_features = parsed_json['features']
+          expect(td_features.length).to be 2
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
+        end
+
+        it "should be able to add a new hopsfs training dataset with a multi feature label to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+          features = [
+              {
+                  type: "INT",
+                  name: "testfeature",
+                  label: true
+              },
+              {
+                  type: "INT",
+                  name: "testfeature2",
+                  label: true
+              }
+          ]
+          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector,
+                                                                              name: "no_version_td", version: nil,
+                                                                              features: features)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          td_features = parsed_json['features']
+          expect(td_features.length).to be 2
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be true
         end
 
         it "should be able to delete a hopsfs training dataset from the featurestore" do
@@ -440,6 +496,36 @@ describe "On #{ENV['OS']}" do
           expect(td_features.select{|feature| feature['index'] == 1}[0]['featuregroup']['id']).to eql(fg_id)
         end
 
+        it "should be able to create a training dataset from a query object with label" do
+          # create feature group
+          featurestore_id = get_featurestore_id(@project.id)
+          features = [
+              {type: "INT", name: "testfeature", primary: true},
+              {type: "INT", name: "testfeature1"},
+          ]
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, "test_fg_#{short_random_id}", features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'testfeature'}, {name: 'testfeature1'}]
+          }
+          features = [
+              {type: "INT", name: "testfeature", label: true},
+              {type: "INT", name: "testfeature1", label: false},
+          ]
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features:
+              features)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+          expect(training_dataset['fromQuery']).to be true
+          td_features = training_dataset['features']
+          expect(td_features.count).to eql(2)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
+        end
+
         it "should fail to create a training dataset with invalid query" do
           # create feature group
           featurestore_id = get_featurestore_id(@project.id)
@@ -455,7 +541,7 @@ describe "On #{ENV['OS']}" do
               },
               leftFeatures: [{name: 'does_not_exists'}]
           }
-          create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query:query)
+          create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query)
           expect_status_details(400)
         end
 
@@ -574,6 +660,79 @@ describe "On #{ENV['OS']}" do
           expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
            "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
            "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+        end
+
+        it "should succeed to replay the query from a query based training dataset with and without label" do
+          project_name = @project.projectname
+          featurestore_id = get_featurestore_id(@project.id)
+          featurestore_name = get_featurestore_name(@project.id)
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "a_testfeature1"},
+          ]
+          fg_a_name = "test_fg_#{short_random_id}"
+          fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+          # create second feature group
+          features = [
+              {type: "INT", name: "a_testfeature", primary: true},
+              {type: "INT", name: "b_testfeature1"},
+          ]
+          fg_b_name = "test_fg_#{short_random_id}"
+          fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+          # create queryDTO object
+          query = {
+              leftFeatureGroup: {
+                  id: fg_id
+              },
+              leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+              joins: [{
+                          query: {
+                              leftFeatureGroup: {
+                                  id: fg_id_b
+                              },
+                              leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}]
+                          }
+                      }
+              ]
+          }
+
+          td_schema = [
+              {type: "INT", name: "a_testfeature", label: false},
+              {type: "INT", name: "a_testfeature1", label: false},
+              {type: "INT", name: "b_testfeature1", label: true},
+          ]
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features:
+              td_schema)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          # with Label
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query?withLabel=true"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+                                            "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
+                                            "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`, `fg1`.`b_testfeature1`\n" +
+                                                  "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+                                                  "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          # Without Label
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project
+                                                                   .id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query?withLabel=false"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`\n" +
+                                            "FROM `#{featurestore_name}`.`#{fg_a_name}_1` `fg0`\n" +
+                                            "INNER JOIN `#{featurestore_name}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
+
+          expect(query['queryOnline']).to eql("SELECT `fg0`.`a_testfeature`, `fg0`.`a_testfeature1`\n" +
+                                                  "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg0`\n" +
+                                                  "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
 
         it "should succeed to replay the query from a query based training dataset with default values" do
@@ -941,6 +1100,32 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("errorMsg")).to be true
           expect(parsed_json.key?("usrMsg")).to be true
           expect(parsed_json["errorCode"] == 270106).to be true
+        end
+
+        it "should be able to add an external training dataset with label to the featurestore" do
+          project = get_project
+          featurestore_id = get_featurestore_id(project.id)
+          connector_id = get_s3_connector_id
+          features = [
+              {
+                  type: "INT",
+                  name: "testfeature",
+                  label: true
+              },
+              {
+                  type: "INT",
+                  name: "testfeature2",
+                  label: false
+              }
+          ]
+          json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id,
+                                                                                connector_id, features: features)
+          parsed_json = JSON.parse(json_result)
+          expect_status(201)
+          td_features = parsed_json['features']
+          expect(td_features.count).to eql(2)
+          expect(td_features.select{|feature| feature['index'] == 0}[0]['label']).to be true
+          expect(td_features.select{|feature| feature['index'] == 1}[0]['label']).to be false
         end
 
         it "should be able to delete an external training dataset from the featurestore" do

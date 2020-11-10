@@ -24,8 +24,10 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.ServiceException;
+import io.hops.hopsworks.persistence.entity.jupyter.config.GitBackend;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.python.AnacondaRepo;
+import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
@@ -84,27 +86,23 @@ public class LibraryController {
     }
   }
   
-  public void addPythonDepsForProject(Project proj, Collection<PythonDep> pythonDeps) {
-    Collection<PythonDep> depsInProj = new ArrayList<>(proj.getPythonDepCollection());
-    for (PythonDep dep : pythonDeps) {
-      depsInProj.remove(dep);
-      depsInProj.add(dep);
-    }
-    proj.setPythonDepCollection(depsInProj);
+  public void syncProjectPythonDepsWithEnv(Project proj, Collection<PythonDep> newDeps) {
+    proj.setPythonDepCollection(newDeps);
     projectFacade.update(proj);
     projectFacade.flushEm();
   }
-  
+
   public PythonDep addLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
-                              String dependency, String version) throws GenericException {
+                              String dependency, String version, String arg, GitBackend gitBackend, String apiKeyName)
+      throws GenericException {
     return commandsController.condaOp(CondaOp.INSTALL, user, installType, proj,
-      channelUrl, dependency, version);
+      channelUrl, dependency, version, arg, gitBackend, apiKeyName);
   }
   
   public void uninstallLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
                                String dependency, String version) throws GenericException {
     commandsController.condaOp(CondaOp.UNINSTALL, user, installType, proj, channelUrl,
-      dependency, version);
+      dependency, version, "", null, null);
   }
   
   public HashMap<String, List<LibraryVersionDTO>> condaSearch(String library, String url) throws ServiceException {
@@ -306,12 +304,14 @@ public class LibraryController {
         String errorMsg = "Could not create the docker image. Exit code: " + processResult.getExitCode()
           + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         LOGGER.log(Level.SEVERE, errorMsg);
-        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
+        throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE, "Failed to "
+        + "list libraries for the environment, if the issue persists please try to recreate the python environment");
       } else {
         return depStringToCollec(processResult.getStdout());
       }
     } catch (IOException ex) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE);
+      throw new ServiceException(RESTCodes.ServiceErrorCode.DOCKER_IMAGE_CREATION_ERROR, Level.SEVERE, "Failed to "
+          + "list libraries for the environment, if the issue persists please try to recreate the python environment");
     }
   }
   
@@ -344,5 +344,26 @@ public class LibraryController {
     }
     return deps;
   }
-  
+
+  public void addOngoingOperations(Project project) throws ServiceException {
+    Collection<CondaCommands> commands = project.getCondaCommandsCollection();
+    for(CondaCommands condaCommand: commands) {
+      if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT))
+          continue;
+
+      PythonDep pythonDep = new PythonDep();
+      pythonDep.setDependency(condaCommand.getLib());
+      pythonDep.setInstallType(condaCommand.getInstallType());
+      pythonDep.setPreinstalled(false);
+      AnacondaRepo repo = libraryFacade.getRepo(condaCommand.getChannelUrl(), false);
+      pythonDep.setRepoUrl(repo);
+      pythonDep.setVersion(condaCommand.getVersion());
+      pythonDep = libraryFacade.getOrCreateDep(pythonDep);
+
+      if(!project.getPythonDepCollection().contains(pythonDep)) {
+        project.getPythonDepCollection().add(pythonDep);
+      }
+    }
+    projectFacade.update(project);
+  }
 }

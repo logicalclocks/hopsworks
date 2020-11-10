@@ -103,10 +103,11 @@ public class EnvironmentController {
 
   public void updateInstalledDependencies(Project project) throws ServiceException {
     try {
-      Collection<PythonDep> defaultEnvDeps = libraryController.listLibraries(
+      Collection<PythonDep> projectDeps = libraryController.listLibraries(
           projectUtils.getFullDockerImageName(project, false));
-      defaultEnvDeps = agentController.persistAndMarkImmutable(defaultEnvDeps);
-      libraryController.addPythonDepsForProject(project, defaultEnvDeps);
+      projectDeps = agentController.persistAndMarkImmutable(projectDeps);
+      libraryController.syncProjectPythonDepsWithEnv(project, projectDeps);
+      libraryController.addOngoingOperations(project);
     } catch (ServiceDiscoveryException e) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_DISCOVERY_ERROR, Level.SEVERE, null, e.
           getMessage(), e);

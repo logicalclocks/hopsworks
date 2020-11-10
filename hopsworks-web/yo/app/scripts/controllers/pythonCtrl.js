@@ -21,13 +21,22 @@
 angular.module('hopsWorksApp')
     .controller('PythonCtrl', ['$scope', '$route', '$routeParams', 'growl', '$location', 'PythonService',
         'ModalService', '$interval', '$mdDialog', 'UtilsService',
-        'VariablesService', 'ElasticService',
+        'VariablesService', 'ElasticService', 'UserService',
         function ($scope, $route, $routeParams, growl, $location, PythonService, ModalService, $interval, $mdDialog,
-                  UtilsService, VariablesService, ElasticService) {
+                  UtilsService, VariablesService, ElasticService, UserService) {
 
 
             var self = this;
             self.projectId = $routeParams.projectID;
+
+            self.installMode = 'PYPI';
+
+            self.uploadDepPath = "";
+            self.gitDep = "";
+            self.thirdPartyApiKeys = [];
+            self.gitApiKey = "";
+            self.gitBackend = 'GITHUB';
+            self.privateGitRepo = false;
 
             self.active = 0;
 
@@ -78,7 +87,7 @@ angular.module('hopsWorksApp')
             self.pythonVersion = "0.0";
 
 
-            //            https://repo.continuum.io/pkgs/free/linux-64/
+            //https://repo.continuum.io/pkgs/free/linux-64/
             self.condaChannel = "defaults";
 
             self.condaSelectedLibs = {};
@@ -89,14 +98,14 @@ angular.module('hopsWorksApp')
 
             self.pipSelectedLib = {
                 "channelUrl": self.condaChannel,
-                "installType": "PIP",
-                "lib": "",
+                "packageSource": "PIP",
+                "library": "",
                 "version": ""
             };
             self.condaSelectedLib = {
                 "channelUrl": self.condaChannel,
-                "installType": "CONDA",
-                "lib": "",
+                "packageSource": "CONDA",
+                "library": "",
                 "version": ""
             };
 
@@ -162,6 +171,10 @@ angular.module('hopsWorksApp')
                 return "UNKNOWN"
             };
 
+            self.getInstallType = function (row) {
+                return row.packageSource;
+            };
+
             self.getVersion = function (row) {
                 return typeof row.pythonVersion !== 'undefined'? row.pythonVersion : row.version;
             };
@@ -171,6 +184,17 @@ angular.module('hopsWorksApp')
                 var part = self.getCountForStatus(status, row);
                 return (part/full) * 100 ;
             };
+
+            var loadThirdPartyApiKeys = function () {
+                    UserService.load_secrets().then(
+                        function (success) {
+                            self.thirdPartyApiKeys = success.data.items
+                        }, function (error) {
+                            self.errorMsg = (typeof error.data.usrMsg !== 'undefined') ? error.data.usrMsg : "";
+                            growl.error(self.errorMsg, { title: error.data.errorMsg, ttl: 5000, referenceId: 1 });
+                        }
+                    );
+            }
 
             self.getCountForStatus = function (status, row) {
                 var count = 0;
@@ -251,6 +275,7 @@ angular.module('hopsWorksApp')
 
             self.init = function () {
                 getInstalledTensorFlowVersion();
+                loadThirdPartyApiKeys();
                 VariablesService.getCondaDefaultRepo(self.projectId).then(
                     function (success) {
                         self.condaChannel = success.data;
@@ -377,7 +402,7 @@ angular.module('hopsWorksApp')
 
             self.exportEnvironment = function () {
                 self.exporting = true;
-                $scope.indextab = 3;
+                $scope.indextab = 2;
                 PythonService.exportEnvironment(self.projectId).then(
                     function (success) {
                         self.exporting = false;
@@ -465,11 +490,11 @@ angular.module('hopsWorksApp')
 
                 if (type === "PIP") {
 
-                    if (self.pipSelectedLib.lib.length < 3) {
+                    if (self.pipSelectedLib.library.length < 3) {
                         return;
                     }
                     self.pipSelectedLib.channelUrl = self.condaChannel;
-                    self.pipSelectedLib.installType = "PIP"
+                    self.pipSelectedLib.packageSource = "PIP"
                     self.pipSelectedLib.version = self.pythonVersion;
                     self.pipSearching = true;
                     self.pipResultsMsg = "Pip search can take a good few seconds... bear with us.";
@@ -506,11 +531,11 @@ angular.module('hopsWorksApp')
                             }
                         });
                 } else if (type === "CONDA") {
-                    if (self.condaSelectedLib.lib.length < 3) {
+                    if (self.condaSelectedLib.library.length < 3) {
                         return;
                     }
                     self.condaSelectedLib.channelUrl = self.condaChannel;
-                    self.condaSelectedLib.installType = "CONDA"
+                    self.condaSelectedLib.packageSource = "CONDA"
                     self.condaSelectedLib.version = self.pythonVersion;
                     self.condaSearching = true;
                     self.condaResultsMsg = "Conda search can take a good few seconds... bear with us.";
@@ -550,86 +575,158 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.install = function (lib, installType, version) {
-                if (version === undefined || version === null || version.length === 0 || version.toUpperCase() === "NONE") {
+            self.getInferredCustomDependency = function(condaLib) {
+                if(condaLib.endsWith(".whl")) {
+                    return "WHEEL";
+                } else if(condaLib.endsWith(".egg")) {
+                    return "EGG";
+                } else {
+                    return null;
+                }
+            };
+
+            self.selectDepRegexes = {
+              "EGG": /.egg\b/,
+              "WHEEL": /.whl\b/
+            };
+
+            self.selectFile = function (reason) {
+              console.log(reason)
+              ModalService.selectFile('lg',  self.projectId,  self.selectDepRegexes[reason],
+                      "Please select a .whl or .egg file", false).then(
+                      function (success) {
+                      self.uploadDepPath = success;
+                      }, function (error) {
+                //The user changed their mind.
+              });
+            };
+
+            self.install = function (library, packageSource, version) {
+
+                if ((packageSource.toUpperCase() === 'CONDA' || packageSource.toUpperCase() === 'PIP') && (version === undefined || version === null || version.length === 0 || version.toUpperCase() === "NONE")) {
                     growl.error("Select a version to install from the dropdown list", {
                         title: 'Error',
                         ttl: 3000
                     });
                     return;
                 }
-                self.installing[lib] = true;
-                if (installType === "conda") {
+                self.installing[library] = true;
+                if (packageSource.toUpperCase() === "CONDA") {
                     var data = {
                         "channelUrl": self.condaChannel,
-                        "installType": installType,
-                        "lib": lib,
+                        "packageSource": packageSource,
+                        "library": library,
                         "version": version
+                    };
+                } else if (packageSource.toUpperCase() === "GIT") {
+                    var data = {
+                        "channelUrl": packageSource.toLowerCase(),
+                        "packageSource": packageSource,
+                        "library": library.substring(library.lastIndexOf("/") + 1, library.length),
+                        "version": "",
+                        "dependencyUrl": library
+                    };
+                    if(self.privateGitRepo) {
+                        data.gitApiKey = self.gitApiKey.name
+                        data.gitBackend = self.gitBackend
+                    }
+                } else if (packageSource.toUpperCase() === "EGG" || packageSource.toUpperCase() === "WHEEL") {
+                    var data = {
+                        "channelUrl": packageSource.toLowerCase(),
+                        "packageSource": packageSource,
+                        "library": library.substring(library.lastIndexOf("/") + 1, library.length),
+                        "version": "",
+                        "dependencyUrl": library
                     };
                 } else {
                     var data = {
                         "channelUrl": "pypi",
-                        "installType": installType,
-                        "lib": lib,
+                        "packageSource": packageSource,
+                        "library": library,
                         "version": version
                     };
                 }
 
                 PythonService.install(self.projectId, self.pythonVersion, data).then(
                     function (success) {
-                        growl.success("Click on the 'Manage Environment' tab for more info.", {
+                        growl.success("Started installing library " + library + ". Click on the 'Ongoing Operations' tab for installation status.", {
                             title: 'Installing',
-                            ttl: 5000
+                            ttl: 10000
                         });
                         self.pipResultsMessageShowing = false;
                         self.condaResultsMessageShowing = false;
                         self.pipSearchResults = [];
                         self.condaSearchResults = [];
-                        self.installing[lib] = false;
+                        self.installing[library] = false;
+                        self.uploadDepPath = "";
+                        self.gitDep = "";
+                        self.gitApiKey = "";
+                        self.privateGitRepo = false;
                         self.getInstalled();
                         $scope.activeForm = 2;
+
                         var msg = success.data;
                         if (msg !== undefined && msg !== null && msg.length > 0) {
                             growl.info(msg, {title: "Creating a new Conda Env", ttl: 10000});
                         }
                     },
                     function (error) {
-                        self.installing[lib] = false;
+                        self.installing[library] = false;
                         showErrorGrowl(error);
                     });
             };
 
-            self.uninstall = function (lib) {
-                self.uninstalling[lib.library] = true;
-
-                if(lib.library === 'tensorflow' && lib.version === self.tensorflowVersion) {
+            self.deleteCommands = function (library) {
+                self.uninstalling[library.library] = true;
+                if(library.library === 'tensorflow' && library.version === self.tensorflowVersion) {
                     growl.warning("You are uninstalling TensorFlow " + self.tensorflowVersion + " which is the supported version for this installation, if you encounter issues please install it again"
                      , {title: 'Uninstalling TensorFlow', ttl: 20000});
                 }
-
-                PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, lib.library).then(
+                PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, library.library).then(
                     function (success) {
                         self.getInstalled();
                         growl.info("Clearing conda operations", {
                             title: 'Clearing Conda Commands and Uninstalling Library',
                             ttl: 3000
                         });
-                        PythonService.uninstall(self.projectId, self.pythonVersion, lib.library).then(
+                    },
+                    function (error) {
+                        self.uninstalling[library.library] = false;
+                        showErrorGrowl(error);
+                    });
+            };
+
+            self.uninstall = function (library) {
+                self.uninstalling[library.library] = true;
+
+                if(library.library === 'tensorflow' && library.version === self.tensorflowVersion) {
+                    growl.warning("You are uninstalling TensorFlow " + self.tensorflowVersion + " which is the supported version for this installation, if you encounter issues please install it again"
+                     , {title: 'Uninstalling TensorFlow', ttl: 20000});
+                }
+
+                PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, library.library).then(
+                    function (success) {
+                        self.getInstalled();
+                        growl.info("Clearing conda operations", {
+                            title: 'Clearing Conda Commands and Uninstalling Library',
+                            ttl: 3000
+                        });
+                        PythonService.uninstall(self.projectId, self.pythonVersion, library.library).then(
                             function (success) {
                                 self.getInstalled();
-                                self.uninstalling[lib.library] = false;
+                                self.uninstalling[library.library] = false;
                                 var msg = success.data;
                                 if (msg !== undefined && msg !== null && msg.length > 0) {
                                     growl.info(msg, {title: "Creating a new Conda Env", ttl: 10000});
                                 }
                             },
                             function (error) {
-                                self.uninstalling[lib.library] = false;
+                                self.uninstalling[library.library] = false;
                                 showErrorGrowl(error);
                             });
                     },
                     function (error) {
-                        self.uninstalling[lib.library] = false;
+                        self.uninstalling[library.library] = false;
                         showErrorGrowl(error);
                     });
             };

@@ -41,6 +41,8 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
   private String state;
 
   private String name;
+  
+  private String projectName;
 
   private String description;
 
@@ -55,8 +57,10 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
   private String direction;
 
   private String optimizationKey;
-
+  
   private String model;
+  
+  private String modelProjectName;
 
   private String jobName;
 
@@ -107,7 +111,15 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
   public void setName(String name) {
     this.name = name;
   }
-
+  
+  public String getProjectName() {
+    return projectName;
+  }
+  
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
+  
   public String getUserFullName() {
     return userFullName;
   }
@@ -187,15 +199,23 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
   public void setResults(ExperimentResultSummaryDTO results) {
     this.results = results;
   }
-
+  
   public String getModel() {
     return model;
   }
-
+  
   public void setModel(String model) {
     this.model = model;
   }
-
+  
+  public String getModelProjectName() {
+    return modelProjectName;
+  }
+  
+  public void setModelProjectName(String modelProjectName) {
+    this.modelProjectName = modelProjectName;
+  }
+  
   public String getJobName() {
     return jobName;
   }
@@ -252,12 +272,39 @@ public class ExperimentDTO extends RestDTO<ExperimentDTO> {
     this.duration = duration;
   }
 
-  public enum XAttrSetFlag {
-    CREATE,
-    REPLACE;
-
-    public static XAttrSetFlag fromString(String param) {
-      return valueOf(param.toUpperCase());
+  public static ExperimentDTO mergeExperiment(ExperimentDTO e1, ExperimentDTO e2) {
+    ExperimentDTO experiment = new ExperimentDTO();
+    if(e2 == null) {
+      e2 = new ExperimentDTO();
     }
+    experiment.setId(mergeValues(e1.getId(), e2.getId()));
+    experiment.setStarted(mergeValues(e1.getStarted(), e2.getStarted()));
+    experiment.setFinished(mergeValues(e1.getFinished(), e2.getFinished()));
+    experiment.setState(mergeValues(e1.getState(), e2.getState()));
+    experiment.setName(mergeValues(e1.getName(), e2.getName()));
+    experiment.setProjectName(mergeValues(e1.getProjectName(), e2.getProjectName()));
+    experiment.setDescription(mergeValues(e1.getDescription(), e2.getDescription()));
+    experiment.setMetric(mergeValues(e1.getMetric(), e2.getMetric()));
+    experiment.setUserFullName(mergeValues(e1.getUserFullName(), e2.getUserFullName()));
+    experiment.setFunction(mergeValues(e1.getFunction(), e2.getFunction()));
+    experiment.setExperimentType(mergeValues(e1.getExperimentType(), e2.getExperimentType()));
+    experiment.setDirection(mergeValues(e1.getDirection(), e2.getDirection()));
+    experiment.setOptimizationKey(mergeValues(e1.getOptimizationKey(), e2.getOptimizationKey()));
+    experiment.setModel(mergeValues(e1.getModel(), e2.getModel()));
+    experiment.setModelProjectName(mergeValues(e1.getModelProjectName(), e1.getModelProjectName()));
+    experiment.setJobName(mergeValues(e1.getJobName(), e2.getJobName()));
+    experiment.setDuration(mergeValues(e1.getDuration(), e2.getDuration()));
+    experiment.setAppId(mergeValues(e1.getAppId(), e2.getAppId()));
+    experiment.setBestDir(mergeValues(e1.getBestDir(), e2.getBestDir()));
+    experiment.setEnvironment(mergeValues(e1.getEnvironment(), e2.getEnvironment()));
+    experiment.setProgram(mergeValues(e1.getProgram(), e2.getProgram()));
+    experiment.setKernelId(mergeValues(e1.getKernelId(), e2.getKernelId()));
+    experiment.setResults(mergeValues(e1.getResults(), e2.getResults()));
+    experiment.setTensorboard(mergeValues(e1.getTensorboard(), e2.getTensorboard()));
+    return experiment;
+  }
+  
+  private static <O> O mergeValues(O v1, O v2) {
+    return v1 == null ? v2 : v1;
   }
 }

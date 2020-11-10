@@ -41,6 +41,7 @@ import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
@@ -626,15 +627,13 @@ public class FeaturegroupService {
     this.statisticsResource.setFeatureGroupId(featureGroupId);
     return statisticsResource;
   }
-
+  
   @Path("/{featureGroupId}/provenance")
   public ProvArtifactResource provenance(@PathParam("featureGroupId") Integer featureGroupId)
     throws FeaturestoreException {
-    this.provenanceResource.setProject(project);
+    Dataset targetEndpoint = featurestoreController.getProjectFeaturestoreDataset(featurestore.getProject());
+    this.provenanceResource.setContext(project, targetEndpoint);
     Featuregroup fg = featuregroupController.getFeaturegroupById(featurestore, featureGroupId);
-    if(fg == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NOT_FOUND, Level.FINE);
-    }
     this.provenanceResource.setArtifactId(fg.getName(), fg.getVersion());
     return provenanceResource;
   }
@@ -643,6 +642,7 @@ public class FeaturegroupService {
   public CommitResource timetravel (
       @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
+    this.commitResource.setProject(project);
     this.commitResource.setFeaturestore(featurestore);
     this.commitResource.setFeatureGroup(featureGroupId);
     return commitResource;

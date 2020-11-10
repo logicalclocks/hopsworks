@@ -15,21 +15,14 @@
  */
 package io.hops.hopsworks.common.provenance.ops;
 
-import io.hops.hopsworks.common.provenance.core.PaginationParams;
-import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
-import io.hops.hopsworks.exceptions.GenericException;
-import io.hops.hopsworks.exceptions.ProvenanceException;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.common.integrations.CommunityStereotype;
 
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.util.logging.Level;
 
-@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-public interface ProvLinksBuilderIface {
-  default ProvLinksDTO build(Project project, ProvLinksParams linksParams, PaginationParams pagParams)
-    throws ProvenanceException, GenericException {
-    throw new GenericException(RESTCodes.GenericErrorCode.ENTERPRISE_FEATURE, Level.WARNING);
-  }
+@Stateless
+@CommunityStereotype
+@TransactionAttribute(TransactionAttributeType.NEVER)
+public class ProvOpsControllerImpl implements ProvOpsControllerIface {
 }

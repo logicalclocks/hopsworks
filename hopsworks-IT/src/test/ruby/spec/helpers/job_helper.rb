@@ -213,4 +213,20 @@ module JobHelper
       expect_status_details(200)
     end
   end
+
+  def prepare_spark_job(project, username, job_name, job_type, job_config: nil, src_dir: "#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary")
+    chmod_local_dir("#{ENV['PROJECT_DIR']}", 777, true)
+    src = "#{src_dir}/#{job_name}.#{job_type}"
+    dst = "/Projects/#{project[:projectname]}/Resources/#{job_name}.#{job_type}"
+    group = "#{project[:projectname]}__Jupyter"
+    copy_from_local(src, dst, username, group, 750, "#{project[:projectname]}")
+    if job_config.nil?
+      job_config = get_spark_default_py_config(project, job_name, job_type)
+      job_config["amMemory"] = 2048
+      job_config["spark.executor.memory"] = 4096
+      job_config["defaultArgs"] = nil
+    end
+    create_sparktour_job(project, job_name, job_type, job_config)
+    expect_status_details(201)
+  end
 end

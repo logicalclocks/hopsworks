@@ -700,6 +700,30 @@ describe "On #{ENV['OS']}" do
         expect(fg_details["inputFormat"]).to eql("org.apache.hudi.hadoop.HoodieParquetInputFormat")
       end
 
+      it "should fail when creating hudi cached featuregroup without primary key" do
+        features = [
+          {
+              type: "INT",
+              name: "testfeature",
+              description: "testfeaturedescription",
+              primary: false,
+              onlineType: "INT",
+              partition: true
+          },
+        ]
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
+        expect_status(400)
+      end
+
+      it "should fail when creating hudi cached featuregroup without partition key" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
+        expect_status(400)
+      end
+
       it "should be able to bulk insert into existing hudi enabled offline cached featuregroup" do
         hopsworks_user = getHopsworksUser()
         project = get_project
@@ -801,6 +825,32 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `fg0` `fg0`")
         expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_#{featuregroup_version}` `fg0`")
+      end
+
+      it "should be able to retrieve commit timeline in correct order from existing hudi enabled offline cached featuregroup" do
+        hopsworks_user = getHopsworksUser()
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        featurestore_name = project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
+        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
+        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
+        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
+        create_featuregroup_commit_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/"  + featuregroup_id.to_s + "/commits?sort_by=committed_on:desc&offset=0"
+        json_result = get create_featuregroup_commit_endpoint
+        parsed_json = JSON.parse(json_result)
+        commitid_one = parsed_json["items"][0]["commitID"]
+        commitid_two = parsed_json["items"][1]["commitID"]
+        expect(commitid_one==1603650176000)
+        expect(commitid_two==1603577485000)
       end
     end
   end

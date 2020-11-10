@@ -25,6 +25,7 @@ public enum CondaOp {
 
   public static boolean isEnvOp(CondaOp arg) {
     return arg.compareTo(CondaOp.CREATE) == 0 ||
-      arg.compareTo(CondaOp.REMOVE) == 0 || arg.compareTo(CondaOp.EXPORT) == 0;
+           arg.compareTo(CondaOp.REMOVE) == 0 ||
+           arg.compareTo(CondaOp.EXPORT) == 0;
   }
 }

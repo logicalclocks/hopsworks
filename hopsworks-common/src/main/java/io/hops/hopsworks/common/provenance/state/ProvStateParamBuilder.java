@@ -58,11 +58,11 @@ public class ProvStateParamBuilder {
   }
   
   public static class Extensions {
-    Set<ProvParser.Expansions> expansions = new HashSet<>();
+    Set<ProvParser.ElasticExpansions> expansions = new HashSet<>();
     Map<ProvParser.Field, ProvParser.FilterVal> appStateFilter = new HashMap<>();
   
     public boolean hasAppExpansion() {
-      return expansions.contains(ProvParser.Expansions.APP);
+      return expansions.contains(ProvParser.ElasticExpansions.APP);
     }
   }
   
@@ -173,7 +173,7 @@ public class ProvStateParamBuilder {
   }
   
   public ProvStateParamBuilder withAppExpansion() {
-    extensions.expansions.add(ProvParser.Expansions.APP);
+    extensions.expansions.add(ProvParser.ElasticExpansions.APP);
     return this;
   }
   

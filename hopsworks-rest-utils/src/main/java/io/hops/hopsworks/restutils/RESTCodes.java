@@ -760,7 +760,8 @@ public class RESTCodes {
     SECURITY_EXCEPTION(8, "A Java security error occurred.", Response.Status.INTERNAL_SERVER_ERROR),
     ENDPOINT_ANNOTATION_MISSING(9, "The requested endpoint did not have any project role annotation",
         Response.Status.SERVICE_UNAVAILABLE),
-    ENTERPRISE_FEATURE(10, "This feature is only availlable in the enterprise edition", Response.Status.BAD_REQUEST);
+    ENTERPRISE_FEATURE(10, "This feature is only available in the enterprise edition", Response.Status.BAD_REQUEST),
+    NOT_AUTHORIZED_TO_ACCESS(11, "Project not accessible to user", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -927,7 +928,8 @@ public class RESTCodes {
     ACCOUNT_NOT_ACTIVE(51, "This account is not active", Response.Status.BAD_REQUEST),
     ACCOUNT_ACTIVATION_FAILED(52, "Account activation failed", Response.Status.BAD_REQUEST),
     ROLE_NOT_FOUND(53, "Role not found", Response.Status.BAD_REQUEST),
-    ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST);
+    ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
+    USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1911,7 +1913,9 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     MODEL_MARSHALLING_FAILED(4,
         "Error occurred during marshalling/unmarshalling of model json.",
-        Response.Status.INTERNAL_SERVER_ERROR);;
+        Response.Status.INTERNAL_SERVER_ERROR),
+    HOPS_ERROR(5, "Error accessing hops storage",
+      Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;
@@ -1919,6 +1923,44 @@ public class RESTCodes {
     public final int range = 360000;
 
     ModelsErrorCode(Integer code, String message, Response.Status respStatus) {
+      this.code = range + code;
+      this.message = message;
+      this.respStatus = respStatus;
+    }
+
+    @Override
+    public Integer getCode() {
+      return code;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
+    }
+
+    public Response.StatusType getRespStatus() {
+      return respStatus;
+    }
+
+    @Override
+    public int getRange() {
+      return range;
+    }
+  }
+
+  public enum CloudErrorCode implements RESTErrorCode {
+    CLOUD_FEATURE(0, "This method is only available in cloud deployments.", Response.Status.METHOD_NOT_ALLOWED),
+    FAILED_TO_ASSUME_ROLE(1, "Failed to assume role.", Response.Status.BAD_REQUEST),
+    ACCESS_CONTROL_EXCEPTION(2, "You are not allowed to assume this role.", Response.Status.FORBIDDEN),
+    MAPPING_NOT_FOUND(3, "Mapping not found.", Response.Status.BAD_REQUEST),
+    MAPPING_ALREADY_EXISTS(4, "Mapping for the given project and role already exists.", Response.Status.BAD_REQUEST);
+
+    private int code;
+    private String message;
+    private Response.Status respStatus;
+    public final int range = 380000;
+
+    CloudErrorCode(Integer code, String message, Response.Status respStatus) {
       this.code = range + code;
       this.message = message;
       this.respStatus = respStatus;

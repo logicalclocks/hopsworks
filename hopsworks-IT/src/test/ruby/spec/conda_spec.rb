@@ -106,7 +106,7 @@ describe "On #{ENV['OS']}" do
             if !@project[:python_version].nil? and !@project[:python_version].empty?
               delete_env(@project[:id], python_version)
             end
-            install_library(@project[:id], python_version, 'requests', 'conda', '2.20.0', conda_channel)
+            install_library(@project[:id], python_version, 'requests', 'CONDA', '2.20.0', conda_channel)
             expect_status(404)
           end
 
@@ -135,7 +135,7 @@ describe "On #{ENV['OS']}" do
             expect(CondaCommands.find_by(project_id: @project[:id])).to be nil
 
             # Install a library to create the new environment
-            install_library(@project[:id], python_version, 'beautifulsoup4', 'conda', '4.9.0', conda_channel)
+            install_library(@project[:id], python_version, 'beautifulsoup4', 'CONDA', '4.9.0', conda_channel)
             expect_status(201)
 
             get_env_commands(@project[:id], python_version)
@@ -233,54 +233,54 @@ describe "On #{ENV['OS']}" do
 
           it 'should fail to install library if version not set' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda', '', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'CONDA', '', conda_channel)
             expect_status(400)
           end
 
           it 'should fail to install library if env version wrong' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version_2, 'dropbox', 'conda', '9.0.0', conda_channel)
+            install_library(@project[:id], python_version_2, 'dropbox', 'CONDA', '9.0.0', conda_channel)
             expect_status(404)
           end
 
           it 'should fail to install library if library contains forbidden chars url encoded' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, '%26%20touch%20%2Ftmp%2Ftest', 'conda', '9.0.0', conda_channel)
+            install_library(@project[:id], python_version, '%26%20touch%20%2Ftmp%2Ftest', 'CONDA', '9.0.0', conda_channel)
             expect_status(422)
           end
 
           it 'should fail to install library if version number contains forbidden chars' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda', 'rm -rf *', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'CONDA', 'rm -rf *', conda_channel)
             expect_status(422)
           end
 
           it 'should fail to install library if conda channel contains forbidden chars' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'conda',
+            install_library(@project[:id], python_version, 'dropbox', 'CONDA',
                             '9.0.0', 'https%3A%2F%2Fhello.com%2F%20%26test')
             expect_status(422)
           end
 
-          it 'should fail if you try to use another package manager' do
+          it 'should fail if you try to use another package source' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'dropbox', 'cargo', '9.0.0', conda_channel)
-            expect_status(404)
+            install_library(@project[:id], python_version, 'dropbox', 'CARGO', '9.0.0', conda_channel)
+            expect_status(400)
           end
 
           it 'should fail to install same library with upper and lower case variation' do
             @project = create_env_and_update_project(@project, python_version)
-            install_library(@project[:id], python_version, 'scipy', 'pip', '1.2.2', conda_channel)
+            install_library(@project[:id], python_version, 'scipy', 'PIP', '1.2.2', conda_channel)
             expect_status(409) #scipy is in the base env
-            install_library(@project[:id], python_version, 'SCIPY', 'pip', '1.2.2', conda_channel)
+            install_library(@project[:id], python_version, 'SCIPY', 'PIP', '1.2.2', conda_channel)
             expect_status(409)
           end
 
           it 'install libraries' do
             @project = create_env_and_update_project(@project, python_version)
 
-            install_library(@project[:id], python_version, 'imageio', 'conda', '2.9.0', conda_channel)
-            install_library(@project[:id], python_version, 'tflearn', 'pip', '0.3.2', conda_channel)
+            install_library(@project[:id], python_version, 'imageio', 'CONDA', '2.9.0', conda_channel)
+            install_library(@project[:id], python_version, 'tflearn', 'PIP', '0.3.2', conda_channel)
             expect_status(201)
 
             get_library_commands(@project[:id], python_version, 'imageio')
@@ -317,13 +317,54 @@ describe "On #{ENV['OS']}" do
             hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
             imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
 
-            expect(tflearn_library[:packageManager]).to eq ("PIP")
+            expect(tflearn_library[:packageSource]).to eq ("PIP")
             expect(tflearn_library[:version]).to eq ("0.3.2")
 
-            expect(hops_library[:packageManager]).to eq ("PIP")
+            expect(hops_library[:packageSource]).to eq ("PIP")
 
-            expect(imageio_library[:packageManager]).to eq("CONDA")
+            expect(imageio_library[:packageSource]).to eq("CONDA")
             expect(imageio_library[:version]).to eq ("2.9.0")
+
+          end
+
+          it 'install from git' do
+
+            @project = create_env_and_update_project(@project, python_version)
+            uninstall_library(@project[:id], python_version, 'hops')
+            expect_status(204)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            install_library(@project[:id], python_version, 'hops-util-py.git@branch-1.0', 'GIT', '', 'git', 'https://github.com/logicalclocks/hops-util-py.git@branch-1.0')
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            list_libraries(@project[:id], python_version)
+
+            hops_library = json_body[:items].detect { |library| library[:library] == "hops" }
+            expect(hops_library[:version]).to eq "1.0.0.4"
+
+          end
+
+          it 'install from wheel' do
+
+            @project = create_env_and_update_project(@project, python_version)
+
+            upload_wheel
+            install_library(@project[:id], python_version, 'lark_parser-0.10.1-py2.py3-none-any.whl', 'WHEEL', '', 'wheel', "/Projects/#{@project[:projectname]}/Resources/lark_parser-0.10.1-py2.py3-none-any.whl")
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            list_libraries(@project[:id], python_version)
+
+            lark_library = json_body[:items].detect { |library| library[:library] == "lark-parser" }
+            expect(lark_library[:version]).to eq "0.10.1"
 
           end
 
@@ -335,6 +376,10 @@ describe "On #{ENV['OS']}" do
             wait_for do
               CondaCommands.find_by(project_id: @project[:id]).nil?
             end
+
+            list_libraries(@project[:id], python_version)
+            imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
+            expect(imageio_library).to eq nil
           end
 
           it 'remove env' do
@@ -343,7 +388,7 @@ describe "On #{ENV['OS']}" do
             end
             @project = create_env_and_update_project(@project, python_version)
             # Install a library to create the new environment
-            install_library(@project[:id], python_version, 'dropbox', 'conda', '10.2.0', conda_channel)
+            install_library(@project[:id], python_version, 'dropbox', 'CONDA', '10.2.0', conda_channel)
             expect_status(201)
             # Wait until library is installed
             wait_for do
@@ -375,7 +420,7 @@ describe "On #{ENV['OS']}" do
             project = create_project_by_name(projectname)
             project = create_env_and_update_project(project, python_version)
             # Install a library to create the new environment
-            install_library(project[:id], python_version, 'dropbox', 'conda', '10.2.0', conda_channel)
+            install_library(project[:id], python_version, 'dropbox', 'CONDA', '10.2.0', conda_channel)
             expect_status(201)
             project = get_project_by_name(project[:projectname])
             non_versioned_project_image = project.docker_image.rpartition('.').first

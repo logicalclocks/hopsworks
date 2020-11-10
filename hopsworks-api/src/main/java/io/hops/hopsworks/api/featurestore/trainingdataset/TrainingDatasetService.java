@@ -18,15 +18,16 @@ package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
+import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
-import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
+import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -35,13 +36,16 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -52,8 +56,6 @@ import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-
-import java.io.IOException;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -77,6 +79,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +114,8 @@ public class TrainingDatasetService {
   private FsQueryBuilder fsQueryBuilder;
   @Inject
   private ProvArtifactResource provenanceResource;
+  @EJB
+  private DatasetController datasetController;
 
   private Project project;
   private Featurestore featurestore;
@@ -474,11 +479,14 @@ public class TrainingDatasetService {
   public Response getQuery(@Context SecurityContext sc,
                            @Context UriInfo uriInfo,
                            @ApiParam(value = "Id of the trainingdatasetid", required = true)
-                           @PathParam("trainingdatasetid") Integer trainingdatasetid) throws FeaturestoreException {
+                           @PathParam("trainingdatasetid") Integer trainingdatasetid,
+                           @ApiParam(value = "get query with label features", example = "true")
+                           @QueryParam("withLabel") @DefaultValue("true") boolean withLabel)
+      throws FeaturestoreException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
 
-    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid);
+    FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid, withLabel);
     return Response.ok().entity(fsQueryDTO).build();
   }
   
@@ -507,12 +515,16 @@ public class TrainingDatasetService {
   
   @Path("/{trainingDatasetId}/provenance")
   public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
-    throws FeaturestoreException {
-    this.provenanceResource.setProject(project);
-    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
-    if(td == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND, Level.FINE);
+    throws FeaturestoreException, GenericException {
+    String tdName = featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+    Dataset targetEndpoint;
+    try {
+      targetEndpoint = datasetController.getByName(featurestore.getProject(), tdName);
+    } catch (DatasetException ex) {
+      throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE, "training dataset not found");
     }
+    this.provenanceResource.setContext(project, targetEndpoint);
+    TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
     return provenanceResource;
   }

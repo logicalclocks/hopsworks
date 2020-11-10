@@ -55,25 +55,31 @@ public class TrainingDatasetFeature implements Serializable {
   @Basic(optional = false)
   @Column(name = "idx")
   private Integer index;
+  @Basic(optional = false)
+  @Column(name = "label")
+  private boolean label;
 
   public TrainingDatasetFeature() {
   }
 
   public TrainingDatasetFeature(TrainingDataset trainingDataset, TrainingDatasetJoin trainingDatasetJoin,
-                                Featuregroup featureGroup, String name, String type, Integer index) {
+                                Featuregroup featureGroup, String name, String type, Integer index, boolean label) {
     this.trainingDataset = trainingDataset;
     this.trainingDatasetJoin = trainingDatasetJoin;
     this.featureGroup = featureGroup;
     this.name = name;
     this.type = type;
     this.index = index;
+    this.label = label;
   }
 
-  public TrainingDatasetFeature(TrainingDataset trainingDataset, String name, String type, Integer index) {
+  public TrainingDatasetFeature(TrainingDataset trainingDataset, String name, String type, Integer index,
+                                boolean label) {
     this.trainingDataset = trainingDataset;
     this.name = name;
     this.type = type;
     this.index = index;
+    this.label = label;
   }
 
   public static long getSerialVersionUID() {
@@ -135,6 +141,14 @@ public class TrainingDatasetFeature implements Serializable {
   public void setIndex(Integer index) {
     this.index = index;
   }
+  
+  public boolean isLabel() {
+    return label;
+  }
+  
+  public void setLabel(boolean label) {
+    this.label = label;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -156,8 +170,11 @@ public class TrainingDatasetFeature implements Serializable {
     int result = id != null ? id.hashCode() : 0;
     result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
     result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
+    result = 31 * result + (trainingDatasetJoin != null ? trainingDatasetJoin.hashCode() : 0);
     result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (index!= null ? index.hashCode() : 0);
+    result = 31 * result + (type != null ? type.hashCode() : 0);
+    result = 31 * result + (index != null ? index.hashCode() : 0);
+    result = 31 * result + (label ? 1 : 0);
     return result;
   }
 }

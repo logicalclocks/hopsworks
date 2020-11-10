@@ -13,10 +13,37 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.common.provenance.ops;
+package io.hops.hopsworks.api.experiments;
 
-import io.hops.hopsworks.common.integrations.CommunityStereotype;
+import javax.xml.bind.annotation.XmlRootElement;
 
-@CommunityStereotype
-public class ProvLinksBuilderImpl implements ProvLinksBuilderIface {
+@XmlRootElement
+public class ModelXAttr {
+  private String id;
+  private String projectName;
+  
+  public ModelXAttr() {
+    //Needed for JAXB
+  }
+  
+  public ModelXAttr(String id, String projectName) {
+    this.id = id;
+    this.projectName = projectName;
+  }
+  
+  public String getId() {
+    return id;
+  }
+  
+  public void setId(String id) {
+    this.id = id;
+  }
+  
+  public String getProjectName() {
+    return projectName;
+  }
+  
+  public void setProjectName(String projectName) {
+    this.projectName = projectName;
+  }
 }

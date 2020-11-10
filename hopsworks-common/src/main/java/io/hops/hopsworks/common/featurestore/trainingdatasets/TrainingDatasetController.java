@@ -171,7 +171,7 @@ public class TrainingDatasetController {
     trainingDatasetDTO.setFeaturestoreName(featurestoreName);
 
     // Set features
-    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset);
+    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, true);
     Map<Integer, String> fsLookupTable = getFsLookupTableFeatures(tdFeatures);
     trainingDatasetDTO.setFeatures(tdFeatures
         .stream()
@@ -182,7 +182,7 @@ public class TrainingDatasetController {
                     f.getFeatureGroup().getId(),
                     f.getFeatureGroup().getName(), f.getFeatureGroup().getVersion())
                 : null,
-            f.getIndex()))
+            f.getIndex(), f.isLabel()))
         .collect(Collectors.toList()));
 
     switch (trainingDataset.getTrainingDatasetType()) {
@@ -344,7 +344,8 @@ public class TrainingDatasetController {
     Project project, Users user) throws FeaturestoreException {
     if (trainingDatasetDTO.getQueryDTO() != null) {
       // The user has created a training dataset from a query object. Stored it so that it can be reused later
-      setTrainingDatasetQuery(trainingDatasetDTO.getQueryDTO(), trainingDataset, project, user);
+      setTrainingDatasetQuery(trainingDatasetDTO.getQueryDTO(), trainingDatasetDTO.getFeatures(), trainingDataset,
+        project, user);
     } else if (trainingDatasetDTO.getFeatures() != null && !trainingDatasetDTO.getFeatures().isEmpty()) {
       // The user has created a training dataset from a dataframe. We can't make any assumption on the content of it
       // just store the schema (feature name + type)
@@ -356,7 +357,8 @@ public class TrainingDatasetController {
     }
   }
 
-  private void setTrainingDatasetQuery(QueryDTO queryDTO, TrainingDataset trainingDataset, Project project, Users user)
+  private void setTrainingDatasetQuery(QueryDTO queryDTO, List<TrainingDatasetFeatureDTO> features,
+                                       TrainingDataset trainingDataset, Project project, Users user)
       throws FeaturestoreException {
     // Convert the queryDTO to the internal representation
     Query query = constructorController.convertQueryDTO(queryDTO, 0, project, user);
@@ -365,25 +367,29 @@ public class TrainingDatasetController {
     List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
     trainingDataset.setJoins(tdJoins);
 
-    trainingDataset.setFeatures(collectFeatures(query, trainingDataset, 0, tdJoins, 0));
+    trainingDataset.setFeatures(collectFeatures(query, features, trainingDataset, 0, tdJoins, 0));
   }
 
   // Here we need to pass the list of training dataset joins so that we can rebuild the aliases.
   // and handle correctly the case in which a feature group is joined with itself.
-  private List<TrainingDatasetFeature> collectFeatures(Query query, TrainingDataset trainingDataset,
-                                                       int featureIndex, List<TrainingDatasetJoin> tdJoins,
-                                                       int joinIndex) {
+  private List<TrainingDatasetFeature> collectFeatures(Query query, List<TrainingDatasetFeatureDTO> featureDTOs,
+                                                       TrainingDataset trainingDataset, int featureIndex,
+                                                       List<TrainingDatasetJoin> tdJoins, int joinIndex) {
     List<TrainingDatasetFeature> features = new ArrayList<>();
+    boolean isLabel = false;
     for (Feature f : query.getFeatures()) {
+      if (featureDTOs != null && !featureDTOs.isEmpty()) {
+        isLabel = featureDTOs.stream().anyMatch(dto -> f.getName().equals(dto.getName()) && dto.getLabel());
+      }
       features.add(new TrainingDatasetFeature(trainingDataset, tdJoins.get(joinIndex), query.getFeaturegroup(),
-          f.getName(), f.getType(), featureIndex++));
+          f.getName(), f.getType(), featureIndex++, isLabel));
     }
 
     if (query.getJoins() != null) {
       for (Join join : query.getJoins()) {
         joinIndex++;
         List<TrainingDatasetFeature> joinFeatures
-            = collectFeatures(join.getRightQuery(), trainingDataset, featureIndex, tdJoins, joinIndex);
+            = collectFeatures(join.getRightQuery(), featureDTOs, trainingDataset, featureIndex, tdJoins, joinIndex);
         features.addAll(joinFeatures);
         featureIndex += joinFeatures.size();
       }
@@ -442,7 +448,7 @@ public class TrainingDatasetController {
     int index = 0;
     for (TrainingDatasetFeatureDTO f : featureList) {
       trainingDatasetFeatureList.add(
-          new TrainingDatasetFeature(trainingDataset, f.getName(), f.getType(), index++));
+          new TrainingDatasetFeature(trainingDataset, f.getName(), f.getType(), index++, f.getLabel()));
     }
 
     return trainingDatasetFeatureList;
@@ -742,8 +748,8 @@ public class TrainingDatasetController {
    * @return
    * @throws FeaturestoreException
    */
-  public Query getQuery(Featurestore featurestore, Integer trainingDatasetId, Project project, Users user)
-    throws FeaturestoreException {
+  public Query getQuery(Featurestore featurestore, Integer trainingDatasetId, boolean withLabel, Project project,
+                        Users user) throws FeaturestoreException {
     TrainingDataset trainingDataset =
         trainingDatasetFacade.findByIdAndFeaturestore(trainingDatasetId, featurestore)
         .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NOT_FOUND,
@@ -762,7 +768,7 @@ public class TrainingDatasetController {
     // These features are for the select part and are from different feature groups
     // to respect the ordering, all selected features are added to the left most Query instead of splitting them
     // over the querys for their respective origin feature group
-    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset);
+    List<TrainingDatasetFeature> tdFeatures = getFeaturesSorted(trainingDataset, withLabel);
 
     // Check that all the feature groups still exists, if not throw a reasonable error
     if (tdFeatures.stream().anyMatch(j -> j.getFeatureGroup() == null)) {
@@ -857,7 +863,7 @@ public class TrainingDatasetController {
     return fsLookup;
   }
 
-  private List<TrainingDatasetFeature> getFeaturesSorted(TrainingDataset trainingDataset) {
+  private List<TrainingDatasetFeature> getFeaturesSorted(TrainingDataset trainingDataset, boolean withLabel) {
     return trainingDataset.getFeatures().stream()
         .sorted((t1, t2) -> {
           if (t1.getIndex() != null) {
@@ -868,6 +874,8 @@ public class TrainingDatasetController {
             return t1.getName().compareTo(t2.getName());
           }
         })
+        // drop label features if desired
+        .filter(f -> !f.isLabel() || withLabel)
         .collect(Collectors.toList());
   }
 
