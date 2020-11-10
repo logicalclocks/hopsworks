@@ -130,13 +130,12 @@ public class FeaturestoreHopsfsConnectorController {
    * @param featurestoreHopsfsId the id
    * @returns DTO of the deleted entity
    */
-  public FeaturestoreHopsfsConnectorDTO removeFeaturestoreHopsfsConnector(Integer featurestoreHopsfsId){
+  public void removeFeaturestoreHopsfsConnector(Integer featurestoreHopsfsId){
     FeaturestoreHopsfsConnector featurestoreHopsfsConnector =
-      featurestoreHopsfsConnectorFacade.find(featurestoreHopsfsId);
-    FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO =
-        convertHopsfsConnectorToDTO(featurestoreHopsfsConnector);
-    featurestoreHopsfsConnectorFacade.remove(featurestoreHopsfsConnector);
-    return featurestoreHopsfsConnectorDTO;
+        featurestoreHopsfsConnectorFacade.find(featurestoreHopsfsId);
+    if (featurestoreHopsfsConnector != null) {
+      featurestoreHopsfsConnectorFacade.remove(featurestoreHopsfsConnector);
+    }
   }
 
   /**

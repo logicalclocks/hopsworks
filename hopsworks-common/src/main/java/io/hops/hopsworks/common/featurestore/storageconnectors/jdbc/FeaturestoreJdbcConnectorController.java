@@ -24,6 +24,7 @@ import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.hive.HiveController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -35,10 +36,11 @@ import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the feature_store_jdbc_connector table and required business logic
@@ -49,9 +51,11 @@ public class FeaturestoreJdbcConnectorController {
   @EJB
   private FeaturestoreJdbcConnectorFacade featurestoreJdbcConnectorFacade;
   @EJB
-  private Settings settings;
+  private ServiceDiscoveryController serviceDiscoveryController;
   @EJB
   private HiveController hiveController;
+  @EJB
+  private Settings settings;
   @EJB
   private SecretsController secretsController;
   @EJB
@@ -158,13 +162,17 @@ public class FeaturestoreJdbcConnectorController {
    * @param featurestoreJdbcId id of the JDBC connection
    * @return DTO of the deleted entity
    */
-  public FeaturestoreJdbcConnectorDTO removeFeaturestoreJdbcConnector(Integer featurestoreJdbcId){
-    FeaturestoreJdbcConnector featurestoreJdbcConnector =
-      featurestoreJdbcConnectorFacade.find(featurestoreJdbcId);
-    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
-      new FeaturestoreJdbcConnectorDTO(featurestoreJdbcConnector);
-    featurestoreJdbcConnectorFacade.remove(featurestoreJdbcConnector);
-    return featurestoreJdbcConnectorDTO;
+  public void removeFeaturestoreJdbcConnector(Integer featurestoreJdbcId){
+    FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(featurestoreJdbcId);
+    if (featurestoreJdbcConnector != null) {
+      featurestoreJdbcConnectorFacade.remove(featurestoreJdbcConnector);
+    }
+  }
+
+  public void removeFeaturestoreJdbcConnector(String featurestoreJdbcName){
+    Optional<FeaturestoreJdbcConnector> featurestoreJdbcConnector =
+        featurestoreJdbcConnectorFacade.findByName(featurestoreJdbcName);
+    featurestoreJdbcConnector.ifPresent(jdbcConnector -> featurestoreJdbcConnectorFacade.remove(jdbcConnector));
   }
 
   /**
@@ -175,15 +183,11 @@ public class FeaturestoreJdbcConnectorController {
    * @return the connector with the given id
    * @throws FeaturestoreException
    */
-  private FeaturestoreJdbcConnector verifyJdbcConnectorId(
-      Integer jdbcConnectorId, Featurestore featurestore) throws FeaturestoreException {
-    FeaturestoreJdbcConnector featurestoreJdbcConnector =
-        featurestoreJdbcConnectorFacade.findByIdAndFeaturestore(jdbcConnectorId, featurestore);
-    if (featurestoreJdbcConnector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND,
-          Level.FINE, "jdbcConnectorId: " + jdbcConnectorId);
-    }
-    return featurestoreJdbcConnector;
+  private FeaturestoreJdbcConnector verifyJdbcConnectorId(Integer jdbcConnectorId, Featurestore featurestore)
+      throws FeaturestoreException {
+    return featurestoreJdbcConnectorFacade.findByIdAndFeaturestore(jdbcConnectorId, featurestore)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND,
+            Level.FINE, "jdbcConnectorId: " + jdbcConnectorId));
   }
 
   /**
@@ -212,17 +216,6 @@ public class FeaturestoreJdbcConnectorController {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
             ", the storage connector name should be unique, there already exists a JDBC connector with the same name ");
       }
-    }
-  }
-
-  /**
-   * Verifies user input featurestore to query
-   *
-   * @param featurestore the user input to validate
-   */
-  private void verifyFeaturestoreInput(Featurestore featurestore){
-    if (featurestore == null) {
-      throw new IllegalArgumentException("Featurestore was not found");
     }
   }
 
@@ -287,7 +280,6 @@ public class FeaturestoreJdbcConnectorController {
     if(featurestoreJdbcConnectorDTO == null){
       throw new IllegalArgumentException("Input data is null");
     }
-    verifyFeaturestoreInput(featurestore);
     verifyJdbcConnectorName(featurestoreJdbcConnectorDTO.getName(), featurestore, false);
     verifyJdbcConnectorDescription(featurestoreJdbcConnectorDTO.getDescription());
     verifyJdbcConnectorConnectionString(featurestoreJdbcConnectorDTO.getConnectionString());
@@ -301,18 +293,25 @@ public class FeaturestoreJdbcConnectorController {
    * @param featurestore featurestore to query for jdbc connectors
    * @return list of XML/JSON DTOs of the jdbc connectors
    */
-  public List<FeaturestoreStorageConnectorDTO> getJdbcConnectorsForFeaturestore(Users user, Featurestore featurestore) {
+  public List<FeaturestoreStorageConnectorDTO> getJdbcConnectorsForFeaturestore(Users user, Featurestore featurestore)
+      throws FeaturestoreException {
+    List<FeaturestoreStorageConnectorDTO> jdbcConnectorDTOs = new ArrayList<>();
     List<FeaturestoreJdbcConnector> jdbcConnectors = featurestoreJdbcConnectorFacade.findByFeaturestore(featurestore);
-    return jdbcConnectors.stream().map(jdbcConnector -> {
-      FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO =
-        new FeaturestoreJdbcConnectorDTO(jdbcConnector);
-      if(featurestoreJdbcConnectorDTO.getName().equals(onlineFeaturestoreController.onlineDbUsername(
-              featurestore.getProject(), user) + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX)) {
-        setPasswordInArgumentToPlainTextForOnlineFeatureStoreJdbcConnector(user, featurestoreJdbcConnectorDTO,
-                featurestore.getProject().getName());
+
+    for (FeaturestoreJdbcConnector jdbcConnector : jdbcConnectors) {
+      FeaturestoreJdbcConnectorDTO jdbcConnectorDTO =
+          replaceOnlineFsConnectorUrl(new FeaturestoreJdbcConnectorDTO(jdbcConnector));
+
+      String userOnlineConnectorName = onlineFeaturestoreController.onlineDbUsername(featurestore.getProject(), user)
+              + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
+      if (jdbcConnectorDTO.getName().equals(userOnlineConnectorName)) {
+        setPasswordPlainTextForOnlineJdbcConnector(user, jdbcConnectorDTO, featurestore.getProject().getName());
       }
-      return featurestoreJdbcConnectorDTO;
-    }).collect(Collectors.toList());
+
+      jdbcConnectorDTOs.add(jdbcConnectorDTO);
+    }
+
+    return jdbcConnectorDTOs;
   }
 
   /**
@@ -330,10 +329,10 @@ public class FeaturestoreJdbcConnectorController {
             new FeaturestoreJdbcConnectorDTO(featurestoreJdbcConnector);
     if(featurestoreJdbcConnectorDTO.getName().equals(onlineFeaturestoreController.onlineDbUsername(
             featurestore.getProject(), user) + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX)) {
-      setPasswordInArgumentToPlainTextForOnlineFeatureStoreJdbcConnector(user, featurestoreJdbcConnectorDTO,
+      setPasswordPlainTextForOnlineJdbcConnector(user, featurestoreJdbcConnectorDTO,
               featurestore.getProject().getName());
     }
-    return featurestoreJdbcConnectorDTO;
+    return replaceOnlineFsConnectorUrl(new FeaturestoreJdbcConnectorDTO(featurestoreJdbcConnector));
   }
   
   /**
@@ -348,19 +347,20 @@ public class FeaturestoreJdbcConnectorController {
   public FeaturestoreJdbcConnectorDTO createJdbcConnectorForOnlineFeaturestore(String onlineDbUsername,
     Featurestore featurestore, String dbName) throws FeaturestoreException {
     String connectorName = onlineDbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
-    if(featurestoreJdbcConnectorFacade.findByName(connectorName).isPresent()) {
+    if (featurestoreJdbcConnectorFacade.findByName(connectorName).isPresent()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-        "a storage connector with that name already exists");
+          "a storage connector with that name already exists");
     }
-    String connectionString = settings.getFeaturestoreJdbcUrl() + dbName;
-    String arguments = FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
-      FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
-      FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername;
+
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
-    featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
+    featurestoreJdbcConnectorDTO.setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName);
     featurestoreJdbcConnectorDTO.setDescription("JDBC connection to Hopsworks Project Online " +
       "Feature Store NDB Database for user: " + onlineDbUsername);
-    featurestoreJdbcConnectorDTO.setArguments(arguments);
+    featurestoreJdbcConnectorDTO.setArguments(
+        FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
+            FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
+            FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername +
+            ",useSSL=false,allowPublicKeyRetrieval=true");
     featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.JDBC);
     featurestoreJdbcConnectorDTO.setName(connectorName);
     featurestoreJdbcConnectorDTO.setFeaturestoreId(featurestore.getId());
@@ -392,8 +392,9 @@ public class FeaturestoreJdbcConnectorController {
    * @param projectName
    * @returnsetPasswordInArgumentToPlainText
    */
-  private void setPasswordInArgumentToPlainTextForOnlineFeatureStoreJdbcConnector(Users user,
-    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO, String projectName) {
+  private void setPasswordPlainTextForOnlineJdbcConnector(Users user,
+                                                          FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO,
+                                                          String projectName) {
     String connectorPassword = getConnectorPlainPasswordFromSecret(user, projectName);
     if(!Strings.isNullOrEmpty(featurestoreJdbcConnectorDTO.getArguments())
       && !Strings.isNullOrEmpty(connectorPassword)) {
@@ -402,4 +403,23 @@ public class FeaturestoreJdbcConnectorController {
     }
   }
 
+  // In the database we store the consul name for mysql, so that we can handle backups and taking AMIs.
+  // When serving to the user, we resolve the name with ANY so that both internal and external users can
+  // work with it.
+  private FeaturestoreJdbcConnectorDTO replaceOnlineFsConnectorUrl(FeaturestoreJdbcConnectorDTO jdbcConnectorDTO)
+      throws FeaturestoreException {
+
+    String connectionString = "";
+    try {
+      connectionString = jdbcConnectorDTO.getConnectionString().replace(
+          serviceDiscoveryController.constructServiceFQDN(ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL),
+          serviceDiscoveryController.getAnyAddressOfServiceWithDNS(
+              ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL).getAddress());
+    } catch (ServiceDiscoveryException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.STORAGE_CONNECTOR_GET_ERROR, Level.SEVERE,
+          "Error resolving MySQL DNS name", e.getMessage(), e);
+    }
+    jdbcConnectorDTO.setConnectionString(connectionString);
+    return jdbcConnectorDTO;
+  }
 }

@@ -111,8 +111,6 @@ public class FeaturestoreService {
   private JWTHelper jWTHelper;
   @EJB
   private Settings settings;
-  @EJB
-  private OnlineFeaturestoreController onlineFeaturestoreController;
   @Inject
   private FeaturegroupService featuregroupService;
   @Inject
@@ -129,6 +127,8 @@ public class FeaturestoreService {
   private JobsBuilder jobsBuilder;
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
+  @Inject
+  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   private Project project;
 
@@ -281,20 +281,11 @@ public class FeaturestoreService {
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
       featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(user, featurestore);
-    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector = null;
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
-    if(settings.isOnlineFeaturestore()
-      && onlineFeaturestoreController.checkIfDatabaseExists(
-          onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
-      String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-      onlineFeaturestoreConnector = featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user,
-              dbUsername, featurestore);
-      featurestoreDTO.setMysqlServerEndpoint(settings.getFeaturestoreJdbcUrl());
-      featurestoreDTO.setOnlineFeaturestoreSize(onlineFeaturestoreController.getDbSize(featurestore));
-      featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
-      featurestoreDTO.setOnlineEnabled(true);
-    }
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector =
+        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, dbUsername, featurestore);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
         featurestoreClientSettingsDTO, storageConnectors, onlineFeaturestoreConnector);
