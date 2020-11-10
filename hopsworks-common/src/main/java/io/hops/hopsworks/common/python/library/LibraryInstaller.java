@@ -262,9 +262,11 @@ public class LibraryInstaller {
           writer.write("COPY .condarc .pip " + projectEnvYml + " /root/");
           writer.newLine();
           String dockerCondaCmd = cc.getInstallJupyter() ?
-              "RUN conda env update -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment() :
+              "RUN conda env update -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment():
               "RUN conda env create -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment();
           writer.write(dockerCondaCmd);
+          writer.write(" && " + getCleanupCommand()  + " && " + anaconda_dir + "/bin/conda list -n "
+              + settings.getCurrentCondaEnvironment());
         }
       }
   
@@ -299,6 +301,10 @@ public class LibraryInstaller {
     } finally {
       FileUtils.deleteDirectory(baseDir);
     }
+  }
+
+  private String getCleanupCommand() {
+    return anaconda_dir + "/bin/conda clean -afy && rm -rf ~/.cache && rm -rf /usr/local/share/.cache";
   }
 
   private void installLibrary(CondaCommands cc)
@@ -369,7 +375,8 @@ public class LibraryInstaller {
         }
         //Installing faulty libraries like broken .egg files can cause the list operation to fail
         //As we find library names and versions using that command we need to make sure it does not break
-        writer.write(" && " + anaconda_dir + "/bin/conda list -n theenv");
+        writer.write(" && " + getCleanupCommand() + " && " + anaconda_dir + "/bin/conda list -n "
+            + settings.getCurrentCondaEnvironment());
       }
       
       String nextDockerImageName = getNextDockerImageName(project);
