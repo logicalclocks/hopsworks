@@ -1494,7 +1494,18 @@ public class RESTCodes {
     ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND(120, "Online featurestore JDBC connector not found",
             Response.Status.INTERNAL_SERVER_ERROR),
     PRIMARY_KEY_PARTITION_KEY_REQUIRED(121, "Primary key and partition key are required " +
-        "when using Hudi time travel format", Response.Status.BAD_REQUEST);
+        "when using Hudi time travel format", Response.Status.BAD_REQUEST),
+    DATABRICKS_INSTANCE_ALREADY_EXISTS(122, "Databricks Instance already registered", Response.Status.CONFLICT),
+    DATABRICKS_INSTANCE_NOT_EXISTS(123, "Databricks Instance doesn't exists", Response.Status.NOT_FOUND),
+    DATABRICKS_CANNOT_START_CLUSTER(124, "Could not start Databricks cluster",
+                                    Response.Status.INTERNAL_SERVER_ERROR),
+    DATABRICKS_ERROR(125, "Error communicating with Databricks", Response.Status.INTERNAL_SERVER_ERROR),
+    STORAGE_CONNECTOR_GET_ERROR(126, "Error retrieving the storage connector",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_ONLINE_FEATURES(127, "Error retrieving online features", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_ONLINE_USERS(128, "Error getting database users", Response.Status.INTERNAL_SERVER_ERROR),
+    ERROR_ONLINE_GENERIC(129, "Error communicating with the online feature store",
+                         Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

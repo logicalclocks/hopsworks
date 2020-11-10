@@ -372,10 +372,7 @@ describe "On #{ENV['OS']}" do
         connector_id = parsed_json["id"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_id.to_s
         delete delete_connector_endpoint
-        parsed_json = JSON.parse(response.body)
         expect_status(200)
-        expect(parsed_json.key?("id")).to be true
-        expect(parsed_json["id"] == connector_id).to be true
       end
 
       it "should be able to delete a s3 connector from the featurestore" do
@@ -389,10 +386,7 @@ describe "On #{ENV['OS']}" do
         connector_id = parsed_json["id"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
         delete delete_connector_endpoint
-        parsed_json = JSON.parse(response.body)
         expect_status(200)
-        expect(parsed_json.key?("id")).to be true
-        expect(parsed_json["id"] == connector_id).to be true
       end
 
       it "should be able to delete a JDBC connector from the featurestore" do
@@ -405,10 +399,7 @@ describe "On #{ENV['OS']}" do
         connector_id = parsed_json["id"]
         delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_id.to_s
         delete delete_connector_endpoint
-        parsed_json = JSON.parse(response.body)
         expect_status(200)
-        expect(parsed_json.key?("id")).to be true
-        expect(parsed_json["id"] == connector_id).to be true
       end
 
       it "should be able to update hopsfs connector in the featurestore" do
@@ -578,6 +569,22 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json2["connectionString"] == "jdbc://test3").to be true
       end
 
+      it "online storage connector connection string should contain the IP of the mysql" do
+        # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
+        connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+        featurestore_id = get_featurestore_id(@project['id'])
+        connector = get_jdbc_storate_connector(@project['id'], featurestore_id, connector_name)
+
+        expect(connector['connectionString']).to match(/jdbc:mysql:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}/)
+      end
+
+      it "online storage connector connection string should be stored with consul name in the database" do
+        # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
+        connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+        connector_db = FeatureStoreJDBCConnector.find_by(name: connector_name)
+
+        expect(connector_db.connection_string).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
+      end
     end
   end
 end

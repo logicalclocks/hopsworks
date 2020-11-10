@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
+import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
@@ -61,7 +62,8 @@ public class FeaturestoreStorageConnectorController {
    * @return List of JSON/XML DTOs of the storage connectors
    */
   public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Users user,
-    Featurestore featurestore) throws FeaturestoreException {
+                                                                                      Featurestore featurestore)
+      throws FeaturestoreException {
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
     featurestoreStorageConnectorDTOS.addAll(
         featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore));
@@ -201,17 +203,21 @@ public class FeaturestoreStorageConnectorController {
    * @param featurestore
    * @return JSON/XML DTOs of the deleted storage connector
    */
-  public FeaturestoreStorageConnectorDTO deleteStorageConnectorWithTypeAndId(
-    Users user, FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId,
-    Featurestore featurestore) throws UserException {
+  public void deleteStorageConnectorWithTypeAndId(Users user,
+                                                  FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
+                                                  Integer storageConnectorId, Featurestore featurestore)
+      throws UserException {
     validateUser(user, featurestore);
     switch(featurestoreStorageConnectorType) {
       case S3:
-        return featurestoreS3ConnectorController.removeFeaturestoreS3Connector(user, storageConnectorId);
+        featurestoreS3ConnectorController.removeFeaturestoreS3Connector(user, storageConnectorId);
+        break;
       case JDBC:
-        return featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnectorId);
+        featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnectorId);
+        break;
       case HOPSFS:
-        return featurestoreHopsfsConnectorController.removeFeaturestoreHopsfsConnector(storageConnectorId);
+        featurestoreHopsfsConnectorController.removeFeaturestoreHopsfsConnector(storageConnectorId);
+        break;
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE.getMessage()
             + ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
@@ -242,15 +248,16 @@ public class FeaturestoreStorageConnectorController {
   }
   
   /**
-   * Checks if the user is a member of the project to add, edit, and delete a connector
+   * Checks if the user is a data owner of the feature store project to add, edit, and delete a connector
    * @param user the user making the request
    * @param featurestore
    * @throws UserException
    */
   private void validateUser(Users user, Featurestore featurestore) throws UserException {
-    if (!projectTeamFacade.isUserMemberOfProject(featurestore.getProject(), user)) {
+    String userRole = projectTeamFacade.findCurrentRole(featurestore.getProject(), user);
+    if (!userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
       throw new UserException(RESTCodes.UserErrorCode.ACCESS_CONTROL, Level.FINE,
-              "Action not allowed. User " + user.getUsername() + " is" + " not member of project ");
+          "Action not allowed. User " + user.getUsername() + " is" + " not member of project ");
     }
   }
 }

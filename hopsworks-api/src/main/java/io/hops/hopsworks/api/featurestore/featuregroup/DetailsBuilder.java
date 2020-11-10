@@ -33,7 +33,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
-import java.math.BigInteger;
 import java.net.URI;
 import java.util.logging.Level;
 
@@ -88,7 +87,6 @@ public class DetailsBuilder {
     detailsDTO.setSize(featuregroup.getCachedFeaturegroup().getHiveTbls().getHiveTableParamsCollection().stream()
         .filter(param -> param.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("totalSize"))
         .map(param -> Long.valueOf(param.getParamValue()))
-        .map(BigInteger::valueOf)
         .findFirst()
         .orElse(null));
 

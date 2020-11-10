@@ -205,7 +205,7 @@ public class FeaturestoreS3ConnectorController {
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public FeaturestoreS3ConnectorDTO removeFeaturestoreS3Connector(Users user, Integer featurestoreS3Id)
-    throws UserException {
+      throws UserException {
     FeaturestoreS3Connector featurestoreS3Connector = featurestoreS3ConnectorFacade.find(featurestoreS3Id);
     FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO = new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
     try {

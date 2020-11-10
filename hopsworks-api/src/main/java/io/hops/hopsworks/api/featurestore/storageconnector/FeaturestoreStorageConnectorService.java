@@ -29,7 +29,6 @@ import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStora
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
-import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
@@ -79,8 +78,6 @@ public class FeaturestoreStorageConnectorService {
   private FeaturestoreController featurestoreController;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
-  @EJB
-  private FeaturestoreUtils featurestoreUtils;
   @EJB
   private ActivityFacade activityFacade;
   @EJB
@@ -158,7 +155,7 @@ public class FeaturestoreStorageConnectorService {
   public Response getStorageConnectorsOfType(
     @ApiParam(value = "storage connector type", example = "JDBC")
     @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType, @Context SecurityContext sc)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     verifyStorageConnectorType(connectorType);
     Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS =
@@ -264,34 +261,23 @@ public class FeaturestoreStorageConnectorService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Delete storage connector with a specific id and type from a featurestore",
-    response = FeaturestoreStorageConnectorDTO.class)
-  public Response deleteStorageConnectorWithTypeAndId(
-    @Context
-      SecurityContext sc,
-    @ApiParam(value = "storage connector type", example = "JDBC", required = true)
-    @PathParam("connectorType")
-      FeaturestoreStorageConnectorType connectorType,
-    @ApiParam(value = "Id of the storage connector", required = true)
-    @PathParam("connectorId")
-      Integer connectorId)
-    throws FeaturestoreException, UserException {
+  @ApiOperation(value = "Delete storage connector with a specific id and type from a featurestore")
+  public Response deleteStorageConnectorWithTypeAndId(@Context SecurityContext sc,
+                                       @ApiParam(value = "storage connector type", example = "JDBC", required = true)
+                                       @PathParam("connectorType") FeaturestoreStorageConnectorType connectorType,
+                                       @ApiParam(value = "Id of the storage connector", required = true)
+                                       @PathParam("connectorId") Integer connectorId)
+      throws FeaturestoreException, UserException {
     verifyStorageConnectorTypeAndId(connectorType, connectorId);
     Users user = jWTHelper.getUserPrincipal(sc);
     FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
       featurestoreStorageConnectorController.getStorageConnectorForFeaturestoreWithTypeAndId(user, featurestore,
-        connectorType, connectorId);
-    featurestoreUtils.verifyUserRole(featurestore, user, project, featurestoreStorageConnectorDTO);
-    featurestoreStorageConnectorDTO =
-      featurestoreStorageConnectorController.deleteStorageConnectorWithTypeAndId(user, connectorType, connectorId,
+          connectorType, connectorId);
+    featurestoreStorageConnectorController.deleteStorageConnectorWithTypeAndId(user, connectorType, connectorId,
         featurestore);
     activityFacade.persistActivity(ActivityFacade.REMOVED_FEATURESTORE_STORAGE_CONNECTOR +
       featurestoreStorageConnectorDTO.getName(), project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOGenericEntity =
-      new GenericEntity<FeaturestoreStorageConnectorDTO>(featurestoreStorageConnectorDTO) {
-      };
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK)
-      .entity(featurestoreStorageConnectorDTOGenericEntity).build();
+    return Response.ok().build();
   }
   
   /**
