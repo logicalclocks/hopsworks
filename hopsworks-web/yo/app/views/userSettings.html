@@ -463,7 +463,7 @@
                         <div class="col-xs-6 col-sm-6 col-md-6">
                             <label class="text-muted">Choose scopes:</label>
                             <div class="checkbox c-checkbox"
-                                 ng-repeat="scope in profileCtrl.keyScopes | orderBy : 'value' track by $index">
+                                 ng-repeat="scope in profileCtrl.keyScopes track by $index">
                                 <label>
                                     <input name="scope.value" ng-model="profileCtrl.keyScopes[$index].selected"
                                            value="true" type="checkbox">
