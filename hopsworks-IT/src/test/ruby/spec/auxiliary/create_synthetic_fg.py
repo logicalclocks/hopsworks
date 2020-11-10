@@ -32,11 +32,11 @@ for i in list(range(1,size)):
     fg2_data.append((i, np.random.normal(), np.random.normal()))
 
 fg1_spark_df = spark.createDataFrame(fg1_data, ['id','fg1_col1', 'fg1_col2'])
-fg1 = fs.create_feature_group("fg1", version=1, description="synthetic fg1", primary_key=['id'])
+fg1 = fs.create_feature_group("fg1", version=1, description="synthetic fg1", primary_key=['id'], time_travel_format=None)
 fg1.save(fg1_spark_df)
 
 fg2_spark_df = spark.createDataFrame(fg2_data, ['id','fg2_col1', 'fg2_col2'])
-fg2 = fs.create_feature_group("fg2", version=1, description="synthetic fg2", primary_key=['id'])
+fg2 = fs.create_feature_group("fg2", version=1, description="synthetic fg2", primary_key=['id'], time_travel_format=None)
 fg2.save(fg2_spark_df)
 
 connection.close()
