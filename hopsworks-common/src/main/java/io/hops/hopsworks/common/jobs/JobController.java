@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.util.SparkConfigurationUtil;
+import io.hops.hopsworks.persistence.entity.jobs.configuration.python.PythonJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -187,14 +188,21 @@ public class JobController {
       String username = hdfsUsersBean.getHdfsUserName(project, user);
       udfso = dfs.getDfsOps(username);
       LOGGER.log(Level.FINE, "Inspecting executable job program by {0} at path: {1}", new Object[]{username, path});
-      if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
-              || path.endsWith(".ipynb"))) {
-        throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
-      }
+
       switch (jobType){
         case SPARK:
         case PYSPARK:
+          if (Strings.isNullOrEmpty(path) || !(path.endsWith(".jar") || path.endsWith(".py")
+              || path.endsWith(".ipynb"))) {
+            throw new IllegalArgumentException("Path does not point to a .jar, .py or .ipynb file.");
+          }
           return sparkController.inspectProgram(path, udfso);
+        case PYTHON:
+          if (Strings.isNullOrEmpty(path) || !(path.endsWith(".py") || path.endsWith(".ipynb") || path.endsWith(
+              ".egg") || path.endsWith(".zip"))) {
+            throw new IllegalArgumentException("Path does not point to a .py or .ipynb or .egg file.");
+          }
+          return new PythonJobConfiguration();
         default:
           throw new IllegalArgumentException("Job type not supported: " + jobType);
       }

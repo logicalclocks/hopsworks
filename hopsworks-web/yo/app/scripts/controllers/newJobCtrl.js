@@ -65,7 +65,8 @@ angular.module('hopsWorksApp')
             self.selectFileRegexes = {
               "SPARK": /.jar\b/,
               "FLINK": /.jar\b/,
-              "PYSPARK": /(.py|.ipynb)\b/
+              "PYSPARK": /(.py|.ipynb)\b/,
+              "PYTHON": /(.py|.ipynb|.egg|.zip)\b/
             };
             self.selectFileErrorMsgs = {
               "SPARK": "Please select a JAR file.",
@@ -176,10 +177,18 @@ angular.module('hopsWorksApp')
             };
 
             self.sparkState = {//Will hold spark-specific state
-              "selectedJar": null //The path to the selected jar
+              "runConfig": null,
+              "selectedFile": ""
             };
+
+            self.pythonState = {//Will hold python-specific state
+              "runConfig": null,
+              "selectedFile": ""
+            }
+
             self.flinkState = {//Will hold flink-specific state
-              "selectedJar": null //The path to the selected jar
+              "selectedFile": null, //The path to the selected jar
+              "runConfig": null,
             };
 
             //Variables for front-end magic
@@ -225,6 +234,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
+                "pythonState": self.pythonState,
                 "accordions": [self.accordion1, self.accordion2, self.accordion3, self.accordion4, self.accordion5]
               };
               self.undoneState = state;
@@ -235,11 +245,17 @@ angular.module('hopsWorksApp')
               self.phase = 0;
               self.runConfig = null;
               self.sparkState = {
-                "selectedJar": null //The path to the selected jar
+                "runConfig": null,
+                "selectedFile": ""
               };
               self.flinkState = {
-                "selectedJar": null //The path to the selected jar
+                "selectedFile": null, //The path to the selected jar
+                "runConfig": null,
               };
+              self.pythonState = {
+                "runConfig": null,
+                "selectedFile": ""
+              }
               //Variables for front-end magic
               self.accordion1 = {//Contains the job name
                 "isOpen": true,
@@ -283,6 +299,7 @@ angular.module('hopsWorksApp')
                 self.phase = self.undoneState.phase;
                 self.runConfig = self.undoneState.runConfig;
                 self.sparkState = self.undoneState.sparkState;
+                self.pythonState = self.undoneState.pythonState;
                 self.flinkState = self.undoneState.flinkState;
                 self.accordion1 = self.undoneState.accordions[0];
                 self.accordion2 = self.undoneState.accordions[1];
@@ -334,18 +351,9 @@ angular.module('hopsWorksApp')
 
             var jobConfigFileImported = function (config) {
               try {
-                var jobConfig = angular.fromJson(config);
-                JobService.putJob(self.projectId, jobConfig.config).then(
-                        function (success) {
-                          $location.path('project/' + self.projectId + '/jobs');
-                          self.removed = true;
-                        }, function (error) {
-                        if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                        } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                        }
-                });
+                var job = angular.fromJson(config);
+                job.name = job.config.appName
+                self.initStoredJob(JobService.getJobState(job))
               } catch (e) {
                 growl.error("Error parsing JSON file", {title: 'Error parsing job configuration file', ttl: 7000});
               }
@@ -460,12 +468,32 @@ angular.module('hopsWorksApp')
               }
             };
 
+            self.storePreviousJobRunConfig = function (prevJobType) {
+              switch (prevJobType) {
+                case 1:
+                case 2:
+                  self.sparkState.runConfig = self.runConfig
+                  self.sparkState.selectedFile = self.accordion3.value
+                  break;
+                case 3:
+                  self.flinkState.runConfig = self.runConfig
+                  break;
+                case 4:
+                  self.pythonState.runConfig = self.runConfig
+                  self.pythonState.selectedFile = self.accordion3.value
+                  break;
+                default:
+                  break;
+              }
+            }
+
             /**
              * Callback method for when the user selected a job type. Will then
              * display the file selection.
              * @returns {undefined}
              */
-            self.jobTypeChosen = function () {
+            self.jobTypeChosen = function (oldJobType) {
+              self.storePreviousJobRunConfig(oldJobType)
               // For Kafka tour
               if (self.projectIsGuide) {
                 self.tourService.currentStep_TourSeven = 4;
@@ -473,26 +501,34 @@ angular.module('hopsWorksApp')
               self.phase = 2;
               self.accordion1.isOpen = false; //Close job name panel
               self.accordion1.value = " - " + self.jobname; //Set job name panel title
-              self.accordion2.isOpen = false; //Close job type panel
+              self.accordion2.isOpen = false; //Close jnewJobCtrl.jobtypeob type panel
               self.accordion3.value = ""; //Reset selected file
               self.accordion3.isOpen = true; //Open file selection
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "App file (.jar, .py or .ipynb)";
+                  self.accordion3.title = "App file (.jar)"; //Only jar allowed
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   self.accordion3.visible = true; //Display file selection
-                  self.accordion4.isOpen = false; //Close job setup
-                  self.accordion4.visible = false; //Hide job setup
-                  self.accordion5.visible = false; // Hide job configuration
+                  if(self.sparkState.runConfig != null) {
+                    self.runConfig = self.sparkState.runConfig;
+                    $scope.jobConfig = self.runConfig;
+                  }
+                  self.accordion3.value = self.sparkState.selectedFile;
+                  self.showJobSetupAndConfig(self.sparkState)
                   break;
                 case 2:
                   self.accordion3.title = "App file (.py or .ipynb)";
                   self.accordion4.title = "Job details";
-                  self.accordion5.visible = true;
-                  self.accordion5.isOpen = true;
                   selectedType = "PySpark";
+                  if(self.sparkState.runConfig != null) {
+                    self.runConfig = self.sparkState.runConfig;
+                    $scope.jobConfig = self.runConfig;
+                  }
+                  self.accordion3.visible = true; //Display file selection
+                  self.accordion3.value = self.sparkState.selectedFile;
+                  self.showJobSetupAndConfig(self.sparkState)
                   break;
                 case 3:
                   self.accordion4.title = "Job details";
@@ -504,13 +540,17 @@ angular.module('hopsWorksApp')
                   self.accordion4.visible = true;
                   self.accordion5.visible = true;
                   self.accordion5.isOpen = true;
-                  self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
-                      "\"amQueue\":\"default\"," +
-                      "\"jobmanager.heap.size\":1024," +
-                      "\"amVCores\":1," +
-                      "\"numberOfTaskManagers\":1," +
-                      "\"taskmanager.heap.size\":1024," +
-                      "\"taskmanager.numberOfTaskSlots\":1}");
+                  if(self.flinkState.runConfig != null) {
+                    self.runConfig = self.flinkState.runConfig
+                  } else{
+                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
+                        "\"amQueue\":\"default\"," +
+                        "\"jobmanager.heap.size\":1024," +
+                        "\"amVCores\":1," +
+                        "\"numberOfTaskManagers\":1," +
+                        "\"taskmanager.heap.size\":1024," +
+                        "\"taskmanager.numberOfTaskSlots\":1}");
+                  }
                   $scope.jobConfig = self.runConfig;
                   break;
                 case 4:
@@ -519,24 +559,39 @@ angular.module('hopsWorksApp')
                   selectedType = "Python";
                   jobConfig = 'pythonJobConfiguration';
                   self.accordion3.visible = true; //Display file selection
-                  self.accordion4.isOpen = false; //Close job setup
-                  self.accordion4.visible = false; //Hide job setup
-                  self.accordion5.visible = false; // Hide job configuration
-                  self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
-                      "\"memory\":2048," +
-                      "\"cores\":1," +
-                      "\"gpus\":0}");
+                  if(self.pythonState.runConfig != null) {
+                    self.runConfig = self.pythonState.runConfig
+                  } else {
+                    self.runConfig = JSON.parse("{\"type\":\"" + jobConfig + "\"," +
+                        "\"memory\":2048," +
+                        "\"cores\":1," +
+                        "\"gpus\":0}");
+                  }
+                  $scope.jobConfig = self.runConfig;
+                  self.accordion3.value = self.pythonState.selectedFile;
+                  self.showJobSetupAndConfig(self.pythonState)
                   break;
                 default:
                   break;
               }
-              self.accordion2.value = " - " + selectedType; //Set job type panel title
 
+              self.accordion2.value = " - " + selectedType; //Set job type panel title
               if (self.tourService.currentStep_TourFour > -1) {
                 self.tourService.currentStep_TourFour = 4;
               }
             };
 
+            self.showJobSetupAndConfig = function (jobTypeState) {
+              if(jobTypeState.selectedFile != "") {
+                self.accordion4.isOpen = true; //Close job setup
+                self.accordion4.visible = true; //Open job setup
+                self.accordion5.visible = true; //Open job configuration
+              } else {
+                self.accordion4.isOpen = false; //Close job setup
+                self.accordion4.visible = false; //Hide job setup
+                self.accordion5.visible = false; // Hide job configuration
+              }
+            }
 
             /**
              * Get the String representation of the selected jobType.
@@ -598,8 +653,9 @@ angular.module('hopsWorksApp')
              * @param {type} path
              * @returns {undefined}
              */
-            this.mainFileSelected = function (path) {
+            self.mainFileSelected = function (path) {
               self.phase = 3;
+
               self.accordion4.isOpen = true; // Open job setup
               self.accordion4.visible = true; // Show job setup
               self.accordion5.visible = true; // Show job config
@@ -618,6 +674,49 @@ angular.module('hopsWorksApp')
             self.jobDetailsFilledIn = function () {
               self.phase = 4;
             };
+
+            self.getJobInspection = function (reason, path) {
+              JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
+                  function (success) {
+                    switch (reason.toUpperCase()) {
+                      case "PYSPARK":
+                      case "SPARK":
+                        $scope.jobConfig = success.data
+                        self.runConfig = $scope.jobConfig
+                        if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
+                            self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
+                          self.jobtype = 2;
+                          self.accordion2.value = " - " + "PYSPARK";
+                        } else {
+                          self.jobtype = 1;
+                          self.accordion2.value = " - " + "SPARK";
+                        }
+                        $scope.settings = {advanced: true};
+                        self.mainFileSelected(path);
+                        // For Kafka tour
+                        if (self.projectIsGuide) {
+                          self.runConfig['spark.executor.memory'] = 2048;
+                          self.tourService.currentStep_TourSeven = 6;
+                        }
+
+                        if (self.tourService.currentStep_TourFour > -1) {
+                          self.tourService.currentStep_TourFour = 6;
+                        }
+                        break;
+                      case "PYTHON":
+                        self.mainFileSelected(filename);
+                        break;
+                      default:
+                        break;
+                    }
+                  }, function (error) {
+                    if (typeof error.data.usrMsg !== 'undefined') {
+                      growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
+                    } else {
+                      growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                    }
+                  });
+            }
 
             /**
              * Callback for when the user selected a file.
@@ -642,43 +741,12 @@ angular.module('hopsWorksApp')
               switch (reason.toUpperCase()) {
                 case "SPARK":
                 case "PYSPARK":
-                  self.sparkState.selectedJar = filename;
-                  if(reason.toUpperCase() !== "PYTHON") {
-                    JobService.getInspection(self.projectId, reason.toLowerCase(), "hdfs://" + path).then(
-                        function (success) {
-                          $scope.jobConfig = success.data;
-                          self.runConfig = $scope.jobConfig;
-                          $scope.settings = {advanced: true};
-
-                          if (self.runConfig.appPath.toLowerCase().endsWith(".py") ||
-                              self.runConfig.appPath.toLowerCase().endsWith(".ipynb")) {
-                            self.jobtype = 2;
-                          } else {
-                            self.jobtype = 1;
-                          }
-                          self.mainFileSelected(filename);
-                          // For Kafka tour
-                          if (self.projectIsGuide) {
-                            self.runConfig['spark.executor.memory'] = 2048;
-                            self.tourService.currentStep_TourSeven = 6;
-                          }
-
-                          if (self.tourService.currentStep_TourFour > -1) {
-                            self.tourService.currentStep_TourFour = 6;
-                          }
-
-                        }, function (error) {
-                          if (typeof error.data.usrMsg !== 'undefined') {
-                            growl.error(error.data.usrMsg, {title: error.data.errorMsg, ttl: 8000});
-                          } else {
-                            growl.error("", {title: error.data.errorMsg, ttl: 8000});
-                          }
-                        });
-                  }
+                  self.sparkState.selectedFile = filename
+                  self.getJobInspection(reason, filename)
                   break;
                 case "PYTHON":
                   self.runConfig.appPath = path;
-                  self.mainFileSelected(filename);
+                  self.getJobInspection(reason, filename)
                   break;
                 case "FILES":
                   if (self.files === []) {
@@ -788,6 +856,7 @@ angular.module('hopsWorksApp')
                 "runConfig": self.runConfig,
                 "sparkState": self.sparkState,
                 "flinkState": self.flinkState,
+                "pythonState": self.pythonState,
                 "accordion1": self.accordion1,
                 "accordion2": self.accordion2,
                 "accordion3": self.accordion3,
@@ -796,6 +865,47 @@ angular.module('hopsWorksApp')
               };
               StorageService.store(self.newJobName, state);
             });
+
+            /**
+             * Initializes variables from the stored job
+             */
+            self.initStoredJob = function (stored) {
+              //Job information
+              self.jobtype = stored.jobtype;
+              self.jobname = stored.jobname;
+              self.templateFormButton();
+              self.phase = stored.phase;
+              $scope.jobConfig = stored.runConfig;
+              $scope.settings = {advanced: true};
+              self.runConfig = stored.runConfig;
+              if (self.runConfig) {
+                self.topics = [];
+                self.runConfig.schedule = null;
+              }
+              if (self.jobtype === 1 || self.jobtype === 2) {
+                self.sparkState = stored.sparkState;
+              } else if(self.jobtype === 4) {
+                self.pythonState = stored.pythonState
+              } else if (self.jobtype ===  3) {
+                self.flinkState = stored.flinkState;
+              }
+
+              if(self.jobtype === 4 && typeof self.runConfig['files'] !== "undefined" && self.runConfig['files'] !== "") {
+                var files = self.runConfig['files'].split(',');
+                for (var i = 0; i < files.length; i++) {
+                  if (files[i]) {
+                    if(self.files.indexOf(files[i] === -1))
+                      self.files.push(files[i]);
+                  }
+                }
+              }
+              //GUI state
+              self.accordion1 = stored.accordion1;
+              self.accordion2 = stored.accordion2;
+              self.accordion3 = stored.accordion3;
+              self.accordion4 = stored.accordion4;
+              self.accordion5 = stored.accordion5;
+            }
             /**
              * Init method: restore any previous state.
              * @returns {undefined}
@@ -804,39 +914,7 @@ angular.module('hopsWorksApp')
               self.checkIfPythonEnabled();
               var stored = StorageService.recover(self.newJobName);
               if (stored) {
-                //Job information
-                self.jobtype = stored.jobtype;
-                self.jobname = stored.jobname;
-                self.templateFormButton();
-                self.phase = stored.phase;
-                $scope.jobConfig = stored.runConfig;
-                $scope.settings = {advanced: true};
-                self.runConfig = stored.runConfig;
-                if (self.runConfig) {
-                  self.topics = [];
-                  self.runConfig.schedule = null;
-                }
-                if (self.jobtype === 1 || self.jobtype === 2) {
-                  self.sparkState = stored.sparkState;
-                } else if (self.jobtype === 3 || self.jobtype === 4) {
-                  self.flinkState = stored.flinkState;
-                }
-
-                if(self.jobtype === 4 && typeof self.runConfig['files'] !== "undefined" && self.runConfig['files'] !== "") {
-                  var files = self.runConfig['files'].split(',');
-                  for (var i = 0; i < files.length; i++) {
-                    if (files[i]) {
-                      if(self.files.indexOf(files[i] === -1))
-                        self.files.push(files[i]);
-                    }
-                  }
-                }
-                //GUI state
-                self.accordion1 = stored.accordion1;
-                self.accordion2 = stored.accordion2;
-                self.accordion3 = stored.accordion3;
-                self.accordion4 = stored.accordion4;
-                self.accordion5 = stored.accordion5;
+                self.initStoredJob(stored)
               }
 
               // Check if it's a guide project
