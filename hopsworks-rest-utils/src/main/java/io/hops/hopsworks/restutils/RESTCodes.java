@@ -1508,7 +1508,9 @@ public class RESTCodes {
     COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP(130, "Could not create on demand feature group",
                                             Response.Status.INTERNAL_SERVER_ERROR),
     COULD_NOT_DELETE_ON_DEMAND_FEATUREGROUP(131, "Could not delete on demand feature group",
-                                            Response.Status.INTERNAL_SERVER_ERROR);
+                                            Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE(132, "Illegal feature default value",
+      Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
