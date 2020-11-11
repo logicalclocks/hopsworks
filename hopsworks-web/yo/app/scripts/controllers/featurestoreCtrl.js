@@ -107,6 +107,7 @@ angular.module('hopsWorksApp')
             self.queryFeaturestore = $location.search()['featurestore'];
             self.queryFeaturegroup = $location.search()['featureGroup'];
             self.queryTrainingDataset = $location.search()['trainingDataset'];
+            self.queryStorageConnector = $location.search()['storageConnector'];
             self.queryFeature = $location.search()['features'];
             self.queryVersion = $location.search()['version'];
 
@@ -360,6 +361,24 @@ angular.module('hopsWorksApp')
                 return deferred.promise;
             };
 
+            
+            var selectStorageConnectorByName = function() {
+                const deferred = $q.defer();
+                if (typeof self.queryStorageConnector !== 'undefined') {
+                    for (var i = 0; i < self.storageConnectors.length; i++){
+                        if (self.storageConnectors[i].name === self.queryStorageConnector) {
+                            self.featurestoreSelectedTab = 4;
+                            deferred.resolve(self.storageConnectors[i]);
+                            break;
+                        }
+                    }
+                } else {
+                    deferred.reject("No select StorageConnector");
+                }
+                return deferred.promise;
+
+            };
+
             var broadcastFeaturegroupSelect = function () {
                 $scope.$broadcast('featuregroupSelected', {
                     featurestoreCtrl: self,
@@ -373,6 +392,7 @@ angular.module('hopsWorksApp')
                     trainingDatasets: self.selectedTrainingDataset,
                     toggle: true });
             };
+
 
             var broadcastFeatureSelect = function () {
                 $scope.$broadcast('featureSelected', {
@@ -457,6 +477,11 @@ angular.module('hopsWorksApp')
                 FeaturestoreService.getStorageConnectors(self.projectId, featurestore).then(
                     function (success) {
                         self.storageConnectors = success.data
+                        selectStorageConnectorByName().then(
+                            function (selected) {
+                                self.viewStorageConnectorInfo(selected);
+                            });
+
                         StorageService.store(self.projectId + "_storageconnectors", success.data);
                         self.storageConnectorsLoaded = true
                         self.stopLoading()
@@ -1088,7 +1113,7 @@ angular.module('hopsWorksApp')
                     self.quotaChart.render();
                 }
             }
-
+            
             /**
              * Opens the modal to view storage connector information
              *

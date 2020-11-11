@@ -33,6 +33,7 @@ import java.util.logging.Logger;
  * use this interface when performing database operations against the table.
  */
 @Stateless
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
 public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegroup> {
   private static final Logger LOGGER = Logger.getLogger(
     OnDemandFeaturegroupFacade.class.getName());
@@ -48,7 +49,6 @@ public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegr
    *
    * @param onDemandFeaturegroup the on-demand featuregroup to persist
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
   public void persist(OnDemandFeaturegroup onDemandFeaturegroup) {
     try {
       em.persist(onDemandFeaturegroup);
@@ -63,11 +63,9 @@ public class OnDemandFeaturegroupFacade extends AbstractFacade<OnDemandFeaturegr
    * Updates an existing On Demand Feature Group
    *
    * @param onDemandFeaturegroup the entity to update
-   * @return the updated entity
    */
-  public OnDemandFeaturegroup updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup) {
+  public void updateMetadata(OnDemandFeaturegroup onDemandFeaturegroup) {
     em.merge(onDemandFeaturegroup);
-    return onDemandFeaturegroup;
   }
   
   /**

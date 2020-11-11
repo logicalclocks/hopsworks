@@ -264,7 +264,9 @@
                         JDBC Connector Name
                     </td>
                     <td class="fs-table">
-                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.jdbcConnectorName}}
+                        <a ng-click="featuregroupViewInfoCtrl.goToStorageConnector()">
+                            {{featuregroupViewInfoCtrl.selectedFeaturegroup.storageConnector.name}}
+                        </a>
                     </td>
                 </tr>
                 <tr class="fs-table">

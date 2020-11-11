@@ -792,7 +792,7 @@ describe "On #{ENV['OS']}" do
         touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
         commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
         _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
-        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores" + "/query"
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/query"
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
@@ -819,7 +819,7 @@ describe "On #{ENV['OS']}" do
         mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
         touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
         _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
-        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores" + "/query"
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/query"
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
@@ -1070,6 +1070,13 @@ describe "On #{ENV['OS']}" do
   describe "on-demand feature groups" do
     context 'with valid project, featurestore service enabled, and a jdbc connector' do
       before :all do
+        with_admin_session
+        @pre_created_tags = Array.new(1)
+        @pre_created_tags[0] = "created_#{0}"
+        createFeatureStoreTag(@pre_created_tags[0], "STRING")
+
+        reset_session
+
         with_valid_project
         with_jdbc_connector(@project[:id])
       end
@@ -1083,23 +1090,24 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("query")).to be true
-        expect(parsed_json.key?("jdbcConnectorId")).to be true
-        expect(parsed_json.key?("jdbcConnectorName")).to be true
+        expect(parsed_json.key?("storageConnector")).to be true
         expect(parsed_json.key?("features")).to be true
         expect(parsed_json.key?("featurestoreName")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
         expect(parsed_json["name"] == featuregroup_name).to be true
         expect(parsed_json["type"] == "onDemandFeaturegroupDTO").to be true
-        expect(parsed_json["jdbcConnectorId"] == connector_id).to be true
+        expect(parsed_json["storageConnector"]["id"] == connector_id).to be true
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be true
       end
 
       it "should not be able to add an on-demand featuregroup to the featurestore with a name containing upper case letters" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         connector_id = get_jdbc_connector_id
-        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
-                                                                       name: "TEST_ondemand_fg")
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, name: "TEST_ondemand_fg")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
         expect(parsed_json.key?("errorCode")).to be true
@@ -1112,7 +1120,7 @@ describe "On #{ENV['OS']}" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         connector_id = get_jdbc_connector_id
-        json_result, featuregroup_name = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
         expect(parsed_json.key?("errorCode")).to be true
@@ -1129,9 +1137,11 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         expect_status(201)
         featuregroup_id = parsed_json["id"]
-        delete_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s
-        delete delete_featuregroup_endpoint
+        delete "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}"
         expect_status(200)
+
+        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_1"
+        expect(test_file(path)).to be false
       end
 
       it "should be able to update the metadata (description) of an on-demand featuregroup from the featurestore" do
@@ -1143,7 +1153,7 @@ describe "On #{ENV['OS']}" do
         expect_status(201)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        json_result2, featuregroup_name2  = update_on_demand_featuregroup(project.id, featurestore_id,
+        json_result2, _ = update_on_demand_featuregroup(project.id, featurestore_id,
                                                                           connector_id, featuregroup_id,
                                                                           featuregroup_version, query: nil,
                                                                           featuregroup_name: featuregroup_name,
@@ -1152,6 +1162,76 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(parsed_json2["version"] == featuregroup_version).to be true
         expect(parsed_json2["description"] == "new description").to be true
+      end
+
+      it "should be able to generate a query with only on-demand feature group" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        connector_id = get_jdbc_connector_id
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
+        expect_status(201)
+        parsed_json = JSON.parse(json_result)
+        fg_id = parsed_json["id"]
+
+        query = {
+            leftFeatureGroup: {
+                id: fg_id
+            },
+            leftFeatures: [{name: 'testfeature'}]
+        }
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+        expect(query.key?("onDemandFeatureGroups")).to be true
+
+        expect(query['query']).to eql("SELECT `fg0`.`testfeature`\nFROM `fg0`")
+      end
+
+      it "should be able to generate a query with on-demand and cached feature groups" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = get_featurestore_name(@project.id)
+        connector_id = get_jdbc_connector_id
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
+        expect_status(201)
+        parsed_json = JSON.parse(json_result)
+        fg_ond_id = parsed_json["id"]
+
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
+                    {type: "INT", name: "anotherfeature", primary: false}]
+        json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
+        parsed_json = JSON.parse(json_result)
+        fg_cached_id = parsed_json["id"]
+
+        query = {
+            leftFeatureGroup: {id: fg_cached_id},
+            leftFeatures: [{name: 'anotherfeature'}],
+            joins: [{query: {
+                        leftFeatureGroup: {id: fg_ond_id},
+                        leftFeatures: [{name: 'testfeature'}]
+            }}]}
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+        expect(query.key?("onDemandFeatureGroups")).to be true
+
+        expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`\n" +
+        "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
+        "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
+      end
+
+      it "should be able to attach a tag to a on-demand feature group" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, get_jdbc_connector_id)
+        expect_status(201)
+        fg_json = JSON.parse(json_result)
+        add_featuregroup_tag(@project[:id], featurestore_id, fg_json["id"], @pre_created_tags[0], value: "daily")
+        expect_status_details(201)
+        json_result = get_featuregroup_tags(@project[:id], featurestore_id, fg_json["id"])
+        expect_status_details(200)
+        tags_json = JSON.parse(json_result)
+        expect(tags_json["items"][0]["name"]).to eq(@pre_created_tags[0])
+        expect(tags_json["items"][0]["value"]).to eq("daily")
       end
     end
   end
