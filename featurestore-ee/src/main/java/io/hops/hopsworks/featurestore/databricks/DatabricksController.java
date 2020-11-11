@@ -81,7 +81,9 @@ public class DatabricksController {
       "tar -xf /tmp/client/apache-hive-*-bin.tar.gz -C /tmp\n" +
       "mv /tmp/apache-hive-*-bin {1}\n" +
       "chmod -R +xr {1}\n" +
-      "cp /tmp/client/hopsfs-client*.jar /databricks/jars/";
+      "cp /tmp/client/hopsfs-client*.jar /databricks/jars/\n" +
+      "cp /tmp/client/hsfs*.jar /databricks/jars/\n" +
+      "cp /tmp/client/hudi*.jar /databricks/jars/";
 
   @EJB
   private SecretsController secretsController;
