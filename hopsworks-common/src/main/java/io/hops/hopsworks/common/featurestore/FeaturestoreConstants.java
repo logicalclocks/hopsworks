@@ -85,7 +85,6 @@ public class FeaturestoreConstants {
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";
   public static final String ONLINE_FEATURE_STORE_JDBC_USER_ARG = "user";
-  public static final String OFFLINE_FEATURE_STORE_TYPE = "Hive";
   public static final List<String> SUGGESTED_MYSQL_DATA_TYPES = Arrays.asList(new String[]{
     "None", "INT(11)", "TINYINT(1)", "SMALLINT(5)", "MEDIUMINT(7)", "BIGINT(20)", "FLOAT", "DOUBLE", "DECIMAL",
     "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "VARCHAR(25)", "VARCHAR(125)", "VARCHAR(225)",

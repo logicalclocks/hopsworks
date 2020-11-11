@@ -15,14 +15,15 @@
  */
 package io.hops.hopsworks.common.featurestore.online;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -61,7 +62,9 @@ public class OnlineFeaturestoreController {
 
   private static final Logger LOGGER = Logger.getLogger(OnlineFeaturestoreController.class.getName());
   private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
-  
+  private static final String MYSQL_JDBC = "jdbc:mysql://";
+  private static final String MYSQL_PROPERTIES = "?useSSL=false&allowPublicKeyRetrieval=true";
+
   @EJB
   private SecretsFacade secretsFacade;
   @EJB
@@ -78,6 +81,8 @@ public class OnlineFeaturestoreController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private UserFacade userFacade;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
   
   @PostConstruct
   public void init() {
@@ -108,20 +113,16 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_SECRETS_ERROR,
         Level.SEVERE, "Problem getting secrets for the JDBC connection to the online FS");
     }
-    jdbcString = settings.getFeaturestoreJdbcUrl() + databaseName + "?allowPublicKeyRetrieval=true&useSSL=false";
     try {
-      return DriverManager.getConnection(jdbcString, dbUsername, password);
-    } catch (SQLException e) {
-      LOGGER.log(Level.SEVERE,
-        "Error initiating MySQL JDBC connection to online feature store for user: " + user.getEmail() + " error:"
-          + e);
+      return DriverManager.getConnection(getJdbcURL(databaseName), dbUsername, password);
+    } catch (SQLException | ServiceDiscoveryException e) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.COULD_NOT_INITIATE_MYSQL_CONNECTION_TO_ONLINE_FEATURESTORE, Level.SEVERE,
         "project: " + project.getName() + ", database: " + databaseName + ", db user:" + dbUsername +
                 ", jdbcString: " + jdbcString, e.getMessage(), e);
     }
   }
-  
+
   /**
    * Runs a update/create SQL query against an online featurestore database, impersonating the user making the request
    *
@@ -241,13 +242,7 @@ public class OnlineFeaturestoreController {
     //Generate random pw
     String onlineFsPw = createOnlineFeaturestoreUserSecret(dbUser, user, featurestore.getProject());
     //database is the same as the project name
-    try {
-      onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw);
-    } catch (Exception e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_USER,
-        Level.SEVERE, "An error occurred when trying to create the MySQL database user for an online feature store",
-        e.getMessage(), e);
-    }
+    onlineFeaturestoreFacade.createOnlineFeaturestoreUser(dbUser, onlineFsPw);
 
     updateUserOnlineFeatureStoreDB(user, featurestore, projectRole);
   }
@@ -328,16 +323,11 @@ public class OnlineFeaturestoreController {
 
     String dbuser = onlineDbUsername(featurestore.getProject(), user);
     onlineFeaturestoreFacade.revokeUserPrivileges(db, dbuser);
-    try{
-      if (projectRole.equals(ProjectRoleTypes.DATA_OWNER.getRole())) {
-        onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser);
-      } else {
-        onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser);
-      }
-    } catch(Exception e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode
-        .ERROR_GRANTING_ONLINE_FEATURESTORE_USER_PRIVILEGES, Level.SEVERE, "An error occurred when trying to create " +
-        "the MySQL database for an online feature store", e.getMessage(), e);
+
+    if (projectRole.equals(ProjectRoleTypes.DATA_OWNER.getRole())) {
+      onlineFeaturestoreFacade.grantDataOwnerPrivileges(db, dbuser);
+    } else {
+      onlineFeaturestoreFacade.grantDataScientistPrivileges(db, dbuser);
     }
 
     try {
@@ -358,13 +348,8 @@ public class OnlineFeaturestoreController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Feature Store is not enabled");
     }
-    try {
-      onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
-    } catch (Exception e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_CREATING_ONLINE_FEATURESTORE_DB,
-        Level.SEVERE, "An error occurred when trying to create the MySQL database for an online feature store",
-        e.getMessage(), e);
-    }
+
+    onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
   }
   
   /**
@@ -391,22 +376,11 @@ public class OnlineFeaturestoreController {
       }
     }
     String db = getOnlineFeaturestoreDbName(project);
-    try {
-      onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
-    } catch (Exception e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_DB,
-        Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
-        e.getMessage(), e);
-    }
+    onlineFeaturestoreFacade.removeOnlineFeaturestoreDatabase(db);
+
     List<String> users = onlineFeaturestoreFacade.getDatabaseUsers(db);
     for (String dbUser: users) {
-      try{
-        onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
-      } catch(Exception e) {
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_USER,
-          Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
-          e.getMessage(), e);
-      }
+      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
     }
   }
   
@@ -425,23 +399,12 @@ public class OnlineFeaturestoreController {
     }
 
     String dbUser = onlineDbUsername(featurestore.getProject().getName(), user.getUsername());
+    String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
+
     SecretId id = new SecretId(user.getUid(), dbUser);
     secretsFacade.deleteSecret(id);
-    try {
-      onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
-    } catch (Exception e) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_DELETING_ONLINE_FEATURESTORE_USER,
-        Level.SEVERE, "An error occurred when trying to delete the MySQL database user for an online feature store",
-        e.getMessage(), e);
-    }
-    String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
-    List<FeaturestoreStorageConnectorDTO> jdbcConnectors =
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
-    for (FeaturestoreStorageConnectorDTO storageConnector: jdbcConnectors) {
-      if (storageConnector.getName().equalsIgnoreCase(connectorName)) {
-        featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnector.getId());
-      }
-    }
+    onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
+    featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(connectorName);
   }
   
   
@@ -473,5 +436,15 @@ public class OnlineFeaturestoreController {
    */
   public Boolean checkIfDatabaseExists(String dbName) {
     return onlineFeaturestoreFacade.checkIfDatabaseExists(dbName);
+  }
+
+  public String getJdbcURL() throws ServiceDiscoveryException {
+    return getJdbcURL("");
+  }
+
+  private String getJdbcURL(String dbName) throws ServiceDiscoveryException {
+    return MYSQL_JDBC + serviceDiscoveryController
+        .constructServiceAddressWithPort(ServiceDiscoveryController.HopsworksService.ONLINEFS_MYSQL)
+        + "/" + dbName + MYSQL_PROPERTIES;
   }
 }

@@ -65,22 +65,6 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
   }
 
   /**
-   * Retrieves a jdbc connector by name
-   *
-   * @param connectorName
-   * @return connector if found, null if not found
-   */
-  @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public Optional<FeaturestoreJdbcConnector> findByName(String connectorName) {
-    try {
-      return  Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByName",
-              FeaturestoreJdbcConnector.class).setParameter("name", connectorName).getSingleResult());
-    } catch (NoResultException e) {
-      return Optional.empty();
-    }
-  }
-
-  /**
    * Retrieves all jdbc connectors for a particular featurestore
    *
    * @param featurestore featurestore get jdbc connectors for
@@ -99,13 +83,25 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
    * @param featurestore featurestore of the connector
    * @return a single FeaturestoreJdbcConnector entity
    */
-  public FeaturestoreJdbcConnector findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
+  public Optional<FeaturestoreJdbcConnector> findByIdAndFeaturestore(Integer id, Featurestore featurestore) {
     try {
-      return em.createNamedQuery("FeaturestoreJdbcConnector.findByFeaturestoreAndId",
-          FeaturestoreJdbcConnector.class).setParameter("featurestore", featurestore).setParameter("id", id)
-          .getSingleResult();
+      return Optional.of(
+          em.createNamedQuery("FeaturestoreJdbcConnector.findByFeaturestoreAndId", FeaturestoreJdbcConnector.class)
+              .setParameter("featurestore", featurestore)
+              .setParameter("id", id)
+              .getSingleResult());
     } catch (NoResultException e) {
-      return null;
+      return Optional.empty();
+    }
+  }
+
+  public Optional<FeaturestoreJdbcConnector> findByName(String name) {
+    try {
+      return Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByName", FeaturestoreJdbcConnector.class)
+          .setParameter("name", name)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
     }
   }
 

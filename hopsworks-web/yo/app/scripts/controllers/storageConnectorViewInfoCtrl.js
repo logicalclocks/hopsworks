@@ -36,15 +36,13 @@ angular.module('hopsWorksApp')
             self.s3ConnectorType = self.settings.s3ConnectorType
             self.jdbcConnectorType = self.settings.jdbcConnectorType
             self.preProcessedArgs = []
-            self.hasPwd = false;
             self.showPwd = false;
-            self.DEFAULT_PASSWORD_TEXT = "<SECRETPASSWORD>";
-            self.pwdToShow = self.DEFAULT_PASSWORD_TEXT;
-            self.connectorPwd = "";
+            self.pwdType = "password";
+
             /**
-             * PreProcess connector
+             * Initialization function
              */
-            self.preProcessConnector = function () {
+            self.init = function () {
                 if (self.storageConnector.storageConnectorType == self.jdbcConnectorType) {
                     var args = self.storageConnector.arguments
                     args = args + ''
@@ -57,20 +55,9 @@ angular.module('hopsWorksApp')
                             "value": argValue.length > 1 ? argValue[1] : "DEFAULT"
                         }
                         newArgs.push(argPair);
-                        if(argPair.name == "password") {
-                            self.hasPwd = true;
-                            self.connectorPwd = argPair.value;
-                        }
                     }
                     self.preProcessedArgs = newArgs
                 }
-            }
-
-            /**
-             * Initialization function
-             */
-            self.init = function () {
-                self.preProcessConnector()
             };
 
             /**
@@ -83,9 +70,9 @@ angular.module('hopsWorksApp')
             self.showPlainConnectorPassword = function () {
                 self.showPwd = !self.showPwd;
                 if(self.showPwd) {
-                    self.pwdToShow = self.connectorPwd;
+                    self.pwdType = "text";
                 } else {
-                    self.pwdToShow = self.DEFAULT_PASSWORD_TEXT;
+                    self.pwdType = "password";
                 }
             }
 

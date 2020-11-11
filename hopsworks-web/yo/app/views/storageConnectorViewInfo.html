@@ -102,18 +102,21 @@
                         </span>
 
                         <span ng-if="argument.name == 'password'">
-                            {{storageConnectorViewInfoCtrl.pwdToShow}}
+                            <input id="connector_password" 
+                                       value="{{argument.value}}"
+                                       placeholder="Password"
+                                       type="{{storageConnectorViewInfoCtrl.pwdType}}" 
+                                       readonly
+                                       style="border:none; background: transparent; 
+                                              outline: 0; width: 280px; margin-right: 20px;"/>
+
+                            <button class="btn btn-primary btn-sm"  
+                                    ng-click="storageConnectorViewInfoCtrl.showPlainConnectorPassword()">
+                                <span ng-if="storageConnectorViewInfoCtrl.showPwd == true" class="fa fa-eye-slash"></span>
+                                <span ng-if="storageConnectorViewInfoCtrl.showPwd == false" class="fa fa-eye"></span>
+                            </button>
                         </span>
-                        <button class="btn btn-primary btn-sm"
-                                ng-if="argument.name == 'password' && storageConnectorViewInfoCtrl.hasPwd == true"
-                                ng-click="storageConnectorViewInfoCtrl.showPlainConnectorPassword()">
-                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == true">
-                                Hide
-                            </span>
-                            <span ng-if="storageConnectorViewInfoCtrl.showPwd == false">
-                                Show
-                            </span>
-                        </button>
+                        
                     </td>
                 </tr>
                 </tbody>

@@ -16,6 +16,18 @@
 
 module StorageConnectorHelper
 
+  def get_jdbc_storate_connector(project_id, featurestore_id, name)
+    get_storage_connector(project_id, featurestore_id, "JDBC", name)
+  end
+
+  def get_storage_connector(project_id, featurestore_id, type, name)
+    connectors_json = get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{type}"
+    expect_status(200)
+    connectors = JSON.parse(connectors_json)
+
+    connectors.select{|connector| connector['name'] == name}[0]
+  end
+
   def create_hopsfs_connector(project_id, featurestore_id, datasetName: "Resources")
     type = "featurestoreHopsfsConnectorDTO"
     storageConnectorType = "HopsFS"

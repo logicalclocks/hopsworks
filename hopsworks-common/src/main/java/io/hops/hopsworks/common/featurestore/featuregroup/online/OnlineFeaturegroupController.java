@@ -33,7 +33,6 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -215,7 +214,7 @@ public class OnlineFeaturegroupController {
    * @param featuregroup the online featuregroup to get the SQL schema of
    * @return a String with the "SHOW CREATE TABLE" result
    */
-  public String getFeaturegroupSchema(Featuregroup featuregroup) {
+  public String getFeaturegroupSchema(Featuregroup featuregroup) throws FeaturestoreException {
     return onlineFeaturestoreFacade.getMySQLSchema(
         getTblName(featuregroup),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
@@ -227,13 +226,13 @@ public class OnlineFeaturegroupController {
    * @param featuregroup the online featuregroup to get type information for
    * @return a list of Feature DTOs with the type information
    */
-  public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) {
+  public List<FeatureGroupFeatureDTO> getFeaturegroupFeatures(Featuregroup featuregroup) throws FeaturestoreException {
     return onlineFeaturestoreFacade.getMySQLFeatures(
         getTblName(featuregroup),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));
   }
 
-  public BigInteger getFeaturegroupSize(Featuregroup featuregroup) {
+  public Long getFeaturegroupSize(Featuregroup featuregroup) {
     return onlineFeaturestoreFacade.getTblSize(
         getTblName(featuregroup),
         onlineFeaturestoreController.getOnlineFeaturestoreDbName(featuregroup.getFeaturestore().getProject()));

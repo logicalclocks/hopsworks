@@ -22,7 +22,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -68,28 +67,6 @@ public class FeaturestoreUtils {
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", Training dataset: " + trainingDataset.getName() + ", userRole:" + userRole +
               ", creator of the featuregroup: " + trainingDataset.getCreator().getEmail());
-    }
-  }
-
-  /**
-   * Verify that the user is allowed to execute the requested operation based on his/hers project role.
-   *
-   * Only data owners are allowed to delete storage connectors for the feature store
-   *
-   * @param featurestore the featurestore that the operation concerns
-   * @param user the user making the request
-   * @param project the project of the featurestore
-   * @param storageConnectorDTO the storage connector taht the operation concerns
-   * @throws FeaturestoreException
-   */
-  public void verifyUserRole(Featurestore featurestore, Users user, Project project, FeaturestoreStorageConnectorDTO
-      storageConnectorDTO)
-      throws FeaturestoreException {
-    String userRole = projectTeamFacade.findCurrentRole(project, user);
-    if (!userRole.equalsIgnoreCase(AllowedRoles.DATA_OWNER)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.UNAUTHORIZED_FEATURESTORE_OPERATION, Level.FINE,
-          "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
-              ", storageConnectorId: " + storageConnectorDTO.getId() + ", userRole:" + userRole);
     }
   }
 
