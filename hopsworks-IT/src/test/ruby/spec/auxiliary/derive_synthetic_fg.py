@@ -38,7 +38,8 @@ else :
 fg1 = in_fs.get_feature_group("fg1")
 fg2 = in_fs.get_feature_group("fg2")
 fg3_data = fg1.select_all().join(fg2.select_all()).read()
-fg3 = out_fs.create_feature_group(out_fg_name, version=1, description="synthetic featuregroup",  primary_key=['id'], time_travel_format=None)
+fg3 = out_fs.create_feature_group(out_fg_name, version=1, description="synthetic featuregroup",  primary_key=['id'],
+                                  time_travel_format=None, statistics_config=False)
 fg3.save(fg3_data)
 
 connection.close()
