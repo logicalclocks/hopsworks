@@ -1483,7 +1483,7 @@ public class RESTCodes {
     ILLEGAL_FEATUREGROUP_UPDATE(114, "Illegal feature group update", Response.Status.BAD_REQUEST),
     COULD_NOT_ALTER_FEAUTURE_GROUP_METADATA(115, "Failed to alter feature group meta data",
       Response.Status.INTERNAL_SERVER_ERROR),
-    COULD_NOT_GET_FEATURE_GROUP_METADATA(116, "Failed to retrieve feature gorup meta data",
+    COULD_NOT_GET_FEATURE_GROUP_METADATA(116, "Failed to retrieve feature group meta data",
       Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_CREATING_HIVE_METASTORE_CLIENT(117, "Failed to open Hive Metastore client",
       Response.Status.INTERNAL_SERVER_ERROR),
@@ -1505,7 +1505,11 @@ public class RESTCodes {
     ERROR_ONLINE_FEATURES(127, "Error retrieving online features", Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_ONLINE_USERS(128, "Error getting database users", Response.Status.INTERNAL_SERVER_ERROR),
     ERROR_ONLINE_GENERIC(129, "Error communicating with the online feature store",
-                         Response.Status.INTERNAL_SERVER_ERROR);
+                         Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_CREATE_ON_DEMAND_FEATUREGROUP(130, "Could not create on demand feature group",
+                                            Response.Status.INTERNAL_SERVER_ERROR),
+    COULD_NOT_DELETE_ON_DEMAND_FEATUREGROUP(131, "Could not delete on demand feature group",
+                                            Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

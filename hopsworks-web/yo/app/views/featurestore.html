@@ -167,19 +167,13 @@
                                                     <div ng-include="'views/featuregroupViewInfo.html'"></div>
                                                 </md-tab>
                                                 <md-tab label="Tags" ng-if="featurestoreCtrl.isEnterprise">
-                                                    <tags   ng-show="featuregroupViewInfoCtrl.selectedFeaturegroup.type == 'cachedFeaturegroupDTO'"
-                                                            project-id="featurestoreCtrl.projectId"
-                                                            featurestore="featurestoreCtrl.featurestore"
-                                                            attached-tags="featuregroupViewInfoCtrl.attachedTags"
-                                                            loading-tags="featuregroupViewInfoCtrl.loadingTags"
-                                                            add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
-                                                            delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
+                                                    <tags project-id="featurestoreCtrl.projectId"
+                                                          featurestore="featurestoreCtrl.featurestore"
+                                                          attached-tags="featuregroupViewInfoCtrl.attachedTags"
+                                                          loading-tags="featuregroupViewInfoCtrl.loadingTags"
+                                                          add-tag="featuregroupViewInfoCtrl.addTag(name, value)"
+                                                          delete-tag="featuregroupViewInfoCtrl.deleteTag(name)">
                                                     </tags>
-
-                                                    <div style="margin-left: 10px" ng-show="!(featuregroupViewInfoCtrl.selectedFeaturegroup.type == 'cachedFeaturegroupDTO')">
-                                                        <h3 style="text-align:center;">Tags not supported for </h3>
-                                                        <p style="text-align:center; margin-top:20px;">{{featuregroupViewInfoCtrl.selectedFeaturegroup.featuregroupType}}</p>
-                                                    </div>
                                                 </md-tab>
                                             </md-tabs>
                                         </md-content>

@@ -53,6 +53,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
@@ -401,7 +402,8 @@ public class TrainingDatasetController {
     List<TrainingDatasetJoin> joins = new ArrayList<>();
     // add the first feature group
     int index = 0;
-    if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
       joins.add(new TrainingDatasetJoin(trainingDataset, query.getFeaturegroup(),
           query.getLeftFeatureGroupEndCommitId() , (short) 0, index++));
     } else {
@@ -411,7 +413,8 @@ public class TrainingDatasetController {
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
         TrainingDatasetJoin tdJoin;
-        if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+        if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+            query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
           tdJoin = new TrainingDatasetJoin(trainingDataset,
               join.getRightQuery().getFeaturegroup(), join.getRightQuery().getLeftFeatureGroupEndCommitId(),
               (short) join.getJoinType().ordinal(),

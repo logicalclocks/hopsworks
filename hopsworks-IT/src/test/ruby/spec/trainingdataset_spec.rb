@@ -662,6 +662,51 @@ describe "On #{ENV['OS']}" do
            "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg1` ON `fg0`.`a_testfeature` = `fg1`.`a_testfeature`")
         end
 
+        it "should succeed to replay a training dataset query using on-demand and cached feature groups" do
+          featurestore_id = get_featurestore_id(@project[:id])
+          featurestore_name = get_featurestore_name(@project.id)
+          with_jdbc_connector(@project[:id])
+          features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
+          json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, @jdbc_connector_id, features: features)
+          expect_status(201)
+          parsed_json = JSON.parse(json_result)
+          fg_ond_id = parsed_json["id"]
+
+          features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
+                      {type: "INT", name: "anotherfeature", primary: false}]
+          json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
+          parsed_json = JSON.parse(json_result)
+          fg_cached_id = parsed_json["id"]
+
+          query = {
+              leftFeatureGroup: {id: fg_cached_id},
+              leftFeatures: [{name: 'anotherfeature'}],
+              joins: [{query: {
+                  leftFeatureGroup: {id: fg_ond_id},
+                  leftFeatures: [{name: 'testfeature'}]
+              }}]}
+
+          td_schema = [
+              {type: "INT", name: "anotherfeature", label: false},
+              {type: "INT", name: "testfeature", label: true}
+          ]
+
+          json_result, _ = create_hopsfs_training_dataset(@project.id, featurestore_id, nil, query: query, features: td_schema)
+          expect_status_details(201)
+          training_dataset = JSON.parse(json_result)
+
+          # with Label
+          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query?withLabel=true"
+          expect_status_details(200)
+          query = JSON.parse(json_result)
+
+          expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`\n" +
+                                        "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
+                                        "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
+          expect(query.key?('onDemandFeatureGroups')).to be true
+          expect(query.key?("queryOnline")).to be false
+        end
+
         it "should succeed to replay the query from a query based training dataset with and without label" do
           project_name = @project.projectname
           featurestore_id = get_featurestore_id(@project.id)

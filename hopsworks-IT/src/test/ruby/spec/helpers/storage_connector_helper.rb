@@ -202,7 +202,7 @@ module StorageConnectorHelper
   end
 
   def get_jdbc_connector_id
-    return @jdbc_connector_id
+    @jdbc_connector_id
   end
 
   def get_hopsfs_training_datasets_connector(project_name)
@@ -211,7 +211,7 @@ module StorageConnectorHelper
   end
 
   def get_s3_connector_id
-    return @s3_connector_id
+    @s3_connector_id
   end
 
   def with_s3_connector(project_id)

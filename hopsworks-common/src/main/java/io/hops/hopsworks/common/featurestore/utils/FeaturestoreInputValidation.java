@@ -98,6 +98,7 @@ public class FeaturestoreInputValidation {
       }
     }
   }
+
   /**
    * Verifies the user input feature list for a training dataset entity with no query
    * @param trainingDatasetFeatureDTOS the feature list to verify

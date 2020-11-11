@@ -51,8 +51,8 @@ module FeaturestoreHelper
   def create_cached_featuregroup_checked(project_id, featurestore_id, featuregroup_name, features: nil,
                                          featuregroup_description: nil)
     pp "create featuregroup:#{featuregroup_name}" if defined?(@debugOpt) && @debugOpt == true
-    json_result, f_name = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
-                                                     features: features, featuregroup_description: featuregroup_description)
+    json_result, _ = create_cached_featuregroup(project_id, featurestore_id, featuregroup_name: featuregroup_name,
+                                                features: features, featuregroup_description: featuregroup_description)
     expect_status_details(201)
     parsed_json = JSON.parse(json_result, :symbolize_names => true)
     parsed_json[:id]
@@ -62,28 +62,10 @@ module FeaturestoreHelper
                                  version: 1, featuregroup_description: nil, desc_stats: nil, histograms: true,
                                  correlations: true, statistic_columns: [], time_travel_format: "NONE")
     type = "cachedFeaturegroupDTO"
-    if features == nil
-      features = [
-          {
-              type: "INT",
-              name: "testfeature",
-              description: "testfeaturedescription",
-              primary: true,
-              onlineType: "INT",
-              partition: false
-          },
-      ]
-      if online
-        features[0]['onlineType'] = "INT(11)"
-      end
-    end
-    if featuregroup_name == nil
-      featuregroup_name = "featuregroup_#{random_id}"
-    end
-    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
-    if featuregroup_description == nil
-      featuregroup_description = "testfeaturegroupdescription"
-    end
+    features = features == nil ? [{type: "INT", name: "testfeature", description: "testfeaturedescription",
+                                   primary: true, onlineType: "INT", partition: false}] : features
+    featuregroup_name = featuregroup_name == nil ? "featuregroup_#{random_id}" : featuregroup_name
+    featuregroup_description = featuregroup_description == nil ? "testfeaturegroupdescription" : featuregroup_description
     json_data = {
         name: featuregroup_name,
         jobs: [],
@@ -101,37 +83,31 @@ module FeaturestoreHelper
       json_data["statisticColumns"] = statistic_columns
     end
     json_data = json_data.to_json
+
+    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
     json_result = post create_featuregroup_endpoint, json_data
     return json_result, featuregroup_name
   end
 
-  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, query: nil)
+  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil, features: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
-    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups"
-    if name == nil
-      featuregroup_name = "featuregroup_#{random_id}"
-    else
-      featuregroup_name = name
-    end
-    if query == nil
-      query = "SELECT * FROM test"
-    end
+    create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups"
+    featuregroup_name = name == nil ? "featuregroup_#{random_id}" : name
+    query = query == nil ? "SELECT * FROM test" : query
+    features = features == nil ?
+                   [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}] :
+                   features
+
     json_data = {
         name: featuregroup_name,
-        jobs: [],
-        features: [
-            {
-                type: "INT",
-                name: "testfeature",
-                description: "testfeaturedescription",
-                primary: true
-            }
-        ],
+        features: features,
         description: "testfeaturegroupdescription",
-        version: 1,
+        version: version,
         type: type,
-        jdbcConnectorId: jdbcconnectorId,
+        storageConnector: {
+            id: jdbcconnectorId,
+        },
         query: query,
         featuregroupType: featuregroupType
     }
@@ -144,16 +120,11 @@ module FeaturestoreHelper
                                     featuregroup_version, query: nil, featuregroup_name: nil, featuregroup_desc: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
-    update_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "?updateMetadata=true"
-    if featuregroup_name == nil
-      featuregroup_name = "featuregroup_#{random_id}"
-    end
-    if featuregroup_desc == nil
-      featuregroup_desc = "description_#{random_id}"
-    end
-    if query == nil
-      query = "SELECT * FROM test"
-    end
+    update_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}?updateMetadata=true"
+    featuregroup_name = featuregroup_name == nil ?  "featuregroup_#{random_id}" :  featuregroup_name
+    featuregroup_desc = featuregroup_desc == nil ? "description_#{random_id}" : featuregroup_desc
+    query = query == nil ? "SELECT * FROM test" : query
+
     json_data = {
         name: featuregroup_name,
         jobs: [],
@@ -168,7 +139,9 @@ module FeaturestoreHelper
         description: featuregroup_desc,
         version: featuregroup_version,
         type: type,
-        jdbcConnectorId: jdbcconnectorId,
+        storageConnector: {
+            id: jdbcconnectorId,
+        },
         query: query,
         featuregroupType: featuregroupType
     }
@@ -202,8 +175,7 @@ module FeaturestoreHelper
         featuregroupType: featuregroupType
     }
     json_data = json_data.to_json
-    json_result = put update_featuregroup_metadata_endpoint, json_data
-    return json_result
+    put update_featuregroup_metadata_endpoint, json_data
   end
 
   def update_cached_featuregroup_stats_settings(project_id, featurestore_id, featuregroup_id, featuregroup_version,

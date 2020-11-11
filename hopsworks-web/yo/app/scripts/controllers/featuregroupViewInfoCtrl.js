@@ -257,8 +257,8 @@ angular.module('hopsWorksApp')
                     if (self.selectedFeaturegroup.onlineEnabled === true) {
                         self.fetchOnlineDetails();
                     }
-                    self.fetchTags();
                 }
+                self.fetchTags();
             };
 
             $scope.$on('featuregroupSelected', function (event, args) {
@@ -277,6 +277,14 @@ angular.module('hopsWorksApp')
             self.goToDataValidation = function () {
                 StorageService.store("dv_featuregroup", self.selectedFeaturegroup);
                 $location.path('project/' + self.projectId + "/featurestore/datavalidation");
+            };
+
+            self.goToStorageConnector = function () {
+                var connParam = {
+                    "storageConnector": self.selectedFeaturegroup.storageConnector.name
+                }
+
+                $location.path('project/' + self.projectId + "/featurestore").search(connParam);
             };
 
             /**

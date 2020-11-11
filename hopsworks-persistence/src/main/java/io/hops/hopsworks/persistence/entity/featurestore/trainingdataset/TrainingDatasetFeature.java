@@ -167,14 +167,6 @@ public class TrainingDatasetFeature implements Serializable {
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + (trainingDataset != null ? trainingDataset.hashCode() : 0);
-    result = 31 * result + (featureGroup != null ? featureGroup.hashCode() : 0);
-    result = 31 * result + (trainingDatasetJoin != null ? trainingDatasetJoin.hashCode() : 0);
-    result = 31 * result + (name != null ? name.hashCode() : 0);
-    result = 31 * result + (type != null ? type.hashCode() : 0);
-    result = 31 * result + (index != null ? index.hashCode() : 0);
-    result = 31 * result + (label ? 1 : 0);
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

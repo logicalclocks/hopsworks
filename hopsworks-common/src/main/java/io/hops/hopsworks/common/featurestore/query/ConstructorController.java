@@ -24,15 +24,17 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
+import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.exceptions.InvalidQueryException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -103,8 +105,13 @@ public class ConstructorController {
   public FsQueryDTO construct(Query query, Project project, Users user) throws FeaturestoreException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
     fsQueryDTO.setQuery(generateSQL(query, false));
-    fsQueryDTO.setQueryOnline(generateSQL(query,true));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
+    fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(query, new ArrayList<>()));
+
+    // if on-demand feature groups are involved in the query, we don't support online queries
+    if (fsQueryDTO.getOnDemandFeatureGroups().isEmpty()) {
+      fsQueryDTO.setQueryOnline(generateSQL(query, true));
+    }
 
     return fsQueryDTO;
   }
@@ -135,17 +142,12 @@ public class ConstructorController {
     List<Feature> requestedFeatures = validateFeatures(fg, queryDTO.getLeftFeatures(), availableFeatures);
 
     Query query = new Query(featureStore, projectName, fg, fgAs, requestedFeatures, availableFeatures);
-    if (fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
 
-      Long startCommitTimeStamp = 0L;
-      FeatureGroupCommit endCommit = featureGroupCommitCommitController.findCommitByDate(fg,
-          queryDTO.getLeftFeatureGroupEndTime());
-      if (queryDTO.getLeftFeatureGroupStartTime() != null) {
-        startCommitTimeStamp = featureGroupCommitCommitController.findCommitByDate(fg,
-            queryDTO.getLeftFeatureGroupStartTime()).getCommittedOn();
-      }
-
-      query.setLeftFeatureGroupStartTimestamp(startCommitTimeStamp);
+    if (fg.getCachedFeaturegroup() != null &&
+        fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      // If the feature group is hudi, validate and configure start and end commit id/timestamp
+      FeatureGroupCommit endCommit =
+          featureGroupCommitCommitController.findCommitByDate(fg, queryDTO.getLeftFeatureGroupEndTime());
       query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
       query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
 
@@ -154,7 +156,7 @@ public class ConstructorController {
             query.getFeaturegroup(), query.getLeftFeatureGroupStartTime()).getCommittedOn();
         query.setLeftFeatureGroupStartTimestamp(exactStartCommitTimestamp);
       } else if (query.getJoins() != null && query.getLeftFeatureGroupStartTime() != null) {
-        throw new InvalidQueryException("Incremental queries are not allowed with join statements");
+        throw new IllegalArgumentException("Incremental queries are not allowed with join statements");
       }
     }
 
@@ -456,7 +458,8 @@ public class ConstructorController {
       }
     }
     // Remove hudi spec metadata features if any
-    if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = cachedFeaturegroupController.dropHudiSpecFeatures(features);
     }
     return features;
@@ -482,6 +485,10 @@ public class ConstructorController {
     return SqlStdOperatorTable.AS.createCall(asNodeList);
   }
 
+  private SqlNode generateOnDemandTableNode(Query query) {
+    return new SqlIdentifier("`" + query.getAs() + "`", SqlParserPos.ZERO);
+  }
+
   /**
    * Generate the table node. The object will contain the fully qualified name of a feature group:
    * featurestore_name.feature_group_name_feature_group_version [as] feature_group alias
@@ -489,7 +496,11 @@ public class ConstructorController {
    * @return
    */
   private SqlNode generateTableNode(Query query, boolean online) {
-    return generateCachedTableNode(query, online);
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
+      return generateCachedTableNode(query, online);
+    } else {
+      return generateOnDemandTableNode(query);
+    }
   }
 
   /**
@@ -575,7 +586,8 @@ public class ConstructorController {
 
   private List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query, List<HudiFeatureGroupAliasDTO> aliases,
                                                         Project project, Users user) throws FeaturestoreException {
-    if (query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
+        query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
       HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
@@ -584,7 +596,7 @@ public class ConstructorController {
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
       featuregroupDTO.setLocation(hiveTable.getSdId().getLocation());
 
-      if (query.getLeftFeatureGroupStartTimestamp() == null){
+      if (query.getLeftFeatureGroupStartTimestamp() == null) {
         aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
             query.getLeftFeatureGroupEndTimestamp()));
       } else {
@@ -593,9 +605,26 @@ public class ConstructorController {
       }
     }
 
+    return aliases;
+  }
+
+  // TODO(Fabio): does it make sense to this in the same pass as where we generate the table nodes?
+  // or does the code becomes even more complicated?
+  private List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Query query,
+                                                                List<OnDemandFeatureGroupAliasDTO> aliases) {
+
+    if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
+      FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO(
+              query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreJdbcConnector());
+      OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
+          new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreJdbcConnectorDTO);
+
+      aliases.add(new OnDemandFeatureGroupAliasDTO(query.getAs(), onDemandFeaturegroupDTO));
+    }
+
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
-        getHudiAliases(join.getRightQuery(), aliases, project, user);
+        getOnDemandAliases(join.getRightQuery(), aliases);
       }
     }
 
