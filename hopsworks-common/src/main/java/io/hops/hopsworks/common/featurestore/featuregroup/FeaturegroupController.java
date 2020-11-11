@@ -17,7 +17,6 @@
 package io.hops.hopsworks.common.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
@@ -33,6 +32,7 @@ import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -50,7 +50,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregro
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitions;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -66,7 +65,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -78,10 +76,6 @@ import java.util.stream.Collectors;
 public class FeaturegroupController {
   @EJB
   private FeaturegroupFacade featuregroupFacade;
-  @EJB
-  private HdfsUsersFacade hdfsUsersFacade;
-  @EJB
-  private HdfsUsersController hdfsUsersController;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
@@ -110,6 +104,8 @@ public class FeaturegroupController {
   private DistributedFsService dfs;
   @EJB
   private Settings settings;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -189,10 +185,6 @@ public class FeaturegroupController {
 
     verifyFeatureGroupInput(featuregroupDTO);
 
-    //Extract metadata
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-  
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
     CachedFeaturegroup cachedFeaturegroup = null;
@@ -200,12 +192,12 @@ public class FeaturegroupController {
       cachedFeaturegroup = cachedFeaturegroupController.createCachedFeaturegroup(featurestore,
           (CachedFeaturegroupDTO) featuregroupDTO, project, user);
     } else {
-      onDemandFeaturegroup =
-          onDemandFeaturegroupController.createOnDemandFeaturegroup((OnDemandFeaturegroupDTO) featuregroupDTO);
+      onDemandFeaturegroup = onDemandFeaturegroupController.createOnDemandFeaturegroup(featurestore,
+          (OnDemandFeaturegroupDTO) featuregroupDTO, project, user);
     }
     
     //Persist basic feature group metadata
-    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
+    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, onDemandFeaturegroup);
     
     //Store statistic columns setting
@@ -219,19 +211,18 @@ public class FeaturegroupController {
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
     
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
-  
-    if (FeaturegroupType.CACHED_FEATURE_GROUP.equals(featuregroup.getFeaturegroupType())) {
-      DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-      try {
-        String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
+
+    //Extract metadata
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+    try {
+      String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
           + "/" + Utils.getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
-        fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
-      } finally {
-        if (udfso != null) {
-          dfs.closeDfsClient(udfso);
-        }
-      }
+      fsController.featuregroupAttachXAttrs(fgPath, completeFeaturegroupDTO, udfso);
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
+
     return completeFeaturegroupDTO;
   }
   
@@ -268,10 +259,9 @@ public class FeaturegroupController {
         cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
         return cachedFeaturegroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
-        OnDemandFeaturegroupDTO onDemandFeaturegroupDTO = new
-          OnDemandFeaturegroupDTO(featuregroup);
-        onDemandFeaturegroupDTO.setFeaturestoreName(featurestoreName);
-        return onDemandFeaturegroupDTO;
+        FeaturestoreJdbcConnectorDTO storageConnectorDTO =
+            new FeaturestoreJdbcConnectorDTO(featuregroup.getOnDemandFeaturegroup().getFeaturestoreJdbcConnector());
+        return new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
             + ", Recognized Feature group types are: " + FeaturegroupType.ON_DEMAND_FEATURE_GROUP + ", and: " +
@@ -359,21 +349,17 @@ public class FeaturegroupController {
     // get feature group object again after alter table
     featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
-  
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
-      // remove if clause when on-demand featuregroups have footprint in the file system
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
-      try {
-        String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
+
+    String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsername);
+    try {
+      String fgPath = Utils.getFeaturestorePath(featurestore.getProject(), settings)
           + "/" + Utils.getFeaturegroupName(featuregroupDTO.getName(), featuregroupDTO.getVersion());
-        fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
-      } finally {
-        if (udfso != null) {
-          dfs.closeDfsClient(udfso);
-        }
-      }
+      fsController.featuregroupAttachXAttrs(fgPath, featuregroupDTO, udfso);
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
+
     return featuregroupDTO;
   }
 
@@ -510,24 +496,6 @@ public class FeaturegroupController {
   }
 
   /**
-   * Get the feature group represented by the DTO
-   *
-   * @param featurestore    the featurestore that the featuregroup belongs to
-   * @param featuregroupDTO DTO representation of the feature group
-   * @return Optional containing the feature group if found
-   */
-  public Optional<Featuregroup> getFeaturegroupByDTO(Featurestore featurestore, FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException {
-    if (featuregroupDTO.getId() != null) {
-      return Optional.of(getFeaturegroupById(featurestore, featuregroupDTO.getId()));
-    }
-
-    List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
-    return featuregroups.stream().filter(fg -> fg.getName().equalsIgnoreCase(featuregroupDTO.getName()) &&
-        fg.getVersion().equals(featuregroupDTO.getVersion())).findFirst();
-  }
-
-  /**
    * Deletes a featuregroup with a particular id or name from a featurestore
    * @param featuregroup
    * @param project
@@ -551,7 +519,8 @@ public class FeaturegroupController {
         break;
       case ON_DEMAND_FEATURE_GROUP:
         //Delete on_demand_feature_group will cascade will cascade to feature_group table
-        onDemandFeaturegroupController.removeOnDemandFeaturegroup(featuregroup.getOnDemandFeaturegroup());
+        onDemandFeaturegroupController
+            .removeOnDemandFeaturegroup(featuregroup.getFeaturestore(), featuregroup, project, user);
         break;
       default:
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE, Level.FINE,
@@ -686,15 +655,11 @@ public class FeaturegroupController {
     }
     verifyFeatureGroupInput(featuregroupDTO);
 
-    //Extract metadata
-    String hdfsUsername = hdfsUsersController.getHdfsUserName(featurestore.getProject(), user);
-    HdfsUsers hdfsUser = hdfsUsersFacade.findByName(hdfsUsername);
-
     CachedFeaturegroup cachedFeaturegroup = cachedFeaturegroupController
             .syncHiveTableWithFeaturestore(featurestore, (CachedFeaturegroupDTO) featuregroupDTO);
 
     //Persist basic feature group metadata
-    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, hdfsUser, user, featuregroupDTO,
+    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, null);
   
     //Get jobs
@@ -710,19 +675,19 @@ public class FeaturegroupController {
    * Persists metadata of a new feature group in the feature_group table
    *
    * @param featurestore the featurestore of the feature group
-   * @param hdfsUser the HDFS user making the request
    * @param user the Hopsworks user making the request
    * @param featuregroupDTO DTO of the feature group
    * @param cachedFeaturegroup the cached feature group that the feature group is linked to (if any)
    * @param onDemandFeaturegroup the on-demand feature group that the feature group is linked to (if any)
    * @return the created entity
    */
-  private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, HdfsUsers hdfsUser, Users user,
-    FeaturegroupDTO featuregroupDTO, CachedFeaturegroup cachedFeaturegroup, OnDemandFeaturegroup onDemandFeaturegroup) {
+  private Featuregroup persistFeaturegroupMetadata(Featurestore featurestore, Users user,
+                                                   FeaturegroupDTO featuregroupDTO,
+                                                   CachedFeaturegroup cachedFeaturegroup,
+                                                   OnDemandFeaturegroup onDemandFeaturegroup) {
     Featuregroup featuregroup = new Featuregroup();
     featuregroup.setName(featuregroupDTO.getName());
     featuregroup.setFeaturestore(featurestore);
-    featuregroup.setHdfsUserId(hdfsUser.getId());
     featuregroup.setCreated(new Date());
     featuregroup.setCreator(user);
     featuregroup.setVersion(featuregroupDTO.getVersion());

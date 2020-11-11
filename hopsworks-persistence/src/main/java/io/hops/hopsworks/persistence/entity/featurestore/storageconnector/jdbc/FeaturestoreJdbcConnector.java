@@ -136,9 +136,6 @@ public class FeaturestoreJdbcConnector implements Serializable {
   
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + featurestore.hashCode();
-    result = 31 * result + connectionString.hashCode();
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

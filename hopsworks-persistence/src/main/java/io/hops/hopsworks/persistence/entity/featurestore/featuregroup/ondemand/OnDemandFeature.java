@@ -61,6 +61,17 @@ public class OnDemandFeature implements Serializable {
     return serialVersionUID;
   }
 
+  public OnDemandFeature() {}
+
+  public OnDemandFeature(OnDemandFeaturegroup onDemandFeaturegroup, String name, String type,
+                         String description, Boolean primary) {
+    this.onDemandFeaturegroup = onDemandFeaturegroup;
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+  }
+
   public Integer getId() {
     return id;
   }

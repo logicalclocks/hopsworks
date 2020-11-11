@@ -27,6 +27,7 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
   private String queryOnline;
 
   private List<HudiFeatureGroupAliasDTO> hudiCachedFeatureGroups;
+  private List<OnDemandFeatureGroupAliasDTO> onDemandFeatureGroups;
 
   public String getQuery() {
     return query;
@@ -50,5 +51,13 @@ public class FsQueryDTO extends RestDTO<FsQueryDTO> {
 
   public void setHudiCachedFeatureGroups(List<HudiFeatureGroupAliasDTO> hudiCachedFeatureGroups) {
     this.hudiCachedFeatureGroups = hudiCachedFeatureGroups;
+  }
+
+  public List<OnDemandFeatureGroupAliasDTO> getOnDemandFeatureGroups() {
+    return onDemandFeatureGroups;
+  }
+
+  public void setOnDemandFeatureGroups(List<OnDemandFeatureGroupAliasDTO> onDemandFeatureGroups) {
+    this.onDemandFeatureGroups = onDemandFeatureGroups;
   }
 }
