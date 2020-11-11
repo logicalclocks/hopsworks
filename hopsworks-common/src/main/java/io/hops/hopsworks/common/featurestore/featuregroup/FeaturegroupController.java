@@ -140,7 +140,7 @@ public class FeaturegroupController {
       case CACHED_FEATURE_GROUP:
         FeaturegroupDTO featuregroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
         deleteFeaturegroup(featuregroup, project, user);
-        return createFeaturegroup(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
+        return createFeaturegroupNoValidation(featuregroup.getFeaturestore(), featuregroupDTO, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         throw new FeaturestoreException(
             RESTCodes.FeaturestoreErrorCode.CLEAR_OPERATION_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS,
@@ -169,8 +169,8 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO createFeaturegroup(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                             Project project, Users user)
-      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
-  
+      throws FeaturestoreException, ServiceException, SQLException, ProvenanceException, IOException {
+
     // if version not provided, get latest and increment
     if (featuregroupDTO.getVersion() == null) {
       // returns ordered list by desc version
@@ -184,6 +184,13 @@ public class FeaturegroupController {
     }
 
     verifyFeatureGroupInput(featuregroupDTO);
+    verifyFeaturesNoDefaultValue(featuregroupDTO.getFeatures());
+    return createFeaturegroupNoValidation(featurestore, featuregroupDTO, project, user);
+  }
+
+  public FeaturegroupDTO createFeaturegroupNoValidation(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
+                                                      Project project, Users user)
+      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
 
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
@@ -758,6 +765,15 @@ public class FeaturegroupController {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_VERSION, Level.FINE,
         "version cannot be negative or zero");
+    }
+  }
+  
+  void verifyFeaturesNoDefaultValue(List<FeatureGroupFeatureDTO> features)
+      throws FeaturestoreException {
+    if (features.stream().anyMatch(f -> f.getDefaultValue() != null)) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE,
+        Level.FINE, "default values for features cannot be set during feature group creation, only allowed for appened"
+        + "features");
     }
   }
 }

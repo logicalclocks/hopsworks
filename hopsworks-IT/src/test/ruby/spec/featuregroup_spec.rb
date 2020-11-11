@@ -371,6 +371,81 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
       end
 
+      it "should not be able to create a cached featuregroup with feature default value in the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        features = [
+            {
+                type: "INT",
+                name: "test_feat",
+                description: "",
+                primary: true,
+                onlineType: nil,
+                partition: false,
+                defaultValue: "10"
+            }
+        ]
+
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features: features)
+        parsed_json = JSON.parse(json_result)
+        expect_status_details(400)
+        expect(parsed_json.key?("errorCode")).to be true
+        expect(parsed_json.key?("errorMsg")).to be true
+        expect(parsed_json.key?("usrMsg")).to be true
+        expect(parsed_json["errorCode"] == 270132).to be true
+      end
+
+      it "should be able to clear the contents of a cached featuregroup updated metadata in the featurestore" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        featuregroup_id = parsed_json["id"]
+        featuregroup_version = parsed_json["version"]
+
+        # updated metadata
+        new_description = "changed description"
+        new_schema = [
+            {
+                type: "INT",
+                name: "testfeature",
+                description: "testfeaturedescription",
+                primary: true,
+                onlineType: "INT",
+                partition: false
+            },
+            {
+                type: "INT",
+                name: "testfeature2",
+                description: "testfeaturedescription",
+                primary: false,
+                onlineType: "INT",
+                partition: false,
+                defaultValue: "10"
+            },
+        ]
+        json_result = update_cached_featuregroup_metadata(project.id, featurestore_id, featuregroup_id,
+                                                          featuregroup_version, featuregroup_name: featuregroup_name,
+                                                          description: new_description, features: new_schema)
+        expect_status_details(200)
+
+        # clear contents
+        clear_featuregroup_contents_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/" + featuregroup_id.to_s + "/clear"
+        post clear_featuregroup_contents_endpoint
+        expect_status_details(200)
+
+        # get feature group and verify
+        parsed_json = get_featuregroup_checked(project.id, featuregroup_name, version: featuregroup_version)
+        expect(parsed_json.length).to be 1
+        parsed_json = parsed_json[0]
+        expect(parsed_json["features"].length).to be 2
+        expect(parsed_json["description"]).to eql("changed description")
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
+        expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10")
+      end
+
+
       it "should be able to update the metadata of an offline featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
