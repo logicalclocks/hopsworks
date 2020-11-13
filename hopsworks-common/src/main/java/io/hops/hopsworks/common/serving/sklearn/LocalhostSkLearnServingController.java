@@ -16,18 +16,20 @@
 
 package io.hops.hopsworks.common.serving.sklearn;
 
+import com.google.common.base.Strings;
 import com.google.common.io.Files;
-import io.hops.hopsworks.persistence.entity.project.Project;
-import io.hops.hopsworks.persistence.entity.serving.Serving;
 import io.hops.hopsworks.common.dao.serving.ServingFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
-import io.hops.hopsworks.exceptions.ServingException;
 import io.hops.hopsworks.common.util.OSProcessExecutor;
 import io.hops.hopsworks.common.util.ProcessDescriptor;
 import io.hops.hopsworks.common.util.ProcessResult;
+import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
+import io.hops.hopsworks.exceptions.ServingException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.serving.Serving;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -44,9 +46,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.hops.hopsworks.common.hdfs.HdfsUsersController.USER_NAME_DELIMITER;
-import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 import static io.hops.hopsworks.common.serving.LocalhostServingController.CID_STOPPED;
-import io.hops.hopsworks.common.util.ProjectUtils;
+import static io.hops.hopsworks.common.serving.LocalhostServingController.SERVING_DIRS;
 
 /**
  * Localhost SkLearn Serving Controller
@@ -166,13 +167,29 @@ public class LocalhostSkLearnServingController {
         // Startup process failed for some reason
         serving.setCid(CID_STOPPED);
         servingFacade.updateDbObject(serving, project);
-        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.INFO);
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.WARNING,
+          "Could not start sklearn serving", "ut:" + processResult.getStdout() + ", err:" + processResult.getStderr());
       }
 
       // Read the pid for SkLearn Serving Flask server
       Path pidFilePath = Paths.get(secretDir.toString(), "sklearn_flask_server.pid");
+      // Pid file is created by sklearn server inside the docker container.
+      // That means the process that started the container returned with exit code 0 but the file might not have been
+      // created yet. Therefore, we wait until the file is created
       String pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
-
+      int pidReadCounter = 0;
+      while (Strings.isNullOrEmpty(pidContents) && pidReadCounter < 10) {
+        logger.log(Level.FINE, "Waiting for sklearn to start...");
+        Thread.sleep(1000);
+        pidContents = Files.readFirstLine(pidFilePath.toFile(), Charset.defaultCharset());
+        pidReadCounter++;
+      }
+  
+      if (Strings.isNullOrEmpty(pidContents)) {
+        throw new ServingException(RESTCodes.ServingErrorCode.LIFECYCLEERRORINT, Level.WARNING,
+          "Could not start sklearn serving because pid file could not be read or was empty");
+      }
+      logger.log(Level.FINE, "sklearn pidContents:"+pidContents);
       // Update the info in the db
       serving.setCid(pidContents);
       serving.setLocalPort(port);
