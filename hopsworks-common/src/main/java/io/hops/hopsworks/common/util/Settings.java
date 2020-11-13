@@ -190,9 +190,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_KAFKA_MAX_NUM_TOPICS = "kafka_max_num_topics";
   private static final String VARIABLE_ZK_DIR = "zk_dir";
   private static final String VARIABLE_ZK_USER = "zk_user";
-  private static final String VARIABLE_DRELEPHANT_IP = "drelephant_ip";
-  private static final String VARIABLE_DRELEPHANT_DB = "drelephant_db";
-  private static final String VARIABLE_DRELEPHANT_PORT = "drelephant_port";
   private static final String VARIABLE_FILE_PREVIEW_IMAGE_SIZE
       = "file_preview_image_size";
   private static final String VARIABLE_FILE_PREVIEW_TXT_SIZE
@@ -251,7 +248,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_DELA_VERSION = "dela_version";
   private static final String VARIABLE_KAFKA_VERSION = "kafka_version";
   private static final String VARIABLE_ELASTIC_VERSION = "elastic_version";
-  private static final String VARIABLE_DRELEPHANT_VERSION = "drelephant_version";
   private static final String VARIABLE_TENSORFLOW_VERSION = "tensorflow_version";
   private static final String VARIABLE_HOPSWORKS_VERSION = "hopsworks_version";
   private static final String VARIABLE_HOPS_VERIFICATION_VERSION = "hops_verification_version";
@@ -598,9 +594,6 @@ public class Settings implements Serializable {
       JHS_IP = setIpVar(VARIABLE_JHS_IP, JHS_IP);
       ZK_USER = setVar(VARIABLE_ZK_USER, ZK_USER);
       ZK_DIR = setDirVar(VARIABLE_ZK_DIR, ZK_DIR);
-      DRELEPHANT_IP = setIpVar(VARIABLE_DRELEPHANT_IP, DRELEPHANT_IP);
-      DRELEPHANT_PORT = setIntVar(VARIABLE_DRELEPHANT_PORT, DRELEPHANT_PORT);
-      DRELEPHANT_DB = setStrVar(VARIABLE_DRELEPHANT_DB, DRELEPHANT_DB);
       KIBANA_IP = setIpVar(VARIABLE_KIBANA_IP, KIBANA_IP);
       KAFKA_MAX_NUM_TOPICS = setIntVar(VARIABLE_KAFKA_MAX_NUM_TOPICS, KAFKA_MAX_NUM_TOPICS);
       HOPSWORKS_DEFAULT_SSL_MASTER_PASSWORD = setVar(VARIABLE_HOPSWORKS_SSL_MASTER_PASSWORD,
@@ -675,7 +668,6 @@ public class Settings implements Serializable {
       DELA_VERSION = setStrVar(VARIABLE_DELA_VERSION, DELA_VERSION);
       KAFKA_VERSION = setStrVar(VARIABLE_KAFKA_VERSION, KAFKA_VERSION);
       ELASTIC_VERSION = setStrVar(VARIABLE_ELASTIC_VERSION, ELASTIC_VERSION);
-      DRELEPHANT_VERSION = setStrVar(VARIABLE_DRELEPHANT_VERSION, DRELEPHANT_VERSION);
       TENSORFLOW_VERSION = setStrVar(VARIABLE_TENSORFLOW_VERSION, TENSORFLOW_VERSION);
       HOPSWORKS_VERSION = setStrVar(VARIABLE_HOPSWORKS_VERSION, HOPSWORKS_VERSION);
       HOPSWORKS_REST_LOG_LEVEL = setLogLevelVar(VARIABLE_HOPSWORKS_REST_LOG_LEVEL, HOPSWORKS_REST_LOG_LEVEL);
@@ -1926,21 +1918,6 @@ public class Settings implements Serializable {
     return ZK_DIR;
   }
 
-  // Dr Elephant
-  private String DRELEPHANT_IP = "127.0.0.1";
-  private String DRELEPHANT_DB = "hopsworks";
-  private int DRELEPHANT_PORT = 11000;
-
-  public synchronized String getDrElephantUrl() {
-    checkCache();
-    return "http://" + DRELEPHANT_IP + ":" + DRELEPHANT_PORT;
-  }
-
-  public synchronized String getDrElephantDb() {
-    checkCache();
-    return DRELEPHANT_DB;
-  }
-
   private String CLUSTER_CERT = "asdasxasx8as6dx8a7sx7asdta8dtasxa8";
 
   public synchronized String getCLUSTER_CERT() {
@@ -3182,13 +3159,6 @@ public class Settings implements Serializable {
   public synchronized String getTensorflowVersion() {
     checkCache();
     return TENSORFLOW_VERSION;
-  }
-
-  private String DRELEPHANT_VERSION;
-
-  public synchronized String getDrelephantVersion() {
-    checkCache();
-    return DRELEPHANT_VERSION;
   }
 
   private String ELASTIC_VERSION;
