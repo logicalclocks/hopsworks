@@ -480,7 +480,7 @@ angular.module('hopsWorksApp')
                         selectStorageConnectorByName().then(
                             function (selected) {
                                 self.viewStorageConnectorInfo(selected);
-                            });
+                            }, function (error) {});
 
                         StorageService.store(self.projectId + "_storageconnectors", success.data);
                         self.storageConnectorsLoaded = true

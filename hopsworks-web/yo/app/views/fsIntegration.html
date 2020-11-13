@@ -33,7 +33,6 @@
 
                     <button class="btn btn-success" 
                             style="margin-left: 10px;"
-                            id="fetch_clusters"
                             ng-click="fsIntegrationCtrl.getClusters()">
                         Get Clusters
                         <i ng-if="fsIntegrationCtrl.clusterSpinner" 
@@ -58,7 +57,6 @@
                            ng-model="fsIntegrationCtrl.dbInstanceApiKey">
                         <button class="btn btn-success" 
                             style="margin-left: 10px;"
-                            id="fetch_clusters"
                             ng-click="fsIntegrationCtrl.addInstance()">
                             Add Instance
                             <i ng-if="fsIntegrationCtrl.addInstanceSpinner" 
@@ -134,7 +132,6 @@
                                 </select>
                                 <button class="btn btn-success"
                                         style="margin-right: 10px;"
-                                        id="fetch_clusters"
                                         ng-click="fsIntegrationCtrl.configure(dbCluster)">
                                     Configure
                                 </button>
@@ -154,7 +151,7 @@
             
         </uib-tab>
         
-        <uib-tab index="2" heading="Spark cluster"
+        <uib-tab index="1" heading="Spark cluster"
                  uib-tooltip="Configure generic Spark cluster integration"
                  class="fs-tab">
 
@@ -175,7 +172,6 @@
                                         <div class="col-lg-3 col-md-3 col-sm-3">
                                             <button class="btn btn-success" 
                                                     style="margin-left: 10px;"
-                                                    id="fetch_clusters"
                                                     ng-click="fsIntegrationCtrl.downloadJars()">
                                                 Download
                                             </button>
@@ -185,16 +181,15 @@
                                         </div>
                                     </div>
                                 </td>
-                            </tr>
+                            </tr> 
 
                             <tr>
                                 <td class="fs-table">Download certificates</td>
-                                <td class="fs-table" ng-controller="ProjectCtrl as projectCtrl">
+                                <td class="fs-table">
                                     <div class="row">
                                         <div class="col-lg-3 col-md-3 col-sm-3">
                                             <button class="btn btn-success" 
                                                     style="margin-left: 10px;"
-                                                    id="fetch_clusters"
                                                     ng-click="projectCtrl.getCerts()">
                                                 Download
                                             </button>
@@ -204,7 +199,7 @@
                                         </div>
                                     </div>
                                 </td>
-                            </tr>
+                            </tr> 
 
                             <tr>
                                 <td class="fs-table">Spark Configuration</td>
@@ -215,7 +210,7 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table> 
                 </div>
     
                 <div class="col-lg-2 col-md-2 col-sm-2" style="margin-top: 10px; border-left: 4px solid #5f6368;">
