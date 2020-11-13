@@ -15,9 +15,9 @@
 =end
 describe "On #{ENV['OS']}" do
   before :all do
-    @debugOpt = true
+    @debugOpt = false
   end
-  # after :all {clean_all_test_projects(spec: "model")}
+  after :all {clean_all_test_projects(spec: "model")}
   experiment_1 = "experiment_1"
   describe 'model' do
     context 'without authentication' do
