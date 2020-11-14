@@ -305,15 +305,17 @@ public class DatabricksController {
       throws FeaturestoreException, IOException {
     DbLibraryInstall dbLibraryInstall = new DbLibraryInstall(clusterId);
 
-    DbLibrary hopsPy = new DbLibrary(new DbPyPiLibrary("hops==" + getPyPiLibraryVersion()));
-    DbLibrary hsfsPy = new DbLibrary(new DbPyPiLibrary("hsfs==" + getPyPiLibraryVersion()));
+    // Hops has an additional digit at the end
+    // this is just a temporary hack, we'll get rid of hops in the next release
+    DbLibrary hopsPy = new DbLibrary(new DbPyPiLibrary("hops~=" + getPyPiLibraryVersion() + ".0"));
+    DbLibrary hsfsPy = new DbLibrary(new DbPyPiLibrary("hsfs~=" + getPyPiLibraryVersion()));
     dbLibraryInstall.setLibraries(Arrays.asList(hopsPy, hsfsPy));
     databricksClient.installLibraries(dbInstanceUrl, dbLibraryInstall, token);
   }
 
   private String getPyPiLibraryVersion() {
     String[] versionDigits = settings.getHopsworksVersion().split("\\.");
-    return versionDigits[0] + "." + versionDigits[1] + ".~";
+    return versionDigits[0] + "." + versionDigits[1] + ".0";
   }
 
   private CertificateMaterializer.CryptoMaterial getCertificates(Users user, Project project) throws IOException {
