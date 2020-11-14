@@ -23,6 +23,7 @@ import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -78,7 +79,7 @@ public class FsQueryConstructorResource {
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Construct the SQL query to join the requested features", response = FsQueryDTO.class)
   public Response constructQuery(@Context SecurityContext sc, @Context UriInfo uriInfo,
-                                 QueryDTO queryDto) throws FeaturestoreException {
+                                 QueryDTO queryDto) throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (queryDto == null) {
       throw new IllegalArgumentException("Please submit a query to construct");

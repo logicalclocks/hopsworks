@@ -482,7 +482,7 @@ public class TrainingDatasetService {
                            @PathParam("trainingdatasetid") Integer trainingdatasetid,
                            @ApiParam(value = "get query with label features", example = "true")
                            @QueryParam("withLabel") @DefaultValue("true") boolean withLabel)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     verifyIdProvided(trainingdatasetid);
     Users user = jWTHelper.getUserPrincipal(sc);
 
