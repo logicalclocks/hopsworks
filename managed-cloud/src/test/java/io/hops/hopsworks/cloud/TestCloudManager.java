@@ -9,6 +9,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hosts.HostsController;
 import io.hops.hopsworks.common.proxies.CAProxy;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ public class TestCloudManager {
       ParserConfigurationException, Exception {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
     workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
     
@@ -66,6 +68,7 @@ public class TestCloudManager {
     Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
@@ -82,6 +85,7 @@ public class TestCloudManager {
     Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
@@ -100,6 +104,7 @@ public class TestCloudManager {
     Mockito.stub(yarnClient.getNodeReports()).toReturn(report);
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     
     status = cloudManager.setAndGetDecommission(new ArrayList<>(), workers, yarnClient, dfsOps, conf, caProxy,
         hostsController);
@@ -109,6 +114,7 @@ public class TestCloudManager {
     //if a node has already been decommisioned it should stay decommisined what ever yarn is thingking.
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     cloudManager.decommissionedNodes.addAll(workers.values());
     report = new ArrayList<>();
     nodeReport = NodeReport.newInstance(NodeId.newInstance("host1", 0), NodeState.RUNNING,
@@ -129,6 +135,7 @@ public class TestCloudManager {
       ParserConfigurationException, Exception {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
     workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
     workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
@@ -193,6 +200,7 @@ public class TestCloudManager {
     //empty nodes
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     dfsOps = Mockito.mock(DistributedFileSystemOps.class);
     
     nodesToRemove = new HashMap<>();
@@ -232,6 +240,7 @@ public class TestCloudManager {
     //empty nodes and then nodes running no application masters.
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     dfsOps = Mockito.mock(DistributedFileSystemOps.class);
     
     nodesToRemove = new HashMap<>();
@@ -275,6 +284,7 @@ public class TestCloudManager {
     // nodes running application masters
     cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     dfsOps = Mockito.mock(DistributedFileSystemOps.class);
     
     nodesToRemove = new HashMap<>();
@@ -320,6 +330,7 @@ public class TestCloudManager {
       TransformerConfigurationException, ParserConfigurationException, Exception {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
     workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
     workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));
@@ -356,6 +367,7 @@ public class TestCloudManager {
 
     ArgumentCaptor<String[]> commandCaptor = ArgumentCaptor.forClass(String[].class);
     Mockito.verify(cloudManager, Mockito.times(2)).execute(Mockito.any(RMAdminCLI.class), commandCaptor.capture());
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     List<String[]> expected = new ArrayList<>(2);
     expected.add(new String[]{"-updateExcludeList",
       "<?xml version=\"1.0\" encoding=\"UTF-8\" "
@@ -376,6 +388,7 @@ public class TestCloudManager {
       TransformerConfigurationException, ParserConfigurationException, Exception {
     CloudManager cloudManager = Mockito.spy(CloudManager.class);
     Mockito.doNothing().when(cloudManager).execute(Mockito.any(RMAdminCLI.class), Mockito.any(String[].class));
+    Mockito.doReturn(Instant.now()).when(cloudManager).getBeginningOfHeartbeat();
     Map<String, CloudNode> workers = new HashMap<>();
     workers.put("host1", new CloudNode("id", "host1", "ip1", 0, "type1", "running"));
     workers.put("host2", new CloudNode("id", "host2", "ip2", 0, "type1", "running"));

@@ -3,6 +3,7 @@
  */
 package io.hops.hopsworks.cloud;
 
+import com.google.common.collect.Lists;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatRequest;
 import io.hops.hopsworks.cloud.dao.heartbeat.HeartbeatResponse;
 import io.hops.hopsworks.cloud.dao.heartbeat.commands.CloudCommandType;
@@ -23,6 +24,7 @@ import io.hops.hopsworks.common.proxies.CAProxy;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.common.yarn.YarnClientService;
 import io.hops.hopsworks.common.yarn.YarnClientWrapper;
+import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.ua.UserAccountStatus;
 import java.io.IOException;
@@ -37,6 +39,9 @@ import javax.ejb.TimerConfig;
 import javax.ejb.TimerService;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.io.StringWriter;
@@ -57,6 +62,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -98,6 +104,8 @@ public class CloudManager {
   final Set<CloudNode> decommissionedNodes = new HashSet<>();
   private final Map<Long, CommandStatus> commandsStatus = new HashMap<>();
   private boolean firstHeartbeat = true;
+  private Instant beginningOfHeartbeat;
+  private boolean shouldLookForMissingNodes = false;
   
   @PostConstruct
   public void init() {
@@ -109,6 +117,9 @@ public class CloudManager {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public void heartbeat() {
     try {
+      if (firstHeartbeat) {
+        beginningOfHeartbeat = Instant.now();
+      }
       //send heartbeat to hopsworks-cloud
       HeartbeatRequest request = new HeartbeatRequest(new ArrayList<>(toSend.getDecommissioned()),
           new ArrayList<>(toSend.getDecommissioning()), commandsStatus, firstHeartbeat);
@@ -273,12 +284,17 @@ public class CloudManager {
       //Store the workers according to there type and status in yarn
       Map<String, Map<Status, Set<CloudNode>>> workerPerType = new HashMap<>();
       //nodes that need to be removed from yarn and hdfs
-      List<String> toRemove = new ArrayList<>();
+      Set<String> toRemove = new HashSet<>();
       
       for (NodeReport report : nodeReports) {
         handleRepport(report, workers, toRemove, oldDecommissioned, decommissioned, decommissioning, activeNodeReports,
             workerPerType);
       }
+
+      // These are nodes which haven't heartbeated for more than 2 minutes
+      // 5 minutes after Hopsworks has started
+      Set<String> missingNodes = getMissingNodes();
+      toRemove.addAll(missingNodes);
 
       //find workers that have no report. They may not have register to yarn yet or be in an error state
       //add them to unusable as yarn can't use them right now.
@@ -332,7 +348,7 @@ public class CloudManager {
           //remove nodes from yarn
           execute(new RMAdminCLI(conf), new String[]{"-removeNodes", String.join(",", toRemove)});
           //remove nodes form hdfs
-          dfsOps.removeAndWipeNodes(toRemove, true);
+          dfsOps.removeAndWipeNodes(Lists.newArrayList(toRemove), true);
         } catch (Exception ex) {
           LOG.log(Level.SEVERE, "Failed to remove node.", ex);
         }
@@ -372,6 +388,30 @@ public class CloudManager {
       }
       return new DecommissionStatus();
     }
+  }
+
+  private Set<String> getMissingNodes() {
+    if (!shouldLookForMissingNodes) {
+      // If we've just restarted the cluster, give the agents some time to catch up
+      if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) >= 5) {
+        shouldLookForMissingNodes = true;
+      }
+      return Collections.EMPTY_SET;
+    }
+    List<Hosts> allHosts = hostsFacade.findAll();
+    Instant now = Instant.now();
+    return allHosts.stream()
+            .filter(h -> {
+              Instant lastHeartbeat = Instant.ofEpochMilli(h.getLastHeartbeat());
+              return ChronoUnit.SECONDS.between(lastHeartbeat, now) >= 90;
+            })
+            .map(Hosts::getHostname)
+            .collect(Collectors.toSet());
+
+  }
+
+  Instant getBeginningOfHeartbeat() {
+    return beginningOfHeartbeat;
   }
   
   private List<NodeReport> getNodeReports(YarnClient yarnClient)
@@ -413,7 +453,7 @@ public class CloudManager {
    * @param activeNodeReports
    * @param workerPerType 
    */
-  private void handleRepport(NodeReport report, Map<String, CloudNode> workers, List<String> toRemove,
+  private void handleRepport(NodeReport report, Map<String, CloudNode> workers, Set<String> toRemove,
       Map<String, CloudNode> oldDecommissioned, Map<String, CloudNode> decommissioned,
       Map<String, CloudNode> decommissioning, Map<String, NodeReport> activeNodeReports,
       Map<String, Map<Status, Set<CloudNode>>> workerPerType) {
