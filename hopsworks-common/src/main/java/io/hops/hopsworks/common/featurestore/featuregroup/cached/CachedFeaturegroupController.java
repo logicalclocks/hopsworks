@@ -25,6 +25,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.online.OnlineFeaturegr
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.query.ConstructorController;
 import io.hops.hopsworks.common.featurestore.query.Feature;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
 import io.hops.hopsworks.common.util.Settings;
@@ -101,6 +102,8 @@ public class CachedFeaturegroupController {
   private HiveController hiveController;
   @EJB
   private ConstructorController constructorController;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   private static final Logger LOGGER = Logger.getLogger(CachedFeaturegroupController.class.getName());
   private static final String HIVE_DRIVER = "org.apache.hive.jdbc.HiveDriver";
@@ -355,7 +358,7 @@ public class CachedFeaturegroupController {
    * @return the converted DTO representation
    */
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
@@ -386,7 +389,7 @@ public class CachedFeaturegroupController {
         .orElse("")
     );
 
-    cachedFeaturegroupDTO.setLocation(hiveTable.getSdId().getLocation());
+    cachedFeaturegroupDTO.setLocation(featurestoreUtils.resolveLocationURI(hiveTable.getSdId().getLocation()));
     return cachedFeaturegroupDTO;
   }
 
@@ -622,7 +625,7 @@ public class CachedFeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, Featuregroup featuregroup,
                                                   Project project, Users user)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException, ServiceException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");
@@ -661,7 +664,7 @@ public class CachedFeaturegroupController {
    * @throws SQLException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException, ServiceException {
     if(!settings.isOnlineFeaturestore()) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.FEATURESTORE_ONLINE_NOT_ENABLED,
         Level.FINE, "Online Featurestore is not enabled for this Hopsworks cluster.");

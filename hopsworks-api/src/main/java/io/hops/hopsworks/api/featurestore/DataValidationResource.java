@@ -30,6 +30,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -109,7 +110,7 @@ public class DataValidationResource {
   @Produces(MediaType.APPLICATION_JSON)
   public Response addValidationRules(ConstraintGroupDTO constraintGroups,
       @PathParam("featuregroupId") Integer featureGroupId,
-      @Context SecurityContext sc) throws FeaturestoreException {
+      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featureGroupId, project, user);
@@ -131,7 +132,7 @@ public class DataValidationResource {
   @Path("{featuregroupId}/rules")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getValidationRules(@PathParam("featuregroupId") Integer featureGroupId,
-      @Context SecurityContext sc) throws FeaturestoreException {
+      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featureGroupId, project, user);
@@ -146,7 +147,7 @@ public class DataValidationResource {
   @Path("{featuregroupId}/result")
   @Produces(MediaType.APPLICATION_JSON)
   public Response getValidationResult(@PathParam("featuregroupId") Integer featureGroupId,
-      @Context SecurityContext sc) throws FeaturestoreException {
+      @Context SecurityContext sc) throws FeaturestoreException, ServiceException {
     Users user = jwtHelper.getUserPrincipal(sc);
     FeaturegroupDTO featureGroup = featuregroupController.getFeaturegroupWithIdAndFeaturestore(featurestore,
         featureGroupId, project, user);
