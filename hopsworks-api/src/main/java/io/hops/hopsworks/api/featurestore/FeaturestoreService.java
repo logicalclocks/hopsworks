@@ -433,7 +433,7 @@ public class FeaturestoreService {
   @ApiOperation(value = "Configure job to create training dataset", response = JobDTO.class)
   public Response createOrUpdateTrainingDatasetJob(@Context SecurityContext sc, @Context UriInfo uriInfo,
     @ApiParam(value = "Job configuration", required = true) TrainingDatasetJobDTO trainingDatasetJobDTO)
-    throws FeaturestoreException, JAXBException {
+      throws FeaturestoreException, JAXBException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     if (trainingDatasetJobDTO == null) {
       throw new IllegalArgumentException("Job specification not provided");

@@ -17,6 +17,7 @@ import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.spark.SparkJobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
@@ -73,7 +74,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @throws FeaturestoreException
    */
   public void verifyFeatureExistence(List<String> featureList, Featurestore featurestore,
-    String featuregroupsVersionDict, Project project, Users user) throws FeaturestoreException {
+    String featuregroupsVersionDict, Project project, Users user) throws FeaturestoreException, ServiceException {
     
     List<FeaturegroupDTO> featuregroupDTOs = featuregroupController.getFeaturegroupsForFeaturestore(featurestore,
       project, user);
@@ -210,7 +211,7 @@ public class TrainingDatasetJobController implements TrainingDatasetJobControlle
    * @throws FeaturestoreException
    */
   public Jobs createTrainingDatasetJob(Users user, Project project, TrainingDatasetJobDTO trainingDatasetJobDTO)
-    throws FeaturestoreException, JAXBException {
+      throws FeaturestoreException, JAXBException, ServiceException {
     
     Boolean sql = validateJobSpecification(trainingDatasetJobDTO.getFeatures(), trainingDatasetJobDTO.getSqlQuery());
     

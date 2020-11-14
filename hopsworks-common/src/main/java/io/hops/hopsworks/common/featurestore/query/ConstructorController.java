@@ -27,7 +27,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCom
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
@@ -77,6 +79,8 @@ public class ConstructorController {
   private FeatureGroupCommitController featureGroupCommitCommitController;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
+  @EJB
+  private FeaturestoreUtils featurestoreUtils;
 
   private final static String ALL_FEATURES = "*";
 
@@ -96,13 +100,14 @@ public class ConstructorController {
   }
 
   public FsQueryDTO construct(QueryDTO queryDTO, Project project, Users user)
-    throws FeaturestoreException {
+    throws FeaturestoreException, ServiceException {
     Query query = convertQueryDTO(queryDTO, 0, project, user);
     // Generate SQL
     return construct(query, project, user);
   }
 
-  public FsQueryDTO construct(Query query, Project project, Users user) throws FeaturestoreException {
+  public FsQueryDTO construct(Query query, Project project, Users user)
+      throws FeaturestoreException, ServiceException {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
     fsQueryDTO.setQuery(generateSQL(query, false));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
@@ -585,7 +590,8 @@ public class ConstructorController {
   }
 
   private List<HudiFeatureGroupAliasDTO> getHudiAliases(Query query, List<HudiFeatureGroupAliasDTO> aliases,
-                                                        Project project, Users user) throws FeaturestoreException {
+                                                        Project project, Users user)
+      throws FeaturestoreException, ServiceException {
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP &&
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
@@ -594,7 +600,8 @@ public class ConstructorController {
       List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(hiveTable,
           featuregroup.getFeaturestore(), project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
-      featuregroupDTO.setLocation(hiveTable.getSdId().getLocation());
+
+      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(hiveTable.getSdId().getLocation()));
 
       if (query.getLeftFeatureGroupStartTimestamp() == null) {
         aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
@@ -602,6 +609,12 @@ public class ConstructorController {
       } else {
         aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
             query.getLeftFeatureGroupStartTimestamp(), query.getLeftFeatureGroupEndTimestamp()));
+      }
+    }
+
+    if (query.getJoins() != null && !query.getJoins().isEmpty()) {
+      for (Join join : query.getJoins()) {
+        getHudiAliases(join.getRightQuery(), aliases, project, user);
       }
     }
 

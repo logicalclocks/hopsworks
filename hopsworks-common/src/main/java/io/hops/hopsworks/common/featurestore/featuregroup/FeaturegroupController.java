@@ -114,7 +114,7 @@ public class FeaturegroupController {
    * @return list of XML/JSON DTOs of the featuregroups
    */
   public List<FeaturegroupDTO> getFeaturegroupsForFeaturestore(Featurestore featurestore, Project project, Users user)
-    throws FeaturestoreException {
+    throws FeaturestoreException, ServiceException {
     List<Featuregroup> featuregroups = featuregroupFacade.findByFeaturestore(featurestore);
     List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
     for (Featuregroup featuregroup : featuregroups) {
@@ -257,7 +257,7 @@ public class FeaturegroupController {
    * @return a DTO representation of the entity
    */
   private FeaturegroupDTO convertFeaturegrouptoDTO(Featuregroup featuregroup, Project project, Users user)
-    throws FeaturestoreException {
+    throws FeaturestoreException, ServiceException {
     String featurestoreName = featurestoreFacade.getHiveDbName(featuregroup.getFeaturestore().getHiveDbId());
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
@@ -285,7 +285,8 @@ public class FeaturegroupController {
    * @return XML/JSON DTO of the featuregroup
    */
   public List<FeaturegroupDTO> getFeaturegroupWithNameAndFeaturestore(Featurestore featurestore, String name,
-    Project project, Users user) throws FeaturestoreException {
+                                                                      Project project, Users user)
+      throws FeaturestoreException, ServiceException {
     List<Featuregroup> featuregroups = verifyFeaturegroupName(featurestore, name);
     List<FeaturegroupDTO> featuregroupDTOS = new ArrayList<>();
     for (Featuregroup featuregroup : featuregroups) {
@@ -303,7 +304,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO getFeaturegroupWithNameVersionAndFeaturestore(Featurestore featurestore, String name,
                                                                        Integer version, Project project, Users user)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     Featuregroup featuregroup = verifyFeaturegroupNameVersion(featurestore, name, version);
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
@@ -317,7 +318,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO getFeaturegroupWithIdAndFeaturestore(Featurestore featurestore, Integer id, Project project,
                                                               Users user)
-      throws FeaturestoreException{
+      throws FeaturestoreException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, id);
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
@@ -332,7 +333,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO updateFeaturegroupMetadata(Project project, Users user, Featurestore featurestore,
                                                     FeaturegroupDTO featuregroupDTO)
-      throws FeaturestoreException, SQLException, ProvenanceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     // Verify general entity related information
     featurestoreInputValidation.verifyDescription(featuregroupDTO);
@@ -378,7 +379,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO updateFeaturegroupJob(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
     Project project, Users user)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
@@ -398,7 +399,7 @@ public class FeaturegroupController {
    */
   public FeaturegroupDTO enableFeaturegroupOnline(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                   Project project, Users user)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP){
       throw new FeaturestoreException(
@@ -420,7 +421,7 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO disableFeaturegroupOnline(Featuregroup featuregroup, Project project, Users user)
-      throws FeaturestoreException, SQLException {
+      throws FeaturestoreException, SQLException, ServiceException {
     if(featuregroup.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       throw new FeaturestoreException(
         RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURE_SERVING_NOT_SUPPORTED_FOR_ON_DEMAND_FEATUREGROUPS, Level.FINE,
@@ -441,7 +442,7 @@ public class FeaturegroupController {
    * @throws FeaturestoreException
    */
   public FeaturegroupDTO updateFeaturegroupStatsSettings(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Project project, Users user) throws FeaturestoreException {
+    Project project, Users user) throws FeaturestoreException, ServiceException {
     Featuregroup featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     if (featuregroupDTO.isDescStatsEnabled() != null) {
       // if setting is changed, check with new setting

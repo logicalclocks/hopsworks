@@ -163,7 +163,8 @@ public class FeaturegroupService {
   @ApiOperation(value = "Get the list of feature groups for a featurestore",
       response = FeaturegroupDTO.class,
       responseContainer = "List")
-  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc) throws FeaturestoreException {
+  public Response getFeaturegroupsForFeaturestore(@Context SecurityContext sc)
+      throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     List<FeaturegroupDTO> featuregroups = featuregroupController.
         getFeaturegroupsForFeaturestore(featurestore, project, user);
@@ -228,7 +229,7 @@ public class FeaturegroupService {
       response = FeaturegroupDTO.class)
   public Response getFeatureGroup(@ApiParam(value = "Id of the featuregroup", required = true)
                                   @PathParam("featuregroupId") Integer featuregroupId, @Context SecurityContext sc)
-      throws FeaturestoreException {
+      throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyIdProvided(featuregroupId);
     FeaturegroupDTO featuregroupDTO =
@@ -258,7 +259,7 @@ public class FeaturegroupService {
                                   @PathParam("name") String name,
                                   @ApiParam(value = "Filter by a specific version")
                                   @QueryParam("version") Integer version, @Context SecurityContext sc)
-      throws FeaturestoreException{
+      throws FeaturestoreException, ServiceException {
     Users user = jWTHelper.getUserPrincipal(sc);
     verifyNameProvided(name);
     List<FeaturegroupDTO> featuregroupDTO;
@@ -374,7 +375,8 @@ public class FeaturegroupService {
       @ApiParam(value = "updateStatsSettings", example = "true")
       @QueryParam("updateStatsSettings") @DefaultValue("false") Boolean updateStatsSettings,
       @ApiParam(value = "updateJob") @DefaultValue("false") @QueryParam("updateJob") Boolean updateJob,
-      FeaturegroupDTO featuregroupDTO) throws FeaturestoreException, SQLException, ProvenanceException {
+      FeaturegroupDTO featuregroupDTO)
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
     if(featuregroupDTO == null) {
       throw new IllegalArgumentException("Input JSON for updating Feature Group cannot be null");
     }

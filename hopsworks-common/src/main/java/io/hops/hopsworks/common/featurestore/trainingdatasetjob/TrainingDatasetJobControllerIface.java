@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasetjob;
 
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -28,7 +29,7 @@ import javax.xml.bind.JAXBException;
 public interface TrainingDatasetJobControllerIface {
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   default Jobs createTrainingDatasetJob(Users user, Project project, TrainingDatasetJobDTO
-    trainingDatasetJobDTO) throws FeaturestoreException, JAXBException {
+    trainingDatasetJobDTO) throws FeaturestoreException, JAXBException, ServiceException {
     throw new IllegalArgumentException("API not supported in the community edition");
   }
 }
