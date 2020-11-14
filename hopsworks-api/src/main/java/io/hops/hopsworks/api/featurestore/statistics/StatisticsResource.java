@@ -104,7 +104,8 @@ public class StatisticsResource {
   @ApiOperation(value = "Get all available statistics")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@BeanParam Pagination pagination,
                       @BeanParam StatisticsBeanParam statisticsBeanParam,
                       @Context UriInfo uriInfo,
@@ -133,7 +134,8 @@ public class StatisticsResource {
   @ApiOperation(value = "Register new statistics")
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response register(@Context UriInfo uriInfo,
                            @Context SecurityContext sc,
                            StatisticsDTO statisticsDTO)
