@@ -16,6 +16,14 @@
 
 package io.hops.hopsworks.common.featurestore.utils;
 
+import com.google.common.base.Strings;
+import com.google.common.net.InetAddresses;
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
+import com.logicalclocks.servicediscoverclient.resolvers.Type;
+import com.logicalclocks.servicediscoverclient.service.Service;
+import com.logicalclocks.servicediscoverclient.service.ServiceQuery;
+import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
+import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -34,6 +42,9 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.logging.Level;
 
 @Stateless
@@ -45,6 +56,8 @@ public class FeaturestoreUtils {
   private DistributedFsService distributedFsService;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private ServiceDiscoveryController serviceDiscoveryController;
 
   /**
    * Verify that the user is allowed to execute the requested operation based on his/hers project role
@@ -92,6 +105,29 @@ public class FeaturestoreUtils {
       if (udfso != null) {
         distributedFsService.closeDfsClient(udfso);
       }
+    }
+  }
+
+  public String resolveLocationURI(String locationURI) throws ServiceException {
+    URI uri = URI.create(locationURI);
+    if (Strings.isNullOrEmpty(uri.getHost())) {
+      return locationURI;
+    }
+    if (InetAddresses.isInetAddress(uri.getHost())) {
+      return locationURI;
+    }
+    try {
+      Service nn =
+          serviceDiscoveryController.getService(Type.DNS, ServiceQuery.of(uri.getHost(), Collections.emptySet()))
+              .findAny()
+              .orElseThrow(() -> new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+                  "Service Discovery is enabled but could not resolve domain " + uri.getHost()));
+
+      return new URI(uri.getScheme(), uri.getUserInfo(), nn.getAddress(), uri.getPort(), uri.getPath(),
+          uri.getQuery(), uri.getFragment()).toString();
+    } catch (ServiceDiscoveryException | URISyntaxException ex) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.SERVICE_NOT_FOUND, Level.SEVERE,
+          "Service Discovery is enabled but could not resolve domain " + uri.getHost(), ex.getMessage(), ex);
     }
   }
 }
