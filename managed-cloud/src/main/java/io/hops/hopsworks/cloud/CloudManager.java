@@ -43,6 +43,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -443,7 +444,29 @@ public class CloudManager {
       }
     }
   }
-  
+
+  private static final String AZURE_INTERNAL_DOMAIN_FORMAT = "%s.internal.cloudapp.net";
+  private String getAzureInternalHostname(String hostname) {
+    return String.format(AZURE_INTERNAL_DOMAIN_FORMAT, hostname);
+  }
+
+  private Optional<CloudNode> getCloudNodeFromYarnNode(Map<String, CloudNode> reportedWorkers, NodeReport nodeReport) {
+    String hostname = nodeReport.getNodeId().getHost();
+    CloudNode worker = reportedWorkers.get(hostname);
+    if (worker != null) {
+      return Optional.of(worker);
+    }
+    if (settings.getCloudType().equals(Settings.CLOUD_TYPES.AZURE)) {
+      // Ugly hack for Azure where reverse DNS lookups may return
+      // HOSTNAME or HOSTNAME.internal.cloudapp.net
+      worker = reportedWorkers.get(getAzureInternalHostname(hostname));
+      if (worker != null) {
+        return Optional.of(worker);
+      }
+    }
+    return Optional.empty();
+  }
+
   /**
    * Handle the yarn report and put the worker info in the proper map.
    * @param report
@@ -460,8 +483,8 @@ public class CloudManager {
       Map<String, CloudNode> decommissioning, Map<String, NodeReport> activeNodeReports,
       Map<String, Map<Status, Set<CloudNode>>> workerPerType) {
 
-    CloudNode worker = workers.get(report.getNodeId().getHost());
-    if (worker == null) {
+    Optional<CloudNode> maybeCloudNode = getCloudNodeFromYarnNode(workers, report);
+    if (!maybeCloudNode.isPresent()) {
       /*
        * Hopsworks-cloud does not know about this node
        * the node was shut down but yarn has not detected it yet.
@@ -469,8 +492,12 @@ public class CloudManager {
        */
       LOG.log(Level.INFO, "Removing worker " + report.getNodeId().getHost());
       toRemove.add(report.getNodeId().getHost());
+      if (settings.getCloudType().equals(Settings.CLOUD_TYPES.AZURE)) {
+        toRemove.add(getAzureInternalHostname(report.getNodeId().getHost()));
+      }
       return;
     }
+    CloudNode worker = maybeCloudNode.get();
     if (decommissionedNodes.contains(worker)) {
       /*
        * The node has been decommissioned but not removed yet
