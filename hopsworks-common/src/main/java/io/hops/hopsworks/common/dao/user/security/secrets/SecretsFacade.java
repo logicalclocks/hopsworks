@@ -24,8 +24,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.util.List;
+import java.util.Optional;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -65,9 +67,14 @@ public class SecretsFacade {
   }
   
   //only safe for secrets for s3 connectors because they are unique
-  public Secret findByName(String name) {
-    return entityManager.createNamedQuery("Secret.findByName", Secret.class)
-      .setParameter("name", name).getSingleResult();
+  public Optional<Secret> findByName(String name) {
+    try {
+      return Optional.of(entityManager.createNamedQuery("Secret.findByName", Secret.class)
+          .setParameter("name", name)
+          .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
   }
   
   public void deleteSecretsForUser(Users user) {

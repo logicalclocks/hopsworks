@@ -46,6 +46,7 @@ import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 /**
@@ -130,18 +131,18 @@ public class FeaturestoreS3ConnectorController {
       Users user, Featurestore featurestore, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO,
       Integer storageConnectorId) throws FeaturestoreException, UserException {
     FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(storageConnectorId, featurestore);
-    FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm =
-      getEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
     String oldConnectorName = featurestoreS3Connector.getName();
     
     verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
     featurestoreS3Connector.setName(featurestoreS3ConnectorDTO.getName());
-    verifyS3ConnectorName(featurestoreS3ConnectorDTO.getName(), featurestore, true);
     verifyS3ConnectorDescription(featurestoreS3ConnectorDTO.getDescription());
     featurestoreS3Connector.setDescription(featurestoreS3ConnectorDTO.getDescription());
     verifyS3ConnectorBucket(featurestoreS3ConnectorDTO.getBucket());
     featurestoreS3Connector.setBucket(featurestoreS3ConnectorDTO.getBucket());
+
     if (featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm() != null) {
+      FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm =
+          getEncryptionAlgorithm(featurestoreS3ConnectorDTO.getServerEncryptionAlgorithm());
       featurestoreS3Connector.setServerEncryptionAlgorithm(serverEncryptionAlgorithm);
       if (serverEncryptionAlgorithm.isRequiresKey()) {
         verifyS3ConnectorServerEncryptionKey(featurestoreS3ConnectorDTO.getServerEncryptionKey());
@@ -154,13 +155,15 @@ public class FeaturestoreS3ConnectorController {
       featurestoreS3Connector.setServerEncryptionAlgorithm(null);
       featurestoreS3Connector.setServerEncryptionKey(null);
     }
+
     if (featurestore != null) {
       featurestoreS3Connector.setFeaturestore(featurestore);
     }
   
     String oldSecretName = createSecretName(featurestore.getId(), oldConnectorName);
     String newSecretName = createSecretName(featurestore.getId(), featurestoreS3Connector.getName());
-    Secret secret = secretsFacade.findByName(oldSecretName);
+    Optional<Secret> secretOptional = secretsFacade.findByName(oldSecretName);
+
     if (!settings.isIAMRoleConfigured()) {
       verifyS3ConnectorAccessKey(featurestoreS3ConnectorDTO.getAccessKey());
       verifyS3ConnectorSecretKey(featurestoreS3ConnectorDTO.getSecretKey());
@@ -168,26 +171,17 @@ public class FeaturestoreS3ConnectorController {
         featurestoreS3ConnectorDTO.getSecretKey());
       Secret newSecret = secretsController.validateAndCreateSecret(new SecretId(user.getUid(), newSecretName), user,
               secretString, VisibilityType.PROJECT, featurestore.getProject().getId());
-      if (secret != null && !newSecretName.equals(oldSecretName)) {
-        secretsFacade.deleteSecret(secret.getId());
+      if (secretOptional.isPresent() && !newSecretName.equals(oldSecretName)) {
+        secretsFacade.deleteSecret(secretOptional.get().getId());
         secretsFacade.persist(newSecret);
-      } else if (secret != null && newSecretName.equals(oldSecretName)) {
-        secret.setSecret(newSecret.getSecret());
-        secretsFacade.update(secret);
+      } else if (secretOptional.isPresent()) {
+        secretOptional.get().setSecret(newSecret.getSecret());
+        secretsFacade.update(secretOptional.get());
       } else {
         secretsFacade.persist(newSecret);
       }
     } else {
       verifySecretAndAccessKeysForIamRole(featurestoreS3ConnectorDTO);
-      // If they changed the connector name, the secret should also be updated: only the name if it exists
-      if (secret != null && !newSecretName.equals(oldSecretName)) {
-        Secret newSecret = new Secret(new SecretId(secret.getId().getUid(), newSecretName), secret.getSecret(),
-          secret.getAddedOn());
-        newSecret.setProjectIdScope(secret.getProjectIdScope());
-        newSecret.setVisibilityType(secret.getVisibilityType());
-        secretsFacade.deleteSecret(secret.getId());
-        secretsFacade.persist(newSecret);
-      }
     }
     FeaturestoreS3Connector updatedFeaturestoreS3Connector =
       featurestoreS3ConnectorFacade.updateS3Connector(featurestoreS3Connector);
@@ -204,25 +198,23 @@ public class FeaturestoreS3ConnectorController {
    * @param featurestoreS3Id id of the connection to remove
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public FeaturestoreS3ConnectorDTO removeFeaturestoreS3Connector(Users user, Integer featurestoreS3Id)
-      throws UserException {
+  public FeaturestoreS3ConnectorDTO removeFeaturestoreS3Connector(Users user, Integer featurestoreS3Id) {
     FeaturestoreS3Connector featurestoreS3Connector = featurestoreS3ConnectorFacade.find(featurestoreS3Id);
     FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO = new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
-    try {
-      FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey = getS3AccessAndSecretKeySecretForConnector(user,
-        featurestoreS3ConnectorDTO);
-      setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
-    } catch (FeaturestoreException e) {
-      //Can still proceed to delete if user is member regardless of the error. Maybe the secret was not properly
-      // configured
+    if (!settings.isIAMRoleConfigured()) {
+      try {
+        FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey =
+            getS3AccessAndSecretKeySecretForConnector(user, featurestoreS3ConnectorDTO);
+        setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
+      } catch (FeaturestoreException e) {
+        //Can still proceed to delete if user is member regardless of the error. Maybe the secret was not properly
+        // configured
+      }
+      Optional<Secret> secret = secretsFacade.findByName(
+          createSecretName(featurestoreS3Connector.getFeaturestore().getId(), featurestoreS3Connector.getName()));
+      secret.ifPresent(s -> secretsFacade.deleteSecret(s.getId()));
     }
-    Secret secret = secretsFacade.findByName(
-      createSecretName(featurestoreS3Connector.getFeaturestore().getId(),
-        featurestoreS3Connector.getName()));
     featurestoreS3ConnectorFacade.remove(featurestoreS3Connector);
-    if (secret != null) {
-      secretsFacade.deleteSecret(secret.getId());
-    }
     return featurestoreS3ConnectorDTO;
   }
 
@@ -412,12 +404,10 @@ public class FeaturestoreS3ConnectorController {
    * @throws FeaturestoreException
    */
   private void verifySecretAndAccessKeysForIamRole(FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO)
-    throws FeaturestoreException{
-    if (settings.isIAMRoleConfigured() && (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
-      !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey()))) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN,
-        Level.FINE,
+      throws FeaturestoreException{
+    if (!Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getAccessKey()) ||
+        !Strings.isNullOrEmpty(featurestoreS3ConnectorDTO.getSecretKey())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_KEYS_FORBIDDEN, Level.FINE,
         "S3 Access Keys are not allowed"
       );
     }
@@ -467,9 +457,11 @@ public class FeaturestoreS3ConnectorController {
     List<FeaturestoreS3Connector> s3Connectors = featurestoreS3ConnectorFacade.findByFeaturestore(featurestore);
     for(FeaturestoreS3Connector s3Connector : s3Connectors) {
       FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO = new FeaturestoreS3ConnectorDTO(s3Connector);
-      FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey = getS3AccessAndSecretKeySecretForConnector(user,
-        featurestoreS3ConnectorDTO);
-      setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
+      if (!settings.isIAMRoleConfigured()) {
+        FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey =
+            getS3AccessAndSecretKeySecretForConnector(user, featurestoreS3ConnectorDTO);
+        setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
+      }
       s3ConnectorDTOs.add(featurestoreS3ConnectorDTO);
     }
     return s3ConnectorDTOs;
@@ -489,9 +481,11 @@ public class FeaturestoreS3ConnectorController {
       throws FeaturestoreException {
     FeaturestoreS3Connector featurestoreS3Connector = verifyS3ConnectorId(id, featurestore);
     FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO = new FeaturestoreS3ConnectorDTO(featurestoreS3Connector);
-    FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey = getS3AccessAndSecretKeySecretForConnector(user,
-      featurestoreS3ConnectorDTO);
-    setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
+    if (!settings.isIAMRoleConfigured()) {
+      FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey =
+          getS3AccessAndSecretKeySecretForConnector(user, featurestoreS3ConnectorDTO);
+      setAccessAndSecretKeysInDTO(featurestoreS3ConnectorDTO, accessAndSecretKey);
+    }
     return  featurestoreS3ConnectorDTO;
   }
   
@@ -503,30 +497,22 @@ public class FeaturestoreS3ConnectorController {
    * @return FeaturestoreS3ConnectorAccessAndSecretKey object
    * @throws FeaturestoreException
    */
-  @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  public FeaturestoreS3ConnectorAccessAndSecretKey getS3AccessAndSecretKeySecretForConnector(
-    Users user, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO) throws FeaturestoreException {
-    String secretName = createSecretName(featurestoreS3ConnectorDTO.getFeaturestoreId(),
-      featurestoreS3ConnectorDTO.getName());
-    Secret secret = secretsFacade.findByName(secretName);
-    if (secret == null && settings.isIAMRoleConfigured()) {
+  private FeaturestoreS3ConnectorAccessAndSecretKey getS3AccessAndSecretKeySecretForConnector(
+      Users user, FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO) throws FeaturestoreException {
+    String secretName =
+        createSecretName(featurestoreS3ConnectorDTO.getFeaturestoreId(), featurestoreS3ConnectorDTO.getName());
+    Secret secret = secretsFacade.findByName(secretName)
+        .orElseThrow(() -> new FeaturestoreException(
+            RESTCodes.FeaturestoreErrorCode.ERROR_GETTING_S3_CONNECTOR_ACCESS_AND_SECRET_KEY_FROM_SECRET,
+            Level.FINE, "Could not find the secret name for connector " + featurestoreS3ConnectorDTO.getName()));
+
+    try {
+      Users ownerUser = userFacade.find(secret.getId().getUid());
+      SecretPlaintext plainText = secretsController.getShared(user, ownerUser.getUsername(), secretName);
+      return new ObjectMapper().readValue(plainText.getPlaintext(), FeaturestoreS3ConnectorAccessAndSecretKey.class);
+    } catch (UserException | ProjectException | ServiceException | IOException e ) {
+      //Just return empty
       return new FeaturestoreS3ConnectorAccessAndSecretKey();
-    } else if (secret == null && !settings.isIAMRoleConfigured()) {
-      throw new FeaturestoreException(
-        RESTCodes.FeaturestoreErrorCode.ERROR_GETTING_S3_CONNECTOR_ACCESS_AND_SECRET_KEY_FROM_SECRET,
-        Level.FINE, "Could not find the secret name for connector " + featurestoreS3ConnectorDTO.getName());
-    } else {
-      try {
-        Users ownerUser = userFacade.find(secret.getId().getUid());
-        SecretPlaintext plainText = secretsController.getShared(user, ownerUser.getUsername(), secretName);
-        FeaturestoreS3ConnectorAccessAndSecretKey accessAndSecretKey =
-          new ObjectMapper().readValue(plainText.getPlaintext(),
-          FeaturestoreS3ConnectorAccessAndSecretKey.class);
-        return accessAndSecretKey;
-      } catch (UserException | ProjectException | ServiceException | IOException e ) {
-        //Just return empty
-        return new FeaturestoreS3ConnectorAccessAndSecretKey();
-      }
     }
   }
   
