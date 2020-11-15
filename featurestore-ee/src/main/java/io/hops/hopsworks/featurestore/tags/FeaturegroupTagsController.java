@@ -4,6 +4,7 @@
 
 package io.hops.hopsworks.featurestore.tags;
 
+import io.hops.hopsworks.common.dao.featurestore.tag.FeatureStoreTagFacade;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
@@ -21,7 +22,6 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -44,6 +44,8 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
   private FeatureStoreTagController featureStoreTagController;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private FeatureStoreTagFacade featureStoreTagFacade;
 
   /**
    * Get all tags associated with a featuregroup
@@ -117,8 +119,10 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
     String path = getFeaturegroupLocation(featuregroup);
 
-    String tagsJson = new JSONObject().put(tag, value).toString();
-    featureStoreTagController.validateTags(tagsJson);
+    if (featureStoreTagFacade.findByName(tag) == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_ALLOWED,
+          Level.FINE, tag + " is not a valid tag.");
+    }
 
     Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
     Map<String, String> tags =
