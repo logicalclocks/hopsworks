@@ -293,7 +293,7 @@ public class CloudManager {
 
       // These are nodes which haven't heartbeated for more than 2 minutes
       // 5 minutes after Hopsworks has started
-      Set<String> missingNodes = getMissingNodes();
+      Set<String> missingNodes = getMissingNodes(workers);
       toRemove.addAll(missingNodes);
 
       //find workers that have no report. They may not have register to yarn yet or be in an error state
@@ -390,7 +390,7 @@ public class CloudManager {
     }
   }
 
-  private Set<String> getMissingNodes() {
+  private Set<String> getMissingNodes(Map<String, CloudNode> reportedWorkers) {
     if (!shouldLookForMissingNodes) {
       // If we've just restarted the cluster, give the agents some time to catch up
       if (ChronoUnit.MINUTES.between(getBeginningOfHeartbeat(), Instant.now()) >= 5) {
@@ -401,6 +401,8 @@ public class CloudManager {
     List<Hosts> allHosts = hostsFacade.findAll();
     Instant now = Instant.now();
     return allHosts.stream()
+            .filter(h -> !reportedWorkers.containsKey(h.getHostname()))
+            .filter(h -> h.getLastHeartbeat() != null)
             .filter(h -> {
               Instant lastHeartbeat = Instant.ofEpochMilli(h.getLastHeartbeat());
               return ChronoUnit.SECONDS.between(lastHeartbeat, now) >= 90;
