@@ -19,9 +19,9 @@
  * Controller for experiments service.
  */
 angular.module('hopsWorksApp')
-    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'MembersService', 'UserService', 'ModalService', 'ProjectService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', 'FeaturestoreService', 'ProvenanceService', '$interval',
+    .controller('ExperimentCtrl', ['$scope', '$timeout', 'growl', '$window', 'UserService', 'ModalService', 'ProjectService', 'ProjectMembershipService', 'ExperimentService', 'TensorBoardService', 'DataSetService', 'StorageService', 'FeaturestoreService', 'ProvenanceService', '$interval',
         '$routeParams', '$route', '$sce', 'JobService', '$location',
-        function($scope, $timeout, growl, $window, MembersService, UserService, ModalService, ProjectService, ExperimentService, TensorBoardService, DataSetService, StorageService, FeaturestoreService, ProvenanceService, $interval,
+        function($scope, $timeout, growl, $window, UserService, ModalService, ProjectService, ProjectMembershipService, ExperimentService, TensorBoardService, DataSetService, StorageService, FeaturestoreService, ProvenanceService, $interval,
             $routeParams, $route, $sce, JobService, $location) {
 
             var self = this;
@@ -191,18 +191,19 @@ angular.module('hopsWorksApp')
                     return;
                 }
                 var offset = self.pageSize * (self.currentPage - 1);
-                self.query = "";
+                self.query = '';
                 if(self.experimentsFilter !== "") {
-                    self.query = '?filter_by=name_like:' + self.experimentsFilter + "&filter_by=date_start_lt:" + self.experimentsToDate.toISOString().replace('Z','')
-                        + "&filter_by=date_start_gt:" + self.experimentsFromDate.toISOString().replace('Z','');
-                } else {
-                    self.query = '?filter_by=date_start_lt:' + self.experimentsToDate.toISOString().replace('Z','')
-                        + "&filter_by=date_start_gt:" + self.experimentsFromDate.toISOString().replace('Z','');
+                    self.query = self.query + '&filter_by=name_like:' + self.experimentsFilter;
                 }
+                self.query = self.query + '&filter_by=date_start_lt:' + self.experimentsToDate.toISOString().replace('Z','');
+                self.query = self.query + '&filter_by=date_start_gt:' + self.experimentsFromDate.toISOString().replace('Z','');
                 if(self.memberSelected.name !== 'All Members') {
-                    self.query = self.query + '&filter_by=user:' + self.memberSelected.uid;
+                    self.query = self.query + '&filter_by=user:' + self.memberSelected.uid + '&filter_by=user_project:' + self.memberSelected.projectId;
                 }
                 self.query = self.query + '&sort_by=' + self.sortType + ':' + self.orderBy + '&offset=' + offset + '&limit=' + self.pageSize;
+                if(self.query.length > 0) {
+                    self.query = '?' + self.query.substring(1, self.query.length);
+                }
             };
 
             self.getExperiments = function(loadingText) {
@@ -294,27 +295,21 @@ angular.module('hopsWorksApp')
                 });
             };
 
+            self.updateMember = function() {
+                //update experiments for member
+                self.getExperiments('Loading Experiments...');
+            };
+
             self.getMembers = function () {
-              MembersService.query({id: self.projectId}).$promise.then(
+                ProjectMembershipService.getDatasetMembers(self.projectId, 'Experiments', 'DATASET').then(
                 function (success) {
-                  self.members = success;
-                  if(self.members.length > 0) {
-                    //Get current user team role
-                    self.members.forEach(function (member) {
-                        if(member.user.email !== 'serving@hopsworks.se') {
-                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname, 'uid': member.user.uid, 'email': member.user.email});
-                        }
-                    });
-
-
-                    self.membersList.push({'name': 'All Members'})
-
-                    for(var i = 0; i < self.membersList.length; i++) {
-                        if(self.membersList[i].email === self.userEmail) {
-                            self.memberSelected = self.membersList[i];
-                            break;
-                        }
-                    }
+                    if(success.data.length > 0) {
+                        self.membersList = [];
+                        success.data.forEach(function (member) {
+                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname + ':' + member.project.name, 'uid': member.user.uid, 'email': member.user.email, 'projectId': member.project.id});
+                        });
+                        self.membersList.push({'name': 'All Members', 'projectId': parseInt(self.projectId)});
+                        self.memberSelected = {'name': 'All Members', 'projectId': parseInt(self.projectId)};
                   }
                   self.getExperiments('Loading Experiments...');
                 },

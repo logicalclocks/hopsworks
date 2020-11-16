@@ -204,7 +204,7 @@ describe "On #{ENV['OS']}" do
                 raise "Log aggregation failed in YARN"
               end
               expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution1 json_body: #{json_body}"
+              puts "execution1 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
               expect(json_body[:type]).to eq "OUT"
 
               #wait for error log aggregation
@@ -213,7 +213,7 @@ describe "On #{ENV['OS']}" do
                 json_body[:log] != "No log available."
               end
               expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution2 json_body: #{json_body}"
+              puts "execution2 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
               expect(json_body[:type]).to eq "ERR"
 
               member = create_user
@@ -239,7 +239,7 @@ describe "On #{ENV['OS']}" do
                 raise "Log aggregation failed in YARN"
               end
               expect(json_body[:log]).not_to eq("No log available.")
-              puts "execution3 json_body: #{json_body}"
+              puts "execution3 json_body: #{json_body}" if defined?(@debugOpt) && @debugOpt
               expect(json_body[:type]).to eq "OUT"
 
               #wait for error log aggregation

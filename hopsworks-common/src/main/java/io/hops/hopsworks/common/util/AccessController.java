@@ -18,12 +18,17 @@ package io.hops.hopsworks.common.util;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -54,5 +59,19 @@ public class AccessController {
       .flatMap(ds -> ds.getDatasetSharedWithCollection().stream())
       .filter(DatasetSharedWith::getAccepted)
       .anyMatch(sds -> sds.getProject().getProjectTeamCollection().stream().anyMatch(t -> t.getUser().equals(user)));
+  }
+  
+  public Collection<ProjectTeam> getExtendedMembers(Dataset dataset) {
+    List<ProjectTeam> members = dataset.getProject().getProjectTeamCollection().stream()
+      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")) //filter serving user
+      .collect(Collectors.toCollection(ArrayList::new));
+    //get members of projects that this dataset has been shared with
+    List<ProjectTeam> sharedDatasets = dataset.getDatasetSharedWithCollection().stream()
+      .filter(DatasetSharedWith::getAccepted)
+      .flatMap((sds) -> sds.getProject().getProjectTeamCollection().stream())
+      .filter(pt -> !pt.getUser().getEmail().equals("serving@hopsworks.se")) //filter serving user
+      .collect(Collectors.toCollection(ArrayList::new));
+    members.addAll(sharedDatasets);
+    return members;
   }
 }

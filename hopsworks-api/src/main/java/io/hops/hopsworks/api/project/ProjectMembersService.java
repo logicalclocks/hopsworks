@@ -47,8 +47,13 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.constants.message.ResponseMessages;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
+import io.hops.hopsworks.common.dataset.util.DatasetPath;
+import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.project.MembersDTO;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.AccessController;
+import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
 import io.hops.hopsworks.exceptions.HopsSecurityException;
@@ -59,6 +64,7 @@ import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.TensorBoardException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
@@ -76,12 +82,14 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -99,6 +107,10 @@ public class ProjectMembersService {
   private NoCacheResponse noCacheResponse;
   @EJB
   private JWTHelper jWTHelper;
+  @EJB
+  private AccessController accessCtrl;
+  @EJB
+  private DatasetHelper datasetHelper;
 
   private Integer projectId;
 
@@ -226,5 +238,22 @@ public class ProjectMembersService {
 
     json.setSuccessMessage(ResponseMessages.MEMBER_REMOVED_FROM_TEAM);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(json).build();
+  }
+  
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @Path("/dataset/{name}")
+  public Response getDatasetMembers(@PathParam("name") String dsName,
+    @QueryParam("type") DatasetType datasetType)
+    throws ProjectException, DatasetException {
+    Project project = projectController.findProjectById(this.projectId);
+    String path = Utils.getProjectPath(project.getName()) + dsName;
+    DatasetPath dp = datasetHelper.getDatasetPath(project, path, datasetType);
+    Collection<ProjectTeam> membersCol = accessCtrl.getExtendedMembers(dp.getDataset());
+    GenericEntity<Collection<ProjectTeam>> members = new GenericEntity<Collection<ProjectTeam>>(membersCol) {
+    };
+    return Response.ok().entity(members).build();
   }
 }

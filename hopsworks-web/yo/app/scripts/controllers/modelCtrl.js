@@ -19,9 +19,9 @@
  * Controller for models service.
  */
 angular.module('hopsWorksApp')
-    .controller('ModelCtrl', ['$scope', '$timeout', 'growl', 'MembersService', 'UserService', 'ModalService', 'ModelService', 'ProjectService', 'StorageService', '$interval',
+    .controller('ModelCtrl', ['$scope', '$timeout', 'growl', 'UserService', 'ModalService', 'ModelService', 'ProjectService', 'ProjectMembershipService', 'StorageService', '$interval',
         '$routeParams', '$route', '$sce', '$window',
-        function($scope, $timeout, growl, MembersService, UserService, ModalService, ModelService, ProjectService, StorageService, $interval,
+        function($scope, $timeout, growl, UserService, ModalService, ModelService, ProjectService, ProjectMembershipService, StorageService, $interval,
             $routeParams, $route, $sce, $window) {
 
             var self = this;
@@ -112,12 +112,18 @@ angular.module('hopsWorksApp')
             }
 
             self.buildQuery = function() {
-                if(self.modelsNameFilter !== "" && self.modelsVersionFilter !== "") {
-                    self.query = '?filter_by=name_eq:' + self.modelsNameFilter + '&filter_by=version:' + self.modelsVersionFilter;
-                } else if(self.modelsNameFilter != "") {
-                    self.query = '?filter_by=name_eq:' + self.modelsNameFilter;
-                } else if(self.modelsVersionFilter != "") {
-                    self.query = '?filter_by=version:' + self.modelsVersionFilter;
+                self.query = '';
+                if(self.modelsNameFilter !== '') {
+                    self.query = self.query + '&filter_by=name_like:' + self.modelsNameFilter;
+                }
+                if(self.modelsVersionFilter !== '') {
+                    self.query = self.query + '&filter_by=version:' + self.modelsVersionFilter;
+                }
+                if(self.memberSelected.name !== 'All Members') {
+                    self.query = self.query + '&filter_by=user:' + self.memberSelected.uid + '&filter_by=user_project:' + self.memberSelected.projectId;
+                }
+                if(self.query.length > 0) {
+                    self.query = '?' + self.query.substring(1, self.query.length);
                 }
             };
 
@@ -368,22 +374,24 @@ angular.module('hopsWorksApp')
                 });
             };
 
-            self.getMembers = function () {
-              MembersService.query({id: self.projectId}).$promise.then(
-                function (success) {
-                  self.members = success;
-                  if(self.members.length > 0) {
-                    //Get current user team role
-                    self.members.forEach(function (member) {
-                        if(member.user.email !== 'serving@hopsworks.se') {
-                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname, 'uid': member.user.uid, 'email': member.user.email});
-                        }
-                    });
+            self.updateMember = function() {
+                //update models for member
+                self.getAll('Loading Models...');
+            };
 
-                    self.membersList.push({'name': 'All Members'});
-                    self.memberSelected = {'name': 'All Members'};
-                  }
-                  self.getAll('Loading Models...');
+            self.getMembers = function () {
+                ProjectMembershipService.getDatasetMembers(self.projectId, 'Models', 'DATASET').then(
+                function (success) {
+                    if(success.data.length > 0) {
+                        //Get current user team role
+                        self.membersList = [];
+                        success.data.forEach(function (member) {
+                            self.membersList.push({'name': member.user.fname + ' ' + member.user.lname + ':' + member.project.name, 'uid': member.user.uid, 'email': member.user.email, 'projectId': member.project.id});
+                        });
+                        self.membersList.push({'name': 'All Members', 'projectId': parseInt(self.projectId)});
+                        self.memberSelected = {'name': 'All Members', 'projectId': parseInt(self.projectId)};
+                    }
+                    self.getAll('Loading Models...');
                 },
                 function (error) {
                     if (typeof error.data.usrMsg !== 'undefined') {
