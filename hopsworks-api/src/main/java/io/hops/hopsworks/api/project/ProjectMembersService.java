@@ -246,7 +246,8 @@ public class ProjectMembersService {
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @Path("/dataset/{name}")
   public Response getDatasetMembers(@PathParam("name") String dsName,
-    @QueryParam("type") DatasetType datasetType)
+    @QueryParam("type") DatasetType datasetType,
+    @Context SecurityContext sc)
     throws ProjectException, DatasetException {
     Project project = projectController.findProjectById(this.projectId);
     String path = Utils.getProjectPath(project.getName()) + dsName;
