@@ -60,7 +60,7 @@ module ExecutionHelper
     id
   end
 
-  def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state)
+  def wait_for_execution_completed(project_id, job_name, execution_id, expected_end_state, expected_final_status: nil)
     wait_result = wait_for_me_time do
       get_execution(project_id, job_name, execution_id)
       unless is_execution_active(json_body)
@@ -68,9 +68,10 @@ module ExecutionHelper
       end
       found_state = json_body[:state].eql? expected_end_state
       pp "waiting execution completed - state:#{json_body[:state]}" if defined?(@debugOpt) && @debugOpt
-      { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}" }
+      { 'success' => found_state, 'msg' => "expected:#{expected_end_state} found:#{json_body[:state]}", "result" => json_body}
     end
     expect(wait_result["success"]).to be(true), wait_result["msg"]
+    expect(wait_result["result"][:finalStatus]).to eq(expected_final_status) unless expected_final_status.nil?
   end
 
   def find_executions(job_id)
@@ -93,7 +94,7 @@ module ExecutionHelper
     expect_status(201)
     execution_id = json_body[:id]
     app_id = wait_for_execution_active(project[:id], job_name, execution_id, "RUNNING", "appId")
-    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED")
+    wait_for_execution_completed(project[:id], job_name, execution_id, "FINISHED", expected_final_status: "SUCCEEDED")
     { app_id: app_id, execution_id: execution_id }
   end
 
