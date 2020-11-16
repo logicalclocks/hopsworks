@@ -22,6 +22,10 @@ describe "On #{ENV['OS']}" do
     restore_cluster_prov(@new_provenance_type, @new_provenance_archive_size, @old_provenance_type, @old_provenance_archive_size)
   end
 
+  #do not move this in the before :all block as the block is run after context :if condition
+  tls_enabled = ActiveModel::Type::Boolean.new.cast(Variables.find_by(id: "hops_rpc_tls")["value"])
+  pp "skipping tests requiring tls enabled" unless tls_enabled
+
   def setup()
     @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
     @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
@@ -67,7 +71,7 @@ describe "On #{ENV['OS']}" do
     @project2 = get_project_by_name("ProJect_28edf9c2")
   end
 
-  context 'synthetic' do
+  context 'synthetic', :if => tls_enabled do
     before :all do
       define_ids
     end
