@@ -446,11 +446,12 @@ module FeaturestoreHelper
         expect(result["readCurrent"].length).to eq(check["readCurrent"]) if check["readCurrent"]
         expect(result["writeCurrent"].length).to eq(check["writeCurrent"]) if check["writeCurrent"]
         { 'success' => true }
-      rescue
-        { 'success' => false, 'msg' => "usage not meeting expectation: " + result }
+      rescue RSpec::Expectations::ExpectationNotMetError => e
+        pp "rescued ex - retrying" if defined?(@debugOpt) && @debugOpt
+        { 'success' => false, 'ex' => e }
       end
     end
-    expect(wait_result["success"]).to be(true), wait_result["msg"]
+    raise wait_result["ex"] unless wait_result["success"]
   end
   def featuregroup_usage(project_id, fg_id, fs_id: nil, fs_project_id: nil, type: [])
     fs_project_id = project_id if fs_project_id.nil?
@@ -530,11 +531,12 @@ module FeaturestoreHelper
         expect(result["readCurrent"].length).to eq(check["readCurrent"]) if check["readCurrent"]
         expect(result["writeCurrent"].length).to eq(check["writeCurrent"]) if check["writeCurrent"]
         { 'success' => true }
-      rescue
-        { 'success' => false, 'msg' => "usage not meeting expectation: " + result }
+      rescue RSpec::Expectations::ExpectationNotMetError => e
+        pp "rescued ex - retrying" if defined?(@debugOpt) && @debugOpt
+        { 'success' => false, 'ex' => e }
       end
     end
-    expect(wait_result["success"]).to be(true), wait_result["msg"]
+    raise wait_result["ex"] unless wait_result["success"]
   end
   def trainingdataset_usage(project_id, td_id, fs_id: nil, fs_project_id: nil, type: [])
     fs_project_id = project_id if fs_project_id.nil?
