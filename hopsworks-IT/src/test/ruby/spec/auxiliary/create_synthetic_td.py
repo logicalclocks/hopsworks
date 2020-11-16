@@ -35,7 +35,7 @@ out_fs = connection.get_feature_store(name=out_fs_name)
 fg1 = in_fs.get_feature_group("fg1")
 fg2 = in_fs.get_feature_group("fg2")
 td_query = fg1.select_all().join(fg2.select_all())
-td = out_fs.create_training_dataset(out_td_name, version=1, description="synthetic td")
+td = out_fs.create_training_dataset(out_td_name, version=1, description="synthetic td", statistics_config=False)
 td.save(td_query)
 
 connection.close()
