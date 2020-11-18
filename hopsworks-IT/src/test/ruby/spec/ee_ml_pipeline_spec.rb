@@ -77,9 +77,11 @@ describe "On #{ENV['OS']}" do
     end
 
     def define_ids()
-      @fg_1 = "fg1"
-      @fg_2 = "fg2"
-      @fg_3 = "fg3"
+      @base_fg_prefix = "fg_1_"
+      @base_fg_count = 4
+      @base_fgs = []
+      @base_fg_count.times do |i| @base_fgs[i] = "#{@base_fg_prefix}#{i}" end
+      @derived_fg = "fg_2_1"
       @td_1 = "td1"
       @create_synth_fg_job = "create_synthetic_fg"
       @create_synth_td_job = "create_synthetic_td"
@@ -94,21 +96,34 @@ describe "On #{ENV['OS']}" do
           prepare_spark_job(@project1, @user1[:username], @create_synth_fg_job, "py")
         end
         expect(job_exists(@project1[:id], @create_synth_fg_job)).to be(true)
-        if featuregroup_exists(@project1[:id], @fg_1) && featuregroup_exists(@project1[:id], @fg_2)
-          pp "featuregroups already exist - skipping"
-        elsif featuregroup_exists(@project1[:id], @fg_1) || featuregroup_exists(@project1[:id], @fg_2)
+        #check if fgs exist
+        fg_or_exist = false
+        fg_and_exist = true
+        @base_fg_count.times do |i|
+          fg_or_exist = fg_or_exist || featuregroup_exists(@project1[:id], @base_fgs[i])
+          fg_and_exist = fg_and_exist && featuregroup_exists(@project1[:id], @base_fgs[i])
+        end
+        #all or nothing approach
+        if fg_or_exist && fg_and_exist
+          pp "all featuregroups already exist - skipping"
+        elsif fg_or_exist && !fg_and_exist
           raise "partial results - probably leftover, please clean before running test again"
         else
-          args = nil
+          args = [@base_fg_prefix, @base_fg_count]
           run_job(@project1, @create_synth_fg_job, args: args)
         end
-        expect(featuregroup_exists(@project1[:id], @fg_1)).to be(true)
-        expect(featuregroup_exists(@project1[:id], @fg_2)).to be(true)
+        #check results
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
       end
       it 'td' do
         create_session(@user1_params[:email], @user1_params[:password])
-        expect(featuregroup_exists(@project1[:id], @fg_1)).to be(true)
-        expect(featuregroup_exists(@project1[:id], @fg_2)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
+
         if job_exists(@project1[:id], @create_synth_td_job)
           pp "job exists - skipping"
         else
@@ -120,7 +135,7 @@ describe "On #{ENV['OS']}" do
           pp "training dataset already exists - skipping"
         else
           fs = get_featurestore(@project1[:id])
-          args = [fs["featurestoreName"], fs["featurestoreName"], @td_1]
+          args = [fs["featurestoreName"], fs["featurestoreName"], @base_fg_prefix, @base_fg_count, @td_1]
           run_job(@project1, @create_synth_td_job, args: args)
         end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
@@ -130,18 +145,22 @@ describe "On #{ENV['OS']}" do
       #depends on setup context
       it 'fg' do
         create_session(@user1_params[:email], @user1_params[:password])
-        expect(featuregroup_exists(@project1[:id], @fg_1)).to be(true)
-        expect(featuregroup_exists(@project1[:id], @fg_2)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
-        fg1 = get_featuregroup_checked(@project1[:id], @fg_1)[0]
+        fg0 = get_featuregroup_checked(@project1[:id], @base_fgs[0])[0]
         usage_type = ["READ_LAST", "WRITE_LAST", "READ_HISTORY", "WRITE_HISTORY"]
         check = {"readLast" => true, "writeLast" => true, "readHistory" => 2, "writeHistory" => 1}
-        check_featuregroup_usage(@project1[:id], fg1["id"], check, type: usage_type)
+        check_featuregroup_usage(@project1[:id], fg0["id"], check, type: usage_type)
       end
       it 'td' do
         create_session(@user1_params[:email], @user1_params[:password])
-        expect(featuregroup_exists(@project1[:id], @fg_1)).to be(true)
-        expect(featuregroup_exists(@project1[:id], @fg_2)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
         expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
         td1 = get_trainingdataset_checked(@project1[:id], @td_1)
         usage_type = ["READ_LAST", "WRITE_LAST", "READ_HISTORY", "WRITE_HISTORY"]
@@ -153,23 +172,95 @@ describe "On #{ENV['OS']}" do
       #depends on setup context
       it 'fg' do
         create_session(@user2_params[:email], @user2_params[:password])
-        expect(featuregroup_exists(@project2[:id], @fg_1, fs_project_id: @project1[:id])).to be(true)
-        expect(featuregroup_exists(@project2[:id], @fg_2, fs_project_id: @project1[:id])).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project2[:id], @base_fgs[i], fs_project_id: @project1[:id])).to be(true)
+        end
         expect(trainingdataset_exists(@project2[:id], @td_1, fs_project_id: @project1[:id])).to be(true)
-        fg1 = get_featuregroup_checked(@project2[:id], @fg_1, fs_project_id: @project1[:id])[0]
+        fg0 = get_featuregroup_checked(@project2[:id], @base_fgs[0], fs_project_id: @project1[:id])[0]
         usage_type = ["READ_LAST", "WRITE_LAST", "READ_HISTORY", "WRITE_HISTORY"]
         check = {"readLast" => true, "writeLast" => true, "readHistory" => 2, "writeHistory" => 1}
-        check_featuregroup_usage(@project2[:id], fg1["id"], check, type: usage_type, fs_project_id: @project1[:id])
+        check_featuregroup_usage(@project2[:id], fg0["id"], check, type: usage_type, fs_project_id: @project1[:id])
       end
       it 'td' do
         create_session(@user2_params[:email], @user2_params[:password])
-        expect(featuregroup_exists(@project2[:id], @fg_1, fs_project_id: @project1[:id])).to be(true)
-        expect(featuregroup_exists(@project2[:id], @fg_2, fs_project_id: @project1[:id])).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project2[:id], @base_fgs[i], fs_project_id: @project1[:id])).to be(true)
+        end
         expect(trainingdataset_exists(@project2[:id], @td_1, fs_project_id: @project1[:id])).to be(true)
         td1 = get_trainingdataset_checked(@project2[:id], @td_1, fs_project_id: @project1[:id])
         usage_type = ["READ_LAST", "WRITE_LAST", "READ_HISTORY", "WRITE_HISTORY"]
         check = {"writeLast" => true, "readHistory" => 0, "writeHistory" => 1}
         check_trainingdataset_usage(@project2[:id], td1["id"], check, type: usage_type, fs_project_id: @project1[:id])
+      end
+    end
+    context 'view local links of' do
+      it 'fg to td - using fg id' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        expect(job_exists(@project1[:id], @create_synth_td_job)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
+        expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
+
+        get_executions(@project1[:id], @create_synth_td_job, "")
+        expect(json_body[:count]).to eq(1)
+        td_app_id = json_body[:items][0][:appId]
+        result = prov_links_get(@project1, in_artifact: "#{@base_fgs[0]}_1")
+        expect(result["items"].length).to eq(1)
+        expect(result["items"][0]["in"]["entry"].length).to eq(1)
+        prov_verify_link(result, td_app_id, "#{@base_fgs[0]}_1", "#{@td_1}_1")
+      end
+      it 'fg to td - using td id' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        expect(job_exists(@project1[:id], @create_synth_td_job)).to be(true)
+        #make sure fgs exist
+        @base_fg_count.times do |i|
+          expect(featuregroup_exists(@project1[:id], @base_fgs[i])).to be(true)
+        end
+        expect(trainingdataset_exists(@project1[:id], @td_1)).to be(true)
+
+        get_executions(@project1[:id], @create_synth_td_job, "")
+        expect(json_body[:count]).to eq(1)
+        td_app_id = json_body[:items][0][:appId]
+        result = prov_links_get(@project1, out_artifact: "#{@td_1}_1")
+        expect(result["items"].length).to eq(1)
+        expect(result["items"][0]["in"]["entry"].length).to eq(@base_fg_count)
+        @base_fg_count.times do |i|
+          prov_verify_link(result, td_app_id, "#{@base_fgs[i]}_1", "#{@td_1}_1")
+        end
+      end
+    end
+    context 'view local prov state' do
+      it 'fg' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        result = get_ml_asset(@project1, ml_type: "FEATURE", ml_id: "#{@base_fgs[0]}_1")
+        expect(result[:count]).to eq 1
+
+        expect(result[:items][0][:xattrs][:entry][0][:key]).to eq "featurestore"
+        fg = JSON[result[:items][0][:xattrs][:entry][0][:value]]
+        #we expect 3 features in this featuregroup
+        expect(fg["fg_features"].length).to eq 3
+      end
+      it 'td' do
+        create_session(@user1_params[:email], @user1_params[:password])
+        result = get_ml_asset(@project1, ml_type: "TRAINING_DATASET", ml_id: "#{@td_1}_1")
+        expect(result[:count]).to eq 1
+
+        expect(result[:items][0][:xattrs][:entry][0][:key]).to eq "featurestore"
+        td = JSON[result[:items][0][:xattrs][:entry][0][:value]]
+        expect(td["td_features"].length).to eq(@base_fg_count)
+        @base_fg_count.times do |i|
+          td_fg = td["td_features"].select do |fg| fg["name"] == @base_fgs[i] end
+          expect(td_fg.length).to eq(1)
+          if i == 0
+            expect(td_fg[0]["fg_features"].length).to eq(3)
+          else
+            expect(td_fg[0]["fg_features"].length).to eq(2)
+          end
+        end
       end
     end
   end

@@ -49,7 +49,9 @@ module ProvOpsHelper
   def prov_verify_link(result, app_id, in_artifact, out_artifact)
     artifacts = result["items"].select do | a | a["appId"] == app_id end
     expect(artifacts.length).to eq(1)
-    expect(artifacts[0]["in"]["entry"][0]["value"]["mlId"]).to eq(in_artifact)
-    expect(artifacts[0]["out"]["entry"][0]["value"]["mlId"]).to eq(out_artifact)
+    expected_in_artifact = artifacts[0]["in"]["entry"].select do |i| i["value"]["mlId"] == in_artifact end
+    expect(expected_in_artifact.length).to eq(1)
+    expected_out_artifact = artifacts[0]["out"]["entry"].select do |i| i["value"]["mlId"] == out_artifact end
+    expect(expected_out_artifact.length).to eq(1)
   end
 end

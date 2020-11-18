@@ -12,14 +12,17 @@ while (arguments >= position):
     print ("Parameter %i: %s" % (position, sys.argv[position]))
     position = position + 1
 in_fs_name = None
-if arguments >= 1 :
-    in_fs_name = sys.argv[1]
 out_fs_name = None
-if arguments >= 2 :
+in_fg_prefix = "fg_1_"
+in_fg_count = 2
+out_fg_name = "fg_2_1"
+
+if arguments == 5 :
+    in_fs_name = sys.argv[1]
     out_fs_name = sys.argv[2]
-out_fg_name = "fg3"
-if arguments >= 3 :
-    out_fg_name = sys.argv[3]
+    in_fg_prefix = sys.argv[3]
+    in_fg_count = int(sys.argv[4])
+    out_fg_name = sys.argv[5]
 
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
@@ -34,13 +37,18 @@ if in_fs_name == out_fg_name :
     out_fs = in_fs
 else :
     out_fs = connection.get_feature_store(name=out_fs_name)
-
-fg1 = in_fs.get_feature_group("fg1")
-fg2 = in_fs.get_feature_group("fg2")
-fg3_data = fg1.select_all().join(fg2.select_all()).read()
-fg3 = out_fs.create_feature_group(out_fg_name, version=1, description="synthetic featuregroup",  primary_key=['id'],
+in_fgs = []
+out_fg_query = None
+for i in list(range(0,in_fg_count)):
+    in_fg_name = in_fg_prefix + str(i)
+    in_fgs.append(in_fs.get_feature_group(in_fg_name))
+    if out_fg_query is None:
+        out_fg_query = in_fgs[i].select_all()
+    else:
+        out_fg_query = out_fg_query.join(in_fgs[i].select_all())
+out_fg = out_fs.create_feature_group(out_fg_name, version=1, description="synthetic featuregroup",  primary_key=['id'],
                                   time_travel_format=None, statistics_config=False)
-fg3.save(fg3_data)
+out_fg.save(out_fg_query.read())
 
 connection.close()
 spark.stop()
