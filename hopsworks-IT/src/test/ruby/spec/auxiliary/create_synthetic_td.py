@@ -12,14 +12,16 @@ while (arguments >= position):
     print ("Parameter %i: %s" % (position, sys.argv[position]))
     position = position + 1
 in_fs_name = None
-if arguments >= 1 :
-    in_fs_name = sys.argv[1]
 out_fs_name = None
-if arguments >= 2 :
-    out_fs_name = sys.argv[2]
+in_fg_prefix = "fg_1_"
+in_fg_count = 2
 out_td_name = "td"
-if arguments >= 3 :
-    out_td_name = sys.argv[3]
+if arguments == 5 :
+    in_fs_name = sys.argv[1]
+    out_fs_name = sys.argv[2]
+    in_fg_prefix = sys.argv[3]
+    in_fg_count = int(sys.argv[4])
+    out_td_name = sys.argv[5]
 
 from pyspark.sql.types import *
 from pyspark.sql import SparkSession
@@ -32,9 +34,15 @@ connection = hsfs.connection()
 in_fs = connection.get_feature_store(name=in_fs_name)
 out_fs = connection.get_feature_store(name=out_fs_name)
 
-fg1 = in_fs.get_feature_group("fg1")
-fg2 = in_fs.get_feature_group("fg2")
-td_query = fg1.select_all().join(fg2.select_all())
+in_fgs = []
+td_query = None
+for i in list(range(0,in_fg_count)):
+    in_fg_name = in_fg_prefix + str(i)
+    in_fgs.append(in_fs.get_feature_group(in_fg_name))
+    if td_query is None:
+        td_query = in_fgs[i].select_all()
+    else:
+        td_query = td_query.join(in_fgs[i].select_all())
 td = out_fs.create_training_dataset(out_td_name, version=1, description="synthetic td", statistics_config=False)
 td.save(td_query)
 
