@@ -228,6 +228,16 @@ module ProvStateHelper
     expect(parsed_result["count"]).to eq 0
   end
 
+  def get_ml_asset(project, ml_type: nil, ml_id: nil)
+    resource = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states"
+    query_params = nil
+    query_params = append_to_query(query_params, "filter_by=ML_TYPE:#{ml_type}") unless ml_type.nil?
+    query_params = append_to_query(query_params, "filter_by=ML_ID:#{ml_id}") unless ml_id.nil?
+    get "#{resource}#{query_params}"
+    expect_status(200)
+    json_body
+  end
+
   def get_ml_asset_by_id(project, ml_type, ml_id, with_app_state)
     resource = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/provenance/states"
     query_params = "?filter_by=ML_TYPE:#{ml_type}&filter_by=ML_ID:#{ml_id}"
