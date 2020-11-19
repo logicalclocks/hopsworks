@@ -64,7 +64,6 @@ describe "On #{ENV['OS']}" do
       fgs[5][:id] = create_cached_featuregroup_checked(project[:id], featurestore_id, fgs[5][:name], featuregroup_description: fg5_description)
       fgs
     end
-
     def trainingdataset_setup(project)
       tds = Array.new
       featurestore_id = get_featurestore_id(project[:id])
@@ -94,7 +93,7 @@ describe "On #{ENV['OS']}" do
       tds
     end
 
-    context "same project" do
+    context "one project basic ops" do
       before :all do
         #make sure epipe is free of work
         wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
@@ -102,6 +101,7 @@ describe "On #{ENV['OS']}" do
 
         with_valid_session
         @project = create_project
+        pp "#{@project[:projectname]}" if defined?(@debugOpt) && @debugOpt
 
         @FEATURE_SIZE_1 = 10
         @FEATURE_SIZE_2 = 208
@@ -243,220 +243,243 @@ describe "On #{ENV['OS']}" do
           featurestore_search_test(@FEATURE_SIZE_3)
         end
       end
+    end
 
-      context 'group' do
-        after :each do
-          cleanup(@project, @fgs, @tds)
-        end
+    it 'three projects with shared content' do
+      clean_all_test_projects(spec: "search")
+    end
+    context 'three projects with shared content' do
+      before :all do
+        clean_all_test_projects(spec: "search")
+        @user1_params = {email: "user1_#{random_id}@email.com", first_name: "User", last_name: "1", password: "Pass123"}
+        @user1 = create_user_with_role(@user1_params, "HOPS_ADMIN")
+        pp "user email: #{@user1[:email]}" if defined?(@debugOpt) && @debugOpt
+        @user2_params = {email: "user2_#{random_id}@email.com", first_name: "User", last_name: "2", password: "Pass123"}
+        @user2 = create_user_with_role(@user2_params, "HOPS_ADMIN")
+        pp "user email: #{@user2[:email]}" if defined?(@debugOpt) && @debugOpt
 
-        it "local search featuregroup, training datasets with name, features, xattr" do
+        create_session(@user1_params[:email], @user1_params[:password])
+        @project1 = create_project
+        pp "project: #{@project1[:projectname]}" if defined?(@debugOpt) && @debugOpt
+        @project3 = create_project
+        pp "project: #{@project3[:projectname]}" if defined?(@debugOpt) && @debugOpt
+
+        create_session(@user2_params[:email], @user2_params[:password])
+        @project2 = create_project
+        pp "project: #{@project2[:projectname]}" if defined?(@debugOpt) && @debugOpt
+
+        #share featurestore (with training dataset)
+        create_session(@user1_params[:email], @user1_params[:password])
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project2[:projectname], datasetType: "FEATURESTORE")
+        share_dataset_checked(@project1, "#{@project1[:projectname].downcase}_featurestore.db", @project3[:projectname], datasetType: "FEATURESTORE")
+        accept_dataset_checked(@project3, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+
+        create_session(@user2_params[:email], @user2_params[:password])
+        accept_dataset_checked(@project2, "#{@project1[:projectname]}::#{@project1[:projectname].downcase}_featurestore.db", datasetType: "FEATURESTORE")
+      end
+      after :all do
+        create_session(@user1_params[:email], @user1_params[:password])
+        delete_project(@project1)
+        delete_project(@project3)
+        create_session(@user2_params[:email], @user2_params[:password])
+        delete_project(@project2)
+      end
+
+      context 'fgs - search by name, desc, features' do
+        before :all do
           #make sure epipe is free of work
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          @fgs = featuregroups_setup(@project)
-          @tds = trainingdataset_setup(@project)
-          #search
+          create_session(@user1_params[:email], @user1_params[:password])
+          @fgs1 = featuregroups_setup(@project1)
+
+          create_session(@user2_params[:email], @user2_params[:password])
+          @fgs2 = featuregroups_setup(@project2)
+
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-          expected_hits1 = [{:name => @fgs[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
-                            {:name => @fgs[3][:name], :highlight => "features", :parent_project => @project[:projectname]},
-                            {:name => @fgs[5][:name], :highlight => "description", :parent_project => @project[:projectname]}]
-          project_search_test(@project, "dog", "featuregroup", expected_hits1)
-          expected_hits2 = [{:name => @tds[1][:name], :highlight => "name", :parent_project => @project[:projectname]},
-                            {:name => @tds[2][:name], :highlight => "features", :parent_project => @project[:projectname]},
-                            {:name => @tds[3][:name], :highlight => "description", :parent_project => @project[:projectname]}]
-          project_search_test(@project, "dog", "trainingdataset", expected_hits2)
-          expected_hits3 = [{:name => @fgs[3][:name], :highlight => "name", :parent_project => @project[:projectname]}]
-          project_search_test(@project, "dog", "feature", expected_hits3)
         end
 
-        it 'featurestore pagination' do
-          fgs_nr = 15
-          tds_nr = 15
-          @fgs = Array.new
-          @tds = Array.new
+        it 'project local search' do
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          project_search_test(@project1, "dog", "featuregroup", expected_hits1)
 
+          expected_hits2 = [{:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]}]
+          project_search_test(@project1, "dog", "feature", expected_hits2)
+        end
+        it 'project shared search' do
+          create_session(@user2_params[:email], @user2_params[:password])
+          expected_hits1 = [{:name => @fgs2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
+                            {:name => @fgs2[5][:name], :highlight => "description", :parent_project => @project2[:projectname]},
+                            #shared featuregroups
+                            {:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          project_search_test(@project2, "dog", "featuregroup", expected_hits1)
+
+          expected_hits2 = [{:name => @fgs2[3][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+                            # shared features
+                            {:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]}]
+          project_search_test(@project2, "dog", "feature", expected_hits2)
+        end
+        it 'global search' do
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits1 = [{:name => @fgs1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[3][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                            {:name => @fgs1[5][:name], :highlight => "description", :parent_project => @project1[:projectname]},
+                            {:name => @fgs2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
+                            {:name => @fgs2[5][:name], :highlight => "description", :parent_project => @project2[:projectname]}]
+          global_search_test("dog", "featuregroup", expected_hits1)
+
+          expected_hits2 = [{:name => @fgs1[3][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @fgs2[3][:name], :highlight => 'name', :parent_project => @project2[:projectname]}]
+          global_search_test("dog", "feature", expected_hits2)
+        end
+      end
+      context 'tds - search by name, desc, features' do
+        before :all do
           #make sure epipe is free of work
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          #create 15 featuregroups
-          featurestore_id = get_featurestore_id(@project[:id])
-          fgs_nr.times do |i|
-            @fgs[i] = {}
-            @fgs[i][:name] = "fg_dog_#{i}"
-            @fgs[i][:id] = create_cached_featuregroup_checked(@project[:id], featurestore_id, @fgs[i][:name])
-          end
+          create_session(@user1_params[:email], @user1_params[:password])
+          @tds1 = trainingdataset_setup(@project1)
+          create_session(@user2_params[:email], @user2_params[:password])
+          @tds2 = trainingdataset_setup(@project2)
 
-          #create 15 training datasets
-          td_name = "#{@project[:projectname]}_Training_Datasets"
-          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          tds_nr.times do |i|
-            @tds[i] = {}
-            @tds[i][:name] = "td_dog_#{i}"
-            td_json, _ = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, connector, name: @tds[i][:name])
-            @tds[i][:id] = td_json[:id]
-          end
-
+          #make sure epipe is free of work
+          wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+          expect(wait_result["success"]).to be(true), wait_result["msg"]
+        end
+        it 'project local search' do
           wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
           expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-          #local search
-          local_featurestore_search(@project, "FEATUREGROUP", "dog")
-          local_featurestore_search(@project, "FEATUREGROUP", "dog", from:0, size:10)
-          expect(local_featurestore_search(@project, "FEATUREGROUP", "dog", from:0, size:10)["featuregroups"].length).to eq (10)
-          expect(local_featurestore_search(@project, "FEATUREGROUP", "dog", from:10, size:10)["featuregroups"].length).to eq(5)
-
-          expect(local_featurestore_search(@project, "TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
-          expect(local_featurestore_search(@project, "TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to eq(5)
-          #global search
-          expect(global_featurestore_search("FEATUREGROUP", "dog", from:0, size:10)["featuregroups"].length).to eq(10)
-          expect(global_featurestore_search("FEATUREGROUP", "dog", from:10, size:10)["featuregroups"].length).to be >= 5
-
-          expect(global_featurestore_search("TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
-          expect(global_featurestore_search("TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to be >= 5
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          project_search_test(@project1, "dog", "trainingdataset", expected_hits)
         end
+        it 'project shared search' do
+          create_session(@user2_params[:email], @user2_params[:password])
+          expected_hits = [{:name => @tds2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+                            {:name => @tds2[2][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
+                            {:name => @tds2[3][:name], :highlight => "description", :parent_project => @project2[:projectname]},
+                            # shared trainingdatasets
+                            {:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                            {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                            {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]}]
+          project_search_test(@project2, "dog", "trainingdataset", expected_hits)
+        end
+        it 'global tds' do
+          create_session(@user1_params[:email], @user1_params[:password])
+          expected_hits = [{:name => @tds1[1][:name], :highlight => 'name', :parent_project => @project1[:projectname]},
+                           {:name => @tds1[2][:name], :highlight => 'features', :parent_project => @project1[:projectname]},
+                           {:name => @tds1[3][:name], :highlight => "description", :parent_project => @project1[:projectname]},
+                           {:name => @tds2[1][:name], :highlight => 'name', :parent_project => @project2[:projectname]},
+                           {:name => @tds2[2][:name], :highlight => 'features', :parent_project => @project2[:projectname]},
+                           {:name => @tds2[3][:name], :highlight => "description", :parent_project => @project2[:projectname]}]
+          global_search_test("dog", "trainingdataset", expected_hits)
+        end
+      end
+      it 'should get correct accessor projects' do
+        #make sure epipe is free of work
+        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+        create_session(@user1_params[:email], @user1_params[:password])
+        featurestore1_id = get_featurestore_id(@project1[:id])
+        fg1_name = "fg_alex"
+        create_cached_featuregroup_checked(@project1[:id], featurestore1_id, fg1_name)
+
+        featurestore3_id = get_featurestore_id(@project3[:id])
+        fg2_name = "fg_john"
+        create_cached_featuregroup_checked(@project3[:id], featurestore3_id, fg2_name)
+
+        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
+        expect(wait_result["success"]).to be(true), wait_result["msg"]
+
+        create_session(@user1_params[:email], @user1_params[:password])
+        #have access to the featurestore both from parent(project1) and shared project(project3) (user1)
+        expected_hits1 = [{:name => fg1_name, :highlight => 'name', :parent_project => @project1[:projectname], :access_projects => 2}]
+        global_search_test("alex", "featuregroup", expected_hits1)
+
+        create_session(@user2_params[:email], @user2_params[:password])
+        #have access to the user1 project1 featurestore shared with me user2 in project2
+        expected_hits2 = [{:name => fg1_name, :highlight => 'name', :parent_project => @project1[:projectname], :access_projects => 1}]
+        global_search_test("alex", "featuregroup", expected_hits2)
+
+        #I see the featurestore of project2, but no access to it
+        expected_hits3 = [{:name => fg2_name, :highlight => 'name', :parent_project => @project3[:projectname], :access_projects => 0}]
+        global_search_test("john", "featuregroup", expected_hits3)
       end
     end
 
-    context "each with its own project" do
-      it "local search featuregroup, training datasets with name, features, xattr with shared training datasets" do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
-
+    context 'each with own project and clean environment' do
+      before :all do
+        clean_all_test_projects(spec: "search")
         with_valid_session
-        project1 = create_project
-        project2 = create_project
-        #share featurestore (with training dataset)
-        featurestore_name = project1[:projectname].downcase + "_featurestore.db"
-        featurestore1 = get_dataset(project1, featurestore_name)
-        request_access_by_dataset(featurestore1, project2)
-        share_dataset_checked(project1, featurestore_name, project2[:projectname], datasetType: "FEATURESTORE")
-        fgs1 = featuregroups_setup(project1)
-        fgs2 = featuregroups_setup(project2)
-        tds1 = trainingdataset_setup(project1)
-        tds2 = trainingdataset_setup(project2)
-        #search
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-        expected_hits1 = [{:name => fgs1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => fgs1[3][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => fgs1[5][:name], :highlight => "description", :parent_project => project1[:projectname]}]
-        project_search_test(project1, "dog", "featuregroup", expected_hits1)
-        expected_hits2 = [{:name => fgs2[1][:name], :highlight => 'name', :parent_project => project2[:projectname]},
-                          {:name => fgs2[3][:name], :highlight => 'features', :parent_project => project2[:projectname]},
-                          {:name => fgs2[5][:name], :highlight => "description", :parent_project => project2[:projectname]},
-                          #shared featuregroups
-                          {:name => fgs1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => fgs1[3][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => fgs1[5][:name], :highlight => "description", :parent_project => project1[:projectname]}]
-        project_search_test(project2, "dog", "featuregroup", expected_hits2)
-        expected_hits3 = [{:name => tds1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => tds1[2][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => tds1[3][:name], :highlight => "description", :parent_project => project1[:projectname]}]
-        project_search_test(project1, "dog", "trainingdataset", expected_hits3)
-        expected_hits4 = [{:name => tds2[1][:name], :highlight => 'name', :parent_project => project2[:projectname]},
-                          {:name => tds2[2][:name], :highlight => 'features', :parent_project => project2[:projectname]},
-                          {:name => tds2[3][:name], :highlight => "description", :parent_project => project2[:projectname]},
-                          # shared trainingdatasets
-                          {:name => tds1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => tds1[2][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => tds1[3][:name], :highlight => "description", :parent_project => project1[:projectname]}]
-        project_search_test(project2, "dog", "trainingdataset", expected_hits4)
-        expected_hits5 = [{:name => fgs1[3][:name], :highlight => 'name', :parent_project => project1[:projectname]}]
-        project_search_test(project1, "dog", "feature", expected_hits5)
-        expected_hits6 = [{:name => fgs2[3][:name], :highlight => 'name', :parent_project => project2[:projectname]},
-                          # shared features
-                          {:name => fgs1[3][:name], :highlight => 'name', :parent_project => project1[:projectname]}]
-        project_search_test(project2, "dog", "feature", expected_hits6)
+        @user_email = @user["email"]
+        pp "user: #{@user_email}" if defined?(@debugOpt) && @debugOpt
       end
-
-      it "global search featuregroup, training datasets with name, features, xattr" do
-        #make sure epipe is free of work
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-        with_valid_session
-        project1 = create_project
-        project2 = create_project
-        fgs1 = featuregroups_setup(project1)
-        fgs2 = featuregroups_setup(project2)
-        tds1 = trainingdataset_setup(project1)
-        tds2 = trainingdataset_setup(project2)
-
-        wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
-        expect(wait_result["success"]).to be(true), wait_result["msg"]
-
-        expected_hits1 = [{:name => fgs1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => fgs1[3][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => fgs1[5][:name], :highlight => "description", :parent_project => project1[:projectname]},
-                          {:name => fgs2[1][:name], :highlight => 'name', :parent_project => project2[:projectname]},
-                          {:name => fgs2[3][:name], :highlight => 'features', :parent_project => project2[:projectname]},
-                          {:name => fgs2[5][:name], :highlight => "description", :parent_project => project2[:projectname]}]
-        global_search_test("dog", "featuregroup", expected_hits1)
-        expected_hits2 = [{:name => tds1[1][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => tds1[2][:name], :highlight => 'features', :parent_project => project1[:projectname]},
-                          {:name => tds1[3][:name], :highlight => "description", :parent_project => project1[:projectname]},
-                          {:name => tds2[1][:name], :highlight => 'name', :parent_project => project2[:projectname]},
-                          {:name => tds2[2][:name], :highlight => 'features', :parent_project => project2[:projectname]},
-                          {:name => tds2[3][:name], :highlight => "description", :parent_project => project2[:projectname]}]
-        global_search_test("dog", "trainingdataset", expected_hits2)
-        expected_hits3 = [{:name => fgs1[3][:name], :highlight => 'name', :parent_project => project1[:projectname]},
-                          {:name => fgs2[3][:name], :highlight => 'name', :parent_project => project2[:projectname]}]
-        global_search_test("dog", "feature", expected_hits3)
+      before :each do
+        @project = create_project
+        pp "project: #{@project[:projectname]}" if defined?(@debugOpt) && @debugOpt
       end
+      after :each do
+        delete_project(@project)
+      end
+      it 'featurestore pagination' do
+        fgs_nr = 15
+        tds_nr = 15
+        @fgs = Array.new
+        @tds = Array.new
 
-      it "accessor projects for search result items" do
         #make sure epipe is free of work
         wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        with_valid_session
-        user1_email = @user["email"]
-        project1 = create_project
-        project2 = create_project
-        featurestore1_name = project1[:projectname].downcase + "_featurestore.db"
-        featurestore1_id = get_featurestore_id(project1[:id])
-        featurestore1 = get_dataset(project1, featurestore1_name)
-        #share featurestore from one of your projects with another one of your projects
-        request_access_by_dataset(featurestore1, project2)
-        share_dataset_checked(project1, featurestore1_name, project2[:projectname], datasetType: "FEATURESTORE")
-        fg1_name = "fg_dog1"
-        featuregroup1_id = create_cached_featuregroup_checked(project1[:id], featurestore1_id, fg1_name)
+        #create 15 featuregroups
+        featurestore_id = get_featurestore_id(@project[:id])
+        fgs_nr.times do |i|
+          @fgs[i] = {}
+          @fgs[i][:name] = "fg_dog_#{i}"
+          @fgs[i][:id] = create_cached_featuregroup_checked(@project[:id], featurestore_id, @fgs[i][:name])
+        end
 
-        #new user with a project shares featurestore with the previous user
-        reset_and_create_session
-        user2_email = @user["email"]
-        project3 = create_project
-        featurestore3_name = project3[:projectname].downcase + "_featurestore.db"
-        featurestore3_id = get_featurestore_id(project3[:id])
-        featurestore3 = get_dataset(project3, featurestore3_name)
-        fg3_name = "fg_cat1"
-        featuregroup3_id = create_cached_featuregroup_checked(project3[:id], featurestore3_id, fg3_name)
-        create_session(user1_email, "Pass123")
-        request_access_by_dataset(featurestore3, project2)
-        create_session(user2_email, "Pass123")
-        share_dataset_checked(project3, featurestore3_name, project2[:projectname], datasetType: "FEATURESTORE")
-
-        create_session(user1_email, "Pass123")
+        #create 15 training datasets
+        td_name = "#{@project[:projectname]}_Training_Datasets"
+        connector = get_hopsfs_training_datasets_connector(@project[:projectname])
+        tds_nr.times do |i|
+          @tds[i] = {}
+          @tds[i][:name] = "td_dog_#{i}"
+          td_json, _ = create_hopsfs_training_dataset_checked(@project[:id], featurestore_id, connector, name: @tds[i][:name])
+          @tds[i][:id] = td_json[:id]
+        end
 
         wait_result = epipe_wait_on_mutations(wait_time: 30, repeat: 2)
         expect(wait_result["success"]).to be(true), wait_result["msg"]
 
-        #have access to the featurestore both from parent(project1) and shared project(project2) (user1)
-        expected_hits1 = [{:name => fg1_name, :highlight => 'name', :parent_project => project1[:projectname], :access_projects => 2}]
-        global_search_test("dog", "featuregroup", expected_hits1)
-        #have access to the user2 project(project3) featurestore shared with me (user1)
-        expected_hits2 = [{:name => fg3_name, :highlight => 'name', :parent_project => project3[:projectname], :access_projects => 1}]
-        global_search_test("cat", "featuregroup", expected_hits2)
-        #I see the featuregroup of user1, but no access to it
-        create_session(user2_email, "Pass123")
-        expected_hits3 = [{:name => fg1_name, :highlight => 'name', :parent_project => project1[:projectname], :access_projects => 0}]
-        global_search_test("dog", "featuregroup", expected_hits3)
+        #local search
+        local_featurestore_search(@project, "FEATUREGROUP", "dog", from:0, size:10)
+        expect(local_featurestore_search(@project, "FEATUREGROUP", "dog", from:0, size:10)["featuregroups"].length).to eq (10)
+        expect(local_featurestore_search(@project, "FEATUREGROUP", "dog", from:10, size:10)["featuregroups"].length).to eq(5)
+
+        expect(local_featurestore_search(@project, "TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
+        expect(local_featurestore_search(@project, "TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to eq(5)
+        #global search
+        expect(global_featurestore_search("FEATUREGROUP", "dog", from:0, size:10)["featuregroups"].length).to eq(10)
+        expect(global_featurestore_search("FEATUREGROUP", "dog", from:10, size:10)["featuregroups"].length).to be >= 5
+
+        expect(global_featurestore_search("TRAININGDATASET", "dog", from:0, size:10)["trainingdatasets"].length).to eq(10)
+        expect(global_featurestore_search("TRAININGDATASET", "dog", from:10, size:10)["trainingdatasets"].length).to be >= 5
       end
     end
   end
