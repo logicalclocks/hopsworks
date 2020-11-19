@@ -33,6 +33,7 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.dialect.SparkSqlDialect;
 import org.junit.Assert;
 import org.junit.Before;
@@ -445,6 +446,81 @@ public class TestConstructorController {
         "FROM `fs1`.`fg1_1` `fg0` " +
         "INNER JOIN `fs1`.`fg2_1` `fg1` ON `fg0`.`ft1` = `fg1`.`ft2` " +
         "INNER JOIN `fs1`.`fg3_1` `fg2` ON `fg0`.`ft1` = `fg2`.`ft1`", query);
+  }
+
+  @Test
+  public void testThreeConditionsOn() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft3", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = constructorController.getCondition(join, false);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` AND `fg1`.`ft3` = `fg2`.`ft3`",
+        sqlConditionStr);
+  }
+
+  @Test
+  public void testFourConditionsOn() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft3", true));
+    availableLeft.add(new Feature("ft4", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+    availableRight.add(new Feature("ft4", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = constructorController.getCondition(join, false);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` " +
+            "AND `fg1`.`ft3` = `fg2`.`ft3` AND `fg1`.`ft4` = `fg2`.`ft4`",
+        sqlConditionStr);
+  }
+
+  @Test
+  public void testThreeConditionsLeftRight() {
+    List<Feature> availableLeft = new ArrayList<>();
+    availableLeft.add(new Feature("ft1", true));
+    availableLeft.add(new Feature("ft2", true));
+    availableLeft.add(new Feature("ft4", true));
+
+    List<Feature> availableRight = new ArrayList<>();
+    availableRight.add(new Feature("ft1", true));
+    availableRight.add(new Feature("ft2", true));
+    availableRight.add(new Feature("ft3", true));
+
+    Query leftQuery = new Query("fs1", "project_fs1", fg1, "fg1", availableLeft, availableLeft);
+    Query rightQuery = new Query("fs1", "project_fs1", fg2, "fg2", availableRight, availableRight);
+
+    Join join = new Join(leftQuery, rightQuery, availableLeft, availableRight, JoinType.INNER);
+    leftQuery.setJoins(Arrays.asList(join));
+
+    SqlNode sqlNode = constructorController.getCondition(join, false);
+    String sqlConditionStr = sqlNode.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).toString();
+    Assert.assertEquals("`fg1`.`ft1` = `fg2`.`ft1` AND `fg1`.`ft2` = `fg2`.`ft2` AND `fg1`.`ft4` = `fg2`.`ft3`",
+        sqlConditionStr);
   }
 
   @Test

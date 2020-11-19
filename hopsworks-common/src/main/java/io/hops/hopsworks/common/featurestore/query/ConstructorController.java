@@ -525,17 +525,18 @@ public class ConstructorController {
    * @return
    */
   private SqlNode getOnCondition(Join join, boolean online) {
-    if (join.getOn().size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (Feature f : join.getOn()) {
-        conditionList.add(generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(), f, f,
-          online));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
+    if (join.getOn().size() == 1) {
       return generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(), join.getOn().get(0),
-        join.getOn().get(0), online);
+          join.getOn().get(0), online);
     }
+
+    SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+    for (Feature f : join.getOn()) {
+      conditionList = compactEquality(conditionList);
+      conditionList.add(
+          generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(), f, f, online));
+    }
+    return SqlStdOperatorTable.AND.createCall(conditionList);
   }
   
   /**
@@ -543,17 +544,30 @@ public class ConstructorController {
    * @return
    */
   private SqlNode getLeftRightCondition(Join join, boolean online)  {
-    if (join.getLeftOn().size() > 1) {
-      SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
-      for (int i = 0; i < join.getLeftOn().size(); i++) {
-        conditionList.add(generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(),
-          join.getLeftOn().get(i), join.getRightOn().get(i), online));
-      }
-      return  SqlStdOperatorTable.AND.createCall(conditionList);
-    } else {
+    if (join.getLeftOn().size() == 1) {
       return generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(),
-        join.getLeftOn().get(0), join.getRightOn().get(0), online);
+          join.getLeftOn().get(0), join.getRightOn().get(0), online);
     }
+
+    SqlNodeList conditionList = new SqlNodeList(SqlParserPos.ZERO);
+    for (int i = 0; i < join.getLeftOn().size(); i++) {
+      conditionList = compactEquality(conditionList);
+      conditionList.add(generateEqualityCondition(join.getLeftQuery().getAs(), join.getRightQuery().getAs(),
+        join.getLeftOn().get(i), join.getRightOn().get(i), online));
+    }
+    return  SqlStdOperatorTable.AND.createCall(conditionList);
+  }
+
+  // if there are already two elements in the list, then compact the list
+  // using the equality operator
+  private SqlNodeList compactEquality(SqlNodeList conditionList) {
+    if (conditionList.size() < 2) {
+      return conditionList;
+    }
+
+    SqlNodeList compactedList = new SqlNodeList(SqlParserPos.ZERO);
+    compactedList.add(SqlStdOperatorTable.AND.createCall(conditionList));
+    return compactedList;
   }
   
   /**
