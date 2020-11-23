@@ -107,6 +107,7 @@ public class CloudManager {
   private boolean firstHeartbeat = true;
   private Instant beginningOfHeartbeat;
   private boolean shouldLookForMissingNodes = false;
+  private boolean isJwtSet = false;
   
   @PostConstruct
   public void init() {
@@ -164,6 +165,12 @@ public class CloudManager {
 
         if (firstHeartbeat) {
           firstHeartbeat = false;
+        }
+        if (!isJwtSet) {
+          settings.refreshCache();
+          if (!settings.getServiceMasterJWT().isEmpty()) {
+            isJwtSet = true;
+          }
         }
       } catch (ServiceDiscoveryException ex) {
         //the resource manager or the namenode is not up
