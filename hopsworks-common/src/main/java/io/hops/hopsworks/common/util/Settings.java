@@ -179,10 +179,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_HIVE_SCRATCHDIR_DELAY = "hive_scratchdir_delay";
   private static final String VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL = "hive_scratchdir_cleaner_interval";
   private static final String VARIABLE_HIVE_DEFAULT_QUOTA = "hive_default_quota";
-  private static final String VARIABLE_HIVE_LLAP_SLIDER_DIR = "hive_llap_slider_dir";
-  private static final String VARIABLE_HIVE_LLAP_LOCAL_DIR = "hive_llap_local_dir";
-  public static final String VARIABLE_LLAP_APP_ID = "hive_llap_app_id";
-  public static final String VARIABLE_LLAP_START_PROC = "hive_llap_start_proc";
 
   private static final String VARIABLE_TWOFACTOR_AUTH = "twofactor_auth";
   private static final String VARIABLE_TWOFACTOR_EXCLUD = "twofactor-excluded-groups";
@@ -241,7 +237,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_LIVY_VERSION = "livy_version";
   private static final String VARIABLE_HIVE2_VERSION = "hive2_version";
   private static final String VARIABLE_TEZ_VERSION = "tez_version";
-  private static final String VARIABLE_SLIDER_VERSION = "slider_version";
   private static final String VARIABLE_SPARK_VERSION = "spark_version";
   private static final String VARIABLE_FLINK_VERSION = "flink_version";
   private static final String VARIABLE_EPIPE_VERSION = "epipe_version";
@@ -540,8 +535,6 @@ public class Settings implements Serializable {
       HOPS_EXAMPLES_VERSION = setVar(VARIABLE_HOPSEXAMPLES_VERSION, HOPS_EXAMPLES_VERSION);
       HIVE_SUPERUSER = setStrVar(VARIABLE_HIVE_SUPERUSER, HIVE_SUPERUSER);
       HIVE_WAREHOUSE = setStrVar(VARIABLE_HIVE_WAREHOUSE, HIVE_WAREHOUSE);
-      HIVE_LLAP_SLIDER_DIR = setStrVar(VARIABLE_HIVE_LLAP_SLIDER_DIR, HIVE_LLAP_SLIDER_DIR);
-      HIVE_LLAP_LOCAL_FS_DIR = setStrVar(VARIABLE_HIVE_LLAP_LOCAL_DIR, HIVE_LLAP_LOCAL_FS_DIR);
       HIVE_SCRATCHDIR = setStrVar(VARIABLE_HIVE_SCRATCHDIR, HIVE_SCRATCHDIR);
       HIVE_SCRATCHDIR_DELAY = setStrVar(VARIABLE_HIVE_SCRATCHDIR_DELAY, HIVE_SCRATCHDIR_DELAY);
       HIVE_SCRATCHDIR_CLEANER_INTERVAL = setStrVar(VARIABLE_HIVE_SCRATCHDIR_CLEANER_INTERVAL,
@@ -657,7 +650,6 @@ public class Settings implements Serializable {
       LIVY_VERSION = setStrVar(VARIABLE_LIVY_VERSION, LIVY_VERSION);
       HIVE2_VERSION = setStrVar(VARIABLE_HIVE2_VERSION, HIVE2_VERSION);
       TEZ_VERSION = setStrVar(VARIABLE_TEZ_VERSION, TEZ_VERSION);
-      SLIDER_VERSION = setStrVar(VARIABLE_SLIDER_VERSION, SLIDER_VERSION);
       SPARK_VERSION = setStrVar(VARIABLE_SPARK_VERSION, SPARK_VERSION);
       FLINK_VERSION = setStrVar(VARIABLE_FLINK_VERSION, FLINK_VERSION);
       EPIPE_VERSION = setStrVar(VARIABLE_EPIPE_VERSION, EPIPE_VERSION);
@@ -1104,20 +1096,6 @@ public class Settings implements Serializable {
   public synchronized String getHiveWarehouse() {
     checkCache();
     return HIVE_WAREHOUSE;
-  }
-
-  private String HIVE_LLAP_SLIDER_DIR = "/home/hive/.slider";
-
-  public synchronized String getHiveLlapSliderDir() {
-    checkCache();
-    return HIVE_LLAP_SLIDER_DIR;
-  }
-
-  private String HIVE_LLAP_LOCAL_FS_DIR = "/srv/hops/apache-hive/bin/llap";
-
-  public synchronized String getHiveLlapLocalDir() {
-    checkCache();
-    return HIVE_LLAP_LOCAL_FS_DIR;
   }
 
   private String HIVE_SCRATCHDIR = "/tmp/hive";
@@ -3187,13 +3165,6 @@ public class Settings implements Serializable {
   public synchronized String getSparkVersion() {
     checkCache();
     return SPARK_VERSION;
-  }
-
-  private String SLIDER_VERSION;
-
-  public synchronized String getSliderVersion() {
-    checkCache();
-    return SLIDER_VERSION;
   }
 
   private String TEZ_VERSION;
