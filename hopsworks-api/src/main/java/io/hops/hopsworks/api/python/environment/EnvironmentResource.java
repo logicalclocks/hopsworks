@@ -163,18 +163,19 @@ public class EnvironmentResource {
     }
   }
   
-  @ApiOperation(value = "Create an environment from a YAML file", response = EnvironmentDTO.class)
+  @ApiOperation(value = "Create an environment from a import file", response = EnvironmentDTO.class)
   @POST
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response postYml(EnvironmentYmlDTO environmentYmlDTO,
+  public Response postImport(EnvironmentImportDTO environmentImportDTO,
     @Context UriInfo uriInfo,
     @Context SecurityContext sc)
     throws PythonException, ServiceException, DatasetException, UnsupportedEncodingException, ProjectException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    String version = environmentController.createProjectDockerImageFromYml(getYmlPath(environmentYmlDTO.getYmlPath()),
-      environmentYmlDTO.getInstallJupyter(), user, project);
+    String version = environmentController.createProjectDockerImageFromImport(
+        getYmlPath(environmentImportDTO.getPath()),
+        environmentImportDTO.getInstallJupyter(), user, project);
     EnvironmentDTO dto = buildEnvDTO(uriInfo,null, version);
     return Response.created(dto.getHref()).entity(dto).build();
   }

@@ -87,6 +87,12 @@ module CondaHelper
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
+  def upload_requirements
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/requirements.txt",
+                    "/Projects/#{@project[:projectname]}/Resources/requirements.txt", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def get_conda_envs_locally
     cmd = "#{@conda_bin} env list --json"
     Open3.popen3(cmd) do |_, stdout, _, _|
@@ -126,9 +132,9 @@ module CondaHelper
     end
   end
 
-  def create_env_yml(projectId, ymlPath, installJupyter)
+  def create_env_from_file(projectId, path, installJupyter)
     post "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments",
-         {ymlPath: ymlPath, installJupyter: installJupyter}
+         {path: path, installJupyter: installJupyter}
   end
 
   def export_env(projectId, version)

@@ -36,53 +36,62 @@
  * DAMAGES OR  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package io.hops.hopsworks.api.python.environment;
+'use strict';
+/*
+ * Controller for the file selection dialog.
+ */
+angular.module('hopsWorksApp')
+    .controller('SelectEnvImportCtrl', ['$uibModalInstance', 'DatasetBrowserService', 'growl', 'projectId', 'regex', 'errorMsg', 'type',
+        function($uibModalInstance, DatasetBrowserService, growl, projectId, regex, errorMsg, type) {
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+            var self = this;
+            self.selectedFilePath;
+            self.environmentImportDef = {};
+            self.isDir = false;
+            self.selected = -1;
+            self.datasetBrowser = new DatasetBrowserService(projectId, "ALL", 114);
+            self.datasetBrowser.getAll();
+            self.type = type;
 
-import javax.xml.bind.annotation.XmlRootElement;
+            /**
+             * Close the modal dialog.
+             * @returns {undefined}
+             */
+            self.close = function() {
+                $uibModalInstance.dismiss('cancel');
+            };
 
-@XmlRootElement
-@ApiModel(value="EnvironmentYmlDTO")
-public class EnvironmentYmlDTO {
+            /**
+             * Select a file.
+             * @param {type} filepath
+             * @param {type} isDirectory
+             * @returns {undefined}
+             */
+            self.select = function(filepath, isDirectory) {
+                self.selectedFilePath = filepath;
+                self.isDir = isDirectory;
+            };
 
-  private String ymlPath;
-  private Boolean installJupyter;
-  
-  public EnvironmentYmlDTO() {
-  }
-  
-  public EnvironmentYmlDTO(String ymlPath, Boolean installJupyter) {
-    this.ymlPath = ymlPath;
-    this.installJupyter = installJupyter;
-  }
-  
-  @ApiModelProperty(value = "Path to a yml with libraries to be installed.")
-  public String getYmlPath() {
-    return ymlPath;
-  }
+            self.confirmSelection = function(pythonCtrl, isDirectory) {
 
-  public void setYmlPath(String ymlPath) {
-    this.ymlPath = ymlPath;
-  }
+                if (self.environmentImportDef.path === "") {
+                    growl.error("Please select a requirements.txt or .yml file for your Anaconda environment.", {
+                        title: "No environment file",
+                        ttl: 15000
+                    });
+                }  else {
+                    $uibModalInstance.close(self.environmentImportDef);
+                }
+            };
 
-  
-  @ApiModelProperty(value = "Install Jupyter in the environment.")
-  public Boolean getInstallJupyter() {
-    return installJupyter;
-  }
-  
-  public void setInstallJupyter(Boolean installJupyter) {
-    this.installJupyter = installJupyter;
-  }
-  
-  @Override
-  public String toString() {
-    return "EnvironmentYmlDTO{" +
-      "ymlPath='" + getYmlPath() + '\'' +
-      ", installJupyter=" + installJupyter +
-      '}';
-  }
-
-}
+            self.selectEnvImport = function(pythonCtrl, index, file) {
+                if (file.attributes.dir) {
+                    self.select(file.attributes.path, true);
+                    self.datasetBrowser.select(file, index)
+                } else {
+                    self.select(file.attributes.path, false);
+                    self.environmentImportDef.path = file.attributes.path;
+                }
+            };
+        }
+    ]);

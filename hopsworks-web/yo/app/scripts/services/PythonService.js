@@ -38,7 +38,7 @@ angular.module('hopsWorksApp')
               createEnvironmentFromVersion: function (projectId, version) {
                 return $http.post('/api/project/' + projectId + '/python/environments/' + version + '?action=create');
               },
-              createEnvironmentFromYml: function (projectId, environment) {
+              createEnvironmentFromImport: function (projectId, environment) {
                 var regReq = {
                   method: 'POST',
                   url: '/api/project/' + projectId + '/python/environments',
