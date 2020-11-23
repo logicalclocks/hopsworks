@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.featurestore.commit;
 
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.AbstractFacade;
@@ -30,6 +31,7 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -83,6 +85,7 @@ public class CommitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Commit to Feature Group", response = CommitDTO.class)
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response commitFeatureGroup(@Context UriInfo uriInfo, CommitDTO commitDTO, @Context SecurityContext sc)
       throws FeaturestoreException {
     FeatureGroupCommit featureGroupCommit = featureGroupCommitController.createHudiFeatureGroupCommit(featuregroup,
@@ -98,6 +101,7 @@ public class CommitResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get Feature Group Commit", response = CommitDTO.class)
+  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response getFeatureGroupCommit(@Context UriInfo uriInfo, @BeanParam Pagination pagination,
                                         @BeanParam CommitBeanParam commitBeanParam, @Context SecurityContext sc) {
 
