@@ -219,6 +219,15 @@ describe "On #{ENV['OS']}" do
               add_featuregroup_tag(project.id, featurestore_id, parsed_json["id"], @tags[0], value: "abc123")
               expect_status_details(400, error_code: 270100)
             end
+
+            it "should not be able to attach key only tags which are not defined" do
+              project = get_project
+              featurestore_id = get_featurestore_id(project.id)
+              json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
+              parsed_json = JSON.parse(json_result)
+              add_featuregroup_tag(project.id, featurestore_id, parsed_json["id"], @tags[0])
+              expect_status_details(400, error_code: 270100)
+            end
           end
 
           context "training datasets" do
@@ -241,6 +250,16 @@ describe "On #{ENV['OS']}" do
               json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
               parsed_json = JSON.parse(json_result)
               add_training_dataset_tag(project.id, featurestore_id, parsed_json["id"], @tags[1], value: "abc123")
+              expect_status_details(400, error_code: 270100)
+            end
+
+            it "should not be able to attach key only tags which are not defined" do
+              project = get_project
+              featurestore_id = get_featurestore_id(project.id)
+              connector = get_hopsfs_training_datasets_connector(project[:projectname])
+              json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+              parsed_json = JSON.parse(json_result)
+              add_training_dataset_tag(project.id, featurestore_id, parsed_json["id"], @tags[1])
               expect_status_details(400, error_code: 270100)
             end
           end
