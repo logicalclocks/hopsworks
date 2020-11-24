@@ -497,14 +497,11 @@ module FeaturestoreHelper
     expect_status_details(200)
   end
 
-  def commit_cached_featuregroup(project_id, featurestore_id, featuregroup_id, commit_metadata_string: nil)
-    create_featuregroup_commit_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/"  + featuregroup_id.to_s + "/commits"
-    if commit_metadata_string == nil
-        commit_metadata_string = '{"commitDateString":"20201024221125","rowsInserted":4,"rowsUpdated":0,"rowsDeleted":0}'
-    end
-    commit_metadata  = JSON.parse(commit_metadata_string)
-    json_result = post create_featuregroup_commit_endpoint, commit_metadata
-    return json_result
+  def commit_cached_featuregroup(project_id, featurestore_id, featuregroup_id, commit_metadata: nil)
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits"
+    commit_metadata = commit_metadata == nil ?
+                          {commitDateString:"20201024221125",rowsInserted:4,rowsUpdated:0,rowsDeleted:0} : commit_metadata
+    post endpoint, commit_metadata.to_json
   end
 
   def trainingdataset_exists(project_id, name, version: 1, fs_id: nil, fs_project_id: nil)

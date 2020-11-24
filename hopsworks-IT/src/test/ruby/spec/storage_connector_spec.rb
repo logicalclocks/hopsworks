@@ -505,48 +505,6 @@ describe "On #{ENV['OS']}" do
         setVar("aws_instance_role", "false")
       end
 
-      it "should be able to update S3 connector in the featurestore when IAM Role is set to true" do
-        setVar("aws_instance_role", "false")
-        project = get_project
-        create_session(project[:username], "Pass123")
-        featurestore_id = get_featurestore_id(project.id)
-        s3_connector_name = "s3_connector_#{random_id}"
-        with_access_keys = false
-        encryption_algorithm = "AES256"
-        encryption_key = ""
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = true;
-        featurestore_id = get_featurestore_id(project.id)
-        json_result1, connector_name1 = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                            encryption_algorithm, encryption_key,
-                                                                            access_key, secret_key,
-                                                                            bucket: "testbucket")
-
-        parsed_json1 = JSON.parse(json_result1)
-        expect_status(201)
-        # reset the session and now login with aws instance role
-        reset_session
-        setVar("aws_instance_role", "true")
-        create_session(project[:username], "Pass123")
-        connector_id = parsed_json1["id"]
-        # provide a different connector name when updating
-        json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id,
-                                                            s3_connector_name, with_access_keys, bucket:
-                                                                "testbucket2")
-        parsed_json2 = JSON.parse(json_result2)
-
-        json_result3 = get "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id
-                                                                                                          .to_s +
-                               "/storageconnectors/S3/" + connector_id.to_s
-        expect_status(200)
-        parsed_json3 = JSON.parse(json_result3)
-        expect(connector_name2 != connector_name1).to be true
-        expect(parsed_json3["accessKey"] == parsed_json1["accessKey"]).to be true
-        expect(parsed_json3["secretKey"] == parsed_json1["secretKey"]).to be true
-        setVar("aws_instance_role", "false")
-      end
-
       it "should be able to update JDBC connector in the featurestore" do
         project = get_project
         create_session(project[:username], "Pass123")
