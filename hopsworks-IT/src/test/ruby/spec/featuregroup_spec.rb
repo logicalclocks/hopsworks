@@ -773,6 +773,10 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         fg_details = JSON.parse(json_result)
         expect(fg_details["inputFormat"]).to eql("org.apache.hudi.hadoop.HoodieParquetInputFormat")
+
+        # The location should contain the IP not the consul domain name of the namenode
+        uri = URI(parsed_json["location"])
+        expect(uri.host).not_to eql("namenode.service.consul")
       end
 
       it "should fail when creating hudi cached featuregroup without primary key" do
@@ -788,30 +792,29 @@ describe "On #{ENV['OS']}" do
         ]
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
+        create_cached_featuregroup(project.id, featurestore_id, features: features, time_travel_format: "HUDI")
         expect_status(400)
       end
 
       it "should fail when creating hudi cached featuregroup without partition key" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
+        create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
         expect_status(400)
       end
 
       it "should be able to bulk insert into existing hudi enabled offline cached featuregroup" do
-        hopsworks_user = getHopsworksUser()
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
+        path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
         hoodie_path = path + "/.hoodie"
-        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
-        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
-        json_result = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,rowsInserted:4,rowsUpdated:0,rowsDeleted:0}
+        json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
         expect_status(200)
         expect(parsed_json.key?("commitID")).to be true
@@ -824,22 +827,22 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to upsert into existing hudi enabled offline cached featuregroup" do
-        hopsworks_user = getHopsworksUser()
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
-        path = "/apps/hive/warehouse/#{project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
+        path = "/apps/hive/warehouse/#{@project['projectname'].downcase}_featurestore.db/#{featuregroup_name}_#{featuregroup_version}"
         hoodie_path = path + "/.hoodie"
-        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
-        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
-        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
-        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
-        json_result = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        json_result = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
         parsed_json = JSON.parse(json_result)
+
         expect_status(200)
         expect(parsed_json.key?("commitID")).to be true
         expect(parsed_json["commitID"] == 1603650176000).to be true
@@ -851,81 +854,187 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to find latest commit timestamp for existing hudi enabled offline cached featuregroup" do
-        hopsworks_user = getHopsworksUser()
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        featurestore_name = project['projectname'].downcase + "_featurestore"
-        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
         hoodie_path = path + "/.hoodie"
-        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
-        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
-        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
-        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
-        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/query"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
+
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
         expect_status(200)
-        hudi_fg = parsed_json["hudiCachedFeatureGroups"].first
-        start_timestamp = hudi_fg["leftFeatureGroupStartTimestamp"]
-        end_timestamp = hudi_fg["leftFeatureGroupEndTimestamp"]
-        expect(start_timestamp == 0).to be true
-        expect(end_timestamp == 1603650176000).to be true
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to be(1603650176000)
       end
 
       it "should be able to enable hudi featuregroup as online and retrieve correct online/offline queries" do
-        hopsworks_user = getHopsworksUser()
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        project_name = project['projectname']
+        featurestore_id = get_featurestore_id(@project[:id])
+        project_name = @project['projectname']
         featurestore_name = project_name.downcase + "_featurestore"
-        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI", online: true)
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI", online: true)
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
-        featuregroup_version = parsed_json["version"]
-        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
         hoodie_path = path + "/.hoodie"
-        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
-        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
-        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/query"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
         json_fs_query = '{"leftFeatureGroup":' +  json_result + ',"leftFeatures":' + parsed_json["features"].to_json + ',"joins":[]}'
         json_result = put create_query_endpoint, json_fs_query
         parsed_json = JSON.parse(json_result)
         expect(parsed_json["query"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `fg0` `fg0`")
-        expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_#{featuregroup_version}` `fg0`")
+        expect(parsed_json["queryOnline"].gsub("\n", " ") == "SELECT `fg0`.`testfeature`, `fg0`.`testfeature2` FROM `#{project_name}`.`#{featuregroup_name}_1` `fg0`")
+      end
+
+      it "should be able to do a range query for existing hudi enabled offline cached featuregroup" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201024221125,rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
+        json_fs_query = {
+            leftFeatureGroup: {
+                id: parsed_json["id"]
+            },
+            leftFeatures: parsed_json["features"],
+            leftFeatureGroupStartTime: "20201024221125",
+            leftFeatureGroupEndTime: "20201025182256",
+        }
+        json_result = put create_query_endpoint, json_fs_query
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupStartTimestamp"]).to eql(1603577485000)
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603650176000)
       end
 
       it "should be able to retrieve commit timeline in correct order from existing hudi enabled offline cached featuregroup" do
-        hopsworks_user = getHopsworksUser()
-        project = get_project
-        featurestore_id = get_featurestore_id(project.id)
-        featurestore_name = project['projectname'].downcase + "_featurestore"
-        json_result, featuregroup_name = create_cached_featuregroup_with_partition(project.id, featurestore_id, time_travel_format: "HUDI")
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
         parsed_json = JSON.parse(json_result)
         featuregroup_id = parsed_json["id"]
         featuregroup_version = parsed_json["version"]
         path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_#{featuregroup_version}"
         hoodie_path = path + "/.hoodie"
-        mkdir(hoodie_path, hopsworks_user, hopsworks_user, 777)
-        touchz(hoodie_path + "/20201024221125.commit", hopsworks_user, hopsworks_user)
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id)
-        touchz(hoodie_path + "/20201025182256.commit", hopsworks_user, hopsworks_user)
-        commit_metadata_string = '{"commitDateString":20201025182256,"rowsInserted":3,"rowsUpdated":1,"rowsDeleted":0}'
-        _ = commit_cached_featuregroup(project.id, featurestore_id, featuregroup_id, commit_metadata_string: commit_metadata_string)
-        create_featuregroup_commit_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/featuregroups/"  + featuregroup_id.to_s + "/commits?sort_by=committed_on:desc&offset=0"
-        json_result = get create_featuregroup_commit_endpoint
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        touchz(hoodie_path + "/20201025182256.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString:20201025182256,rowsInserted:3,rowsUpdated:1,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, featuregroup_id, commit_metadata: commit_metadata)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/commits?sort_by=committed_on:desc&offset=0"
         parsed_json = JSON.parse(json_result)
-        commitid_one = parsed_json["items"][0]["commitID"]
-        commitid_two = parsed_json["items"][1]["commitID"]
-        expect(commitid_one==1603650176000)
-        expect(commitid_two==1603577485000)
+        expect(parsed_json["items"][0]["commitID"]).to eql(1603650176000)
+        expect(parsed_json["items"][1]["commitID"]).to eql(1603577485000)
+      end
+
+      it "should be able to join 2 hudi feature groups together and return the configuration correctly" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        fg_1_id = parsed_json["id"]
+        fg_1_features = parsed_json["features"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
+
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        fg_2_id = parsed_json["id"]
+        fg_2_features = parsed_json["features"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221126.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221126, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_2_id, commit_metadata: commit_metadata)
+
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
+        json_fs_query = {
+            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupEndTime: "20201024221125",
+            joins: {
+                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: "20201024221126"}
+            }
+        }
+        json_result = put create_query_endpoint, json_fs_query
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+        expect(parsed_json["hudiCachedFeatureGroups"].length).to eql(2)
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603577485000)
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["alias"]).to eql("fg0")
+        expect(parsed_json["hudiCachedFeatureGroups"][1]["leftFeatureGroupEndTimestamp"]).to eql(1603577486000)
+        expect(parsed_json["hudiCachedFeatureGroups"][1]["alias"]).to eql("fg1")
+      end
+
+      it "should not allow range queries for join of hudi enabled cached featuregroups" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = @project['projectname'].downcase + "_featurestore"
+
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        fg_1_id = parsed_json["id"]
+        fg_1_features = parsed_json["features"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221125.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221125, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_1_id, commit_metadata: commit_metadata)
+
+        json_result, featuregroup_name = create_cached_featuregroup_with_partition(@project[:id], featurestore_id, time_travel_format: "HUDI")
+        parsed_json = JSON.parse(json_result)
+        fg_2_id = parsed_json["id"]
+        fg_2_features = parsed_json["features"]
+        path = "/apps/hive/warehouse/#{featurestore_name}.db/#{featuregroup_name}_1"
+        hoodie_path = path + "/.hoodie"
+        mkdir(hoodie_path, getHopsworksUser, getHopsworksUser, 777)
+        touchz(hoodie_path + "/20201024221126.commit", getHopsworksUser, getHopsworksUser)
+        commit_metadata = {commitDateString: 20201024221126, rowsInserted:3,rowsUpdated:0,rowsDeleted:0}
+        _ = commit_cached_featuregroup(@project[:id], featurestore_id, fg_2_id, commit_metadata: commit_metadata)
+
+        create_query_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query"
+        json_fs_query = {
+            leftFeatureGroup: {id: fg_1_id}, leftFeatures: fg_1_features, leftFeatureGroupStartTime: "20201024221125", leftFeatureGroupEndTime: "20201024221125",
+            joins: {
+                query: {leftFeatureGroup: {id: fg_2_id}, leftFeatures: fg_2_features, leftFeatureGroupEndTime: "20201024221126"}
+            }
+        }
+        put create_query_endpoint, json_fs_query
+        expect_status(422)
       end
     end
   end
@@ -1780,4 +1889,3 @@ describe "On #{ENV['OS']}" do
     end
   end
 end
-

@@ -43,9 +43,12 @@ import java.util.Date;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "FeatureGroupCommit.findByLatestCommittedOn",
-      query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
-          "FeatureGroupCommit fgc WHERE fgc.committedOn <= :requestedPointInTime AND " +
-          "fgc.featureGroupCommitPK.featureGroupId = :featureGroupId)"),
+      query = "SELECT fgc FROM FeatureGroupCommit fgc " +
+          "WHERE fgc.committedOn IN " +
+              "(SELECT MAX(fgc.committedOn) FROM FeatureGroupCommit fgc " +
+                "WHERE fgc.committedOn <= :requestedPointInTime " +
+                "AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
+          " AND fgc.featureGroupCommitPK.featureGroupId = :featureGroupId"),
     @NamedQuery(name = "FeatureGroupCommit.findLatestCommit",
         query = "SELECT fgc FROM FeatureGroupCommit fgc WHERE fgc.committedOn IN (SELECT MAX(fgc.committedOn) FROM " +
             "FeatureGroupCommit fgc WHERE fgc.featureGroupCommitPK.featureGroupId = :featureGroupId) " +
