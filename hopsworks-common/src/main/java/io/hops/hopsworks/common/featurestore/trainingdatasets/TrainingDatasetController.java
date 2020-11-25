@@ -51,6 +51,7 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
@@ -365,7 +366,13 @@ public class TrainingDatasetController {
                                        TrainingDataset trainingDataset, Project project, Users user)
       throws FeaturestoreException {
     // Convert the queryDTO to the internal representation
-    Query query = constructorController.convertQueryDTO(queryDTO, 0, project, user);
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+  
+    constructorController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
+      project, user);
+    Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
     trainingDataset.setQuery(true);
     // Convert the joins from the query object into training dataset joins
     List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
@@ -787,7 +794,7 @@ public class TrainingDatasetController {
       if (!availableFeaturesLookup.containsKey(join.getFeatureGroup().getId())) {
         List<Feature> availableFeatures = featuregroupController.getFeatures(join.getFeatureGroup(), project, user)
           .stream()
-          .map(f -> new Feature(f.getName(), join.getFeatureGroup().getName(),
+          .map(f -> new Feature(f.getName(),
             fgAliasLookup.get(join.getId()), f.getType(), f.getPrimary(), f.getDefaultValue()))
           .collect(Collectors.toList());
         availableFeaturesLookup.put(join.getFeatureGroup().getId(), availableFeatures);

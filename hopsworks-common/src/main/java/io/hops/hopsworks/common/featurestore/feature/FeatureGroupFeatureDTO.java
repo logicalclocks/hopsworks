@@ -33,11 +33,12 @@ public class FeatureGroupFeatureDTO {
   private Boolean primary = false;
   private Boolean partition = false;
   private String defaultValue = null;
+  private Integer featureGroupId = null;
 
   public FeatureGroupFeatureDTO(){}
 
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary,
-                                Boolean partition, String onlineType, String defaultValue) {
+                                Boolean partition, String onlineType, String defaultValue, Integer featureGroupId) {
     this.name = name;
     this.type = type;
     this.onlineType = onlineType;
@@ -45,8 +46,20 @@ public class FeatureGroupFeatureDTO {
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+    this.featureGroupId = featureGroupId;
   }
 
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, String defaultValue,
+                                Integer featureGroupId) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+    this.defaultValue = defaultValue;
+    this.featureGroupId = featureGroupId;
+  }
+  
+  // for testing
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, String defaultValue) {
     this.name = name;
     this.type = type;
@@ -64,13 +77,14 @@ public class FeatureGroupFeatureDTO {
   }
 
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
-    String defaultValue) {
+                                String defaultValue, Integer featureGroupId) {
     this.name = name;
     this.type = type;
     this.description = description;
     this.primary = primary;
     this.partition = partition;
     this.defaultValue = defaultValue;
+    this.featureGroupId = featureGroupId;
   }
 
   public FeatureGroupFeatureDTO(String name, String type, String description) {
@@ -78,12 +92,21 @@ public class FeatureGroupFeatureDTO {
     this.type = type;
     this.description = description;
   }
+  
+  public FeatureGroupFeatureDTO(String name, String type, String description, Integer featureGroupId) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.featureGroupId = featureGroupId;
+  }
 
-  public FeatureGroupFeatureDTO(String name, String type, Boolean primary, String defaultValue) {
+  public FeatureGroupFeatureDTO(String name, String type, Boolean primary, String defaultValue,
+                                Integer featureGroupId) {
     this.name = name;
     this.type = type;
     this.primary = primary;
     this.defaultValue = defaultValue;
+    this.featureGroupId = featureGroupId;
   }
 
   public FeatureGroupFeatureDTO(String name) {
@@ -124,6 +147,11 @@ public class FeatureGroupFeatureDTO {
   public String getDefaultValue() {
     return defaultValue;
   }
+  
+  @XmlElement
+  public Integer getFeatureGroupId() {
+    return featureGroupId;
+  }
 
   public void setPrimary(Boolean primary) {
     this.primary = primary;
@@ -153,6 +181,10 @@ public class FeatureGroupFeatureDTO {
     this.defaultValue = defaultValue;
   }
   
+  public void setFeatureGroupId(Integer featureGroupId) {
+    this.featureGroupId = featureGroupId;
+  }
+  
   @Override
   public String toString() {
     return "FeatureDTO{" +
@@ -162,7 +194,8 @@ public class FeatureGroupFeatureDTO {
       ", description='" + description + '\'' +
       ", primary=" + primary + '\'' +
       ", partition=" + partition + '\'' +
-      ", defaultValue=" + defaultValue +
+      ", defaultValue=" + defaultValue + '\'' +
+      ", featureGroupName=" + featureGroupId +
       '}';
   }
   
@@ -175,6 +208,7 @@ public class FeatureGroupFeatureDTO {
     result = 31 * result + primary.hashCode();
     result = 31 * result + partition.hashCode();
     result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
+    result = 31 * result + (featureGroupId != null ? featureGroupId.hashCode() : 0);
     return result;
   }
 }

@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.query;
 
 import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogicDTO;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
@@ -29,17 +30,20 @@ public class QueryDTO {
   private List<FeatureGroupFeatureDTO> leftFeatures;
   private String leftFeatureGroupStartTime;
   private String leftFeatureGroupEndTime;
+  private FilterLogicDTO filter;
 
   // Recursively merge QueryDTOs
   private List<JoinDTO> joins;
 
   public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
-                  String leftFeatureGroupStartTime, String leftFeatureGroupEndTime, List<JoinDTO> joins) {
+                  String leftFeatureGroupStartTime, String leftFeatureGroupEndTime, List<JoinDTO> joins,
+                  FilterLogicDTO filter) {
     this.leftFeatureGroup = leftFeatureGroup;
     this.leftFeatures = leftFeatures;
     this.leftFeatureGroupStartTime = leftFeatureGroupStartTime;
     this.leftFeatureGroupEndTime = leftFeatureGroupEndTime;
     this.joins = joins;
+    this.filter = filter;
   }
 
   public QueryDTO(FeaturegroupDTO leftFeatureGroup, List<FeatureGroupFeatureDTO> leftFeatures,
@@ -104,6 +108,14 @@ public class QueryDTO {
   public void setJoins(List<JoinDTO> joins) {
     this.joins = joins;
   }
+  
+  public FilterLogicDTO getFilter() {
+    return filter;
+  }
+  
+  public void setFilter(FilterLogicDTO filter) {
+    this.filter = filter;
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -116,6 +128,8 @@ public class QueryDTO {
       return false;
     if (!Objects.equals(leftFeatures, queryDTO.leftFeatures))
       return false;
+    if (!Objects.equals(filter, queryDTO.filter))
+      return false;
     return Objects.equals(joins, queryDTO.joins);
   }
 
@@ -124,6 +138,7 @@ public class QueryDTO {
     int result = leftFeatureGroup != null ? leftFeatureGroup.hashCode() : 0;
     result = 31 * result + (leftFeatures != null ? leftFeatures.hashCode() : 0);
     result = 31 * result + (joins != null ? joins.hashCode() : 0);
+    result = 31 * result + (filter != null ? filter.hashCode() : 0);
     return result;
   }
 }
