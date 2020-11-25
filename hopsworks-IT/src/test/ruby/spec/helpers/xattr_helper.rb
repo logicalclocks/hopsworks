@@ -14,52 +14,61 @@
  If not, see <https://www.gnu.org/licenses/>.
 =end
 module XAttrHelper
-  def add_xattr(project, path, xattr_key, xattr_val)
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}, #{{xattr_key => xattr_val}.to_json}" if defined?(@debugOpt) && @debugOpt
-    put "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}", {xattr_key => xattr_val}.to_json
+  def add_xattr(project, path, xattr_key, xattr_val, path_type: "DATASET")
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
+    query = "name=#{xattr_key}&pathType=#{path_type}"
+    data = {xattr_key => xattr_val}.to_json
+    pp  "put #{endpoint}?#{query}, #{data}" if defined?(@debugOpt) && @debugOpt
+    put "#{endpoint}?#{query}", data
   end
 
-  def add_xattr_checked(project, path, xattr_key, xattr_val)
-    add_xattr(project, path, xattr_key, xattr_val)
+  def add_xattr_checked(project, path, xattr_key, xattr_val, path_type: "DATASET")
+    add_xattr(project, path, xattr_key, xattr_val, path_type: path_type)
     expect_status_details(201)
   end
 
-  def update_xattr_checked(project, path, xattr_key, xattr_val)
-    add_xattr(project, path, xattr_key, xattr_val)
+  def update_xattr_checked(project, path, xattr_key, xattr_val, path_type: "DATASET")
+    add_xattr(project, path, xattr_key, xattr_val, path_type: path_type)
     expect_status_details(200)
   end
 
-  def get_xattr(project, path, xattr_key)
-    pp  "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}" if defined?(@debugOpt) && @debugOpt
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr_key}"
+  def get_xattr(project, path, xattr_key, path_type: "DATASET")
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
+    query = "name=#{xattr_key}&pathType=#{path_type}"
+    pp  "get #{endpoint}?#{query}" if defined?(@debugOpt) && @debugOpt
+    get "#{endpoint}?#{query}"
     json_body
   end
 
-  def get_xattr_checked(project, path, xattr_key)
-    get_xattr(project, path, xattr_key)
-    expect_status_details(200)
-    json_body
-  end
-
-  def get_xattrs(project, path)
-    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}" if defined?(@debugOpt) && @debugOpt
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
-    json_body
-  end
-
-  def get_xattrs_checked(project, path)
-    get_xattrs(project, path)
+  def get_xattr_checked(project, path, xattr_key, path_type: "DATASET")
+    get_xattr(project, path, xattr_key, path_type: path_type)
     expect_status_details(200)
     json_body
   end
 
-  def delete_xattr(project, path, xattr)
-    pp "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr}" if defined?(@debugOpt) && @debugOpt
-    delete "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}?name=#{xattr}"
+  def get_xattrs(project, path, path_type: "DATASET")
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
+    query = "pathType=#{path_type}"
+    pp  "get #{endpoint}?#{query}" if defined?(@debugOpt) && @debugOpt
+    get "#{endpoint}?#{query}"
+    json_body
   end
 
-  def delete_xattr_checked(project, path, xattr)
-    delete_xattr(project, path, xattr)
+  def get_xattrs_checked(project, path, path_type: "DATASET")
+    get_xattrs(project, path, path_type: path_type)
+    expect_status_details(200)
+    json_body
+  end
+
+  def delete_xattr(project, path, xattr_key, path_type: "DATASET")
+    endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/xattrs/#{path}"
+    query = "name=#{xattr_key}&pathType=#{path_type}"
+    pp  "delete #{endpoint}?#{query}" if defined?(@debugOpt) && @debugOpt
+    delete "#{endpoint}?#{query}"
+  end
+
+  def delete_xattr_checked(project, path, xattr_key, path_type: "DATASET")
+    delete_xattr(project, path, xattr_key, path_type: path_type)
     expect_status_details(204)
   end
 end

@@ -130,7 +130,7 @@ public class DistributedFsService {
     conf = new Configuration();
     conf.addResource(hadoopPath);
     conf.addResource(hdfsPath);
-    conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "0027");
+    conf.set(CommonConfigurationKeys.FS_PERMISSIONS_UMASK_KEY, "0007");
     conf.setStrings("dfs.namenode.rpc-address", hdfsLeDescriptorsFacade.getRPCEndpoint());
     if (settings.getHopsRpcTls()) {
       transientDir = settings.getHopsworksTmpCertDir();
