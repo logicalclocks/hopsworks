@@ -207,10 +207,24 @@ describe "On #{ENV['OS']}" do
                 primary: false
             }
         ]
-        json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id, features:features)
+        _, _ = create_cached_featuregroup(project.id, featurestore_id, features:features, online:true)
         expect_status(201)
       end
 
+      it "should be able to create a feature group with complex types" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        features = [
+            {
+                type: "ARRAY <BOOLEAN>",
+                name: "test",
+                description: "--",
+                primary: false
+            }
+        ]
+        _, _ = create_cached_featuregroup(project.id, featurestore_id, features:features, online:true)
+        expect_status(201)
+      end
 
       it "should be able to add a offline cached featuregroup to the featurestore with empty feature description" do
         project = get_project
