@@ -43,7 +43,7 @@ public class TestOnlineFeatureGroupController {
     List<FeatureGroupFeatureDTO> features = new ArrayList<>();
     features.add(new FeatureGroupFeatureDTO("feature", "string", ""));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` varchar(1000) DEFAULT NULL;";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` CHAR(100) DEFAULT NULL;";
     Assert.assertEquals(expected, output);
   }
   
@@ -53,7 +53,7 @@ public class TestOnlineFeatureGroupController {
     features.add(new FeatureGroupFeatureDTO("feature", "string", "",
       false, "defaultValue"));
     String output = onlineFeaturegroupController.buildAlterStatement("tbl", "db", features);
-    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` varchar(1000) NOT NULL DEFAULT 'defaultValue';";
+    String expected = "ALTER TABLE `db`.`tbl` ADD COLUMN `feature` CHAR(100) NOT NULL DEFAULT 'defaultValue';";
     Assert.assertEquals(expected, output);
   }
   
@@ -88,7 +88,7 @@ public class TestOnlineFeatureGroupController {
     features.add(new FeatureGroupFeatureDTO("feature", "String", "", false, false));
     
     String output = onlineFeaturegroupController.buildCreateStatement("db", "tbl", features);
-    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int,`feature` varchar(1000),PRIMARY KEY (`pk`))" +
+    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int, `feature` CHAR(100), PRIMARY KEY (`pk`))" +
       "ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
     Assert.assertEquals(expected, output);
   }
@@ -102,7 +102,7 @@ public class TestOnlineFeatureGroupController {
     features.add(new FeatureGroupFeatureDTO("feature", "String", "", false, false));
     
     String output = onlineFeaturegroupController.buildCreateStatement("db", "tbl", features);
-    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int,`feature` varchar(1000),PRIMARY KEY (`pk`))" +
+    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int, `feature` CHAR(100), PRIMARY KEY (`pk`))" +
       "ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'/*!50100 TABLESPACE `abc` STORAGE DISK */";
     Assert.assertEquals(expected, output);
   }
@@ -117,8 +117,8 @@ public class TestOnlineFeatureGroupController {
       "hello"));
     
     String output = onlineFeaturegroupController.buildCreateStatement("db", "tbl", features);
-    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int,`feature` varchar(1000) NOT NULL DEFAULT " +
-      "'hello',PRIMARY KEY (`pk`))ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
+    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int, `feature` CHAR(100) NOT NULL DEFAULT " +
+      "'hello', PRIMARY KEY (`pk`))ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
     Assert.assertEquals(expected, output);
   }
   
@@ -132,8 +132,22 @@ public class TestOnlineFeatureGroupController {
       "10.0"));
     
     String output = onlineFeaturegroupController.buildCreateStatement("db", "tbl", features);
-    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int,`feature` float NOT NULL DEFAULT " +
-      "10.0,PRIMARY KEY (`pk`))ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
+    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int, `feature` float NOT NULL DEFAULT " +
+      "10.0, PRIMARY KEY (`pk`))ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
+    Assert.assertEquals(expected, output);
+  }
+
+  @Test
+  public void testBuildCreateStatementNoPrimaryKey() {
+    Mockito.when(settings.getOnlineFeatureStoreTableSpace()).thenReturn("");
+
+    List<FeatureGroupFeatureDTO> features = new ArrayList<>();
+    features.add(new FeatureGroupFeatureDTO("pk", "int", "", false, false));
+    features.add(new FeatureGroupFeatureDTO("feature", "float", "", false, false));
+
+    String output = onlineFeaturegroupController.buildCreateStatement("db", "tbl", features);
+    String expected = "CREATE TABLE IF NOT EXISTS `db`.`tbl`(`pk` int, `feature` float)" +
+        "ENGINE=ndbcluster COMMENT='NDB_TABLE=READ_BACKUP=1'";
     Assert.assertEquals(expected, output);
   }
 }
