@@ -97,18 +97,23 @@ public class OnlineFeaturegroupController {
     createStatement.append("`" + dbName + "`").append(".").append("`" + tableName + "`").append("(");
 
     // Add all features
+    List<String> columns = new ArrayList<>();
     for (FeatureGroupFeatureDTO feature : features) {
-      createStatement.append("`" + feature.getName() + "`").append(" ").append(getOnlineType(feature));
+      StringBuilder column = new StringBuilder();
+      column.append("`" + feature.getName() + "`").append(" ").append(getOnlineType(feature));
       // at the moment only needed for online-enabling a previously offline-only feature group with appended features
       if (feature.getDefaultValue() != null) {
-        createStatement.append(" NOT NULL DEFAULT ");
+        column.append(" NOT NULL DEFAULT ");
         if (feature.getType().equalsIgnoreCase("string")) {
-          createStatement.append("'").append(feature.getDefaultValue()).append("'");
+          column.append("'").append(feature.getDefaultValue()).append("'");
         } else {
-          createStatement.append(feature.getDefaultValue());
+          column.append(feature.getDefaultValue());
         }
       }
+      columns.add(column.toString());
     }
+
+    createStatement.append(StringUtils.join(columns, ", "));
 
     // add primary keys
     List<FeatureGroupFeatureDTO> pkFeatures = features.stream()
