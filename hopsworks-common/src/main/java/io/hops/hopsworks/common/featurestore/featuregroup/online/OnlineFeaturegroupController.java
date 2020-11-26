@@ -57,7 +57,8 @@ public class OnlineFeaturegroupController {
       "FLOAT", "DOUBLE", "DECIMAL", "DATE", "DATETIME", "TIMESTAMP", "TIME", "YEAR", "CHAR", "BLOB", "TEXT",
       "TINYBLOB", "TINYTEXT", "MEDIUMBLOB", "MEDIUMTEXT", "LONGBLOB", "LONGTEXT");
 
-  private final static String VARBINARY = "VARBINARY";
+  private final static String VARBINARY_DEFAULT = "VARBINARY(100)";
+  private final static String CHAR_DEFAULT = "CHAR(100)";
 
   public OnlineFeaturegroupController() {}
 
@@ -107,7 +108,6 @@ public class OnlineFeaturegroupController {
           createStatement.append(feature.getDefaultValue());
         }
       }
-      createStatement.append(",");
     }
 
     // add primary keys
@@ -115,7 +115,7 @@ public class OnlineFeaturegroupController {
         .filter(FeatureGroupFeatureDTO::getPrimary)
         .collect(Collectors.toList());
     if (!pkFeatures.isEmpty()) {
-      createStatement.append("PRIMARY KEY (`");
+      createStatement.append(", PRIMARY KEY (`");
       createStatement.append(
           StringUtils.join(pkFeatures.stream().map(FeatureGroupFeatureDTO::getName).collect(Collectors.toList()),
             "`,`"));
@@ -181,9 +181,9 @@ public class OnlineFeaturegroupController {
     } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("boolean")) {
       return "tinyint";
     } else if (featureGroupFeatureDTO.getType().equalsIgnoreCase("string")) {
-      return "varchar(1000)";
+      return CHAR_DEFAULT;
     } else {
-      return VARBINARY;
+      return VARBINARY_DEFAULT;
     }
   }
 
