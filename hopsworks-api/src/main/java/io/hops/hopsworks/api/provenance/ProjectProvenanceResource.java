@@ -18,6 +18,7 @@ package io.hops.hopsworks.api.provenance;
 import io.hops.hopsworks.api.dataset.DatasetAccessType;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBeanParams;
 import io.hops.hopsworks.api.provenance.ops.ProvLinksBuilder;
@@ -49,6 +50,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -117,6 +119,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.ANYONE})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Get the Provenance Type of PROJECT/DATASET", response = ProvTypeDTO.class)
   public Response getProvenanceStatus(
     @QueryParam("type") @DefaultValue("PROJECT") TypeOf typeOf,
@@ -147,6 +150,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "State Provenance query endpoint", response = ProvStateDTO.class)
   public Response getFileStates(
     @BeanParam ProvStateBeanParams params,
@@ -162,6 +166,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Operations Provenance query endpoint", response = ProvOpsDTO.class)
   public Response getFileOps(
     @BeanParam ProvOpsBeanParams params,
@@ -178,6 +183,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Links Provenance query endpoint - " +
     "link feature groups/training datasets/experiments/models through their application ids",
     response = ProvLinksDTO.class)
@@ -195,6 +201,7 @@ public class ProjectProvenanceResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired( acceptedScopes = {ApiScope.PROJECT}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiOperation(value = "Artifact usage", response = ProvArtifactUsageParentDTO.class)
   public Response usage(
     @QueryParam("artifact_id") String artifactId,
