@@ -1050,6 +1050,60 @@ describe "On #{ENV['OS']}" do
         put create_query_endpoint, json_fs_query
         expect_status(422)
       end
+
+      it "should be able to attach keywords" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_cached_featuregroup_with_partition(@project[:id], featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+            {keywords: ['hello', 'this', 'keyword123']}.to_json
+        expect_status(200)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
+        expect_status(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).to include('hello')
+        expect(parsed_json['keywords']).to include('this')
+        expect(parsed_json['keywords']).to include('keyword123')
+      end
+
+      it "should fail to attach invalid keywords" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_cached_featuregroup_with_partition(@project[:id], featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+             {keywords: ['hello', 'this', '@#!@#^(&$']}
+        expect_status(400)
+      end
+
+      it "should be able to remove keyword" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_cached_featuregroup_with_partition(@project[:id], featurestore_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+             {keywords: ['hello', 'this', 'keyword123']}.to_json
+        expect_status(200)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
+        expect_status(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).to include('hello')
+        expect(parsed_json['keywords']).to include('this')
+        expect(parsed_json['keywords']).to include('keyword123')
+
+        delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords?keyword=hello"
+        expect_status(200)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
+        expect_status(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).not_to include('hello')
+        expect(parsed_json['keywords']).to include('this')
+        expect(parsed_json['keywords']).to include('keyword123')
+      end
     end
   end
 
@@ -1159,6 +1213,29 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["description"]).to eql("changed description")
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature"}.first["defaultValue"]).to be nil
         expect(parsed_json["features"].select{ |f| f["name"] == "testfeature2"}.first["defaultValue"]).to eql("10.0")
+      end
+
+      it "should be able to add keywords to a shared feature group" do
+        create_session(@user1[:email], "Pass123")
+        # create FG in first project
+        featurestore_id = get_featurestore_id(@project1.id)
+        json_result, featuregroup_name = create_cached_featuregroup(@project1.id, featurestore_id)
+        featuregroup_id = JSON.parse(json_result)['id']
+
+        # featurestore in project1 is shared already with project2 and user2 therein
+        create_session(@user2[:email], "Pass123")
+
+        # User2 should be able to set keywords for the feature group in the shared feature store
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project2.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+             {keywords: ['hello', 'this', 'keyword123']}.to_json
+        expect_status_details(200)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project2[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
+        expect_status_details(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).to include('hello')
+        expect(parsed_json['keywords']).to include('this')
+        expect(parsed_json['keywords']).to include('keyword123')
       end
     end
       # TODO: test can be put back once HOPSWORKS-1932 is fixed
@@ -1430,6 +1507,23 @@ describe "On #{ENV['OS']}" do
         tags_json = JSON.parse(json_result)
         expect(tags_json["items"][0]["name"]).to eq(@pre_created_tags[0])
         expect(tags_json["items"][0]["value"]).to eq("daily")
+      end
+
+      it "should be able to attach keywords" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, get_jdbc_connector_id)
+        parsed_json = JSON.parse(json_result)
+        featuregroup_id = parsed_json["id"]
+        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords",
+             {keywords: ['hello', 'this', 'keyword123']}.to_json
+        expect_status(200)
+
+        json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_id}/keywords"
+        expect_status(200)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json['keywords']).to include('hello')
+        expect(parsed_json['keywords']).to include('this')
+        expect(parsed_json['keywords']).to include('keyword123')
       end
     end
   end
