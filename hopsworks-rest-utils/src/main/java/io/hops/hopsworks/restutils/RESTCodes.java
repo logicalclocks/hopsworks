@@ -1510,7 +1510,10 @@ public class RESTCodes {
     COULD_NOT_DELETE_ON_DEMAND_FEATUREGROUP(131, "Could not delete on demand feature group",
                                             Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE(132, "Illegal feature default value",
-      Response.Status.BAD_REQUEST);
+      Response.Status.BAD_REQUEST),
+    KEYWORD_ERROR(133, "Keyword error for feature group/training dataset",
+        Response.Status.INTERNAL_SERVER_ERROR),
+    KEYWORD_FORMAT_ERROR(134, "Keyword format error", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

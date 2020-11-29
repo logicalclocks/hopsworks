@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore.featuregroup;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
 import io.hops.hopsworks.api.featurestore.tag.TagsDTO;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
@@ -122,6 +123,8 @@ public class FeaturegroupService {
   private CommitResource commitResource;
   @Inject
   private ProvArtifactResource provenanceResource;
+  @Inject
+  private FeaturestoreKeywordResource featurestoreKeywordResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -659,5 +662,17 @@ public class FeaturegroupService {
     this.commitResource.setFeaturestore(featurestore);
     this.commitResource.setFeatureGroup(featureGroupId);
     return commitResource;
+  }
+
+
+  @Path("/{featureGroupId}/keywords")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeaturestoreKeywordResource keywords (
+      @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
+      throws FeaturestoreException {
+    this.featurestoreKeywordResource.setProject(project);
+    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    this.featurestoreKeywordResource.setFeatureGroupId(featureGroupId);
+    return featurestoreKeywordResource;
   }
 }

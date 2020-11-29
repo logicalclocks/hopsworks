@@ -15,6 +15,7 @@
  */
 package io.hops.hopsworks.api.metadata;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.jwt.JWTHelper;
@@ -22,6 +23,9 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
@@ -50,6 +54,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -67,6 +72,10 @@ public class XAttrsResource {
   private XAttrsController xattrsController;
   @EJB
   private XAttrsBuilder xattrsBuilder;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
   
   private Project project;
   
@@ -118,11 +127,23 @@ public class XAttrsResource {
       @PathParam("path") String path, @QueryParam("name") String xattrName)
       throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    Map<String, String> result = xattrsController.getXAttrs(project, user, path, xattrName);
-    
-    if(xattrName != null & result.isEmpty()) {
-      throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
+    Map<String, String> result = new HashMap<>();
+
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      if (xattrName != null) {
+        String xattr = xattrsController.getXAttr(path, xattrName, udfso);
+        if (Strings.isNullOrEmpty(xattr)) {
+          throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
+        }
+        result.put(xattrName, xattr);
+      } else {
+        result.putAll(xattrsController.getXAttrs(path, udfso));
+      }
+    } finally {
+      dfs.closeDfsClient(udfso);
     }
+
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
     XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, path, result);
     return Response.ok().entity(dto).build();

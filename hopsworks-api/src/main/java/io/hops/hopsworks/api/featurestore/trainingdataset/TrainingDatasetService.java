@@ -17,6 +17,7 @@
 package io.hops.hopsworks.api.featurestore.trainingdataset;
 
 import com.google.common.base.Strings;
+import io.hops.hopsworks.api.featurestore.FeaturestoreKeywordResource;
 import io.hops.hopsworks.api.featurestore.FsQueryBuilder;
 import io.hops.hopsworks.api.featurestore.statistics.StatisticsResource;
 import io.hops.hopsworks.api.featurestore.tag.TagsBuilder;
@@ -119,6 +120,8 @@ public class TrainingDatasetService {
   private ProvArtifactResource provenanceResource;
   @EJB
   private DatasetController datasetController;
+  @Inject
+  private FeaturestoreKeywordResource featurestoreKeywordResource;
 
   private Project project;
   private Featurestore featurestore;
@@ -534,6 +537,17 @@ public class TrainingDatasetService {
     TrainingDataset td = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
     this.provenanceResource.setArtifactId(td.getName(), td.getVersion());
     return provenanceResource;
+  }
+
+  @Path("/{trainingDatasetId}/keywords")
+  @Logged(logLevel = LogLevel.OFF)
+  public FeaturestoreKeywordResource keywords (
+      @ApiParam(value = "Id of the training dataset") @PathParam("trainingDatasetId") Integer trainingDatasetId)
+      throws FeaturestoreException {
+    this.featurestoreKeywordResource.setProject(project);
+    this.featurestoreKeywordResource.setFeaturestore(featurestore);
+    this.featurestoreKeywordResource.setTrainingDatasetId(trainingDatasetId);
+    return featurestoreKeywordResource;
   }
 }
 

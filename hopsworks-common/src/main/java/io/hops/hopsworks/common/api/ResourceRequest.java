@@ -191,7 +191,8 @@ public class ResourceRequest {
     INTEGRATIONS,
     DATABRICKS,
     SPARK,
-    CONFIGURATION;
+    CONFIGURATION,
+    KEYWORDS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

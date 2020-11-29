@@ -61,8 +61,8 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
   public Map<String, String> getAll(Project project, Users user, Featurestore featurestore, int trainingDatasetId)
       throws FeaturestoreException, DatasetException, MetadataException {
     String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    return featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    return featureStoreTagController.convertToExternalTags(xAttrStr);
   }
 
   /**
@@ -82,10 +82,8 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
       throws FeaturestoreException, DatasetException, MetadataException {
 
     String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrStr);
 
     Map<String, String> results = new HashMap<>();
     if (tags != null && tags.containsKey(tagName)) {
@@ -121,9 +119,8 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
           Level.FINE, tag + " is not a valid tag.");
     }
 
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrStr);
     tags.put(tag, value != null ? value : "");
 
     JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
@@ -163,10 +160,8 @@ public class TrainingDatasetTagsController implements TrainingDatasetTagControll
 
     String path = getTrainingDatasetLocation(trainingDatasetId, featurestore);
 
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrStr);
     tags.remove(tagName);
 
     JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);

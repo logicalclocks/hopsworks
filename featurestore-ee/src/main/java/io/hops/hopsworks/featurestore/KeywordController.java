@@ -1,0 +1,195 @@
+/*
+ * This file is part of Hopsworks
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
+ *
+ * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
+ * the GNU Affero General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * Hopsworks is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License along with this program.
+ * If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package io.hops.hopsworks.featurestore;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
+import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
+import io.hops.hopsworks.common.hdfs.DistributedFsService;
+import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
+import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
+import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.MetadataException;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.restutils.RESTCodes;
+
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+
+@Stateless
+@EnterpriseStereotype
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+public class KeywordController {
+
+  @EJB
+  private InodeController inodeController;
+  @EJB
+  private XAttrsController xAttrsController;
+  @EJB
+  private DistributedFsService dfs;
+  @EJB
+  private HdfsUsersController hdfsUsersController;
+  @EJB
+  private FeaturegroupController featuregroupController;
+
+  private ObjectMapper objectMapper = new ObjectMapper();
+
+  public List<String> getAll(Project project, Users user,
+                             Featuregroup featureGroup, TrainingDataset trainingDataset)
+      throws FeaturestoreException, MetadataException {
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      return getAll(featureGroup, trainingDataset, udfso);
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Error reading keywords", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
+  public List<String> getAll(Featuregroup featureGroup, TrainingDataset trainingDataset, DistributedFileSystemOps udfso)
+      throws IOException, MetadataException, FeaturestoreException {
+    if (featureGroup != null) {
+      return getAll(featureGroup, udfso);
+    } else {
+      return getAll(trainingDataset, udfso);
+    }
+  }
+
+  private List<String> getAll(Featuregroup featuregroup, DistributedFileSystemOps udfso)
+      throws IOException, MetadataException {
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
+    String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
+    if (!Strings.isNullOrEmpty(keywords)) {
+      return objectMapper.readValue(keywords, List.class);
+    } else {
+      return new ArrayList<>();
+    }
+  }
+
+  private List<String> getAll(TrainingDataset trainingDataset, DistributedFileSystemOps udfso)
+      throws IOException, MetadataException, FeaturestoreException {
+    String path = getTrainingDatasetLocation(trainingDataset);
+    String keywords = xAttrsController.getXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, udfso);
+    if (!Strings.isNullOrEmpty(keywords)) {
+      return objectMapper.readValue(keywords, List.class);
+    } else {
+      return new ArrayList<>();
+    }
+  }
+
+  public List<String> addKeywords(Project project, Users user, Featuregroup featureGroup,
+                                  TrainingDataset trainingDataset, List<String> keywords)
+      throws FeaturestoreException, MetadataException {
+    validateKeywords(keywords);
+    Set<String> currentKeywords;
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      currentKeywords = new HashSet<>(getAll(featureGroup, trainingDataset, udfso));
+      currentKeywords.addAll(keywords);
+
+      if (featureGroup != null) {
+        addFeatureGroupKeywords(featureGroup, currentKeywords, udfso);
+      } else {
+        addTrainingDatasetKeywords(trainingDataset, currentKeywords, udfso);
+      }
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Error adding keywords", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+
+    return new ArrayList<>(currentKeywords);
+  }
+
+  public List<String> deleteKeywords(Project project, Users user, Featuregroup featureGroup,
+                                     TrainingDataset trainingDataset, List<String> keywords)
+      throws FeaturestoreException, MetadataException {
+    Set<String> currentKeywords;
+    DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    try {
+      currentKeywords = new HashSet<>(getAll(featureGroup, trainingDataset, udfso));
+      currentKeywords.removeAll(keywords);
+
+      if (featureGroup != null) {
+        addFeatureGroupKeywords(featureGroup, currentKeywords, udfso);
+      } else {
+        addTrainingDatasetKeywords(trainingDataset, currentKeywords, udfso);
+      }
+    } catch (IOException e) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Error deleting keywords", e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+
+    return new ArrayList<>(currentKeywords);
+  }
+
+  private void addFeatureGroupKeywords(Featuregroup featureGroup, Set<String> keywords,
+                                       DistributedFileSystemOps udfso) throws IOException, MetadataException {
+    String keywordsStr = objectMapper.writeValueAsString(keywords);
+    String path = featuregroupController.getFeatureGroupLocation(featureGroup);
+    xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
+  }
+
+  private void addTrainingDatasetKeywords(TrainingDataset trainingDataset, Set<String> keywords,
+                                          DistributedFileSystemOps udfso)
+      throws IOException, MetadataException, FeaturestoreException {
+    String keywordsStr = objectMapper.writeValueAsString(keywords);
+    String path = getTrainingDatasetLocation(trainingDataset);
+    xAttrsController.addStrXAttr(path, FeaturestoreXAttrsConstants.KEYWORDS, keywordsStr, udfso);
+  }
+
+  private String getTrainingDatasetLocation(TrainingDataset trainingDataset) throws FeaturestoreException {
+    if (trainingDataset.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
+      return inodeController.getPath(trainingDataset.getHopsfsTrainingDataset().getInode());
+    } else {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_ERROR, Level.FINE,
+          "Keywords are not supported for external training datasets");
+    }
+  }
+
+  private void validateKeywords(List<String> keywords) throws FeaturestoreException {
+    for (String keyword : keywords) {
+      if (!FeaturestoreConstants.FEATURESTORE_REGEX.matcher(keyword).matches()) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.KEYWORD_FORMAT_ERROR, Level.FINE,
+            "Keywords can only contain lower case characters, numbers and underscores and cannot be " +
+                "longer than " + FeaturestoreConstants.FEATURESTORE_ENTITY_NAME_MAX_LENGTH + " characters or empty.");
+      }
+    }
+  }
+}

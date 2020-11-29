@@ -9,7 +9,6 @@ import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController
 import io.hops.hopsworks.common.featurestore.tag.FeatureStoreTagController;
 import io.hops.hopsworks.common.featurestore.tag.FeaturegroupTagControllerIface;
 import io.hops.hopsworks.common.featurestore.xattr.dto.FeaturestoreXAttrsConstants;
-import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.integrations.EnterpriseStereotype;
 import io.hops.hopsworks.exceptions.DatasetException;
@@ -17,7 +16,6 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -43,8 +41,6 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
   @EJB
   private FeatureStoreTagController featureStoreTagController;
   @EJB
-  private InodeController inodeController;
-  @EJB
   private FeatureStoreTagFacade featureStoreTagFacade;
 
   /**
@@ -62,9 +58,9 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    String path = getFeaturegroupLocation(featuregroup);
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    return featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    return featureStoreTagController.convertToExternalTags(xAttrStr);
   }
 
   /**
@@ -84,10 +80,9 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    String path = getFeaturegroupLocation(featuregroup);
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrStr);
 
     Map<String, String> results = new HashMap<>();
     if (tags != null && tags.containsKey(tagName)) {
@@ -117,16 +112,15 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, DatasetException, MetadataException {
 
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    String path = getFeaturegroupLocation(featuregroup);
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
 
     if (featureStoreTagFacade.findByName(tag) == null) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TAG_NOT_ALLOWED,
           Level.FINE, tag + " is not a valid tag.");
     }
 
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrsStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrsStr);
     tags.put(tag, value != null ? value : "");
 
     JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
@@ -146,7 +140,7 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
   public void deleteAll(Project project, Users user, Featurestore featurestore, int featuregroupId)
       throws FeaturestoreException, MetadataException, DatasetException {
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    String path = getFeaturegroupLocation(featuregroup);
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
     xAttrsController.removeXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
   }
 
@@ -165,29 +159,13 @@ public class FeaturegroupTagsController implements FeaturegroupTagControllerIfac
       throws FeaturestoreException, MetadataException, DatasetException {
 
     Featuregroup featuregroup = featuregroupController.getFeaturegroupById(featurestore, featuregroupId);
-    String path = getFeaturegroupLocation(featuregroup);
+    String path = featuregroupController.getFeatureGroupLocation(featuregroup);
 
-    Map<String, String> xattrsMap = xAttrsController.getXAttrs(project, user, path, FeaturestoreXAttrsConstants.TAGS);
-    Map<String, String> tags =
-        featureStoreTagController.convertToExternalTags(xattrsMap.get(FeaturestoreXAttrsConstants.TAGS));
+    String xAttrStr = xAttrsController.getXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS);
+    Map<String, String> tags = featureStoreTagController.convertToExternalTags(xAttrStr);
     tags.remove(tagName);
 
     JSONArray jsonTagsArr = featureStoreTagController.convertToInternalTags(tags);
     xAttrsController.addXAttr(project, user, path, FeaturestoreXAttrsConstants.TAGS, jsonTagsArr.toString());
-  }
-
-  /**
-   * Get path to where featuregroup is stored
-   * @param featuregroup
-   * @return
-   */
-  private String getFeaturegroupLocation(Featuregroup featuregroup) {
-    if (featuregroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP) {
-      return featuregroup.getCachedFeaturegroup().getHiveTbls()
-          .getSdId()
-          .getLocation();
-    } else {
-      return inodeController.getPath(featuregroup.getOnDemandFeaturegroup().getInode());
-    }
   }
 }
