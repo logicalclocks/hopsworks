@@ -533,7 +533,6 @@ public class TrainingDatasetService {
   }
 
   @Path("/{trainingDatasetId}/keywords")
-  @Logged(logLevel = LogLevel.OFF)
   public FeaturestoreKeywordResource keywords (
       @ApiParam(value = "Id of the training dataset") @PathParam("trainingDatasetId") Integer trainingDatasetId)
       throws FeaturestoreException {

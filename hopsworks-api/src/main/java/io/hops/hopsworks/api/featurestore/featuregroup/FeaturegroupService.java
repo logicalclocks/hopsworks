@@ -655,7 +655,6 @@ public class FeaturegroupService {
 
 
   @Path("/{featureGroupId}/keywords")
-  @Logged(logLevel = LogLevel.OFF)
   public FeaturestoreKeywordResource keywords (
       @ApiParam(value = "Id of the featuregroup") @PathParam("featureGroupId") Integer featureGroupId)
       throws FeaturestoreException {
