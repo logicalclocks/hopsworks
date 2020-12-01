@@ -353,14 +353,15 @@ public class FeaturestoreJdbcConnectorController {
     }
 
     FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
-    featurestoreJdbcConnectorDTO.setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName);
+    featurestoreJdbcConnectorDTO
+        .setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName + "?useSSL=false&allowPublicKeyRetrieval=true");
     featurestoreJdbcConnectorDTO.setDescription("JDBC connection to Hopsworks Project Online " +
       "Feature Store NDB Database for user: " + onlineDbUsername);
     featurestoreJdbcConnectorDTO.setArguments(
         FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
             FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
             FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername +
-            ",useSSL=false,allowPublicKeyRetrieval=true");
+            ",isolationLevel=NONE,batchsize=500");
     featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.JDBC);
     featurestoreJdbcConnectorDTO.setName(connectorName);
     featurestoreJdbcConnectorDTO.setFeaturestoreId(featurestore.getId());
