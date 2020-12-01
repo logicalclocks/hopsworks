@@ -134,17 +134,25 @@ public class EnvironmentController {
   }
   
   @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-  public String createProjectDockerImageFromYml(String ymlPath, boolean installJupyter, Users user, Project project)
+  public String createProjectDockerImageFromImport(
+      String importPath, boolean installJupyter, Users user, Project project)
     throws PythonException, ServiceException {
     if (project.getConda()) {
       throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_ALREADY_INITIALIZED, Level.FINE);
     }
     String username = hdfsUsersController.getHdfsUserName(project, user);
-    String yml = validateYml(new Path(ymlPath), username);
-    // Get Python version from yaml
-    String pythonVersion = findPythonVersion(yml);
+    String importContent = validateImportFile(new Path(importPath), username);
+
+    if(!importPath.endsWith(".yml") && !importPath.endsWith("/requirements.txt")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.ANACONDA_ENVIRONMENT_FILE_INVALID, Level.FINE);
+    }
+
+    String pythonVersion = findPythonVersion(importContent);
+    if(Strings.isNullOrEmpty(pythonVersion)) {
+      pythonVersion = settings.getDockerBaseImagePythonVersion();
+    }
     
-    condaEnvironmentOp(CondaOp.IMPORT, pythonVersion, project, user, project.getPythonVersion(), ymlPath,
+    condaEnvironmentOp(CondaOp.IMPORT, pythonVersion, project, user, pythonVersion, importPath,
       installJupyter);
     project.setConda(true);
     project.setPythonVersion(pythonVersion);
@@ -171,13 +179,13 @@ public class EnvironmentController {
    * @param arg
    */
   private void condaEnvironmentOp(CondaOp op, String pythonVersion, Project proj, Users user,
-      String arg, String environmentYml,Boolean installJupyter) {
+      String arg, String environmentFile,Boolean installJupyter) {
     if (projectUtils.isReservedProjectName(proj.getName())) {
       throw new IllegalStateException("Tried to execute a conda env op on a reserved project name");
     }
     CondaCommands cc = new CondaCommands(settings.getAnacondaUser(),
         user, op, CondaStatus.NEW, CondaInstallType.ENVIRONMENT, proj, pythonVersion, "", "defaults",
-        new Date(), arg, environmentYml, installJupyter);
+        new Date(), arg, environmentFile, installJupyter);
     condaCommandFacade.save(cc);
   }
 
@@ -208,7 +216,7 @@ public class EnvironmentController {
     if (urlMatcher.find()) {
       foundVersion = urlMatcher.group(2);
     } else {
-      throw new PythonException(RESTCodes.PythonErrorCode.YML_FILE_MISSING_PYTHON_VERSION, Level.FINE);
+      return null;
     }
     return foundVersion;
   }
@@ -247,7 +255,7 @@ public class EnvironmentController {
     updateInstalledDependencies(project);
   }
   
-  private String validateYml(Path fullPath, String username) throws ServiceException {
+  private String validateImportFile(Path fullPath, String username) throws ServiceException {
     DistributedFileSystemOps udfso = null;
     try {
       udfso = dfs.getDfsOps(username);

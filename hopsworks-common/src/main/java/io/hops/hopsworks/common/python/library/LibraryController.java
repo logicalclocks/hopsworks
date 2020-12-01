@@ -92,7 +92,7 @@ public class LibraryController {
     projectFacade.flushEm();
   }
 
-  public PythonDep addLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
+  public PythonDep installLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
                               String dependency, String version, String arg, GitBackend gitBackend, String apiKeyName)
       throws GenericException {
     return commandsController.condaOp(CondaOp.INSTALL, user, installType, proj,

@@ -21,7 +21,8 @@ public enum PackageSource {
   PIP,
   EGG,
   WHEEL,
-  GIT;
+  GIT,
+  REQUIREMENTS;
 
   public static PackageSource fromString(String param) {
     return valueOf(param.toUpperCase());

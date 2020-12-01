@@ -31,7 +31,9 @@ angular.module('hopsWorksApp')
 
             self.installMode = 'PYPI';
 
+            self.uploadMode = null;
             self.uploadDepPath = "";
+
             self.gitDep = "";
             self.thirdPartyApiKeys = [];
             self.gitApiKey = "";
@@ -94,7 +96,7 @@ angular.module('hopsWorksApp')
             self.pipSelectedLibs = {};
             self.environmentTypes = {};
 
-            self.environmentYmlDef = {};
+            self.environmentImportDef = {};
 
             self.pipSelectedLib = {
                 "channelUrl": self.condaChannel,
@@ -419,22 +421,24 @@ angular.module('hopsWorksApp')
 
             //Set some (semi-)constants
             self.selectFileRegexes = {
-                "yml": /.yml\b/
+                "yml": /.yml\b/,
+                "txt": /.txt\b/
             };
 
             self.selectFileErrorMsgs = {
-                "yml": "Please select a .yml file. It should have be processable by 'conda env create' command"
+                "yml": "Please select a .yml file. It should have be processable by 'conda env create' command",
+                "txt": "Please select a requirements.txt file. It should have be processable by 'pip install -r requirements.txt' command"
             };
 
-            self.selectYmlFile = function () {
-                ModalService.selectEnvironmentYml('lg', self.projectId, self.selectFileRegexes['yml'.toUpperCase()], self.selectFileErrorMsgs['yml'.toUpperCase()]).then(
+            self.selectImportFile = function (type) {
+                ModalService.selectEnvironmentImport('lg', self.projectId, self.selectFileRegexes[type.toUpperCase()], self.selectFileErrorMsgs[type.toUpperCase()], type).then(
                     function (success) {
                         self.startLoading("Issuing commands to create environment ...")
 
-                        self.environmentYmlDef = success;
+                        self.environmentImportDef = success;
                         self.enabling = true;
 
-                        PythonService.createEnvironmentFromYml(self.projectId, self.environmentYmlDef).then(
+                        PythonService.createEnvironmentFromImport(self.projectId, self.environmentImportDef).then(
                             function (success) {
                                 self.stopLoading()
                                 self.enabled = true;
@@ -575,23 +579,13 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            self.getInferredCustomDependency = function(condaLib) {
-                if(condaLib.endsWith(".whl")) {
-                    return "WHEEL";
-                } else if(condaLib.endsWith(".egg")) {
-                    return "EGG";
-                } else {
-                    return null;
-                }
-            };
-
             self.selectDepRegexes = {
               "EGG": /.egg\b/,
-              "WHEEL": /.whl\b/
+              "WHEEL": /.whl\b/,
+              "REQUIREMENTS": /.txt\b/
             };
 
             self.selectFile = function (reason) {
-              console.log(reason)
               ModalService.selectFile('lg',  self.projectId,  self.selectDepRegexes[reason],
                       "Please select a .whl or .egg file", false).then(
                       function (success) {
@@ -630,7 +624,7 @@ angular.module('hopsWorksApp')
                         data.gitApiKey = self.gitApiKey.name
                         data.gitBackend = self.gitBackend
                     }
-                } else if (packageSource.toUpperCase() === "EGG" || packageSource.toUpperCase() === "WHEEL") {
+                } else if (packageSource.toUpperCase() === "EGG" || packageSource.toUpperCase() === "WHEEL" || packageSource.toUpperCase() === "REQUIREMENTS") {
                     var data = {
                         "channelUrl": packageSource.toLowerCase(),
                         "packageSource": packageSource,
@@ -659,6 +653,7 @@ angular.module('hopsWorksApp')
                         self.condaSearchResults = [];
                         self.installing[library] = false;
                         self.uploadDepPath = "";
+                        self.uploadMode = null;
                         self.gitDep = "";
                         self.gitApiKey = "";
                         self.privateGitRepo = false;

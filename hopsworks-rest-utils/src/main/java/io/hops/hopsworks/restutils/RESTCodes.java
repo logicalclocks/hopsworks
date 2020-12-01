@@ -1654,7 +1654,9 @@ public class RESTCodes {
     MACHINE_TYPE_NOT_SPECIFIED(9, "Machine type not specified.", Response.Status.BAD_REQUEST),
     VERSION_NOT_SPECIFIED(10, "Version not specified.", Response.Status.BAD_REQUEST),
     ANACONDA_ENVIRONMENT_INITIALIZING(11, "The project's Python environment is currently being initialized. Please " +
-      "try again later.", Response.Status.BAD_REQUEST);
+      "try again later.", Response.Status.BAD_REQUEST),
+    ANACONDA_ENVIRONMENT_FILE_INVALID(12, "Path is not a valid environment file, " +
+        "must be Anaconda .yml or requirements.txt", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

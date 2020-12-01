@@ -638,10 +638,10 @@ angular.module('hopsWorksApp')
                 });
                 return modalInstance.result;
             },
-            selectEnvironmentYml: function (size, projectId, regex, errorMsg) {
+            selectEnvironmentImport: function (size, projectId, regex, errorMsg, type) {
                 var modalInstance = $uibModal.open({
-                    templateUrl: 'views/selectEnvYml.html',
-                    controller: 'SelectEnvYmlCtrl as selectEnvYmlCtrl',
+                    templateUrl: 'views/selectEnvImport.html',
+                    controller: 'SelectEnvImportCtrl as selectEnvImportCtrl',
                     size: size,
                     resolve: {
                         auth: ['$q','AuthGuardService',
@@ -660,6 +660,9 @@ angular.module('hopsWorksApp')
                         },
                         errorMsg: function () {
                             return errorMsg;
+                        },
+                        type: function () {
+                            return type;
                         }
                     }
                 });

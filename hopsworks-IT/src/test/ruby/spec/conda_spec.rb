@@ -462,7 +462,7 @@ describe "On #{ENV['OS']}" do
           it 'create environment from yml with jupyter install true' do
             upload_yml
             delete_env(@project[:id], python_version)
-            create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", true)
+            create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", true)
             expect_status(201)
 
             wait_for do
@@ -475,7 +475,7 @@ describe "On #{ENV['OS']}" do
 
           it 'create environment from yml with jupyter install false' do
             delete_env(@project[:id], python_version)
-            create_env_yml(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", false)
+            create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/environment_cpu.yml", false)
             expect_status(201)
 
             wait_for do
@@ -484,6 +484,43 @@ describe "On #{ENV['OS']}" do
 
             @project = get_project_by_name(@project[:projectname])
             expect(python_version).to eq "3.7"
+          end
+
+          it 'create environment from requirements.txt with jupyter install true' do
+            upload_requirements
+            delete_env(@project[:id], python_version)
+            create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/requirements.txt", true)
+            expect_status(201)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            @project = get_project_by_name(@project[:projectname])
+            expect(python_version).to eq "3.7"
+
+            list_libraries(@project[:id], python_version)
+            imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
+            expect(imageio_library[:packageSource]).to eq("PIP")
+            expect(imageio_library[:version]).to eq ("2.2.0")
+          end
+
+          it 'create environment from requirements.txt with jupyter install false' do
+            delete_env(@project[:id], python_version)
+            create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/requirements.txt", false)
+            expect_status(201)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            @project = get_project_by_name(@project[:projectname])
+            expect(python_version).to eq "3.7"
+
+            list_libraries(@project[:id], python_version)
+            imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
+            expect(imageio_library[:packageSource]).to eq("PIP")
+            expect(imageio_library[:version]).to eq ("2.2.0")
           end
         end
         

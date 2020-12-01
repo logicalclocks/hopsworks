@@ -71,7 +71,7 @@
               <div class="jumbotron" style="margin-top: 30px;">
                 <div class="col-md-offset-1">
                   <h1 class="display-3">Anaconda</h1>
-                  <p class="lead">Using Jupyter requires that Anaconda is enabled for the project. Select one of the two options below.</p>
+                  <p class="lead">Using Jupyter requires that Anaconda is enabled for the project. Select one of the three options below.</p>
                   <br />
                   <p class="lead"><b> Option 1 (Recommended for new users): </b> Create a default environment with
                     pre-installed libraries and python 3.7.</p>
@@ -90,8 +90,15 @@
                   <p><b> Option 2: </b> Create environment from Anaconda .yml file.</p>
 
                   <button ng-disabled="pythonCtrl.enabling" class="btn btn-success btn-lg" type="button"
-                          ng-click="pythonCtrl.selectYmlFile()">
-                    Select .yml
+                          ng-click="pythonCtrl.selectImportFile('yaml')">
+                    Browse
+                  </button>
+                  <br />
+                  <p style="margin-top:25px;"><b> Option 3: </b> Create environment from pip requirements.txt file.</p>
+
+                  <button ng-disabled="pythonCtrl.enabling" class="btn btn-success btn-lg" type="button"
+                          ng-click="pythonCtrl.selectImportFile('requirements.txt')">
+                    Browse
                   </button>
                 </div>
               </div>
@@ -409,13 +416,27 @@
                       </tr>
                     </table>
                   </div>
-
                 </div>
 
                 <div class="col-md-offset-1" ng-show="pythonCtrl.installMode === 'UPLOAD'">
-                  <h4 style="margin-top:20px;">Select .whl or .egg file</h4>
                   <div class="control-group">
-                    <label class="control-label" for="selectDep">
+                    <h4>Select package file</h4>
+                    <div id="selectUpload" class="btn-group" role="group" aria-label="...">
+                      <button type="button" class="btn"
+                              ng-click="pythonCtrl.uploadMode = 'REQUIREMENTS';"
+                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'REQUIREMENTS', 'btn-primary': pythonCtrl.uploadMode === 'REQUIREMENTS'}"
+                      >Requirements</button>
+                      <button type="button" class="btn"
+                              ng-click="pythonCtrl.uploadMode = 'WHEEL';"
+                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'WHEEL', 'btn-primary': pythonCtrl.uploadMode === 'WHEEL'}"
+                      >Wheel</button>
+                      <button type="button" class="btn"
+                              ng-click="pythonCtrl.uploadMode = 'EGG';"
+                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'EGG', 'btn-primary': pythonCtrl.uploadMode === 'EGG'}"
+                      >Egg</button>
+                    </div>
+
+                    <label class="control-label" for="selectDep" style="margin-top:15px;" ng-show="pythonCtrl.uploadMode">
                       <button id="selectDep"
                               class="btn btn-default" ng-click="pythonCtrl.selectFile()" style="width:100px; box-shadow:0 1px 2px 0 rgba(60,64,67,.3),0 1px 3px 1px rgba(60,64,67,.15);">
                       <span><i class="fa fa-file" style="font-size:0.8em;"/> Browse</span>
@@ -426,7 +447,7 @@
 
                     <div ng-show="pythonCtrl.uploadDepPath" style="margin-top:10px;">
                       <button type="submit" class="btn btn-primary"
-                        ng-click="pythonCtrl.install(pythonCtrl.uploadDepPath, pythonCtrl.getInferredCustomDependency(pythonCtrl.uploadDepPath), '')">
+                        ng-click="pythonCtrl.install(pythonCtrl.uploadDepPath, pythonCtrl.uploadMode, '')">
                         Install <i class="fa fa-download"></i>
                       </button>
                     </div>
