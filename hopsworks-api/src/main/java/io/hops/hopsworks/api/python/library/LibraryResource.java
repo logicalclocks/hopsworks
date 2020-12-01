@@ -210,6 +210,7 @@ public class LibraryResource {
         break;
       case EGG:
       case WHEEL:
+      case REQUIREMENTS:
         validateBundledDependency(user, librarySpecification);
         break;
       case GIT:
@@ -228,7 +229,7 @@ public class LibraryResource {
       }
     }
 
-    PythonDep dep = libraryController.addLibrary(project, user,
+    PythonDep dep = libraryController.installLibrary(project, user,
         CondaInstallType.valueOf(packageSource.name().toUpperCase()), librarySpecification.getChannelUrl(),
         library, librarySpecification.getVersion(), librarySpecification.getDependencyUrl(),
         librarySpecification.getGitBackend(), librarySpecification.getGitApiKey());
@@ -327,6 +328,9 @@ public class LibraryResource {
     } else if(packageSource.equals(PackageSource.WHEEL) && !dependencyUrl.endsWith(".whl")) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
           "The library to install is not a .whl file: " + dependencyUrl);
+    } else if(packageSource.equals(PackageSource.REQUIREMENTS) && !dependencyUrl.endsWith("/requirements.txt")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not a requirements.txt file: " + dependencyUrl);
     }
   }
 

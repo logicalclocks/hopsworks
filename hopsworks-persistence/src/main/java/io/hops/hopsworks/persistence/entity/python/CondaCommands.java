@@ -193,8 +193,8 @@ public class CondaCommands implements Serializable {
   private Project projectId;
   @Size(min = 1,
           max = 1000)
-  @Column(name = "environment_yml")
-  private String environmentYml;
+  @Column(name = "environment_file")
+  private String environmentFile;
 
   @Column(name= "install_jupyter")
   private Boolean installJupyter = false;
@@ -207,14 +207,14 @@ public class CondaCommands implements Serializable {
 
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter) {
+                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter) {
     this(user, userId, op, status, installType, project, lib, version, channelUrl, created, arg,
-        environmentYml, installJupyter, null, null);
+        environmentFile, installJupyter, null, null);
   }
 
   public CondaCommands(String user, Users userId, CondaOp op,
                        CondaStatus status, CondaInstallType installType, Project project, String lib, String version,
-                       String channelUrl, Date created, String arg, String environmentYml, Boolean installJupyter,
+                       String channelUrl, Date created, String arg, String environmentFile, Boolean installJupyter,
                        GitBackend gitBackend, String gitApiKeyName) {
     if (op  == null || user == null || project == null) { 
       throw new NullPointerException("Op/user/project cannot be null");
@@ -230,7 +230,7 @@ public class CondaCommands implements Serializable {
     this.lib = lib;
     this.version = version;
     this.arg = arg;
-    this.environmentYml = environmentYml;
+    this.environmentFile = environmentFile;
     this.installJupyter = installJupyter;
     this.gitBackend = gitBackend;
     this.gitApiKeyName = gitApiKeyName;
@@ -325,12 +325,12 @@ public class CondaCommands implements Serializable {
     this.installType = installType;
   }
 
-  public String getEnvironmentYml() {
-    return environmentYml;
+  public String getEnvironmentFile() {
+    return environmentFile;
   }
 
-  public void setEnvironmentYml(String environmentYml) {
-    this.environmentYml = environmentYml;
+  public void setEnvironmentFile(String environmentFile) {
+    this.environmentFile = environmentFile;
   }
 
   public Boolean getInstallJupyter() {

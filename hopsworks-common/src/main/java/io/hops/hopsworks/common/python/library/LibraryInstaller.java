@@ -43,6 +43,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -242,7 +243,7 @@ public class LibraryInstaller {
         String baseImage = projectUtils.getFullBaseImageName();
         //If a user creates an environment from a yml file and jupyter install is not selected build on the base
         //image that does not contain a python environment
-        if(!Strings.isNullOrEmpty(cc.getEnvironmentYml()) && !cc.getInstallJupyter()) {
+        if(!Strings.isNullOrEmpty(cc.getEnvironmentFile()) && !cc.getInstallJupyter()) {
           baseImage = baseImage.replace(settings.getBaseDockerImagePythonName(),
               settings.getBaseNonPythonDockerImage());
         }
@@ -250,21 +251,36 @@ public class LibraryInstaller {
         writer.newLine();
         writer.write("FROM " + baseImage);
         writer.newLine();
-        // If new image is created from a YML file, copy it in the image, create the env and delete it
-        if (!Strings.isNullOrEmpty(cc.getEnvironmentYml())) {
-          // Materialize YML
-          String projectEnvYml = "environment.yml";
-          // Copy from hdfs
-          copyCondaArtifactToLocal(cc.getEnvironmentYml(), baseDir + File.separator + projectEnvYml);
-          // Mount in Dockerfile
+        // If new image is created from an IMPORT (.yml or requirements.txt) file
+        // copy it in the image, create the env and delete it
+        if (!Strings.isNullOrEmpty(cc.getEnvironmentFile())) {
           writer.write("RUN rm -f /root/.condarc");
           writer.newLine();
-          writer.write("COPY .condarc .pip " + projectEnvYml + " /root/");
+          // Materialize IMPORT FILE
+          String environmentFilePath = cc.getEnvironmentFile();
+          String environmentFile = FilenameUtils.getName(environmentFilePath);
+
+          writer.write("COPY .condarc .pip " + environmentFile + " /root/");
           writer.newLine();
-          String dockerCondaCmd = cc.getInstallJupyter() ?
-              "RUN conda env update -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment():
-              "RUN conda env create -f /root/" + projectEnvYml + " -n " + settings.getCurrentCondaEnvironment();
-          writer.write(dockerCondaCmd);
+          copyCondaArtifactToLocal(environmentFilePath, baseDir + File.separator + environmentFile);
+
+          if(environmentFilePath.endsWith(".yml")) {
+            if(cc.getInstallJupyter()) {
+              writer.write("RUN conda env update -f /root/" + environmentFile + " -n "
+                  + settings.getCurrentCondaEnvironment());
+            } else {
+              writer.write("RUN conda env create -f /root/" + environmentFile + " -p "
+                  + anaconda_project_dir);
+            }
+          } else if(environmentFilePath.endsWith("/requirements.txt")) {
+            if(cc.getInstallJupyter()) {
+              writer.write("RUN pip install -r /root/" + environmentFile);
+            } else {
+              writer.write("RUN conda create -y -p " + anaconda_project_dir
+                  + " python=" + settings.getDockerBaseImagePythonVersion()
+                  + " && pip install -r /root/" + environmentFile);
+            }
+          }
           writer.write(" && " + getCleanupCommand()  + " && " + anaconda_dir + "/bin/conda list -n "
               + settings.getCurrentCondaEnvironment());
         }
@@ -352,6 +368,13 @@ public class LibraryInstaller {
             copyCondaArtifactToLocal(cc.getArg(), localWheelPath);
             writer.write("--mount=type=bind,source="+wheelName+",target=/root/" + wheelName + " ");
             writer.write(anaconda_project_dir + "/bin/pip install --upgrade /root/" + wheelName);
+            break;
+          case REQUIREMENTS:
+            String requirementsName = cc.getLib();
+            String localRequirementsName = baseDir + File.separator + requirementsName;
+            copyCondaArtifactToLocal(cc.getArg(), localRequirementsName);
+            writer.write("--mount=type=bind,source="+requirementsName+",target=/root/" + requirementsName + " ");
+            writer.write(anaconda_project_dir + "/bin/pip install -r /root/" + requirementsName);
             break;
           case GIT:
             if(cc.getGitBackend() != null && cc.getGitApiKeyName() != null) {
