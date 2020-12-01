@@ -24,10 +24,10 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
+import io.hops.hopsworks.common.featurestore.keyword.KeywordControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.MetadataException;
-import io.hops.hopsworks.featurestore.KeywordController;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
@@ -42,6 +42,7 @@ import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -68,8 +69,8 @@ public class FeaturestoreKeywordResource {
   private TrainingDatasetController trainingDatasetController;
   @EJB
   private JWTHelper jwtHelper;
-  @EJB
-  private KeywordController keywordController;
+  @Inject
+  private KeywordControllerIface keywordControllerIface;
   @EJB
   private FeaturestoreKeywordBuilder featurestoreKeywordBuilder;
 
@@ -107,7 +108,7 @@ public class FeaturestoreKeywordResource {
   public Response getKeywords(@Context SecurityContext sc, @Context UriInfo uriInfo)
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
-    List<String> keywords = keywordController.getAll(project, user, featuregroup, trainingDataset);
+    List<String> keywords = keywordControllerIface.getAll(project, user, featuregroup, trainingDataset);
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project,
@@ -126,7 +127,7 @@ public class FeaturestoreKeywordResource {
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     List<String> updatedKeywords =
-        keywordController.addKeywords(project, user, featuregroup, trainingDataset, keywordDTO.getKeywords());
+        keywordControllerIface.addKeywords(project, user, featuregroup, trainingDataset, keywordDTO.getKeywords());
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project,
@@ -144,7 +145,7 @@ public class FeaturestoreKeywordResource {
       throws FeaturestoreException, MetadataException {
     Users user = jwtHelper.getUserPrincipal(sc);
     List<String> updatedKeywords =
-        keywordController.deleteKeywords(project, user, featuregroup, trainingDataset, Arrays.asList(keyword));
+        keywordControllerIface.deleteKeywords(project, user, featuregroup, trainingDataset, Arrays.asList(keyword));
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.KEYWORDS);
     KeywordDTO dto = featurestoreKeywordBuilder.build(uriInfo, resourceRequest, project,
