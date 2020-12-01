@@ -38,6 +38,7 @@ import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hdfs.Utils;
+import io.hops.hopsworks.common.hdfs.inode.InodeController;
 import io.hops.hopsworks.common.provenance.core.HopsFSProvenanceController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -106,6 +107,8 @@ public class FeaturegroupController {
   private Settings settings;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private InodeController inodeController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -202,21 +205,21 @@ public class FeaturegroupController {
       onDemandFeaturegroup = onDemandFeaturegroupController.createOnDemandFeaturegroup(featurestore,
           (OnDemandFeaturegroupDTO) featuregroupDTO, project, user);
     }
-    
+
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, onDemandFeaturegroup);
-    
+
     //Store statistic columns setting
     statisticColumnController.persistStatisticColumns(featuregroup, featuregroupDTO.getStatisticColumns());
     featuregroup.setStatisticColumns(statisticColumnFacade.findByFeaturegroup(featuregroup));
 
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-    
+
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
-    
+
     FeaturegroupDTO completeFeaturegroupDTO = convertFeaturegrouptoDTO(featuregroup, project, user);
 
     //Extract metadata
@@ -232,7 +235,7 @@ public class FeaturegroupController {
 
     return completeFeaturegroupDTO;
   }
-  
+
   /**
    * Lookup jobs by list of jobNames
    *
@@ -411,7 +414,7 @@ public class FeaturegroupController {
     cachedFeaturegroupController.enableFeaturegroupOnline(featurestore, featuregroup, project, user);
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
-  
+
   /**
    * Disable online feature serving of a feature group
    *
@@ -469,7 +472,7 @@ public class FeaturegroupController {
     featuregroup = getFeaturegroupById(featurestore, featuregroupDTO.getId());
     return convertFeaturegrouptoDTO(featuregroup, project, user);
   }
-  
+
   /**
    * Verifies if statistics settings were provided and else sets it to the default or keeps the current settings
    *
@@ -598,7 +601,7 @@ public class FeaturegroupController {
                 + featuregroup.getFeaturegroupType());
     }
   }
-  
+
   /**
    * Verifies the id of a feature group
    *
@@ -644,7 +647,7 @@ public class FeaturegroupController {
         "feature group name: " + featureGroupName + " feature group version: " + version));
   }
 
-  
+
   /**
    * Synchronizes an already created Hive table with the Feature Store metadata
    *
@@ -669,16 +672,16 @@ public class FeaturegroupController {
     //Persist basic feature group metadata
     Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
       cachedFeaturegroup, null);
-  
+
     //Get jobs
     List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-  
+
     //Store jobs
     featurestoreJobFacade.insertJobs(featuregroup, jobs);
-    
+
     return featuregroupDTO;
   }
-  
+
   /**
    * Persists metadata of a new feature group in the feature_group table
    *
@@ -734,7 +737,16 @@ public class FeaturegroupController {
     }
     return new ArrayList<>();
   }
-  
+
+  public String getFeatureGroupLocation(Featuregroup featureGroup) {
+    // Cached feature groups also have a `location` field.
+    // the issue is that the host is slightly different due to a configuration of Hive
+    // so here we resolve only the path based on the indoe
+    return inodeController.getPath(featureGroup.getFeaturegroupType() == FeaturegroupType.CACHED_FEATURE_GROUP ?
+        featureGroup.getCachedFeaturegroup().getHiveTbls().getSdId().getInode() :
+        featureGroup.getOnDemandFeaturegroup().getInode());
+  }
+
   /**
    * Verify feature group specific input
    *
@@ -750,7 +762,7 @@ public class FeaturegroupController {
       featureGroupDTO.isFeatHistEnabled());
     statisticColumnController.verifyStatisticColumnsExist(featureGroupDTO);
   }
-  
+
   /**
    * Verify user input feature group version
    *
@@ -768,7 +780,7 @@ public class FeaturegroupController {
         "version cannot be negative or zero");
     }
   }
-  
+
   void verifyFeaturesNoDefaultValue(List<FeatureGroupFeatureDTO> features)
       throws FeaturestoreException {
     if (features.stream().anyMatch(f -> f.getDefaultValue() != null)) {
