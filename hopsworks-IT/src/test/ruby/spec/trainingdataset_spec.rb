@@ -1007,64 +1007,6 @@ describe "On #{ENV['OS']}" do
           get "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset['id']}/query"
           expect_status_details(400)
         end
-
-        it "should be able to attach keywords" do
-          featurestore_id = get_featurestore_id(@project[:id])
-          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector)
-          parsed_json = JSON.parse(json_result)
-          training_dataset_id = parsed_json["id"]
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords",
-               {keywords: ['hello', 'this', 'keyword123']}.to_json
-
-          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords"
-          expect_status(200)
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json['keywords']).to include('hello')
-          expect(parsed_json['keywords']).to include('this')
-          expect(parsed_json['keywords']).to include('keyword123')
-        end
-
-        it "should fail to attach invalid keywords" do
-          featurestore_id = get_featurestore_id(@project[:id])
-          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector)
-          parsed_json = JSON.parse(json_result)
-          training_dataset_id = parsed_json["id"]
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords",
-               {keywords: ['hello', 'this', '@#!@#^(&$']}
-          expect_status(400)
-        end
-
-        it "should be able to remove keyword" do
-          featurestore_id = get_featurestore_id(@project[:id])
-          connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, _ = create_hopsfs_training_dataset(@project[:id], featurestore_id, connector)
-          parsed_json = JSON.parse(json_result)
-          training_dataset_id = parsed_json["id"]
-
-          post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords",
-               {keywords: ['hello', 'this', 'keyword123']}.to_json
-
-          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords"
-          expect_status(200)
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json['keywords']).to include('hello')
-          expect(parsed_json['keywords']).to include('this')
-          expect(parsed_json['keywords']).to include('keyword123')
-
-          delete "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords?keyword=hello"
-          expect_status(200)
-
-          json_result = get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/#{featurestore_id}/trainingdatasets/#{training_dataset_id}/keywords"
-          expect_status(200)
-          parsed_json = JSON.parse(json_result)
-          expect(parsed_json['keywords']).not_to include('hello')
-          expect(parsed_json['keywords']).to include('this')
-          expect(parsed_json['keywords']).to include('keyword123')
-        end
       end
     end
 
