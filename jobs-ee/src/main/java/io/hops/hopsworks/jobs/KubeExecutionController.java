@@ -163,6 +163,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
         //If it is a notebook we need to convert it to a .py file every time the job is run
         String appPath = pythonJobConfiguration.getAppPath();
         if (appPath.endsWith(".ipynb")) {
+          executionFacade.updateState(execution, JobState.CONVERTING_NOTEBOOK);
           String outPath = "hdfs://" + Utils.getProjectPath(job.getProject().getName()) + Settings.PROJECT_STAGING_DIR;
           String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
           pythonJobConfiguration.setAppPath(pyAppPath);
