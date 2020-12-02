@@ -288,6 +288,11 @@
                                      style="color: #0066bb ">
                                 {{jobsCtrl.toTitleCase(execution.state)}}
                             </span>
+                              <span
+                                      ng-if="execution.state === 'CONVERTING_NOTEBOOK'"
+                                      style="color: #0066bb ">
+                                {{jobsCtrl.toTitleCase(execution.state)}}
+                            </span>
                                   <span
                                           ng-if="execution.state === 'INITIALIZATION_FAILED'"
                                           style="color: #880000 ">

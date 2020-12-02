@@ -54,7 +54,7 @@ angular.module('hopsWorksApp')
             var dataSetService = new DataSetService(self.projectId); //The datasetservice for the current project.
 
             self.jobs = {}; // Will contain all the jobs.
-            self.runningStates = ['INITIALIZING', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
+            self.runningStates = ['INITIALIZING', 'CONVERTING_NOTEBOOK', 'RUNNING', 'ACCEPTED', 'NEW', 'NEW_SAVING', 'SUBMITTED',
                   'STARTING_APP_MASTER', 'AGGREGATING_LOGS'];
             self.jobFilter = JobService.getJobFilter();
             self.selectedJobs = {};

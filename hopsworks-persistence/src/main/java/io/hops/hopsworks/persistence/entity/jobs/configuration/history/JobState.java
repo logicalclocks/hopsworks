@@ -60,7 +60,8 @@ public enum JobState {
   FRAMEWORK_FAILURE("Framework failure"),
   STARTING_APP_MASTER("Starting Application Master"),
   APP_MASTER_START_FAILED("Failed starting AM"),
-  GENERATING_SECURITY_MATERIAL("Generating security material");
+  GENERATING_SECURITY_MATERIAL("Generating security material"),
+  CONVERTING_NOTEBOOK("Converting noteboook to python");
 
   private final String readable;
 
@@ -115,7 +116,7 @@ public enum JobState {
   public static Set<JobState> getRunningStates() {
     return EnumSet.
         of(INITIALIZING, NEW, NEW_SAVING, GENERATING_SECURITY_MATERIAL, SUBMITTED, ACCEPTED, STARTING_APP_MASTER,
-            RUNNING, AGGREGATING_LOGS);
+            RUNNING, AGGREGATING_LOGS, CONVERTING_NOTEBOOK);
   }
   
   public static Set<JobState> getKubeRunningStates() {
