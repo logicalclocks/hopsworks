@@ -156,6 +156,12 @@ public class FeaturegroupFacade extends AbstractFacade<Featuregroup> {
       .setParameter("featurestore", featurestore);
     return q.getResultList();
   }
+
+  public Long countByFeaturestore(Featurestore featurestore) {
+    return em.createNamedQuery("Featuregroup.countByFeaturestore", Long.class)
+        .setParameter("featurestore", featurestore)
+        .getSingleResult();
+  }
   
   /**
    * Transaction to create a new featuregroup in the database

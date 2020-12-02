@@ -61,6 +61,8 @@ import java.util.Objects;
   @NamedQuery(name = "TrainingDataset.findById", query = "SELECT td FROM TrainingDataset td WHERE td.id = :id"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestore", query = "SELECT td FROM TrainingDataset td " +
     "WHERE td.featurestore = :featurestore"),
+  @NamedQuery(name = "TrainingDataset.countByFeaturestore", query = "SELECT count(td.id) FROM TrainingDataset td " +
+        "WHERE td.featurestore = :featurestore"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndId", query = "SELECT td FROM TrainingDataset td " +
     "WHERE td.featurestore = :featurestore AND td.id = :id"),
   @NamedQuery(name = "TrainingDataset.findByFeaturestoreAndNameVersion",

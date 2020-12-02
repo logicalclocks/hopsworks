@@ -163,6 +163,12 @@ public class TrainingDatasetFacade extends AbstractFacade<TrainingDataset> {
     return q.getResultList();
   }
 
+  public Long countByFeaturestore(Featurestore featurestore) {
+    return em.createNamedQuery("TrainingDataset.countByFeaturestore", Long.class)
+        .setParameter("featurestore", featurestore)
+        .getSingleResult();
+  }
+
   /**
    * Transaction to create a new trainingDataset in the database
    *

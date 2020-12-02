@@ -60,6 +60,8 @@ import java.util.Objects;
   @NamedQuery(name = "Featuregroup.findById", query = "SELECT fg FROM Featuregroup fg WHERE fg.id = :id"),
   @NamedQuery(name = "Featuregroup.findByFeaturestore", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore"),
+  @NamedQuery(name = "Featuregroup.countByFeaturestore", query = "SELECT count(fg.id) FROM Featuregroup fg " +
+        "WHERE fg.featurestore = :featurestore"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndId", query = "SELECT fg FROM Featuregroup fg " +
     "WHERE fg.featurestore = :featurestore AND fg.id = :id"),
   @NamedQuery(name = "Featuregroup.findByFeaturestoreAndNameVersion", query = "SELECT fg FROM Featuregroup fg " +
