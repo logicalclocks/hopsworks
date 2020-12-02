@@ -26,10 +26,12 @@ import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
+import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -42,6 +44,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -76,6 +79,8 @@ public class XAttrsResource {
   private DistributedFsService dfs;
   @EJB
   private HdfsUsersController hdfsUsersController;
+  @EJB
+  private DatasetHelper datasetHelper;
   
   private Project project;
   
@@ -92,21 +97,23 @@ public class XAttrsResource {
   @Produces(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response put(@Context
-      SecurityContext sc, @Context
-      UriInfo uriInfo, @PathParam("path") String path,
-      @QueryParam("name") String xattrName,
-      String metaObj) throws DatasetException,
-      MetadataException {
+  public Response put(
+    @Context SecurityContext sc, @Context UriInfo uriInfo,
+    @PathParam("path") String path,
+    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+    @QueryParam("name") String xattrName,
+    String metaObj)
+    throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     
     Response.Status status = Response.Status.OK;
-    if(xattrsController.addXAttr(project, user, path, xattrName, metaObj)){
+    String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
+    if(xattrsController.addXAttr(project, user, inodePath, xattrName, metaObj)){
       status = Response.Status.CREATED;
     }
     
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
-    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, path, xattrName);
+    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, inodePath, xattrName);
     
     if(status == Response.Status.CREATED) {
       UriBuilder builder = uriInfo.getAbsolutePathBuilder();
@@ -124,28 +131,31 @@ public class XAttrsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response get(@Context SecurityContext sc, @Context UriInfo uriInfo,
-      @PathParam("path") String path, @QueryParam("name") String xattrName)
-      throws DatasetException, MetadataException {
+    @PathParam("path") String path,
+    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+    @QueryParam("name") String xattrName)
+    throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
     Map<String, String> result = new HashMap<>();
 
     DistributedFileSystemOps udfso = dfs.getDfsOps(hdfsUsersController.getHdfsUserName(project, user));
+    String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
     try {
       if (xattrName != null) {
-        String xattr = xattrsController.getXAttr(path, xattrName, udfso);
+        String xattr = xattrsController.getXAttr(inodePath, xattrName, udfso);
         if (Strings.isNullOrEmpty(xattr)) {
           throw new MetadataException(RESTCodes.MetadataErrorCode.METADATA_MISSING_FIELD, Level.FINE);
         }
         result.put(xattrName, xattr);
       } else {
-        result.putAll(xattrsController.getXAttrs(path, udfso));
+        result.putAll(xattrsController.getXAttrs(inodePath, udfso));
       }
     } finally {
       dfs.closeDfsClient(udfso);
     }
 
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.XATTRS);
-    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, path, result);
+    XAttrDTO dto = xattrsBuilder.build(uriInfo, resourceRequest, project, inodePath, result);
     return Response.ok().entity(dto).build();
   }
   
@@ -156,10 +166,13 @@ public class XAttrsResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
   @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   public Response delete(@Context SecurityContext sc,
-      @PathParam("path") String path, @QueryParam("name") String xattrName)
-      throws DatasetException, MetadataException {
+    @PathParam("path") String path,
+    @QueryParam("pathType") @DefaultValue("DATASET") DatasetType pathType,
+    @QueryParam("name") String xattrName)
+    throws DatasetException, MetadataException {
     Users user = jWTHelper.getUserPrincipal(sc);
-    xattrsController.removeXAttr(project, user, path, xattrName);
+    String inodePath = datasetHelper.getDatasetPathIfFileExist(project, path, pathType).getFullPath().toString();
+    xattrsController.removeXAttr(project, user, inodePath, xattrName);
     return Response.status(Response.Status.NO_CONTENT).build();
   }
 }
