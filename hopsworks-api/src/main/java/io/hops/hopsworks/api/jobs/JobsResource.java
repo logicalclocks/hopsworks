@@ -287,17 +287,17 @@ public class JobsResource {
     return Response.noContent().build();
   }
   
-  @ApiOperation(value = "Inspect Spark user program and return SparkJobConfiguration",
+  @ApiOperation(value = "Inspect user program and return a JobConfiguration",
     response = SparkJobConfiguration.class)
   @GET
-  @Path("{jobtype : spark|pyspark|flink}/inspection")
+  @Path("{jobtype : python|spark|pyspark|flink}/inspection")
   @Produces(MediaType.APPLICATION_JSON)
   @Consumes(MediaType.APPLICATION_JSON)
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens={Audience.API, Audience.JOB}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response inspect (
-    @ApiParam (value = "spark job type", example = "spark") @PathParam("jobtype") JobType jobtype,
+    @ApiParam (value = "job type", example = "spark") @PathParam("jobtype") JobType jobtype,
     @ApiParam(value = "path", example = "/Projects/demo_spark_admin000/Resources/spark-examples.jar",
       required = true)  @QueryParam("path") String path,
     @Context SecurityContext sc) throws JobException {

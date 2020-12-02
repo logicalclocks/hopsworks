@@ -207,66 +207,7 @@ angular.module('hopsWorksApp')
               };
 
             self.copy = function (job) {
-              var jobType;
-              switch (job.jobType.toUpperCase()) {
-                case "SPARK":
-                  jobType = 1;
-                  break;
-                case "PYSPARK":
-                  jobType = 2;
-                  break;
-                case "FLINK":
-                  jobType = 3;
-                  break;
-                case "PYTHON":
-                  jobType = 4;
-                  break;
-              }
-              var mainFileTxt, mainFileVal, jobDetailsTxt, sparkState, flinkState;
-              if (jobType === 1 || jobType === 2 || jobType === 4 ) {
-
-                sparkState = {
-                  "selectedJar": getFileName(job.config.appPath)
-                };
-                mainFileTxt = "App file";
-                mainFileVal = sparkState.selectedJar;
-              }
-                jobDetailsTxt = "Job details";
-                var state = {
-                "jobtype": jobType,
-                "jobname": job.name,
-                "localResources": job.config.localResources,
-                "phase": 4,
-                "runConfig": job.config,
-                "sparkState": sparkState,
-                "flinkState": flinkState,
-                "accordion1": {//Contains the job name
-                  "isOpen": false,
-                  "visible": true,
-                  "value": " - " + job.name,
-                  "title": "Job name"},
-                "accordion2": {//Contains the job type
-                  "isOpen": false,
-                  "visible": true,
-                  "value": " - " + job.jobType,
-                  "title": "Job type"},
-                "accordion3": {// Contains the main execution file (jar, workflow,...)
-                  "isOpen": false,
-                  "visible": true,
-                  "value": " - " + mainFileVal,
-                  "title": mainFileTxt},
-                "accordion4": {// Contains the job setup (main class, input variables,...)
-                  "isOpen": true,
-                  "visible": true,
-                  "value": "",
-                  "title": jobDetailsTxt},
-                "accordion5": {//Contains the configuration and creation
-                  "isOpen": true,
-                  "visible": true,
-                  "value": "",
-                  "title": "Configure and create"}
-              };
-              StorageService.store(self.projectId + "_newjob", state);
+              StorageService.store(self.projectId + "_newjob", JobService.getJobState(job));
               $location.path('project/' + self.projectId + '/newjob');
             };
 
