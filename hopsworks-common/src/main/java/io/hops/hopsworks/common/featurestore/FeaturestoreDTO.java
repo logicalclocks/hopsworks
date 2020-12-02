@@ -20,7 +20,6 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import java.util.Date;
 
 /**
@@ -28,10 +27,6 @@ import java.util.Date;
  * using jaxb.
  */
 @XmlRootElement
-@XmlType(propOrder = {"featurestoreId", "featurestoreName", "featurestoreDescription",
-  "created", "hdfsStorePath", "projectName", "projectId", "inodeId", "onlineFeaturestoreName",
-  "onlineFeaturestoreSize", "offlineFeaturestoreName",
-  "hiveEndpoint", "mysqlServerEndpoint", "onlineEnabled"})
 public class FeaturestoreDTO {
   
   private Integer featurestoreId;
@@ -48,6 +43,9 @@ public class FeaturestoreDTO {
   private String hiveEndpoint;
   private String mysqlServerEndpoint;
   private Boolean onlineEnabled = false;
+  private Long numFeatureGroups;
+  private Long numTrainingDatasets;
+  private Long numStorageConnectors;
   
   public FeaturestoreDTO() {
   }
@@ -96,12 +94,12 @@ public class FeaturestoreDTO {
   public Date getCreated() {
     return created;
   }
-  
+
   @XmlElement
   public String getProjectName() {
     return projectName;
   }
-  
+
   @XmlElement
   public Integer getProjectId() {
     return projectId;
@@ -169,7 +167,7 @@ public class FeaturestoreDTO {
   public void setOnlineFeaturestoreName(String onlineFeaturestoreName) {
     this.onlineFeaturestoreName = onlineFeaturestoreName;
   }
-  
+
   @XmlElement
   public Boolean getOnlineEnabled() {
     return onlineEnabled;
@@ -178,24 +176,51 @@ public class FeaturestoreDTO {
   public void setOnlineEnabled(Boolean onlineEnabled) {
     this.onlineEnabled = onlineEnabled;
   }
-  
+
+  public Long getNumFeatureGroups() {
+    return numFeatureGroups;
+  }
+
+  public void setNumFeatureGroups(Long numFeatureGroups) {
+    this.numFeatureGroups = numFeatureGroups;
+  }
+
+  public Long getNumTrainingDatasets() {
+    return numTrainingDatasets;
+  }
+
+  public void setNumTrainingDatasets(Long numTrainingDatasets) {
+    this.numTrainingDatasets = numTrainingDatasets;
+  }
+
+  public Long getNumStorageConnectors() {
+    return numStorageConnectors;
+  }
+
+  public void setNumStorageConnectors(Long numStorageConnectors) {
+    this.numStorageConnectors = numStorageConnectors;
+  }
+
   @Override
   public String toString() {
     return "FeaturestoreDTO{" +
-      "featurestoreId=" + featurestoreId +
-      ", featurestoreName='" + featurestoreName + '\'' +
-      ", created=" + created +
-      ", hdfsStorePath='" + hdfsStorePath + '\'' +
-      ", projectName='" + projectName + '\'' +
-      ", projectId=" + projectId +
-      ", featurestoreDescription='" + featurestoreDescription + '\'' +
-      ", inodeId=" + inodeId +
-      ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
-      ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
-      ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
-      ", hiveEndpoint='" + hiveEndpoint + '\'' +
-      ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +
-      ", onlineEnabled=" + onlineEnabled +
-      '}';
+        "featurestoreId=" + featurestoreId +
+        ", featurestoreName='" + featurestoreName + '\'' +
+        ", created=" + created +
+        ", hdfsStorePath='" + hdfsStorePath + '\'' +
+        ", projectName='" + projectName + '\'' +
+        ", projectId=" + projectId +
+        ", featurestoreDescription='" + featurestoreDescription + '\'' +
+        ", inodeId=" + inodeId +
+        ", onlineFeaturestoreName='" + onlineFeaturestoreName + '\'' +
+        ", onlineFeaturestoreSize=" + onlineFeaturestoreSize +
+        ", offlineFeaturestoreName='" + offlineFeaturestoreName + '\'' +
+        ", hiveEndpoint='" + hiveEndpoint + '\'' +
+        ", mysqlServerEndpoint='" + mysqlServerEndpoint + '\'' +
+        ", onlineEnabled=" + onlineEnabled +
+        ", numFeatureGroups=" + numFeatureGroups +
+        ", numTrainingDatasets=" + numTrainingDatasets +
+        ", numStorageConnectors=" + numStorageConnectors +
+        '}';
   }
 }
