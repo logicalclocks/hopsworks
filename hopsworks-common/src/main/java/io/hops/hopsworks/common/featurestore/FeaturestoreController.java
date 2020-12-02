@@ -18,9 +18,11 @@ package io.hops.hopsworks.common.featurestore;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
+import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
@@ -76,6 +78,10 @@ public class FeaturestoreController {
   private FeaturestoreUtils featurestoreUtils;
   @EJB
   private HiveController hiveController;
+  @EJB
+  private FeaturegroupFacade featuregroupFacade;
+  @EJB
+  private TrainingDatasetFacade trainingDatasetFacade;
   
   private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private Marshaller featurestoreUtilJobArgsMarshaller = null;
@@ -269,17 +275,17 @@ public class FeaturestoreController {
   private FeaturestoreDTO convertFeaturestoreToDTO(Featurestore featurestore) {
     String hiveDbDescription = featurestoreFacade.getHiveDatabaseDescription(featurestore.getHiveDbId());
     FeaturestoreDTO featurestoreDTO = new FeaturestoreDTO(featurestore);
+
     featurestoreDTO.setFeaturestoreDescription(hiveDbDescription);
-    String hiveDbName = featurestoreFacade.getHiveDbName(featurestore.getHiveDbId());
-    featurestoreDTO.setFeaturestoreName(hiveDbName);
-    String hdfsPath = featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId());
-    featurestoreDTO.setHdfsStorePath(hdfsPath);
-    Long inodeId = featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId());
-    featurestoreDTO.setInodeId(inodeId);
+    String name = featurestoreFacade.getHiveDbName(featurestore.getHiveDbId());
+    // TODO(Fabio): remove this when we switch to the new UI.
+    featurestoreDTO.setFeaturestoreName(name);
+    featurestoreDTO.setOfflineFeaturestoreName(name);
+    featurestoreDTO.setHdfsStorePath(featurestoreFacade.getHiveDbHdfsPath(featurestore.getHiveDbId()));
+    featurestoreDTO.setInodeId(featurestoreFacade.getFeaturestoreInodeId(featurestore.getHiveDbId()));
+
     try {
-      String hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
-      featurestoreDTO.setHiveEndpoint(hiveEndpoint);
-      featurestoreDTO.setOfflineFeaturestoreName(hiveDbName);
+      featurestoreDTO.setHiveEndpoint(hiveController.getHiveServerInternalEndpoint());
       if (settings.isOnlineFeaturestore() &&
           onlineFeaturestoreController.checkIfDatabaseExists(
               onlineFeaturestoreController.getOnlineFeaturestoreDbName(featurestore.getProject()))) {
@@ -288,10 +294,16 @@ public class FeaturestoreController {
         featurestoreDTO.setOnlineFeaturestoreName(featurestore.getProject().getName());
         featurestoreDTO.setOnlineEnabled(true);
       }
-      return featurestoreDTO;
     } catch (ServiceDiscoveryException ex) {
       throw new RuntimeException(ex);
     }
+
+    // add counters
+    featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeaturestore(featurestore));
+    featurestoreDTO.setNumTrainingDatasets(trainingDatasetFacade.countByFeaturestore(featurestore));
+    // TODO(Fabio): add counter for storage connectors
+
+    return featurestoreDTO;
   }
 
   /**
