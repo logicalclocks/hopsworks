@@ -83,19 +83,6 @@
                 <i id="project_working" class="fa fa-cog fa-spin fa-2x  fa-fw pull-right"
                    ng-show="homeCtrl.working[project.project.id]"></i>
             </a>
-            <div uib-dropdown class="dropdown position-fixed" id="menu-{{$index}}">
-                <ul uib-dropdown-menu class="dropdown-amore">
-                    <li>
-                        <a class="pointer"
-                           role="menuitem"
-                           tabindex="2"
-                           ng-click="homeCtrl.deleteProjectAndDatasets(project.project.id)">
-                  <span><i class="fa fa-trash"></i>
-                    Remove and delete DataSets </span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </div>
     </div>
     <ul uib-pager total-items="homeCtrl.totalItemsProjects" ng-model="homeCtrl.currentPageProjects"></ul>

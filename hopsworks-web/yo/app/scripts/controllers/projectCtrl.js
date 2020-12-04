@@ -77,6 +77,35 @@ angular.module('hopsWorksApp')
                 self.tourService.disableTourTips();
             };
 
+            self.projectDangerActions = [
+                {
+                    "action":"delete",
+                    "title":"Delete Project",
+                    "description":"Once you delete a project, there is no going back. Please be certain."
+                }
+            ]
+
+            self.handleProjectDangerActions = function (action) {
+                switch (action) {
+                    case "delete":
+                        ModalService.confirm('md', 'Confirm Delete',
+                            'Are you sure that you want to delete ' + self.currentProject.projectName +
+                            '?. This action will delete all the project data and there is no going back, please be' +
+                            ' sure.')
+                            .then(function (success) {
+                               ProjectService.delete({id: self.projectId}).$promise.then(function (success){
+                                   $location.path('/')
+                               }, function (error){
+                                   growl.error("", {title: error.data.errorMsg, ttl: 8000});
+                               });
+                               growl.info("Deleting project...", {title: 'Deleting', ttl: 12000})
+                            }, function (error) {})
+                        break;
+                    default:
+                        //do nothing
+                }
+            }
+
             // We could instead implement a service to get all the available types but this will do it for now
             if ($rootScope.isDelaEnabled) {
                 // , 'RSTUDIO'
