@@ -1289,8 +1289,12 @@ describe "On #{ENV['OS']}" do
           expect_status(401)
         end
         it "should fail to download file without a token" do
-          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/Logs/README.md?type=DATASET"
+          get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/download/with_token/Logs/README.md?type=DATASET"
           expect_json(errorCode: 200003)
+          expect_status(401)
+        end
+        it "should fail to download file without auth" do
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(401)
         end
         it "should fail to download file with an empty string token" do
@@ -1309,6 +1313,10 @@ describe "On #{ENV['OS']}" do
           with_valid_project
         end
         it "should download Logs/README.md" do
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(200)
+        end
+        it "should download Logs/README.md with token" do
           download_dataset(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(200)
         end
@@ -1332,7 +1340,30 @@ describe "On #{ENV['OS']}" do
           user = @user[:email]
           setVar("download_allowed", 'false')
           create_session(user, "Pass123")
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(403)
+          #set var back to true
+          setVar("download_allowed", "true")
+          expect(getVar("download_allowed").value).to eq "true"
+        end
+        it 'should fail to download a file with token if variable download_allowed is false' do
+          user = @user[:email]
+          setVar("download_allowed", 'false')
+          create_session(user, "Pass123")
           get_download_token(@project, "Logs/README.md", datasetType: "?type=DATASET")
+          expect_status(403)
+          #set var back to true
+          setVar("download_allowed", "true")
+          expect(getVar("download_allowed").value).to eq "true"
+        end
+        it 'should fail to download a file with apikey if variable download_allowed is false' do
+          user = @user[:email]
+          setVar("download_allowed", 'false')
+          create_session(user, "Pass123")
+          # use a valid apikey
+          key_view = create_api_key('datasetKey', %w(DATASET_VIEW))
+          set_api_key_to_header(key_view)
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
           expect_status(403)
           #set var back to true
           setVar("download_allowed", "true")
@@ -1784,6 +1815,11 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
           copy_dataset(@project, "Resources/test2", "/Projects/#{@project[:projectname]}/Logs/test2", datasetType: "&type=DATASET")
           expect_status(204)
+        end
+        it 'should download Logs/README.md' do
+          set_api_key_to_header(@key_view)
+          download_dataset_with_auth(@project, "Logs/README.md", datasetType: "type=DATASET")
+          expect_status(200)
         end
         it 'should delete' do
           set_api_key_to_header(@key_delete)
