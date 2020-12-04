@@ -26,6 +26,8 @@ public enum FeaturestoreStorageConnectorType {
   HOPSFS,
   @JsonProperty("JDBC")
   JDBC,
+  @JsonProperty("REDSHIFT")
+  REDSHIFT,
   @JsonProperty("S3")
   S3;
 }

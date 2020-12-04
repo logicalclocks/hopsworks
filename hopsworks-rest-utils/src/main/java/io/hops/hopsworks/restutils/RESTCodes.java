@@ -929,7 +929,8 @@ public class RESTCodes {
     ACCOUNT_ACTIVATION_FAILED(52, "Account activation failed", Response.Status.BAD_REQUEST),
     ROLE_NOT_FOUND(53, "Role not found", Response.Status.BAD_REQUEST),
     ACCOUNT_DELETION_ERROR(54, "Failed to delete account.", Response.Status.BAD_REQUEST),
-    USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST);
+    USER_NAME_NOT_SET(55, "User name not set.", Response.Status.BAD_REQUEST),
+    SECRET_DELETION_FAILED(56, "Failed to delete secret.", Response.Status.BAD_REQUEST);
 
     private Integer code;
     private String message;
@@ -1513,8 +1514,10 @@ public class RESTCodes {
     ILLEGAL_FEATURE_GROUP_FEATURE_DEFAULT_VALUE(132, "Illegal feature default value",
       Response.Status.BAD_REQUEST),
     KEYWORD_ERROR(133, "Keyword error for feature group/training dataset",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    KEYWORD_FORMAT_ERROR(134, "Keyword format error", Response.Status.BAD_REQUEST);
+      Response.Status.INTERNAL_SERVER_ERROR),
+    KEYWORD_FORMAT_ERROR(134, "Keyword format error", Response.Status.BAD_REQUEST),
+    REDSHIFT_CONNECTOR_NOT_FOUND(135, "Redshift Connector not found", Response.Status.BAD_REQUEST),
+    ILLEGAL_STORAGE_CONNECTOR_ARG(136, "Illegal storage connector argument", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
@@ -1975,7 +1978,8 @@ public class RESTCodes {
     FAILED_TO_ASSUME_ROLE(1, "Failed to assume role.", Response.Status.BAD_REQUEST),
     ACCESS_CONTROL_EXCEPTION(2, "You are not allowed to assume this role.", Response.Status.FORBIDDEN),
     MAPPING_NOT_FOUND(3, "Mapping not found.", Response.Status.BAD_REQUEST),
-    MAPPING_ALREADY_EXISTS(4, "Mapping for the given project and role already exists.", Response.Status.BAD_REQUEST);
+    MAPPING_ALREADY_EXISTS(4, "Mapping for the given project and role already exists.", Response.Status.BAD_REQUEST),
+    FAILED_TO_GET_CLUSTER_CRED(5, "Failed to get cluster credential.", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

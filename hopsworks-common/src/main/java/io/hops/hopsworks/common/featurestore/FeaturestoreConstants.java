@@ -46,6 +46,7 @@ public class FeaturestoreConstants {
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
     "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
   public static final String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
+  public static final String REDSHIFT_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.REDSHIFT.name();
   public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HOPSFS.name();
   public static final String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
   public static final String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
@@ -54,6 +55,7 @@ public class FeaturestoreConstants {
   public static final String EXTERNAL_TRAINING_DATASET_TYPE = TrainingDatasetType.EXTERNAL_TRAINING_DATASET.name();
   public static final String S3_CONNECTOR_DTO_TYPE = "featurestoreS3ConnectorDTO";
   public static final String JDBC_CONNECTOR_DTO_TYPE = "featurestoreJdbcConnectorDTO";
+  public static final String REDSHIFT_CONNECTOR_DTO_TYPE = "featurestoreRedshiftConnectorDTO";
   public static final String HOPSFS_CONNECTOR_DTO_TYPE = "featurestoreHopsfsConnectorDTO";
   public static final String FEATUREGROUP_TYPE = "FEATURE GROUP";
   public static final String TRAINING_DATASET_TYPE = "TRAINING DATASET";
@@ -80,7 +82,7 @@ public class FeaturestoreConstants {
     "/user/spark/featurestore_util.py";
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
-      = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE});
+      = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE});
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE = "<SECRETPASSWORD>";
   public static final String ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX = "_onlinefeaturestore";
   public static final String ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG = "password";

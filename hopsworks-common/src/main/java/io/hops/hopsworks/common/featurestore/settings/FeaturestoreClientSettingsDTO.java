@@ -56,6 +56,7 @@ public class FeaturestoreClientSettingsDTO {
   private boolean s3IAMRole = false;
   private List<String> trainingDatasetDataFormats = FeaturestoreConstants.TRAINING_DATASET_DATA_FORMATS;
   private String jdbcConnectorType = FeaturestoreConstants.JDBC_CONNECTOR_TYPE;
+  private String redshiftConnectorType = FeaturestoreConstants.REDSHIFT_CONNECTOR_TYPE;
   private String hopsfsConnectorType = FeaturestoreConstants.HOPSFS_CONNECTOR_TYPE;
   private String s3ConnectorType = FeaturestoreConstants.S3_CONNECTOR_TYPE;
   private String cachedFeaturegroupDtoType = FeaturestoreConstants.CACHED_FEATUREGROUP_DTO_TYPE;
@@ -64,6 +65,7 @@ public class FeaturestoreClientSettingsDTO {
   private String externalTrainingDatasetType = FeaturestoreConstants.EXTERNAL_TRAINING_DATASET_TYPE;
   private String s3ConnectorDtoType = FeaturestoreConstants.S3_CONNECTOR_DTO_TYPE;
   private String jdbcConnectorDtoType = FeaturestoreConstants.JDBC_CONNECTOR_DTO_TYPE;
+  private String redshiftConnectorDtoType = FeaturestoreConstants.REDSHIFT_CONNECTOR_DTO_TYPE;
   private String hopsfsConnectorDtoType = FeaturestoreConstants.HOPSFS_CONNECTOR_DTO_TYPE;
   private String featuregroupType = FeaturestoreConstants.FEATUREGROUP_TYPE;
   private String trainingDatasetType = FeaturestoreConstants.TRAINING_DATASET_TYPE;
@@ -210,6 +212,15 @@ public class FeaturestoreClientSettingsDTO {
   }
   
   @XmlElement
+  public String getRedshiftConnectorType() {
+    return redshiftConnectorType;
+  }
+
+  public void setRedshiftConnectorType(String redshiftConnectorType) {
+    this.redshiftConnectorType = redshiftConnectorType;
+  }
+
+  @XmlElement
   public String getHopsfsConnectorType() {
     return hopsfsConnectorType;
   }
@@ -281,6 +292,15 @@ public class FeaturestoreClientSettingsDTO {
     this.jdbcConnectorDtoType = jdbcConnectorDtoType;
   }
   
+  @XmlElement
+  public String getRedshiftConnectorDtoType() {
+    return redshiftConnectorDtoType;
+  }
+
+  public void setRedshiftConnectorDtoType(String redshiftConnectorDtoType) {
+    this.redshiftConnectorDtoType = redshiftConnectorDtoType;
+  }
+
   @XmlElement
   public String getHopsfsConnectorDtoType() {
     return hopsfsConnectorDtoType;

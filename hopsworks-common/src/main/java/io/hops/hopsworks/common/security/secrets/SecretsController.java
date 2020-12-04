@@ -17,16 +17,11 @@
 package io.hops.hopsworks.common.security.secrets;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
-import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretPlaintext;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
-import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.common.security.CertificatesMgmService;
 import io.hops.hopsworks.common.security.SymmetricEncryptionDescriptor;
 import io.hops.hopsworks.common.security.SymmetricEncryptionService;
@@ -34,14 +29,23 @@ import io.hops.hopsworks.common.util.DateUtils;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.SecretId;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.VisibilityType;
 import io.hops.hopsworks.restutils.RESTCodes;
+
 import javax.ejb.EJB;
+import javax.ejb.EJBException;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,6 +71,8 @@ public class SecretsController {
   private UserFacade userFacade;
   @EJB
   private ProjectFacade projectFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
   
   /**
    * Adds a new Secret. The secret is encrypted before persisted in the database.
@@ -79,9 +85,8 @@ public class SecretsController {
    * @param visibilityType Visibility of a Secret. It can be private or shared among members of a project
    * @throws UserException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-  public void add(Users user, String secretName, String secret, VisibilityType visibilityType,
-      Integer projectIdScope) throws UserException {
+  public Secret add(Users user, String secretName, String secret, VisibilityType visibilityType, Integer projectIdScope)
+    throws UserException {
     SecretId secretId = new SecretId(user.getUid(), secretName);
     if(secretsFacade.findById(secretId) != null) {
       throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
@@ -89,8 +94,39 @@ public class SecretsController {
     }
     Secret storedSecret = validateAndCreateSecret(secretId, user, secret, visibilityType, projectIdScope);
     secretsFacade.persist(storedSecret);
+    return storedSecret;
   }
   
+  /**
+   *
+   * @param user
+   * @param secretName
+   * @param secret
+   * @param projectIdScope
+   * @return
+   * @throws UserException
+   */
+  public Secret createSecretForProject(Users user, String secretName, String secret, Integer projectIdScope)
+    throws UserException, ProjectException {
+    Project project = projectFacade.find(projectIdScope);
+    if (project == null) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE,
+        "Project with ID " + projectIdScope + " does not exist!",
+        "User " + user.getUsername() + " requested shared Secret " + secretName +
+          " but Project with ID " + projectIdScope + "does not exist");
+    }
+    if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE, "User not a member of " +
+        "project with ID " + projectIdScope +".");
+    }
+    SecretId secretId = new SecretId(user.getUid(), secretName);
+    if(secretsFacade.findById(secretId) != null) {
+      throw new UserException(RESTCodes.UserErrorCode.SECRET_EXISTS, Level.FINE,
+        "Secret already exists", "Secret with name " + secretName + " already exists for user " + user.getUsername());
+    }
+    return validateAndCreateSecret(secretId, user, secret, VisibilityType.PROJECT, projectIdScope);
+  }
+
   /**
    * Validates parameters required to create a secret and creates the secret
    *
@@ -102,7 +138,6 @@ public class SecretsController {
    * @return created secret object
    * @throws UserException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public Secret validateAndCreateSecret(SecretId secretId, Users user, String secret, VisibilityType visibilityType,
                                         Integer projectIdScope) throws UserException{
     checkIfUserIsNull(user);
@@ -159,12 +194,30 @@ public class SecretsController {
    * @param secretName The name of the Secret
    * @throws UserException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public void delete(Users user, String secretName) throws UserException {
     checkIfUserIsNull(user);
     checkIfNameIsNullOrEmpty(secretName);
     SecretId secretId = new SecretId(user.getUid(), secretName);
-    secretsFacade.deleteSecret(secretId);
+    try {
+      secretsFacade.deleteSecret(secretId);
+    } catch (EJBException de) {
+      Throwable rootCause = getRootCause(de);
+      if (rootCause instanceof SQLIntegrityConstraintViolationException) {
+        throw new UserException(RESTCodes.UserErrorCode.SECRET_DELETION_FAILED, Level.FINE, "Cannot delete secret. " +
+          "Secret is in use by a connector. Try deleting the connector first. ", rootCause.getMessage());
+      } else {
+        throw de;
+      }
+    }
+  }
+
+  private Throwable getRootCause(Throwable throwable) {
+    Throwable rootCause = throwable;
+    while (throwable != null) {
+      rootCause = throwable;
+      throwable = throwable.getCause();
+    }
+    return rootCause;
   }
   
   /**
@@ -175,7 +228,17 @@ public class SecretsController {
    */
   public void deleteAll(Users user) throws UserException {
     checkIfUserIsNull(user);
-    secretsFacade.deleteSecretsForUser(user);
+    try {
+      secretsFacade.deleteSecretsForUser(user);
+    } catch (EJBException de) {
+      Throwable rootCause = getRootCause(de);
+      if (rootCause instanceof SQLIntegrityConstraintViolationException) {
+        throw new UserException(RESTCodes.UserErrorCode.SECRET_DELETION_FAILED, Level.FINE, "Cannot delete secrets. " +
+          "One or more secrets are in use by a connector. Try deleting the connectors first. ", rootCause.getMessage());
+      } else {
+        throw de;
+      }
+    }
   }
   
   /**
@@ -194,7 +257,6 @@ public class SecretsController {
    * @return The Secret decrypted along with some metadata
    * @throws UserException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public SecretPlaintext get(Users user, String secretName) throws UserException {
     checkIfUserIsNull(user);
     checkIfNameIsNullOrEmpty(secretName);
@@ -222,7 +284,6 @@ public class SecretsController {
    * @throws ServiceException
    * @throws ProjectException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public SecretPlaintext getShared(Users caller, String ownerUsername, String secretName)
       throws UserException, ServiceException, ProjectException {
     checkIfUserIsNull(caller);
@@ -347,8 +408,7 @@ public class SecretsController {
    * @throws IOException
    * @throws GeneralSecurityException
    */
-  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-  private byte[] encryptSecret(String secret) throws IOException, GeneralSecurityException {
+  public byte[] encryptSecret(String secret) throws IOException, GeneralSecurityException {
     String password = certificatesMgmService.getMasterEncryptionPassword();
     SymmetricEncryptionDescriptor descriptor = new SymmetricEncryptionDescriptor.Builder()
         .setInput(string2bytes(secret))
@@ -379,5 +439,14 @@ public class SecretsController {
    */
   private String bytes2string(byte[] bytes) {
     return new String(bytes, Charset.defaultCharset());
+  }
+
+  public void checkCanAccessSecret(Secret secret, Users user) throws ProjectException {
+    if (secret != null &&
+      !projectTeamFacade.isUserMemberOfProject(projectFacade.find(secret.getProjectIdScope()), user)) {
+      throw new ProjectException(RESTCodes.ProjectErrorCode.TEAM_MEMBER_NOT_FOUND, Level.FINE,
+        "User not a member of project with ID " + secret.getProjectIdScope() +
+          ". Can not delete secret in project with id " + secret.getProjectIdScope());
+    }
   }
 }

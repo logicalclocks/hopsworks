@@ -92,6 +92,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
       "with name: ";
   public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for " +
       "the featurestore with name: ";
+  public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR_ID = " added a storage connector for " +
+    "the featurestore with id: ";
   
   @PersistenceContext(unitName = "kthfsPU")
   private EntityManager em;
