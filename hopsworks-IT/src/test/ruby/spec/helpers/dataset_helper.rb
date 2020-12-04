@@ -388,7 +388,12 @@ module DatasetHelper
   end
 
   def download_dataset_with_token(project, path, token, datasetType: "")
-    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/#{path}?token=#{token}#{datasetType}"
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/with_token/#{path}?token=#{token
+    }#{datasetType}"
+  end
+
+  def download_dataset_with_auth(project, path, datasetType: "")
+    get "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/dataset/download/with_auth/#{path}?#{datasetType}"
   end
 
   def download_dataset(project, path, datasetType: "")
