@@ -156,7 +156,8 @@ angular.module('hopsWorksApp')
                 },
                 download: function (path, token, type) {
                   var datasetType = getQuery(type, 'type');
-                  location.href=getPathname() + baseUrl + 'download/' + getEncodedPath(path) + '?token=' + token + datasetType;
+                  location.href=getPathname() + baseUrl + 'download/with_token/' + getEncodedPath(path) + '?token=' +
+                  token + datasetType;
                 },
                 publish: function (path, type) {
                   var datasetType = getQuery(type, 'type');

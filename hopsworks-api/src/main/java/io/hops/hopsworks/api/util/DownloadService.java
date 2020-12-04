@@ -41,6 +41,7 @@ package io.hops.hopsworks.api.util;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.hops.hopsworks.api.filter.JWTNotRequired;
+import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
 import io.hops.hopsworks.common.dataset.util.DatasetHelper;
 import io.hops.hopsworks.common.dataset.util.DatasetPath;
 import io.hops.hopsworks.api.filter.AllowedProjectRoles;
@@ -66,6 +67,7 @@ import io.hops.hopsworks.persistence.entity.dataset.DatasetPermissions;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -89,6 +91,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.javatuples.Pair;
 
 @Logged
 @RequestScoped
@@ -170,7 +174,7 @@ public class DownloadService {
   }
 
   @GET
-  @javax.ws.rs.Path("/{path: .+}")
+  @javax.ws.rs.Path("with_token/{path: .+}")
   @Produces(MediaType.APPLICATION_OCTET_STREAM)
   @JWTNotRequired
   @ApiOperation(value = "Download file.", response = StreamingOutput.class)
@@ -185,6 +189,47 @@ public class DownloadService {
     String fullPath = datasetPath.getFullPath().toString();
     DecodedJWT djwt = jWTHelper.verifyOneTimeToken(token, fullPath);
     Users user = userFacade.findByUsername(djwt.getSubject());
+    
+    Pair<Path, StreamingOutput> pathStreamPair = downloadFromHDFS(project, datasetPath, user);
+    
+    Response.ResponseBuilder response = Response.ok(pathStreamPair.getValue1());
+    response.header("Content-disposition", "attachment; filename=\"" + pathStreamPair.getValue0().getName() + "\"");
+    return response.build();
+  }
+  
+  @GET
+  @javax.ws.rs.Path("with_auth/{path: .+}")
+  @Produces({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON})
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_SCIENTIST, AllowedProjectRoles.DATA_OWNER})
+  @ApiOperation(value = "Download file.", response = StreamingOutput.class)
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response downloadFromHDFS(@PathParam("path") String path, @QueryParam("type") DatasetType datasetType,
+    @Context SecurityContext sc) throws DatasetException, ProjectException {
+    if (!settings.isDownloadAllowed()) {
+      throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_NOT_ALLOWED, Level.FINEST);
+    }
+    Project project = this.getProject();
+    DatasetPath datasetPath = datasetHelper.getDatasetPathIfFileExist(project, path, datasetType);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    
+    Pair<Path, StreamingOutput> pathStreamPair = downloadFromHDFS(project, datasetPath, user);
+    
+    Response.ResponseBuilder response = Response.ok(pathStreamPair.getValue1());
+    response.header("Content-disposition", "attachment; filename=\"" + pathStreamPair.getValue0().getName() + "\"");
+    return response.build();
+  }
+  
+  /**
+   * @param project
+   * @param datasetPath
+   * @param user
+   * @return
+   */
+  private Pair<Path, StreamingOutput> downloadFromHDFS(Project project, DatasetPath datasetPath, Users user)
+    throws DatasetException {
+    
+    String fullPath = datasetPath.getFullPath().toString();
     String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
 
     Dataset ds = datasetPath.getDataset();
@@ -199,9 +244,8 @@ public class DownloadService {
         udfso = dfs.getDfsOps(projectUsername);
         Path p = new Path(fullPath);
         stream = udfso.open(p);
-        Response.ResponseBuilder response = Response.ok(buildOutputStream(stream, udfso));
-        response.header("Content-disposition", "attachment; filename=\"" + p.getName() + "\"" );
-        return response.build();
+        return new Pair(p, buildOutputStream(stream, udfso));
+        
       } else {
         throw new DatasetException(RESTCodes.DatasetErrorCode.DOWNLOAD_ERROR, Level.WARNING);
       }
