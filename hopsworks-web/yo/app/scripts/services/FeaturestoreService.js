@@ -332,16 +332,16 @@ angular.module('hopsWorksApp')
                  * @param projectId project where the featuregroup will be created
                  * @param storageConnectorJson the JSON payload
                  * @param featurestore featurestore where the connector will be created
-                 * @param storageConnectorId the id of the connector
+                 * @param storageConnectorName the name of the connector
                  * @param storageConnectorType the type of the storage connector
                  *
                  * @returns {HttpPromise}
                  */
                 updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType,
-                                                 storageConnectorId) {
+                                                 storageConnectorName) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/"
-                        + storageConnectorId,
+                        + storageConnectorName,
                         JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -350,14 +350,14 @@ angular.module('hopsWorksApp')
                  *
                  * @param projectId the project of the featurestore
                  * @param featurestore the featurestore
-                 * @param storageConnectorId the id of the connector
+                 * @param storageConnectorName the name of the connector
                  * @param storageConnectorType the type of the storage connector
                  * @returns {HttpPromise}
                  */
-                deleteStorageConnector: function(projectId, featurestore, storageConnectorId, storageConnectorType) {
+                deleteStorageConnector: function(projectId, featurestore, storageConnectorName, storageConnectorType) {
                     return $http.delete('/api/project/' + projectId + '/featurestores/' +
                         featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/" +
-                        storageConnectorId);
+                        storageConnectorName);
                 },
                 /**
                  * Sends a POST request to the backend for writing args for featurestore util job to HDFS

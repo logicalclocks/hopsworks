@@ -91,6 +91,7 @@ angular.module('hopsWorksApp')
             self.hopsfsConnectorType = ""
             self.s3ConnectorType = ""
             self.jdbcConnectorType = ""
+            self.redshiftConnectorType = "";
             self.hopsfsTrainingDatasetType = ""
             self.externalTrainingDatasetType = ""
             self.trainingDatasetType = ""
@@ -300,7 +301,7 @@ angular.module('hopsWorksApp')
              * @param connector the connector to delete
              */
             self.deleteStorageConnector = function (connector) {
-                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.id,
+                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.name,
                     connector.storageConnectorType).then(
                     function (success) {
                         self.getStorageConnectors(self.featurestore);
@@ -451,6 +452,7 @@ angular.module('hopsWorksApp')
                         self.hopsfsConnectorType = self.settings.hopsfsConnectorType
                         self.s3ConnectorType = self.settings.s3ConnectorType
                         self.jdbcConnectorType = self.settings.jdbcConnectorType
+                        self.redshiftConnectorType = self.settings.redshiftConnectorType;
                         self.trainingDatasetType = self.settings.trainingDatasetType
                         self.hopsfsTrainingDatasetType = self.settings.hopsfsTrainingDatasetType
                         self.externalTrainingDatasetType = self.settings.externalTrainingDatasetType
@@ -489,10 +491,9 @@ angular.module('hopsWorksApp')
                     function (error) {
                         self.storageConnectorsLoaded = true
                         self.stopLoading()
-                        growl.error(error.data.errorMsg, {
-                            title: 'Failed to fetch the storage connectors for the featurestore',
-                            ttl: 15000
-                        });
+                        var errorMsg = (typeof error.data.usrMsg !== 'undefined')? error.data.usrMsg : msg;
+                        growl.error(errorMsg, {title: 'Failed to fetch the storage connectors for the featurestore',
+                            ttl: 15000});
                     });
             }
 

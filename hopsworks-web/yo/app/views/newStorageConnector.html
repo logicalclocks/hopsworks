@@ -56,7 +56,8 @@
                     <input type="text" class="form-control" placeholder="Enter a name for the storage connector"
                            value="newStorageConnectorCtrl.storageConnectorName"
                            ng-model="newStorageConnectorCtrl.storageConnectorName"
-                           ng-change="newStorageConnectorCtrl.nameFilledIn()" autofocus>
+                           ng-change="newStorageConnectorCtrl.nameFilledIn()" autofocus
+                           ng-disabled="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'">
                     <div ng-if="newStorageConnectorCtrl.storageConnectorNameWrongValue === -1" style="color: red">
                         <p>
                             Storage Connector name shouldn't be empty and can only contain alphanumeric characters and
@@ -122,9 +123,21 @@
                                                        style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="JDBC_CONNECTION_BTN"
                                                            id="JDBC_CONNECTION_BTN">
-                                                    JDBC Connector
+                                                    JDBC
                                                     <i class="fa fa-info-circle"
                                                        uib-tooltip="Define a connection to a JDBC connector"
+                                                       tooltip-placement="left" style="margin-left: 10px">
+                                                    </i>
+                                                </label>
+                                                <label class="btn btn-default btn-md" id="redshift_connector_lbl"
+                                                       ng-click="newStorageConnectorCtrl.setStorageConnectorType(3);"
+                                                       ng-class="{unset: newStorageConnectorCtrl.storageConnectorType !== 3}"
+                                                       style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
+                                                    <input type="radio" value="REDSHIFT_CONNECTION_BTN"
+                                                           id="REDSHIFT_CONNECTION_BTN">
+                                                    Redshift
+                                                    <i class="fa fa-info-circle"
+                                                       uib-tooltip="Define a connection to a Redshift connector"
                                                        tooltip-placement="left" style="margin-left: 10px">
                                                     </i>
                                                 </label>
@@ -134,7 +147,7 @@
                                                        style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="S3_CONNECTION_BTN"
                                                            id="S3_CONNECTION_BTN">
-                                                    S3 Connector
+                                                    S3
                                                     <i class="fa fa-info-circle"
                                                        uib-tooltip="Define a connection to a S3 connector"
                                                        tooltip-placement="left" style="margin-left: 10px">
@@ -147,7 +160,7 @@
                                                        style="margin:2px; background:rgb(108, 117, 125); color:white; z-index:2">
                                                     <input type="radio" value="HOPSFS_CONNECTION_BTN"
                                                            id="HopsFS_CONNECTION_BTN">
-                                                    HopsFS Connector
+                                                    HopsFS
                                                     <i class="fa fa-info-circle"
                                                        uib-tooltip="Define a HopsFS dataset as a connector for the feature store "
                                                        tooltip-placement="left" style="margin-left: 10px">
@@ -167,8 +180,8 @@
                                 <div class="col-sm-3">
                                     <label class="control-label">JDBC Connection String:</label>
                                     <i class="fa fa-info-circle" tooltip-placement="auto left" uib-tooltip='The JDBC Connection String e.g
-                       "jdbc:hive2://hopsworks0:9084/demo_featurestore_admin000_featurestore.db;". This string will be
-                       visible for all project members' style="margin-left: 10px"></i>
+                                       "jdbc:hive2://hopsworks0:9084/demo_featurestore_admin000_featurestore.db;". This string will be
+                                       visible for all project members' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
                                     <input type="text" class="form-control" placeholder="Enter a JDBC connection string"
@@ -198,27 +211,22 @@
                                            uib-tooltip='An argument/parameter to complement the JDBC string at run-time (e.g password field)'
                                            style="margin-left: 10px"></i>
                                     </div>
-                                    <div class="col-sm-9">
-                                        <input type="text" class="form-control"
-                                               placeholder="Enter the name of the argument" value="{{jdbcArgument}}"
-                                               ng-model="newStorageConnectorCtrl.jdbcArguments[$index]">
+                                    <div class="col-sm-3">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control"
+                                                   placeholder="Enter the name of the argument {{$index + 1}}"
+                                                   value="{{jdbcArgument}}"
+                                                   ng-model="newStorageConnectorCtrl.jdbcArguments[$index]">
+                                            <span class="input-group-btn">
+                                            <button class="btn btn-danger fa fa-trash-o icon-resize-small"
+                                                    type="button"
+                                                    title="Remove JDBC Argument"
+                                                    ng-click="newStorageConnectorCtrl.removeJdbcArgument($index)"></button>
+                                          </span>
+                                        </div>
                                         <div ng-if="newStorageConnectorCtrl.jdbcArgumentsWrongValue[$index] === -1"
                                              style="color: red">{{"" + "JDBC argument name should not be empty"}}
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="view-info">
-                            <div class="col-md-12">
-                                <div class="col-sm-12" style="margin-bottom: 20px">
-                                    <div class="col-sm-3">
-                                    </div>
-                                    <div class="col-sm-9">
-                                        <button class="btn btn-sm btn-danger glyphicon glyphicon-trash"
-                                                uib-tooltip="Remove JDBC Argument"
-                                                ng-click="newStorageConnectorCtrl.removeJdbcArgument($index)">
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -247,8 +255,7 @@
                             </p>
                         </div>
                     </div>
-                    <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
+                    <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
@@ -269,72 +276,6 @@
                         </div>
                     </div>
                     <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
-                        <div class="col-md-12">
-                            <div class="col-sm-12" style="margin-bottom: 20px">
-                                <div class="col-sm-3">
-                                    <label class="control-label">AWS Access/Secret keys:</label>
-                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='AWS Access/Secret keys' style="margin-left: 10px"></i>
-                                </div>
-                                <div class="col-sm-9">
-                                    <md-checkbox class="row md-primary" ng-disabled="true" ng-disabled="true"
-                                                 ng-init="newStorageConnectorCtrl.s3BucketSecretAndAccessKeys=true"
-                                                 ng-model="newStorageConnectorCtrl.s3BucketSecretAndAccessKeys">
-                                    </md-checkbox>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
-                        <div class="col-md-12">
-                            <div class="col-sm-12" style="margin-bottom: 20px">
-                                <div class="col-sm-3">
-                                    <label class="control-label">S3 Access Key:</label>
-                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='The S3 access key' style="margin-left: 10px"></i>
-                                </div>
-                                <div class="col-sm-9">
-                                    <input type="text" class="form-control" placeholder="Enter an S3 access key"
-                                           ng-model="newStorageConnectorCtrl.s3AccessKey">
-                                    <div ng-if="newStorageConnectorCtrl.storageConnectorS3AccessKeyWrongValue === -1"
-                                         style="color: red">
-                                        <p>
-                                            The Access Key should not be empty and longer than
-                                            {{newStorageConnectorCtrl.s3StorageConnectorAccesskeyMaxLength}} characters
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="view-info"
-                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
-                        <div class="col-md-12">
-                            <div class="col-sm-12" style="margin-bottom: 20px">
-                                <div class="col-sm-3">
-                                    <label class="control-label">S3 Secret Key:</label>
-                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
-                                       uib-tooltip='The S3 secret key' style="margin-left: 10px"></i>
-                                </div>
-                                <div class="col-sm-9">
-                                    <input type="text" class="form-control" placeholder="Enter an S3 secret key"
-                                           ng-model="newStorageConnectorCtrl.s3SecretKey">
-                                    <div ng-if="newStorageConnectorCtrl.storageConnectorS3SecretKeyWrongValue === -1"
-                                         style="color: red">
-                                        <p>
-                                            The Secret Key should not be empty and longer than
-                                            {{newStorageConnectorCtrl.s3StorageConnectorSecretkeyMaxLength}}
-                                            characters
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="view-info"
                          ng-if="newStorageConnectorCtrl.storageConnectorType === 1">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
@@ -353,7 +294,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="view-info"
                          ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && newStorageConnectorCtrl.s3BucketEncryption">
                         <div class="col-md-12">
@@ -411,12 +351,106 @@
                             </div>
                         </div>
                     </div>
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                        <div class="col-md-12">
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Authentication method:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='AWS Access/Secret keys or IAM role'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-3">
+                                    <select class="form-control" id="sel1"
+                                            ng-model="newStorageConnectorCtrl.s3BucketAuth"
+                                            ng-options="obj.id as obj.name for obj in newStorageConnectorCtrl.s3BucketAuthMethods">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole && newStorageConnectorCtrl.s3BucketAuth == 0">
+                        <div class="view-info"
+                             ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                            <div class="col-md-12">
+                                <div class="col-sm-12" style="margin-bottom: 20px">
+                                    <div class="col-sm-3">
+                                        <label class="control-label">S3 Access Key:</label>
+                                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                           uib-tooltip='The S3 access key' style="margin-left: 10px"></i>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" placeholder="Enter an S3 access key"
+                                               ng-model="newStorageConnectorCtrl.s3AccessKey">
+                                        <div ng-if="newStorageConnectorCtrl.storageConnectorS3AccessKeyWrongValue === -1"
+                                             style="color: red">
+                                            <p>
+                                                The Access Key should not be empty and longer than
+                                                {{newStorageConnectorCtrl.s3StorageConnectorAccesskeyMaxLength}} characters
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="view-info"
+                             ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && !newStorageConnectorCtrl.s3IAMRole">
+                            <div class="col-md-12">
+                                <div class="col-sm-12" style="margin-bottom: 20px">
+                                    <div class="col-sm-3">
+                                        <label class="control-label">S3 Secret Key:</label>
+                                        <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                           uib-tooltip='The S3 secret key' style="margin-left: 10px"></i>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" placeholder="Enter an S3 secret key"
+                                               ng-model="newStorageConnectorCtrl.s3SecretKey">
+                                        <div ng-if="newStorageConnectorCtrl.storageConnectorS3SecretKeyWrongValue === -1"
+                                             style="color: red">
+                                            <p>
+                                                The Secret Key should not be empty and longer than
+                                                {{newStorageConnectorCtrl.s3StorageConnectorSecretkeyMaxLength}}
+                                                characters
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="view-info"
+                         ng-if="newStorageConnectorCtrl.storageConnectorType === 1 && newStorageConnectorCtrl.s3BucketAuth == 1">
+                        <div class="col-md-12">
+                        <div class="col-sm-12" style="margin-bottom: 20px">
+                            <div class="col-sm-3">
+                                <label class="control-label">Available IAM roles:</label>
+                                <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                   uib-tooltip='IAM role that will be used to get temporary credentials'
+                                   style="margin-left: 10px"></i>
+                            </div>
+                            <div class="col-sm-3">
+                                <select class="form-control" id="sel" ng-model="newStorageConnectorCtrl.s3AWSRole" required>
+                                    <option value="" selected disabled>Select IAM role</option>
+                                    <option ng-repeat="mapping in newStorageConnectorCtrl.cloudRoleMappings">{{mapping.cloudRole}}</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6" ng-if="newStorageConnectorCtrl.s3AWSRoleWrongValue === -1"
+                                 style="color: red">
+                                <p>
+                                   You need to select a role to use for temporary credentials.
+                                </p>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
                     <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 2">
                         <div class="col-md-12">
                             <div class="col-sm-12" style="margin-bottom: 20px">
                                 <div class="col-sm-3">
                                     <label class="control-label">HopsFS Dataset:</label>
-                                    <i class="fa fa-info-circle" tooltip-placement="auto left"
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
                                        uib-tooltip='Select a Dataset in your project' style="margin-left: 10px"></i>
                                 </div>
                                 <div class="col-sm-9">
@@ -438,6 +472,229 @@
                             </div>
                         </div>
                     </div>
+                    <div class="view-info" ng-if="newStorageConnectorCtrl.storageConnectorType === 3">
+                        <form role="form" id="redshiftConnectorForm"
+                              ng-submit="newStorageConnectorCtrl.submitRedshiftConnector()"
+                              novalidate class="form-validate">
+                          <div class="col-md-12">
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Cluster identifier:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The identifier must be from 1-63 characters. Valid characters are a-z (lowercase only) and - (hyphen).'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter a Redshift cluster connection string"
+                                           ng-model="newStorageConnectorCtrl.redshiftClusterIdentifier"
+                                           ng-minlength="1"
+                                           ng-maxlength="63"
+                                           required>
+                                </div>
+                            </div>
+                              <div class="col-sm-12" style="margin-bottom: 20px">
+                                  <div class="col-sm-3">
+                                      <label class="control-label">Database driver:</label>
+                                      <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                         uib-tooltip='The driver name of the Amazon Redshift database JDBC/ODBC driver.'
+                                         style="margin-left: 10px"></i>
+                                  </div>
+                                  <div class="col-sm-4">
+                                      <input type="text" class="form-control"
+                                             placeholder="Enter Database driver. ex. com.amazon.redshift.jdbc42.Driver"
+                                             ng-model="newStorageConnectorCtrl.redshiftDatabaseDriver"
+                                             ng-minlength="1"
+                                             ng-maxlength="64">
+                                  </div>
+                              </div>
+                              <div class="col-sm-12" style="margin-bottom: 20px">
+                                  <div class="col-sm-3">
+                                      <label class="control-label">Database endpoint:</label>
+                                      <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                         uib-tooltip='The endpoint of the Amazon Redshift cluster.'
+                                         style="margin-left: 10px"></i>
+                                  </div>
+                                  <div class="col-sm-4">
+                                      <input type="text" class="form-control"
+                                             placeholder="Enter Database endpoint ex. abc123xyz789.us-west-2.redshift.amazonaws.com"
+                                             ng-model="newStorageConnectorCtrl.redshiftDatabaseEndpoint"
+                                             ng-minlength="1"
+                                             ng-maxlength="64">
+                                  </div>
+                              </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Database name:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The name must be 1-64 alphanumeric characters (lowercase only).'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Database name"
+                                           ng-model="newStorageConnectorCtrl.redshiftDatabaseName"
+                                           ng-minlength="1"
+                                           ng-maxlength="64">
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Database port:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The port must be numeric (1150-65535).'
+                                       style="margin-left: 10px">
+                                    </i>
+                                </div>
+                                <div class="col-sm-1">
+                                    <input type="number" class="form-control"
+                                           placeholder="5439"
+                                           ng-model="newStorageConnectorCtrl.redshiftDatabasePort"
+                                           min="1150" max="65535">
+                                </div>
+                            </div>
+                              <div class="col-sm-12" style="margin-bottom: 20px">
+                                  <div class="col-sm-3">
+                                      <label class="control-label">Table name:</label>
+                                      <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                         uib-tooltip='Default table name.'
+                                         style="margin-left: 10px"></i>
+                                  </div>
+                                  <div class="col-sm-3">
+                                      <input type="text" class="form-control"
+                                             placeholder="Enter Table name"
+                                             ng-model="newStorageConnectorCtrl.redshiftTableName"
+                                             ng-minlength="0"
+                                             ng-maxlength="128">
+                                  </div>
+                              </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Database user name:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The name must be 1-128 alphanumeric characters.'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-3">
+                                    <input type="text" class="form-control"
+                                           placeholder="Enter Database user name"
+                                           ng-model="newStorageConnectorCtrl.redshiftDatabaseUserName"
+                                           ng-minlength="1"
+                                           ng-maxlength="128">
+                                </div>
+
+                                <div class="col-sm-3">
+                                    <label class="control-label">Auto create:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='Create a database user with the name specified for the user named in
+                                        Database user name if one does not exist.'
+                                       style="margin-left: 10px; margin-right: 30px"></i>
+                                    <md-checkbox
+                                            class="row md-primary"
+                                            ng-model="newStorageConnectorCtrl.redshiftAutoCreate"
+                                            style="min-height: auto;">
+                                    </md-checkbox>
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                                <div class="col-sm-3">
+                                    <label class="control-label">Database user password:</label>
+                                    <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                       uib-tooltip='The password can only contain ASCII characters (ASCII codes 33-126),
+                                        except single quotation mark, double quotation mark, /, \, or @.'
+                                       style="margin-left: 10px"></i>
+                                </div>
+                                <div class="col-sm-3">
+                                    <div class="form-group has-feedback">
+                                        <input type="password" class="form-control"
+                                               placeholder="Enter Database user password"
+                                               ng-model="newStorageConnectorCtrl.redshiftDatabasePassword" show-hide-password>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                              <div class="col-sm-3">
+                                  <label class="control-label">Database Groups:</label>
+                                  <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                     uib-tooltip='A list of (colon-separated) names of existing database groups that the user named in
+                                      Database user name will join for the current session, in addition to any group memberships for
+                                      an existing user. If not specified, a new user is added only to PUBLIC.'
+                                     style="margin-left: 10px"></i>
+                              </div>
+                              <div class="col-sm-3">
+                                  <div class="form-group has-feedback">
+                                      <input type="text" class="form-control"
+                                             placeholder="Enter Database groups"
+                                             ng-model="newStorageConnectorCtrl.redshiftDatabaseGroup"
+                                             ng-maxlength="2048">
+                                  </div>
+                              </div>
+                            </div>
+                            <div class="col-sm-12" style="margin-bottom: 20px">
+                              <div class="col-sm-3">
+                                  <label class="control-label">Available IAM roles:</label>
+                                  <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                     uib-tooltip='IAM role that will be used to get temporary credentials'
+                                     style="margin-left: 10px"></i>
+                              </div>
+                              <div class="col-sm-3">
+                                  <select class="form-control" id="role"
+                                          ng-model="newStorageConnectorCtrl.redshiftIAMRole">
+                                      <option value="" selected>Select IAM role</option>
+                                      <option ng-repeat="mapping in newStorageConnectorCtrl.cloudRoleMappings">{{mapping.cloudRole}}</option>
+                                  </select>
+                              </div>
+                            </div>
+                            <div data-ng-repeat="redshiftArgument in newStorageConnectorCtrl.redshiftArguments track by $index">
+                              <div class="col-sm-12" style="margin-bottom: 20px">
+                                  <div class="col-sm-3">
+                                      <label class="control-label">Redshift Property</label>
+                                      <i class="fa fa-info-circle" tooltip-placement="auto right"
+                                         uib-tooltip='[Property1]=[Value]'
+                                         style="margin-left: 10px"></i>
+                                  </div>
+                                  <div class="col-sm-3">
+                                      <div class="input-group">
+                                          <input type="text" class="form-control"
+                                                 placeholder="Enter property {{$index + 1}}"
+                                                 value="{{redshiftArgument}}"
+                                                 ng-model="newStorageConnectorCtrl.redshiftArguments[$index]">
+                                          <span class="input-group-btn">
+                                            <button class="btn btn-danger fa fa-trash-o icon-resize-small"
+                                                  type="button"
+                                                  title="Delete"
+                                                  ng-click="newStorageConnectorCtrl.redshiftArguments.splice($index, 1)"></button>
+                                          </span>
+                                      </div>
+                                  </div>
+                              </div>
+                            </div>
+                            <div class="view-info">
+                                  <div class="col-md-12">
+                                      <div class="col-sm-12" style="margin-bottom: 20px">
+                                          <div class="col-sm-3">
+                                              <button type="button"
+                                                      ng-click="newStorageConnectorCtrl.redshiftArguments.push('')"
+                                                      uib-tooltip="Add additional properties like SSL authentication"
+                                                      class="btn btn-sm btn-default btn-success control-label" style="margin-bottom:
+                            10px">
+                                                  Add Argument<i style="margin-left: 10px" class="glyphicon glyphicon-plus">
+                                              </i>
+                                              </button>
+                                          </div>
+                                          <div class="col-sm-9">
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div ng-if="newStorageConnectorCtrl.redshiftArgumentsNotUnique === -1" style="color: red">
+                                      <p>
+                                          Redshift connector property names should be unique.
+                                      </p>
+                                  </div>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
                 </div>
 
                 <div uib-accordion-group class="panel-default" is-open="newStorageConnectorCtrl.accordion4.isOpen">
@@ -449,7 +706,7 @@
                             {{newStorageConnectorCtrl.accordion4.value}}
                         </span>
                     </div>
-                    <div class="row">
+                    <div class="row" ng-if="newStorageConnectorCtrl.storageConnectorType !== 3">
                         <div class="col-sm-1">
                             <button ng-click="newStorageConnectorCtrl.createStorageConnector()"
                                     class="btn btn-default btn-success"
@@ -471,6 +728,28 @@
                             There are errors in your input configuration, see error messages above.
                         </div>
                         <div class="col-sm-7">
+                        </div>
+                    </div>
+                    <div class="row" ng-if="newStorageConnectorCtrl.storageConnectorType === 3">
+                        <div class="col-sm-1">
+                            <button type="submit"
+                                    form="redshiftConnectorForm"
+                                    class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'CREATE'">
+                                Create
+                                <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                            </button>
+                            <button type="submit"
+                                    form="redshiftConnectorForm"
+                                    class="btn btn-default btn-success"
+                                    ng-if="newStorageConnectorCtrl.storageConnectorOperation === 'UPDATE'">
+                                Update
+                                <i ng-if="newStorageConnectorCtrl.working" style="margin-top: 2px"
+                                   class="fa fa-spinner fa-spin pull-right"></i>
+                            </button>
+                        </div>
+                        <div class="col-sm-11">
                         </div>
                     </div>
                 </div>

@@ -16,6 +16,10 @@
 
 module StorageConnectorHelper
 
+  def get_storage_connectors(project_id, featurestore_id, type)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{type}"
+  end
+
   def get_jdbc_storate_connector(project_id, featurestore_id, name)
     get_storage_connector(project_id, featurestore_id, "JDBC", name)
   end
@@ -26,6 +30,10 @@ module StorageConnectorHelper
     connectors = JSON.parse(connectors_json)
 
     connectors.select{|connector| connector['name'] == name}[0]
+  end
+
+  def get_storage_connector_by_name(project_id, featurestore_id, type, name)
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{type}/#{name}"
   end
 
   def create_hopsfs_connector(project_id, featurestore_id, datasetName: "Resources")
@@ -45,10 +53,10 @@ module StorageConnectorHelper
     return json_result, hopsfs_connector_name
   end
 
-  def update_hopsfs_connector(project_id, featurestore_id, connector_id, datasetName: "Resources")
+  def update_hopsfs_connector(project_id, featurestore_id, connector_name, datasetName: "Resources")
     type = "featurestoreHopsfsConnectorDTO"
     storageConnectorType = "HopsFS"
-    update_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_id.to_s
+    update_hopsfs_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_name
     hopsfs_connector_name = "hopsfs_connector_#{random_id}"
     json_data = {
         name: hopsfs_connector_name,
@@ -80,10 +88,10 @@ module StorageConnectorHelper
     return json_result, jdbc_connector_name
   end
 
-  def update_jdbc_connector(project_id, featurestore_id, connector_id, connectionString: "jdbc://test")
+  def update_jdbc_connector(project_id, featurestore_id, connector_name, connectionString: "jdbc://test")
     type = "featurestoreJdbcConnectorDTO"
     storageConnectorType = "JDBC"
-    update_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_id.to_s
+    update_jdbc_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_name
     jdbc_connector_name = "jdbc_connector_#{random_id}"
     json_data = {
         name: jdbc_connector_name,
@@ -171,11 +179,11 @@ module StorageConnectorHelper
   end
 
 
-  def update_s3_connector(project_id, featurestore_id, connector_id, s3_connector_name, with_access_keys, bucket:
+  def update_s3_connector(project_id, featurestore_id, connector_name, s3_connector_name, with_access_keys, bucket:
           "test")
     type = "featurestoreS3ConnectorDTO"
     storageConnectorType = "S3"
-    update_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
+    update_s3_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
     json_data = {
         name: s3_connector_name,
         description: "tests3connectordescription",
@@ -190,6 +198,44 @@ module StorageConnectorHelper
     json_data = json_data.to_json
     json_result = put update_s3_connector_endpoint, json_data
     return json_result, s3_connector_name
+  end
+
+  def create_redshift_connector(project_id, featurestore_id, redshift_connector_name: nil, clusterIdentifier: "redshift-connector",
+                                databaseUserName: "awsUser",  databasePassword: nil, iamRole: nil)
+    type = "featurestoreRedshiftConnectorDTO"
+    storageConnectorType = "REDSHIFT"
+    create_redshift_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{storageConnectorType}"
+    redshift_connector_name ||= "redshift_connector_#{random_id}"
+    json_data = {
+        name: redshift_connector_name,
+        description: "test feature store connector description",
+        type: type,
+        storageConnectorType: storageConnectorType,
+        clusterIdentifier: clusterIdentifier,
+        databaseDriver: "com.amazon.redshift.jdbc42.Driver",
+        databaseEndpoint: "abc123xyz789.us-west-1.redshift.amazonaws.com",
+        databaseName: "dev",
+        databasePort: 5439,
+        tableName: "test",
+        databaseUserName: databaseUserName,
+        databasePassword: databasePassword,
+        iamRole: iamRole,
+        arguments: "test1,test2"
+    }
+    json_data = json_data.to_json
+    json_result = post create_redshift_connector_endpoint, json_data
+    return json_result, redshift_connector_name
+  end
+
+  def update_redshift_connector(project_id, featurestore_id, connector_name, redshift_connector_json)
+    type = "featurestoreRedshiftConnectorDTO"
+    storageConnectorType = "REDSHIFT"
+    update_redshift_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{storageConnectorType}/#{connector_name}"
+    redshift_connector_json["type"] = type
+    redshift_connector_json["storageConnectorType"] = storageConnectorType
+    json_data = redshift_connector_json.to_json
+    json_result = put update_redshift_connector_endpoint, json_data
+    return json_result
   end
 
   def with_jdbc_connector(project_id)
@@ -229,5 +275,42 @@ module StorageConnectorHelper
     expect_status_details(201)
     connector_id = parsed_json["id"]
     @s3_connector_id = connector_id
+  end
+
+  def delete_connector(project_id, featurestore_id, type, name)
+    delete "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/storageconnectors/#{type}/#{name}"
+  end
+
+  def with_redshift_connectors
+    with_valid_project
+    project1 = create_project
+    featurestore = get_featurestores_checked(@project[:id])[0]
+    create_redshift_connector(@project[:id], featurestore["featurestoreId"], redshift_connector_name: "redshift_connector_iam",
+                              iamRole: "arn:aws:iam::123456789012:role/test-role-p1")
+    create_redshift_connector(@project[:id], featurestore["featurestoreId"], redshift_connector_name: "redshift_connector_pwd",
+                              databasePassword: "awsUserPwd")
+    project1_featurestore = get_featurestores_checked(project1[:id])[0]
+    create_redshift_connector(project1[:id], project1_featurestore["featurestoreId"], redshift_connector_name: "redshift_connector_iam",
+                              iamRole: "arn:aws:iam::123456789012:role/test-role-p2")
+    create_redshift_connector(project1[:id], project1_featurestore["featurestoreId"], redshift_connector_name: "redshift_connector_pwd",
+                              databasePassword: "awsUserPwd")
+    return @project, project1
+  end
+
+  def check_redshift_connector_update(json_body, connector)
+    expect(json_body[:name]).to eq connector[:name]
+    expect(json_body[:description]).to eq connector[:description]
+    expect(json_body[:clusterIdentifier]).to eq connector[:clusterIdentifier]
+    expect(json_body[:databaseDriver]).to eq connector[:databaseDriver]
+    expect(json_body[:databaseEndpoint]).to eq connector[:databaseEndpoint]
+    expect(json_body[:databaseName]).to eq connector[:databaseName]
+    expect(json_body[:databaseUserName]).to eq connector[:databaseUserName]
+    expect(json_body[:autoCreate]).to eq connector[:autoCreate]
+    expect(json_body[:databaseGroup]).to eq connector[:databaseGroup]
+    expect(json_body[:databasePort]).to eq connector[:databasePort]
+    expect(json_body[:tableName]).to eq connector[:tableName]
+    expect(json_body[:arguments]).to eq connector[:arguments]
+    expect(json_body[:iamRole]).to eq connector[:iamRole]
+    expect(json_body[:databasePassword]).to eq connector[:databasePassword]
   end
 end

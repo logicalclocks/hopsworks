@@ -144,7 +144,7 @@
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="!storageConnectorViewInfoCtrl.settings.s3IAMRole">
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.accessKey">
                     <td style="font-weight:700;" class="fs-table">
                         Access Key
                     </td>
@@ -153,7 +153,7 @@
                     </td>
                 </tr>
 
-                <tr class="fs-table" ng-if="!storageConnectorViewInfoCtrl.settings.s3IAMRole">
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.secretKey">
                     <td style="font-weight:700;" class="fs-table">
                         Secret Key
                     </td>
@@ -161,7 +161,7 @@
                         {{storageConnectorViewInfoCtrl.storageConnector.secretKey}}
                     </td>
                 </tr>
-                <tr class="fs-table">
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.serverEncryptionAlgorithm">
                     <td style="font-weight:700;" class="fs-table">
                         Server Encryption Algorithm
                     </td>
@@ -169,12 +169,21 @@
                         {{storageConnectorViewInfoCtrl.storageConnector.serverEncryptionAlgorithm}}
                     </td>
                 </tr>
-                <tr class="fs-table">
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.serverEncryptionKey">
                     <td style="font-weight:700;" class="fs-table">
                         Secret Encryption Key
                     </td>
                     <td class="fs-table">
                         {{storageConnectorViewInfoCtrl.storageConnector.serverEncryptionKey}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.iamRole">
+                    <td style="font-weight:700;" class="fs-table">
+                        IAM role
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.iamRole}}
                     </td>
                 </tr>
 
@@ -209,6 +218,136 @@
                     </td>
                     <td class="fs-table">
                         {{storageConnectorViewInfoCtrl.storageConnector.hopsfsPath}}
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div uib-accordion-group class="panel-default"
+             ng-if="storageConnectorViewInfoCtrl.storageConnector.storageConnectorType == storageConnectorViewInfoCtrl.redshiftConnectorType">
+            <div uib-accordion-heading>
+                <i class="fa fa-info-circle" tooltip-placement="auto left"
+                   uib-tooltip='Redshift Connector Details'></i>
+                <span style="margin-left: 20px">
+                    Redshift Connector
+                </span>
+            </div>
+
+            <table class="table table-hover fs-table" style="margin-left: 10px; overflow: auto">
+                <tbody class="fs-table">
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.clusterIdentifier">
+                    <td style="font-weight:700;" class="fs-table">
+                        Cluster identifier
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.clusterIdentifier}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databaseDriver">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database driver
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databaseDriver}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databaseEndpoint">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database endpoint
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databaseEndpoint}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databaseName">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database Name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databaseName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databasePort">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database port
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databasePort}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.tableName">
+                    <td style="font-weight:700;" class="fs-table">
+                        Table Name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.tableName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databaseUserName">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database user name
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databaseUserName}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.autoCreate">
+                    <td style="font-weight:700;" class="fs-table">
+                        Auto Create
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.autoCreate}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databaseGroup">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database Groups
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.databaseGroup}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.databasePassword">
+                    <td style="font-weight:700;" class="fs-table">
+                        Database password
+                    </td>
+                    <td class="fs-table">
+                        <div class="form-group has-feedback">
+                            <input type="password"
+                                   class="form-control"
+                                   ng-model="storageConnectorViewInfoCtrl.storageConnector.databasePassword"
+                                   show-hide-password
+                                   readonly/>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.iamRole">
+                    <td style="font-weight:700;" class="fs-table">
+                        IAM role
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.iamRole}}
+                    </td>
+                </tr>
+
+                <tr class="fs-table" ng-if="storageConnectorViewInfoCtrl.storageConnector.arguments">
+                    <td style="font-weight:700;" class="fs-table">
+                        Redshift Properties
+                    </td>
+                    <td class="fs-table">
+                        {{storageConnectorViewInfoCtrl.storageConnector.arguments}}
                     </td>
                 </tr>
 

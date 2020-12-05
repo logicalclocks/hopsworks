@@ -198,17 +198,15 @@ describe "On #{ENV['OS']}" do
 
         parsed_json = JSON.parse(json_result)
         member = create_user
-        connector_id = parsed_json["id"]
+        connector_name = parsed_json["name"]
         add_member_to_project(@project, member[:email], "Data scientist")
         reset_session
         create_session(member[:email],"Pass123")
 
-        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id
-                                                                                                          .to_s +
-                               "/storageconnectors/S3/" + connector_id.to_s
+        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
         parsed_json1 = JSON.parse(json_result1)
         expect_status_details(200)
-        expect(parsed_json1["id"] == connector_id).to be true
+        expect(parsed_json1["name"] == connector_name).to be true
         setVar("aws_instance_role", "false")
       end
 
@@ -222,7 +220,7 @@ describe "On #{ENV['OS']}" do
             "testbucket")
 
         parsed_json = JSON.parse(json_result)
-        connector_id = parsed_json["id"]
+        connector_name = parsed_json["name"]
         reset_session
         #create another project
         projectname = "project_#{short_random_id}"
@@ -237,10 +235,10 @@ describe "On #{ENV['OS']}" do
         create_session(project1[:username],"Pass123")
         accept_dataset(project1, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
         json_result1 = get "#{ENV['HOPSWORKS_API']}/project/" + project1.id.to_s + "/featurestores/" +
-                               featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
+                               featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
         parsed_json1 = JSON.parse(json_result1)
         expect_status_details(200)
-        expect(parsed_json1["id"] == connector_id).to be true
+        expect(parsed_json1["name"] == connector_name).to be true
         setVar("aws_instance_role", "false")
       end
 
@@ -369,8 +367,8 @@ describe "On #{ENV['OS']}" do
         json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        connector_id = parsed_json["id"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_id.to_s
+        connector_name = parsed_json["name"]
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_name
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -383,8 +381,8 @@ describe "On #{ENV['OS']}" do
             "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        connector_id = parsed_json["id"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_id.to_s
+        connector_name = parsed_json["name"]
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -396,8 +394,8 @@ describe "On #{ENV['OS']}" do
         json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        connector_id = parsed_json["id"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_id.to_s
+        connector_name = parsed_json["name"]
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_name
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -409,8 +407,8 @@ describe "On #{ENV['OS']}" do
         json_result1, connector_name1 = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         parsed_json1 = JSON.parse(json_result1)
         expect_status(201)
-        connector_id = parsed_json1["id"]
-        json_result2, connector_name2 = update_hopsfs_connector(project.id, featurestore_id, connector_id, datasetName: "Experiments")
+        connector_name = parsed_json1["name"]
+        json_result2, connector_name2 = update_hopsfs_connector(project.id, featurestore_id, connector_name, datasetName: "Experiments")
         parsed_json2 = JSON.parse(json_result2)
         expect(parsed_json2.key?("id")).to be true
         expect(parsed_json2.key?("name")).to be true
@@ -424,7 +422,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json2["datasetName"] == "Experiments").to be true
       end
 
-      it "should be able to update S3 connector in the featurestore: provide different connector name" do
+      it "should fail to update connector name" do
         setVar("aws_instance_role", "false")
         project = get_project
         create_session(project[:username], "Pass123")
@@ -444,24 +442,14 @@ describe "On #{ENV['OS']}" do
 
         parsed_json1 = JSON.parse(json_result1)
         expect_status(201)
-        connector_id = parsed_json1["id"]
+        connector_name = parsed_json1["name"]
 
-        json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id,
-                                                            s3_connector_name, with_access_keys, bucket:
-                                                                "testbucket2")
-        parsed_json2 = JSON.parse(json_result2)
-
-        expect(parsed_json2.key?("id")).to be true
-        expect(parsed_json2.key?("name")).to be true
-        expect(parsed_json2.key?("description")).to be true
-        expect(parsed_json2.key?("storageConnectorType")).to be true
-        expect(parsed_json2.key?("featurestoreId")).to be true
-        expect(parsed_json2.key?("bucket")).to be true
-        expect(parsed_json2.key?("secretKey")).to be true
-        expect(parsed_json2.key?("accessKey")).to be true
-        expect(parsed_json2["name"] == connector_name2).to be true
-        expect(parsed_json2["storageConnectorType"] == "S3").to be true
-        expect(parsed_json2["bucket"] == "testbucket2").to be true
+        update_s3_connector(project.id, featurestore_id, connector_name, s3_connector_name, with_access_keys, bucket:
+        "testbucket2")
+        expect_status_details(400)
+        get_storage_connector_by_name(project.id, featurestore_id, "S3", connector_name)
+        expect_status_details(200)
+        expect(json_body[:name]).to eq connector_name
         setVar("aws_instance_role", "false")
       end
 
@@ -484,9 +472,9 @@ describe "On #{ENV['OS']}" do
 
         parsed_json1 = JSON.parse(json_result1)
         expect_status(201)
-        connector_id = parsed_json1["id"]
+        connector_name = parsed_json1["name"]
         s3_connector_name = connector_name1
-        json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_id,
+        json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_name,
                                                             s3_connector_name, with_access_keys, bucket:
                                                                 "testbucket2")
         parsed_json2 = JSON.parse(json_result2)
@@ -512,8 +500,8 @@ describe "On #{ENV['OS']}" do
         json_result1, connector_name1 = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         parsed_json1 = JSON.parse(json_result1)
         expect_status(201)
-        connector_id = parsed_json1["id"]
-        json_result2, connector_name2 = update_jdbc_connector(project.id, featurestore_id, connector_id, connectionString: "jdbc://test3")
+        connector_name = parsed_json1["name"]
+        json_result2, connector_name2 = update_jdbc_connector(project.id, featurestore_id, connector_name, connectionString: "jdbc://test3")
         parsed_json2 = JSON.parse(json_result2)
         expect(parsed_json2.key?("id")).to be true
         expect(parsed_json2.key?("name")).to be true

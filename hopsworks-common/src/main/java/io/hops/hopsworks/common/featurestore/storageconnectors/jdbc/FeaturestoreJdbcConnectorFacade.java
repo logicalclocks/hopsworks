@@ -95,11 +95,13 @@ public class FeaturestoreJdbcConnectorFacade extends AbstractFacade<Featurestore
     }
   }
 
-  public Optional<FeaturestoreJdbcConnector> findByName(String name) {
+  public Optional<FeaturestoreJdbcConnector> findByNameAndFeaturestore(String name, Featurestore featurestore) {
     try {
-      return Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByName", FeaturestoreJdbcConnector.class)
-          .setParameter("name", name)
-          .getSingleResult());
+      return Optional.of(em.createNamedQuery("FeaturestoreJdbcConnector.findByNameAndFeaturestore",
+        FeaturestoreJdbcConnector.class)
+        .setParameter("name", name)
+        .setParameter("featurestore", featurestore)
+        .getSingleResult());
     } catch (NoResultException e) {
       return Optional.empty();
     }

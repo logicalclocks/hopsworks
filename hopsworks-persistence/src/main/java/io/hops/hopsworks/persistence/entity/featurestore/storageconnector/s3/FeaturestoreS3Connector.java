@@ -17,8 +17,10 @@
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3;
 
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -27,9 +29,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
@@ -46,6 +51,8 @@ import java.io.Serializable;
         query = "SELECT fss FROM FeaturestoreS3Connector fss WHERE fss.id = :id"),
     @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestore", query = "SELECT fss " +
         "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore"),
+    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestoreAndName", query = "SELECT fss " +
+      "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore AND fss.name = :name"),
     @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestoreAndId", query = "SELECT fss " +
         "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore AND fss.id = :id")})
 public class FeaturestoreS3Connector implements Serializable {
@@ -64,11 +71,18 @@ public class FeaturestoreS3Connector implements Serializable {
   @Basic(optional = false)
   @Column(name = "name")
   private String name;
+  @Size(max = 2048)
+  @Column(name = "iam_role")
+  private String iamRole;
   @Column(name = "server_encryption_algorithm")
   @Enumerated(EnumType.ORDINAL)
   private FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm;
   @Column(name = "server_encryption_key")
   private String serverEncryptionKey;
+  @JoinColumns({@JoinColumn(name = "key_secret_uid", referencedColumnName = "uid"),
+    @JoinColumn(name = "key_secret_name", referencedColumnName = "secret_name")})
+  @ManyToOne(cascade = CascadeType.ALL)
+  private Secret secret;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -114,6 +128,14 @@ public class FeaturestoreS3Connector implements Serializable {
     this.name = name;
   }
   
+  public String getIamRole() {
+    return iamRole;
+  }
+
+  public void setIamRole(String iamRole) {
+    this.iamRole = iamRole;
+  }
+
   public FeaturestoreS3ConnectorEncryptionAlgorithm getServerEncryptionAlgorithm() { return serverEncryptionAlgorithm; }
 
   public void setServerEncryptionAlgorithm(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
@@ -124,6 +146,14 @@ public class FeaturestoreS3Connector implements Serializable {
 
   public void setServerEncryptionKey(String serverEncryptionKey) { this.serverEncryptionKey = serverEncryptionKey; }
   
+  public Secret getSecret() {
+    return secret;
+  }
+
+  public void setSecret(Secret secret) {
+    this.secret = secret;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
