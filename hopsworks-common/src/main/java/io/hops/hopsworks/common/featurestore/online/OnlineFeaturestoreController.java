@@ -404,7 +404,7 @@ public class OnlineFeaturestoreController {
     SecretId id = new SecretId(user.getUid(), dbUser);
     secretsFacade.deleteSecret(id);
     onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
-    featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(connectorName);
+    featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(connectorName, featurestore);
   }
   
   

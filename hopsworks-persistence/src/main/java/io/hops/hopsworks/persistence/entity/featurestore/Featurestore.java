@@ -18,6 +18,7 @@ package io.hops.hopsworks.persistence.entity.featurestore;
 
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
 import io.hops.hopsworks.persistence.entity.project.Project;
 
@@ -55,7 +56,9 @@ import java.util.Date;
         "WHERE f.project = :project"),
     @NamedQuery(name = "Featurestore.findById", query = "SELECT f FROM Featurestore f WHERE f.id = :id")})
 public class Featurestore implements Serializable {
+  
   private static final long serialVersionUID = 1L;
+  
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Basic(optional = false)
@@ -78,9 +81,10 @@ public class Featurestore implements Serializable {
   private Collection<FeaturestoreS3Connector> featurestoreS3ConnectorConnections;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "featurestore")
   private Collection<FeaturestoreHopsfsConnector> hopsfsConnections;
-
-  public static long getSerialVersionUID() {
-    return serialVersionUID;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "featureStore")
+  private Collection<FeatureStoreRedshiftConnector> featureStoreRedshiftConnectorCollection;
+  
+  public Featurestore() {
   }
 
   public Integer getId() {
@@ -137,16 +141,24 @@ public class Featurestore implements Serializable {
     return hopsfsConnections;
   }
   
-  public void setHopsfsConnections(
-    Collection<FeaturestoreHopsfsConnector> hopsfsConnections) {
+  public void setHopsfsConnections(Collection<FeaturestoreHopsfsConnector> hopsfsConnections) {
     this.hopsfsConnections = hopsfsConnections;
+  }
+  
+  public Collection<FeatureStoreRedshiftConnector> getFeatureStoreRedshiftConnectorCollection() {
+    return featureStoreRedshiftConnectorCollection;
+  }
+  
+  public void setFeatureStoreRedshiftConnectorCollection(
+    Collection<FeatureStoreRedshiftConnector> featureStoreRedshiftConnectorCollection) {
+    this.featureStoreRedshiftConnectorCollection = featureStoreRedshiftConnectorCollection;
   }
   
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Featurestore)) return false;
-
+    
     Featurestore that = (Featurestore) o;
     
     if (id != null  && !id.equals(that.id)) return false;
@@ -154,7 +166,7 @@ public class Featurestore implements Serializable {
     if (created != null && that.created != null && !created.equals(that.created)) return false;
     return hiveDbId.equals(that.hiveDbId);
   }
-
+  
   @Override
   public int hashCode() {
     int result = id != null ? id.hashCode() : 0;

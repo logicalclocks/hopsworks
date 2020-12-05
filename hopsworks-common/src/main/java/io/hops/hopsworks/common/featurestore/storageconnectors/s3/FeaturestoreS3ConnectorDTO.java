@@ -36,6 +36,8 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String bucket;
   private String serverEncryptionAlgorithm;
   private String serverEncryptionKey;
+  private String iamRole;
+  private String sessionToken;
   
   public FeaturestoreS3ConnectorDTO() {
     super(null, null, null, null, null);
@@ -48,6 +50,7 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
     this.bucket = featurestoreS3Connector.getBucket();
     this.serverEncryptionAlgorithm = getEncryptionAlgorithmName(featurestoreS3Connector.getServerEncryptionAlgorithm());
     this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();
+    this.iamRole = featurestoreS3Connector.getIamRole();
   }
   
   private String getEncryptionAlgorithmName(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {
@@ -96,7 +99,25 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   public String getServerEncryptionKey() { return serverEncryptionKey; }
 
   public void setServerEncryptionKey(String serverEncryptionKey) { this.serverEncryptionKey = serverEncryptionKey; }
-
+  
+  @XmlElement
+  public String getIamRole() {
+    return iamRole;
+  }
+  
+  public void setIamRole(String iamRole) {
+    this.iamRole = iamRole;
+  }
+  
+  @XmlElement
+  public String getSessionToken() {
+    return sessionToken;
+  }
+  
+  public void setSessionToken(String sessionToken) {
+    this.sessionToken = sessionToken;
+  }
+  
   @Override
   public String toString() {
     return "FeaturestoreS3ConnectorDTO{" +

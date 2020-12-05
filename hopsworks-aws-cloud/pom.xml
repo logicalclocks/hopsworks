@@ -20,12 +20,16 @@
   <name>Hopsworks: AWS cloud</name>
   <packaging>ejb</packaging>
 
+  <properties>
+    <awssdk.version>2.14.12</awssdk.version>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
-        <version>2.14.12</version>
+        <version>${awssdk.version}</version>
         <type>pom</type>
       </dependency>
     </dependencies>
@@ -41,8 +45,14 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>sts</artifactId>
-      <version>2.14.12</version>
+      <version>${awssdk.version}</version>
     </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>redshift</artifactId>
+      <version>${awssdk.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore</artifactId>

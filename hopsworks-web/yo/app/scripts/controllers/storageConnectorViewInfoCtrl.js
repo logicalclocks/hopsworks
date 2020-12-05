@@ -32,10 +32,11 @@ angular.module('hopsWorksApp')
             self.featurestore = featurestore;
             self.settings = settings
             //Constants
-            self.hopsfsConnectorType = self.settings.hopsfsConnectorType
-            self.s3ConnectorType = self.settings.s3ConnectorType
-            self.jdbcConnectorType = self.settings.jdbcConnectorType
-            self.preProcessedArgs = []
+            self.hopsfsConnectorType = self.settings.hopsfsConnectorType;
+            self.s3ConnectorType = self.settings.s3ConnectorType;
+            self.jdbcConnectorType = self.settings.jdbcConnectorType;
+            self.redshiftConnectorType = self.settings.redshiftConnectorType;
+            self.preProcessedArgs = [];
             self.showPwd = false;
             self.pwdType = "password";
 

@@ -94,6 +94,18 @@ public class FeaturestoreS3ConnectorFacade extends AbstractFacade<FeaturestoreS3
       return Optional.empty();
     }
   }
+  
+  public Optional<FeaturestoreS3Connector> findByNameAndFeaturestore(String name, Featurestore featurestore) {
+    try {
+      return Optional.of(em.createNamedQuery("FeaturestoreS3Connector.findByFeaturestoreAndName",
+        FeaturestoreS3Connector.class)
+        .setParameter("featurestore", featurestore)
+        .setParameter("name", name)
+        .getSingleResult());
+    } catch (NoResultException e) {
+      return Optional.empty();
+    }
+  }
 
   /**
    * Updates a s3 connector

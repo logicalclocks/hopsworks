@@ -15,7 +15,6 @@ import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.audit.logger.annotation.Secret;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.cloud.AWSSecurityTokenService;
 import io.hops.hopsworks.common.cloud.CloudRoleMappingController;
 import io.hops.hopsworks.common.cloud.Credentials;
 import io.hops.hopsworks.common.project.ProjectController;
@@ -26,14 +25,12 @@ import io.hops.hopsworks.persistence.entity.cloud.CloudRoleMapping;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -47,7 +44,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Logged
@@ -66,8 +62,8 @@ public class RoleMappingResource {
   private CloudRoleMappingController cloudRoleMappingController;
   @EJB
   private JWTHelper jwtHelper;
-  @Inject
-  private AWSSecurityTokenService awsSecurityTokenService;
+  @EJB
+  private TemporaryCredentialsHelper temporaryCredentialsHelper;
   
   private Integer projectId;
   private String projectName;
@@ -155,13 +151,8 @@ public class RoleMappingResource {
     throws ProjectException, CloudException {
     Users user = jwtHelper.getUserPrincipal(sc);
     Project project = projectController.findProjectById(this.projectId);
-    CloudRoleMapping cloudRoleMapping = cloudRoleMappingController.getRoleMappingOrDefault(roleARN, project, user);
-    if (!cloudRoleMappingController.canAssumeRole(user, cloudRoleMapping)) {
-      throw new CloudException(RESTCodes.CloudErrorCode.ACCESS_CONTROL_EXCEPTION, Level.FINE, "No role mapping found " +
-        "for user.");
-    }
-    Credentials credentials =
-      awsSecurityTokenService.assumeRole(cloudRoleMapping.getCloudRole(), roleSessionName, durationSeconds);
+    Credentials credentials = temporaryCredentialsHelper.getTemporaryCredentials(roleARN, roleSessionName,
+      durationSeconds, user, project);
     return Response.ok(credentials).build();
   }
 }
