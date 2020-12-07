@@ -704,7 +704,7 @@ angular.module('hopsWorksApp')
                         }
                         break;
                       case "PYTHON":
-                        self.mainFileSelected(filename);
+                        self.mainFileSelected(path);
                         break;
                       default:
                         break;
