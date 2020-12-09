@@ -210,7 +210,8 @@ public class LibraryResource {
         break;
       case EGG:
       case WHEEL:
-      case REQUIREMENTS:
+      case REQUIREMENTS_TXT:
+      case ENVIRONMENT_YAML:
         validateBundledDependency(user, librarySpecification);
         break;
       case GIT:
@@ -328,9 +329,12 @@ public class LibraryResource {
     } else if(packageSource.equals(PackageSource.WHEEL) && !dependencyUrl.endsWith(".whl")) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
           "The library to install is not a .whl file: " + dependencyUrl);
-    } else if(packageSource.equals(PackageSource.REQUIREMENTS) && !dependencyUrl.endsWith("/requirements.txt")) {
+    } else if(packageSource.equals(PackageSource.REQUIREMENTS_TXT) && !dependencyUrl.endsWith("/requirements.txt")) {
       throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
           "The library to install is not a requirements.txt file: " + dependencyUrl);
+    } else if(packageSource.equals(PackageSource.ENVIRONMENT_YAML) && !dependencyUrl.endsWith(".yml")) {
+      throw new PythonException(RESTCodes.PythonErrorCode.INSTALL_TYPE_NOT_SUPPORTED, Level.FINE,
+          "The library to install is not a conda environment.yml file: " + dependencyUrl);
     }
   }
 

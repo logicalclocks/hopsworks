@@ -22,7 +22,8 @@ public enum PackageSource {
   EGG,
   WHEEL,
   GIT,
-  REQUIREMENTS;
+  REQUIREMENTS_TXT,
+  ENVIRONMENT_YAML;
 
   public static PackageSource fromString(String param) {
     return valueOf(param.toUpperCase());
