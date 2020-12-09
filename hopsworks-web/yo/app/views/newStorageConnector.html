@@ -431,8 +431,10 @@
                                    style="margin-left: 10px"></i>
                             </div>
                             <div class="col-sm-3">
-                                <select class="form-control" id="sel" ng-model="newStorageConnectorCtrl.s3AWSRole" required>
+                                <select class="form-control" id="sel" ng-model="newStorageConnectorCtrl.s3AWSRole">
                                     <option value="" selected disabled>Select IAM role</option>
+                                    <option ng-if="newStorageConnectorCtrl.s3IAMRole" value="">Instance Role
+                                    </option>
                                     <option ng-repeat="mapping in newStorageConnectorCtrl.cloudRoleMappings">{{mapping.cloudRole}}</option>
                                 </select>
                             </div>
