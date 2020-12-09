@@ -369,12 +369,20 @@ public class LibraryInstaller {
             writer.write("--mount=type=bind,source="+wheelName+",target=/root/" + wheelName + " ");
             writer.write(anaconda_project_dir + "/bin/pip install --upgrade /root/" + wheelName);
             break;
-          case REQUIREMENTS:
+          case REQUIREMENTS_TXT:
             String requirementsName = cc.getLib();
             String localRequirementsName = baseDir + File.separator + requirementsName;
             copyCondaArtifactToLocal(cc.getArg(), localRequirementsName);
             writer.write("--mount=type=bind,source="+requirementsName+",target=/root/" + requirementsName + " ");
             writer.write(anaconda_project_dir + "/bin/pip install -r /root/" + requirementsName);
+            break;
+          case ENVIRONMENT_YAML:
+            String environmentsName = cc.getLib();
+            String localEnvironmentsName = baseDir + File.separator + environmentsName;
+            copyCondaArtifactToLocal(cc.getArg(), localEnvironmentsName);
+            writer.write("--mount=type=bind,source="+environmentsName+",target=/root/" + environmentsName + " ");
+            writer.write(anaconda_dir + "/bin/conda env update -f /root/" + environmentsName + " -n "
+                + settings.getCurrentCondaEnvironment());
             break;
           case GIT:
             if(cc.getGitBackend() != null && cc.getGitApiKeyName() != null) {
@@ -413,7 +421,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(10, TimeUnit.MINUTES)
+          .setWaitTimeout(1, TimeUnit.HOURS)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
@@ -491,7 +499,7 @@ public class LibraryInstaller {
           .addCommand(projectUtils.getRegistryURL() + "/" + nextDockerImageName)
           .redirectErrorStream(true)
           .setCurrentWorkingDirectory(baseDir)
-          .setWaitTimeout(5, TimeUnit.MINUTES)
+          .setWaitTimeout(10, TimeUnit.MINUTES)
           .build();
 
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);

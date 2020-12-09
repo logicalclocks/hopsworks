@@ -582,7 +582,8 @@ angular.module('hopsWorksApp')
             self.selectDepRegexes = {
               "EGG": /.egg\b/,
               "WHEEL": /.whl\b/,
-              "REQUIREMENTS": /.txt\b/
+              "REQUIREMENTS_TXT": /.txt\b/,
+              "ENVIRONMENT_YAML": /.yml\b/
             };
 
             self.selectFile = function (reason) {
@@ -624,7 +625,7 @@ angular.module('hopsWorksApp')
                         data.gitApiKey = self.gitApiKey.name
                         data.gitBackend = self.gitBackend
                     }
-                } else if (packageSource.toUpperCase() === "EGG" || packageSource.toUpperCase() === "WHEEL" || packageSource.toUpperCase() === "REQUIREMENTS") {
+                } else if (packageSource.toUpperCase() === "EGG" || packageSource.toUpperCase() === "WHEEL" || packageSource.toUpperCase() === "REQUIREMENTS_TXT" || packageSource.toUpperCase() === "ENVIRONMENT_YAML") {
                     var data = {
                         "channelUrl": packageSource.toLowerCase(),
                         "packageSource": packageSource,

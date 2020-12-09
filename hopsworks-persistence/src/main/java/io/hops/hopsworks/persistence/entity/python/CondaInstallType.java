@@ -22,5 +22,6 @@ public enum CondaInstallType {
   EGG,
   WHEEL,
   GIT,
-  REQUIREMENTS
+  REQUIREMENTS_TXT,
+  ENVIRONMENT_YAML
 }

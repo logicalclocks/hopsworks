@@ -368,6 +368,42 @@ describe "On #{ENV['OS']}" do
 
           end
 
+          it 'install from environment.yml' do
+
+            @project = create_env_and_update_project(@project, python_version)
+
+            upload_environment
+            install_library(@project[:id], python_version, 'environment.yml', 'ENVIRONMENT_YAML', '', 'environment', "/Projects/#{@project[:projectname]}/Resources/environment.yml")
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            list_libraries(@project[:id], python_version)
+            dropbox_library = json_body[:items].detect { |library| library[:library] == "dropbox" }
+            expect(dropbox_library[:packageSource]).to eq("CONDA")
+            expect(dropbox_library[:version]).to eq ("10.10.0")
+
+          end
+
+          it 'install from requirements.txt' do
+
+            @project = create_env_and_update_project(@project, python_version)
+
+            upload_requirements
+            install_library(@project[:id], python_version, 'requirements.txt', 'REQUIREMENTS_TXT', '', 'requirements', "/Projects/#{@project[:projectname]}/Resources/requirements.txt")
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            list_libraries(@project[:id], python_version)
+            imageio_library = json_body[:items].detect { |library| library[:library] == "imageio" }
+            expect(imageio_library[:packageSource]).to eq("PIP")
+            expect(imageio_library[:version]).to eq ("2.2.0")
+
+          end
+
           it 'uninstall libraries' do
             @project = create_env_and_update_project(@project, python_version)
             uninstall_library(@project[:id], python_version, 'imageio')
@@ -388,7 +424,7 @@ describe "On #{ENV['OS']}" do
             end
             @project = create_env_and_update_project(@project, python_version)
             # Install a library to create the new environment
-            install_library(@project[:id], python_version, 'dropbox', 'CONDA', '10.2.0', conda_channel)
+            install_library(@project[:id], python_version, 'htmlmin', 'CONDA', '0.1.12', conda_channel)
             expect_status(201)
             # Wait until library is installed
             wait_for do
@@ -487,7 +523,6 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'create environment from requirements.txt with jupyter install true' do
-            upload_requirements
             delete_env(@project[:id], python_version)
             create_env_from_file(@project[:id], "/Projects/#{@project[:projectname]}/Resources/requirements.txt", true)
             expect_status(201)

@@ -423,14 +423,22 @@
                     <h4>Select package file</h4>
                     <div id="selectUpload" class="btn-group" role="group" aria-label="...">
                       <button type="button" class="btn"
-                              ng-click="pythonCtrl.uploadMode = 'REQUIREMENTS';"
-                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'REQUIREMENTS', 'btn-primary': pythonCtrl.uploadMode === 'REQUIREMENTS'}"
-                      >Requirements</button>
+                              uib-tooltip="Check this option if you have a requirements.txt to install in the environment."
+                              ng-click="pythonCtrl.uploadMode = 'REQUIREMENTS_TXT';"
+                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'REQUIREMENTS_TXT', 'btn-primary': pythonCtrl.uploadMode === 'REQUIREMENTS_TXT'}"
+                      >Requirements.txt</button>
                       <button type="button" class="btn"
+                              uib-tooltip="Check this option if you have a conda environment file (.yml) to install in the environment"
+                              ng-click="pythonCtrl.uploadMode = 'ENVIRONMENT_YAML';"
+                              ng-class="{'btn-default': pythonCtrl.uploadMode !== 'ENVIRONMENT_YAML', 'btn-primary': pythonCtrl.uploadMode === 'ENVIRONMENT_YAML'}"
+                      >Environment YAML</button>
+                      <button type="button" class="btn"
+                              uib-tooltip="Check this option if you have a wheel (.whl) to install in the environment"
                               ng-click="pythonCtrl.uploadMode = 'WHEEL';"
                               ng-class="{'btn-default': pythonCtrl.uploadMode !== 'WHEEL', 'btn-primary': pythonCtrl.uploadMode === 'WHEEL'}"
                       >Wheel</button>
                       <button type="button" class="btn"
+                              uib-tooltip="Check this option if you have an egg to install in the environment"
                               ng-click="pythonCtrl.uploadMode = 'EGG';"
                               ng-class="{'btn-default': pythonCtrl.uploadMode !== 'EGG', 'btn-primary': pythonCtrl.uploadMode === 'EGG'}"
                       >Egg</button>
