@@ -93,6 +93,12 @@ module CondaHelper
                     "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
   end
 
+  def upload_environment
+      copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/environment.yml",
+                    "/Projects/#{@project[:projectname]}/Resources/environment.yml", @user[:username],
+                    "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
+  end
+
   def get_conda_envs_locally
     cmd = "#{@conda_bin} env list --json"
     Open3.popen3(cmd) do |_, stdout, _, _|

@@ -163,7 +163,8 @@ public class CommandsController {
           if(cc.getInstallType().equals(CondaInstallType.GIT) ||
               cc.getInstallType().equals(CondaInstallType.EGG) ||
               cc.getInstallType().equals(CondaInstallType.WHEEL) ||
-              cc.getInstallType().equals(CondaInstallType.REQUIREMENTS) ||
+              cc.getInstallType().equals(CondaInstallType.REQUIREMENTS_TXT) ||
+              cc.getInstallType().equals(CondaInstallType.ENVIRONMENT_YAML) ||
               opType.equals(CondaOp.UNINSTALL)) {
             deps.remove(dep);
           }
