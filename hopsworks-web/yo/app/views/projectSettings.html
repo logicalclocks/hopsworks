@@ -229,7 +229,33 @@
                   </button>
 
                 </form>
-
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="panel panel-danger">
+                      <div class="panel-heading">
+                        Danger Zone
+                      </div>
+                      <div class="panel-body no-padding">
+                        <div class="no-padding" ng-repeat="action in projectCtrl.projectDangerActions">
+                          <div class="col-md-12 no-padding border-bottom">
+                            <div class="col-md-10 no-padding">
+                              <h2>
+                                {{action.title}}
+                              </h2>
+                              {{action.description}}
+                            </div>
+                            <div class="col-md-2 no-padding" style="margin-top:25px">
+                              <button class="btn btn-danger"
+                                      ng-click="projectCtrl.handleProjectDangerActions(action.action)">
+                                {{action.title}}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </uib-tab>
               <uib-tab index="1" heading="PIA">
                 <h2>Privacy Impact Assessment</h2>
