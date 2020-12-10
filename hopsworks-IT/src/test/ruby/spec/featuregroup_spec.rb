@@ -1104,6 +1104,34 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json['keywords']).to include('this')
         expect(parsed_json['keywords']).to include('keyword123')
       end
+
+      it "should be able to create cached feature group with extra constraints of features" do
+        project = get_project
+        featurestore_id = get_featurestore_id(@project[:id])
+
+        # Create cached featuregroup
+        features = [
+            {type: "INT",
+             name: "testfeature",
+             description: "testfeaturedescription",
+             primary: true,
+             onlineType: "INT",
+             partition: true}
+        ]
+        json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
+
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+
+        # Get the first version
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
+        json_result = get get_featuregroup_endpoint
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"] == true)
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"] == true)
+      end
     end
   end
 
