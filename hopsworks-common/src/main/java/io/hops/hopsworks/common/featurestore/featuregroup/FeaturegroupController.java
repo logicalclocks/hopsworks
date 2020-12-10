@@ -193,7 +193,7 @@ public class FeaturegroupController {
 
   public FeaturegroupDTO createFeaturegroupNoValidation(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
                                                       Project project, Users user)
-      throws FeaturestoreException, SQLException, ProvenanceException, IOException, ServiceException {
+      throws FeaturestoreException, SQLException, ProvenanceException, ServiceException {
 
     //Persist specific feature group metadata (cached fg or on-demand fg)
     OnDemandFeaturegroup onDemandFeaturegroup = null;
@@ -729,7 +729,7 @@ public class FeaturegroupController {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
         return cachedFeaturegroupController.getFeaturesDTO(
-          featuregroup.getCachedFeaturegroup().getHiveTbls(), featuregroup.getFeaturestore(), project, user);
+            featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
           .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary(), null))

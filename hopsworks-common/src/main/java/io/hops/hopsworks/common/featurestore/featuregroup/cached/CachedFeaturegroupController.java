@@ -35,9 +35,9 @@ import io.hops.hopsworks.exceptions.HopsSecurityException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeatureExtraConstraints;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.CachedFeaturegroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveColumns;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveKeyConstraints;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HivePartitionKeys;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTableParams;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
@@ -73,6 +73,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -245,8 +246,8 @@ public class CachedFeaturegroupController {
                                                            Users user, String partition, int limit)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup.getCachedFeaturegroup().getHiveTbls(),
-      featuregroup.getFeaturestore(), project, user);
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(
+        featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
 
     // This is not great, but at the same time the query runs as the user.
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
@@ -322,7 +323,7 @@ public class CachedFeaturegroupController {
    */
   public CachedFeaturegroup createCachedFeaturegroup(
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
-      throws FeaturestoreException, ServiceException, IOException, SQLException {
+      throws FeaturestoreException, SQLException {
 
     verifyPrimaryAndPartitionKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
 
@@ -348,7 +349,8 @@ public class CachedFeaturegroupController {
             Level.WARNING, "", "Table created correctly but not in the metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getTimeTravelFormat());
+    return persistCachedFeaturegroupMetadata(hiveTbls, onlineEnabled, cachedFeaturegroupDTO.getTimeTravelFormat(),
+        cachedFeaturegroupDTO.getFeatures());
   }
   
   /**
@@ -362,7 +364,7 @@ public class CachedFeaturegroupController {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
     HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-      getFeaturesDTO(hiveTable, featuregroup.getFeaturestore(), project, user);
+      getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
@@ -393,25 +395,22 @@ public class CachedFeaturegroupController {
     return cachedFeaturegroupDTO;
   }
 
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(HiveTbls hiveTable, Featurestore featurestore, Project project,
-    Users user) throws FeaturestoreException {
-    List<HiveKeyConstraints> primaryKeys = hiveTable.getHiveKeyConstraintsCollection().stream()
-      // 0 is the primary key index
-      .filter(c -> c.getConstraintType() == 0)
-      .collect(Collectors.toList());
-
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore,
+                                                     Project project, Users user) throws FeaturestoreException {
+    Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
+        cachedFeaturegroup.getFeaturesExtraConstraints();
+    HiveTbls hiveTable = cachedFeaturegroup.getHiveTbls();
     List<SQLDefaultConstraint> defaultConstraints =
       offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
 
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     // Add all the columns - if there is a primary key constraint, set the primary key flag
     for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
-      boolean primary = primaryKeys.stream().anyMatch(pk ->
-        pk.getParentCdId().getCdId().equals(hc.getHiveColumnsPK().getCdId()) &&
-          pk.getParentIntegerIdx() == hc.getIntegerIdx());
+      boolean primary = featureExtraConstraints.stream().anyMatch(pk ->
+          pk.getName().equals(hc.getHiveColumnsPK().getColumnName()));
       String defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
-        hc.getComment(), primary, defaultValue));
+          hc.getComment(), primary, defaultValue));
     }
     // Hive stores the partition columns separately. Add them
     for (HivePartitionKeys pk : hiveTable.getHivePartitionKeysCollection()) {
@@ -419,6 +418,10 @@ public class CachedFeaturegroupController {
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
         pk.getPkeyType(), pk.getPkeyComment(), false, true, defaultValue));
     }
+    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
+    }
+
     return featureGroupFeatureDTOS;
   }
 
@@ -594,7 +597,8 @@ public class CachedFeaturegroupController {
           "in the Hive metastore"));
 
     //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, false, cachedFeaturegroupDTO.getTimeTravelFormat());
+    return persistCachedFeaturegroupMetadata(hiveTbls, false, cachedFeaturegroupDTO.getTimeTravelFormat(),
+        cachedFeaturegroupDTO.getFeatures());
   }
 
   /**
@@ -604,11 +608,14 @@ public class CachedFeaturegroupController {
    * @return Entity of the created cached feature group
    */
   private CachedFeaturegroup persistCachedFeaturegroupMetadata(HiveTbls hiveTable, boolean onlineEnabled,
-                                                               TimeTravelFormat timeTravelFormat) {
+                                                               TimeTravelFormat timeTravelFormat,
+                                                               List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS) {
     CachedFeaturegroup cachedFeaturegroup = new CachedFeaturegroup();
     cachedFeaturegroup.setHiveTbls(hiveTable);
     cachedFeaturegroup.setOnlineEnabled(onlineEnabled);
     cachedFeaturegroup.setTimeTravelFormat(timeTravelFormat);
+    cachedFeaturegroup.setFeaturesExtraConstraints(
+        buildFeatureExtraConstrains(featureGroupFeatureDTOS, cachedFeaturegroup));
     cachedFeaturegroupFacade.persist(cachedFeaturegroup);
     return cachedFeaturegroup;
   }
@@ -640,7 +647,7 @@ public class CachedFeaturegroupController {
     //Create MySQL Table for Online Feature Group
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
     List<FeatureGroupFeatureDTO> features =
-      getFeaturesDTO(cachedFeaturegroup.getHiveTbls(), featurestore, project, user);
+      getFeaturesDTO(cachedFeaturegroup, featurestore, project, user);
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = dropHudiSpecFeatureGroupFeature(features);
     }
@@ -689,9 +696,8 @@ public class CachedFeaturegroupController {
                              CachedFeaturegroupDTO cachedFeaturegroupDTO)
       throws FeaturestoreException, SQLException {
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    HiveTbls hiveTable = cachedFeaturegroup.getHiveTbls();
-    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(hiveTable, featuregroup.getFeaturestore(), project,
-      user);
+    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(cachedFeaturegroup, featuregroup.getFeaturestore(),
+        project, user);
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     // verify user input specific for cached feature groups - if any
@@ -760,8 +766,8 @@ public class CachedFeaturegroupController {
       if (newFeature.getPartition() != feature.getPartition() || newFeature.getPrimary() != feature.getPrimary() ||
         !newFeature.getType().equalsIgnoreCase(feature.getType())) {
         throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_UPDATE, Level.FINE,
-          "Primary key, partition key or type information of feature " + feature.getName() + " changed. Primary key" +
-            ", partition key and type cannot be changed when appending features.");
+            "Primary key, partition key or type information of feature " + feature.getName() + " changed. Primary key" +
+                ", partition key and type cannot be changed when appending features.");
       }
     }
   }
@@ -792,24 +798,26 @@ public class CachedFeaturegroupController {
 
   public void verifyPrimaryAndPartitionKey(List<FeatureGroupFeatureDTO> features,
                                            TimeTravelFormat timeTravelFormat) throws FeaturestoreException {
-    // Verify that primary keys are not also a partition key
-    String invalidPrimaryKeys = features.stream()
-        .filter(FeatureGroupFeatureDTO::getPrimary)
-        .filter(FeatureGroupFeatureDTO::getPartition)
-        .map(FeatureGroupFeatureDTO::getName)
-        .collect(Collectors.joining(","));
-
-    if (!Strings.isNullOrEmpty(invalidPrimaryKeys)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.COULD_NOT_CREATE_FEATUREGROUP, Level.FINE,
-          "The primary key columns: " + invalidPrimaryKeys + " were specified as a partition columns, which is not " +
-              "allowed.");
-    }
-
     // Currently the Hudi implementation requires having both at last a primary key and a partition key
     if (timeTravelFormat == TimeTravelFormat.HUDI &&
         (features.stream().noneMatch(FeatureGroupFeatureDTO::getPrimary) ||
             features.stream().noneMatch(FeatureGroupFeatureDTO::getPartition))) {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_PARTITION_KEY_REQUIRED, Level.FINE);
     }
+  }
+
+  private List<CachedFeatureExtraConstraints> buildFeatureExtraConstrains(
+      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS, CachedFeaturegroup cachedFeaturegroup) {
+    List<CachedFeatureExtraConstraints> cachedFeatureExtraConstraints = new ArrayList<>();
+    List<String> pkNames = featureGroupFeatureDTOS.stream()
+        .filter(FeatureGroupFeatureDTO::getPrimary)
+        .map(f -> f.getName())
+        .collect(Collectors.toList());
+
+    for (String pkName : pkNames) {
+      cachedFeatureExtraConstraints.add(new CachedFeatureExtraConstraints(cachedFeaturegroup,
+          pkName, true, false));
+    }
+    return cachedFeatureExtraConstraints;
   }
 }

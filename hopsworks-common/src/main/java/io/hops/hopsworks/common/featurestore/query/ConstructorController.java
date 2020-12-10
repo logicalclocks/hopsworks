@@ -32,7 +32,6 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.HiveTbls;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
@@ -610,12 +609,13 @@ public class ConstructorController {
         query.getFeaturegroup().getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
-      HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
-      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(hiveTable,
-          featuregroup.getFeaturestore(), project, user);
+      List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(
+          featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(),
+          project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
 
-      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(hiveTable.getSdId().getLocation()));
+      featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
+          featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
 
       if (query.getLeftFeatureGroupStartTimestamp() == null) {
         aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
