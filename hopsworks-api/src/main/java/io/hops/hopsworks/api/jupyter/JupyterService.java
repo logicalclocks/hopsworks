@@ -478,8 +478,10 @@ public class JupyterService {
     StringBuilder pathBuilder = new StringBuilder(ipynbPath.substring(0, extensionIndex)).append(".py");
     String pyAppPath = pathBuilder.toString();
     String hdfsUsername = getHdfsUser(sc);
-    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath,
-        JupyterController.NotebookConversion.PY);
+    Users user  =jWTHelper.getUserPrincipal(sc);
+    JupyterController.NotebookConversion conversionType = jupyterController
+        .getNotebookConversionType(ipynbPath, user, this.project);
+    jupyterController.convertIPythonNotebook(hdfsUsername, ipynbPath, project, pyAppPath, conversionType);
     return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).build();
   }
 

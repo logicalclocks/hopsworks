@@ -168,7 +168,7 @@ public class KubeExecutionController extends AbstractExecutionController impleme
           String pyAppPath = outPath + "/job_tmp_" + job.getName() + ".py";
           pythonJobConfiguration.setAppPath(pyAppPath);
           jupyterController.convertIPythonNotebook(hdfsUser, appPath, job.getProject(), pyAppPath,
-            JupyterController.NotebookConversion.PY_JOB);
+              jupyterController.getNotebookConversionType(appPath, user, job.getProject()));
         }
         
         String kubeProjectUser = kubeClientService.getKubeDeploymentName(job.getProject(), user);
