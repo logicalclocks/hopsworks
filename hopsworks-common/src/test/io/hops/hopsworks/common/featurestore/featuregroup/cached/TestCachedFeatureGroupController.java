@@ -168,16 +168,7 @@ public class TestCachedFeatureGroupController {
     thrown.expect(FeaturestoreException.class);
     cachedFeaturegroupController.verifyAndGetNewFeatures(features, newSchema);
   }
-
-  @Test
-  public void testVerifyPrimaryKeyNotPartitionKeyValid() throws Exception {
-    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
-    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
-    newSchema.add(new FeatureGroupFeatureDTO("part_param2", "Integer", "", false, true));
-
-    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.NONE);
-  }
-
+  
   @Test
   public void testVerifyPrimaryKeyHudi() throws Exception {
     List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
