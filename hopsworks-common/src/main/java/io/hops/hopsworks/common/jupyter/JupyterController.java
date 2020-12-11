@@ -16,6 +16,8 @@
 
 package io.hops.hopsworks.common.jupyter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import com.google.common.base.Strings;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.common.dao.hdfsUser.HdfsUsersFacade;
@@ -25,6 +27,7 @@ import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
+import io.hops.hopsworks.common.hdfs.xattrs.XAttrsController;
 import io.hops.hopsworks.common.livy.LivyController;
 import io.hops.hopsworks.common.livy.LivyMsg;
 import io.hops.hopsworks.common.security.CertificateMaterializer;
@@ -74,6 +77,7 @@ import java.util.logging.Logger;
 public class JupyterController {
 
   private static final Logger LOGGER = Logger.getLogger(JupyterController.class.getName());
+  private static final String NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME = "jupyter_configuration";
 
   @EJB
   private DistributedFsService dfs;
@@ -105,6 +109,8 @@ public class JupyterController {
   private JupyterNbVCSController jupyterNbVCSController;
   @EJB
   private ProjectUtils projectUtils;
+  @EJB
+  private XAttrsController xAttrsController;
 
   @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
   public String convertIPythonNotebook(String hdfsUsername, String notebookPath, Project project, String pyPath,
@@ -307,33 +313,13 @@ public class JupyterController {
       }
     }
   }
+
   public void versionProgram(String hdfsUser, String sessionKernelId, Path outputPath,
     DistributedFileSystemOps udfso) throws ServiceException {
     JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
     String relativeNotebookPath = null;
     try {
-      JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
-          .target("http://" + jupyterManager.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
-              jp.getPort() + "/api/sessions?token=" + jp.getToken())
-          .request()
-          .method("GET")
-          .readEntity(String.class));
-
-      boolean foundKernel = false;
-      for (int i = 0; i < sessionsArray.length(); i++) {
-        JSONObject session = (JSONObject) sessionsArray.get(i);
-        JSONObject kernel = (JSONObject) session.get("kernel");
-        String kernelId = kernel.getString("id");
-        if (kernelId.equals(sessionKernelId)) {
-          relativeNotebookPath = session.getString("path");
-          foundKernel = true;
-        }
-      }
-
-      if(!foundKernel) {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
-            Level.FINE, "failed to find kernel " + sessionKernelId);
-      }
+      relativeNotebookPath = getNotebookRelativeFilePath(hdfsUser, sessionKernelId, udfso);
 
       //Get the content of the notebook should work in both spark and python kernels irregardless of contents manager
       if (!Strings.isNullOrEmpty(relativeNotebookPath)) {
@@ -356,6 +342,61 @@ public class JupyterController {
       throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
           Level.FINE, "failed to version notebook", e.getMessage(), e);
     }
+  }
+
+  public void attachJupyterConfigurationToNotebook(Users user, String hdfsUsername, Project project, String kernelId)
+      throws ServiceException {
+    DistributedFileSystemOps udfso = null;
+    try {
+      udfso = dfs.getDfsOps(hdfsUsername);
+      String relativeNotebookPath = getNotebookRelativeFilePath(hdfsUsername, kernelId, udfso);
+      JupyterSettings jupyterSettings = jupyterSettingsFacade.findByProjectUser(project, user.getEmail());
+      ObjectMapper objectMapper = new ObjectMapper();
+      objectMapper.registerModule(new JaxbAnnotationModule());
+      JSONObject jupyterSettingsMetadataObj = new JSONObject();
+      jupyterSettingsMetadataObj.put(NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+          objectMapper.writeValueAsString(jupyterSettings));
+      String inodePath = jupyterSettings.getBaseDir() + "/" +
+          relativeNotebookPath;
+      xAttrsController.addStrXAttr(inodePath, NOTEBOOK_JUPYTER_CONFIG_XATTR_NAME,
+          jupyterSettingsMetadataObj.toString(), udfso);
+    } catch (Exception e) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.ATTACHING_JUPYTER_CONFIG_TO_NOTEBOOK_FAILED,
+          Level.FINE, "Failed to attach jupyter configuration for user: " + user+ ", project" + ": " + project + ", " +
+          "kernelId: " + kernelId, e.getMessage(), e);
+    } finally {
+      dfs.closeDfsClient(udfso);
+    }
+  }
+
+  public String getNotebookRelativeFilePath(String hdfsUser, String sessionKernelId, DistributedFileSystemOps udfso)
+      throws ServiceException {
+    String relativeNotebookPath = null;
+    JupyterProject jp = jupyterFacade.findByUser(hdfsUser);
+    JSONArray sessionsArray = new JSONArray(ClientBuilder.newClient()
+        .target("http://" + jupyterManager.getJupyterHost() + ":" + jp.getPort() + "/hopsworks-api/jupyter/" +
+            jp.getPort() + "/api/sessions?token=" + jp.getToken())
+        .request()
+        .method("GET")
+        .readEntity(String.class));
+
+    boolean foundKernel = false;
+    for (int i = 0; i < sessionsArray.length(); i++) {
+      JSONObject session = (JSONObject) sessionsArray.get(i);
+      JSONObject kernel = (JSONObject) session.get("kernel");
+      String kernelId = kernel.getString("id");
+      if (kernelId.equals(sessionKernelId)) {
+        relativeNotebookPath = session.getString("path");
+        foundKernel = true;
+      }
+    }
+
+    if(!foundKernel) {
+      throw new ServiceException(RESTCodes.ServiceErrorCode.JUPYTER_NOTEBOOK_VERSIONING_FAILED,
+          Level.FINE, "failed to find kernel " + sessionKernelId);
+    }
+
+    return relativeNotebookPath;
   }
 
   /**

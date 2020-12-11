@@ -16,7 +16,7 @@ gem 'jwt', '2.2.1'
 gem 'composite_primary_keys', '=12.0.2'
 gem 'typhoeus'
 gem 'concurrent-ruby', require: 'concurrent'
-
+gem 'websocket-client-simple'
 group :development do
   gem 'dotenv'
   gem 'byebug'

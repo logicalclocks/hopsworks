@@ -79,6 +79,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -445,6 +446,14 @@ public class UsersController {
       throw new IllegalStateException("You cannot register with this email address. Pick another.");
     }
     return testUname + suffix;
+  }
+
+  public Optional<Users> findByUsername(String username) {
+    Users user = userFacade.findByUsername(username);
+    if(user != null) {
+      return Optional.of(user);
+    }
+    return Optional.empty();
   }
 
 

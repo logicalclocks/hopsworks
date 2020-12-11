@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.DistributionStrategy;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ExperimentType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
@@ -54,6 +55,7 @@ import io.hops.hopsworks.persistence.entity.util.Settings;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.NONE)
+@JsonTypeName("sparkJobConfiguration")
 public class SparkJobConfiguration extends YarnJobConfiguration {
 
   /**
