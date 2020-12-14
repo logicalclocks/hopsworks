@@ -43,9 +43,7 @@ import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -55,15 +53,12 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.ws.rs.client.ClientBuilder;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -140,8 +135,6 @@ public class JupyterController {
           materializeCertificatesLocalCustomDir(user.getUsername(), project.getName(), conversionDir.getAbsolutePath());
       ProcessResult processResult = osProcessExecutor.execute(processDescriptor);
       if (!processResult.processExited() || processResult.getExitCode() != 0) {
-        LOGGER.log(Level.WARNING, "error code: " + processResult.getExitCode(), "Failed to convert "
-            + notebookPath + "\nstderr: " + processResult.getStderr() + "\nstdout: " + processResult.getStdout());
         throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR,  Level.SEVERE,
             "error code: " + processResult.getExitCode(), "Failed to convert " + notebookPath
             + "\nstderr: " + processResult.getStderr()
@@ -358,70 +351,9 @@ public class JupyterController {
     }
   }
 
-  /**
-   * Gets the NotebookConversion type depending on the kernel of the notebook
-   * @param notebookPath
-   * @return NotebookConversion type
-   * @throws ServiceException
-   */
-  @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-  public NotebookConversion getNotebookConversionType(String notebookPath, Users user, Project project)
-      throws ServiceException {
-    String projectUsername = hdfsUsersController.getHdfsUserName(project, user);
-    DistributedFileSystemOps udfso = null;
-    Path p = new Path(notebookPath);
-    try {
-      udfso = dfs.getDfsOps(projectUsername);
-      String notebookString;
-      try(FSDataInputStream inStream = udfso.open(p)) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        IOUtils.copyBytes(inStream, out, 512);
-        notebookString = out.toString("UTF-8");
-      }
-      JSONObject notebookJSON = new JSONObject(notebookString);
-      String notebookKernel = (String) notebookJSON
-          .getJSONObject("metadata")
-          .getJSONObject("kernelspec")
-          .get("display_name");
-      Optional<NotebookConversion> kernel = NotebookConversion.fromKernel(notebookKernel);
-      if(kernel.isPresent()) {
-        if(kernel.get() == NotebookConversion.PY_JOB || kernel.get() == NotebookConversion.PY) {
-          return kernel.get();
-        } else {
-          throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE,
-              "Unsupported kernel: " + kernel.get().name() + ". Conversion to .py is for PySpark " +
-                  "or Python notebooks");
-        }
-      } else {
-        throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE,
-            "Unsupported kernel for notebook. Conversion to .py is for PySpark " +
-                "or Python notebooks");
-      }
-    } catch (Exception e) {
-      throw new ServiceException(RESTCodes.ServiceErrorCode.IPYTHON_CONVERT_ERROR, Level.FINE, "Failed to get " +
-          "kernel for notebook.",  e.getMessage(), e);
-    } finally {
-      dfs.closeDfsClient(udfso);
-    }
-  }
-
   public enum NotebookConversion {
-    PY("PySpark"),
-    HTML("Html"),
-    PY_JOB("Python");
-
-    private String kernel;
-    NotebookConversion(String kernel) {
-      this.kernel = kernel;
-    }
-
-    public static Optional<NotebookConversion> fromKernel(String kernel) {
-      return Arrays.stream(NotebookConversion.values()).filter(k ->
-          k.getKernel().equalsIgnoreCase(kernel)).findFirst();
-    }
-
-    public String getKernel() {
-      return kernel;
-    }
+    PY,
+    HTML,
+    PY_JOB
   }
 }
