@@ -507,7 +507,7 @@ angular.module('hopsWorksApp')
               var selectedType;
               switch (self.jobtype) { //Set the panel titles according to job type
                 case 1:
-                  self.accordion3.title = "App file (.jar)"; //Only jar allowed
+                  self.accordion3.title = "App file (.jar, .py or .ipynb)"; //Only jar allowed
                   self.accordion4.title = "Job details";
                   selectedType = "Spark";
                   self.accordion3.visible = true; //Display file selection
@@ -692,7 +692,7 @@ angular.module('hopsWorksApp')
                           self.accordion2.value = " - " + "SPARK";
                         }
                         $scope.settings = {advanced: true};
-                        self.mainFileSelected(path);
+                        self.mainFileSelected(getFileName(path));
                         // For Kafka tour
                         if (self.projectIsGuide) {
                           self.runConfig['spark.executor.memory'] = 2048;
@@ -704,7 +704,7 @@ angular.module('hopsWorksApp')
                         }
                         break;
                       case "PYTHON":
-                        self.mainFileSelected(path);
+                        self.mainFileSelected(getFileName(path));
                         break;
                       default:
                         break;
@@ -742,11 +742,11 @@ angular.module('hopsWorksApp')
                 case "SPARK":
                 case "PYSPARK":
                   self.sparkState.selectedFile = filename
-                  self.getJobInspection(reason, filename)
+                  self.getJobInspection(reason, path)
                   break;
                 case "PYTHON":
                   self.runConfig.appPath = path;
-                  self.getJobInspection(reason, filename)
+                  self.getJobInspection(reason, path)
                   break;
                 case "FILES":
                   if (self.files === []) {
