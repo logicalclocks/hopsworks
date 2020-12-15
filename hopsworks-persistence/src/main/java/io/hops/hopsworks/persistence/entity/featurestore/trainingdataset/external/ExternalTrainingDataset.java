@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -53,8 +53,8 @@ public class ExternalTrainingDataset implements Serializable {
   private Integer id;
   @Column(name = "path")
   private String path;
-  @JoinColumn(name = "s3_connector_id", referencedColumnName = "id")
-  private FeaturestoreS3Connector featurestoreS3Connector;
+  @JoinColumn(name = "connector_id", referencedColumnName = "id")
+  private FeaturestoreConnector featurestoreConnector;
 
   public Integer getId() {
     return id;
@@ -69,14 +69,13 @@ public class ExternalTrainingDataset implements Serializable {
   public void setPath(String path) {
     this.path = path;
   }
-  
-  public FeaturestoreS3Connector getFeaturestoreS3Connector() {
-    return featurestoreS3Connector;
+
+  public FeaturestoreConnector getFeaturestoreConnector() {
+    return featurestoreConnector;
   }
-  
-  public void setFeaturestoreS3Connector(
-    FeaturestoreS3Connector featurestoreS3Connector) {
-    this.featurestoreS3Connector = featurestoreS3Connector;
+
+  public void setFeaturestoreConnector(FeaturestoreConnector featurestoreConnector) {
+    this.featurestoreConnector = featurestoreConnector;
   }
 
   @Override
@@ -86,14 +85,11 @@ public class ExternalTrainingDataset implements Serializable {
 
     ExternalTrainingDataset that = (ExternalTrainingDataset) o;
 
-    if (!Objects.equals(id, that.id)) return false;
-    return Objects.equals(featurestoreS3Connector, that.featurestoreS3Connector);
+    return Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    int result = id != null ? id.hashCode() : 0;
-    result = 31 * result + (featurestoreS3Connector != null ? featurestoreS3Connector.hashCode() : 0);
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

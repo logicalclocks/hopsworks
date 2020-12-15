@@ -20,7 +20,6 @@ import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -42,15 +41,16 @@ public class FeaturestoreMetadataDTO {
   private List<TrainingDatasetDTO> trainingDatasets;
   private FeaturestoreClientSettingsDTO settings;
   private List<FeaturestoreStorageConnectorDTO> storageConnectors;
-  private FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector;
+  private FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector;
   
   public FeaturestoreMetadataDTO() {
   }
-  
+
   public FeaturestoreMetadataDTO(FeaturestoreDTO featurestore,
-    List<FeaturegroupDTO> featuregroups, List<TrainingDatasetDTO> trainingDatasets,
-    FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO,
-    List<FeaturestoreStorageConnectorDTO> storageConnectors, FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector) {
+                                 List<FeaturegroupDTO> featuregroups, List<TrainingDatasetDTO> trainingDatasets,
+                                 FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO,
+                                 List<FeaturestoreStorageConnectorDTO> storageConnectors,
+                                 FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector) {
     this.featurestore = featurestore;
     this.featuregroups = featuregroups;
     this.trainingDatasets = trainingDatasets;
@@ -85,7 +85,7 @@ public class FeaturestoreMetadataDTO {
   }
   
   @XmlElement
-  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector() {
+  public FeaturestoreStorageConnectorDTO getOnlineFeaturestoreConnector() {
     return onlineFeaturestoreConnector;
   }
   
@@ -111,7 +111,7 @@ public class FeaturestoreMetadataDTO {
   }
   
   public void setOnlineFeaturestoreConnector(
-    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector) {
+    FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector) {
     this.onlineFeaturestoreConnector = onlineFeaturestoreConnector;
   }
   

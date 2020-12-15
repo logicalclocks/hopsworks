@@ -16,17 +16,12 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc;
 
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
@@ -38,20 +33,6 @@ import java.io.Serializable;
 @Entity
 @Table(name = "feature_store_jdbc_connector", catalog = "hopsworks")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findAll", query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector " +
-      "fsjdbc"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findById",
-        query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.id = :id"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestore", query = "SELECT fsjdbc " +
-        "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findByNameAndFeaturestore",
-        query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector fsjdbc WHERE lower(fsjdbc.name)  = lower(:name) AND " +
-          "fsjdbc.featurestore = :featurestore"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findByFeaturestoreAndId", query = "SELECT fsjdbc " +
-        "FROM FeaturestoreJdbcConnector fsjdbc WHERE fsjdbc.featurestore = :featurestore AND fsjdbc.id = :id"),
-    @NamedQuery(name = "FeaturestoreJdbcConnector.findByName", query = "SELECT fsjdbc FROM FeaturestoreJdbcConnector " +
-        "fsjdbc WHERE lower(fsjdbc.name)  = lower(:name)")})
 public class FeaturestoreJdbcConnector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -59,18 +40,11 @@ public class FeaturestoreJdbcConnector implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
-  private Featurestore featurestore;
   @Basic(optional = false)
   @Column(name = "connection_string")
   private String connectionString;
   @Column(name = "arguments")
   private String arguments;
-  @Column(name = "description")
-  private String description;
-  @Basic(optional = false)
-  @Column(name = "name")
-  private String name;
 
   public static long getSerialVersionUID() {
     return serialVersionUID;
@@ -83,15 +57,7 @@ public class FeaturestoreJdbcConnector implements Serializable {
   public void setId(Integer id) {
     this.id = id;
   }
-  
-  public Featurestore getFeaturestore() {
-    return featurestore;
-  }
-  
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
-  }
-  
+
   public String getConnectionString() {
     return connectionString;
   }
@@ -107,23 +73,7 @@ public class FeaturestoreJdbcConnector implements Serializable {
   public void setArguments(String arguments) {
     this.arguments = arguments;
   }
-  
-  public String getDescription() {
-    return description;
-  }
-  
-  public void setDescription(String description) {
-    this.description = description;
-  }
-  
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
-  }
-  
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
@@ -132,7 +82,6 @@ public class FeaturestoreJdbcConnector implements Serializable {
     FeaturestoreJdbcConnector that = (FeaturestoreJdbcConnector) o;
     
     if (!id.equals(that.id)) return false;
-    if (!featurestore.equals(that.featurestore)) return false;
     if (!connectionString.equals(that.connectionString)) return false;
     return connectionString.equals(that.connectionString);
   }

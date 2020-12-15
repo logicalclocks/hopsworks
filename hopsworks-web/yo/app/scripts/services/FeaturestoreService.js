@@ -316,13 +316,12 @@ angular.module('hopsWorksApp')
                  * @param projectId project where the featuregroup will be created
                  * @param storageConnectorJson the JSON payload
                  * @param featurestore featurestore where the connector will be created
-                 * @param storageConnectorType the type of the storage connector
                  *
                  * @returns {HttpPromise}
                  */
-                createStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType) {
+                createStorageConnector: function(projectId, storageConnectorJson, featurestore) {
                     return $http.post('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType,
+                        featurestore.featurestoreId + "/storageconnectors/",
                         JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -333,15 +332,12 @@ angular.module('hopsWorksApp')
                  * @param storageConnectorJson the JSON payload
                  * @param featurestore featurestore where the connector will be created
                  * @param storageConnectorName the name of the connector
-                 * @param storageConnectorType the type of the storage connector
                  *
                  * @returns {HttpPromise}
                  */
-                updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorType,
-                                                 storageConnectorName) {
+                updateStorageConnector: function(projectId, storageConnectorJson, featurestore, storageConnectorName) {
                     return $http.put('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/"
-                        + storageConnectorName,
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorName,
                         JSON.stringify(storageConnectorJson), {headers: {'Content-Type': 'application/json'}});
                 },
 
@@ -351,13 +347,11 @@ angular.module('hopsWorksApp')
                  * @param projectId the project of the featurestore
                  * @param featurestore the featurestore
                  * @param storageConnectorName the name of the connector
-                 * @param storageConnectorType the type of the storage connector
                  * @returns {HttpPromise}
                  */
-                deleteStorageConnector: function(projectId, featurestore, storageConnectorName, storageConnectorType) {
+                deleteStorageConnector: function(projectId, featurestore, storageConnectorName) {
                     return $http.delete('/api/project/' + projectId + '/featurestores/' +
-                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorType + "/" +
-                        storageConnectorName);
+                        featurestore.featurestoreId + "/storageconnectors/" + storageConnectorName);
                 },
                 /**
                  * Sends a POST request to the backend for writing args for featurestore util job to HDFS

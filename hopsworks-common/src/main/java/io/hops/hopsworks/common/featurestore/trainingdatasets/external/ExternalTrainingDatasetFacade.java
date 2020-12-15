@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 
 import javax.ejb.Stateless;
@@ -44,9 +44,9 @@ public class ExternalTrainingDatasetFacade extends AbstractFacade<ExternalTraini
    * @param path
    * @return
    */
-  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreS3Connector connector, String path) {
+  public ExternalTrainingDataset createExternalTrainingDataset(FeaturestoreConnector connector, String path) {
     ExternalTrainingDataset externalTrainingDataset = new ExternalTrainingDataset();
-    externalTrainingDataset.setFeaturestoreS3Connector(connector);
+    externalTrainingDataset.setFeaturestoreConnector(connector);
     externalTrainingDataset.setPath(path);
     em.persist(externalTrainingDataset);
     em.flush();

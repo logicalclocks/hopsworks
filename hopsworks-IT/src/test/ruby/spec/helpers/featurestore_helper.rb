@@ -256,7 +256,9 @@ module FeaturestoreHelper
         version: 1,
         dataFormat: dataFormat,
         trainingDatasetType: trainingDatasetType,
-        storageConnectorId: hopsfs_connector.id
+        storageConnector: {
+            id: hopsfs_connector.id
+        }
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -274,7 +276,9 @@ module FeaturestoreHelper
         version: 1,
         dataFormat: "parquet",
         trainingDatasetType: trainingDatasetType,
-        storageConnectorId: s3_connector_id
+        storageConnector: {
+            id: s3_connector_id
+        }
     }
     json_data = json_data.to_json
     json_result = put update_training_dataset_metadata_endpoint, json_data
@@ -296,8 +300,6 @@ module FeaturestoreHelper
     create_training_dataset_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/trainingdatasets"
     name = name == nil ? "training_dataset_#{random_id}" : name
     data_format = data_format == nil ? "tfrecords" : data_format
-    connector_id = hopsfs_connector == nil ? nil : hopsfs_connector.id
-    connector_name = hopsfs_connector == nil ? nil : hopsfs_connector.name
     description = description == nil ? "testtrainingdatasetdescription" : description
     if features == nil && query == nil
       features = [
@@ -318,13 +320,18 @@ module FeaturestoreHelper
         version: version,
         dataFormat: data_format,
         trainingDatasetType: trainingDatasetType,
-        storageConnectorId: connector_id,
-        storageConnectorName: connector_name,
         features: features,
         splits: splits,
         seed: 1234,
         queryDTO: query
     }
+
+    unless hopsfs_connector.nil?
+      json_data["storageConnector"] = {
+          id: hopsfs_connector.id
+      }
+    end
+
     json_result = post create_training_dataset_endpoint, json_data.to_json
     [json_result, name]
   end
@@ -356,11 +363,17 @@ module FeaturestoreHelper
         dataFormat: "tfrecords",
         location: location,
         trainingDatasetType: trainingDatasetType,
-        storageConnectorId: s3_connector_id,
         features: features == nil ? default_features : features,
         splits: splits,
         seed: 1234
     }
+
+    unless s3_connector_id.nil?
+      json_data["storageConnector"] = {
+          id: s3_connector_id
+      }
+    end
+
     json_data = json_data.to_json
     json_result = post create_training_dataset_endpoint, json_data
     return json_result, training_dataset_name

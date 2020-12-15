@@ -18,11 +18,11 @@ package io.hops.hopsworks.common.featurestore.trainingdatasets;
 
 import io.hops.hopsworks.common.featurestore.feature.TrainingDatasetFeatureDTO;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.split.TrainingDatasetSplitDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 import io.hops.hopsworks.common.featurestore.FeaturestoreEntityDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -43,11 +43,7 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
   private List<TrainingDatasetSplitDTO> splits = new ArrayList<>();
   private Long seed = null;
 
-  private Integer storageConnectorId; // Need to know which storage connector to use it
-  // ID + type would be unique. However momentarily keep also the name, until we switch to
-  // rest api v2 with expansion on the storage controller.
-  private String storageConnectorName;
-  private FeaturestoreStorageConnectorType storageConnectorType;
+  private FeaturestoreStorageConnectorDTO storageConnector;
 
   // This is here for the frontend. The frontend uses a rest call to get the total size of
   // a subdirectory - the rest call requires the inode id.
@@ -86,28 +82,12 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
     this.dataFormat = dataFormat;
   }
 
-  public Integer getStorageConnectorId() {
-    return storageConnectorId;
+  public FeaturestoreStorageConnectorDTO getStorageConnector() {
+    return storageConnector;
   }
 
-  public void setStorageConnectorId(Integer storageConnectorId) {
-    this.storageConnectorId = storageConnectorId;
-  }
-
-  public String getStorageConnectorName() {
-    return storageConnectorName;
-  }
-
-  public void setStorageConnectorName(String storageConnectorName) {
-    this.storageConnectorName = storageConnectorName;
-  }
-
-  public FeaturestoreStorageConnectorType getStorageConnectorType() {
-    return storageConnectorType;
-  }
-
-  public void setStorageConnectorType(FeaturestoreStorageConnectorType storageConnectorType) {
-    this.storageConnectorType = storageConnectorType;
+  public void setStorageConnector(FeaturestoreStorageConnectorDTO storageConnector) {
+    this.storageConnector = storageConnector;
   }
 
   public Long getInodeId() {
@@ -178,9 +158,6 @@ public class TrainingDatasetDTO extends FeaturestoreEntityDTO {
       ", trainingDatasetType=" + trainingDatasetType +
       ", splits=" + splits +
       ", seed=" + seed +
-      ", storageConnectorId=" + storageConnectorId +
-      ", storageConnectorName='" + storageConnectorName + '\'' +
-      ", storageConnectorType=" + storageConnectorType +
       ", inodeId=" + inodeId +
       '}';
   }

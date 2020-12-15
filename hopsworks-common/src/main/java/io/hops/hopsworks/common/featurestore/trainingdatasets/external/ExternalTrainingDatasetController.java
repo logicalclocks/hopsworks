@@ -16,11 +16,11 @@
 
 package io.hops.hopsworks.common.featurestore.trainingdatasets.external;
 
+import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.external.ExternalTrainingDataset;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 
 import javax.ejb.EJB;
@@ -58,10 +58,10 @@ public class ExternalTrainingDatasetController {
   public TrainingDatasetDTO convertExternalTrainingDatasetToDTO(TrainingDatasetDTO trainingDatasetDTO,
                                                                 TrainingDataset trainingDataset) {
     ExternalTrainingDataset externalTrainingDataset = trainingDataset.getExternalTrainingDataset();
+    FeaturestoreS3ConnectorDTO featurestoreS3ConnectorDTO =
+        new FeaturestoreS3ConnectorDTO(externalTrainingDataset.getFeaturestoreConnector());
 
-    trainingDatasetDTO.setStorageConnectorId(externalTrainingDataset.getFeaturestoreS3Connector().getId());
-    trainingDatasetDTO.setStorageConnectorName(externalTrainingDataset.getFeaturestoreS3Connector().getName());
-    trainingDatasetDTO.setStorageConnectorType(FeaturestoreStorageConnectorType.S3);
+    trainingDatasetDTO.setStorageConnector(featurestoreS3ConnectorDTO);
     trainingDatasetDTO.setLocation(buildDatasetPath(trainingDataset));
 
     return trainingDatasetDTO;
@@ -78,8 +78,8 @@ public class ExternalTrainingDatasetController {
       bucketFolder = trainingDataset.getExternalTrainingDataset().getPath();
     }
 
-    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset().getFeaturestoreS3Connector().getBucket(),
-        bucketFolder,
+    return "s3://" + Paths.get(trainingDataset.getExternalTrainingDataset()
+            .getFeaturestoreConnector().getS3Connector().getBucket(), bucketFolder,
         trainingDataset.getName() + "_" + trainingDataset.getVersion()).toString();
   }
 }
