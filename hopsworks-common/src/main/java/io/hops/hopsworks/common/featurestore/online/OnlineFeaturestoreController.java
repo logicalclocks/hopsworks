@@ -21,7 +21,7 @@ import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeaturegroupPreview;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
@@ -29,6 +29,9 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
 import io.hops.hopsworks.persistence.entity.hdfs.user.HdfsUsers;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectRoleTypes;
@@ -72,8 +75,6 @@ public class OnlineFeaturestoreController {
   @EJB
   private SecretsController secretsController;
   @EJB
-  private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
-  @EJB
   private OnlineFeaturestoreFacade onlineFeaturestoreFacade;
   @EJB
   private CachedFeaturegroupController cachedFeaturegroupController;
@@ -83,6 +84,8 @@ public class OnlineFeaturestoreController {
   private UserFacade userFacade;
   @EJB
   private ServiceDiscoveryController serviceDiscoveryController;
+  @EJB
+  private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   
   @PostConstruct
   public void init() {
@@ -331,7 +334,7 @@ public class OnlineFeaturestoreController {
     }
 
     try {
-      featurestoreJdbcConnectorController.createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
+      createJdbcConnectorForOnlineFeaturestore(dbuser, featurestore, db);
     } catch(Exception e) {
       //If the connector have already been created, skip this step
     }
@@ -350,6 +353,43 @@ public class OnlineFeaturestoreController {
     }
 
     onlineFeaturestoreFacade.createOnlineFeaturestoreDatabase(db);
+  }
+
+  /**
+   * Utility function for create a JDBC connection to the online featurestore for a particular user.
+   *
+   * @param onlineDbUsername the db-username of the connection
+   * @param featurestore the featurestore metadata
+   * @param dbName name of the MySQL database
+   * @return DTO of the newly created connector
+   * @throws FeaturestoreException
+   */
+  public void createJdbcConnectorForOnlineFeaturestore(String onlineDbUsername,
+             Featurestore featurestore, String dbName) throws FeaturestoreException {
+    String connectorName = onlineDbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
+    if (featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName).isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          "a storage connector with that name already exists");
+    }
+
+    FeaturestoreConnector featurestoreConnector = new FeaturestoreConnector();
+    featurestoreConnector.setName(connectorName);
+    featurestoreConnector.setDescription("JDBC connection to Hopsworks Project Online " +
+        "Feature Store NDB Database for user: " + onlineDbUsername);
+    featurestoreConnector.setFeaturestore(featurestore);
+    featurestoreConnector.setConnectorType(FeaturestoreConnectorType.JDBC);
+
+    FeaturestoreJdbcConnector featurestoreJdbcConnector = new FeaturestoreJdbcConnector();
+    featurestoreJdbcConnector.setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName +
+        "?useSSL=false&allowPublicKeyRetrieval=true");
+    featurestoreJdbcConnector.setArguments(
+        FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
+            FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
+            FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername +
+            ",isolationLevel=NONE,batchsize=500");
+    featurestoreConnector.setJdbcConnector(featurestoreJdbcConnector);
+
+    featurestoreConnectorFacade.update(featurestoreConnector);
   }
   
   /**
@@ -384,13 +424,6 @@ public class OnlineFeaturestoreController {
     }
   }
   
-  /**
-   * Removes a user from a online feature store database in the project
-   *
-   * @param featurestore the project that owns the online feature store
-   * @param user the user to remove
-   * @throws FeaturestoreException
-   */
   public void removeOnlineFeaturestoreUser(Featurestore featurestore, Users user) throws FeaturestoreException {
     String db = getOnlineFeaturestoreDbName(featurestore.getProject());
     if (!checkIfDatabaseExists(db)) {
@@ -399,15 +432,15 @@ public class OnlineFeaturestoreController {
     }
 
     String dbUser = onlineDbUsername(featurestore.getProject().getName(), user.getUsername());
-    String connectorName = dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
 
     SecretId id = new SecretId(user.getUid(), dbUser);
     secretsFacade.deleteSecret(id);
     onlineFeaturestoreFacade.removeOnlineFeaturestoreUser(dbUser);
-    featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(connectorName, featurestore);
+
+    featurestoreConnectorFacade.deleteByFeaturestoreName(featurestore,
+        dbUser + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
   }
-  
-  
+
   /**
    * Gets the size of an online featurestore database. I.e the size of a MySQL-cluster database.
    *

@@ -516,8 +516,9 @@ angular.module('hopsWorksApp')
                     "dataFormat": self.trainingDatasetFormat,
                     "features": self.featureBasket,
                     "trainingDatasetType": self.sinkType === 0 ? self.hopsfsTrainingDatasetType : self.externalTrainingDatasetType,
-                    "storageConnectorId": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id,
-                    "storageConnectorName": self.sinkType === 0 ? self.selectedHopsfsConnector.name : self.selectedS3Connector.name,
+                    "storageConnector": {
+                        "id": self.sinkType === 0 ? self.selectedHopsfsConnector.id : self.selectedS3Connector.id
+                    },
                     "location": self.path,
                 }
                 if(self.configureJob){

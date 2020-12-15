@@ -18,6 +18,7 @@ package io.hops.hopsworks.common.featurestore.featuregroup.ondemand;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.featurestore.FeaturestoreFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
@@ -26,8 +27,7 @@ import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeaturegroup;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorFacade;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.persistence.entity.project.Project;
@@ -55,7 +55,7 @@ public class OnDemandFeaturegroupController {
   @EJB
   private OnDemandFeaturegroupFacade onDemandFeaturegroupFacade;
   @EJB
-  private FeaturestoreJdbcConnectorFacade featurestoreJdbcConnectorFacade;
+  private FeaturestoreConnectorFacade featurestoreConnectorFacade;
   @EJB
   private FeaturestoreFacade featurestoreFacade;
   @EJB
@@ -80,20 +80,17 @@ public class OnDemandFeaturegroupController {
                                                          Project project, Users user)
       throws FeaturestoreException {
     //Verify User Input specific for on demand feature groups
-    FeaturestoreJdbcConnector featurestoreJdbcConnector =
-      getJdbcStorageConnector(onDemandFeaturegroupDTO.getStorageConnector().getId());
+    FeaturestoreConnector connector = getStorageConnector(onDemandFeaturegroupDTO.getStorageConnector().getId());
 
     if (Strings.isNullOrEmpty(onDemandFeaturegroupDTO.getQuery())){
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.INVALID_SQL_QUERY,
           Level.FINE, "SQL Query cannot be empty");
     }
 
-    // Create inode on the file system
-
     //Persist on-demand featuregroup
     OnDemandFeaturegroup onDemandFeaturegroup = new OnDemandFeaturegroup();
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-    onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
+    onDemandFeaturegroup.setFeaturestoreConnector(connector);
     onDemandFeaturegroup.setQuery(onDemandFeaturegroupDTO.getQuery());
     onDemandFeaturegroup.setFeatures(convertOnDemandFeatures(onDemandFeaturegroupDTO, onDemandFeaturegroup));
     onDemandFeaturegroup.setInode(createFile(project, user, featurestore, onDemandFeaturegroupDTO));
@@ -113,14 +110,13 @@ public class OnDemandFeaturegroupController {
     OnDemandFeaturegroupDTO onDemandFeaturegroupDTO) throws FeaturestoreException {
 
     // Verify User Input specific for on demand feature groups
-    FeaturestoreJdbcConnector featurestoreJdbcConnector =
-        getJdbcStorageConnector(onDemandFeaturegroupDTO.getStorageConnector().getId());
+    FeaturestoreConnector connector = getStorageConnector(onDemandFeaturegroupDTO.getStorageConnector().getId());
 
     // Update metadata in entity
     onDemandFeaturegroup.setDescription(onDemandFeaturegroupDTO.getDescription());
-    onDemandFeaturegroup.setFeaturestoreJdbcConnector(featurestoreJdbcConnector);
+    onDemandFeaturegroup.setFeaturestoreConnector(connector);
 
-    // finally persist in database
+    // finally merge in database
     onDemandFeaturegroupFacade.updateMetadata(onDemandFeaturegroup);
   }
 
@@ -185,23 +181,13 @@ public class OnDemandFeaturegroupController {
         name + "_" + version);
   }
 
-  /**
-   * Verifies the user input JDBC Connector Id for an on-demand feature group
-   *
-   * @param jdbcConnectorId the JDBC connector id to verify
-   * @returns the jdbc connector with the given id if it passed the validation
-   * @throws FeaturestoreException
-   */
-  private FeaturestoreJdbcConnector getJdbcStorageConnector(Integer jdbcConnectorId)
-    throws FeaturestoreException {
-    if(jdbcConnectorId == null){
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_ID_NOT_PROVIDED.getMessage());
+  private FeaturestoreConnector getStorageConnector(Integer connectorId) throws FeaturestoreException {
+    if(connectorId == null){
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_ID_NOT_PROVIDED.getMessage());
     }
-    FeaturestoreJdbcConnector featurestoreJdbcConnector = featurestoreJdbcConnectorFacade.find(jdbcConnectorId);
-    if(featurestoreJdbcConnector == null) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.JDBC_CONNECTOR_NOT_FOUND, Level.FINE,
-        "JDBC connector with id: " + jdbcConnectorId + " was not found");
-    }
-    return featurestoreJdbcConnector;
+
+    return featurestoreConnectorFacade.findById(connectorId)
+        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
+        "Connector with id: " + connectorId + " was not found"));
   }
 }

@@ -16,8 +16,7 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import org.apache.parquet.Strings;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -44,21 +43,19 @@ public class FeaturestoreRedshiftConnectorDTO extends FeaturestoreStorageConnect
   public FeaturestoreRedshiftConnectorDTO() {
   }
 
-  public FeaturestoreRedshiftConnectorDTO(FeatureStoreRedshiftConnector featureStoreRedshiftConnector) {
-    super(featureStoreRedshiftConnector.getId(), featureStoreRedshiftConnector.getDescription(),
-      featureStoreRedshiftConnector.getName(), featureStoreRedshiftConnector.getFeatureStore().getId(),
-      FeaturestoreStorageConnectorType.REDSHIFT);
-    this.clusterIdentifier = featureStoreRedshiftConnector.getClusterIdentifier();
-    this.databaseDriver = featureStoreRedshiftConnector.getDatabaseDriver();
-    this.databaseEndpoint = featureStoreRedshiftConnector.getDatabaseEndpoint();
-    this.databaseName = featureStoreRedshiftConnector.getDatabaseName();
-    this.databasePort = featureStoreRedshiftConnector.getDatabasePort();
-    this.tableName = featureStoreRedshiftConnector.getTableName();
-    this.databaseUserName = featureStoreRedshiftConnector.getDatabaseUserName();
-    this.autoCreate = featureStoreRedshiftConnector.getAutoCreate();
-    this.databaseGroup = featureStoreRedshiftConnector.getDatabaseGroup();
-    this.iamRole = featureStoreRedshiftConnector.getIamRole();
-    this.arguments = featureStoreRedshiftConnector.getArguments();
+  public FeaturestoreRedshiftConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    super(featurestoreConnector);
+    this.clusterIdentifier = featurestoreConnector.getRedshiftConnector().getClusterIdentifier();
+    this.databaseDriver = featurestoreConnector.getRedshiftConnector().getDatabaseDriver();
+    this.databaseEndpoint = featurestoreConnector.getRedshiftConnector().getDatabaseEndpoint();
+    this.databaseName = featurestoreConnector.getRedshiftConnector().getDatabaseName();
+    this.databasePort = featurestoreConnector.getRedshiftConnector().getDatabasePort();
+    this.tableName = featurestoreConnector.getRedshiftConnector().getTableName();
+    this.databaseUserName = featurestoreConnector.getRedshiftConnector().getDatabaseUserName();
+    this.autoCreate = featurestoreConnector.getRedshiftConnector().getAutoCreate();
+    this.databaseGroup = featurestoreConnector.getRedshiftConnector().getDatabaseGroup();
+    this.iamRole = featurestoreConnector.getRedshiftConnector().getIamRole();
+    this.arguments = featurestoreConnector.getRedshiftConnector().getArguments();
   }
 
   @XmlElement

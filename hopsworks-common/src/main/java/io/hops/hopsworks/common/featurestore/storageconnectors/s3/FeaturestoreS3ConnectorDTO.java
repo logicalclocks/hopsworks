@@ -16,9 +16,8 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors.s3;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3ConnectorEncryptionAlgorithm;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -40,17 +39,15 @@ public class FeaturestoreS3ConnectorDTO extends FeaturestoreStorageConnectorDTO 
   private String sessionToken;
   
   public FeaturestoreS3ConnectorDTO() {
-    super(null, null, null, null, null);
   }
-  
-  public FeaturestoreS3ConnectorDTO(FeaturestoreS3Connector featurestoreS3Connector) {
-    super(featurestoreS3Connector.getId(), featurestoreS3Connector.getDescription(),
-        featurestoreS3Connector.getName(), featurestoreS3Connector.getFeaturestore().getId(),
-        FeaturestoreStorageConnectorType.S3);
-    this.bucket = featurestoreS3Connector.getBucket();
-    this.serverEncryptionAlgorithm = getEncryptionAlgorithmName(featurestoreS3Connector.getServerEncryptionAlgorithm());
-    this.serverEncryptionKey = featurestoreS3Connector.getServerEncryptionKey();
-    this.iamRole = featurestoreS3Connector.getIamRole();
+
+  public FeaturestoreS3ConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    super(featurestoreConnector);
+    this.bucket = featurestoreConnector.getS3Connector().getBucket();
+    this.serverEncryptionAlgorithm =
+        getEncryptionAlgorithmName(featurestoreConnector.getS3Connector().getServerEncryptionAlgorithm());
+    this.serverEncryptionKey = featurestoreConnector.getS3Connector().getServerEncryptionKey();
+    this.iamRole = featurestoreConnector.getS3Connector().getIamRole();
   }
   
   private String getEncryptionAlgorithmName(FeaturestoreS3ConnectorEncryptionAlgorithm serverEncryptionAlgorithm) {

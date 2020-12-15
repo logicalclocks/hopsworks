@@ -270,7 +270,7 @@ public class FeaturegroupController {
         return cachedFeaturegroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
         FeaturestoreJdbcConnectorDTO storageConnectorDTO =
-            new FeaturestoreJdbcConnectorDTO(featuregroup.getOnDemandFeaturegroup().getFeaturestoreJdbcConnector());
+            new FeaturestoreJdbcConnectorDTO(featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
         return new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()

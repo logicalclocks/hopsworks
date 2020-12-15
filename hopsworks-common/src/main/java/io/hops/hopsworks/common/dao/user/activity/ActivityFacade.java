@@ -90,6 +90,8 @@ public class ActivityFacade extends AbstractFacade<Activity> {
   public static final String EDITED_TRAINING_DATASET = " edited training dataset named ";
   public static final String ADDED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for the featurestore " +
       "with name: ";
+  public static final String UPDATED_FEATURESTORE_STORAGE_CONNECTOR =
+      " updated a storage connector for the featurestore with name: ";
   public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR = " added a storage connector for " +
       "the featurestore with name: ";
   public static final String REMOVED_FEATURESTORE_STORAGE_CONNECTOR_ID = " added a storage connector for " +

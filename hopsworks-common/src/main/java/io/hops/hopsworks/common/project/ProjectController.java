@@ -899,7 +899,7 @@ public class ProjectController {
    */
   private void addServiceFeaturestore(Project project, Users user,
     DistributedFileSystemOps dfso, ProvTypeDTO datasetProvCore)
-    throws FeaturestoreException {
+      throws FeaturestoreException, ProjectException, UserException {
     String featurestoreName = featurestoreController.getOfflineFeaturestoreDbName(project);
     try {
       //Create HiveDB for the featurestore

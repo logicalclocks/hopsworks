@@ -16,9 +16,12 @@
 
 package io.hops.hopsworks.common.featurestore.storageconnectors;
 
+import com.google.common.base.Strings;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
+import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
+import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
@@ -31,15 +34,21 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
+import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
 /**
@@ -49,15 +58,21 @@ import java.util.logging.Level;
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeaturestoreStorageConnectorController {
   @EJB
-  private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
+  private FeaturestoreHopsfsConnectorController hopsfsConnectorController;
   @EJB
-  private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
+  private FeaturestoreJdbcConnectorController jdbcConnectorController;
   @EJB
-  private FeaturestoreRedshiftConnectorController featurestoreRedshiftConnectorController;
+  private FeaturestoreRedshiftConnectorController redshiftConnectorController;
   @EJB
-  private FeaturestoreS3ConnectorController featurestoreS3ConnectorController;
+  private FeaturestoreS3ConnectorController s3ConnectorController;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
+  @EJB
+  private FeaturestoreConnectorFacade featurestoreConnectorFacade;
+  @EJB
+  private OnlineFeaturestoreController onlineFeaturestoreController;
+  @EJB
+  private ActivityFacade activityFacade;
 
   /**
    * Returns a list with DTOs of all storage connectors for a featurestore
@@ -67,80 +82,47 @@ public class FeaturestoreStorageConnectorController {
    * @param user the user making the request
    * @return List of JSON/XML DTOs of the storage connectors
    */
-  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestore(Users user,
-                                                                                      Featurestore featurestore)
+  public List<FeaturestoreStorageConnectorDTO> getConnectorsForFeaturestore(Users user, Project project,
+                                                                            Featurestore featurestore)
       throws FeaturestoreException {
+    List<FeaturestoreConnector> featurestoreConnectors = featurestoreConnectorFacade.findByFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> featurestoreStorageConnectorDTOS = new ArrayList<>();
-    featurestoreStorageConnectorDTOS.addAll(
-      featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore));
-    featurestoreStorageConnectorDTOS.addAll(
-      featurestoreRedshiftConnectorController.getConnectorsForFeaturestore(user, featurestore));
-    featurestoreStorageConnectorDTOS.addAll(
-      featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore));
-    featurestoreStorageConnectorDTOS.addAll(featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore));
+
+    for (FeaturestoreConnector featurestoreConnector : featurestoreConnectors) {
+      featurestoreStorageConnectorDTOS.add(convertToConnectorDTO(user, project, featurestoreConnector));
+    }
+
     return featurestoreStorageConnectorDTOS;
   }
 
-  /**
-   * Returns a list with DTOs of all storage connectors for a featurestore with a specific type
-   *
-   * @param user the user making the request
-   * @param featurestore the featurestore to query
-   * @param featurestoreStorageConnectorType the type of the storage connector
-   * @return List of JSON/XML DTOs of the storage connectors
-   */
-  public List<FeaturestoreStorageConnectorDTO> getAllStorageConnectorsForFeaturestoreWithType(Users user,
-    Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType)
-    throws FeaturestoreException {
-    switch(featurestoreStorageConnectorType) {
-      case S3:
-        return featurestoreS3ConnectorController.getS3ConnectorsForFeaturestore(user, featurestore);
-      case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorsForFeaturestore(user, featurestore);
-      case REDSHIFT:
-        return featurestoreRedshiftConnectorController.getConnectorsForFeaturestore(user, featurestore);
-      case HOPSFS:
-        return featurestoreHopsfsConnectorController.getHopsfsConnectors(featurestore);
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + featurestoreStorageConnectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
-    }
+  public FeaturestoreStorageConnectorDTO getConnectorWithName(Users user, Project project,
+                                                              Featurestore featurestore,
+                                                              String connectorName)
+      throws FeaturestoreException {
+    FeaturestoreConnector featurestoreConnector =
+        featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
+        .orElseThrow(() ->
+            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
+                "Cannot find storage connector with name: " + connectorName));
+
+    return convertToConnectorDTO(user, project, featurestoreConnector);
   }
 
-  /**
-   *
-   * @param user
-   * @param featurestore
-   * @param featurestoreStorageConnectorType
-   * @param storageConnectorName
-   * @return
-   * @throws FeaturestoreException
-   */
-  public FeaturestoreStorageConnectorDTO getStorageConnectorForFeaturestoreWithTypeAndName(Users user,
-    Featurestore featurestore, FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-    String storageConnectorName) throws FeaturestoreException {
-    switch(featurestoreStorageConnectorType) {
+  private FeaturestoreStorageConnectorDTO convertToConnectorDTO(Users user, Project project,
+                                                                FeaturestoreConnector featurestoreConnector)
+      throws FeaturestoreException {
+    switch (featurestoreConnector.getConnectorType()) {
       case S3:
-        return featurestoreS3ConnectorController.getS3ConnectorWithNameAndFeaturestore(user, featurestore,
-          storageConnectorName);
+        return s3ConnectorController.getS3ConnectorDTO(user, featurestoreConnector);
       case JDBC:
-        return featurestoreJdbcConnectorController.getJdbcConnectorWithNameAndFeaturestore(user, featurestore,
-          storageConnectorName);
-      case REDSHIFT:
-        return featurestoreRedshiftConnectorController.getConnectorsWithNameAndFeaturestore(user, featurestore,
-          storageConnectorName);
+        return jdbcConnectorController.getJdbcConnectorDTO(user, project, featurestoreConnector);
       case HOPSFS:
-        return featurestoreHopsfsConnectorController.getHopsFsConnectorWithNameAndFeaturestore(featurestore,
-          storageConnectorName);
+        return hopsfsConnectorController.getHopsfsConnectorDTO(featurestoreConnector);
+      case REDSHIFT:
+        return redshiftConnectorController.getRedshiftConnectorDTO(user, featurestoreConnector);
       default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + featurestoreStorageConnectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
+        // We should not reach this point
+        throw new IllegalArgumentException("Feature Store connector type not recognized");
     }
   }
 
@@ -149,129 +131,147 @@ public class FeaturestoreStorageConnectorController {
    *
    * @param user the user making the request
    * @param featurestore the featurestore to create the new connector
-   * @param featurestoreStorageConnectorType the type of the storage connector
    * @param featurestoreStorageConnectorDTO the data to use when creating the storage connector
    * @return A JSON/XML DTOs representation of the created storage connector
    * @throws FeaturestoreException
    */
-  public FeaturestoreStorageConnectorDTO createStorageConnectorWithType(Users user, Featurestore featurestore,
-    FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO) throws FeaturestoreException, UserException,
-    ProjectException {
+  public FeaturestoreStorageConnectorDTO createStorageConnector(Users user, Project project, Featurestore featurestore,
+         FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO)
+      throws FeaturestoreException, UserException, ProjectException {
     validateUser(user, featurestore);
-    switch(featurestoreStorageConnectorType) {
-      case S3:
-        return featurestoreS3ConnectorController.createFeaturestoreS3Connector(user, featurestore,
-            (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO);
-      case JDBC:
-        return featurestoreJdbcConnectorController.createFeaturestoreJdbcConnector(featurestore,
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO);
-      case REDSHIFT:
-        return featurestoreRedshiftConnectorController.createFeaturestoreRedshiftConnector(user, featurestore,
-          (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO);
-      case HOPSFS:
-        return featurestoreHopsfsConnectorController.createFeaturestoreHopsfsConnector(featurestore,
-            (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO);
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + featurestoreStorageConnectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
+
+    if (featurestoreConnectorFacade.findByFeaturestoreName(featurestore, featurestoreStorageConnectorDTO.getName())
+        .isPresent()) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
+          "Redshift connector with the same name already exists. Name=" + featurestoreStorageConnectorDTO.getName());
     }
+
+    FeaturestoreConnector featurestoreConnector = new FeaturestoreConnector();
+    verifyName(featurestoreStorageConnectorDTO);
+    featurestoreConnector.setName(featurestoreStorageConnectorDTO.getName());
+
+    verifyDescription(featurestoreStorageConnectorDTO);
+    featurestoreConnector.setDescription(featurestoreStorageConnectorDTO.getDescription());
+    featurestoreConnector.setFeaturestore(featurestore);
+
+    switch (featurestoreStorageConnectorDTO.getStorageConnectorType()) {
+      case HOPSFS:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.HOPSFS);
+        featurestoreConnector.setHopsfsConnector(hopsfsConnectorController.createFeaturestoreHopsfsConnector(
+            featurestore, (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
+      case S3:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.S3);
+        featurestoreConnector.setS3Connector(s3ConnectorController.createFeaturestoreS3Connector(
+            user, featurestore, (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
+      case JDBC:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.JDBC);
+        featurestoreConnector.setJdbcConnector(jdbcConnectorController.createFeaturestoreJdbcConnector(
+            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
+      case REDSHIFT:
+        featurestoreConnector.setConnectorType(FeaturestoreConnectorType.REDSHIFT);
+        featurestoreConnector.setRedshiftConnector(redshiftConnectorController.createFeaturestoreRedshiftConnector(
+            user, featurestore, (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO));
+        break;
+      default:
+        // We should not reach this point
+        throw new IllegalArgumentException("Feature Store connector type not recognized");
+    }
+
+    // Update object to populate id (auto-increment) information
+    featurestoreConnector = featurestoreConnectorFacade.update(featurestoreConnector);
+
+    activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
+        featurestoreConnector.getName(), project, user, ActivityFlag.SERVICE);
+
+    return convertToConnectorDTO(user, project, featurestoreConnector);
   }
 
-  /**
-   * Updates an existing Storage Connector of a specific type in a feature store
-   *
-   * @param user the user making the request
-   * @param featurestore the featurestore where the connector exists
-   * @param featurestoreStorageConnectorType the type of the storage connector
-   * @param featurestoreStorageConnectorDTO the data to use when updating the storage connector
-   * @param storageConnectorName name of the connector
-   * @return A JSON/XML DTOs representation of the updated storage connector
-   */
-  public FeaturestoreStorageConnectorDTO updateStorageConnectorWithType(Users user, Featurestore featurestore,
-    FeaturestoreStorageConnectorType featurestoreStorageConnectorType,
-    FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, String storageConnectorName)
-    throws FeaturestoreException, UserException, ProjectException {
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  @Transactional(rollbackOn = FeaturestoreException.class)
+  public void updateStorageConnector(Users user, Project project, Featurestore featurestore,
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO, String connectorName)
+      throws FeaturestoreException, UserException, ProjectException {
     validateUser(user, featurestore);
-    switch(featurestoreStorageConnectorType) {
-      case S3:
-        return featurestoreS3ConnectorController.updateFeaturestoreS3Connector(user, featurestore,
-            (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorName);
-      case JDBC:
-        return featurestoreJdbcConnectorController.updateFeaturestoreJdbcConnector(featurestore,
-            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorName);
-      case REDSHIFT:
-        return featurestoreRedshiftConnectorController.updateFeaturestoreRedshiftConnector(user, featurestore,
-          (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorName);
-      case HOPSFS:
-        return featurestoreHopsfsConnectorController.updateFeaturestoreHopsfsConnector(featurestore,
-            (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO, storageConnectorName);
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + featurestoreStorageConnectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
+
+    if (!connectorName.equalsIgnoreCase(featurestoreStorageConnectorDTO.getName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG,
+          Level.FINE, "Can not update connector name.");
     }
+
+    FeaturestoreConnector featurestoreConnector =
+        featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
+        .orElseThrow(() ->
+            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND, Level.FINE,
+                "Cannot find storage connector with name: " + connectorName));
+
+    verifyDescription(featurestoreStorageConnectorDTO);
+    featurestoreConnector.setDescription(featurestoreStorageConnectorDTO.getDescription());
+
+    switch (featurestoreConnector.getConnectorType()) {
+      case HOPSFS:
+        featurestoreConnector.setHopsfsConnector(hopsfsConnectorController.updateFeaturestoreHopsfsConnector(
+            featurestore, (FeaturestoreHopsfsConnectorDTO) featurestoreStorageConnectorDTO,
+            featurestoreConnector.getHopsfsConnector()));
+        break;
+      case S3:
+        featurestoreConnector.setS3Connector(s3ConnectorController.updateFeaturestoreS3Connector(
+            user, featurestore, (FeaturestoreS3ConnectorDTO) featurestoreStorageConnectorDTO,
+            featurestoreConnector.getS3Connector()));
+        break;
+      case JDBC:
+        featurestoreConnector.setJdbcConnector(jdbcConnectorController.updateFeaturestoreJdbcConnector(
+            (FeaturestoreJdbcConnectorDTO) featurestoreStorageConnectorDTO, featurestoreConnector.getJdbcConnector()));
+        break;
+      case REDSHIFT:
+        featurestoreConnector.setRedshiftConnector(redshiftConnectorController.updateFeaturestoreRedshiftConnector(
+            user, featurestore, (FeaturestoreRedshiftConnectorDTO) featurestoreStorageConnectorDTO,
+            featurestoreConnector.getRedshiftConnector()));
+        break;
+      default:
+        // We should not reach this point
+        throw new IllegalArgumentException("Feature Store connector type not recognized");
+    }
+
+    featurestoreConnector = featurestoreConnectorFacade.update(featurestoreConnector);
+
+    activityFacade.persistActivity(
+        ActivityFacade.UPDATED_FEATURESTORE_STORAGE_CONNECTOR + featurestoreConnector.getName(),
+        project, user, ActivityFlag.SERVICE);
   }
 
-  /**
-   * Deletes a storage connector with a specific type and id in a feature store
-   *
-   * @param user the user making the request
-   * @param featurestoreStorageConnectorType the type of the storage connector
-   * @param storageConnectorId id of the storage connector
-   * @param featurestore
-   * @return JSON/XML DTOs of the deleted storage connector
-   */
-  public void deleteStorageConnectorWithTypeAndId(Users user,
-    FeaturestoreStorageConnectorType featurestoreStorageConnectorType, Integer storageConnectorId,
-    Featurestore featurestore) throws FeaturestoreException, UserException, ProjectException {
+  // The transaction here is required otherwise when calling the remove the entity is not going to be managed anymore
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  public void deleteConnectorWithName(Users user, Project project, String connectorName, Featurestore featurestore)
+      throws UserException{
     validateUser(user, featurestore);
-    switch (featurestoreStorageConnectorType) {
-      case S3:
-        featurestoreS3ConnectorController.removeFeaturestoreS3Connector(user, storageConnectorId);
-        break;
-      case JDBC:
-        featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(storageConnectorId);
-        break;
-      case REDSHIFT:
-        featurestoreRedshiftConnectorController.removeFeaturestoreRedshiftConnector(user, storageConnectorId);
-        break;
-      case HOPSFS:
-        featurestoreHopsfsConnectorController.removeFeaturestoreHopsfsConnector(storageConnectorId);
-        break;
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + featurestoreStorageConnectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
+    Optional<FeaturestoreConnector> featurestoreConnectorOptional =
+        featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName);
+    if (!featurestoreConnectorOptional.isPresent()) {
+      return;
     }
+    FeaturestoreConnector featurestoreConnector = featurestoreConnectorOptional.get();
+    featurestoreConnectorFacade.remove(featurestoreConnector);
+    activityFacade.persistActivity(
+        ActivityFacade.REMOVED_FEATURESTORE_STORAGE_CONNECTOR + featurestoreConnector.getName(),
+        project, user, ActivityFlag.SERVICE);
   }
   
-  /**
-   * Gets the JDBC connector of the online featurestore for a particular user and project. This connector is different
-   * from other connectors in that it includes a password reference to the secretsmanager that needs to be resolved.
-   *
-   * @param user         the user making the request
-   * @param dbUsername   the database username
-   * @param featurestore the featurestore metadata
-   * @return a JDBC DTO connector for the online featurestore.
-   * @throws FeaturestoreException
-   */
-  @TransactionAttribute(TransactionAttributeType.NEVER)
-  public FeaturestoreJdbcConnectorDTO getOnlineFeaturestoreConnector(Users user, String dbUsername,
-    Featurestore featurestore) throws FeaturestoreException {
-    String onlineFeaturestoreConnectorName = dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX;
-    return (FeaturestoreJdbcConnectorDTO) this.getAllStorageConnectorsForFeaturestoreWithType(user, featurestore,
-            FeaturestoreStorageConnectorType.JDBC).stream().filter(dto -> dto.getName()
-            .equalsIgnoreCase(onlineFeaturestoreConnectorName)).findFirst().orElseThrow(() ->
-            new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND,
-                    Level.SEVERE, "Cannot get online featurestore JDBC connector"));
+  public FeaturestoreStorageConnectorDTO getOnlineFeaturestoreConnector(Users user, Project project,
+                                                                        Featurestore featurestore)
+      throws FeaturestoreException {
+    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
+    Optional<FeaturestoreConnector> featurestoreConnector = featurestoreConnectorFacade
+        .findByFeaturestoreName(featurestore,
+            dbUsername + FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_SUFFIX);
+
+    if (featurestoreConnector.isPresent()) {
+      return convertToConnectorDTO(user, project, featurestoreConnector.get());
+    } else {
+      return null;
+    }
   }
   
   /**
@@ -288,28 +288,25 @@ public class FeaturestoreStorageConnectorController {
     }
   }
 
-  public void deleteStorageConnectorWithTypeAndName(Users user, FeaturestoreStorageConnectorType connectorType,
-    String connectorName, Featurestore featurestore) throws FeaturestoreException, UserException, ProjectException {
-    validateUser(user, featurestore);
-    switch (connectorType) {
-      case S3:
-        featurestoreS3ConnectorController.removeFeaturestoreS3Connector(user, featurestore, connectorName);
-        break;
-      case JDBC:
-        featurestoreJdbcConnectorController.removeFeaturestoreJdbcConnector(connectorName, featurestore);
-        break;
-      case REDSHIFT:
-        featurestoreRedshiftConnectorController.removeFeaturestoreRedshiftConnector(user, connectorName, featurestore);
-        break;
-      case HOPSFS:
-        featurestoreHopsfsConnectorController.removeFeaturestoreHopsfsConnector(connectorName, featurestore);
-        break;
-      default:
-        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_TYPE, Level.FINE,
-          "Unrecognized storage connector type " + connectorType +
-            ", Recognized storage connector types are: " + FeaturestoreStorageConnectorType.HOPSFS + ", " +
-            FeaturestoreStorageConnectorType.REDSHIFT + ", " + FeaturestoreStorageConnectorType.S3 + ", and " +
-            FeaturestoreStorageConnectorType.JDBC);
+  public void verifyName(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
+    if (Strings.isNullOrEmpty(connectorDTO.getName())) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME + ", the storage connector name cannot be empty");
+    }
+    if (connectorDTO.getName().length() > FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME + ", the name should be less than " +
+              FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters, the provided name was: " +
+              connectorDTO.getName());
+    }
+  }
+
+  public void verifyDescription(FeaturestoreStorageConnectorDTO connectorDTO) throws FeaturestoreException {
+    if (connectorDTO.getDescription() != null &&
+        connectorDTO.getDescription().length() > FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
+          RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION + ", the description should be less than: " +
+              FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
     }
   }
 }

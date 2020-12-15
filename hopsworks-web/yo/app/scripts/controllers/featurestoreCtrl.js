@@ -293,16 +293,15 @@ angular.module('hopsWorksApp')
                             + "</code>"
                     }
                 }
-            }
 
+            }
             /**
              * Delete a storage connector
              *
              * @param connector the connector to delete
              */
             self.deleteStorageConnector = function (connector) {
-                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.name,
-                    connector.storageConnectorType).then(
+                FeaturestoreService.deleteStorageConnector(self.projectId, self.featurestore, connector.name).then(
                     function (success) {
                         self.getStorageConnectors(self.featurestore);
                         growl.success("Storage connector deleted", {title: 'Success', ttl: 1000});

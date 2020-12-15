@@ -19,20 +19,16 @@ package io.hops.hopsworks.common.featurestore.storageconnectors;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.google.common.base.Strings;
-import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorDTO;
-import io.hops.hopsworks.exceptions.FeaturestoreException;
-import io.hops.hopsworks.restutils.RESTCodes;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
-import java.util.logging.Level;
-
 /**
  * Abstract storage connector in the featurestore. Contains the common fields and functionality between different
  * types of storage connectors
@@ -43,7 +39,7 @@ import java.util.logging.Level;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreJobDTO"),
+    @JsonSubTypes.Type(value = FeaturestoreHopsfsConnectorDTO.class, name = "FeaturestoreHopsfsConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreJdbcConnectorDTO.class, name = "FeaturestoreJdbcConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreRedshiftConnectorDTO.class, name = "FeaturestoreRedshiftConnectorDTO"),
     @JsonSubTypes.Type(value = FeaturestoreS3ConnectorDTO.class, name = "FeaturestoreS3ConnectorDTO")}
@@ -53,18 +49,17 @@ public class FeaturestoreStorageConnectorDTO {
   private String description;
   private String name;
   private Integer featurestoreId;
-  private FeaturestoreStorageConnectorType storageConnectorType;
+  private FeaturestoreConnectorType storageConnectorType;
 
   public FeaturestoreStorageConnectorDTO() {
   }
 
-  public FeaturestoreStorageConnectorDTO(Integer id, String description, String name, Integer featurestoreId,
-                                         FeaturestoreStorageConnectorType featurestoreStorageConnectorType) {
-    this.id = id;
-    this.description = description;
-    this.name = name;
-    this.featurestoreId = featurestoreId;
-    this.storageConnectorType = featurestoreStorageConnectorType;
+  public FeaturestoreStorageConnectorDTO(FeaturestoreConnector featurestoreConnector) {
+    this.id = featurestoreConnector.getId();
+    this.description = featurestoreConnector.getDescription();
+    this.name = featurestoreConnector.getName();
+    this.featurestoreId = featurestoreConnector.getFeaturestore().getId();
+    this.storageConnectorType = featurestoreConnector.getConnectorType();
   }
 
   @XmlElement
@@ -104,32 +99,12 @@ public class FeaturestoreStorageConnectorDTO {
   }
 
   @XmlElement
-  public FeaturestoreStorageConnectorType getStorageConnectorType() {
+  public FeaturestoreConnectorType getStorageConnectorType() {
     return storageConnectorType;
   }
 
-  public void setStorageConnectorType(FeaturestoreStorageConnectorType storageConnectorType) {
+  public void setStorageConnectorType(FeaturestoreConnectorType storageConnectorType) {
     this.storageConnectorType = storageConnectorType;
-  }
-
-  public void verifyName() throws FeaturestoreException {
-    if (Strings.isNullOrEmpty(name)) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME + ", the storage connector name cannot be empty");
-    }
-    if (name.length() > FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_NAME + ", the name should be less than " +
-          FeaturestoreConstants.STORAGE_CONNECTOR_NAME_MAX_LENGTH + " characters, the provided name was: " + name);
-    }
-  }
-
-  public void verifyDescription() throws FeaturestoreException {
-    if (description != null && description.length() > FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATURE_DESCRIPTION + ", the description should be less than: " +
-          FeaturestoreConstants.STORAGE_CONNECTOR_DESCRIPTION_MAX_LENGTH);
-    }
   }
 
   @Override

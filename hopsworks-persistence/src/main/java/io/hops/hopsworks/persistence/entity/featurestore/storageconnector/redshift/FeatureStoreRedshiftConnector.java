@@ -15,7 +15,6 @@
  */
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift;
 
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 
 import javax.persistence.Basic;
@@ -28,8 +27,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -39,50 +36,6 @@ import java.io.Serializable;
 @Entity
 @Table(name = "feature_store_redshift_connector", catalog = "hopsworks")
 @XmlRootElement
-@NamedQueries({
-  @NamedQuery(name = "FeatureStoreRedshiftConnector.findAll",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findById",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.id = :id")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByNameAndFeaturestore",
-      query
-        = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.name = :name AND f.featureStore = :featurestore")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByFeaturestore",
-      query
-        = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.featureStore = :featurestore")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByFeaturestoreAndId",
-      query
-        = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.id = :id AND f.featureStore = :featurestore")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByClusterIdentifier",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.clusterIdentifier = :clusterIdentifier")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByDatabaseName",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.databaseName = :databaseName")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByDatabasePort",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.databasePort = :databasePort")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByDatabaseUserName",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.databaseUserName = :databaseUserName")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByRedshiftIamRole",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.iamRole = :redshiftIamRole")
-  ,
-    @NamedQuery(name = "FeatureStoreRedshiftConnector.findByArguments",
-      query
-      = "SELECT f FROM FeatureStoreRedshiftConnector f WHERE f.arguments = :arguments")})
 public class FeatureStoreRedshiftConnector implements Serializable {
 
   private static final long serialVersionUID = 1L;
@@ -93,8 +46,7 @@ public class FeatureStoreRedshiftConnector implements Serializable {
   private Integer id;
   @Basic(optional = false)
   @NotNull
-  @Size(min = 1,
-      max = 64)
+  @Size(min = 1, max = 64)
   @Column(name = "cluster_identifier")
   private String clusterIdentifier;
   @Basic(optional = false)
@@ -127,15 +79,6 @@ public class FeatureStoreRedshiftConnector implements Serializable {
   @Size(max = 2000)
   @Column(name = "arguments")
   private String arguments;
-  @JoinColumn(name = "feature_store_id",
-      referencedColumnName = "id")
-  @ManyToOne(optional = false)
-  private Featurestore featureStore;
-  @Column(name = "description")
-  private String description;
-  @Basic(optional = false)
-  @Column(name = "name")
-  private String name;
   @JoinColumns({@JoinColumn(name = "database_pwd_secret_uid", referencedColumnName = "uid"),
     @JoinColumn(name = "database_pwd_secret_name", referencedColumnName = "secret_name")})
   @ManyToOne(cascade = CascadeType.ALL)
@@ -261,30 +204,6 @@ public class FeatureStoreRedshiftConnector implements Serializable {
     this.arguments = arguments;
   }
 
-  public Featurestore getFeatureStore() {
-    return featureStore;
-  }
-
-  public void setFeatureStore(Featurestore featureStore) {
-    this.featureStore = featureStore;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
   @Override
   public int hashCode() {
     int hash = 0;
@@ -303,14 +222,5 @@ public class FeatureStoreRedshiftConnector implements Serializable {
       return false;
     }
     return true;
-  }
-
-  @Override
-  public String toString() {
-    return "FeatureStoreRedshiftConnector{" +
-      "id=" + id +
-      ", clusterIdentifier='" + clusterIdentifier + '\'' +
-      ", description='" + description + '\'' +
-      '}';
   }
 }

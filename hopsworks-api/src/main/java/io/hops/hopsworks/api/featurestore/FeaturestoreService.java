@@ -37,11 +37,9 @@ import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.importjob.FeaturegroupImportJobDTO;
-import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobControllerIface;
 import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
@@ -124,8 +122,6 @@ public class FeaturestoreService {
   private JobsBuilder jobsBuilder;
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
-  @Inject
-  private OnlineFeaturestoreController onlineFeaturestoreController;
 
   private Project project;
 
@@ -260,8 +256,7 @@ public class FeaturestoreService {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Get featurestore Metadata",
-    response = FeaturestoreClientSettingsDTO.class)
+  @ApiOperation(value = "Get featurestore Metadata", response = FeaturestoreClientSettingsDTO.class)
   public Response getFeaturestoreId(@Context SecurityContext sc, @PathParam("featurestoreName") String featurestoreName)
     throws FeaturestoreException, ServiceException {
     if (Strings.isNullOrEmpty(featurestoreName)) {
@@ -276,12 +271,11 @@ public class FeaturestoreService {
     List<TrainingDatasetDTO> trainingDatasets =
       trainingDatasetController.getTrainingDatasetsForFeaturestore(featurestore);
     List<FeaturestoreStorageConnectorDTO> storageConnectors =
-      featurestoreStorageConnectorController.getAllStorageConnectorsForFeaturestore(user, featurestore);
+      featurestoreStorageConnectorController.getConnectorsForFeaturestore(user, project, featurestore);
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
-    String dbUsername = onlineFeaturestoreController.onlineDbUsername(project, user);
-    FeaturestoreJdbcConnectorDTO onlineFeaturestoreConnector =
-        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, dbUsername, featurestore);
+    FeaturestoreStorageConnectorDTO onlineFeaturestoreConnector =
+        featurestoreStorageConnectorController.getOnlineFeaturestoreConnector(user, project, featurestore);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
       new FeaturestoreMetadataDTO(featurestoreDTO, featuregroups, trainingDatasets,
         featurestoreClientSettingsDTO, storageConnectors, onlineFeaturestoreConnector);

@@ -46,15 +46,13 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
           expect(parsed_json.key?("location")).to be true
-          expect(parsed_json.key?("storageConnectorId")).to be true
-          expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("inodeId")).to be true
           expect(parsed_json.key?("features")).to be true
           expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "HOPSFS_TRAINING_DATASET").to be true
-          expect(parsed_json["storageConnectorId"] == connector.id).to be true
+          expect(parsed_json["storageConnector"]["id"] == connector.id).to be true
           expect(parsed_json["seed"] == 1234).to be true
           expect(parsed_json["fromQuery"]).to be false
 
@@ -240,7 +238,7 @@ describe "On #{ENV['OS']}" do
           json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, nil)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
-          expect(parsed_json["storageConnectorName"] == "#{project['projectname']}_Training_Datasets")
+          expect(parsed_json["storageConnector"]["name"] == "#{project['projectname']}_Training_Datasets")
         end
 
         it "should be able to add a new hopsfs training dataset with a single feature label to the featurestore" do
@@ -335,8 +333,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("version")).to be true
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
-          expect(parsed_json2.key?("storageConnectorId")).to be true
-          expect(parsed_json2.key?("storageConnectorName")).to be true
           expect(parsed_json2.key?("inodeId")).to be true
 
           # make sure the dataformat didn't change
@@ -1033,14 +1029,12 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json.key?("dataFormat")).to be true
           expect(parsed_json.key?("trainingDatasetType")).to be true
           expect(parsed_json.key?("description")).to be true
-          expect(parsed_json.key?("storageConnectorId")).to be true
-          expect(parsed_json.key?("storageConnectorName")).to be true
           expect(parsed_json.key?("features")).to be true
           expect(parsed_json.key?("seed")).to be true
           expect(parsed_json["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json["name"] == training_dataset_name).to be true
           expect(parsed_json["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
-          expect(parsed_json["storageConnectorId"] == connector_id).to be true
+          expect(parsed_json["storageConnector"]["id"] == connector_id).to be true
           expect(parsed_json["features"].length).to be 2
           expect(parsed_json["seed"] == 1234).to be true
         end
@@ -1064,7 +1058,6 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, nil)
-          parsed_json = JSON.parse(json_result)
           expect_status(400)
         end
 
@@ -1209,8 +1202,6 @@ describe "On #{ENV['OS']}" do
           expect(parsed_json2.key?("dataFormat")).to be true
           expect(parsed_json2.key?("trainingDatasetType")).to be true
           expect(parsed_json2.key?("description")).to be true
-          expect(parsed_json2.key?("storageConnectorId")).to be true
-          expect(parsed_json2.key?("storageConnectorName")).to be true
           expect(parsed_json2["featurestoreName"] == project.projectname.downcase + "_featurestore").to be true
           expect(parsed_json2["description"] == "new description").to be true
           expect(parsed_json2["trainingDatasetType"] == "EXTERNAL_TRAINING_DATASET").to be true
@@ -1225,7 +1216,7 @@ describe "On #{ENV['OS']}" do
           expect_status(201)
 
           training_dataset_id = parsed_json1["id"]
-          json_new_connector, _ = create_s3_connector_without_encryption(project.id, featurestore_id)
+          json_new_connector, _ = create_s3_connector(project.id, featurestore_id)
           new_connector = JSON.parse(json_new_connector)
 
           json_result2 = update_external_training_dataset_metadata(project.id, featurestore_id,
@@ -1235,7 +1226,7 @@ describe "On #{ENV['OS']}" do
           expect_status(200)
 
           # make sure the name didn't change
-          expect(parsed_json2["storageConnectorId"]).to be connector_id
+          expect(parsed_json2["storageConnector"]["id"]).to be connector_id
         end
 
         it "should store and return the correct path within the bucket" do

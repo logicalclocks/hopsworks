@@ -16,11 +16,9 @@
 package io.hops.hopsworks.common.featurestore.storageconnectors.redshift;
 
 import com.google.common.base.Strings;
-import io.hops.hopsworks.common.dao.featurestore.storageconnectors.redshift.FeaturestoreRedshiftConnectorFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.dao.user.security.secrets.SecretsFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreConstants;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.security.secrets.SecretsController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
@@ -28,6 +26,7 @@ import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
@@ -37,21 +36,18 @@ import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.transaction.Transactional;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
 public class FeaturestoreRedshiftConnectorController {
+
   private static final Logger LOGGER = Logger.getLogger(FeaturestoreRedshiftConnectorController.class.getName());
 
-  @EJB
-  private FeaturestoreRedshiftConnectorFacade featurestoreRedshiftConnectorFacade;
   @EJB
   private SecretsController secretsController;
   @EJB
@@ -61,65 +57,12 @@ public class FeaturestoreRedshiftConnectorController {
   @EJB
   private UserFacade userFacade;
 
-  /**
-   *
-   * @param featurestore
-   * @return
-   */
-  public List<FeaturestoreStorageConnectorDTO> getConnectorsForFeaturestore(Users user, Featurestore featurestore) {
-    List<FeatureStoreRedshiftConnector> featureStoreRedshiftConnectors = featurestoreRedshiftConnectorFacade
-      .findByFeaturestore(featurestore);
-    return featureStoreRedshiftConnectors.stream()
-      .map(redshiftConnector -> getFeaturestoreRedshiftConnectorDTO(user, redshiftConnector))
-      .collect(Collectors.toList());
-  }
-
-  /**
-   *
-   * @param featurestore
-   * @param storageConnectorId
-   * @return
-   */
-  public FeaturestoreRedshiftConnectorDTO getConnectorsWithIdAndFeaturestore(Users user, Featurestore featurestore,
-    Integer storageConnectorId) throws FeaturestoreException {
-    FeatureStoreRedshiftConnector featureStoreRedshiftConnector =
-      featurestoreRedshiftConnectorFacade.findByIdAndFeaturestore(storageConnectorId, featurestore)
-        .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.REDSHIFT_CONNECTOR_NOT_FOUND,
-          Level.FINE, "Redshift Connector not found. ConnectorId: " + storageConnectorId));
-    return getFeaturestoreRedshiftConnectorDTO(user, featureStoreRedshiftConnector);
-  }
-
-  /**
-   *
-   * @param user
-   * @param featurestore
-   * @param storageConnectorName
-   * @return
-   * @throws FeaturestoreException
-   */
-  public FeaturestoreStorageConnectorDTO getConnectorsWithNameAndFeaturestore(Users user, Featurestore featurestore,
-    String storageConnectorName) throws FeaturestoreException {
-    FeatureStoreRedshiftConnector featureStoreRedshiftConnector =
-      featurestoreRedshiftConnectorFacade.findByNameAndFeaturestore(storageConnectorName, featurestore)
-        .orElseThrow(() ->  new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.REDSHIFT_CONNECTOR_NOT_FOUND,
-        Level.FINE, "Redshift Connector not found. Connector name: " + storageConnectorName));
-    return getFeaturestoreRedshiftConnectorDTO(user, featureStoreRedshiftConnector);
-  }
-
-  private FeaturestoreRedshiftConnectorDTO getFeaturestoreRedshiftConnectorDTO(Users user,
-    FeatureStoreRedshiftConnector featureStoreRedshiftConnector) {
+  public FeaturestoreRedshiftConnectorDTO getRedshiftConnectorDTO(Users user,
+                                                                  FeaturestoreConnector featurestoreConnector) {
     FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO =
-      new FeaturestoreRedshiftConnectorDTO(featureStoreRedshiftConnector);
-    if (featureStoreRedshiftConnector.getSecret() != null) {
-      Users owner = userFacade.find(featureStoreRedshiftConnector.getSecret().getId().getUid());
-      try {
-        featurestoreRedshiftConnectorDTO.setDatabasePassword(secretsController
-          .getShared(user, owner.getUsername(), featureStoreRedshiftConnector.getSecret().getId().getName())
-          .getPlaintext());
-      } catch (UserException | ServiceException | ProjectException e) {
-        //user can't access secret
-      }
-    }
+        new FeaturestoreRedshiftConnectorDTO(featurestoreConnector);
+    featurestoreRedshiftConnectorDTO.setDatabasePassword(
+        getDatabasePassword(featurestoreConnector.getRedshiftConnector(), user));
     return featurestoreRedshiftConnectorDTO;
   }
 
@@ -129,13 +72,11 @@ public class FeaturestoreRedshiftConnectorController {
    * @param featurestoreRedshiftConnectorDTO
    * @return
    */
-  public FeaturestoreRedshiftConnectorDTO createFeaturestoreRedshiftConnector(Users user, Featurestore featurestore,
-    FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO) throws FeaturestoreException, UserException,
-    ProjectException {
-    verifyCreateDTO(featurestoreRedshiftConnectorDTO, featurestore);
+  public FeatureStoreRedshiftConnector createFeaturestoreRedshiftConnector(Users user, Featurestore featurestore,
+      FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
+      throws FeaturestoreException, UserException, ProjectException {
+    verifyCreateDTO(featurestoreRedshiftConnectorDTO);
     FeatureStoreRedshiftConnector featurestoreRedshiftConnector = new FeatureStoreRedshiftConnector();
-    featurestoreRedshiftConnector.setName(featurestoreRedshiftConnectorDTO.getName());
-    featurestoreRedshiftConnector.setDescription(featurestoreRedshiftConnectorDTO.getDescription());
     featurestoreRedshiftConnector.setClusterIdentifier(featurestoreRedshiftConnectorDTO.getClusterIdentifier());
     featurestoreRedshiftConnector.setDatabaseDriver(featurestoreRedshiftConnectorDTO.getDatabaseDriver());
     featurestoreRedshiftConnector.setDatabaseEndpoint(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint());
@@ -148,9 +89,7 @@ public class FeaturestoreRedshiftConnectorController {
     featurestoreRedshiftConnector.setAutoCreate(featurestoreRedshiftConnectorDTO.getAutoCreate());
     featurestoreRedshiftConnector.setDatabaseGroup(featurestoreRedshiftConnectorDTO.getDatabaseGroup());
     featurestoreRedshiftConnector.setArguments(featurestoreRedshiftConnectorDTO.getArguments());
-    featurestoreRedshiftConnector.setFeatureStore(featurestore);
-    featurestoreRedshiftConnectorFacade.save(featurestoreRedshiftConnector);
-    return featurestoreRedshiftConnectorDTO;
+    return featurestoreRedshiftConnector;
   }
 
   private void setPassword(Users user, FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
@@ -168,14 +107,8 @@ public class FeaturestoreRedshiftConnectorController {
     return "redshift_" + connectorName.replaceAll(" ", "_").toLowerCase() + "_" + featurestore.getId();
   }
 
-  private void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
-    Featurestore featurestore) throws FeaturestoreException {
-    verifyName(featurestoreRedshiftConnectorDTO, featurestore);
-    featurestoreRedshiftConnectorDTO.verifyDescription();
-    if (Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getClusterIdentifier())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG, Level.FINE,
-        "Redshift connector cluster identifier cannot be empty");
-    }
+  private void verifyCreateDTO(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
+      throws FeaturestoreException {
     if(!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getArguments())
       && featurestoreRedshiftConnectorDTO.getArguments().length() >
       FeaturestoreConstants.JDBC_STORAGE_CONNECTOR_ARGUMENTS_MAX_LENGTH) {
@@ -186,22 +119,10 @@ public class FeaturestoreRedshiftConnectorController {
     verifyPassword(featurestoreRedshiftConnectorDTO);
   }
 
-  private void verifyName(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO, Featurestore featurestore)
-    throws FeaturestoreException {
-    featurestoreRedshiftConnectorDTO.verifyName();
-    Optional<FeatureStoreRedshiftConnector> featureStoreRedshiftConnector =
-      featurestoreRedshiftConnectorFacade
-        .findByNameAndFeaturestore(featurestoreRedshiftConnectorDTO.getName(), featurestore);
-    if (featureStoreRedshiftConnector.isPresent()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_NAME, Level.FINE,
-        "Redshift connector with the same name already exists. Name=" + featurestoreRedshiftConnectorDTO.getName());
-    }
-  }
-
   private void verifyPassword(FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO)
-    throws FeaturestoreException {
+      throws FeaturestoreException {
     verifyPassword(featurestoreRedshiftConnectorDTO.getIamRole(),
-      featurestoreRedshiftConnectorDTO.getDatabasePassword());
+        featurestoreRedshiftConnectorDTO.getDatabasePassword());
   }
 
   private void verifyPassword(String iamRole, String password) throws FeaturestoreException {
@@ -226,110 +147,71 @@ public class FeaturestoreRedshiftConnectorController {
     }
   }
 
-  /**
-   *
-   * @param featurestore
-   * @param featurestoreRedshiftConnectorDTO
-   * @param storageConnectorName
-   * @return
-   */
-  public FeaturestoreRedshiftConnectorDTO updateFeaturestoreRedshiftConnector(Users user, Featurestore featurestore,
-    FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO, String storageConnectorName)
-    throws FeaturestoreException, UserException, ProjectException {
-    Optional<FeatureStoreRedshiftConnector> featureStoreRedshiftConnectorOptional =
-      featurestoreRedshiftConnectorFacade.findByNameAndFeaturestore(storageConnectorName, featurestore);
-    if (!featureStoreRedshiftConnectorOptional.isPresent()) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.REDSHIFT_CONNECTOR_NOT_FOUND,
-        Level.FINE, "Connector name: " + storageConnectorName);
-    }
-    boolean updated = false;
-    FeatureStoreRedshiftConnector featureStoreRedshiftConnector = featureStoreRedshiftConnectorOptional.get();
-    FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTOExisting =
-      getFeaturestoreRedshiftConnectorDTO(user, featureStoreRedshiftConnector);
-    if (shouldUpdate(featurestoreRedshiftConnectorDTO.getName(), featurestoreRedshiftConnectorDTOExisting.getName())) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_STORAGE_CONNECTOR_ARG,
-        Level.FINE, "Can not update connector name.");
-    }
-    //can set description to empty
-    if (shouldUpdate(featurestoreRedshiftConnectorDTO.getDescription(),
-      featurestoreRedshiftConnectorDTOExisting.getDescription())) {
-      featurestoreRedshiftConnectorDTO.verifyDescription();
-      featureStoreRedshiftConnector.setDescription(featurestoreRedshiftConnectorDTO.getDescription());
-      updated = true;
-    }
+  @TransactionAttribute(TransactionAttributeType.REQUIRED)
+  @Transactional(rollbackOn = FeaturestoreException.class)
+  public FeatureStoreRedshiftConnector updateFeaturestoreRedshiftConnector(Users user, Featurestore featurestore,
+      FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
+      FeatureStoreRedshiftConnector featureStoreRedshiftConnector)
+      throws FeaturestoreException, UserException, ProjectException {
+
     if (!Strings.isNullOrEmpty(featurestoreRedshiftConnectorDTO.getClusterIdentifier()) &&
-      !featurestoreRedshiftConnectorDTO.getClusterIdentifier()
-        .equals(featurestoreRedshiftConnectorDTOExisting.getClusterIdentifier())) {
+        !featurestoreRedshiftConnectorDTO.getClusterIdentifier()
+            .equals(featureStoreRedshiftConnector.getClusterIdentifier())) {
       featureStoreRedshiftConnector.setClusterIdentifier(featurestoreRedshiftConnectorDTO.getClusterIdentifier());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getDatabaseDriver(),
-      featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseDriver(),
+        featurestoreRedshiftConnectorDTO.getDatabaseDriver())) {
       featureStoreRedshiftConnector.setDatabaseDriver(featurestoreRedshiftConnectorDTO.getDatabaseDriver());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getDatabaseEndpoint(),
-      featurestoreRedshiftConnectorDTO.getDatabaseEndpoint())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseEndpoint(),
+        featurestoreRedshiftConnectorDTO.getDatabaseEndpoint())) {
       featureStoreRedshiftConnector.setDatabaseEndpoint(featurestoreRedshiftConnectorDTO.getDatabaseEndpoint());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getDatabaseName(),
-      featurestoreRedshiftConnectorDTO.getDatabaseName())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseName(),
+        featurestoreRedshiftConnectorDTO.getDatabaseName())) {
       featureStoreRedshiftConnector.setDatabaseName(featurestoreRedshiftConnectorDTO.getDatabaseName());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTO.getDatabaseUserName(),
-      featurestoreRedshiftConnectorDTOExisting.getDatabaseUserName())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseUserName(),
+        featurestoreRedshiftConnectorDTO.getDatabaseUserName())) {
       featureStoreRedshiftConnector.setDatabaseUserName(featurestoreRedshiftConnectorDTO.getDatabaseUserName());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getDatabaseGroup(),
-      featurestoreRedshiftConnectorDTO.getDatabaseGroup())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getDatabaseGroup(),
+        featurestoreRedshiftConnectorDTO.getDatabaseGroup())) {
       featureStoreRedshiftConnector.setDatabaseGroup(featurestoreRedshiftConnectorDTO.getDatabaseGroup());
-      updated = true;
     }
-    if (featurestoreRedshiftConnectorDTO.getAutoCreate() != featurestoreRedshiftConnectorDTOExisting.getAutoCreate()) {
+    if (featurestoreRedshiftConnectorDTO.getAutoCreate() != featureStoreRedshiftConnector.getAutoCreate()) {
       featureStoreRedshiftConnector.setAutoCreate(featurestoreRedshiftConnectorDTO.getAutoCreate());
-      updated = true;
     }
     if (shouldUpdate(featurestoreRedshiftConnectorDTO.getDatabasePort(),
-      featurestoreRedshiftConnectorDTOExisting.getDatabasePort())) {
+        featureStoreRedshiftConnector.getDatabasePort())) {
       featureStoreRedshiftConnector.setDatabasePort(featurestoreRedshiftConnectorDTO.getDatabasePort());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getTableName(),
-      featurestoreRedshiftConnectorDTO.getTableName())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getTableName(),
+        featurestoreRedshiftConnectorDTO.getTableName())) {
       featureStoreRedshiftConnector.setTableName(featurestoreRedshiftConnectorDTO.getTableName());
-      updated = true;
     }
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getIamRole(),
-      featurestoreRedshiftConnectorDTO.getIamRole())) {
+    if (shouldUpdate(featureStoreRedshiftConnector.getIamRole(),
+        featurestoreRedshiftConnectorDTO.getIamRole())) {
       featureStoreRedshiftConnector.setIamRole(featurestoreRedshiftConnectorDTO.getIamRole());
-      updated = true;
-    }
-    Secret secret = null;
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getDatabasePassword(),
-      featurestoreRedshiftConnectorDTO.getDatabasePassword())) {
-      secret = updatePassword(user, featurestoreRedshiftConnectorDTO, featurestore, featureStoreRedshiftConnector);
-      updated = true;
     }
 
-    if (shouldUpdate(featurestoreRedshiftConnectorDTOExisting.getArguments(),
+    Secret secret = null;
+    if (shouldUpdate(getDatabasePassword(featureStoreRedshiftConnector, user),
+            featurestoreRedshiftConnectorDTO.getDatabasePassword())) {
+      secret = updatePassword(user, featurestoreRedshiftConnectorDTO, featurestore, featureStoreRedshiftConnector);
+    }
+
+    if (shouldUpdate(featureStoreRedshiftConnector.getArguments(),
       featurestoreRedshiftConnectorDTO.getArguments())) {
       featureStoreRedshiftConnector.setArguments(featurestoreRedshiftConnectorDTO.getArguments());
-      updated = true;
     }
-    if (updated) {
-      //verify if password or iam role is set
-      verifyPassword(featureStoreRedshiftConnector.getIamRole(), featureStoreRedshiftConnector.getSecret());
-      featureStoreRedshiftConnector = featurestoreRedshiftConnectorFacade.update(featureStoreRedshiftConnector);
-      if (featureStoreRedshiftConnector.getSecret() == null && secret != null) {
-        secretsFacade.deleteSecret(secret.getId());
-      }
-      featurestoreRedshiftConnectorDTOExisting = getFeaturestoreRedshiftConnectorDTO(user,
-        featureStoreRedshiftConnector);
+
+    verifyPassword(featureStoreRedshiftConnector.getIamRole(), featureStoreRedshiftConnector.getSecret());
+    if (featureStoreRedshiftConnector.getSecret() == null && secret != null) {
+      secretsFacade.deleteSecret(secret.getId());
     }
-    return featurestoreRedshiftConnectorDTOExisting;
+
+    return featureStoreRedshiftConnector;
   }
 
   private Secret updatePassword(Users user, FeaturestoreRedshiftConnectorDTO featurestoreRedshiftConnectorDTO,
@@ -363,40 +245,20 @@ public class FeaturestoreRedshiftConnectorController {
     return (oldVal == null && newVal != null) || (oldVal != null && !oldVal.equals(newVal));
   }
 
-  /**
-   *
-   * @param storageConnectorId
-   * @return
-   */
-  public void removeFeaturestoreRedshiftConnector(Users user, Integer storageConnectorId) throws ProjectException {
-    FeatureStoreRedshiftConnector featureStoreRedshiftConnector =
-      featurestoreRedshiftConnectorFacade.find(storageConnectorId);
-    if (featureStoreRedshiftConnector != null) {
-      Secret secret = featureStoreRedshiftConnector.getSecret();
-      secretsController.checkCanAccessSecret(secret, user);
-      featurestoreRedshiftConnectorFacade.remove(featureStoreRedshiftConnector);
-      if (secret != null) {
-        secretsFacade.deleteSecret(secret.getId());
-      }
-    }
-  }
 
-  /**
-   *
-   * @param storageConnectorName
-   * @return
-   */
-  public void removeFeaturestoreRedshiftConnector(Users user, String storageConnectorName, Featurestore featurestore)
-    throws ProjectException {
-    Optional<FeatureStoreRedshiftConnector> featureStoreRedshiftConnector =
-      featurestoreRedshiftConnectorFacade.findByNameAndFeaturestore(storageConnectorName, featurestore);
-    if (featureStoreRedshiftConnector.isPresent()) {
-      Secret secret = featureStoreRedshiftConnector.get().getSecret();
-      secretsController.checkCanAccessSecret(secret, user);
-      featurestoreRedshiftConnectorFacade.remove(featureStoreRedshiftConnector.get());
-      if (secret != null) {
-        secretsFacade.deleteSecret(secret.getId());
-      }
+  private String getDatabasePassword(FeatureStoreRedshiftConnector featureStoreRedshiftConnector, Users user) {
+    if (featureStoreRedshiftConnector.getSecret() == null) {
+      return null;
     }
+
+    Users owner = userFacade.find(featureStoreRedshiftConnector.getSecret().getId().getUid());
+    try {
+      return secretsController
+          .getShared(user, owner.getUsername(), featureStoreRedshiftConnector.getSecret().getId().getName())
+          .getPlaintext();
+    } catch (UserException | ServiceException | ProjectException e) {
+      //user can't access secret
+    }
+    return "";
   }
 }
