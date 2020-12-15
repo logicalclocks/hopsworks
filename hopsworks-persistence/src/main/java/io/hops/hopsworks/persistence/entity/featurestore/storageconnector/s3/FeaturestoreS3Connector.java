@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3;
 
-import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.user.security.secrets.Secret;
 
 import javax.persistence.Basic;
@@ -31,8 +30,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -45,16 +42,6 @@ import java.io.Serializable;
 @Entity
 @Table(name = "feature_store_s3_connector", catalog = "hopsworks")
 @XmlRootElement
-@NamedQueries({
-    @NamedQuery(name = "FeaturestoreS3Connector.findAll", query = "SELECT fss FROM FeaturestoreS3Connector fss"),
-    @NamedQuery(name = "FeaturestoreS3Connector.findById",
-        query = "SELECT fss FROM FeaturestoreS3Connector fss WHERE fss.id = :id"),
-    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestore", query = "SELECT fss " +
-        "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore"),
-    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestoreAndName", query = "SELECT fss " +
-      "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore AND fss.name = :name"),
-    @NamedQuery(name = "FeaturestoreS3Connector.findByFeaturestoreAndId", query = "SELECT fss " +
-        "FROM FeaturestoreS3Connector fss WHERE fss.featurestore = :featurestore AND fss.id = :id")})
 public class FeaturestoreS3Connector implements Serializable {
   private static final long serialVersionUID = 1L;
   @Id
@@ -62,15 +49,8 @@ public class FeaturestoreS3Connector implements Serializable {
   @Basic(optional = false)
   @Column(name = "id")
   private Integer id;
-  @JoinColumn(name = "feature_store_id", referencedColumnName = "id")
-  private Featurestore featurestore;
   @Column(name = "bucket")
   private String bucket;
-  @Column(name = "description")
-  private String description;
-  @Basic(optional = false)
-  @Column(name = "name")
-  private String name;
   @Size(max = 2048)
   @Column(name = "iam_role")
   private String iamRole;
@@ -96,36 +76,12 @@ public class FeaturestoreS3Connector implements Serializable {
     this.id = id;
   }
   
-  public Featurestore getFeaturestore() {
-    return featurestore;
-  }
-  
-  public void setFeaturestore(Featurestore featurestore) {
-    this.featurestore = featurestore;
-  }
-  
   public String getBucket() {
     return bucket;
   }
   
   public void setBucket(String bucket) {
     this.bucket = bucket;
-  }
-  
-  public String getDescription() {
-    return description;
-  }
-  
-  public void setDescription(String description) {
-    this.description = description;
-  }
-  
-  public String getName() {
-    return name;
-  }
-  
-  public void setName(String name) {
-    this.name = name;
   }
   
   public String getIamRole() {
@@ -145,7 +101,7 @@ public class FeaturestoreS3Connector implements Serializable {
   public String getServerEncryptionKey() { return serverEncryptionKey; }
 
   public void setServerEncryptionKey(String serverEncryptionKey) { this.serverEncryptionKey = serverEncryptionKey; }
-  
+
   public Secret getSecret() {
     return secret;
   }
@@ -156,29 +112,16 @@ public class FeaturestoreS3Connector implements Serializable {
   
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof FeaturestoreS3Connector)) {
-      return false;
-    }
-    
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     FeaturestoreS3Connector that = (FeaturestoreS3Connector) o;
-    
-    if (!id.equals(that.id)) {
-      return false;
-    }
-    if (!featurestore.equals(that.featurestore)) {
-      return false;
-    }
-    return bucket.equals(that.bucket);
+
+    return id.equals(that.id);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + featurestore.hashCode();
-    result = 31 * result + bucket.hashCode();
-    return result;
+    return id.hashCode();
   }
 }

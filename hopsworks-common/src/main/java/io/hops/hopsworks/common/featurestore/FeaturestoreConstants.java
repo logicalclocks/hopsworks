@@ -15,7 +15,8 @@
  */
 
 package io.hops.hopsworks.common.featurestore;
-import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorType;
+
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetType;
 
 import java.util.Arrays;
@@ -45,10 +46,10 @@ public class FeaturestoreConstants {
   public static final int ON_DEMAND_FEATUREGROUP_SQL_QUERY_MAX_LENGTH = 11000;
   public static final List<String> TRAINING_DATASET_DATA_FORMATS = Arrays.asList(new String[]{"csv", "tfrecords",
     "tfrecord", "parquet", "tsv", "hdf5", "npy", "orc", "avro", "image", "petastorm"});
-  public static final String JDBC_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.JDBC.name();
-  public static final String REDSHIFT_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.REDSHIFT.name();
-  public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.HOPSFS.name();
-  public static final String S3_CONNECTOR_TYPE = FeaturestoreStorageConnectorType.S3.name();
+  public static final String JDBC_CONNECTOR_TYPE = FeaturestoreConnectorType.JDBC.name();
+  public static final String HOPSFS_CONNECTOR_TYPE = FeaturestoreConnectorType.HOPSFS.name();
+  public static final String S3_CONNECTOR_TYPE = FeaturestoreConnectorType.S3.name();
+  public static final String REDSHIFT_CONNECTOR_TYPE = FeaturestoreConnectorType.REDSHIFT.name();
   public static final String CACHED_FEATUREGROUP_DTO_TYPE = "cachedFeaturegroupDTO";
   public static final String ON_DEMAND_FEATUREGROUP_DTO_TYPE = "onDemandFeaturegroupDTO";
   public static final String HOPSFS_TRAINING_DATASET_TYPE = TrainingDatasetType.HOPSFS_TRAINING_DATASET.name();

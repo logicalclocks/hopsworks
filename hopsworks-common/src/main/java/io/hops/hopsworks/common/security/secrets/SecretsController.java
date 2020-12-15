@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Stateless
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 /**
  * Stateless bean for managing Secrets of users
  * Secrets are encrypted with Hopsworks master encryption password
@@ -440,7 +440,8 @@ public class SecretsController {
   private String bytes2string(byte[] bytes) {
     return new String(bytes, Charset.defaultCharset());
   }
-  
+
+  @TransactionAttribute(TransactionAttributeType.SUPPORTS)
   public void checkCanAccessSecret(Secret secret, Users user) throws ProjectException {
     if (secret != null &&
       !projectTeamFacade.isUserMemberOfProject(projectFacade.find(secret.getProjectIdScope()), user)) {

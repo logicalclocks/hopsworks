@@ -20,17 +20,22 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.common.hive.HiveController;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
+import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetSharedWith;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -67,10 +72,6 @@ public class FeaturestoreController {
   @EJB
   private ActivityFacade activityFacade;
   @EJB
-  private FeaturestoreJdbcConnectorController featurestoreJdbcConnectorController;
-  @EJB
-  private FeaturestoreHopsfsConnectorController featurestoreHopsfsConnectorController;
-  @EJB
   private Settings settings;
   @EJB
   private OnlineFeaturestoreController onlineFeaturestoreController;
@@ -82,6 +83,8 @@ public class FeaturestoreController {
   private FeaturegroupFacade featuregroupFacade;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
+  @EJB
+  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   
   private JAXBContext featurestoreUtilJobArgsJaxbContext = null;
   private Marshaller featurestoreUtilJobArgsMarshaller = null;
@@ -235,7 +238,7 @@ public class FeaturestoreController {
    * @throws FeaturestoreException
    */
   public Featurestore createProjectFeatureStore(Project project, Users user, String featurestoreName,
-      Dataset trainingDatasetsFolder) throws FeaturestoreException {
+      Dataset trainingDatasetsFolder) throws FeaturestoreException, ProjectException, UserException {
 
     //Get HiveDbId for the newly created Hive featurestore DB
     Long hiveDbId = featurestoreFacade.getHiveDatabaseId(featurestoreName);
@@ -247,22 +250,54 @@ public class FeaturestoreController {
     featurestoreFacade.persist(featurestore);
     activityFacade.persistActivity(ActivityFacade.CREATED_FEATURESTORE + featurestoreName, project,
       project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
-        getOfflineFeaturestoreDbName(project), "JDBC connection to Hopsworks Project Feature Store Hive Database");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR +
         getOfflineFeaturestoreDbName(project), project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreJdbcConnectorController.createDefaultJdbcConnectorForOfflineFeaturestore(featurestore,
-      project.getName(), "JDBC connection to Hopsworks Project Hive Warehouse");
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + project.getName(),
       project, project.getOwner(), ActivityFlag.SERVICE);
-    featurestoreHopsfsConnectorController.createHopsFsBackendForFeaturestoreConnector(featurestore,
-        trainingDatasetsFolder);
+    featurestoreStorageConnectorController
+        .createStorageConnector(user, project, featurestore, hopsfsTrainingDatasetConnector(trainingDatasetsFolder));
+    featurestoreStorageConnectorController
+        .createStorageConnector(user, project, featurestore, createOfflineJdbcConnector(featurestoreName));
     activityFacade.persistActivity(ActivityFacade.ADDED_FEATURESTORE_STORAGE_CONNECTOR + trainingDatasetsFolder.
         getName(), project, project.getOwner(), ActivityFlag.SERVICE);
     if (settings.isOnlineFeaturestore()) {
       onlineFeaturestoreController.setupOnlineFeaturestore(user, featurestore);
     }
     return featurestore;
+  }
+
+  public FeaturestoreStorageConnectorDTO hopsfsTrainingDatasetConnector(Dataset hopsfsDataset) {
+    String name = hopsfsDataset.getName();
+    String description = "HOPSFS backend for storing Training Datasets of the Hopsworks Feature Store";
+    FeaturestoreHopsfsConnectorDTO featurestoreHopsfsConnectorDTO = new FeaturestoreHopsfsConnectorDTO();
+    featurestoreHopsfsConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.HOPSFS);
+    featurestoreHopsfsConnectorDTO.setName(name);
+    featurestoreHopsfsConnectorDTO.setDescription(description);
+    featurestoreHopsfsConnectorDTO.setDatasetName(hopsfsDataset.getName());
+
+    return featurestoreHopsfsConnectorDTO;
+  }
+
+
+  public FeaturestoreStorageConnectorDTO createOfflineJdbcConnector(String databaseName) throws FeaturestoreException {
+    String hiveEndpoint;
+    try {
+      hiveEndpoint = hiveController.getHiveServerInternalEndpoint();
+    } catch (ServiceDiscoveryException ex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.CONNECTOR_NOT_FOUND,
+          Level.SEVERE, "Could not create Hive connection string", ex.getMessage(), ex);
+    }
+
+    String connectionString = "jdbc:hive2://" + hiveEndpoint + "/" + databaseName + ";" +
+        "auth=noSasl;ssl=true;twoWay=true;";
+    String arguments = "sslTrustStore,trustStorePassword,sslKeyStore,keyStorePassword";
+    FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO();
+    featurestoreJdbcConnectorDTO.setStorageConnectorType(FeaturestoreConnectorType.JDBC);
+    featurestoreJdbcConnectorDTO.setName(databaseName);
+    featurestoreJdbcConnectorDTO.setDescription("JDBC connector for the Offline Feature Store");
+    featurestoreJdbcConnectorDTO.setConnectionString(connectionString);
+    featurestoreJdbcConnectorDTO.setArguments(arguments);
+    return featurestoreJdbcConnectorDTO;
   }
 
   /**

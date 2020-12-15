@@ -33,9 +33,7 @@ import io.hops.hopsworks.common.featurestore.query.Feature;
 import io.hops.hopsworks.common.featurestore.query.Join;
 import io.hops.hopsworks.common.featurestore.query.Query;
 import io.hops.hopsworks.common.featurestore.query.QueryDTO;
-import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorFacade;
-import io.hops.hopsworks.common.featurestore.storageconnectors.s3.FeaturestoreS3ConnectorFacade;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.external.ExternalTrainingDatasetFacade;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs.HopsfsTrainingDatasetController;
@@ -55,8 +53,8 @@ import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnectorType;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetFeature;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDatasetJoin;
@@ -117,15 +115,9 @@ public class TrainingDatasetController {
   @EJB
   private FeaturestoreInputValidation featurestoreInputValidation;
   @EJB
-  private FeaturestoreHopsfsConnectorFacade hopsfsConnectorFacade;
-  @EJB
-  private FeaturestoreS3ConnectorFacade S3ConnectorFacade;
-  @EJB
   private InodeController inodeController;
   @EJB
   private HopsFSProvenanceController fsProvenanceController;
-  @EJB
-  private FeaturestoreHopsfsConnectorController hopsfsConnectorController;
   @EJB
   private DistributedFsService dfs;
   @EJB
@@ -140,6 +132,8 @@ public class TrainingDatasetController {
   private OnlineFeaturestoreController onlineFeaturestoreController;
   @EJB
   private FeaturegroupController featuregroupController;
+  @EJB
+  private FeaturestoreConnectorFacade featurestoreConnectorFacade;
 
   /**
    * Gets all trainingDatasets for a particular featurestore and project
@@ -228,20 +222,23 @@ public class TrainingDatasetController {
     verifyTrainingDatasetInput(trainingDatasetDTO);
   
     Inode inode = null;
-    FeaturestoreHopsfsConnector hopsfsConnector = null;
-    FeaturestoreS3Connector s3Connector = null;
+    FeaturestoreConnector featurestoreConnector;
 
     if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
-      if (trainingDatasetDTO.getStorageConnectorId() == null) {
-        hopsfsConnector = hopsfsConnectorController.getDefaultStorageConnector(featurestore);
-      } else {
-        hopsfsConnector = hopsfsConnectorFacade.
-            findByIdAndFeaturestore(trainingDatasetDTO.getStorageConnectorId(), featurestore)
+      if (trainingDatasetDTO.getStorageConnector() == null) {
+        String connectorName =
+            featurestore.getProject().getName() + "_" + Settings.ServiceDataset.TRAININGDATASETS.getName();
+        featurestoreConnector = featurestoreConnectorFacade.findByFeaturestoreName(featurestore, connectorName)
             .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
-                Level.FINE, "HOPSFS Connector: " + trainingDatasetDTO.getStorageConnectorId()));
+                Level.FINE, "HOPSFS Connector: " + connectorName));
+      } else {
+        featurestoreConnector = featurestoreConnectorFacade
+            .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.HOPSFS)
+            .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.HOPSFS_CONNECTOR_NOT_FOUND,
+                Level.FINE, "HOPSFS Connector: " + trainingDatasetDTO.getStorageConnector().getId()));
       }
 
-      Dataset trainingDatasetsFolder = hopsfsConnector.getHopsfsDataset();
+      Dataset trainingDatasetsFolder = featurestoreConnector.getHopsfsConnector().getHopsfsDataset();
 
       // TODO(Fabio) account for path
       String trainingDatasetPath = getTrainingDatasetPath(
@@ -255,8 +252,9 @@ public class TrainingDatasetController {
         udfso.mkdir(trainingDatasetPath);
 
         inode = inodeController.getInodeAtPath(trainingDatasetPath);
-        TrainingDatasetDTO completeTrainingDatasetDTO = createTrainingDatasetMetadata(project, user, featurestore,
-          trainingDatasetDTO, hopsfsConnector, inode, s3Connector);
+        TrainingDatasetDTO completeTrainingDatasetDTO =
+            createTrainingDatasetMetadata(project, user, featurestore,
+                trainingDatasetDTO, featurestoreConnector, inode);
         fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
         return completeTrainingDatasetDTO;
       } finally {
@@ -265,11 +263,17 @@ public class TrainingDatasetController {
         }
       }
     } else {
-      s3Connector = S3ConnectorFacade.findByIdAndFeaturestore(trainingDatasetDTO.getStorageConnectorId(), featurestore)
+      if (trainingDatasetDTO.getStorageConnector() == null) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
+            Level.FINE, "Storage connector is empty");
+      }
+
+      featurestoreConnector = featurestoreConnectorFacade
+          .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.S3)
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
-              Level.FINE, "S3 connector: " + trainingDatasetDTO.getStorageConnectorId()));
-      return createTrainingDatasetMetadata(project, user, featurestore, trainingDatasetDTO, hopsfsConnector,  inode,
-        s3Connector);
+              Level.FINE, "S3 connector: " + trainingDatasetDTO.getStorageConnector().getId()));
+      return createTrainingDatasetMetadata(project, user, featurestore,
+          trainingDatasetDTO, featurestoreConnector, inode);
     }
   }
 
@@ -285,9 +289,8 @@ public class TrainingDatasetController {
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
   private TrainingDatasetDTO createTrainingDatasetMetadata(Project project, Users user, Featurestore featurestore,
                                                            TrainingDatasetDTO trainingDatasetDTO,
-                                                           FeaturestoreHopsfsConnector hopsfsConnector,
-                                                           Inode inode,
-                                                           FeaturestoreS3Connector S3Connector)
+                                                           FeaturestoreConnector featurestoreConnector,
+                                                           Inode inode)
       throws FeaturestoreException, ServiceException {
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
@@ -295,10 +298,10 @@ public class TrainingDatasetController {
     switch (trainingDatasetDTO.getTrainingDatasetType()) {
       case HOPSFS_TRAINING_DATASET:
         hopsfsTrainingDataset =
-            hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(hopsfsConnector, inode);
+            hopsfsTrainingDatasetFacade.createHopsfsTrainingDataset(featurestoreConnector, inode);
         break;
       case EXTERNAL_TRAINING_DATASET:
-        externalTrainingDataset = externalTrainingDatasetFacade.createExternalTrainingDataset(S3Connector,
+        externalTrainingDataset = externalTrainingDatasetFacade.createExternalTrainingDataset(featurestoreConnector,
             trainingDatasetDTO.getLocation());
         break;
       default:

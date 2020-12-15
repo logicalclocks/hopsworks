@@ -55,6 +55,7 @@
     <class>io.hops.hopsworks.persistence.entity.featurestore.Featurestore</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.tag.FeatureStoreTag</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandFeature</class>
+    <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.redshift.FeatureStoreRedshiftConnector</class>
     <class>io.hops.hopsworks.persistence.entity.featurestore.storageconnector.s3.FeaturestoreS3Connector</class>

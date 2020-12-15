@@ -432,8 +432,8 @@ angular.module('hopsWorksApp')
             };
 
             var createStorageConnector = function (type, storageConnectorJson) {
-                FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
-                    type).then(
+                FeaturestoreService.createStorageConnector(self.projectId, storageConnectorJson, self.featurestore)
+                .then(
                     function (success) {
                         self.working = false;
                         growl.success(type + " Storage Connector created", { title: 'Success', ttl: 1000 });
@@ -446,7 +446,7 @@ angular.module('hopsWorksApp')
 
             var updateStorageConnector = function (type, storageConnectorJson) {
                 FeaturestoreService.updateStorageConnector(self.projectId, storageConnectorJson, self.featurestore,
-                    type, self.storageConnector.name).then(
+                    self.storageConnector.name).then(
                     function (success) {
                         self.working = false;
                         growl.success(type + " Storage Connector updated", { title: 'Success', ttl: 1000 });

@@ -642,7 +642,7 @@ public class ConstructorController {
 
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
       FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO(
-              query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreJdbcConnector());
+              query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreConnector());
       OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
           new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreJdbcConnectorDTO);
 

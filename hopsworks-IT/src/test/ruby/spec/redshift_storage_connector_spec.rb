@@ -20,8 +20,8 @@ describe "On #{ENV['OS']}" do
     @p1, @p2 = with_redshift_connectors
     @featurestore1 = get_featurestores_checked(@p1[:id])[0]
     @featurestore2 = get_featurestores_checked(@p2[:id])[0]
-    get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
-    @connector = json_body[0]
+    connectors = get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
+    @connector = connectors[0]
   end
   describe "get" do
     context 'without authentication' do
@@ -43,15 +43,15 @@ describe "On #{ENV['OS']}" do
         create_session(@p1[:username], "Pass123")
       end
       it "should get" do
-        get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
+        connectors = get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
         expect_status_details(200)
-        expect(json_body.length).to eq 2
+        expect(connectors.length).to eq 2
       end
       it "should get by name" do
-        get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
+        connectors = get_storage_connectors(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT")
         expect_status_details(200)
-        connector_name = json_body[0][:name]
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector_name)
+        connector_name = connectors[0][:name]
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], connector_name)
         expect_status_details(200)
         expect(json_body[:name]).to eq connector_name
       end
@@ -139,7 +139,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -149,7 +149,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -159,7 +159,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -169,7 +169,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -179,7 +179,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -189,7 +189,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -199,7 +199,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -209,7 +209,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -219,7 +219,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -229,7 +229,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -239,36 +239,36 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
       it "should update connector database password" do
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", "redshift_connector_pwd")
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], "redshift_connector_pwd")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:databasePassword] = "databasepwd"
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
       it "should update connector database iam role" do
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", "redshift_connector_iam")
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], "redshift_connector_iam")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:iamRole] = "arn:aws:iam::123456789012:role/test-role-p1-owners"
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
       it "should update connector from iam role to password" do
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", "redshift_connector_iam")
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], "redshift_connector_iam")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:iamRole] = nil
@@ -276,14 +276,14 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
         get_private_secret("redshift_redshift_connector_iam_#{@featurestore1["featurestoreId"]}")
         expect_status_details(200)
       end
       it "should update connector from password to iam role" do
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", "redshift_connector_pwd")
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], "redshift_connector_pwd")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:iamRole] = "arn:aws:iam::123456789012:role/test-role-p1-owners"
@@ -291,7 +291,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
         get_private_secret("redshift_redshift_connector_pwd_#{@featurestore1["featurestoreId"]}")
@@ -311,7 +311,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, copyConnector)
       end
@@ -320,36 +320,36 @@ describe "On #{ENV['OS']}" do
         copyConnector[:name] = "updated_connector_name"
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(400)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         expect(json_body[:name]).to eq @connector[:name]
       end
       it "should fail to update with iam role when password is set" do
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", "redshift_connector_pwd")
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_pwd")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:iamRole] = "arn:aws:iam::123456789012:role/test-role-p1"
         update_redshift_connector(@p2[:id], @featurestore2["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(400)
 
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
       it "should fail to update with password when iam role set" do
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", "redshift_connector_iam")
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_iam")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:databasePassword] = "newPassword"
         update_redshift_connector(@p2[:id], @featurestore2["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(400)
 
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
       it "should fail to update with no password and iam role" do
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", "redshift_connector_iam")
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_iam")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:databasePassword] = nil
@@ -357,7 +357,7 @@ describe "On #{ENV['OS']}" do
         update_redshift_connector(@p2[:id], @featurestore2["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(400)
 
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
@@ -383,7 +383,7 @@ describe "On #{ENV['OS']}" do
         expect(json_body.length > 2).to eq true
       end
       it "should get connector in a shared fs with no password" do
-        get_storage_connector_by_name(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", "p3-connector-pwd")
+        get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], "p3-connector-pwd")
         expect_status_details(200)
         expect(json_body.key?("databasePassword")).to eq false
       end
@@ -398,7 +398,7 @@ describe "On #{ENV['OS']}" do
         expect_status_details(403)
       end
       it "should fail to edit connectors in a shared fs" do
-        get_storage_connector_by_name(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", "p3-connector-pwd")
+        get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], "p3-connector-pwd")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:description] = "updated description p3"
@@ -409,23 +409,23 @@ describe "On #{ENV['OS']}" do
         copyConnector[:arguments] = "test1,test2,test3,test4,p3"
         update_redshift_connector(@p3[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(403)
-        get_storage_connector_by_name(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
       it "should fail to edit connector database password in a shared fs" do
-        get_storage_connector_by_name(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", "p3-connector-pwd")
+        get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], "p3-connector-pwd")
         connector = json_body
         copyConnector = connector.clone
         copyConnector[:databasePassword] = "password-p3"
         update_redshift_connector(@p3[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
         expect_status_details(403)
-        get_storage_connector_by_name(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", connector[:name])
+        get_storage_connector(@p3[:id], @featurestore1["featurestoreId"], connector[:name])
         expect_status_details(200)
         check_redshift_connector_update(json_body, connector)
       end
       it "should fail to delete connector with password in a shared fs" do
-        delete_connector(@p3[:id], @featurestore1["featurestoreId"], "REDSHIFT", "p3-connector-pwd")
+        delete_connector(@p3[:id], @featurestore1["featurestoreId"], "p3-connector-pwd")
         expect_status_details(403)
       end
     end
@@ -436,12 +436,12 @@ describe "On #{ENV['OS']}" do
         reset_session
       end
       it "should fail to delete connector" do
-        delete_connector(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        delete_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(401)
       end
       it "should fail to update a connector in a project with no role" do
         with_valid_session
-        delete_connector(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        delete_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(403)
       end
     end
@@ -450,17 +450,17 @@ describe "On #{ENV['OS']}" do
         create_session(@p1[:username], "Pass123")
       end
       it "should delete connector by name" do
-        delete_connector(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        delete_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
-        get_storage_connector_by_name(@p1[:id], @featurestore1["featurestoreId"], "REDSHIFT", @connector[:name])
+        get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(400)
       end
       it "should delete secrete when deleting connector" do
-        get_storage_connector_by_name(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", "redshift_connector_pwd")
+        get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_pwd")
         connector = json_body
         get_private_secret("redshift_redshift_connector_pwd_#{@featurestore2["featurestoreId"]}")
         expect_status_details(200)
-        delete_connector(@p2[:id], @featurestore2["featurestoreId"], "REDSHIFT", connector[:name])
+        delete_connector(@p2[:id], @featurestore2["featurestoreId"], connector[:name])
         expect_status_details(200)
         get_private_secret("redshift_redshift_connector_pwd_#{@featurestore2["featurestoreId"]}")
         expect_status_details(404)

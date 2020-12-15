@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.jdbc.FeaturestoreJdbcConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Basic;
@@ -36,6 +36,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Objects;
 
 /**
  * Entity class representing the on_demand_feature_group table in Hopsworks database.
@@ -61,8 +62,8 @@ public class OnDemandFeaturegroup implements Serializable {
   private String query;
   @Column(name = "description")
   private String description;
-  @JoinColumn(name = "jdbc_connector_id", referencedColumnName = "id")
-  private FeaturestoreJdbcConnector featurestoreJdbcConnector;
+  @JoinColumn(name = "connector_id", referencedColumnName = "id")
+  private FeaturestoreConnector featurestoreConnector;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
   private Collection<OnDemandFeature> features;
 
@@ -92,16 +93,15 @@ public class OnDemandFeaturegroup implements Serializable {
   public void setDescription(String description) {
     this.description = description;
   }
-  
-  public FeaturestoreJdbcConnector getFeaturestoreJdbcConnector() {
-    return featurestoreJdbcConnector;
+
+  public FeaturestoreConnector getFeaturestoreConnector() {
+    return featurestoreConnector;
   }
-  
-  public void setFeaturestoreJdbcConnector(
-    FeaturestoreJdbcConnector featurestoreJdbcConnector) {
-    this.featurestoreJdbcConnector = featurestoreJdbcConnector;
+
+  public void setFeaturestoreConnector(FeaturestoreConnector featurestoreConnector) {
+    this.featurestoreConnector = featurestoreConnector;
   }
-  
+
   public Collection<OnDemandFeature> getFeatures() {
     return features;
   }
@@ -124,29 +124,14 @@ public class OnDemandFeaturegroup implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof OnDemandFeaturegroup)) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
 
     OnDemandFeaturegroup that = (OnDemandFeaturegroup) o;
-  
-    if (!id.equals(that.id)) {
-      return false;
-    }
-    
-    if (!query.equals(that.query)) {
-      return false;
-    }
-    if (!description.equals(that.description)) {
-      return false;
-    }
-    if (features != null && !features.equals(that.features)) return false;
-    return featurestoreJdbcConnector.equals(that.featurestoreJdbcConnector);
+
+    return Objects.equals(id, that.id);
   }
-  
+
   @Override
   public int hashCode() {
     return id != null ? id.hashCode() : 0;

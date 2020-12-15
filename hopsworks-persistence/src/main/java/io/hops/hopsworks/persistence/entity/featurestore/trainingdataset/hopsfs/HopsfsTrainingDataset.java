@@ -16,7 +16,7 @@
 
 package io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs;
 
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
 import javax.persistence.Basic;
@@ -33,6 +33,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Entity class representing the hopsfs_training_dataset table in Hopsworks database.
@@ -62,9 +63,9 @@ public class HopsfsTrainingDataset implements Serializable {
       referencedColumnName = "partition_id")})
   @ManyToOne(optional = false)
   private Inode inode;
-  @JoinColumn(name = "hopsfs_connector_id", referencedColumnName = "id")
-  private FeaturestoreHopsfsConnector featurestoreHopsfsConnector;
-  
+  @JoinColumn(name = "connector_id", referencedColumnName = "id")
+  private FeaturestoreConnector featurestoreConnector;
+
   public Integer getId() {
     return id;
   }
@@ -80,41 +81,27 @@ public class HopsfsTrainingDataset implements Serializable {
   public void setInode(Inode inode) {
     this.inode = inode;
   }
-  
-  public FeaturestoreHopsfsConnector getFeaturestoreHopsfsConnector() {
-    return featurestoreHopsfsConnector;
+
+  public FeaturestoreConnector getFeaturestoreConnector() {
+    return featurestoreConnector;
   }
-  
-  public void setFeaturestoreHopsfsConnector(
-    FeaturestoreHopsfsConnector featurestoreHopsfsConnector) {
-    this.featurestoreHopsfsConnector = featurestoreHopsfsConnector;
+
+  public void setFeaturestoreConnector(FeaturestoreConnector featurestoreConnector) {
+    this.featurestoreConnector = featurestoreConnector;
   }
-  
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof HopsfsTrainingDataset)) {
-      return false;
-    }
-    
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
     HopsfsTrainingDataset that = (HopsfsTrainingDataset) o;
-    
-    if (!id.equals(that.id)) {
-      return false;
-    }
-    if (!inode.equals(that.inode)) {
-      return false;
-    }
-    return featurestoreHopsfsConnector.equals(that.featurestoreHopsfsConnector);
+
+    return Objects.equals(id, that.id);
   }
-  
+
   @Override
   public int hashCode() {
-    int result = id.hashCode();
-    result = 31 * result + inode.hashCode();
-    result = 31 * result + featurestoreHopsfsConnector.hashCode();
-    return result;
+    return id != null ? id.hashCode() : 0;
   }
 }

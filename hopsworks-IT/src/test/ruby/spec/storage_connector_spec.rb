@@ -22,6 +22,11 @@ describe "On #{ENV['OS']}" do
         with_valid_project
       end
 
+      after :each do
+        setVar("aws_instance_role", "false")
+        create_session(@project[:username], "Pass123")
+      end
+
       it "should be able to add hopsfs connector to the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
@@ -53,16 +58,15 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to add s3 connector to the featurestore without encryption information" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
-            "testbucket")
+        json_result, connector_name = create_s3_connector(project.id, featurestore_id,
+                                                          bucket: "testbucket",
+                                                          access_key: "access_key",
+                                                          secret_key: "secret_key")
 
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -77,20 +81,11 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should not be able to add s3 connector without providing the access and secret key if the IAM Role is set to false" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        access_key = nil
-        secret_key = nil
-        with_access_and_secret_key = false
-        json_result, connector_name = create_s3_connector_with_or_without_access_key_and_secret_key(project.id, featurestore_id,
-                                                                                                    with_access_and_secret_key,
-                                                                                                    access_key, secret_key,
-                                                                                                    bucket: "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -102,16 +97,9 @@ describe "On #{ENV['OS']}" do
         project = get_project
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        access_key = nil
-        secret_key = nil
-        with_access_and_secret_key = false
-        json_result, connector_name = create_s3_connector_with_or_without_access_key_and_secret_key(project.id, featurestore_id,
-                                                                                                    with_access_and_secret_key,
-                                                                                                    access_key, secret_key,
-                                                                                                    bucket: "testbucket")
+        json_result, connector_name = create_s3_connector(project.id, featurestore_id, bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -123,24 +111,19 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == connector_name).to be true
         expect(parsed_json["storageConnectorType"] == "S3").to be true
         expect(parsed_json["bucket"] == "testbucket").to be true
+        setVar("aws_instance_role", "false")
+        create_session(project[:username], "Pass123")
       end
 
       it "should be able to add s3 connector to the featurestore with encryption algorithm but no key" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
-        encryption_algorithm = "AES256"
-        encryption_key = nil
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = false;
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                          encryption_algorithm, encryption_key, secret_key,
-                                                                          access_key, bucket: "testbucket")
+        json_result, connector_name = create_s3_connector(project.id, featurestore_id,
+                                                          encryption_algorithm: "AES256",
+                                                          secret_key: "test", access_key: "test",
+                                                          bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -152,26 +135,22 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["name"] == connector_name).to be true
         expect(parsed_json["storageConnectorType"] == "S3").to be true
         expect(parsed_json["bucket"] == "testbucket").to be true
-        expect(parsed_json["serverEncryptionAlgorithm"] == encryption_algorithm).to be true
+        expect(parsed_json["serverEncryptionAlgorithm"] == "AES256").to be true
         expect(parsed_json["serverEncryptionKey"] == nil).to be true
       end
 
       it "should be able to add s3 connector to the featurestore with encryption algorithm and with encryption key" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
         encryption_algorithm = "SSE-KMS"
         encryption_key = "Test"
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = true;
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                          encryption_algorithm, encryption_key,access_key,
-                                                                          secret_key, bucket: "testbucket")
+        json_result, connector_name = create_s3_connector(project.id, featurestore_id,
+                                                          encryption_algorithm: encryption_algorithm,
+                                                          encryption_key: encryption_key,
+                                                          access_key: "test", secret_key: "test",
+                                                          bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("id")).to be true
         expect(parsed_json.key?("name")).to be true
         expect(parsed_json.key?("description")).to be true
@@ -188,13 +167,9 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be able to share access keys for s3 connector : for members belonging to same project" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        project_id = project.id
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
-            "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test", bucket: "testbucket")
 
         parsed_json = JSON.parse(json_result)
         member = create_user
@@ -203,21 +178,19 @@ describe "On #{ENV['OS']}" do
         reset_session
         create_session(member[:email],"Pass123")
 
-        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/" + project_id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
+        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         parsed_json1 = JSON.parse(json_result1)
         expect_status_details(200)
         expect(parsed_json1["name"] == connector_name).to be true
-        setVar("aws_instance_role", "false")
+        expect(parsed_json1["accessKey"]).to eql("test")
+        expect(parsed_json1["secretKey"]).to eql("test")
       end
 
-      it "should be able to share s3 connector between shared projects" do
-        setVar("aws_instance_role", "false")
+      it "should be able to share s3 connector between shared projects - without sharing the secret key" do
         project = get_project
-        project_id = project.id
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
-            "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id, access_key: "test",
+                                             secret_key: "test", bucket: "testbucket")
 
         parsed_json = JSON.parse(json_result)
         connector_name = parsed_json["name"]
@@ -234,94 +207,65 @@ describe "On #{ENV['OS']}" do
         #login with user for project 1 and accept dataset
         create_session(project1[:username],"Pass123")
         accept_dataset(project1, "#{@project[:projectname]}::#{featurestore}", datasetType: "&type=FEATURESTORE")
-        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/" + project1.id.to_s + "/featurestores/" +
-                               featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
-        parsed_json1 = JSON.parse(json_result1)
+
+        json_result1 = get "#{ENV['HOPSWORKS_API']}/project/#{project1.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         expect_status_details(200)
+        parsed_json1 = JSON.parse(json_result1)
         expect(parsed_json1["name"] == connector_name).to be true
-        setVar("aws_instance_role", "false")
+        expect(parsed_json1["accessKey"]).to be nil
       end
 
       it "should not be able to add s3 connector to the featurestore with wrong encryption algorithm" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
-        encryption_algorithm = "WRONG-ALGORITHM"
-        encryption_key = "Test"
-        access_key = "test"
-        secret_key = "test"
         with_encryption_key = true;
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                          encryption_algorithm, encryption_key,
-                                                                          access_key, secret_key,
-                                                                          bucket: "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id, encryption_algorithm: "WRONG-ALGORITHM",
+                                             access_key: "test", secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
-        setVar("aws_instance_role", "false")
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
         expect(parsed_json["errorCode"] == 270104).to be true
       end
 
-      it "should not be able to add s3 connector to the featurestore with encryption key provided but no
-        encryption algorithm" do
-        setVar("aws_instance_role", "false")
+      it "should not be able to add s3 connector to the featurestore with encryption key provided but no encryption algorithm" do
         project = get_project
-        create_session(project[:username], "Pass123")
         encryption_algorithm = ""
         encryption_key = "Test"
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = true;
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                          encryption_algorithm, encryption_key,
-                                                                          access_key, secret_key,
-                                                                          bucket: "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id,
+                                             encryption_algorithm: encryption_algorithm,
+                                             encryption_key: encryption_key,
+                                             access_key: "test", secret_key: "test",
+                                             bucket: "testbucket")
+
         parsed_json = JSON.parse(json_result)
         expect_status(400)
-        setVar("aws_instance_role", "false")
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
         expect(parsed_json["errorCode"] == 270104).to be true
       end
 
-      it "should be not able to add s3 connector to the featurestore with wrong server key and access key pair" do
-        setVar("aws_instance_role", "false")
+      it "should be not able to add s3 connector to the featurestore without access key" do
         project = get_project
-        create_session(project[:username], "Pass123")
-        encryption_algorithm = "SSE-KMS"
-        encryption_key = "Test"
-        secret_key = "test"
-        access_key = nil
-        with_encryption_key = true;
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                          encryption_algorithm, encryption_key,
-                                                                          access_key, secret_key,
-                                                                          bucket: "testbucket")
+        json_result, _ = create_s3_connector(project.id, featurestore_id, secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(400)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
       end
 
       it "should not be able to add s3 connector to the featurestore without specifying a bucket" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket: nil)
+        json_result, _ = create_s3_connector(project.id, featurestore_id,
+                                             access_key: "test", secret_key: "test", bucket: nil)
         parsed_json = JSON.parse(json_result)
         expect_status(400)
-        setVar("aws_instance_role", "false")
         expect(parsed_json.key?("errorCode")).to be true
         expect(parsed_json.key?("errorMsg")).to be true
         expect(parsed_json.key?("usrMsg")).to be true
@@ -330,7 +274,6 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to add jdbc connector to the featurestore" do
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
         json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         parsed_json = JSON.parse(json_result)
@@ -349,9 +292,8 @@ describe "On #{ENV['OS']}" do
 
       it "should not be able to add jdbc connector without a connection string to the featurestore" do
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: nil)
+        json_result, _ = create_jdbc_connector(project.id, featurestore_id, connectionString: nil)
         parsed_json = JSON.parse(json_result)
         expect_status(400)
         expect(parsed_json.key?("errorCode")).to be true
@@ -362,13 +304,12 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to delete a hopsfs connector from the featurestore" do
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
+        json_result, _ = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
         connector_name = parsed_json["name"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/HOPSFS/" + connector_name
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -377,12 +318,12 @@ describe "On #{ENV['OS']}" do
         project = get_project
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result, connector_name = create_s3_connector_without_encryption(project.id, featurestore_id, bucket:
-            "testbucket")
+        json_result, connector_name = create_s3_connector(project.id, featurestore_id, access_key: "test",
+                                                       secret_key: "test", bucket: "testbucket")
         parsed_json = JSON.parse(json_result)
         expect_status(201)
         connector_name = parsed_json["name"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/S3/" + connector_name
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -395,7 +336,7 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         expect_status(201)
         connector_name = parsed_json["name"]
-        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/" + project.id.to_s + "/featurestores/" + featurestore_id.to_s + "/storageconnectors/JDBC/" + connector_name
+        delete_connector_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/storageconnectors/#{connector_name}"
         delete delete_connector_endpoint
         expect_status(200)
       end
@@ -404,11 +345,10 @@ describe "On #{ENV['OS']}" do
         project = get_project
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result1, connector_name1 = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
-        parsed_json1 = JSON.parse(json_result1)
+        json_result1, connector_name = create_hopsfs_connector(project.id, featurestore_id, datasetName: "Resources")
         expect_status(201)
-        connector_name = parsed_json1["name"]
-        json_result2, connector_name2 = update_hopsfs_connector(project.id, featurestore_id, connector_name, datasetName: "Experiments")
+
+        json_result2, _ = update_hopsfs_connector(project.id, featurestore_id, connector_name, datasetName: "Experiments")
         parsed_json2 = JSON.parse(json_result2)
         expect(parsed_json2.key?("id")).to be true
         expect(parsed_json2.key?("name")).to be true
@@ -417,66 +357,45 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json2.key?("featurestoreId")).to be true
         expect(parsed_json2.key?("datasetName")).to be true
         expect(parsed_json2.key?("hopsfsPath")).to be true
-        expect(parsed_json2["name"] == connector_name2).to be true
+        expect(parsed_json2["name"] == connector_name).to be true
         expect(parsed_json2["storageConnectorType"] == "HOPSFS").to be true
         expect(parsed_json2["datasetName"] == "Experiments").to be true
       end
 
       it "should fail to update connector name" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
-        featurestore_id = get_featurestore_id(project.id)
         s3_connector_name = "s3_connector_#{random_id}"
-        with_access_keys = true
-        encryption_algorithm = "AES256"
-        encryption_key = ""
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = true;
         featurestore_id = get_featurestore_id(project.id)
-        json_result1, connector_name1 = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                            encryption_algorithm, encryption_key,
-                                                                            access_key, secret_key,
-                                                                            bucket: "testbucket")
-
-        parsed_json1 = JSON.parse(json_result1)
+        _, connector_name = create_s3_connector(project.id, featurestore_id,
+                                                           encryption_algorithm: "AES256",
+                                                           access_key: "test", secret_key: "test",
+                                                           bucket: "testbucket")
         expect_status(201)
-        connector_name = parsed_json1["name"]
 
-        update_s3_connector(project.id, featurestore_id, connector_name, s3_connector_name, with_access_keys, bucket:
-        "testbucket2")
+        update_s3_connector(project.id, featurestore_id, s3_connector_name,
+                            access_key: "testdifferent", secret_key: "test",
+                            bucket: "testbucket1")
         expect_status_details(400)
-        get_storage_connector_by_name(project.id, featurestore_id, "S3", connector_name)
+        json_result = get_storage_connector(project.id, featurestore_id, connector_name)
         expect_status_details(200)
-        expect(json_body[:name]).to eq connector_name
-        setVar("aws_instance_role", "false")
+        json_body = JSON.parse(json_result)
+        expect(json_body["name"]).to eql(connector_name)
       end
 
       it "should be able to update S3 connector in the featurestore: provide same connector name" do
-        setVar("aws_instance_role", "false")
         project = get_project
-        create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        with_access_keys = true
-        encryption_algorithm = "AES256"
-        encryption_key = ""
-        access_key = "test"
-        secret_key = "test"
-        with_encryption_key = true;
-        featurestore_id = get_featurestore_id(project.id)
-        json_result1, connector_name1 = create_s3_connector_with_encryption(project.id, featurestore_id, with_encryption_key,
-                                                                            encryption_algorithm, encryption_key,
-                                                                            access_key, secret_key,
-                                                                            bucket: "testbucket")
+        json_result1, connector_name = create_s3_connector(project.id, featurestore_id,
+                                                            encryption_algorithm: "AES256",
+                                                            access_key: "test", secret_key: "test",
+                                                            bucket: "testbucket")
 
         parsed_json1 = JSON.parse(json_result1)
         expect_status(201)
-        connector_name = parsed_json1["name"]
-        s3_connector_name = connector_name1
-        json_result2, connector_name2 = update_s3_connector(project.id, featurestore_id, connector_name,
-                                                            s3_connector_name, with_access_keys, bucket:
-                                                                "testbucket2")
+
+        json_result2, _ = update_s3_connector(project.id, featurestore_id, connector_name,
+                                                            access_key: "testdifferent", secret_key: "test",
+                                                            bucket: "testbucket2")
         parsed_json2 = JSON.parse(json_result2)
 
         expect(parsed_json2.key?("id")).to be true
@@ -486,22 +405,19 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json2.key?("featurestoreId")).to be true
         expect(parsed_json2.key?("bucket")).to be true
         expect(parsed_json2.key?("secretKey")).to be true
-        expect(parsed_json2.key?("accessKey")).to be true
-        expect(parsed_json2["name"] == connector_name2).to be true
+        expect(parsed_json2["name"] == connector_name).to be true
         expect(parsed_json2["storageConnectorType"] == "S3").to be true
         expect(parsed_json2["bucket"] == "testbucket2").to be true
-        setVar("aws_instance_role", "false")
+        expect(parsed_json2["accessKey"]).to eql("testdifferent")
       end
 
       it "should be able to update JDBC connector in the featurestore" do
         project = get_project
         create_session(project[:username], "Pass123")
         featurestore_id = get_featurestore_id(project.id)
-        json_result1, connector_name1 = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
-        parsed_json1 = JSON.parse(json_result1)
+        json_result1, connector_name = create_jdbc_connector(project.id, featurestore_id, connectionString: "jdbc://test2")
         expect_status(201)
-        connector_name = parsed_json1["name"]
-        json_result2, connector_name2 = update_jdbc_connector(project.id, featurestore_id, connector_name, connectionString: "jdbc://test3")
+        json_result2 = update_jdbc_connector(project.id, featurestore_id, connector_name, connectionString: "jdbc://test3")
         parsed_json2 = JSON.parse(json_result2)
         expect(parsed_json2.key?("id")).to be true
         expect(parsed_json2.key?("name")).to be true
@@ -510,7 +426,7 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json2.key?("featurestoreId")).to be true
         expect(parsed_json2.key?("connectionString")).to be true
         expect(parsed_json2.key?("arguments")).to be true
-        expect(parsed_json2["name"] == connector_name2).to be true
+        expect(parsed_json2["name"] == connector_name).to be true
         expect(parsed_json2["storageConnectorType"] == "JDBC").to be true
         expect(parsed_json2["connectionString"] == "jdbc://test3").to be true
       end
@@ -519,7 +435,8 @@ describe "On #{ENV['OS']}" do
         # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
         connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
         featurestore_id = get_featurestore_id(@project['id'])
-        connector = get_jdbc_storate_connector(@project['id'], featurestore_id, connector_name)
+        connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
+        connector = JSON.parse(connector_json)
 
         expect(connector['connectionString']).to match(/jdbc:mysql:\/\/\d{1,3}\.\d{1,3}\.\d{1,3}.\d{1,3}/)
       end
@@ -527,9 +444,10 @@ describe "On #{ENV['OS']}" do
       it "online storage connector connection string should be stored with consul name in the database" do
         # Storage connector looks like this: [project name]_[username]_onlinefeaturestore
         connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
-        connector_db = FeatureStoreJDBCConnector.find_by(name: connector_name)
+        connector_db = FeatureStoreConnector.find_by(name: connector_name)
+        jdbc_connector_db = FeatureStoreJDBCConnector.find_by(id: connector_db.jdbc_id)
 
-        expect(connector_db.connection_string).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
+        expect(jdbc_connector_db[:connection_string]).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
       end
     end
   end

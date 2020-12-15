@@ -17,7 +17,7 @@
 package io.hops.hopsworks.common.featurestore.trainingdatasets.hopsfs;
 
 import io.hops.hopsworks.common.dao.AbstractFacade;
-import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.hopsfs.FeaturestoreHopsfsConnector;
+import io.hops.hopsworks.persistence.entity.featurestore.storageconnector.FeaturestoreConnector;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.hopsfs.HopsfsTrainingDataset;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 
@@ -45,10 +45,10 @@ public class HopsfsTrainingDatasetFacade extends AbstractFacade<HopsfsTrainingDa
    * @param inode
    * @return
    */
-  public HopsfsTrainingDataset createHopsfsTrainingDataset(FeaturestoreHopsfsConnector connector, Inode inode) {
+  public HopsfsTrainingDataset createHopsfsTrainingDataset(FeaturestoreConnector connector, Inode inode) {
     HopsfsTrainingDataset hopsfsTrainingDataset = new HopsfsTrainingDataset();
     hopsfsTrainingDataset.setInode(inode);
-    hopsfsTrainingDataset.setFeaturestoreHopsfsConnector(connector);
+    hopsfsTrainingDataset.setFeaturestoreConnector(connector);
     em.persist(hopsfsTrainingDataset);
     em.flush();
     return hopsfsTrainingDataset;
