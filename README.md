@@ -121,6 +121,10 @@ If you want to build Hopsworks-enterprise with support for Kubernetes you should
 mvn clean install -Pkube
 ``` 
 
+#### Hopsworks IDE Plugin
+
+To work with the Hopsworks IDE plugin for IntelliJ/PyCharm, you can install it directly from the plugins menu of the IDE or clone the source at https://github.com/logicalclocks/hopsworks-ide-plugins and follow the README.
+
 ## Front-end Development
 The javascript produced by building maven is obsfuscated. For debugging javascript, we recommend that you use the following script
 to deploy changes to HTML or javascript to your vagrant machine:
