@@ -113,7 +113,7 @@ You can also build Hopsworks without the frontend (for Java EE development and t
 mvn install -P-web
 ```
 
-#### Hopsworks IDE Plugin
+### Hopsworks IDE Plugin
 
 To work with the Hopsworks IDE plugin for IntelliJ/PyCharm, you can install it directly from the plugins menu of the IDE or clone the source at https://github.com/logicalclocks/hopsworks-ide-plugins and follow the README.
 
