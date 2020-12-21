@@ -165,7 +165,7 @@ public class KafkaResource {
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   public Response createTopic(TopicDTO topicDto, @Context UriInfo uriInfo, @Context SecurityContext sc)
     throws KafkaException, ProjectException, UserException {
-    kafkaController.createTopic(project, topicDto, uriInfo);
+    kafkaController.createTopic(project, topicDto);
     URI uri = uriInfo.getAbsolutePathBuilder().path(topicDto.getName()).build();
     topicDto.setHref(uri);
     return Response.created(uri).entity(topicDto).build();
@@ -643,7 +643,8 @@ public class KafkaResource {
   @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
   @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
   @ApiKeyRequired(acceptedScopes = {ApiScope.KAFKA}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  public Response getTopicSubject(@PathParam("topic") String topic, @Context SecurityContext sc) throws KafkaException {
+  public Response getTopicSubject(@PathParam("topic") String topic, @Context SecurityContext sc) throws KafkaException,
+      ProjectException {
     SubjectDTO subjectDTO = kafkaController.getSubjectForTopic(project, topic);
     return Response.ok().entity(subjectDTO).build();
   }

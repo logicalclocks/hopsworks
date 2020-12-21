@@ -138,6 +138,36 @@ describe "On #{ENV['OS']}" do
         delete_topic(project.id, topic)
         expect_status(204)
       end
+
+      it "should be able to share the topic with another project and get the schema" do
+        with_kafka_topic(@project[:id])
+        org_project = get_project
+
+        # create the target project
+        target_project = create_project
+        topic = get_topic
+        share_topic(org_project, topic, target_project)
+        expect_status(201)
+
+        # Check that the topic has been shared correctly
+        get_shared_topics(target_project.id)
+        expect(json_body[:items].count).to eq 1
+
+        # Get the topic's schema from the target_project
+        get_topic_subject_details(target_project, topic)
+        expect_status(200)
+      end
+      it "should not be able to get the schema of a non-shared topic" do
+        with_kafka_topic(@project[:id])
+
+        # create the target project
+        target_project = create_project
+        topic = get_topic
+
+        # Get the topic's schema from the target_project
+        get_topic_subject_details(target_project, topic)
+        expect_status(404)
+      end
     end
 
     context 'with valid project, kafka service enabled, a kafka schema, and multiple kafka topics' do
