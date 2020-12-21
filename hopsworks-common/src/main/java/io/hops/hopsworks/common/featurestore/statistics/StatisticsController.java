@@ -16,7 +16,6 @@
 
 package io.hops.hopsworks.common.featurestore.statistics;
 
-import io.hops.hopsworks.common.dao.dataset.DatasetFacade;
 import io.hops.hopsworks.common.dataset.DatasetController;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -37,6 +36,8 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.hadoop.fs.Path;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -60,8 +61,6 @@ public class StatisticsController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private FeaturestoreStatisticFacade featurestoreStatisticFacade;
-  @EJB
-  private DatasetFacade datasetFacade;
 
   public String readStatisticsContent(Project project, Users user, FeaturestoreStatistic statistic)
       throws FeaturestoreException {
@@ -80,9 +79,20 @@ public class StatisticsController {
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, String commitTime, String content,
-    Featuregroup featuregroup) throws DatasetException, HopsSecurityException, IOException {
-    Inode statisticsInode = registerStatistics(project, user, commitTime, content, featuregroup.getName(),
-      "FeatureGroups", featuregroup.getVersion());
+    Featuregroup featuregroup) throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
+    // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
+    // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
+    // potentially other errors
+    JSONObject statisticsJson = null;
+    try {
+      statisticsJson = new JSONObject(content);
+    } catch (JSONException jex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
+          Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
+    }
+
+    Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
+        featuregroup.getName(), "FeatureGroups", featuregroup.getVersion());
     FeaturestoreStatistic featurestoreStatistic =
       new FeaturestoreStatistic(commitTime, statisticsInode, featuregroup);
     featurestoreStatisticFacade.persist(featurestoreStatistic);
