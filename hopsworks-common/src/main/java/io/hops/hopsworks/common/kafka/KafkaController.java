@@ -41,37 +41,37 @@ package io.hops.hopsworks.common.kafka;
 
 import com.google.common.base.Strings;
 import io.hops.hopsworks.common.dao.certificates.CertsFacade;
-import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
 import io.hops.hopsworks.common.dao.kafka.AclDTO;
 import io.hops.hopsworks.common.dao.kafka.AclUser;
 import io.hops.hopsworks.common.dao.kafka.HopsKafkaAdminClient;
 import io.hops.hopsworks.common.dao.kafka.KafkaConst;
 import io.hops.hopsworks.common.dao.kafka.PartitionDetailsDTO;
-import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
 import io.hops.hopsworks.common.dao.kafka.ProjectTopicsFacade;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
-import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
-import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.kafka.SharedProjectDTO;
-import io.hops.hopsworks.persistence.entity.kafka.SharedTopics;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsDTO;
 import io.hops.hopsworks.common.dao.kafka.SharedTopicsFacade;
-import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
+import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
 import io.hops.hopsworks.common.dao.kafka.TopicDTO;
 import io.hops.hopsworks.common.dao.kafka.TopicDefaultValueDTO;
-import io.hops.hopsworks.common.dao.kafka.TopicAclsFacade;
-import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectDTO;
+import io.hops.hopsworks.common.dao.kafka.schemas.SubjectsFacade;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.common.dao.user.UserFacade;
-import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.project.ProjectController;
+import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.KafkaException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.SchemaException;
 import io.hops.hopsworks.exceptions.UserException;
+import io.hops.hopsworks.persistence.entity.certificates.UserCerts;
+import io.hops.hopsworks.persistence.entity.kafka.ProjectTopics;
+import io.hops.hopsworks.persistence.entity.kafka.SharedTopics;
+import io.hops.hopsworks.persistence.entity.kafka.TopicAcls;
+import io.hops.hopsworks.persistence.entity.kafka.schemas.Subjects;
+import io.hops.hopsworks.persistence.entity.project.Project;
+import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.restutils.RESTCodes;
-import io.hops.hopsworks.common.util.Settings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -80,6 +80,11 @@ import org.apache.kafka.common.Node;
 import org.apache.kafka.common.TopicPartitionInfo;
 import org.apache.zookeeper.KeeperException;
 
+import javax.ejb.EJB;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -98,12 +103,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
 @Stateless
 @TransactionAttribute(TransactionAttributeType.NEVER)
@@ -134,7 +133,7 @@ public class KafkaController {
   @EJB
   private KafkaBrokers kafkaBrokers;
   
-  public void createTopic(Project project, TopicDTO topicDto, UriInfo uriInfo) throws KafkaException,
+  public void createTopic(Project project, TopicDTO topicDto) throws KafkaException,
     ProjectException, UserException {
     
     if (topicDto == null) {
@@ -721,13 +720,23 @@ public class KafkaController {
     topicAclsFacade.remove(ta);
   }
   
-  public SubjectDTO getSubjectForTopic(Project project, String topic) throws KafkaException {
+  public SubjectDTO getSubjectForTopic(Project project, String topic) throws KafkaException, ProjectException {
     Optional<ProjectTopics> pt = projectTopicsFacade.findTopicByNameAndProject(project, topic);
     if (!pt.isPresent()) {
-      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
-        "project=" + project.getName() + ", topic=" + topic);
+      SharedTopics sharedTopic =
+        sharedTopicsFacade.findSharedTopicByProjectAndTopic(project.getId(), topic).orElseThrow(() ->
+          new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_SHARED, Level.FINE,
+            "topic: " + topic + ", project: " + project.getName()));
+      Project sharedWithProject =
+              projectFacade.findById(sharedTopic.getProjectId())
+                      .orElseThrow(() -> new ProjectException(RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND,
+                              Level.FINE, "projectId: " + sharedTopic.getSharedTopicsPK().getProjectId()));
+      pt = projectTopicsFacade.findTopicByNameAndProject(sharedWithProject, topic);
     }
-    
+    if (!pt.isPresent()) {
+      throw new KafkaException(RESTCodes.KafkaErrorCode.TOPIC_NOT_FOUND, Level.FINE,
+              "project=" + project.getName() + ", topic=" + topic);
+    }
     return new SubjectDTO(pt.get().getSubjects());
   }
   
