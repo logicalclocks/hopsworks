@@ -176,18 +176,15 @@ public abstract class DockerRegistryMngrImpl implements DockerRegistryMngr {
             .addCommand(prog)
             .addCommand("delete")
             .addCommand(projectDockerImageNoTags)
-            .addCommand(tag)
             .redirectErrorStream(true)
-            .setWaitTimeout(5, TimeUnit.MINUTES)
+            .setWaitTimeout(1, TimeUnit.MINUTES)
             .build();
   
         ProcessResult processResult =
             osProcessExecutor.execute(processDescriptor);
         if (processResult.getExitCode() != 0) {
           throw new IOException("Could not delete the docker image. Exit code: " +
-              processResult.getExitCode()
-              + " out: " + processResult.getStdout() + "\n err: " +
-              processResult.getStderr());
+              processResult.getExitCode() + " out: " + processResult.getStdout());
         }
       }
     }
