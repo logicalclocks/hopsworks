@@ -1129,8 +1129,8 @@ describe "On #{ENV['OS']}" do
         parsed_json = JSON.parse(json_result)
         expect_status(200)
 
-        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"] == true)
-        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"] == true)
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"]).to be true
       end
     end
   end

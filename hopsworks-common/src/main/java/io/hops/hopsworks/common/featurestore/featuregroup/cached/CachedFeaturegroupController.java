@@ -404,19 +404,21 @@ public class CachedFeaturegroupController {
       offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
 
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
+    boolean primary;
+    String defaultValue;
     // Add all the columns - if there is a primary key constraint, set the primary key flag
     for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
-      boolean primary = featureExtraConstraints.stream().anyMatch(pk ->
-          pk.getName().equals(hc.getHiveColumnsPK().getColumnName()));
-      String defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
+      primary = getPrimaryFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
+      defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
           hc.getComment(), primary, defaultValue));
     }
     // Hive stores the partition columns separately. Add them
     for (HivePartitionKeys pk : hiveTable.getHivePartitionKeysCollection()) {
-      String defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
+      primary = getPrimaryFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName());
+      defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
-        pk.getPkeyType(), pk.getPkeyComment(), false, true, defaultValue));
+        pk.getPkeyType(), pk.getPkeyComment(), primary, true, defaultValue));
     }
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
@@ -428,6 +430,10 @@ public class CachedFeaturegroupController {
   private String getDefaultValue(List<SQLDefaultConstraint> defaultConstraints, String columnName) {
     return defaultConstraints.stream().filter(constraint -> constraint.getColumn_name().equals(columnName))
       .map(SQLDefaultConstraint::getDefault_value).findAny().orElse(null);
+  }
+
+  private boolean getPrimaryFlag(Collection<CachedFeatureExtraConstraints> featureExtraConstraints, String columnName) {
+    return featureExtraConstraints.stream().anyMatch(pk -> pk.getName().equals(columnName));
   }
 
   /**
