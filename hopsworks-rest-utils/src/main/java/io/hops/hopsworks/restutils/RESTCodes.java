@@ -1515,7 +1515,8 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     KEYWORD_FORMAT_ERROR(134, "Keyword format error", Response.Status.BAD_REQUEST),
     REDSHIFT_CONNECTOR_NOT_FOUND(135, "Redshift Connector not found", Response.Status.BAD_REQUEST),
-    ILLEGAL_STORAGE_CONNECTOR_ARG(136, "Illegal storage connector argument", Response.Status.BAD_REQUEST);
+    ILLEGAL_STORAGE_CONNECTOR_ARG(136, "Illegal storage connector argument", Response.Status.BAD_REQUEST),
+    ERROR_SAVING_STATISTICS(137, "Error saving statistics", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;
