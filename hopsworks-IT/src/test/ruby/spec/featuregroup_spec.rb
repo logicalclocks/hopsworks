@@ -1009,9 +1009,9 @@ describe "On #{ENV['OS']}" do
         expect_status(200)
         expect(parsed_json["hudiCachedFeatureGroups"].length).to eql(2)
         expect(parsed_json["hudiCachedFeatureGroups"][0]["leftFeatureGroupEndTimestamp"]).to eql(1603577485000)
-        expect(parsed_json["hudiCachedFeatureGroups"][0]["alias"]).to eql("fg0")
+        expect(parsed_json["hudiCachedFeatureGroups"][0]["alias"]).to eql("fg1")
         expect(parsed_json["hudiCachedFeatureGroups"][1]["leftFeatureGroupEndTimestamp"]).to eql(1603577486000)
-        expect(parsed_json["hudiCachedFeatureGroups"][1]["alias"]).to eql("fg1")
+        expect(parsed_json["hudiCachedFeatureGroups"][1]["alias"]).to eql("fg0")
       end
 
       it "should not allow range queries for join of hudi enabled cached featuregroups" do
@@ -1077,6 +1077,77 @@ describe "On #{ENV['OS']}" do
 
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"]).to be true
+      end
+
+      it "should be able to construct a SQL string from a query object with joins and filters" do
+        project_name = @project.projectname
+        featurestore_id = get_featurestore_id(@project.id)
+        featurestore_name = get_featurestore_name(@project.id)
+        features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "a_testfeature1"},
+        ]
+        fg_a_name = "test_fg_#{short_random_id}"
+        fg_id = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_a_name, features: features)
+        # create second feature group
+        features = [
+            {type: "INT", name: "a_testfeature", primary: true},
+            {type: "INT", name: "b_testfeature1"},
+            {type: "INT", name: "b_testfeature2"}
+        ]
+        fg_b_name = "test_fg_#{short_random_id}"
+        fg_id_b = create_cached_featuregroup_checked(@project.id, featurestore_id, fg_b_name, features: features)
+        # create queryDTO object
+        query = {
+            leftFeatureGroup: {
+                id: fg_id
+            },
+            leftFeatures: [{name: 'a_testfeature'}, {name: 'a_testfeature1'}],
+            joins: [{
+                        query: {
+                            leftFeatureGroup: {
+                                id: fg_id_b
+                            },
+                            leftFeatures: [{name: 'a_testfeature'}, {name: 'b_testfeature1'}],
+                            filter: {
+                                type: "SINGLE",
+                                leftFilter: {
+                                    feature: {name: "b_testfeature2", featureGroupId: fg_id_b},
+                                    condition: "EQUALS",
+                                    value: "10"
+                                }
+                            }
+                        }
+                    }
+            ],
+            filter: {
+                type: "OR",
+                leftFilter: {
+                    feature: {name: "a_testfeature", featureGroupId: fg_id},
+                    condition: "EQUALS",
+                    value: "10"
+                },
+                rightFilter: {
+                    feature: {name: "b_testfeature1"},
+                    condition: "EQUALS",
+                    value: "10"
+                }
+            }
+        }
+
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project.id}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+
+        expect(query['query']).to eql("SELECT `fg1`.`a_testfeature`, `fg1`.`a_testfeature1`, `fg0`.`b_testfeature1`\n" +
+                                          "FROM `#{project_name.downcase}_featurestore`.`#{fg_a_name}_1` `fg1`\n" +
+                                          "INNER JOIN `#{project_name.downcase}_featurestore`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature`\n" +
+                                          "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
+
+        expect(query['queryOnline']).to eql("SELECT `fg1`.`a_testfeature`, `fg1`.`a_testfeature1`, `fg0`.`b_testfeature1`\n" +
+                                                "FROM `#{project_name.downcase}`.`#{fg_a_name}_1` `fg1`\n" +
+                                                "INNER JOIN `#{project_name.downcase}`.`#{fg_b_name}_1` `fg0` ON `fg1`.`a_testfeature` = `fg0`.`a_testfeature`\n" +
+                                                "WHERE (`fg1`.`a_testfeature` = 10 OR `fg0`.`b_testfeature1` = 10) AND `fg0`.`b_testfeature2` = 10")
       end
     end
   end
@@ -1441,9 +1512,60 @@ describe "On #{ENV['OS']}" do
         query = JSON.parse(json_result)
         expect(query.key?("onDemandFeatureGroups")).to be true
 
-        expect(query['query']).to eql("SELECT `fg0`.`anotherfeature`\n" +
-        "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg0`\n" +
-        "INNER JOIN `fg1` ON `fg0`.`testfeature` = `fg1`.`testfeature`")
+        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`\n" +
+        "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
+        "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`")
+      end
+
+      it "should be able to generate a query with on-demand and cached feature groups and filters for both" do
+        featurestore_id = get_featurestore_id(@project[:id])
+        featurestore_name = get_featurestore_name(@project.id)
+        connector_id = get_jdbc_connector_id
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true}]
+        json_result, _ = create_on_demand_featuregroup(@project[:id], featurestore_id, connector_id, features: features)
+        expect_status(201)
+        parsed_json = JSON.parse(json_result)
+        fg_ond_id = parsed_json["id"]
+
+        features = [{type: "INT", name: "testfeature", description: "testfeaturedescription", primary: true},
+                    {type: "INT", name: "anotherfeature", primary: false}]
+        json_result, fg_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features)
+        parsed_json = JSON.parse(json_result)
+        fg_cached_id = parsed_json["id"]
+
+        query = {
+            leftFeatureGroup: {id: fg_cached_id},
+            leftFeatures: [{name: 'anotherfeature'}],
+            joins: [{query: {
+                leftFeatureGroup: {id: fg_ond_id},
+                leftFeatures: [{name: 'testfeature'}],
+                filter: {
+                    type: "SINGLE",
+                    leftFilter: {
+                        feature: {name: "testfeature", featureGroupId: fg_ond_id},
+                        condition: "EQUALS",
+                        value: "10"
+                    }
+                }
+            }}],
+            filter: {
+                type: "SINGLE",
+                leftFilter: {
+                    feature: {name: "anotherfeature", featureGroupId: fg_cached_id},
+                    condition: "EQUALS",
+                    value: "10"
+                }
+            }
+        }
+        json_result = put "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/featurestores/query", query
+        expect_status_details(200)
+        query = JSON.parse(json_result)
+        expect(query.key?("onDemandFeatureGroups")).to be true
+
+        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`\n" +
+                                          "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
+                                          "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`\n" +
+                                          "WHERE `fg1`.`anotherfeature` = 10 AND `fg0`.`testfeature` = 10")
       end
 
       it "should be able to attach a tag to a on-demand feature group" do

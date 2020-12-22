@@ -246,8 +246,7 @@ public class CachedFeaturegroupController {
                                                            Users user, String partition, int limit)
       throws FeaturestoreException, HopsSecurityException, SQLException {
     String tbl = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(
-        featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup, project, user);
 
     // This is not great, but at the same time the query runs as the user.
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
@@ -362,9 +361,7 @@ public class CachedFeaturegroupController {
   public CachedFeaturegroupDTO convertCachedFeaturegroupToDTO(Featuregroup featuregroup, Project project, Users user)
       throws FeaturestoreException, ServiceException {
     CachedFeaturegroupDTO cachedFeaturegroupDTO = new CachedFeaturegroupDTO(featuregroup);
-    HiveTbls hiveTable = featuregroup.getCachedFeaturegroup().getHiveTbls();
-    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS =
-      getFeaturesDTO(featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
+    List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = getFeaturesDTO(featuregroup, project, user);
 
     if (settings.isOnlineFeaturestore() && featuregroup.getCachedFeaturegroup().isOnlineEnabled()) {
       cachedFeaturegroupDTO.setOnlineEnabled(true);
@@ -384,24 +381,28 @@ public class CachedFeaturegroupController {
     cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
             .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
 
-    cachedFeaturegroupDTO.setDescription(hiveTable.getHiveTableParamsCollection().stream()
+    cachedFeaturegroupDTO.setDescription(
+      featuregroup.getCachedFeaturegroup().getHiveTbls().getHiveTableParamsCollection().stream()
         .filter(p -> p.getHiveTableParamsPK().getParamKey().equalsIgnoreCase("COMMENT"))
         .map(HiveTableParams::getParamValue)
         .findFirst()
         .orElse("")
     );
 
-    cachedFeaturegroupDTO.setLocation(featurestoreUtils.resolveLocationURI(hiveTable.getSdId().getLocation()));
+    cachedFeaturegroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
+      featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
     return cachedFeaturegroupDTO;
   }
 
-  public List<FeatureGroupFeatureDTO> getFeaturesDTO(CachedFeaturegroup cachedFeaturegroup, Featurestore featurestore,
-                                                     Project project, Users user) throws FeaturestoreException {
+  public List<FeatureGroupFeatureDTO> getFeaturesDTO(Featuregroup featureGroup, Project project, Users user)
+      throws FeaturestoreException {
     Collection<CachedFeatureExtraConstraints> featureExtraConstraints =
-        cachedFeaturegroup.getFeaturesExtraConstraints();
-    HiveTbls hiveTable = cachedFeaturegroup.getHiveTbls();
+      featureGroup.getCachedFeaturegroup().getFeaturesExtraConstraints();
+    HiveTbls hiveTable = featureGroup.getCachedFeaturegroup().getHiveTbls();
+
     List<SQLDefaultConstraint> defaultConstraints =
-      offlineFeatureGroupController.getDefaultConstraints(featurestore, hiveTable.getTblName(), project, user);
+      offlineFeatureGroupController.getDefaultConstraints(featureGroup.getFeaturestore(), hiveTable.getTblName(),
+        project, user);
 
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     boolean primary;
@@ -411,16 +412,16 @@ public class CachedFeaturegroupController {
       primary = getPrimaryFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
       defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
-          hc.getComment(), primary, defaultValue));
+        hc.getComment(), primary, defaultValue, featureGroup.getId()));
     }
     // Hive stores the partition columns separately. Add them
     for (HivePartitionKeys pk : hiveTable.getHivePartitionKeysCollection()) {
       primary = getPrimaryFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
-        pk.getPkeyType(), pk.getPkeyComment(), primary, true, defaultValue));
+        pk.getPkeyType(), pk.getPkeyComment(), primary, true, defaultValue, featureGroup.getId()));
     }
-    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+    if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
       featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
     }
 
@@ -652,8 +653,7 @@ public class CachedFeaturegroupController {
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
     //Create MySQL Table for Online Feature Group
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
-    List<FeatureGroupFeatureDTO> features =
-      getFeaturesDTO(cachedFeaturegroup, featurestore, project, user);
+    List<FeatureGroupFeatureDTO> features = getFeaturesDTO(featuregroup, project, user);
     if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
       features = dropHudiSpecFeatureGroupFeature(features);
     }
@@ -702,8 +702,7 @@ public class CachedFeaturegroupController {
                              CachedFeaturegroupDTO cachedFeaturegroupDTO)
       throws FeaturestoreException, SQLException {
     CachedFeaturegroup cachedFeaturegroup = featuregroup.getCachedFeaturegroup();
-    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(cachedFeaturegroup, featuregroup.getFeaturestore(),
-        project, user);
+    List<FeatureGroupFeatureDTO> previousSchema = getFeaturesDTO(featuregroup, project, user);
     String tableName = getTblName(featuregroup.getName(), featuregroup.getVersion());
 
     // verify user input specific for cached feature groups - if any
