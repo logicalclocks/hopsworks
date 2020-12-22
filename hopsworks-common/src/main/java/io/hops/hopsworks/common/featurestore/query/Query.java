@@ -16,6 +16,7 @@
 
 package io.hops.hopsworks.common.featurestore.query;
 
+import io.hops.hopsworks.common.featurestore.query.filter.FilterLogic;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 
 import java.util.List;
@@ -44,6 +45,7 @@ public class Query {
   private List<Feature> availableFeatures;
 
   private List<Join> joins;
+  private FilterLogic filter;
 
   // For testing
   public Query() {
@@ -55,8 +57,9 @@ public class Query {
     this.featuregroup = featuregroup;
   }
 
+  // for testing
   public Query(String featureStore, String project, Featuregroup featuregroup, String as,
-               List<Feature> features, List<Feature> availableFeatures) {
+    List<Feature> features, List<Feature> availableFeatures) {
     this.featureStore = featureStore;
     this.project = project;
     this.featuregroup = featuregroup;
@@ -167,5 +170,13 @@ public class Query {
 
   public void setJoins(List<Join> joins) {
     this.joins = joins;
+  }
+  
+  public FilterLogic getFilter() {
+    return filter;
+  }
+  
+  public void setFilter(FilterLogic filter) {
+    this.filter = filter;
   }
 }

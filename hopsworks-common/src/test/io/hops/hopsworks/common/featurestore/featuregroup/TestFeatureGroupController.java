@@ -38,8 +38,8 @@ public class TestFeatureGroupController {
   @Before
   public void setup() {
     features = new ArrayList<>();
-    features.add(new FeatureGroupFeatureDTO("feature", "Integer", "", true, false, "10"));
-    features.add(new FeatureGroupFeatureDTO("feature2", "String", "", false, false, null));
+    features.add(new FeatureGroupFeatureDTO("feature", "Integer", "", true, false, "10", null));
+    features.add(new FeatureGroupFeatureDTO("feature2", "String", "", false, false, null, null));
   }
   
   @Test

@@ -1516,7 +1516,10 @@ public class RESTCodes {
     KEYWORD_FORMAT_ERROR(134, "Keyword format error", Response.Status.BAD_REQUEST),
     REDSHIFT_CONNECTOR_NOT_FOUND(135, "Redshift Connector not found", Response.Status.BAD_REQUEST),
     ILLEGAL_STORAGE_CONNECTOR_ARG(136, "Illegal storage connector argument", Response.Status.BAD_REQUEST),
-    ERROR_SAVING_STATISTICS(137, "Error saving statistics", Response.Status.BAD_REQUEST);
+    ERROR_SAVING_STATISTICS(137, "Error saving statistics", Response.Status.BAD_REQUEST),
+    FILTER_CONSTRUCTION_ERROR(138, "Failed to construct filter condition",
+      Response.Status.INTERNAL_SERVER_ERROR),
+    ILLEGAL_FILTER_ARGUMENTS(139, "Malformed filter conditions for Query", Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

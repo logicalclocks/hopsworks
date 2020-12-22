@@ -728,11 +728,10 @@ public class FeaturegroupController {
     throws FeaturestoreException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        return cachedFeaturegroupController.getFeaturesDTO(
-            featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(), project, user);
+        return cachedFeaturegroupController.getFeaturesDTO(featuregroup, project, user);
       case ON_DEMAND_FEATURE_GROUP:
         return featuregroup.getOnDemandFeaturegroup().getFeatures().stream()
-          .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary(), null))
+          .map(f -> new FeatureGroupFeatureDTO(f.getName(), f.getType(), f.getPrimary(), null, featuregroup.getId()))
           .collect(Collectors.toList());
     }
     return new ArrayList<>();

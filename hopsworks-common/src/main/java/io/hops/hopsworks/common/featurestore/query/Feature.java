@@ -20,15 +20,13 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 
 public class Feature {
   private String name;
-  private String featureGroup;
   private String fgAlias;
   private String type;
   private boolean primary;
   private String defaultValue;
 
-  public Feature(String name, String featureGroup, String fgAlias, String type, boolean primary, String defaultValue) {
+  public Feature(String name, String fgAlias, String type, boolean primary, String defaultValue) {
     this.name = name;
-    this.featureGroup = featureGroup;
     this.fgAlias = fgAlias;
     this.type = type;
     this.primary = primary;
@@ -44,9 +42,8 @@ public class Feature {
   }
 
   // For testing purposes
-  public Feature(String name, String featureGroup, String fgAlias, boolean primary) {
+  public Feature(String name, String fgAlias, boolean primary) {
     this.name = name;
-    this.featureGroup = featureGroup;
     this.fgAlias = fgAlias;
     this.primary = primary;
   }
@@ -74,14 +71,6 @@ public class Feature {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getFeatureGroup() {
-    return featureGroup;
-  }
-
-  public void setFeatureGroup(String featureGroup) {
-    this.featureGroup = featureGroup;
   }
 
   public String getFgAlias() {

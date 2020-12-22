@@ -26,16 +26,17 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.FeatureGroupCommit;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.cached.TimeTravelFormat;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
-import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.FeaturegroupType;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -57,7 +58,9 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -80,6 +83,8 @@ public class ConstructorController {
   private CachedFeaturegroupController cachedFeaturegroupController;
   @EJB
   private FeaturestoreUtils featurestoreUtils;
+  @EJB
+  private FilterController filterController;
 
   private final static String ALL_FEATURES = "*";
 
@@ -90,17 +95,28 @@ public class ConstructorController {
                                   FeaturestoreFacade featurestoreFacade,
                                   FeaturegroupFacade featuregroupFacade,
                                   OnlineFeaturestoreController onlineFeaturestoreController,
-                                  CachedFeaturegroupController cachedFeaturegroupController) {
+                                  CachedFeaturegroupController cachedFeaturegroupController,
+                                  FilterController filterController) {
     this.featuregroupController = featuregroupController;
     this.featurestoreFacade = featurestoreFacade;
     this.featuregroupFacade = featuregroupFacade;
     this.onlineFeaturestoreController = onlineFeaturestoreController;
     this.cachedFeaturegroupController = cachedFeaturegroupController;
+    this.filterController = filterController;
   }
 
   public FsQueryDTO construct(QueryDTO queryDTO, Project project, Users user)
     throws FeaturestoreException, ServiceException {
-    Query query = convertQueryDTO(queryDTO, 0, project, user);
+  
+    // construct lookup tables once for all involved feature groups
+    // all maps have the feature group id as key
+    Map<Integer, String> fgAliasLookup = new HashMap<>();
+    Map<Integer, Featuregroup> fgLookup = new HashMap<>();
+    Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
+    
+    populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup, project, user);
+    
+    Query query = convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
     // Generate SQL
     return construct(query, project, user);
   }
@@ -123,29 +139,23 @@ public class ConstructorController {
   /**
    * Recursively convert the QueryDTO into the internal query representation
    * @param queryDTO
-   * @param fgId each feature group will be aliased as fg[Integer] where [integer] is going to be an incremental id
    * @return
    */
-  public Query convertQueryDTO(QueryDTO queryDTO, int fgId, Project project, Users user)
-    throws FeaturestoreException {
-    Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
-    String fgAs = generateAs(fgId++);
+  public Query convertQueryDTO(QueryDTO queryDTO, Map<Integer, String> fgAliasLookup,
+                               Map<Integer, Featuregroup> fgLookup, Map<Integer, List<Feature>> availableFeatureLookup)
+      throws FeaturestoreException {
+    Integer fgId = queryDTO.getLeftFeatureGroup().getId();
+    Featuregroup fg = fgLookup.get(fgId);
 
     String featureStore = featurestoreFacade.getHiveDbName(fg.getFeaturestore().getHiveDbId());
     // used to build the online query - needs to respect the online db format name
     String projectName = onlineFeaturestoreController.getOnlineFeaturestoreDbName(fg.getFeaturestore().getProject());
 
-    List<Feature> availableFeatures = featuregroupController.getFeatures(fg, project, user).stream()
-        // Set the type as well, as the same code is used when parsing the query to generate a training dataset
-        // in that case we would like to show the type of the feature in the UI.
-        // it's easier and faster to return the training dataset schema if we store the type in the
-        // training dataset features table.
-        .map(f -> new Feature(f.getName(), fg.getName(), fgAs, f.getType(), f.getPrimary(), f.getDefaultValue()))
-        .collect(Collectors.toList());
+    List<Feature> requestedFeatures = validateFeatures(fg, queryDTO.getLeftFeatures(),
+      availableFeatureLookup.get(fgId));
 
-    List<Feature> requestedFeatures = validateFeatures(fg, queryDTO.getLeftFeatures(), availableFeatures);
-
-    Query query = new Query(featureStore, projectName, fg, fgAs, requestedFeatures, availableFeatures);
+    Query query = new Query(featureStore, projectName, fg, fgAliasLookup.get(fgId), requestedFeatures,
+      availableFeatureLookup.get(fgId));
 
     if (fg.getCachedFeaturegroup() != null &&
         fg.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
@@ -166,12 +176,47 @@ public class ConstructorController {
 
     // If there are any joins, recursively convert the Join's QueryDTO into the internal Query representation
     if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
-      query.setJoins(convertJoins(query, queryDTO.getJoins(), fgId, project, user));
+      query.setJoins(convertJoins(query, queryDTO.getJoins(), fgAliasLookup, fgLookup, availableFeatureLookup));
       // remove duplicated join columns
       removeDuplicateColumns(query);
     }
+    
+    // If there are any filters, recursively convert the
+    if (queryDTO.getFilter() != null) {
+      query.setFilter(filterController.convertFilterLogic(queryDTO.getFilter(), fgLookup, availableFeatureLookup));
+    }
 
     return query;
+  }
+  
+  public int populateFgLookupTables(QueryDTO queryDTO, int fgId, Map<Integer, String> fgAliasLookup,
+                                      Map<Integer, Featuregroup> fgLookup,
+                                      Map<Integer, List<Feature>> availableFeatureLookup, Project project, Users user)
+      throws FeaturestoreException {
+    // go into depth first
+    if (queryDTO.getJoins() != null && !queryDTO.getJoins().isEmpty()) {
+      for (JoinDTO join : queryDTO.getJoins()) {
+        fgId = populateFgLookupTables(join.getQuery(), fgId, fgAliasLookup, fgLookup, availableFeatureLookup, project,
+          user);
+        fgId++;
+      }
+    }
+
+    Featuregroup fg = validateFeaturegroupDTO(queryDTO.getLeftFeatureGroup());
+    fgLookup.put(fg.getId(), fg);
+    fgAliasLookup.put(fg.getId(), generateAs(fgId));
+  
+    List<Feature> availableFeatures = featuregroupController.getFeatures(fg, project, user).stream()
+      // Set the type as well, as the same code is used when parsing the query to generate a training dataset
+      // in that case we would like to show the type of the feature in the UI.
+      // it's easier and faster to return the training dataset schema if we store the type in the
+      // training dataset features table.
+      .map(f -> new Feature(
+        f.getName(), fgAliasLookup.get(fg.getId()), f.getType(), f.getPrimary(), f.getDefaultValue()))
+      .collect(Collectors.toList());
+    availableFeatureLookup.put(fg.getId(), availableFeatures);
+
+    return fgId;
   }
 
   private String generateAs(int id) {
@@ -232,18 +277,19 @@ public class ConstructorController {
    * The returned list will already contain the correct set of joining keys
    * @param leftQuery
    * @param joinDTOS
-   * @param fgId
    * @return
    */
-  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, int fgId, Project project, Users user)
-    throws FeaturestoreException {
+  private List<Join> convertJoins(Query leftQuery, List<JoinDTO> joinDTOS, Map<Integer, String> fgAliasLookup,
+                                  Map<Integer, Featuregroup> fgLookup,
+                                  Map<Integer, List<Feature>> availableFeatureLookup)
+      throws FeaturestoreException {
     List<Join> joins = new ArrayList<>();
     for (JoinDTO joinDTO : joinDTOS) {
       if (joinDTO.getQuery() == null) {
         throw new IllegalArgumentException("Subquery not specified");
       }
       // Recursively convert the QueryDTO. Currently we don't support Joins of Joins
-      Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgId++, project, user);
+      Query rightQuery = convertQueryDTO(joinDTO.getQuery(), fgAliasLookup, fgLookup, availableFeatureLookup);
 
       if (joinDTO.getOn() != null && !joinDTO.getOn().isEmpty()) {
         List<Feature> leftOn = joinDTO.getOn().stream().map(f -> new Feature(f.getName())).collect(Collectors.toList());
@@ -372,7 +418,7 @@ public class ConstructorController {
    * @param query
    * @return
    */
-  public String generateSQL(Query query, boolean online) {
+  public String generateSQL(Query query, boolean online) throws FeaturestoreException {
 
     SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
     for (Feature f : collectFeatures(query)) {
@@ -394,10 +440,20 @@ public class ConstructorController {
       // If there are joins jgenerate the join list with the respective conditions
       joinNode = buildJoinNode(query, query.getJoins().size() - 1, online);
     }
+    
+    SqlNode filterNode = null;
+    if (query.getJoins() == null || query.getJoins().isEmpty()) {
+      // no joins, don't look for other filters
+      if (query.getFilter() != null) {
+        filterNode = filterController.generateFilterLogicNode(query.getFilter(), online);
+      }
+    } else {
+      filterNode = filterController.buildFilterNode(query, query,query.getJoins().size() - 1, online);
+    }
 
     // Assemble the query
     SqlSelect select = new SqlSelect(SqlParserPos.ZERO, null, selectList, joinNode,
-        null, null, null, null, null, null, null);
+        filterNode, null, null, null, null, null, null);
     return select.toSqlString(new SparkSqlDialect(SqlDialect.EMPTY_CONTEXT)).getSql();
   }
 
@@ -610,12 +666,11 @@ public class ConstructorController {
       CachedFeaturegroupDTO featuregroupDTO = new CachedFeaturegroupDTO(query.getFeaturegroup());
       Featuregroup featuregroup = query.getFeaturegroup();
       List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = cachedFeaturegroupController.getFeaturesDTO(
-          featuregroup.getCachedFeaturegroup(), featuregroup.getFeaturestore(),
-          project, user);
+        featuregroup, project, user);
       featuregroupDTO.setFeatures(featureGroupFeatureDTOS);
 
       featuregroupDTO.setLocation(featurestoreUtils.resolveLocationURI(
-          featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
+        featuregroup.getCachedFeaturegroup().getHiveTbls().getSdId().getLocation()));
 
       if (query.getLeftFeatureGroupStartTimestamp() == null) {
         aliases.add(new HudiFeatureGroupAliasDTO(query.getAs(), featuregroupDTO,
