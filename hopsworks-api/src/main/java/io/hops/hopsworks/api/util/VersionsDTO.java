@@ -78,7 +78,6 @@ public class VersionsDTO {
   public VersionsDTO(Settings settings) {
 
     versions.add(new Version("zookeeper", settings.getZookeeperVersion()));
-    versions.add(new Version("influxdb", settings.getInfluxdbVersion()));
     versions.add(new Version("grafana", settings.getGrafanaVersion()));
     versions.add(new Version("logstash", settings.getLogstashVersion()));
     versions.add(new Version("kibana", settings.getKibanaVersion()));

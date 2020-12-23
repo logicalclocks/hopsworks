@@ -116,7 +116,6 @@ Backend Dependencies
 * org.elasticsearch:elasticsearch:jar:2.4.1 [ApacheV2](https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt)
 * org.glassfish.jersey.core:jersey-server:jar:2.21 [CDDL](https://jersey.github.io/license.html)
 * org.glassfish.jersey.media:jersey-media-multipart:jar:2.21 [CDDL](https://jersey.github.io/license.html)
-* org.influxdb:influxdb-java:jar:2.5 [MIT](https://github.com/influxdata/influxdb/blob/master/LICENSE)
 * org.javatuples:javatuples:jar:1.2 [ApacheV2](https://github.com/javatuples/javatuples/blob/master/LICENSE.txt)
 * org.primefaces.extensions:primefaces-extensions:jar:6.1.1 [ApacheV2](https://github.com/primefaces/primefaces/blob/master/LICENSE)
 * org.primefaces:primefaces:jar:6.1 [ApacheV2](https://github.com/primefaces/primefaces/blob/master/LICENSE)
