@@ -28,13 +28,11 @@ import io.hops.hopsworks.api.util.Pagination;
 import io.hops.hopsworks.audit.logger.LogLevel;
 import io.hops.hopsworks.audit.logger.annotation.Logged;
 import io.hops.hopsworks.common.api.ResourceRequest;
-import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationAttemptStateFacade;
 import io.hops.hopsworks.common.dao.jobs.description.JobFacade;
 import io.hops.hopsworks.common.dao.jobs.description.YarnAppUrlsDTO;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
-import io.hops.hopsworks.common.jobs.AppInfoDTO;
 import io.hops.hopsworks.common.jobs.JobController;
 import io.hops.hopsworks.common.jobs.execution.ExecutionController;
 import io.hops.hopsworks.common.util.HopsUtils;
@@ -42,7 +40,6 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
-import io.hops.hopsworks.persistence.entity.jobs.history.Execution;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobConfiguration;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.ScheduleDTO;
@@ -54,10 +51,6 @@ import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import org.influxdb.InfluxDB;
-import org.influxdb.InfluxDBFactory;
-import org.influxdb.dto.Query;
-import org.influxdb.dto.QueryResult;
 
 import javax.ejb.EJB;
 import javax.ejb.TransactionAttribute;
@@ -81,15 +74,9 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Logged
 @RequestScoped
@@ -107,11 +94,7 @@ public class JobsResource {
   @Inject
   private ExecutionController executionController;
   @EJB
-  private ExecutionFacade executionFacade;
-  @EJB
   private YarnApplicationAttemptStateFacade yarnApplicationAttemptStateFacade;
-  @EJB
-  private Settings settings;
   @EJB
   private ProjectFacade projectFacade;
   @EJB
@@ -415,116 +398,4 @@ public class JobsResource {
           "Could not find YARN Web UI Service");
     }
   }
-  
-  /**
-   * Get application run info for the specified job
-   * <p>
-   * @param appId
-   * @return url
-   */
-  @GET
-  @Path("/{appId}/appinfo")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens={Audience.API}, allowedUserRoles={"HOPS_ADMIN", "HOPS_USER"})
-  public Response getAppInfo(@PathParam("appId") String appId, @Context SecurityContext sc) throws JobException {
-    executionController.checkAccessRight(appId, project);
-    Execution execution = executionFacade.findByAppId(appId);
-    try {
-      long startTime = System.currentTimeMillis() - 60000;
-      long endTime = System.currentTimeMillis();
-      boolean running = true;
-      if (execution != null) {
-        startTime = execution.getSubmissionTime().getTime();
-        endTime = startTime + execution.getExecutionDuration();
-        running = false;
-        if (!execution.getState().isFinalState()) {
-          running = true;
-        }
-      }
-    
-      InfluxDB influxDB = InfluxDBFactory.connect(settings.
-        getInfluxDBAddress(), settings.getInfluxDBUser(), settings.
-        getInfluxDBPW());
-    
-      // Transform application_1493112123688_0001 to 1493112123688_0001
-      // application_ = 12 chars
-      String timestamp_attempt = appId.substring(12);
-    
-      Query query = new Query("show tag values from nodemanager with key=\"source\" " + "where source =~ /^.*"
-        + timestamp_attempt + ".*$/", "graphite");
-      QueryResult queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-    
-      int nbExecutors = 0;
-      HashMap<Integer, List<String>> executorInfo = new HashMap<>();
-      int index = 0;
-      if (queryResult != null && queryResult.getResults() != null) {
-        for (QueryResult.Result res : queryResult.getResults()) {
-          if (res.getSeries() != null) {
-            for (QueryResult.Series series : res.getSeries()) {
-              List<List<Object>> values = series.getValues();
-              if (values != null) {
-                nbExecutors += values.size();
-                for (List<Object> l : values) {
-                  executorInfo.put(index, Stream.of(Objects.toString(l.get(1))).collect(Collectors.toList()));
-                  index++;
-                }
-              }
-            }
-          }
-        }
-      }
-    
-      /*
-       * At this point executor info contains the keys and a list with a single value, the YARN container id
-       */
-      String vCoreTemp = null;
-      HashMap<String, String> hostnameVCoreCache = new HashMap<>();
-    
-      for (Map.Entry<Integer, List<String>> entry : executorInfo.entrySet()) {
-        query = new Query("select MilliVcoreUsageAvgMilliVcores, hostname from nodemanager where source = \'" + entry.
-          getValue().get(0) + "\' limit 1", "graphite");
-        queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-      
-        if (queryResult != null && queryResult.getResults() != null
-          && queryResult.getResults().get(0) != null && queryResult.
-          getResults().get(0).getSeries() != null) {
-          List<List<Object>> values = queryResult.getResults().get(0).getSeries().get(0).getValues();
-          String hostname = Objects.toString(values.get(0).get(2)).split("=")[1];
-          entry.getValue().add(hostname);
-        
-          if (!hostnameVCoreCache.containsKey(hostname)) {
-            // Not in cache, get the vcores of the host machine
-            query = new Query("select AllocatedVCores+AvailableVCores from nodemanager " + "where hostname =~ /.*"
-              + hostname + ".*/ limit 1", "graphite");
-            queryResult = influxDB.query(query, TimeUnit.MILLISECONDS);
-          
-            if (queryResult != null && queryResult.getResults() != null
-              && queryResult.getResults().get(0) != null && queryResult.
-              getResults().get(0).getSeries() != null) {
-              values = queryResult.getResults().get(0).getSeries().get(0).getValues();
-              vCoreTemp = Objects.toString(values.get(0).get(1));
-              entry.getValue().add(vCoreTemp);
-              hostnameVCoreCache.put(hostname, vCoreTemp); // cache it
-            }
-          } else {
-            // It's a hit, skip the database query
-            entry.getValue().add(hostnameVCoreCache.get(hostname));
-          }
-        }
-      }
-    
-      influxDB.close();
-    
-      AppInfoDTO appInfo = new AppInfoDTO(appId, startTime,
-        running, endTime, nbExecutors, executorInfo);
-    
-      return Response.ok().entity(appInfo).build();
-    
-    } catch (Exception e) {
-      LOGGER.log(Level.SEVERE, "Exception while getting job ui " + e.getLocalizedMessage(), e);
-    }
-    return Response.ok().status(Response.Status.NOT_FOUND).build();
-  }
-  
 }

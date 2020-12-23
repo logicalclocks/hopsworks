@@ -16,6 +16,9 @@
 
 package io.hops.hopsworks.common.proxies.client;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import com.logicalclocks.servicediscoverclient.service.Service;
 import io.hops.hopsworks.common.hosts.ServiceDiscoveryController;
@@ -23,6 +26,8 @@ import io.hops.hopsworks.common.util.Settings;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -35,6 +40,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.ssl.SSLContexts;
+import org.apache.http.util.EntityUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -46,12 +52,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 
 @Singleton
-@TransactionAttribute(TransactionAttributeType.NEVER)
+@TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
 @ConcurrencyManagement(ConcurrencyManagementType.BEAN)
 public class HttpClient {
   
@@ -65,9 +72,15 @@ public class HttpClient {
   private PoolingHttpClientConnectionManager connectionManager;
   private CloseableHttpClient client;
   private HttpHost host;
+  private ObjectMapper objectMapper;
 
   @PostConstruct
   public void init() throws RuntimeException {
+    this.objectMapper = new ObjectMapper();
+    this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+    this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
     try {
       connectionManager = createConnectionManager();
       client = HttpClients.custom()
@@ -83,6 +96,46 @@ public class HttpClient {
   public void destroy() {
     if (connectionManager != null) {
       connectionManager.shutdown();
+    }
+  }
+
+  public static class ObjectResponseHandler<T> implements ResponseHandler<T> {
+
+    private Class<T> cls;
+    private ObjectMapper objectMapper;
+
+    public ObjectResponseHandler(Class<T> cls, ObjectMapper objectMapper) {
+      this.cls = cls;
+      this.objectMapper = objectMapper;
+    }
+
+    @Override
+    public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+      if (response.getStatusLine().getStatusCode() / 100 == 2) {
+        return objectMapper.readValue(responseJson, cls);
+      } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
+        throw new IOException(responseJson);
+      } else {
+        throw new NotRetryableClientProtocolException(responseJson);
+      }
+    }
+  }
+
+  public static class NoBodyResponseHandler<T> implements ResponseHandler<T> {
+
+    public NoBodyResponseHandler() {
+    }
+
+    @Override
+    public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
+      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
+      if (response.getStatusLine().getStatusCode() / 100 == 5) {
+        throw new IOException(responseJson);
+      } else if (response.getStatusLine().getStatusCode() / 100 == 4) {
+        throw new NotRetryableClientProtocolException(responseJson);
+      }
+      return null;
     }
   }
   
@@ -111,6 +164,10 @@ public class HttpClient {
   public void setAuthorizationHeader(HttpRequest httpRequest) {
     httpRequest.setHeader(HttpHeaders.AUTHORIZATION,
         String.format(AUTH_HEADER_CONTENT, settings.getServiceMasterJWT()));
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return objectMapper;
   }
   
   public <T> T execute(HttpRequest request, ResponseHandler<T> handler) throws IOException {

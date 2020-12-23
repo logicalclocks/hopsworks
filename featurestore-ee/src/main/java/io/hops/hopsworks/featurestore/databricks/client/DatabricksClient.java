@@ -5,9 +5,6 @@
 package io.hops.hopsworks.featurestore.databricks.client;
 
 import com.damnhandy.uri.template.UriTemplate;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twitter.bijection.codec.Base64;
 import io.hops.hopsworks.common.proxies.client.HttpClient;
 import io.hops.hopsworks.common.proxies.client.HttpRetryableAction;
@@ -16,15 +13,11 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.ConcurrencyManagementType;
 import javax.ejb.EJB;
@@ -33,7 +26,6 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -58,58 +50,8 @@ public class DatabricksClient {
   private static final String DBFS_ADD_BLOCK = API_ENDPOINT + "/dbfs/add-block";
   private static final String DBFS_STATUS = API_ENDPOINT + "/dbfs/get-status{?path}";
 
-  private static class DatabricksResponseHandler<T> implements ResponseHandler<T> {
-
-    private Class<T> cls;
-    private ObjectMapper objectMapper;
-
-    public DatabricksResponseHandler(Class<T> cls, ObjectMapper objectMapper) {
-      this.cls = cls;
-      this.objectMapper = objectMapper;
-    }
-
-    @Override
-    public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
-      if (response.getStatusLine().getStatusCode() / 100 == 2) {
-        return objectMapper.readValue(responseJson, cls);
-      } else if (response.getStatusLine().getStatusCode() / 100 == 5) {
-        throw new IOException(responseJson);
-      } else {
-        throw new NotRetryableClientProtocolException(responseJson);
-      }
-    }
-  }
-
-  private static class DatabricksNoResponseHandler<T> implements ResponseHandler<T> {
-
-    public DatabricksNoResponseHandler() {
-    }
-
-    @Override
-    public T handleResponse(HttpResponse response) throws ClientProtocolException, IOException {
-      String responseJson = EntityUtils.toString(response.getEntity(), Charset.defaultCharset());
-      if (response.getStatusLine().getStatusCode() / 100 == 5) {
-        throw new IOException(responseJson);
-      } else if (response.getStatusLine().getStatusCode() / 100 == 4) {
-        throw new NotRetryableClientProtocolException(responseJson);
-      }
-      return null;
-    }
-  }
-
   @EJB
   private HttpClient httpClient;
-
-  private ObjectMapper objectMapper;
-
-  @PostConstruct
-  public void init() {
-    this.objectMapper = new ObjectMapper();
-    this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    this.objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-    this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-  }
 
   public List<DbCluster> listClusters(String dbInstance, String token) throws FeaturestoreException {
     HttpHost dbInstanceHost = getDbInstanceHost(dbInstance);
@@ -120,7 +62,8 @@ public class DatabricksClient {
       @Override
       public List<DbCluster> performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, listRequest,
-            new DatabricksResponseHandler<>(DbClusterListResponse.class, objectMapper)).getClusters();
+            new HttpClient.ObjectResponseHandler<>(DbClusterListResponse.class, httpClient.getObjectMapper()))
+            .getClusters();
       }
     });
   }
@@ -137,7 +80,7 @@ public class DatabricksClient {
       @Override
       public DbCluster performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, getClusterRequest,
-            new DatabricksResponseHandler<>(DbCluster.class, objectMapper));
+            new HttpClient.ObjectResponseHandler<>(DbCluster.class, httpClient.getObjectMapper()));
       }
     });
   }
@@ -148,12 +91,12 @@ public class DatabricksClient {
     HttpPost editRequest = new HttpPost(EDIT_ENDPOINT);
     editRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     editRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    editRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbCluster)));
+    editRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbCluster)));
 
     wrapException(new HttpRetryableAction<Object>() {
       @Override
       public Object performAction() throws ClientProtocolException, IOException {
-        httpClient.execute(dbInstanceHost, editRequest, new DatabricksNoResponseHandler<>());
+        httpClient.execute(dbInstanceHost, editRequest, new HttpClient.NoBodyResponseHandler<>());
         return null;
       }
     });
@@ -165,12 +108,12 @@ public class DatabricksClient {
     HttpPost libraryRequest = new HttpPost(LIBRARIES_INSTALL);
     libraryRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     libraryRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    libraryRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbLibraryInstall)));
+    libraryRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbLibraryInstall)));
 
     wrapException(new HttpRetryableAction<Object>() {
       @Override
       public Object performAction() throws ClientProtocolException, IOException {
-        httpClient.execute(dbInstanceHost, libraryRequest, new DatabricksNoResponseHandler<>());
+        httpClient.execute(dbInstanceHost, libraryRequest, new HttpClient.NoBodyResponseHandler<>());
         return null;
       }
     });
@@ -188,7 +131,7 @@ public class DatabricksClient {
       new HttpRetryableAction<Object>() {
         @Override
         public Object performAction() throws ClientProtocolException, IOException {
-          httpClient.execute(dbInstanceHost, statusRequest, new DatabricksNoResponseHandler<>());
+          httpClient.execute(dbInstanceHost, statusRequest, new HttpClient.NoBodyResponseHandler<>());
           return null;
         }
       }.performAction();
@@ -204,12 +147,12 @@ public class DatabricksClient {
     HttpPost uploadRequest = new HttpPost(DBFS_PUT);
     uploadRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     uploadRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    uploadRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbfsPut)));
+    uploadRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbfsPut)));
 
     wrapException(new HttpRetryableAction<Object>() {
       @Override
       public Object performAction() throws ClientProtocolException, IOException {
-        httpClient.execute(dbInstanceHost, uploadRequest, new DatabricksNoResponseHandler<>());
+        httpClient.execute(dbInstanceHost, uploadRequest, new HttpClient.NoBodyResponseHandler<>());
         return null;
       }
     });
@@ -229,12 +172,12 @@ public class DatabricksClient {
     HttpPost startRequest = new HttpPost(START_ENDPOINT);
     startRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     startRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    startRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbClusterStart)));
+    startRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbClusterStart)));
 
     wrapException(new HttpRetryableAction<Object>() {
       @Override
       public Object performAction() throws ClientProtocolException, IOException {
-        httpClient.execute(dbInstanceHost, startRequest, new DatabricksNoResponseHandler<>());
+        httpClient.execute(dbInstanceHost, startRequest, new HttpClient.NoBodyResponseHandler<>());
         return null;
       }
     });
@@ -245,13 +188,13 @@ public class DatabricksClient {
     HttpPost createRequest = new HttpPost(DBFS_CREATE);
     createRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     createRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    createRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbfsCreate)));
+    createRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbfsCreate)));
 
     return wrapException(new HttpRetryableAction<DbfsClose>() {
       @Override
       public DbfsClose performAction() throws ClientProtocolException, IOException {
         return httpClient.execute(dbInstanceHost, createRequest,
-            new DatabricksResponseHandler<>(DbfsClose.class, objectMapper));
+            new HttpClient.ObjectResponseHandler<>(DbfsClose.class, httpClient.getObjectMapper()));
       }
     });
   }
@@ -274,12 +217,12 @@ public class DatabricksClient {
     uploadRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
 
     DbfsAddBlock addBlock = new DbfsAddBlock(dbfsClose.getHandle(), data);
-    uploadRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(addBlock)));
+    uploadRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(addBlock)));
 
     wrapException(new HttpRetryableAction<Object>() {
       @Override
       public Object performAction() throws ClientProtocolException, IOException {
-        httpClient.execute(dbInstanceHost, uploadRequest, new DatabricksNoResponseHandler<>());
+        httpClient.execute(dbInstanceHost, uploadRequest, new HttpClient.NoBodyResponseHandler<>());
         return null;
       }
     });
@@ -290,12 +233,12 @@ public class DatabricksClient {
     HttpPost closeRequest = new HttpPost(DBFS_CLOSE);
     closeRequest.setHeader(HttpHeaders.CONTENT_TYPE, "application/json");
     closeRequest.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    closeRequest.setEntity(new StringEntity(objectMapper.writeValueAsString(dbfsClose)));
+    closeRequest.setEntity(new StringEntity(httpClient.getObjectMapper().writeValueAsString(dbfsClose)));
 
     return wrapException(new HttpRetryableAction<DbfsClose>() {
       @Override
       public DbfsClose performAction() throws ClientProtocolException, IOException {
-        return httpClient.execute(dbInstanceHost, closeRequest, new DatabricksNoResponseHandler<>());
+        return httpClient.execute(dbInstanceHost, closeRequest, new HttpClient.NoBodyResponseHandler<>());
       }
     });
   }

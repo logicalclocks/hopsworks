@@ -357,8 +357,6 @@ public class SparkConfigurationUtil extends ConfigurationUtil {
 
     StringBuilder sparkFiles = new StringBuilder();
     sparkFiles
-            .append(settings.getSparkMetricsPath())
-            .append(",")
             //Log4j.properties
             .append(settings.getSparkLog4JPath())
             .append(",")

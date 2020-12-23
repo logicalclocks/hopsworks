@@ -229,15 +229,6 @@ angular.module('hopsWorksApp')
                 return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/yarnui');
               },
               /**
-               * Get the app infos.
-               * @param {type} projectId
-               * @param {type} appId
-               * @returns {unresolved} The app info.
-               */
-              getAppInfo: function (projectId, appId) {
-                return $http.get('/api/project/' + projectId + '/jobs/' + appId + '/appinfo');
-              },
-              /**
                * Get the content of log for the appId
                * @param {type} projectId
                * @param {type} name

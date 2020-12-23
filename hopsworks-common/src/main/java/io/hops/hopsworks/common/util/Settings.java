@@ -207,10 +207,6 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SUPPORT_EMAIL_ADDR = "support_email_addr";
   private static final String VARIABLE_HOPSEXAMPLES_VERSION = "hopsexamples_version";
 
-  private static final String VARIABLE_INFLUXDB_IP = "influxdb_ip";
-  private static final String VARIABLE_INFLUXDB_PORT = "influxdb_port";
-  private static final String VARIABLE_INFLUXDB_USER = "influxdb_user";
-  private static final String VARIABLE_INFLUXDB_PW = "influxdb_pw";
   private static final String VARIABLE_KAGENT_USER = "kagent_user";
   private static final String VARIABLE_KAGENT_LIVENESS_MONITOR_ENABLED = "kagent_liveness_monitor_enabled";
   private static final String VARIABLE_KAGENT_LIVENESS_THRESHOLD = "kagent_liveness_threshold";
@@ -226,10 +222,7 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SERVICE_DISCOVERY_DOMAIN = "service_discovery_domain";
 
   private static final String VARIABLE_ZOOKEEPER_VERSION = "zookeeper_version";
-  private static final String VARIABLE_INFLUXDB_VERSION = "influxdb_version";
   private static final String VARIABLE_GRAFANA_VERSION = "grafana_version";
-  private static final String VARIABLE_TELEGRAF_VERSION = "telegraf_version";
-  private static final String VARIABLE_KAPACITOR_VERSION = "kapacitor_version";
   private static final String VARIABLE_LOGSTASH_VERSION = "logstash_version";
   private static final String VARIABLE_KIBANA_VERSION = "kibana_version";
   private static final String VARIABLE_FILEBEAT_VERSION = "filebeat_version";
@@ -617,10 +610,6 @@ public class Settings implements Serializable {
           KAGENT_LIVENESS_MONITOR_ENABLED);
       KAGENT_LIVENESS_THRESHOLD = setStrVar(VARIABLE_KAGENT_LIVENESS_THRESHOLD, KAGENT_LIVENESS_THRESHOLD);
       DOWNLOAD_ALLOWED = Boolean.parseBoolean(setStrVar(VARIABLE_DOWNLOAD_ALLOWED, DOWNLOAD_ALLOWED.toString()));
-      INFLUXDB_IP = setStrVar(VARIABLE_INFLUXDB_IP, INFLUXDB_IP);
-      INFLUXDB_PORT = setStrVar(VARIABLE_INFLUXDB_PORT, INFLUXDB_PORT);
-      INFLUXDB_USER = setStrVar(VARIABLE_INFLUXDB_USER, INFLUXDB_USER);
-      INFLUXDB_PW = setStrVar(VARIABLE_INFLUXDB_PW, INFLUXDB_PW);
       SUPPORT_EMAIL_ADDR = setStrVar(VARIABLE_SUPPORT_EMAIL_ADDR, SUPPORT_EMAIL_ADDR);
       UserAccountsEmailMessages.HOPSWORKS_SUPPORT_EMAIL = SUPPORT_EMAIL_ADDR;
       RESOURCE_DIRS = setStrVar(VARIABLE_RESOURCE_DIRS, RESOURCE_DIRS);
@@ -643,10 +632,7 @@ public class Settings implements Serializable {
       populateLDAPCache();
 
       ZOOKEEPER_VERSION = setStrVar(VARIABLE_ZOOKEEPER_VERSION, ZOOKEEPER_VERSION);
-      INFLUXDB_VERSION = setStrVar(VARIABLE_INFLUXDB_VERSION, INFLUXDB_VERSION);
       GRAFANA_VERSION = setStrVar(VARIABLE_GRAFANA_VERSION, GRAFANA_VERSION);
-      TELEGRAF_VERSION = setStrVar(VARIABLE_TELEGRAF_VERSION, TELEGRAF_VERSION);
-      KAPACITOR_VERSION = setStrVar(VARIABLE_KAPACITOR_VERSION, KAPACITOR_VERSION);
       LOGSTASH_VERSION = setStrVar(VARIABLE_LOGSTASH_VERSION, LOGSTASH_VERSION);
       KIBANA_VERSION = setStrVar(VARIABLE_KIBANA_VERSION, KIBANA_VERSION);
       FILEBEAT_VERSION = setStrVar(VARIABLE_FILEBEAT_VERSION, FILEBEAT_VERSION);
@@ -930,7 +916,6 @@ public class Settings implements Serializable {
   public static final String JOB_LOG4J_PROPERTIES = "log4j.properties";
   //If the value of this property changes, it must be changed in spark-chef log4j.properties as well
   public static final String LOGSTASH_JOB_INFO = "hopsworks.logstash.job.info";
-  public static final String SPARK_METRICS_PROPERTIES = "metrics.properties";
 
   public static final String SPARK_CACHE_FILENAMES
       = "spark.yarn.cache.filenames";
@@ -1409,10 +1394,6 @@ public class Settings implements Serializable {
 
   public String getSparkLog4JPath() {
     return "hdfs:///user/" + getSparkUser() + "/log4j.properties";
-  }
-
-  public String getSparkMetricsPath() {
-    return "hdfs:///user/" + getSparkUser() + "/metrics.properties";
   }
 
   public synchronized String getSparkDefaultClasspath() {
@@ -2057,26 +2038,6 @@ public class Settings implements Serializable {
   public synchronized int getFilePreviewTxtSize() {
     checkCache();
     return FILE_PREVIEW_TXT_SIZE;
-  }
-
-  private String INFLUXDB_IP = "localhost";
-  private String INFLUXDB_PORT = "8086";
-  private String INFLUXDB_USER = "hopsworks";
-  private String INFLUXDB_PW = "hopsworks";
-
-  public synchronized String getInfluxDBAddress() {
-    checkCache();
-    return "http://" + INFLUXDB_IP + ":" + INFLUXDB_PORT;
-  }
-
-  public synchronized String getInfluxDBUser() {
-    checkCache();
-    return INFLUXDB_USER;
-  }
-
-  public synchronized String getInfluxDBPW() {
-    checkCache();
-    return INFLUXDB_PW;
   }
 
   //Project creation: default datasets
@@ -3241,32 +3202,11 @@ public class Settings implements Serializable {
     return LOGSTASH_VERSION;
   }
 
-  private String KAPACITOR_VERSION;
-
-  public synchronized String getKapacitorVersion() {
-    checkCache();
-    return KAPACITOR_VERSION;
-  }
-
-  private String TELEGRAF_VERSION;
-
-  public synchronized String getTelegrafVersion() {
-    checkCache();
-    return TELEGRAF_VERSION;
-  }
-
   private String GRAFANA_VERSION;
 
   public synchronized String getGrafanaVersion() {
     checkCache();
     return GRAFANA_VERSION;
-  }
-
-  private String INFLUXDB_VERSION;
-
-  public synchronized String getInfluxdbVersion() {
-    checkCache();
-    return INFLUXDB_VERSION;
   }
 
   private String ZOOKEEPER_VERSION;

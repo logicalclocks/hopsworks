@@ -42,14 +42,13 @@ package io.hops.hopsworks.api.experiments.tensorboard;
 import com.google.common.base.Strings;
 import io.hops.hopsworks.api.kibana.ProxyServlet;
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.tensorflow.TensorBoardFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import org.apache.hadoop.yarn.api.records.YarnApplicationState;
@@ -77,7 +76,9 @@ public class TensorBoardProxyServlet extends ProxyServlet {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private ProjectController projectController;
+  private ProjectFacade projectFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
   @EJB
   private TensorBoardFacade tensorBoardFacade;
  
@@ -168,8 +169,6 @@ public class TensorBoardProxyServlet extends ProxyServlet {
                 "try refreshing the page");
         return;
       }
-
-
     } else if(appMatcher.find()) {
       String appId = appMatcher.group(1);
       YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
@@ -178,28 +177,20 @@ public class TensorBoardProxyServlet extends ProxyServlet {
                 "You don't have the access right for this application");
         return;
       }
-      String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
-      ProjectDTO project;
-      try {
-        project = projectController.getProjectByName(projectName);
-      } catch (ProjectException ex) {
-        throw new ServletException(ex);
-      }
-
       Users user = userFacade.findByEmail(email);
-
-      boolean inTeam = false;
-      for (ProjectTeam pt : project.getProjectTeam()) {
-        if (pt.getUser().equals(user)) {
-          inTeam = true;
-          break;
-        }
-      }
-      if (!inTeam) {
-        servletResponse.sendError(Response.Status.FORBIDDEN.getStatusCode(),
-                "You don't have the access right for this application");
+      String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
+      Project project = projectFacade.findByName(projectName);
+      if (project == null) {
+        servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Project does not exists");
         return;
       }
+
+      if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
+        servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
+            "You don't have the access right for this application");
+        return;
+      }
+
       if (appState.getAppsmstate() != null && (appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.FINISHED.
               toString()) || appState.getAppsmstate().equalsIgnoreCase(YarnApplicationState.KILLED.toString()))) {
         servletResponse.sendError(Response.Status.NOT_FOUND.getStatusCode(),

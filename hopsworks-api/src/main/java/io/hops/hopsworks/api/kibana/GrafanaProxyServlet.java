@@ -40,13 +40,12 @@
 package io.hops.hopsworks.api.kibana;
 
 import io.hops.hopsworks.common.dao.jobhistory.YarnApplicationstateFacade;
+import io.hops.hopsworks.common.dao.project.ProjectFacade;
+import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.hdfs.HdfsUsersController;
-import io.hops.hopsworks.common.project.ProjectController;
-import io.hops.hopsworks.common.project.ProjectDTO;
-import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.persistence.entity.jobs.history.YarnApplicationstate;
-import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
+import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 
 import javax.ejb.EJB;
@@ -69,7 +68,11 @@ public class GrafanaProxyServlet extends ProxyServlet {
   @EJB
   private HdfsUsersController hdfsUsersBean;
   @EJB
-  private ProjectController projectController;
+  private ProjectFacade projectFacade;
+  @EJB
+  private ProjectTeamFacade projectTeamFacade;
+
+  private Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
 
   @Override
   protected void service(HttpServletRequest servletRequest, HttpServletResponse servletResponse) 
@@ -79,39 +82,30 @@ public class GrafanaProxyServlet extends ProxyServlet {
       servletResponse.sendError(403, "User is not logged in");
       return;
     }
+
     if (servletRequest.getRequestURI().contains("query")) {
       String email = servletRequest.getUserPrincipal().getName();
-      Pattern pattern = Pattern.compile("(application_.*?_.\\d*)");
       Users user = userFacade.findByEmail(email);
       Matcher matcher = pattern.matcher(servletRequest.getQueryString());
       if (matcher.find()) {
         String appId = matcher.group(1);
-        YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(
-                appId);
+        YarnApplicationstate appState = yarnApplicationstateFacade.findByAppId(appId);
         if (appState == null) {
           servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
                   "You don't have the access right for this application");
           return;
         }
+
         String projectName = hdfsUsersBean.getProjectName(appState.getAppuser());
-        ProjectDTO project;
-        try {
-          project = projectController.getProjectByName(projectName);
-        } catch (ProjectException ex) {
-          throw new ServletException(ex);
+        Project project = projectFacade.findByName(projectName);
+        if (project == null) {
+          servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(), "Project does not exists");
+          return;
         }
-        
-        
-        boolean inTeam = false;
-        for(ProjectTeam pt: project.getProjectTeam()){
-          if(pt.getUser().equals(user)){
-            inTeam = true;
-            break;
-          }
-        }
-        if(!inTeam){
+
+        if (!projectTeamFacade.isUserMemberOfProject(project, user)) {
           servletResponse.sendError(Response.Status.BAD_REQUEST.getStatusCode(),
-                  "You don't have the access right for this application");
+              "You don't have the access right for this application");
           return;
         }
       } else {
