@@ -64,7 +64,8 @@ public class ServiceDiscoveryController {
     REGISTRY("registry"),
     CONSUL_SERVER("consul"),
     ONLINEFS_MYSQL("onlinefs.mysql"),
-    RESOURCEMANAGER("resourcemanager");
+    RESOURCEMANAGER("resourcemanager"),
+    PUSHGATEWAY("pushgateway.prometheus");
 
     private String name;
     HopsworksService(String name) {
