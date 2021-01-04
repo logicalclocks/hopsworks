@@ -56,6 +56,8 @@ import java.io.Serializable;
             "WHERE fsConn.id = :id AND fsConn.connectorType= :type"),
     @NamedQuery(name = "FeaturestoreConnector.findByFeaturestore",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn WHERE fsConn.featurestore = :featurestore"),
+    @NamedQuery(name = "FeaturestoreConnector.countByFeaturestore",
+        query = "SELECT count(fsConn.id) FROM FeaturestoreConnector fsConn WHERE fsConn.featurestore = :featurestore"),
     @NamedQuery(name = "FeaturestoreConnector.findByFeaturestoreId",
         query = "SELECT fsConn FROM FeaturestoreConnector fsConn " +
             "WHERE fsConn.featurestore = :featurestore AND fsConn.id = :id"),

@@ -99,4 +99,10 @@ public class FeaturestoreConnectorFacade extends AbstractFacade<FeaturestoreConn
   public void deleteByFeaturestoreName(Featurestore featurestore, String name) {
     findByFeaturestoreName(featurestore, name).ifPresent(this::remove);
   }
+
+  public Long countByFeaturestore(Featurestore featurestore) {
+    return em.createNamedQuery("FeaturestoreConnector.countByFeaturestore", Long.class)
+        .setParameter("featurestore", featurestore)
+        .getSingleResult();
+  }
 }
