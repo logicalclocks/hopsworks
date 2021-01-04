@@ -20,6 +20,7 @@ import io.hops.hopsworks.common.dao.user.activity.ActivityFacade;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupFacade;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreConnectorFacade;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.hopsfs.FeaturestoreHopsfsConnectorDTO;
@@ -83,6 +84,8 @@ public class FeaturestoreController {
   private FeaturegroupFacade featuregroupFacade;
   @EJB
   private TrainingDatasetFacade trainingDatasetFacade;
+  @EJB
+  private FeaturestoreConnectorFacade connectorFacade;
   @EJB
   private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
   
@@ -336,7 +339,7 @@ public class FeaturestoreController {
     // add counters
     featurestoreDTO.setNumFeatureGroups(featuregroupFacade.countByFeaturestore(featurestore));
     featurestoreDTO.setNumTrainingDatasets(trainingDatasetFacade.countByFeaturestore(featurestore));
-    // TODO(Fabio): add counter for storage connectors
+    featurestoreDTO.setNumStorageConnectors(connectorFacade.countByFeaturestore(featurestore));
 
     return featurestoreDTO;
   }
