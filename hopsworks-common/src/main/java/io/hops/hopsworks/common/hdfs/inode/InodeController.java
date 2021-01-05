@@ -18,7 +18,6 @@ package io.hops.hopsworks.common.hdfs.inode;
 import io.hops.common.Pair;
 import io.hops.hopsworks.persistence.entity.hdfs.inode.Inode;
 import io.hops.hopsworks.common.dao.hdfs.inode.InodeFacade;
-import io.hops.hopsworks.common.dao.hdfs.inode.NavigationPath;
 import io.hops.hopsworks.common.hdfs.Utils;
 import io.hops.hopsworks.common.util.HopsUtils;
 import io.hops.hopsworks.common.util.Settings;
@@ -144,33 +143,6 @@ public class InodeController {
   public String getProjectNameForInode(Inode i) throws IllegalStateException {
     Inode projectRoot = getProjectRootForInode(i);
     return projectRoot.getInodePK().getName();
-  }
-  
-  /**
-   * Get a list of NavigationPath objects representing the project-relative path
-   * to the given Inode. The first element in the list is the project root
-   * directory.
-   * <p/>
-   * @param i
-   * @return
-   */
-  public List<NavigationPath> getConstituentsPath(Inode i) {
-    if (isProjectRoot(i)) {
-      List<NavigationPath> p = new ArrayList<>();
-      p.add(new NavigationPath(i.getInodePK().getName(), i.getInodePK().getName() + "/"));
-      return p;
-    } else {
-      List<NavigationPath> p = getConstituentsPath(inodeFacade.findParent(i));
-      NavigationPath a;
-      if (i.isDir()) {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).getPath() + i.getInodePK().getName()
-          + "/");
-      } else {
-        a = new NavigationPath(i.getInodePK().getName(), p.get(p.size() - 1).getPath() + i.getInodePK().getName());
-      }
-      p.add(a);
-      return p;
-    }
   }
   
   /**
