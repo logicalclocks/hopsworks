@@ -79,7 +79,8 @@ public class StatisticsController {
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, String commitTime, String content,
-    Featuregroup featuregroup) throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
+                                                  Featuregroup featuregroup)
+      throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
     // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
     // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
     // potentially other errors
@@ -100,9 +101,21 @@ public class StatisticsController {
   }
 
   public FeaturestoreStatistic registerStatistics(Project project, Users user, String commitTime, String content,
-    TrainingDataset trainingDataset) throws DatasetException, HopsSecurityException, IOException {
-    Inode statisticsInode = registerStatistics(project, user, commitTime, content, trainingDataset.getName(),
-      "TrainingDatasets", trainingDataset.getVersion());
+                                                  TrainingDataset trainingDataset)
+      throws FeaturestoreException, DatasetException, HopsSecurityException, IOException {
+    // In some cases Deequ returns NaN. Having NaNs in the frontend causes issue to the display
+    // By converting the string to JSONObject and back to string, JSONObject is going to fix them and
+    // potentially other errors
+    JSONObject statisticsJson = null;
+    try {
+      statisticsJson = new JSONObject(content);
+    } catch (JSONException jex) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.ERROR_SAVING_STATISTICS,
+          Level.WARNING, "Not a valid JSON", jex.getMessage(), jex);
+    }
+
+    Inode statisticsInode = registerStatistics(project, user, commitTime, statisticsJson.toString(),
+        trainingDataset.getName(), "TrainingDatasets", trainingDataset.getVersion());
     FeaturestoreStatistic featurestoreStatistic =
       new FeaturestoreStatistic(commitTime, statisticsInode, trainingDataset);
     featurestoreStatisticFacade.persist(featurestoreStatistic);

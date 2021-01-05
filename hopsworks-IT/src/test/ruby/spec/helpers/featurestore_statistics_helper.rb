@@ -19,21 +19,16 @@ module FeatureStoreStatisticsHelper
     post_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics"
     json_data = {
         commitTime: commit_time,
-        content: "{statistics}"
+        content: '{"columns": ["a", "b", "c"]}'
     }
-    result = post post_statistics_endpoint, json_data.to_json
-    return result
+    post post_statistics_endpoint, json_data.to_json
   end
 
   def get_statistics_commit(project_id, featurestore_id, entity_type, entity_id, commit_time: "20200820080808")
-    get_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content"
-    result = get get_statistics_endpoint
-    return result
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?filter_by=commit_time_eq:#{commit_time}&fields=content"
   end
 
   def get_last_statistics_commit(project_id, featurestore_id, entity_type, entity_id)
-    get_statistics_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content"
-    result = get get_statistics_endpoint
-    return result
+    get "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/#{entity_type}/#{entity_id}/statistics?sort_by=commit_time:desc&offset=0&limit=1&fields=content"
   end
 end
