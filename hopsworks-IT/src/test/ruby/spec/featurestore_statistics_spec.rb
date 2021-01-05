@@ -28,10 +28,10 @@ describe "On #{ENV['OS']}" do
         it "should be able to add statistics as a commit to a feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
         end
 
@@ -39,20 +39,20 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status_details(200)
         end
 
         it "should be able to get a specific statistics commit with content field of a feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
           json_result = get_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status_details(200)
@@ -62,7 +62,7 @@ describe "On #{ENV['OS']}" do
           # should contain exactly one item
           expect(parsed_json["count"] == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
-          expect(parsed_json["items"][0]["content"] == "{statistics}").to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
           expect(parsed_json["items"][0]["commitTime"] == "20200820080808").to be true
         end
 
@@ -70,10 +70,10 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status(200)
           json_result = get_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status_details(200)
@@ -83,19 +83,19 @@ describe "On #{ENV['OS']}" do
           # should contain exactly one item
           expect(parsed_json["count"] == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
-          expect(parsed_json["items"][0]["content"] == "{statistics}").to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
           expect(parsed_json["items"][0]["commitTime"] == "20200820080808").to be true
         end
 
         it "should be able to get the latest statistics commit for a feature group" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
-          json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
+          json_result, _ = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
                                                  commit_time: "20200821080808")
           expect_status(200)
           json_result = get_last_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
@@ -107,7 +107,7 @@ describe "On #{ENV['OS']}" do
           # should contain exactly one item
           expect(parsed_json["items"].length == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
-          expect(parsed_json["items"][0]["content"] == "{statistics}").to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
           expect(parsed_json["items"][0]["commitTime"] == "20200821080808").to be true
         end
 
@@ -115,12 +115,12 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           connector = get_hopsfs_training_datasets_connector(@project[:projectname])
-          json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
+          json_result, _ = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status(200)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
                                                  commit_time: "20200821080808")
           expect_status(200)
           json_result = get_last_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
@@ -132,7 +132,7 @@ describe "On #{ENV['OS']}" do
           # should contain exactly one item
           expect(parsed_json["items"].length == 1).to be true
           expect(parsed_json["items"][0].key?("content")).to be true
-          expect(parsed_json["items"][0]["content"] == "{statistics}").to be true
+          expect(JSON.parse(parsed_json["items"][0]["content"])).to eql({"columns" => ["a", "b", "c"]})
           expect(parsed_json["items"][0]["commitTime"] == "20200821080808").to be true
         end
 
@@ -142,9 +142,9 @@ describe "On #{ENV['OS']}" do
           json_result, featuregroup_name = create_cached_featuregroup(project.id, featurestore_id)
           expect_status(201)
           parsed_json = JSON.parse(json_result)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"])
           expect_status(200)
-          json_result = create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
+          create_statistics_commit(project.id, featurestore_id, "featuregroups", parsed_json["id"],
                                                  commit_time: "20200821080808")
           expect_status(200)
           delete_featuregroup_checked(project.id, featurestore_id, parsed_json["id"])
@@ -159,9 +159,9 @@ describe "On #{ENV['OS']}" do
           json_result, training_dataset_name = create_hopsfs_training_dataset(project.id, featurestore_id, connector)
           parsed_json = JSON.parse(json_result)
           expect_status(201)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"])
           expect_status(200)
-          json_result = create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
+          create_statistics_commit(project.id, featurestore_id, "trainingdatasets", parsed_json["id"],
                                                  commit_time: "20200821080808")
           expect_status(200)
           delete_trainingdataset_checked(project.id, featurestore_id, parsed_json["id"])
