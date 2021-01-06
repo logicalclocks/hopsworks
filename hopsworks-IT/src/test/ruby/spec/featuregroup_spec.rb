@@ -344,7 +344,7 @@ describe "On #{ENV['OS']}" do
         get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/doesnotexists?version=1"
         get get_featuregroup_endpoint
         parsed_json = JSON.parse(response.body)
-        expect_status(400)
+        expect_status(404)
       end
 
       it "should be able to get the hive schema of a cached offline featuregroup in the featurestore" do

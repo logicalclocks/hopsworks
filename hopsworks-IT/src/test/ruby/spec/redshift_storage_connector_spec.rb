@@ -453,7 +453,7 @@ describe "On #{ENV['OS']}" do
         delete_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
-        expect_status_details(400)
+        expect_status_details(404)
       end
       it "should delete secrete when deleting connector" do
         get_storage_connector(@p2[:id], @featurestore2["featurestoreId"], "redshift_connector_pwd")
