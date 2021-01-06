@@ -450,7 +450,7 @@ describe "On #{ENV['OS']}" do
           featurestore_id = get_featurestore_id(project.id)
           get_training_datasets_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/trainingdatasets/doesnotexists/"
           get get_training_datasets_endpoint
-          expect_status(400)
+          expect_status(404)
         end
 
         it "should fail to create a training dataset with no features and no query" do
@@ -1058,7 +1058,7 @@ describe "On #{ENV['OS']}" do
           project = get_project
           featurestore_id = get_featurestore_id(project.id)
           json_result, training_dataset_name = create_external_training_dataset(project.id, featurestore_id, nil)
-          expect_status(400)
+          expect_status(404)
         end
 
         it "should be able to add an external training dataset to the featurestore with splits" do
