@@ -281,7 +281,6 @@ public class FeaturestoreController {
     return featurestoreHopsfsConnectorDTO;
   }
 
-
   public FeaturestoreStorageConnectorDTO createOfflineJdbcConnector(String databaseName) throws FeaturestoreException {
     String hiveEndpoint;
     try {

@@ -23,6 +23,8 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -62,10 +64,17 @@ public class OnDemandFeaturegroup implements Serializable {
   private String query;
   @Column(name = "description")
   private String description;
+  @Column(name = "data_format")
+  @Enumerated(EnumType.ORDINAL)
+  private OnDemandDataFormat dataFormat;
+  @Column(name = "path")
+  private String path;
   @JoinColumn(name = "connector_id", referencedColumnName = "id")
   private FeaturestoreConnector featurestoreConnector;
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
   private Collection<OnDemandFeature> features;
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "onDemandFeaturegroup")
+  private Collection<OnDemandOption> options;
 
   @JoinColumns({
       @JoinColumn(name = "inode_pid", referencedColumnName = "parent_id"),
@@ -120,6 +129,30 @@ public class OnDemandFeaturegroup implements Serializable {
 
   public void setInode(Inode inode) {
     this.inode = inode;
+  }
+
+  public OnDemandDataFormat getDataFormat() {
+    return dataFormat;
+  }
+
+  public void setDataFormat(OnDemandDataFormat dataFormat) {
+    this.dataFormat = dataFormat;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public Collection<OnDemandOption> getOptions() {
+    return options;
+  }
+
+  public void setOptions(Collection<OnDemandOption> options) {
+    this.options = options;
   }
 
   @Override

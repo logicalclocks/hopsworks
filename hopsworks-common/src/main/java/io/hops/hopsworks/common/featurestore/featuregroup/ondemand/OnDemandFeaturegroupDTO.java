@@ -20,9 +20,11 @@ import io.hops.hopsworks.common.featurestore.feature.FeatureGroupFeatureDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.ondemand.OnDemandDataFormat;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +36,16 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
 
   private FeaturestoreStorageConnectorDTO storageConnector;
   private String query;
-  
+
+  private OnDemandDataFormat dataFormat;
+  private String path;
+
+  // This is useful if, for instance, we have a feature group defined over a set of CSV files
+  // we'll always have to configure elements like `header` and `inferSchema`, also when querying the
+  // on-demand feature group.
+  // In the future we should consider expanding the concept of options also to cached feature groups.
+  private List<OnDemandOptionDTO> options;
+
   public OnDemandFeaturegroupDTO() {
     super();
   }
@@ -44,6 +55,13 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
     super(featuregroup);
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     this.storageConnector = storageConnectorDTO;
+    this.dataFormat = featuregroup.getOnDemandFeaturegroup().getDataFormat();
+    this.path = featuregroup.getOnDemandFeaturegroup().getPath();
+
+    this.options = featuregroup.getOnDemandFeaturegroup().getOptions().stream()
+        .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
+        .collect(Collectors.toList());
+
     setFeaturestoreName(featureStoreName);
     setDescription(featuregroup.getOnDemandFeaturegroup().getDescription());
     setFeatures(featuregroup.getOnDemandFeaturegroup().getFeatures().stream().map(fgFeature ->
@@ -53,8 +71,14 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   }
 
   public OnDemandFeaturegroupDTO(Featuregroup featuregroup, FeaturestoreStorageConnectorDTO storageConnectorDTO) {
+    super(featuregroup);
     this.query = featuregroup.getOnDemandFeaturegroup().getQuery();
     this.storageConnector = storageConnectorDTO;
+    this.dataFormat = featuregroup.getOnDemandFeaturegroup().getDataFormat();
+    this.path = featuregroup.getOnDemandFeaturegroup().getPath();
+    this.options = featuregroup.getOnDemandFeaturegroup().getOptions().stream()
+        .map(o -> new OnDemandOptionDTO(o.getName(), o.getValue()))
+        .collect(Collectors.toList());
   }
 
   public FeaturestoreStorageConnectorDTO getStorageConnector() {
@@ -72,5 +96,29 @@ public class OnDemandFeaturegroupDTO extends FeaturegroupDTO {
   
   public void setQuery(String query) {
     this.query = query;
+  }
+
+  public OnDemandDataFormat getDataFormat() {
+    return dataFormat;
+  }
+
+  public void setDataFormat(OnDemandDataFormat dataFormat) {
+    this.dataFormat = dataFormat;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public List<OnDemandOptionDTO> getOptions() {
+    return options;
+  }
+
+  public void setOptions(List<OnDemandOptionDTO> options) {
+    this.options = options;
   }
 }

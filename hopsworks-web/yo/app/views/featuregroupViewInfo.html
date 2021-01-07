@@ -123,7 +123,6 @@
                     <td class="fs-table">
                         <button class="btn btn-default fa fa-bar-chart"
                                 uib-tooltip="View statistics"
-                                ng-disabled="featuregroupViewInfoCtrl.selectedFeaturegroup.type === 'onDemandFeaturegroupDTO'"
                                 ng-click="featuregroupViewInfoCtrl.viewFeaturegroupStatistics(); $event.stopPropagation();"></button>
 
                         <button class="btn btn-default fa fa-external-link" id="toolbar-preview"
@@ -279,7 +278,7 @@
                 <tbody class="fs-table">
                 <tr class="fs-table">
                     <td style="font-weight:700;" class="fs-table">
-                        JDBC Connector Name
+                        Connector Name
                     </td>
                     <td class="fs-table">
                         <a ng-click="featuregroupViewInfoCtrl.goToStorageConnector()">
@@ -287,14 +286,30 @@
                         </a>
                     </td>
                 </tr>
-                <tr class="fs-table">
+                <tr class="fs-table" ng-if="featuregroupViewInfoCtrl.selectedFeaturegroup.hasOwnProperty('query')">
                     <td style="font-weight:700;" class="fs-table">
-                        SQL
+                        SQL Query 
                     </td>
                     <td class="fs-table">
 <pre>
 <code>{{featuregroupViewInfoCtrl.selectedFeaturegroup.query}}</code>
 </pre>
+                    </td>
+                </tr>
+                <tr class="fs-table" ng-if='featuregroupViewInfoCtrl.showDataFormat'>
+                    <td style="font-weight:700;" class="fs-table">
+                        Data Format
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.dataFormat}}
+                    </td>
+                </tr>
+                <tr class="fs-table" ng-if='featuregroupViewInfoCtrl.showPath'>
+                    <td style="font-weight:700;" class="fs-table">
+                        Path 
+                    </td>
+                    <td class="fs-table">
+                        {{featuregroupViewInfoCtrl.selectedFeaturegroup.path}}
                     </td>
                 </tr>
                 </tbody>

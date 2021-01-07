@@ -89,7 +89,8 @@ module FeaturestoreHelper
     return json_result, featuregroup_name
   end
 
-  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil, features: nil)
+  def create_on_demand_featuregroup(project_id, featurestore_id, jdbcconnectorId, name: nil, version: 1, query: nil,
+                                    features: nil, data_format: nil, options: nil)
     type = "onDemandFeaturegroupDTO"
     featuregroupType = "ON_DEMAND_FEATURE_GROUP"
     create_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project_id}/featurestores/#{featurestore_id}/featuregroups"
@@ -111,6 +112,15 @@ module FeaturestoreHelper
         query: query,
         featuregroupType: featuregroupType
     }
+
+    unless data_format == nil
+      json_data[:dataFormat] = data_format
+    end
+
+    unless options == nil
+      json_data[:options] = options
+    end
+
     json_data = json_data.to_json
     json_result = post create_featuregroup_endpoint, json_data
     return json_result, featuregroup_name
