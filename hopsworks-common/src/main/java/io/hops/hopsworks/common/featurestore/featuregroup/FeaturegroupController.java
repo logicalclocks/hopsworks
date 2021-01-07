@@ -647,41 +647,6 @@ public class FeaturegroupController {
         "feature group name: " + featureGroupName + " feature group version: " + version));
   }
 
-
-  /**
-   * Synchronizes an already created Hive table with the Feature Store metadata
-   *
-   * @param featurestore the featurestore of the feature group
-   * @param featuregroupDTO the feature group DTO
-   * @param user the Hopsworks user making the request
-   * @return a DTO of the created feature group
-   * @throws FeaturestoreException
-   */
-  public FeaturegroupDTO syncHiveTableWithFeaturestore(Featurestore featurestore, FeaturegroupDTO featuregroupDTO,
-    Users user) throws FeaturestoreException {
-
-    if (featuregroupDTO instanceof OnDemandFeaturegroupDTO) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
-          + ", Only cached feature groups can be synced from an existing Hive table, not on-demand feature groups.");
-    }
-    verifyFeatureGroupInput(featuregroupDTO);
-
-    CachedFeaturegroup cachedFeaturegroup = cachedFeaturegroupController
-            .syncHiveTableWithFeaturestore(featurestore, (CachedFeaturegroupDTO) featuregroupDTO);
-
-    //Persist basic feature group metadata
-    Featuregroup featuregroup = persistFeaturegroupMetadata(featurestore, user, featuregroupDTO,
-      cachedFeaturegroup, null);
-
-    //Get jobs
-    List<Jobs> jobs = getJobs(featuregroupDTO.getJobs(), featurestore.getProject());
-
-    //Store jobs
-    featurestoreJobFacade.insertJobs(featuregroup, jobs);
-
-    return featuregroupDTO;
-  }
-
   /**
    * Persists metadata of a new feature group in the feature_group table
    *

@@ -165,12 +165,19 @@ public class ConstructorController {
       query.setLeftFeatureGroupEndTimestamp(endCommit.getCommittedOn());
       query.setLeftFeatureGroupEndCommitId(endCommit.getFeatureGroupCommitPK().getCommitId());
 
-      if (queryDTO.getJoins() == null && queryDTO.getLeftFeatureGroupStartTime() != null){
+      boolean noJoins = false;
+      if (queryDTO.getJoins() == null) {
+        noJoins = true;
+      } else if (queryDTO.getJoins().size() == 0){
+        noJoins = true;
+      }
+      if (noJoins && queryDTO.getLeftFeatureGroupStartTime() != null){
         Long exactStartCommitTimestamp = featureGroupCommitCommitController.findCommitByDate(
             query.getFeaturegroup(), queryDTO.getLeftFeatureGroupStartTime()).getCommittedOn();
         query.setLeftFeatureGroupStartTimestamp(exactStartCommitTimestamp);
       } else if (queryDTO.getJoins() != null && queryDTO.getLeftFeatureGroupStartTime() != null) {
-        throw new IllegalArgumentException("Incremental queries are not allowed with join statements");
+        throw new IllegalArgumentException("For incremental queries start time must be provided and "
+            + "join statements are not allowed");
       }
     }
 

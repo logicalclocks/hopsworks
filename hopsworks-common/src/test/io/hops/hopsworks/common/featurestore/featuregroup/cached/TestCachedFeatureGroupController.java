@@ -175,15 +175,6 @@ public class TestCachedFeatureGroupController {
     newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", false, true));
 
     thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.HUDI);
-  }
-
-  @Test
-  public void testVerifyPartitionKeyHudi() throws Exception {
-    List<FeatureGroupFeatureDTO> newSchema = new ArrayList<>();
-    newSchema.add(new FeatureGroupFeatureDTO("part_param", "Integer", "", true, false));
-
-    thrown.expect(FeaturestoreException.class);
-    cachedFeaturegroupController.verifyPrimaryAndPartitionKey(newSchema, TimeTravelFormat.HUDI);
+    cachedFeaturegroupController.verifyPrimaryKey(newSchema, TimeTravelFormat.HUDI);
   }
 }
