@@ -32,7 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   private Boolean onlineEnabled = false;
-  private Boolean hudiEnabled = false;
   private TimeTravelFormat timeTravelFormat = TimeTravelFormat.NONE;
 
   public CachedFeaturegroupDTO() {
@@ -56,20 +55,11 @@ public class CachedFeaturegroupDTO extends FeaturegroupDTO {
 
   public void setTimeTravelFormat (TimeTravelFormat timeTravelFormat ) { this.timeTravelFormat = timeTravelFormat; }
 
-  public Boolean getHudiEnabled() {
-    return hudiEnabled;
-  }
-
-  public void setHudiEnabled(Boolean hudiEnabled) {
-    this.hudiEnabled = hudiEnabled;
-  }
-
   @Override
   public String toString() {
     return "CachedFeaturegroupDTO{" +
       ", onlineEnabled=" + onlineEnabled +
       ", timeTravelFormat =" + timeTravelFormat +
-      ", hudiEnabled =" + hudiEnabled +
       '}';
   }
 }

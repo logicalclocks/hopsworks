@@ -810,11 +810,11 @@ describe "On #{ENV['OS']}" do
         expect_status(400)
       end
 
-      it "should fail when creating hudi cached featuregroup without partition key" do
+      it "should not fail when creating hudi cached featuregroup without partition key" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)
         create_cached_featuregroup(project.id, featurestore_id, time_travel_format: "HUDI")
-        expect_status(400)
+        expect_status(201)
       end
 
       it "should be able to bulk insert into existing hudi enabled offline cached featuregroup" do
@@ -1077,6 +1077,44 @@ describe "On #{ENV['OS']}" do
 
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
         expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"]).to be true
+      end
+
+      it "should be able to create hudi enabled cached feature group with extra constraints of features" do
+        project = get_project
+        featurestore_id = get_featurestore_id(@project[:id])
+
+        # Create cached featuregroup
+        features = [
+            {type: "INT",
+             name: "testfeature",
+             description: "testfeaturedescription",
+             primary: true,
+             onlineType: "INT",
+             partition: true},
+
+            {type: "INT",
+             name: "testfeature2",
+             description: "testfeaturedescription",
+             primary: false,
+             onlineType: "INT",
+             partition: false,
+             hudiPrecombineKey: true}
+        ]
+        json_result, featuregroup_name = create_cached_featuregroup(@project[:id], featurestore_id, features: features, time_travel_format: "HUDI")
+
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+
+        # Get the first version
+        get_featuregroup_endpoint = "#{ENV['HOPSWORKS_API']}/project/#{project.id}/featurestores/#{featurestore_id}/featuregroups/#{featuregroup_name}?version=1"
+        json_result = get get_featuregroup_endpoint
+        parsed_json = JSON.parse(json_result)
+        expect_status(200)
+
+        expect(parsed_json.first["timeTravelFormat"] == "HUDI").to be true
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["primary"]).to be true
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature"}.first["partition"]).to be true
+        expect(parsed_json.first["features"].select{ |f| f["name"] == "testfeature2"}.first["hudiPrecombineKey"]).to be true
       end
 
       it "should be able to construct a SQL string from a query object with joins and filters" do

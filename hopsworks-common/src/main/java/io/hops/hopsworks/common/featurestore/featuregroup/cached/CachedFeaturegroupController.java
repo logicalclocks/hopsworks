@@ -324,7 +324,7 @@ public class CachedFeaturegroupController {
       Featurestore featurestore, CachedFeaturegroupDTO cachedFeaturegroupDTO, Project project, Users user)
       throws FeaturestoreException, SQLException {
 
-    verifyPrimaryAndPartitionKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
+    verifyPrimaryKey(cachedFeaturegroupDTO.getFeatures(), cachedFeaturegroupDTO.getTimeTravelFormat());
 
     //Prepare DDL statement
     String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
@@ -378,8 +378,6 @@ public class CachedFeaturegroupController {
     cachedFeaturegroupDTO.setFeatures(featureGroupFeatureDTOS);
     cachedFeaturegroupDTO.setName(featuregroup.getName());
     cachedFeaturegroupDTO.setTimeTravelFormat(featuregroup.getCachedFeaturegroup().getTimeTravelFormat());
-    cachedFeaturegroupDTO.setHudiEnabled(featuregroup.getCachedFeaturegroup().getHiveTbls()
-            .getSdId().getInputFormat().equals(OfflineFeatureGroupController.Formats.HUDI.getInputFormat()));
 
     cachedFeaturegroupDTO.setDescription(
       featuregroup.getCachedFeaturegroup().getHiveTbls().getHiveTableParamsCollection().stream()
@@ -406,20 +404,25 @@ public class CachedFeaturegroupController {
 
     List<FeatureGroupFeatureDTO> featureGroupFeatureDTOS = new ArrayList<>();
     boolean primary;
+    boolean hudiPrecombine;
     String defaultValue;
     // Add all the columns - if there is a primary key constraint, set the primary key flag
     for (HiveColumns hc : hiveTable.getSdId().getCdId().getHiveColumnsCollection()) {
       primary = getPrimaryFlag(featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
+      hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints, hc.getHiveColumnsPK().getColumnName());
+
       defaultValue = getDefaultValue(defaultConstraints, hc.getHiveColumnsPK().getColumnName());
-      featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(), hc.getTypeName(),
-        hc.getComment(), primary, defaultValue, featureGroup.getId()));
+      featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(hc.getHiveColumnsPK().getColumnName(),
+          hc.getTypeName(), hc.getComment(), primary, false, hudiPrecombine, defaultValue, featureGroup.getId()));
     }
     // Hive stores the partition columns separately. Add them
     for (HivePartitionKeys pk : hiveTable.getHivePartitionKeysCollection()) {
       primary = getPrimaryFlag(featureExtraConstraints, pk.getHivePartitionKeysPK().getPkeyName());
+      hudiPrecombine = getPrecombineFlag(featureGroup, featureExtraConstraints,
+          pk.getHivePartitionKeysPK().getPkeyName());
       defaultValue = getDefaultValue(defaultConstraints, pk.getHivePartitionKeysPK().getPkeyName());
       featureGroupFeatureDTOS.add(new FeatureGroupFeatureDTO(pk.getHivePartitionKeysPK().getPkeyName(),
-        pk.getPkeyType(), pk.getPkeyComment(), primary, true, defaultValue, featureGroup.getId()));
+        pk.getPkeyType(), pk.getPkeyComment(), primary, true, hudiPrecombine, defaultValue, featureGroup.getId()));
     }
     if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI){
       featureGroupFeatureDTOS = dropHudiSpecFeatureGroupFeature(featureGroupFeatureDTOS);
@@ -434,7 +437,18 @@ public class CachedFeaturegroupController {
   }
 
   private boolean getPrimaryFlag(Collection<CachedFeatureExtraConstraints> featureExtraConstraints, String columnName) {
-    return featureExtraConstraints.stream().anyMatch(pk -> pk.getName().equals(columnName));
+    return featureExtraConstraints.stream().filter(CachedFeatureExtraConstraints::getPrimary).anyMatch(pk ->
+        pk.getName().equals(columnName));
+  }
+
+  private boolean getPrecombineFlag(
+      Featuregroup featureGroup, Collection<CachedFeatureExtraConstraints> featureExtraConstraints, String columnName) {
+    if (featureGroup.getCachedFeaturegroup().getTimeTravelFormat() == TimeTravelFormat.HUDI) {
+      return featureExtraConstraints.stream().filter(CachedFeatureExtraConstraints::getHudiPrecombineKey)
+          .anyMatch(hpk -> hpk.getName().equals(columnName));
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -583,29 +597,6 @@ public class CachedFeaturegroupController {
     } finally {
       certificateMaterializer.removeCertificatesLocal(user.getUsername(), project.getName());
     }
-  }
-
-  /**
-   * Synchronizes an already created Hive table with the Feature Store metadata
-   *
-   * @param featurestore the featurestore of the feature group
-   * @param cachedFeaturegroupDTO the feature group DTO
-   * @return a DTO of the created feature group
-   * @throws FeaturestoreException
-   */
-  public CachedFeaturegroup syncHiveTableWithFeaturestore(Featurestore featurestore,
-    CachedFeaturegroupDTO cachedFeaturegroupDTO) throws FeaturestoreException {
-  
-    //Get Hive Table Metadata
-    String tableName = getTblName(cachedFeaturegroupDTO.getName(), cachedFeaturegroupDTO.getVersion());
-    HiveTbls hiveTbls = cachedFeaturegroupFacade.getHiveTableByNameAndDB(tableName, featurestore.getHiveDbId())
-        .orElseThrow(() ->new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.SYNC_TABLE_NOT_FOUND, Level.FINE,
-        ", tried to sync hive table with name: " + tableName + " with the feature store, but the table was not found " +
-          "in the Hive metastore"));
-
-    //Persist cached feature group
-    return persistCachedFeaturegroupMetadata(hiveTbls, false, cachedFeaturegroupDTO.getTimeTravelFormat(),
-        cachedFeaturegroupDTO.getFeatures());
   }
 
   /**
@@ -801,13 +792,12 @@ public class CachedFeaturegroupController {
     return newFeatures;
   }
 
-  public void verifyPrimaryAndPartitionKey(List<FeatureGroupFeatureDTO> features,
-                                           TimeTravelFormat timeTravelFormat) throws FeaturestoreException {
-    // Currently the Hudi implementation requires having both at last a primary key and a partition key
-    if (timeTravelFormat == TimeTravelFormat.HUDI &&
-        (features.stream().noneMatch(FeatureGroupFeatureDTO::getPrimary) ||
-            features.stream().noneMatch(FeatureGroupFeatureDTO::getPartition))) {
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_PARTITION_KEY_REQUIRED, Level.FINE);
+  public void verifyPrimaryKey(List<FeatureGroupFeatureDTO> features,
+                               TimeTravelFormat timeTravelFormat) throws FeaturestoreException {
+    // Currently the Hudi implementation requires having at last one primary key
+    if (timeTravelFormat == TimeTravelFormat.HUDI && (features.stream().noneMatch(FeatureGroupFeatureDTO::getPrimary)))
+    {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.PRIMARY_KEY_REQUIRED, Level.FINE);
     }
   }
 
@@ -816,12 +806,36 @@ public class CachedFeaturegroupController {
     List<CachedFeatureExtraConstraints> cachedFeatureExtraConstraints = new ArrayList<>();
     List<String> pkNames = featureGroupFeatureDTOS.stream()
         .filter(FeatureGroupFeatureDTO::getPrimary)
-        .map(f -> f.getName())
+        .map(FeatureGroupFeatureDTO::getName)
         .collect(Collectors.toList());
+
+    //hudi precombine key is always one feature
+    String hudiPrecombineKeyName = featureGroupFeatureDTOS.stream()
+        .filter(FeatureGroupFeatureDTO::getHudiPrecombineKey)
+        .map(FeatureGroupFeatureDTO::getName)
+        .findFirst().orElse(null);
+
+    boolean primaryKeyIsHudiPrecombineKey = false;
+
+    if (cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      if (hudiPrecombineKeyName == null) {
+        //hudi precombine key is always one feature, we pick up 1st primary key
+        hudiPrecombineKeyName = pkNames.get(0);
+        primaryKeyIsHudiPrecombineKey = true;
+      } else {
+        // User may set primary key as precombine key
+        primaryKeyIsHudiPrecombineKey = pkNames.contains(hudiPrecombineKeyName);
+      }
+    }
 
     for (String pkName : pkNames) {
       cachedFeatureExtraConstraints.add(new CachedFeatureExtraConstraints(cachedFeaturegroup,
-          pkName, true, false));
+          pkName, true, pkName.equals(hudiPrecombineKeyName)));
+    }
+
+    if (!primaryKeyIsHudiPrecombineKey && cachedFeaturegroup.getTimeTravelFormat() == TimeTravelFormat.HUDI){
+      cachedFeatureExtraConstraints.add(new CachedFeatureExtraConstraints(cachedFeaturegroup,
+          hudiPrecombineKeyName, false, true));
     }
     return cachedFeatureExtraConstraints;
   }

@@ -32,6 +32,7 @@ public class FeatureGroupFeatureDTO {
   private String description;
   private Boolean primary = false;
   private Boolean partition = false;
+  private Boolean hudiPrecombineKey  = false;
   private String defaultValue = null;
   private Integer featureGroupId = null;
 
@@ -58,7 +59,7 @@ public class FeatureGroupFeatureDTO {
     this.defaultValue = defaultValue;
     this.featureGroupId = featureGroupId;
   }
-  
+
   // for testing
   public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, String defaultValue) {
     this.name = name;
@@ -87,12 +88,24 @@ public class FeatureGroupFeatureDTO {
     this.featureGroupId = featureGroupId;
   }
 
+  public FeatureGroupFeatureDTO(String name, String type, String description, Boolean primary, Boolean partition,
+                                Boolean hudiPrecombineKey, String defaultValue, Integer featureGroupId) {
+    this.name = name;
+    this.type = type;
+    this.description = description;
+    this.primary = primary;
+    this.partition = partition;
+    this.hudiPrecombineKey = hudiPrecombineKey;
+    this.defaultValue = defaultValue;
+    this.featureGroupId = featureGroupId;
+  }
+
   public FeatureGroupFeatureDTO(String name, String type, String description) {
     this.name = name;
     this.type = type;
     this.description = description;
   }
-  
+
   public FeatureGroupFeatureDTO(String name, String type, String description, Integer featureGroupId) {
     this.name = name;
     this.type = type;
@@ -137,7 +150,12 @@ public class FeatureGroupFeatureDTO {
   public Boolean getPartition() {
     return partition;
   }
-  
+
+  @XmlElement
+  public Boolean getHudiPrecombineKey() {
+    return hudiPrecombineKey;
+  }
+
   @XmlElement
   public String getOnlineType() {
     return onlineType;
@@ -147,7 +165,7 @@ public class FeatureGroupFeatureDTO {
   public String getDefaultValue() {
     return defaultValue;
   }
-  
+
   @XmlElement
   public Integer getFeatureGroupId() {
     return featureGroupId;
@@ -172,7 +190,11 @@ public class FeatureGroupFeatureDTO {
   public void setPartition(Boolean partition) {
     this.partition = partition;
   }
-  
+
+  public void setHudiPrecombineKey(Boolean hudiPrecombineKey) {
+    this.hudiPrecombineKey = hudiPrecombineKey;
+  }
+
   public void setOnlineType(String onlineType) {
     this.onlineType = onlineType;
   }
@@ -184,7 +206,7 @@ public class FeatureGroupFeatureDTO {
   public void setFeatureGroupId(Integer featureGroupId) {
     this.featureGroupId = featureGroupId;
   }
-  
+
   @Override
   public String toString() {
     return "FeatureDTO{" +
@@ -196,6 +218,8 @@ public class FeatureGroupFeatureDTO {
       ", partition=" + partition + '\'' +
       ", defaultValue=" + defaultValue + '\'' +
       ", featureGroupName=" + featureGroupId +
+      ", hudiPrecombineKey=" + hudiPrecombineKey + '\'' +
+      ", defaultValue=" + defaultValue +
       '}';
   }
   
@@ -207,6 +231,7 @@ public class FeatureGroupFeatureDTO {
     result = 31 * result + (description != null ? description.hashCode() : 0);
     result = 31 * result + primary.hashCode();
     result = 31 * result + partition.hashCode();
+    result = 31 * result + hudiPrecombineKey.hashCode();
     result = 31 * result + (defaultValue != null ? defaultValue.hashCode() : 0);
     result = 31 * result + (featureGroupId != null ? featureGroupId.hashCode() : 0);
     return result;

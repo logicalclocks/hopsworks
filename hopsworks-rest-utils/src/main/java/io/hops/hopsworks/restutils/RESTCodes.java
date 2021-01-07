@@ -1479,9 +1479,9 @@ public class RESTCodes {
         +  "commit date", Response.Status.NOT_FOUND),
     PROVIDED_DATE_FORMAT_NOT_SUPPORTED(119, "Invalid date format", Response.Status.BAD_REQUEST),
     ONLINE_FEATURESTORE_JDBC_CONNECTOR_NOT_FOUND(120, "Online featurestore JDBC connector not found",
-        Response.Status.INTERNAL_SERVER_ERROR),
-    PRIMARY_KEY_PARTITION_KEY_REQUIRED(121, "Primary key and partition key are required " +
-        "when using Hudi time travel format", Response.Status.BAD_REQUEST),
+            Response.Status.INTERNAL_SERVER_ERROR),
+    PRIMARY_KEY_REQUIRED(121, "Primary key is required when using Hudi time travel "
+        + "format", Response.Status.BAD_REQUEST),
     DATABRICKS_INSTANCE_ALREADY_EXISTS(122, "Databricks Instance already registered", Response.Status.CONFLICT),
     DATABRICKS_INSTANCE_NOT_EXISTS(123, "Databricks Instance doesn't exists", Response.Status.NOT_FOUND),
     DATABRICKS_CANNOT_START_CLUSTER(124, "Could not start Databricks cluster",

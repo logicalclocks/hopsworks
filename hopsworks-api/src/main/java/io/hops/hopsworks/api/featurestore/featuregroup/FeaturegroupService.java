@@ -438,34 +438,6 @@ public class FeaturegroupService {
       throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.FEATUREGROUP_NAME_NOT_PROVIDED.getMessage());
     }
   }
-  
-  /**
-   * Endpoint for syncing a Hive Table with the Feature Store
-   *
-   * @param featuregroupDTO JSON payload for the new featuregroup
-   * @return a JSON representation of the the created featuregroup
-   */
-  @POST
-  @Path("/sync")
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Synchronize Hive Table with the feature store",
-    response = FeaturegroupDTO.class)
-  public Response syncWithFeaturestore(@Context SecurityContext sc, FeaturegroupDTO featuregroupDTO)
-    throws FeaturestoreException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    if(featuregroupDTO == null){
-      throw new IllegalArgumentException("Input JSON for creating a new Feature Group cannot be null");
-    }
-    FeaturegroupDTO createdFeaturegroupDTO = featuregroupController.syncHiveTableWithFeaturestore(featurestore,
-      featuregroupDTO, user);
-    activityFacade.persistActivity(ActivityFacade.CREATED_FEATUREGROUP + createdFeaturegroupDTO.getName(),
-      project, user, ActivityFlag.SERVICE);
-    GenericEntity<FeaturegroupDTO> featuregroupGeneric =
-      new GenericEntity<FeaturegroupDTO>(createdFeaturegroupDTO) {};
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.CREATED).entity(featuregroupGeneric).build();
-  }
 
   @ApiOperation( value = "Create or update tags for a featuregroup", response = TagsDTO.class)
   @PUT
