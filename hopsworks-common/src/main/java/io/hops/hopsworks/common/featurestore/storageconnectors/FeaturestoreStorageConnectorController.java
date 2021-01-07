@@ -108,8 +108,8 @@ public class FeaturestoreStorageConnectorController {
     return convertToConnectorDTO(user, project, featurestoreConnector);
   }
 
-  private FeaturestoreStorageConnectorDTO convertToConnectorDTO(Users user, Project project,
-                                                                FeaturestoreConnector featurestoreConnector)
+  public FeaturestoreStorageConnectorDTO convertToConnectorDTO(Users user, Project project,
+                                                               FeaturestoreConnector featurestoreConnector)
       throws FeaturestoreException {
     switch (featurestoreConnector.getConnectorType()) {
       case S3:

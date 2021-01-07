@@ -51,6 +51,8 @@ angular.module('hopsWorksApp')
             self.onlineSchemaWorking= false;
             self.offlineSampleColumns = []
             self.attachedTags = [];
+            self.showDataFormat = false;
+            self.showPath = false;
 
             self.featurestoreCtrl = null;
 
@@ -236,6 +238,10 @@ angular.module('hopsWorksApp')
                 }
 
                 self.selectedFeaturegroup = featuregroups.versionToGroups[featuregroups.activeVersion];
+
+                self.showDataFormat = typeof self.selectedFeaturegroup.dataFormat !== 'undefined';
+                self.showPath = typeof self.selectedFeaturegroup.path !== 'undefined' 
+                                    && self.selectedFeaturegroup.path != "";
 
                 self.featurestoreCtrl = featurestoreCtrl;
                 self.projectId = featurestoreCtrl.projectId;

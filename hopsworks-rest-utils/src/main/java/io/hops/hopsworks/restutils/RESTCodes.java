@@ -1507,7 +1507,9 @@ public class RESTCodes {
     ERROR_SAVING_STATISTICS(137, "Error saving statistics", Response.Status.BAD_REQUEST),
     FILTER_CONSTRUCTION_ERROR(138, "Failed to construct filter condition",
       Response.Status.INTERNAL_SERVER_ERROR),
-    ILLEGAL_FILTER_ARGUMENTS(139, "Malformed filter conditions for Query", Response.Status.BAD_REQUEST);
+    ILLEGAL_FILTER_ARGUMENTS(139, "Malformed filter conditions for Query", Response.Status.BAD_REQUEST),
+    ILLEGAL_ON_DEMAND_DATA_FORMAT(140, "Illegal on-demand feature group data format",
+        Response.Status.BAD_REQUEST);
 
     private int code;
     private String message;

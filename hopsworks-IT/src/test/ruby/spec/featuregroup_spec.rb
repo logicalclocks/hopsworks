@@ -1464,6 +1464,61 @@ describe "On #{ENV['OS']}" do
         expect(parsed_json["errorCode"] == 270044).to be true
       end
 
+      it "should be able to add an on-demand feature group with S3 connector and data format" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
+        connector_id = JSON.parse(connector_json)["id"]
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
+                                                       query: "",
+                                                       data_format: "CSV")
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json["query"]).to eql("")
+        expect(parsed_json["dataFormat"]).to eql("CSV")
+      end
+
+      it "should not be able to create a on-demand feature group with query and s3 connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
+        connector_id = JSON.parse(connector_json)["id"]
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
+                                                       query: "SELECT * FROM something")
+        expect_status(400)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["errorCode"]).to eql(270044)
+      end
+
+      it "should not be able to create a on-demand feature group wihtout data format and s3 connector" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
+        connector_id = JSON.parse(connector_json)["id"]
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id, query: "")
+        expect_status(400)
+        parsed_json = JSON.parse(json_result)
+        expect(parsed_json["errorCode"]).to eql(270140)
+      end
+
+      it "should be able to add an on-demand feature group with options" do
+        project = get_project
+        featurestore_id = get_featurestore_id(project.id)
+        connector_json, _ = create_s3_connector(project.id, featurestore_id, access_key: "test", secret_key: "test")
+        connector_id = JSON.parse(connector_json)["id"]
+        options = [{"name": "header", "value": "true"}]
+        json_result, _ = create_on_demand_featuregroup(project.id, featurestore_id, connector_id,
+                                                       query: "",
+                                                       data_format: "CSV",
+                                                       options: options)
+        parsed_json = JSON.parse(json_result)
+        expect_status(201)
+        expect(parsed_json["query"]).to eql("")
+        expect(parsed_json["dataFormat"]).to eql("CSV")
+        expect(parsed_json["options"][0]["name"]).to eql("header")
+        expect(parsed_json["options"][0]["value"]).to eql("true")
+      end
+
       it "should be able to delete an on-demand featuregroup from the featurestore" do
         project = get_project
         featurestore_id = get_featurestore_id(project.id)

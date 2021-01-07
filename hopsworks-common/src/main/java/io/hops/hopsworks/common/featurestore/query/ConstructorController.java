@@ -26,8 +26,9 @@ import io.hops.hopsworks.common.featurestore.featuregroup.cached.CachedFeaturegr
 import io.hops.hopsworks.common.featurestore.featuregroup.cached.FeatureGroupCommitController;
 import io.hops.hopsworks.common.featurestore.featuregroup.ondemand.OnDemandFeaturegroupDTO;
 import io.hops.hopsworks.common.featurestore.online.OnlineFeaturestoreController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.query.filter.FilterController;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreUtils;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
@@ -84,6 +85,8 @@ public class ConstructorController {
   @EJB
   private FeaturestoreUtils featurestoreUtils;
   @EJB
+  private FeaturestoreStorageConnectorController storageConnectorController;
+  @EJB
   private FilterController filterController;
 
   private final static String ALL_FEATURES = "*";
@@ -126,7 +129,7 @@ public class ConstructorController {
     FsQueryDTO fsQueryDTO = new FsQueryDTO();
     fsQueryDTO.setQuery(generateSQL(query, false));
     fsQueryDTO.setHudiCachedFeatureGroups(getHudiAliases(query, new ArrayList<>(), project, user));
-    fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(query, new ArrayList<>()));
+    fsQueryDTO.setOnDemandFeatureGroups(getOnDemandAliases(user, project, query, new ArrayList<>()));
 
     // if on-demand feature groups are involved in the query, we don't support online queries
     if (fsQueryDTO.getOnDemandFeatureGroups().isEmpty()) {
@@ -699,21 +702,23 @@ public class ConstructorController {
 
   // TODO(Fabio): does it make sense to this in the same pass as where we generate the table nodes?
   // or does the code becomes even more complicated?
-  private List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Query query,
-                                                                List<OnDemandFeatureGroupAliasDTO> aliases) {
+  private List<OnDemandFeatureGroupAliasDTO> getOnDemandAliases(Users user, Project project, Query query,
+                                                                List<OnDemandFeatureGroupAliasDTO> aliases)
+      throws FeaturestoreException {
 
     if (query.getFeaturegroup().getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP) {
-      FeaturestoreJdbcConnectorDTO featurestoreJdbcConnectorDTO = new FeaturestoreJdbcConnectorDTO(
+      FeaturestoreStorageConnectorDTO featurestoreStorageConnectorDTO =
+          storageConnectorController.convertToConnectorDTO(user, project,
               query.getFeaturegroup().getOnDemandFeaturegroup().getFeaturestoreConnector());
       OnDemandFeaturegroupDTO onDemandFeaturegroupDTO =
-          new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreJdbcConnectorDTO);
+          new OnDemandFeaturegroupDTO(query.getFeaturegroup(), featurestoreStorageConnectorDTO);
 
       aliases.add(new OnDemandFeatureGroupAliasDTO(query.getAs(), onDemandFeaturegroupDTO));
     }
 
     if (query.getJoins() != null && !query.getJoins().isEmpty()) {
       for (Join join : query.getJoins()) {
-        getOnDemandAliases(join.getRightQuery(), aliases);
+        getOnDemandAliases(user, project, join.getRightQuery(), aliases);
       }
     }
 

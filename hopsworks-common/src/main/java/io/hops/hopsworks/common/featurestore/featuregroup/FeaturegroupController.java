@@ -32,7 +32,8 @@ import io.hops.hopsworks.common.featurestore.jobs.FeaturestoreJobFacade;
 import io.hops.hopsworks.common.featurestore.statistics.StatisticsController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnController;
 import io.hops.hopsworks.common.featurestore.statistics.columns.StatisticColumnFacade;
-import io.hops.hopsworks.common.featurestore.storageconnectors.jdbc.FeaturestoreJdbcConnectorDTO;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
+import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
 import io.hops.hopsworks.common.featurestore.utils.FeaturestoreInputValidation;
 import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
 import io.hops.hopsworks.common.hdfs.DistributedFsService;
@@ -109,6 +110,8 @@ public class FeaturegroupController {
   private HdfsUsersController hdfsUsersController;
   @EJB
   private InodeController inodeController;
+  @EJB
+  private FeaturestoreStorageConnectorController featurestoreStorageConnectorController;
 
   /**
    * Gets all featuregroups for a particular featurestore and project, using the userCerts to query Hive
@@ -269,8 +272,9 @@ public class FeaturegroupController {
         cachedFeaturegroupDTO.setFeaturestoreName(featurestoreName);
         return cachedFeaturegroupDTO;
       case ON_DEMAND_FEATURE_GROUP:
-        FeaturestoreJdbcConnectorDTO storageConnectorDTO =
-            new FeaturestoreJdbcConnectorDTO(featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
+        FeaturestoreStorageConnectorDTO storageConnectorDTO =
+            featurestoreStorageConnectorController.convertToConnectorDTO(user, project,
+                    featuregroup.getOnDemandFeaturegroup().getFeaturestoreConnector());
         return new OnDemandFeaturegroupDTO(featurestoreName, featuregroup, storageConnectorDTO);
       default:
         throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.ILLEGAL_FEATUREGROUP_TYPE.getMessage()
@@ -521,8 +525,6 @@ public class FeaturegroupController {
     throws SQLException, FeaturestoreException, ServiceException, IOException {
     switch (featuregroup.getFeaturegroupType()) {
       case CACHED_FEATURE_GROUP:
-        // Statistics files need to be deleted explicitly
-        statisticsController.deleteStatistics(project, user, featuregroup);
         //Delete hive_table will cascade to cached_featuregroup_table which will cascade to feature_group table
         cachedFeaturegroupController.dropHiveFeaturegroup(featuregroup, project, user);
         //Delete mysql table and metadata
@@ -539,6 +541,9 @@ public class FeaturegroupController {
             FeaturegroupType.CACHED_FEATURE_GROUP + ". The provided feature group type was not recognized: "
             + featuregroup.getFeaturegroupType());
     }
+
+    // Statistics files need to be deleted explicitly
+    statisticsController.deleteStatistics(project, user, featuregroup);
 
     activityFacade.persistActivity(ActivityFacade.DELETED_FEATUREGROUP + featuregroup.getName(),
         project, user, ActivityFlag.SERVICE);
