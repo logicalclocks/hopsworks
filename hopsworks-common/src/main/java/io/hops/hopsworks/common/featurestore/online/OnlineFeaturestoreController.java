@@ -51,9 +51,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Class controlling the interaction with the online featurestore databases in Hopsworks and the associated
@@ -382,11 +385,18 @@ public class OnlineFeaturestoreController {
     FeaturestoreJdbcConnector featurestoreJdbcConnector = new FeaturestoreJdbcConnector();
     featurestoreJdbcConnector.setConnectionString(settings.getFeaturestoreJdbcUrl() + dbName +
         "?useSSL=false&allowPublicKeyRetrieval=true");
-    featurestoreJdbcConnector.setArguments(
-        FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG + "=" +
-            FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE + "," +
-            FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG + "=" + onlineDbUsername +
-            ",isolationLevel=NONE,batchsize=500");
+    Map<String, String> arguments = new HashMap<>();
+    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_PASSWORD_ARG,
+        FeaturestoreConstants.ONLINE_FEATURE_STORE_CONNECTOR_PASSWORD_TEMPLATE);
+    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_USER_ARG, onlineDbUsername);
+    arguments.put(FeaturestoreConstants.ONLINE_FEATURE_STORE_JDBC_DRIVER_ARG, MYSQL_DRIVER);
+    arguments.put("isolationLevel", "NONE");
+    arguments.put("batchsize", "500");
+
+    featurestoreJdbcConnector.setArguments(arguments.entrySet()
+        .stream()
+        .map(e -> e.getKey() + "=" + e.getValue())
+        .collect(Collectors.joining(",")));
     featurestoreConnector.setJdbcConnector(featurestoreJdbcConnector);
 
     featurestoreConnectorFacade.update(featurestoreConnector);
