@@ -449,6 +449,21 @@ describe "On #{ENV['OS']}" do
 
         expect(jdbc_connector_db[:connection_string]).to start_with("jdbc:mysql://onlinefs.mysql.service.consul")
       end
+      
+      it "online storage connector should contain the driver class and isolationLevel" do
+        connector_name = "#{@project['projectname']}_#{@user['username']}_onlinefeaturestore"
+        featurestore_id = get_featurestore_id(@project['id'])
+        connector_json = get_storage_connector(@project['id'], featurestore_id, connector_name)
+        connector = JSON.parse(connector_json)
+
+        arguments_hash = Hash[]
+        connector['arguments'].split(",").each {|arg|
+          arg_split = arg.split("=")
+          arguments_hash[arg_split[0]] = arg_split[1]
+        }
+        expect(arguments_hash['driver']).to eql("com.mysql.cj.jdbc.Driver")
+        expect(arguments_hash['isolationLevel']).to eql("NONE")
+      end
     end
   end
 end
