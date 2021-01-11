@@ -31,7 +31,7 @@ import io.hops.hopsworks.common.dao.jobhistory.ExecutionFacade;
 import io.hops.hopsworks.common.dao.user.UserFacade;
 import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.ops.ProvOps;
-import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsReturnType;
 import io.hops.hopsworks.common.provenance.ops.ProvUsageType;
@@ -103,7 +103,7 @@ public class ProvUsageBuilder {
     ProvOpsDTO ops = opsBuilder.build(targetEndpoint.getProject(), params, ProvOpsReturnType.AGGREGATIONS);
     Optional<ProvOpsDTO> aggregation = ops.getItems().stream()
       .filter(agg -> agg.getAggregation() != null
-        && agg.getAggregation().equals(ProvOpsElasticComm.Aggregations.APP_USAGE.toString()))
+        && agg.getAggregation().equals(ProvOpsAggregations.APP_USAGE.toString()))
       .findFirst();
     if(!aggregation.isPresent()) {
       return usage;
@@ -145,7 +145,7 @@ public class ProvUsageBuilder {
     return new ProvOpsParamBuilder()
       .filterByField(ProvOps.FieldsP.ML_ID, artifactId)
       .filterByField(ProvOps.FieldsP.DATASET_I_ID, targetEndpoint.getInode().getId())
-      .withAggregation(ProvOpsElasticComm.Aggregations.APP_USAGE);
+      .withAggregation(ProvOpsAggregations.APP_USAGE);
   }
   
   //ops are artifacts -> apps -> ops
