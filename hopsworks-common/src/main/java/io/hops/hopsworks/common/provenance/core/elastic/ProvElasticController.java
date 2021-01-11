@@ -274,7 +274,7 @@ public class ProvElasticController {
     return response.getHits().getTotalHits().value;
   }
   
-  public <A extends ElasticAggregation, E extends Exception> Pair<Long, Map<A, List>> searchCount(
+  public <A extends ElasticAggregation, E extends Exception> Map<A, List> searchAggregations(
     SearchRequest request, Map<A, ElasticAggregationParser<?, E>> aggregations)
     throws ElasticException, E {
     SearchResponse response;
@@ -287,7 +287,7 @@ public class ProvElasticController {
         aggResults.put(aggregation.getKey(), aggregation.getValue().apply(response.getAggregations()));
       }
     }
-    return Pair.with(response.getHits().getTotalHits().value, aggResults);
+    return aggResults;
   }
   
   private SearchResponse searchScrollingInt(SearchScrollRequest request) throws ElasticException {
