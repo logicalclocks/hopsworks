@@ -8,7 +8,7 @@ import io.hops.hopsworks.common.provenance.core.Provenance;
 import io.hops.hopsworks.common.provenance.core.elastic.BasicElasticHit;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregationParser;
 import io.hops.hopsworks.common.provenance.ops.ProvOps;
-import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
 import io.hops.hopsworks.exceptions.ProvenanceException;
 import io.hops.hopsworks.restutils.RESTCodes;
@@ -28,8 +28,7 @@ import java.util.logging.Level;
 
 public class ProvOpsElasticEE {
   
-  public static AggregationBuilder getAggregationBuilder(
-    ProvOpsElasticComm.Aggregations agg)
+  public static AggregationBuilder getAggregationBuilder(ProvOpsAggregations agg)
     throws ProvenanceException {
     switch(agg) {
       case APP_USAGE: return artifactOpsAppAggregation();
@@ -40,7 +39,7 @@ public class ProvOpsElasticEE {
   }
   
   public static ElasticAggregationParser<?, ProvenanceException> getAggregationParser(
-    ProvOpsElasticComm.Aggregations agg)
+    ProvOpsAggregations agg)
     throws ProvenanceException {
     switch(agg) {
       case APP_USAGE: return artifactOpsAppAggregationParser();

@@ -38,7 +38,7 @@ public class ProvOpsParamBuilder {
   Set<ProvParser.ElasticExpansions> expansions = new HashSet<>();
   Map<ProvParser.Field, ProvParser.FilterVal> appStateFilter = new HashMap<>();
   Pair<Integer, Integer> pagination = null;
-  Set<ProvOpsElasticComm.Aggregations> aggregations = new HashSet<>();
+  Set<ProvOpsAggregations> aggregations = new HashSet<>();
   
   public ProvOpsParamBuilder filterByFields(Set<String> params)
     throws ProvenanceException {
@@ -113,7 +113,7 @@ public class ProvOpsParamBuilder {
     return expansions.contains(ProvParser.ElasticExpansions.APP);
   }
   
-  public ProvOpsParamBuilder withAggregation(ProvOpsElasticComm.Aggregations aggregation) {
+  public ProvOpsParamBuilder withAggregation(ProvOpsAggregations aggregation) {
     this.aggregations.add(aggregation);
     return this;
   }
@@ -124,11 +124,11 @@ public class ProvOpsParamBuilder {
     }
     for(String agg : aggregations) {
       try {
-        ProvOpsElasticComm.Aggregations aggregation = ProvOpsElasticComm.Aggregations.valueOf(agg);
+        ProvOpsAggregations aggregation = ProvOpsAggregations.valueOf(agg);
         withAggregation(aggregation);
       } catch(NullPointerException | IllegalArgumentException e) {
         String msg = "aggregation" + agg
-          + " not supported - supported:" + EnumSet.allOf(ProvOpsElasticComm.Aggregations.class);
+          + " not supported - supported:" + EnumSet.allOf(ProvOpsAggregations.class);
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO,
           msg, "exception extracting aggregations");
       }
@@ -136,7 +136,7 @@ public class ProvOpsParamBuilder {
     return this;
   }
   
-  public Set<ProvOpsElasticComm.Aggregations> getAggregations() {
+  public Set<ProvOpsAggregations> getAggregations() {
     return aggregations;
   }
   

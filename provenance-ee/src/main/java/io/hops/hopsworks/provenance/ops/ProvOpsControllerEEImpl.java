@@ -18,8 +18,8 @@ import io.hops.hopsworks.common.provenance.core.elastic.ElasticHelper;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticHits;
 import io.hops.hopsworks.common.provenance.core.elastic.ProvElasticController;
 import io.hops.hopsworks.common.provenance.ops.ProvLinks;
+import io.hops.hopsworks.common.provenance.ops.ProvOpsAggregations;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsControllerIface;
-import io.hops.hopsworks.common.provenance.ops.ProvOpsElasticComm;
 import io.hops.hopsworks.common.provenance.ops.ProvOpsParamBuilder;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvLinksDTO;
 import io.hops.hopsworks.common.provenance.ops.dto.ProvOpsDTO;
@@ -150,12 +150,12 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "currently multiple aggregations in one request are not supported");
     }
-    Map<ProvOpsElasticComm.Aggregations, List> aggregations = provFileOpsAggs(project.getInode().getId(),
+    Map<ProvOpsAggregations, List> aggregations = provFileOpsAggs(project.getInode().getId(),
       params.getFileOpsFilterBy(), params.getAggregations());
     ProvOpsDTO allAggregations = new ProvOpsDTO();
     List<ProvOpsDTO> aggregationItems = new ArrayList<>();
     allAggregations.setItems(aggregationItems);
-    for (Map.Entry<ProvOpsElasticComm.Aggregations, List> agg : aggregations.entrySet()) {
+    for (Map.Entry<ProvOpsAggregations, List> agg : aggregations.entrySet()) {
       ProvOpsDTO aggregation = new ProvOpsDTO();
       aggregation.setAggregation(agg.getKey().toString());
       aggregation.setItems(agg.getValue());
@@ -164,15 +164,14 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     return allAggregations;
   }
   
-  public Map<ProvOpsElasticComm.Aggregations, List> provFileOpsAggs(Long projectIId,
-                                                                    Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
-                                                                    Set<ProvOpsElasticComm.Aggregations> aggregations)
+  public Map<ProvOpsAggregations, List> provFileOpsAggs(Long projectIId,
+                                                        Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters,
+                                                        Set<ProvOpsAggregations> aggregations)
     throws ProvenanceException {
     
-    Map<ProvOpsElasticComm.Aggregations,
-      ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
+    Map<ProvOpsAggregations, ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
     List<AggregationBuilder> aggBuilders = new ArrayList<>();
-    for (ProvOpsElasticComm.Aggregations aggregation : aggregations) {
+    for (ProvOpsAggregations aggregation : aggregations) {
       aggParsers.put(aggregation, ProvOpsElasticEE.getAggregationParser(aggregation));
       aggBuilders.add(ProvOpsElasticEE.getAggregationBuilder(aggregation));
     }
@@ -184,7 +183,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
         .andThen(ElasticHelper.withAggregations(aggBuilders));
     SearchRequest request = srF.get();
     
-    Map<ProvOpsElasticComm.Aggregations, List> aggregationResult;
+    Map<ProvOpsAggregations, List> aggregationResult;
     try {
       aggregationResult = client.searchAggregations(request, aggParsers);
       return aggregationResult;
@@ -508,57 +507,57 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
    */
   static final ElasticHits.Merger<ProvOpsDTO, Map<String, AppState>> provLinksMerger
     = (ProvOpsDTO hit, Map<String, AppState> state) -> {
-    if (hit.getAppId().equals("none")) {
-      return Try.apply(() -> state);
-    }
-    switch (hit.getInodeOperation()) {
-      case CREATE: {
-        AppState appArtifacts = state.get(hit.getAppId());
-        if (appArtifacts == null) {
-          appArtifacts = new AppState();
-          state.put(hit.getAppId(), appArtifacts);
-        }
-        // assume immutable artifacts
-        appArtifacts.in.remove(hit.getMlId());
+      if (hit.getAppId().equals("none")) {
+        return Try.apply(() -> state);
+      }
+      switch (hit.getInodeOperation()) {
+        case CREATE: {
+          AppState appArtifacts = state.get(hit.getAppId());
+          if (appArtifacts == null) {
+            appArtifacts = new AppState();
+            state.put(hit.getAppId(), appArtifacts);
+          }
+          // assume immutable artifacts
+          appArtifacts.in.remove(hit.getMlId());
         
-        ProvOpsDTO s = appArtifacts.out.get(hit.getMlId());
-        if (s == null) {
-          s = hit.upgradePart();
-          appArtifacts.out.put(hit.getMlId(), s);
+          ProvOpsDTO s = appArtifacts.out.get(hit.getMlId());
+          if (s == null) {
+            s = hit.upgradePart();
+            appArtifacts.out.put(hit.getMlId(), s);
+          }
+          // timestamp marks when you are done creating it - we want the highest (last)
+          if (s.getTimestamp() < hit.getTimestamp()) {
+            s.setTimestamp(hit.getTimestamp());
+            s.setLogicalTime(hit.getLogicalTime());
+            s.setReadableTimestamp(hit.getReadableTimestamp());
+          }
         }
-        // timestamp marks when you are done creating it - we want the highest (last)
-        if (s.getTimestamp() < hit.getTimestamp()) {
-          s.setTimestamp(hit.getTimestamp());
-          s.setLogicalTime(hit.getLogicalTime());
-          s.setReadableTimestamp(hit.getReadableTimestamp());
+        break;
+        case ACCESS_DATA: {
+          AppState appArtifacts = state.get(hit.getAppId());
+          if (appArtifacts == null) {
+            appArtifacts = new AppState();
+            state.put(hit.getAppId(), appArtifacts);
+          }
+          if (appArtifacts.out.containsKey(hit.getMlId())) {
+            break;
+          }
+          ProvOpsDTO s = appArtifacts.in.get(hit.getMlId());
+          if (s == null) {
+            s = hit.upgradePart();
+            appArtifacts.in.put(hit.getMlId(), s);
+          }
+          // timestamp marks when you start reading it - we want the lowest (first)
+          if (s.getTimestamp() > hit.getTimestamp()) {
+            s.setTimestamp(hit.getTimestamp());
+            s.setLogicalTime(hit.getLogicalTime());
+            s.setReadableTimestamp(hit.getReadableTimestamp());
+          }
         }
+        break;
       }
-      break;
-      case ACCESS_DATA: {
-        AppState appArtifacts = state.get(hit.getAppId());
-        if (appArtifacts == null) {
-          appArtifacts = new AppState();
-          state.put(hit.getAppId(), appArtifacts);
-        }
-        if (appArtifacts.out.containsKey(hit.getMlId())) {
-          break;
-        }
-        ProvOpsDTO s = appArtifacts.in.get(hit.getMlId());
-        if (s == null) {
-          s = hit.upgradePart();
-          appArtifacts.in.put(hit.getMlId(), s);
-        }
-        // timestamp marks when you start reading it - we want the lowest (first)
-        if (s.getTimestamp() > hit.getTimestamp()) {
-          s.setTimestamp(hit.getTimestamp());
-          s.setLogicalTime(hit.getLogicalTime());
-          s.setReadableTimestamp(hit.getReadableTimestamp());
-        }
-      }
-      break;
-    }
-    return Try.apply(() -> state);
-  };
+      return Try.apply(() -> state);
+    };
   
   interface HandlerFactory<O1, O2> {
     ElasticHits.Handler<ProvOpsDTO, O1> getHandler();
