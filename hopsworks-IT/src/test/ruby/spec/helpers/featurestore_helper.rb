@@ -449,7 +449,7 @@ module FeaturestoreHelper
     get_featuregroup(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
     if response.code == resolve_status(200, response.code)
       true
-    elsif response.code == resolve_status(400, response.code)  && json_body[:errorCode] == 270009
+    elsif response.code == resolve_status(404, response.code)  && json_body[:errorCode] == 270009
       false
     else
       expect_status_details(200)
@@ -531,7 +531,7 @@ module FeaturestoreHelper
     get_trainingdataset(project_id, name, version: version, fs_id: fs_id, fs_project_id: fs_project_id)
     if response.code == resolve_status(200, response.code)
       true
-    elsif response.code == resolve_status(400, response.code) && json_body[:errorCode] == 270012
+    elsif response.code == resolve_status(404, response.code) && json_body[:errorCode] == 270012
       false
     else
       expect_status_details(200)
