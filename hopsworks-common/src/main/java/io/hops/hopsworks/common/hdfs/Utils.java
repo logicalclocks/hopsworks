@@ -42,6 +42,7 @@ package io.hops.hopsworks.common.hdfs;
 import com.google.common.base.CharMatcher;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
+import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.util.Settings;
@@ -145,6 +146,10 @@ public final class Utils {
   
   public static String getFeaturestorePath(Project project, Settings settings) {
     return settings.getHiveWarehouse() + "/" + getFeaturestoreName(project);
+  }
+
+  public static String getFeaturegroupName(Featuregroup featuregroup) {
+    return getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
   }
   
   public static String getFeaturegroupName(String featuregroupName, Integer version) {

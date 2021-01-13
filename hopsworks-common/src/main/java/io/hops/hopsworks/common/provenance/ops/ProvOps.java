@@ -130,13 +130,15 @@ public class ProvOps {
     
     @Override
     public Provenance.FileOps apply(Object o) throws ProvenanceException {
-      if(o instanceof String) {
+      if (o instanceof String) {
         try {
-          return Provenance.FileOps.valueOf((String)o);
+          return Provenance.FileOps.valueOf((String) o);
         } catch (NullPointerException | IllegalArgumentException e) {
           String msg = "expected string-ified version of File Ops found " + o.getClass();
           throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO, msg, msg, e);
         }
+      } else if (o instanceof Provenance.FileOps) {
+        return (Provenance.FileOps) o;
       } else {
         String msg = "expected string-ified version of File Ops found " + o.getClass();
         throw new ProvenanceException(RESTCodes.ProvenanceErrorCode.BAD_REQUEST, Level.INFO, msg);
