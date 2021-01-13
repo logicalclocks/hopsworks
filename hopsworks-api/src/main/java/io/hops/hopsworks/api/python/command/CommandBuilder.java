@@ -53,7 +53,7 @@ public class CommandBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.COMMANDS.toString())
       .build());
     return dto;
@@ -64,7 +64,7 @@ public class CommandBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.COMMANDS.toString())
       .path(Integer.toString(command.getId()))
       .build());
@@ -76,7 +76,7 @@ public class CommandBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .path(libName)
       .path(ResourceRequest.Name.COMMANDS.toString())
@@ -89,7 +89,7 @@ public class CommandBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .path(libName)
       .path(ResourceRequest.Name.COMMANDS.toString())

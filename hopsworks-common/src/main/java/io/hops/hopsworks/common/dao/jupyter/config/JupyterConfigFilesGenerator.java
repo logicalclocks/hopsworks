@@ -232,7 +232,7 @@ public class JupyterConfigFilesGenerator {
         .setPort(port)
         .setBaseDirectory(js.getBaseDir())
         .setHdfsUser(hdfsUser)
-        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonVersion()) +
+        .setWhiteListedKernels("'" + pythonKernelName(js.getProject().getPythonEnvironment().getPythonVersion()) +
             "', 'pysparkkernel', 'sparkkernel', 'sparkrkernel'")
         .setHadoopHome(settings.getHadoopSymbolicLinkDir())
         .setJupyterCertsDirectory(certsDir)
@@ -331,7 +331,7 @@ public class JupyterConfigFilesGenerator {
     File sparkmagic_config_file = new File(confDirPath, SparkMagicConfigTemplate.FILE_NAME);
     
     if (!jupyter_config_file.exists()) {
-      String pythonKernelName = pythonKernelName(project.getPythonVersion());
+      String pythonKernelName = pythonKernelName(project.getPythonEnvironment().getPythonVersion());
       if (settings.isPythonKernelEnabled()) {
         String pythonKernelPath = pythonKernelPath(kernelsDir, pythonKernelName);
         File pythonKernelFile = new File(pythonKernelPath, KernelTemplate.FILE_NAME);

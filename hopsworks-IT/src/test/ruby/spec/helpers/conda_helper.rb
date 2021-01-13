@@ -100,6 +100,10 @@ module CondaHelper
     end
   end
 
+  def get_project_env_by_id(id)
+    PythonEnvironment.find_by(project_id: "#{id}")
+  end
+
   def check_if_img_exists_locally(docker_image_name)
     image_name = @@registry + "/" + docker_image_name
     return system("docker inspect --type=image " + image_name + "> /dev/null 2>&1")
@@ -109,12 +113,21 @@ module CondaHelper
     delete "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}"
   end
 
+  def wait_for_sync
+    wait_for do
+      CondaCommands.where(["project_id = ? and op = ?", @project[:id], "SYNC_BASE_ENV"]).empty?
+    end
+  end
+
   def create_env(project, version)
+    env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
-    if not (project[:python_version].nil? or project[:python_version].empty?)
+    if not env.nil?
       delete_env(project[:id], version)
     end
-    post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
+    project = post "#{ENV['HOPSWORKS_API']}/project/#{project[:id]}/python/environments/#{version}?action=create"
+    wait_for_sync
+    project
   end
 
   def list_envs(projectId)
@@ -122,12 +135,15 @@ module CondaHelper
   end
 
   def create_env_and_update_project(project, version)
+    env = get_project_env_by_id(project[:id])
     project = get_project_by_name(project[:projectname])
-    if project[:python_version].nil? or project[:python_version].empty?
+    if env.nil?
       create_env(project, version)
       expect_status(201)
+      wait_for_sync
       get_project_by_name(project[:projectname]) #get project from db with updated python version
     else
+      wait_for_sync
       project
     end
   end
@@ -172,6 +188,10 @@ module CondaHelper
   def get_env_commands(projectId, version)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/commands"
   end
+
+    def get_env_conflicts(projectId, version, query="")
+      get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/conflicts" + query
+    end
 
   def get_library_commands(projectId, version, lib)
     get "#{ENV['HOPSWORKS_API']}/project/#{projectId}/python/environments/#{version}/libraries/#{lib}/commands"

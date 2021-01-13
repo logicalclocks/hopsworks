@@ -13,21 +13,35 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
+package io.hops.hopsworks.api.python.conflicts;
 
-public enum CondaOp {
-  CREATE,
-  REMOVE,
-  INSTALL,
-  UNINSTALL,
-  EXPORT,
-  IMPORT,
-  SYNC_BASE_ENV;
+import io.hops.hopsworks.common.api.RestDTO;
+import io.hops.hopsworks.persistence.entity.project.service.ProjectServiceEnum;
 
-  public static boolean isEnvOp(CondaOp arg) {
-    return arg.compareTo(CondaOp.CREATE) == 0 ||
-           arg.compareTo(CondaOp.REMOVE) == 0 ||
-           arg.compareTo(CondaOp.EXPORT) == 0 ||
-           arg.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class ConflictDTO extends RestDTO<ConflictDTO> {
+
+  private String conflict;
+  private ProjectServiceEnum service;
+
+  public ConflictDTO() {
+  }
+
+  public String getConflict() {
+    return conflict;
+  }
+
+  public void setConflict(String conflict) {
+    this.conflict = conflict;
+  }
+
+  public ProjectServiceEnum getService() {
+    return service;
+  }
+
+  public void setService(ProjectServiceEnum service) {
+    this.service = service;
   }
 }

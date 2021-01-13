@@ -171,7 +171,7 @@ public abstract class AbstractExecutionController implements ExecutionController
           ActivityFlag.JOB);
         break;
       case PYSPARK:
-        if(!job.getProject().getConda()){
+        if(job.getProject().getPythonEnvironment() == null){
           throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINEST);
         }
         exec = sparkController.startJob(job, args, user);

@@ -56,6 +56,18 @@
           </div>
         </div>
         <div ng-if="!mainCtrl.showSearchPage" class="content-wrapper">
+          <div class="alert alert-warning" style="padding: 10px;" ng-show="!jupyterCtrl.condaEnabled">
+                  <span style="font-size: 1.2em !important; margin-left:150px;">
+                    <i class="fa fa-warning" uib-tooltip="Jupyter requires a Python environment but the service is not enabled for this project." style="color:red;">
+                    </i> <a ng-click="jupyterCtrl.navigateToPython()" style="cursor: pointer;">Python</a> environment not created for this project.
+                  </span>
+          </div>
+          <div class="alert alert-warning" style="padding: 10px;" ng-show="jupyterCtrl.jupyterConflicts">
+                  <span style="font-size: 1.2em !important; margin-left:150px;">
+                    <i class="fa fa-warning" uib-tooltip="pip check detected unsatisfied dependency constraints in the environment. If possible please resolve them." style="color:orange;">
+                    </i> <a ng-click="jupyterCtrl.showConflicts()" style="cursor: pointer;">Conflicts</a> detected in your python environment may affect this service
+                  </span>
+          </div>
         <div growl reference="10" class="pull-right" ></div>
           <h3 class="breadcrumb" ng-class="{'hidden' : jupyterCtrl.ui == ''}">
             <div style="padding-top: 20px; padding-bottom: 5px;">
@@ -70,9 +82,6 @@
                     </div>
                     <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="!jupyterCtrl.condaEnabled" style="margin-top:12px;">
                       <i class="fa fa-warning" style="color:orange;" uib-tooltip="Jupyter requires that you enable Python. Please navigate to the Python service to do so."></i> <strong>&nbsp;Python not enabled</strong>
-                    </div>
-                    <div ng-controller="ProjectCtrl as projectCtrl" class="ng-scope" ng-if="jupyterCtrl.condaEnabled && !jupyterCtrl.jupyterInstalled && jupyterCtrl.numNotEnabledEnvs === 0" style="margin-top:12px;">
-                      <i class="fa fa-warning" style="color:orange;" uib-tooltip="Make sure Jupyter, hdfscontents and Sparkmagic are installed in your project environment"></i> <strong>&nbsp;Jupyter not installed</strong>
                     </div>
                   </div>
                 </div>

@@ -66,8 +66,9 @@ describe "On #{ENV['OS']}" do
 
         context 'conda not enabled' do
           it 'should fail to list envs' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             list_envs(@project[:id])
@@ -75,8 +76,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'should fail to get env commands' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             get_env_commands(@project[:id], python_version)
@@ -84,8 +86,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'should fail to list libraries' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             list_libraries(@project[:id], python_version)
@@ -93,8 +96,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'should fail to list library commands' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             get_library_commands(@project[:id], python_version, 'numpy')
@@ -102,8 +106,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'should fail to install library' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             install_library(@project[:id], python_version, 'requests', 'CONDA', '2.20.0', conda_channel)
@@ -111,8 +116,9 @@ describe "On #{ENV['OS']}" do
           end
 
           it 'should fail to search for a library' do
+            @env = get_project_env_by_id(@project[:id])
             @project = get_project_by_name(@project[:projectname])
-            if !@project[:python_version].nil? and !@project[:python_version].empty?
+            if !@env.nil?
               delete_env(@project[:id], python_version)
             end
             search_library(@project[:id], python_version, 'conda', 'dropbox', conda_channel)
@@ -160,6 +166,17 @@ describe "On #{ENV['OS']}" do
             expect(check_if_img_exists_locally(non_versioned_project_image + ".2")).to be false
             expect(check_if_img_exists_locally(base_python_project_image)).to be true
 
+          end
+
+          it 'export environment' do
+            delete_env(@project[:id], python_version)
+            @project = create_env_and_update_project(@project, python_version)
+            export_env(@project[:id], python_version)
+            expect_status(200)
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
           end
 
           it 'search library (conda)' do
@@ -418,8 +435,12 @@ describe "On #{ENV['OS']}" do
             end
             projectname = "project_#{short_random_id}"
             project = create_project_by_name(projectname)
-            project = create_env_and_update_project(project, python_version)
-            # Install a library to create the new environment
+            project = create_env_and_update_project(project, python_version)      
+
+            wait_for do
+              CondaCommands.where(["project_id = ? and op = ?", project[:id], "SYNC_BASE_ENV"]).empty?
+            end
+
             install_library(project[:id], python_version, 'dropbox', 'CONDA', '10.2.0', conda_channel)
             expect_status(201)
             project = get_project_by_name(project[:projectname])
@@ -522,16 +543,50 @@ describe "On #{ENV['OS']}" do
             expect(imageio_library[:packageSource]).to eq("PIP")
             expect(imageio_library[:version]).to eq ("2.2.0")
           end
-        end
-        
-        it 'export environment' do
-          delete_env(@project[:id], python_version)
-          @project = create_env_and_update_project(@project, python_version)
-          export_env(@project[:id], python_version)
-          expect_status(200)
 
-          wait_for do
-            CondaCommands.find_by(project_id: @project[:id]).nil?
+          it 'check conflicts are empty' do
+            delete_env(@project[:id], python_version)
+            @project = create_env_and_update_project(@project, python_version)
+
+            get_env_conflicts(@project[:id], python_version)
+            expect_status(200)
+            expect(json_body[:items]).to eq(nil)
+            expect(json_body[:count]).to eq(nil)
+          end
+
+          it 'check conflicts are not empty' do
+            delete_env(@project[:id], python_version)
+            @project = create_env_and_update_project(@project, python_version)
+
+            uninstall_library(@project[:id], python_version, 'tensorboard')
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            get_env_conflicts(@project[:id], python_version)
+            expect_status(200)
+            expect(json_body[:count]).to be > 0
+          end
+
+          it 'check jupyter conflicts' do
+            delete_env(@project[:id], python_version)
+            @project = create_env_and_update_project(@project, python_version)
+
+            get_env_conflicts(@project[:id], python_version, "?filter_by=service:JUPYTER")
+            expect_status(200)
+            expect(json_body[:items]).to eq(nil)
+            expect(json_body[:count]).to eq(nil)
+
+            uninstall_library(@project[:id], python_version, 'notebook')
+
+            wait_for do
+              CondaCommands.find_by(project_id: @project[:id]).nil?
+            end
+
+            get_env_conflicts(@project[:id], python_version, "?filter_by=service:JUPYTER")
+            expect_status(200)
+            expect(json_body[:count]).to be > 0
           end
         end
       end

@@ -40,8 +40,7 @@ describe "On #{ENV['OS']}" do
 
       it "should start, get logs and stop a notebook server" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -93,8 +92,9 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should fail to start if insufficient executor memory is provided" do
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+
+        create_env_and_update_project(@project, version)
+
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/jupyter/settings"
         expect_status(200)
         shutdownLevel=6
@@ -113,8 +113,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not allow starting multiple notebook servers" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -133,8 +132,7 @@ describe "On #{ENV['OS']}" do
 
       it "should allow multiple restarts" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project)
 
@@ -156,8 +154,8 @@ describe "On #{ENV['OS']}" do
       end
 
       it "should be killed by timer" do
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+
+        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=0)
 
@@ -175,8 +173,7 @@ describe "On #{ENV['OS']}" do
 
       it "should not be killed by timer" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         secret_dir, staging_dir, settings = start_jupyter(@project, expected_status=200, shutdownLevel=6)
 
@@ -196,8 +193,7 @@ describe "On #{ENV['OS']}" do
 
       it "should be able to start from a shared dataset" do
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         projectname = "project_#{short_random_id}"
         project = create_project_by_name(projectname)
@@ -232,8 +228,7 @@ describe "On #{ENV['OS']}" do
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
                         "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)
@@ -253,8 +248,7 @@ describe "On #{ENV['OS']}" do
         copy_from_local("#{ENV['PROJECT_DIR']}/hopsworks-IT/src/test/ruby/spec/auxiliary/export_model.ipynb",
                         "/Projects/#{@project[:projectname]}/Resources", @user[:username], "#{@project[:projectname]}__Resources", 750, "#{@project[:projectname]}")
 
-        post "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/python/environments/#{version}?action=create"
-        expect_status(201)
+        create_env_and_update_project(@project, version)
 
         get "#{ENV['HOPSWORKS_API']}/project/#{@project[:id]}/dataset/Resources/?action=listing&expand=inodes"
         expect_status(200)

@@ -48,6 +48,11 @@ angular.module('hopsWorksApp')
             self.loading = false;
             self.loadingText = "";
 
+            self.loadingLibs = false;
+            self.loadingCommands = false;
+
+            self.initializingEnvironment = true;
+
             $scope.activeForm;
             $scope.indextab = 0;
 
@@ -86,8 +91,8 @@ angular.module('hopsWorksApp')
 
             self.isRetryingFailedCondaOps = false;
 
-            self.pythonVersion = "0.0";
-
+            self.pythonVersion = null;
+            self.pythonConflicts = false;
 
             //https://repo.continuum.io/pkgs/free/linux-64/
             self.condaChannel = "defaults";
@@ -225,14 +230,53 @@ angular.module('hopsWorksApp')
                 }
             };
 
-            var getInstalledLibs = function () {
-                if (!self.enabled) {
+            self.getSyncStatus = function (version) {
+                if(version) {
+                     PythonService.getEnvironmentCommands(self.projectId, version).then(
+                        function (success) {
+                            if(success.data.items) {
+                                var commands = success.data.items;
+                                    for (var i = 0; i < commands.length; i++) {
+                                        if (commands[i].op === 'SYNC_BASE_ENV') {
+                                            var syncBaseEnv = {}
+                                            syncBaseEnv['commands'] = success.data;
+                                            syncBaseEnv['type'] = 'commandDTO';
+                                            self.opsStatus = [syncBaseEnv]
+                                            self.initializingEnvironment = true;
+                                            self.loadingLibs = true;
+                                            self.loadingCommands = true;
+                                            return;
+                                        }
+                                    }
+                            }
+                            self.initializingEnvironment = false;
+                        },
+                        function (error) {
+                            self.enabled = false;
+                     });
+                 }
+            };
+
+            self.showConflicts = function () {
+                ModalService.conflicts('lg', 'Environment conflicts', self.projectId, self.pythonVersion, '?expand=conflicts')
+                            .then(function (success) {}, function (error) {});
+            };
+
+            self.getInstalledLibs = function () {
+
+                self.getSyncStatus(self.pythonVersion);
+
+                if (!self.enabled || self.initializingEnvironment || self.pythonVersion === null) {
                     return;
                 };
-                PythonService.getEnvironments(self.projectId).then(
+
+                PythonService.getEnvironments(self.projectId, '?expand=commands').then(
                     function (success) {
                         var envs = success.data.items;
                         var count = success.data.count;
+                        if(envs) {
+                            self.pythonConflicts = envs[0].pythonConflicts;
+                        }
                         var opsStatusList = [];
                         for (var i = 0; i < count; i++) {
                             if (typeof envs[i].commands !== 'undefined' && envs[i].commands.count > 0) {
@@ -244,7 +288,9 @@ angular.module('hopsWorksApp')
                         }
                         PythonService.getLibraries(self.projectId, self.pythonVersion).then(
                             function (success) {
-                                self.installedLibs = success.data.items;
+                                self.loadingLibs = false;
+                                self.loadingCommands = false;
+                                self.updateInstalledLibs(success.data.items);
                                 var libCount = success.data.count;
                                 for (var i = 0; i < libCount; i++) {
                                     if (typeof self.installedLibs[i].commands !== 'undefined' && self.installedLibs[i].commands.count > 0) {
@@ -254,6 +300,8 @@ angular.module('hopsWorksApp')
                                 self.opsStatus = opsStatusList;
                             },
                             function (error) {
+                                self.loadingLibs = false;
+                                self.loadingCommands = false;
                                 showErrorGrowl(error);
                             });
                     }, function (error) {
@@ -261,16 +309,47 @@ angular.module('hopsWorksApp')
                     });
 
             };
-            getInstalledLibs();
+            self.getInstalledLibs();
+
+            self.updateInstalledLibs = function(libs) {
+                if(libs) {
+                    if(self.installedLibs.length == 0 || libs.length > self.installedLibs.length) {
+                        self.installedLibs = libs;
+                    } else {
+                        var i=0;
+                          self.installedLibs = self.installedLibs.slice(0, libs.length);
+                          angular.forEach(libs, function (lib, key) {
+                            for (var key in self.installedLibs[i]) {
+                                delete self.installedLibs[i][key];
+                            }
+                            for (var key in lib) {
+                                self.installedLibs[i][key] = lib[key];
+                            }
+                            i++;
+                        });
+                    }
+                }
+            };
 
             //this might be a bit to frequent for refresh rate
             var getInstallationStatusInterval = $interval(function () {
-                getInstalledLibs();
+                self.getInstalledLibs();
             }, 5000);
 
-            self.getInstalled = function () {
-                getInstalledLibs();
+            self.loadLibraries = function () {
+                if(self.installedLibs.length === 0) {
+                    self.loadingLibs = true;
+                }
+                self.getInstalledLibs();
             };
+
+            self.loadCommands = function () {
+                if(self.opsStatus.length === 0) {
+                    self.loadingCommands = true;
+                }
+                self.getInstalledLibs();
+            }
+
             $scope.$on("$destroy", function () {
                 $interval.cancel(getInstallationStatusInterval);
             });
@@ -290,6 +369,8 @@ angular.module('hopsWorksApp')
                     function (success) {
                         self.enabled = true;
                         self.pythonVersion = success.data.items[0].pythonVersion;
+                        self.pythonConflicts = success.data.items[0].pythonConflicts;
+                        self.getSyncStatus(self.pythonVersion);
                     },
                     function (error) {
                         self.enabled = false;
@@ -305,9 +386,9 @@ angular.module('hopsWorksApp')
                         self.stopLoading()
                         self.enabled = true;
                         self.enabling = false;
-                        self.getInstalled();
+                        self.getSyncStatus(version);
                         self.pythonVersion = version;
-                        growl.success("Anaconda initialized for this project.", {
+                        growl.success("Anaconda initializing for this project...", {
                             title: 'Done',
                             ttl: 5000
                         });
@@ -322,9 +403,9 @@ angular.module('hopsWorksApp')
             self.deleteEnvironment = function () {
                 PythonService.removeEnvironment(self.projectId, self.pythonVersion).then(
                     function (success) {
-                        self.enabled = true;
+                        self.enabled = false;
                         self.enabling = false;
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         growl.success("Anaconda removed for this project.", {
                             title: 'Done',
                             ttl: 5000
@@ -364,9 +445,9 @@ angular.module('hopsWorksApp')
                         });
                         PythonService.removeEnvironment(self.projectId, self.pythonVersion).then(
                             function (success) {
-                                self.enabled = true;
+                                self.enabled = false;
                                 self.enabling = false;
-                                self.getInstalled();
+                                self.getInstalledLibs();
                                 growl.success("Anaconda removed for this project.", {
                                     title: 'Done',
                                     ttl: 5000
@@ -444,7 +525,7 @@ angular.module('hopsWorksApp')
                                 self.enabled = true;
                                 self.enabling = false;
                                 self.init();
-                                self.getInstalled();
+                                self.getInstalledLibs();
                                 growl.success("Anaconda initialized for this project.", {
                                     title: 'Done',
                                     ttl: 5000
@@ -465,7 +546,7 @@ angular.module('hopsWorksApp')
                 PythonService.retryEnvironmentCommand(self.projectId, self.pythonVersion).then(
                     function (success) {
                         self.isRetryingFailedCondaOps = false;
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         growl.success("Retried failed conda ops for this project.", {title: 'Done', ttl: 3000
                         });
                     },
@@ -480,7 +561,7 @@ angular.module('hopsWorksApp')
                 PythonService.retryInstallLibrary(self.projectId, self.pythonVersion, row.library).then(
                     function (success) {
                         self.isRetryingFailedCondaOps = false;
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         growl.success("Retried failed conda ops for this project.", {title: 'Done', ttl: 3000
                         });
                     },
@@ -589,7 +670,9 @@ angular.module('hopsWorksApp')
               ModalService.selectFile('lg',  self.projectId,  self.selectDepRegexes[reason],
                       "Please select a .whl or .egg file", false).then(
                       function (success) {
-                      self.uploadDepPath = success;
+                          if(self.getInferredCustomDependency(success)) {
+                              self.uploadDepPath = success;
+                          }
                       }, function (error) {
                 //The user changed their mind.
               });
@@ -657,7 +740,7 @@ angular.module('hopsWorksApp')
                         self.gitDep = "";
                         self.gitApiKey = "";
                         self.privateGitRepo = false;
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         $scope.activeForm = 2;
 
                         var msg = success.data;
@@ -679,7 +762,7 @@ angular.module('hopsWorksApp')
                 }
                 PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, library.library).then(
                     function (success) {
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         growl.info("Clearing conda operations", {
                             title: 'Clearing Conda Commands and Uninstalling Library',
                             ttl: 3000
@@ -701,14 +784,14 @@ angular.module('hopsWorksApp')
 
                 PythonService.deleteLibraryCommands(self.projectId, self.pythonVersion, library.library).then(
                     function (success) {
-                        self.getInstalled();
+                        self.getInstalledLibs();
                         growl.info("Clearing conda operations", {
                             title: 'Clearing Conda Commands and Uninstalling Library',
                             ttl: 3000
                         });
                         PythonService.uninstall(self.projectId, self.pythonVersion, library.library).then(
                             function (success) {
-                                self.getInstalled();
+                                self.getInstalledLibs();
                                 self.uninstalling[library.library] = false;
                                 var msg = success.data;
                                 if (msg !== undefined && msg !== null && msg.length > 0) {

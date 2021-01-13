@@ -188,7 +188,8 @@ public class ResourceRequest {
     STATISTICS,
     COMMITS,
     CLOUD,
-    KEYWORDS;
+    KEYWORDS,
+    CONFLICTS;
 
     public static Name fromString(String name) {
       return valueOf(name.toUpperCase());

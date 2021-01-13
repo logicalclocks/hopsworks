@@ -16,6 +16,7 @@
 package io.hops.hopsworks.api.python.environment;
 
 import io.hops.hopsworks.api.python.command.CommandResourceRequest;
+import io.hops.hopsworks.api.python.conflicts.ConflictsResourceRequest;
 import io.hops.hopsworks.api.python.library.LibrariesResourceRequest;
 import io.hops.hopsworks.common.api.Expansions;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -39,6 +40,9 @@ public class EnvironmentExpansions implements Expansions {
         break;
       case LIBRARIES:
         resourceRequest = new LibrariesResourceRequest(name, queryParam);
+        break;
+      case CONFLICTS:
+        resourceRequest = new ConflictsResourceRequest(name, queryParam);
         break;
       default:
         break;

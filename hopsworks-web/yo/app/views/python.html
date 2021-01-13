@@ -546,9 +546,16 @@
                 </div>
               </uib-tab>
               <uib-tab index="1" heading="Manage Environment" ng-show="pythonCtrl.enabled && pythonCtrl.installed"
-                ng-click="pythonCtrl.getInstalled()">
+                ng-click="pythonCtrl.loadLibraries()">
+                <div class="alert alert-warning" style="padding: 10px;" ng-show="!pythonCtrl.loadingLibs && pythonCtrl.pythonConflicts">
+                  <span style="font-size: 1.2em !important; margin-left:150px;">
+                    <i class="fa fa-warning" uib-tooltip="pip check detected unsatisfied dependency constraints in the environment. If possible please resolve them." style="color:orange;">
+                    </i> <a ng-click="pythonCtrl.showConflicts()" style="cursor: pointer;">Conflicts</a> detected in this environment
+                  </span>
+                </div>
                 <div>
                   <h2 style="margin-bottom: 30px;">Manage Environment
+                    <span ng-show="pythonCtrl.loadingLibs" class="glyphicon glyphicon-refresh spin-icon" style="font-size: 0.9em !important;"> </span>
                     <div style="float:right">
                       <button tooltip-placement="auto top" style="float:left; margin-right: 10px;"
                               uib-tooltip="Export the Anaconda environment of the project as a .yml file."
@@ -565,6 +572,7 @@
                     </div>
                   </h2>
                 </div>
+                <div ng-if="pythonCtrl.installedLibs.length === 0 && !pythonCtrl.loadingLibs">There are no installed libraries.</div>
                 <table class="table table-striped" ng-show="pythonCtrl.installedLibs.length > 0">
                   <thead>
                     <tr>
@@ -658,12 +666,12 @@
                 </table>
               </uib-tab>
               <uib-tab index="2" heading="Ongoing Operations" ng-show="pythonCtrl.enabled && pythonCtrl.installed"
-                ng-click="pythonCtrl.getInstalled()">
-                <h2>Ongoing Anaconda operations</h2>
-
+                ng-click="pythonCtrl.loadCommands()">
+                <h2>Ongoing Anaconda operations
+                  <span ng-show="pythonCtrl.loadingCommands" class="glyphicon glyphicon-refresh spin-icon" style="font-size: 0.9em !important;"> </span></h2>
 
                 <div ng-if="pythonCtrl.showLogs === false">
-                  <div ng-if="pythonCtrl.opsStatus.length === 0">There are no ongoing operations.</div>
+                  <div ng-if="pythonCtrl.opsStatus.length === 0 && !pythonCtrl.loadingCommands">There are no ongoing operations.</div>
 
                   <table st-table="rowCollection" class="table table-striped" ng-if="pythonCtrl.opsStatus.length > 0">
                     <thead>
@@ -684,6 +692,7 @@
                         </td>
                         <td class="col-sm-2">
                           <div ng-if="row.type === 'environmentDTO'">Environment</div>
+                          <div ng-if="row.type === 'commandDTO'">Listing libraries in base environment</div>
                           <div ng-if="row.type === 'libraryDTO'">
                             <span ng-if="row.library !== '0.0'">{{row.library}}</span>
                             <span ng-if="row.library === '0.0'">Creating environment from .yml file</span>
@@ -755,14 +764,14 @@
                                     ng-click="pythonCtrl.deleteEnvironmentCommands()">
                               <i class="fa fa-trash"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT' && pythonCtrl.getOp(row) !== 'CREATE' && pythonCtrl.getOp(row) !== 'REMOVE'" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && pythonCtrl.getOp(row) !== 'YML' && pythonCtrl.getOp(row) !== 'EXPORT' && pythonCtrl.getOp(row) !== 'CREATE' && pythonCtrl.getOp(row) !== 'REMOVE' && pythonCtrl.getOp(row) !== 'SYNC_BASE_ENV'" type="submit"
                                     class="btn btn-md btn-warning"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Retry the conda command"
                                     ng-click="pythonCtrl.retryFailedCondaLibraryOp(row)">
                               <i class="fa fa-repeat"></i>
                             </button>
-                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) === 'EXPORT' || pythonCtrl.getOp(row) === 'CREATE' || pythonCtrl.getOp(row) === 'REMOVE')" type="submit"
+                            <button ng-show="pythonCtrl.getStatus(row) === 'FAILED' && (pythonCtrl.getOp(row) === 'EXPORT' || pythonCtrl.getOp(row) === 'CREATE' || pythonCtrl.getOp(row) === 'REMOVE' || pythonCtrl.getOp(row) === 'SYNC_BASE_ENV')" type="submit"
                                     class="btn btn-md btn-warning"
                                     tooltip-placement="auto left"
                                     uib-tooltip="Retry the conda command"

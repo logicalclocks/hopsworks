@@ -589,7 +589,6 @@ public class RESTCodes {
         Response.Status.INTERNAL_SERVER_ERROR),
     SERVICE_DISCOVERY_ERROR(53, "Service not found", Response.Status.INTERNAL_SERVER_ERROR);
 
-
     private Integer code;
     private String message;
     private Response.StatusType respStatus;
@@ -707,7 +706,7 @@ public class RESTCodes {
     KAFKA_UNAVAILABLE(21, "Kafka is temporarily unavailable. Please try again later",
       Response.Status.SERVICE_UNAVAILABLE),
     TOPIC_DELETION_FAILED(22, "Could not delete Kafka topics.", Response.Status.INTERNAL_SERVER_ERROR),
-    TOPIC_FETCH_FAILED(23, "Could note fetch topic details.", Response.Status.INTERNAL_SERVER_ERROR),
+    TOPIC_FETCH_FAILED(23, "Could not fetch topic details.", Response.Status.INTERNAL_SERVER_ERROR),
     TOPIC_CREATION_FAILED(24, "Could not create topic.", Response.Status.INTERNAL_SERVER_ERROR);
 
 
@@ -1662,7 +1661,10 @@ public class RESTCodes {
     ANACONDA_ENVIRONMENT_INITIALIZING(11, "The project's Python environment is currently being initialized. Please " +
       "try again later.", Response.Status.BAD_REQUEST),
     ANACONDA_ENVIRONMENT_FILE_INVALID(12, "Path is not a valid environment file, " +
-        "must be Anaconda .yml or requirements.txt", Response.Status.BAD_REQUEST);
+        "must be Anaconda .yml or requirements.txt", Response.Status.BAD_REQUEST),
+    ANACONDA_PIP_CHECK_FAILED(13, "pip check command failed", Response.Status.INTERNAL_SERVER_ERROR),
+    ANACONDA_ENVIRONMENT_FAILED_INITIALIZATION(14, "The project's Python environment failed to initialize," +
+        " please recreate the environment.", Response.Status.INTERNAL_SERVER_ERROR);
 
     private int code;
     private String message;

@@ -78,11 +78,11 @@ public class ProjectUtils {
   }
   
   public static String getDockerImageName(Project project, Settings settings, boolean useBase) {
-    if (project.getConda() && (useBase || Strings.isNullOrEmpty(project.getDockerImage()))) {
+    if (project.getPythonEnvironment() != null && (useBase || Strings.isNullOrEmpty(project.getDockerImage()))) {
       // if conda enabled is true and usebase is true
-      // or as a fall back in case thhe proejct image name hasn't been set (i.e. during upgrades)
+      // or as a fall back in case the project image name hasn't been set (i.e. during upgrades)
       return settings.getBaseDockerImagePythonName();
-    } else if(!project.getConda()) {
+    } else if(project.getPythonEnvironment() == null) {
       throw new IllegalArgumentException("Error. Python has not been enabled for this project.");
     } else {
       return project.getDockerImage();

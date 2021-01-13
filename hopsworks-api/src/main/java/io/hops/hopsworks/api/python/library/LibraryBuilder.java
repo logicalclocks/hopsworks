@@ -64,7 +64,7 @@ public class LibraryBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .build());
     return dto;
@@ -75,7 +75,7 @@ public class LibraryBuilder {
       .path(ResourceRequest.Name.PROJECT.toString())
       .path(project.getId().toString())
       .path(ResourceRequest.Name.ENVIRONMENTS.toString())
-      .path(project.getPythonVersion())
+      .path(project.getPythonEnvironment().getPythonVersion())
       .path(ResourceRequest.Name.LIBRARIES.toString())
       .path(dep.getDependency())
       .build());

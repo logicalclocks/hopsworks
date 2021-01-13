@@ -69,6 +69,7 @@ import io.hops.hopsworks.persistence.entity.project.service.ProjectServices;
 import io.hops.hopsworks.persistence.entity.project.team.ProjectTeam;
 import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.PythonDep;
+import io.hops.hopsworks.persistence.entity.python.PythonEnvironment;
 import io.hops.hopsworks.persistence.entity.tensorflow.TensorBoard;
 import io.hops.hopsworks.persistence.entity.serving.Serving;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -112,8 +113,6 @@ import javax.persistence.ManyToMany;
       query = "SELECT t FROM Project t where LOWER(t.name) = LOWER(:name)")})
 public class Project implements Serializable {
 
-  @Column(name = "conda")
-  private Boolean conda = false;
   @Column(name = "archived")
   private Boolean archived = false;
   @Column(name = "logs")
@@ -165,6 +164,11 @@ public class Project implements Serializable {
       referencedColumnName = "email")
   private Users owner;
 
+  @OneToOne(cascade = CascadeType.ALL,
+      orphanRemoval = true)
+  @JoinColumn(name = "python_env_id", referencedColumnName = "id")
+  private PythonEnvironment pythonEnvironment;
+
   @Basic(optional = false)
   @NotNull
   @Column(name = "created")
@@ -182,9 +186,6 @@ public class Project implements Serializable {
   @Column(name = "payment_type")
   @Enumerated(EnumType.STRING)
   private PaymentType paymentType;
-
-  @Column(name = "python_version")
-  private String pythonVersion;
 
   @Size(max = 2000)
   @Column(name = "description")
@@ -226,7 +227,7 @@ public class Project implements Serializable {
       = {
         @JoinColumn(name = "dep_id",
             referencedColumnName = "id")})
-  @ManyToMany
+  @ManyToMany(fetch = FetchType.LAZY)
   private Collection<PythonDep> pythonDepCollection;
 
   @OneToMany(cascade = CascadeType.ALL,
@@ -293,14 +294,6 @@ public class Project implements Serializable {
 
   public void setRetentionPeriod(Date retentionPeriod) {
     this.retentionPeriod = retentionPeriod;
-  }
-
-  public String getPythonVersion() {
-    return pythonVersion;
-  }
-
-  public void setPythonVersion(String pythonVersion) {
-    this.pythonVersion = pythonVersion;
   }
 
   public String getDescription() {
@@ -519,19 +512,12 @@ public class Project implements Serializable {
     this.lastQuotaUpdate = lastQuotaUpdate;
   }
 
-  
   public Integer getKafkaMaxNumTopics() {
     return kafkaMaxNumTopics;
   }
 
   public void setKafkaMaxNumTopics(Integer kafkaMaxNumTopics) {
     this.kafkaMaxNumTopics = kafkaMaxNumTopics;
-  }
-  
-  @Override
-  public String toString() {
-    return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
-        + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
 
   public String getDockerImage() {
@@ -542,11 +528,17 @@ public class Project implements Serializable {
     this.dockerImage = dockerImage;
   }
 
-  public Boolean getConda() {
-    return conda;
+  public PythonEnvironment getPythonEnvironment() {
+    return pythonEnvironment;
   }
 
-  public void setConda(Boolean conda) {
-    this.conda = conda;
+  public void setPythonEnvironment(PythonEnvironment pythonEnvironment) {
+    this.pythonEnvironment = pythonEnvironment;
+  }
+
+  @Override
+  public String toString() {
+    return "se.kth.bbc.project.Project[ name=" + this.name + ", id=" + this.id
+        + ", parentId=" + this.inode.getInodePK().getParentId() + " ]";
   }
 }
