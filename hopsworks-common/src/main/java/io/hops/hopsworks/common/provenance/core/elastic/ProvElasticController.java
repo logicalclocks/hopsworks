@@ -273,13 +273,12 @@ public class ProvElasticController {
     LOG.log(Level.FINE, "response:{0}", response.toString());
     return response.getHits().getTotalHits().value;
   }
-  
+
   public <A extends ElasticAggregation, E extends Exception> Map<A, List> searchAggregations(
-    SearchRequest request, Map<A, ElasticAggregationParser<?, E>> aggregations)
-    throws ElasticException, E {
-    SearchResponse response;
+      SearchRequest request, Map<A, ElasticAggregationParser<?, E>> aggregations)
+      throws ElasticException, E {
     LOG.log(Level.FINE, "request:{0}", request.toString());
-    response = searchBasicInt(request);
+    SearchResponse response = searchBasicInt(request);
     LOG.log(Level.FINE, "response:{0}", response.toString());
     Map<A, List> aggResults = new HashMap<>();
     if(!aggregations.isEmpty()) {

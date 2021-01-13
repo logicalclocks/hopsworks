@@ -73,6 +73,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
   private ProvAppController appCtrl;
   @EJB
   private ProvStateController stateCtrl;
+  @EJB
+  private ProvOpsElasticAggregations provOpsElasticAggregations;
   
   public ProvOpsDTO provFileOpsList(Project project, ProvOpsParamBuilder params)
     throws ProvenanceException {
@@ -143,24 +145,25 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
       throw ProvHelper.fromElastic(e, msg, msg + " - file ops");
     }
   }
-  
+
   public ProvOpsDTO provFileOpsAggs(Project project, ProvOpsParamBuilder params)
-    throws ProvenanceException, GenericException {
-    if (params.getAggregations().size() > 1) {
+      throws ProvenanceException, GenericException {
+    if(params.getAggregations().size() > 1) {
       throw new GenericException(RESTCodes.GenericErrorCode.ILLEGAL_ARGUMENT, Level.FINE,
         "currently multiple aggregations in one request are not supported");
     }
     Map<ProvOpsAggregations, List> aggregations = provFileOpsAggs(project.getInode().getId(),
-      params.getFileOpsFilterBy(), params.getAggregations());
-    ProvOpsDTO allAggregations = new ProvOpsDTO();
+        params.getFileOpsFilterBy(), params.getAggregations());
     List<ProvOpsDTO> aggregationItems = new ArrayList<>();
-    allAggregations.setItems(aggregationItems);
-    for (Map.Entry<ProvOpsAggregations, List> agg : aggregations.entrySet()) {
+    for(Map.Entry<ProvOpsAggregations, List> agg : aggregations.entrySet()) {
       ProvOpsDTO aggregation = new ProvOpsDTO();
       aggregation.setAggregation(agg.getKey().toString());
       aggregation.setItems(agg.getValue());
       aggregationItems.add(aggregation);
     }
+
+    ProvOpsDTO allAggregations = new ProvOpsDTO();
+    allAggregations.setItems(aggregationItems);
     return allAggregations;
   }
   
@@ -172,8 +175,8 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     Map<ProvOpsAggregations, ElasticAggregationParser<?, ProvenanceException>> aggParsers = new HashMap<>();
     List<AggregationBuilder> aggBuilders = new ArrayList<>();
     for (ProvOpsAggregations aggregation : aggregations) {
-      aggParsers.put(aggregation, ProvOpsElasticEE.getAggregationParser(aggregation));
-      aggBuilders.add(ProvOpsElasticEE.getAggregationBuilder(aggregation));
+      aggParsers.put(aggregation, provOpsElasticAggregations.getAggregationParser(aggregation));
+      aggBuilders.add(provOpsElasticAggregations.getAggregationBuilder(aggregation));
     }
     
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
@@ -432,7 +435,7 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     CheckedSupplier<SearchRequest, ProvenanceException> srF =
       ElasticHelper
         .scrollingSearchRequest(settings.getProvFileIndex(projectIId), settings.getElasticDefaultScrollPageSize())
-        .andThen(filterByOpsParams2(filterByFields))
+        .andThen(filterByOpsParams(filterByFields))
         .andThen(ElasticHelper.withPagination(null, null, settings.getElasticMaxScrollPageSize()));
     SearchRequest request = srF.get();
     Pair<Long, Try<O1>> searchResult;
@@ -444,31 +447,19 @@ public class ProvOpsControllerEEImpl implements ProvOpsControllerIface {
     }
     return handlerFactory.checkedResult(searchResult.getValue1());
   }
-  
+
   private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> filterByOpsParams(
-    Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters) {
+      Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters) {
     return (SearchRequest sr) -> {
       BoolQueryBuilder query = QueryBuilders.boolQuery()
         .must(QueryBuilders.termQuery(ProvParser.Fields.ENTRY_TYPE.toString().toLowerCase(),
           ProvParser.EntryType.OPERATION.toString().toLowerCase()));
-      query = ElasticHelper.filterByBasicFields(query, fileOpsFilters);
+      ElasticHelper.filterByBasicFields(query, fileOpsFilters);
       sr.source().query(query);
       return sr;
     };
   }
-  
-  private CheckedFunction<SearchRequest, SearchRequest, ProvenanceException> filterByOpsParams2(
-    Map<ProvParser.Field, ProvParser.FilterVal> fileOpsFilters) {
-    return (SearchRequest sr) -> {
-      BoolQueryBuilder query = QueryBuilders.boolQuery()
-        .must(QueryBuilders.termQuery(ProvParser.Fields.ENTRY_TYPE.toString().toLowerCase(),
-          ProvParser.EntryType.OPERATION.toString().toLowerCase()));
-      query = ElasticHelper.filterByBasicFields(query, fileOpsFilters);
-      sr.source().query(query);
-      return sr;
-    };
-  }
-  
+
   static class ProvOpsHandlerFactory {
     static ElasticHits.Handler<ProvOpsDTO, List<ProvOpsDTO>> getHandler() {
       ElasticHits.Parser<ProvOpsDTO> parser

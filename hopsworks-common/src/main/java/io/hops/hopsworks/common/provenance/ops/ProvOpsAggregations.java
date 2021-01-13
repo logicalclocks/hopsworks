@@ -18,5 +18,6 @@ package io.hops.hopsworks.common.provenance.ops;
 import io.hops.hopsworks.common.provenance.core.elastic.ElasticAggregation;
 
 public enum ProvOpsAggregations implements ElasticAggregation {
-  APP_USAGE
+  APP_USAGE,
+  APP_IDS
 }
