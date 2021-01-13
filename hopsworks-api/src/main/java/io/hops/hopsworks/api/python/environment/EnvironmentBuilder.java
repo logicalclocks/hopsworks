@@ -15,7 +15,9 @@
  */
 package io.hops.hopsworks.api.python.environment;
 
+import com.logicalclocks.servicediscoverclient.exceptions.ServiceDiscoveryException;
 import io.hops.hopsworks.api.python.command.CommandBuilder;
+import io.hops.hopsworks.api.python.conflicts.ConflictBuilder;
 import io.hops.hopsworks.api.python.library.LibraryBuilder;
 import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.util.Settings;
@@ -26,6 +28,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.ws.rs.core.UriInfo;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +40,8 @@ public class EnvironmentBuilder {
   private LibraryBuilder librariesBuilder;
   @EJB
   private CommandBuilder commandBuilder;
+  @EJB
+  private ConflictBuilder conflictBuilder;
   @EJB
   private Settings settings;
 
@@ -62,16 +67,19 @@ public class EnvironmentBuilder {
     return dto;
   }
   
-  public EnvironmentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, String version) {
+  public EnvironmentDTO build(UriInfo uriInfo, ResourceRequest resourceRequest, Project project, String version)
+      throws IOException, ServiceDiscoveryException {
     EnvironmentDTO dto = new EnvironmentDTO();
     uri(dto, uriInfo, project, version);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
+      dto.setPythonConflicts(project.getPythonEnvironment().getConflicts() != null);
       dto.setCondaChannel(settings.getCondaDefaultRepo());
       dto.setPythonVersion(version);
       dto.setCommands(commandBuilder.buildItems(uriInfo, resourceRequest.get(ResourceRequest.Name.COMMANDS), project));
       dto.setLibraries(
         librariesBuilder.buildExpansionItem(uriInfo, resourceRequest.get(ResourceRequest.Name.LIBRARIES), project));
+      dto.setConflicts(conflictBuilder.build(uriInfo, resourceRequest.get(ResourceRequest.Name.CONFLICTS), project));
     }
     return dto;
   }
@@ -83,13 +91,14 @@ public class EnvironmentBuilder {
    * @param project
    * @return
    */
-  public EnvironmentDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Project project) {
+  public EnvironmentDTO buildItems(UriInfo uriInfo, ResourceRequest resourceRequest, Project project)
+      throws IOException, ServiceDiscoveryException {
     EnvironmentDTO dto = new EnvironmentDTO();
     uri(dto, uriInfo);
     expand(dto, resourceRequest);
     if (dto.isExpand()) {
       List<String> envs =  new ArrayList<>();
-      envs.add(project.getPythonVersion()); //Currently we only have one environment
+      envs.add(project.getPythonEnvironment().getPythonVersion()); //Currently we only have one environment
       dto.setCount((long) envs.size());
       return buildItems(dto, uriInfo, resourceRequest, project, envs);
     }
@@ -97,9 +106,11 @@ public class EnvironmentBuilder {
   }
   
   private EnvironmentDTO buildItems(EnvironmentDTO dto, UriInfo uriInfo, ResourceRequest resourceRequest,
-    Project project, List<String> envs) {
+    Project project, List<String> envs) throws IOException, ServiceDiscoveryException {
     if (envs != null && !envs.isEmpty()) {
-      envs.forEach((env) -> dto.addItem(build(uriInfo, resourceRequest, project, env)));
+      for (String env : envs) {
+        dto.addItem(build(uriInfo, resourceRequest, project, env));
+      }
     }
     return dto;
   }

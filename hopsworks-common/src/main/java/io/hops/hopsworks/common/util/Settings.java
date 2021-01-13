@@ -77,6 +77,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,6 +91,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -297,6 +299,8 @@ public class Settings implements Serializable {
   private static final String VARIABLE_SERVICE_JWT_EXP_LEEWAY_SEC = "service_jwt_exp_leeway_sec";
 
   private static final String VARIABLE_CONNECTION_KEEPALIVE_TIMEOUT = "keepalive_timeout";
+
+  private static final String VARIABLE_JUPYTER_DEPENDENCIES = "jupyter_host";
 
   /* -------------------- Featurestore --------------- */
   private static final String VARIABLE_FEATURESTORE_DEFAULT_QUOTA = "featurestore_default_quota";
@@ -3392,6 +3396,22 @@ public class Settings implements Serializable {
   public synchronized String getJupyterHost() {
     checkCache();
     return JUPYTER_HOST;
+  }
+
+  //These dependencies were collected by installing jupyterlab in a new environment
+  private String JUPYTER_DEPENDENCIES = "urllib3, chardet, idna, requests, attrs, zipp, importlib-metadata, " +
+      "pyrsistent, six, jsonschema, prometheus-client, pycparser, cffi, argon2-cffi, pyzmq, ipython-genutils, " +
+      "decorator, traitlets, jupyter-core, Send2Trash, tornado, pygments, pickleshare, wcwidth, prompt-toolkit, " +
+      "backcall, ptyprocess, pexpect, parso, jedi, ipython, python-dateutil, jupyter-client, ipykernel, terminado, " +
+      "MarkupSafe, jinja2, mistune, defusedxml, jupyterlab-pygments, pandocfilters, entrypoints, pyparsing, " +
+      "packaging, webencodings, bleach, testpath, nbformat, nest-asyncio, async-generator, nbclient, nbconvert, " +
+      "notebook, json5, jupyterlab-server, jupyterlab, sparkmagic";
+
+  public synchronized List<String> getJupyterDependencies() {
+    checkCache();
+    List<String> dependencies = new ArrayList<>(Arrays.asList(JUPYTER_DEPENDENCIES.split(",")));
+    dependencies = dependencies.stream().map(x -> x.trim()).collect(Collectors.toList());
+    return dependencies;
   }
   
   private String HOPS_VERIFICATION_VERSION = "1.0.0-SNAPSHOT";

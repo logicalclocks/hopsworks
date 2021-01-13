@@ -28,7 +28,6 @@ import io.hops.hopsworks.persistence.entity.command.CommandStatus;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
 import io.hops.hopsworks.persistence.entity.host.Hosts;
 import io.hops.hopsworks.persistence.entity.host.ServiceStatus;
-import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 
 import javax.ejb.EJB;
@@ -36,7 +35,6 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -136,29 +134,6 @@ public class AgentController {
   //since we only want to show certain predefined libs or those user have installed we need to be selective about
   //which python deps should be put in the database
   //check that library is part of preinstalled libs OR in provided library list, only then add it
-
-  /**
-   * For each library in the conda environment figure out if it should be marked as unmutable.
-   *
-   * @param pyDepsInImage
-   * @return
-   */
-  public Collection<PythonDep> persistAndMarkImmutable(Collection<PythonDep> pyDepsInImage) {
-    Collection<PythonDep> deps = new ArrayList();
-    for (PythonDep dep: pyDepsInImage) {
-      String libraryName = dep.getDependency();
-      if (settings.getImmutablePythonLibraryNames().contains(libraryName)) {
-        PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), libraryName,
-            dep.getVersion(), true, true);
-        deps.add(pyDep);
-      } else {
-        PythonDep pyDep = libraryFacade.getOrCreateDep(dep);
-        deps.add(pyDep);
-      }
-    }
-    return deps;
-  }
-
 
   private void processSystemCommands(AgentHeartbeatDTO heartbeat) {
     if (heartbeat.systemCommands == null) {

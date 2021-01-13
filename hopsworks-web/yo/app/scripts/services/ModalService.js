@@ -56,7 +56,29 @@ angular.module('hopsWorksApp')
                         },
                         projectId: function () {
                             return projectId;
-}
+                        }
+                    }
+                });
+                return modalInstance.result;
+            },
+            conflicts: function (size, title, projectId, pythonVersion, query) {
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'views/conflictModal.html',
+                    controller: 'ConflictCtrl as conflictCtrl',
+                    size: size,
+                    resolve: {
+                        title: function () {
+                            return title;
+                        },
+                        projectId: function () {
+                            return projectId;
+                        },
+                        pythonVersion: function () {
+                            return pythonVersion;
+                        },
+                        query: function () {
+                            return query;
+                        }
                     }
                 });
                 return modalInstance.result;
