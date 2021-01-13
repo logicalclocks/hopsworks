@@ -13,21 +13,33 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
+package io.hops.hopsworks.api.python.conflicts;
 
-public enum CondaOp {
-  CREATE,
-  REMOVE,
-  INSTALL,
-  UNINSTALL,
-  EXPORT,
-  IMPORT,
-  SYNC_BASE_ENV;
+import io.swagger.annotations.ApiParam;
 
-  public static boolean isEnvOp(CondaOp arg) {
-    return arg.compareTo(CondaOp.CREATE) == 0 ||
-           arg.compareTo(CondaOp.REMOVE) == 0 ||
-           arg.compareTo(CondaOp.EXPORT) == 0 ||
-           arg.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+import javax.ws.rs.QueryParam;
+import java.util.Set;
+
+public class ConflictBeanParam
+{
+  @QueryParam("filter_by")
+  @ApiParam(value = "ex. filter_by=service:JUPYTER",
+      allowableValues
+          = "service:JUPYTER ",
+      allowMultiple = true)
+  private Set<FilterBy> filter;
+
+  public ConflictBeanParam(
+      @QueryParam("filter_by") Set<FilterBy> filter) {
+    this.filter = filter;
   }
+
+  public Set<FilterBy> getFilter() {
+    return filter;
+  }
+
+  public void setFilter(Set<FilterBy> filter) {
+    this.filter = filter;
+  }
+
 }

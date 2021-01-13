@@ -120,7 +120,7 @@ public class LibraryResource {
   public Response get(@BeanParam Pagination pagination,
       @BeanParam LibrariesBeanParam librariesBeanParam,
       @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     resourceRequest.setOffset(pagination.getOffset());
     resourceRequest.setLimit(pagination.getLimit());
@@ -142,7 +142,7 @@ public class LibraryResource {
   public Response getByName(@PathParam("library") String library, @BeanParam LibraryExpansionBeanParam expansions,
     @Context UriInfo uriInfo, @Context SecurityContext sc) throws PythonException {
     validatePattern(library);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     PythonDep dep = libraryController.getPythonDep(library, project);
     ResourceRequest resourceRequest = new ResourceRequest(ResourceRequest.Name.LIBRARIES);
     if (expansions != null) {
@@ -162,7 +162,7 @@ public class LibraryResource {
     throws ServiceException, GenericException, PythonException {
     validatePattern(library);
     Users user = jwtHelper.getUserPrincipal(sc);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     if (settings.getImmutablePythonLibraryNames().contains(library)) {
       throw new ServiceException(RESTCodes.ServiceErrorCode.ANACONDA_DEP_REMOVE_FORBIDDEN, Level.INFO,
           "library: " + library);
@@ -189,7 +189,7 @@ public class LibraryResource {
       throws ServiceException, GenericException, PythonException, DatasetException {
 
     Users user = jwtHelper.getUserPrincipal(req);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
 
     PackageSource packageSource = librarySpecification.getPackageSource();
     if (packageSource == null) {
@@ -248,7 +248,7 @@ public class LibraryResource {
                          @Context SecurityContext sc)
     throws ServiceException, PythonException {
     validatePattern(query);
-    environmentController.checkCondaEnabled(project, pythonVersion);
+    environmentController.checkCondaEnabled(project, pythonVersion, true);
     LibrarySearchDTO librarySearchDTO;
     PackageSource packageSource = PackageSource.fromString(search);
     switch (packageSource) {

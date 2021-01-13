@@ -1,3 +1,5 @@
+package io.hops.hopsworks.api.python.conflicts;
+
 /*
  * This file is part of Hopsworks
  * Copyright (C) 2020, Logical Clocks AB. All rights reserved
@@ -13,21 +15,37 @@
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see <https://www.gnu.org/licenses/>.
  */
-package io.hops.hopsworks.persistence.entity.python;
 
-public enum CondaOp {
-  CREATE,
-  REMOVE,
-  INSTALL,
-  UNINSTALL,
-  EXPORT,
-  IMPORT,
-  SYNC_BASE_ENV;
+import io.hops.hopsworks.common.dao.AbstractFacade;
 
-  public static boolean isEnvOp(CondaOp arg) {
-    return arg.compareTo(CondaOp.CREATE) == 0 ||
-           arg.compareTo(CondaOp.REMOVE) == 0 ||
-           arg.compareTo(CondaOp.EXPORT) == 0 ||
-           arg.compareTo(CondaOp.SYNC_BASE_ENV) == 0;
+public class FilterBy implements AbstractFacade.FilterBy {
+
+  private String param = null;
+  private String value = null;
+
+  public FilterBy(String param) {
+    if(param.contains(":")) {
+      String[] paramSplit = param.split(":");
+      this.param = paramSplit[0];
+      this.value = paramSplit[1];
+    }
+  }
+
+  public String getParam() {
+    return param;
+  }
+
+  @Override
+  public String getSql() {
+    return null;
+  }
+
+  @Override
+  public String getField() {
+    return null;
+  }
+
+  public String getValue() {
+    return value;
   }
 }

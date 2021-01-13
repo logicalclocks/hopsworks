@@ -86,10 +86,11 @@ public class LibraryController {
     }
   }
   
-  public void syncProjectPythonDepsWithEnv(Project proj, Collection<PythonDep> newDeps) {
+  public Project syncProjectPythonDepsWithEnv(Project proj, Collection<PythonDep> newDeps) {
     proj.setPythonDepCollection(newDeps);
-    projectFacade.update(proj);
+    proj = projectFacade.update(proj);
     projectFacade.flushEm();
+    return proj;
   }
 
   public PythonDep installLibrary(Project proj, Users user, CondaInstallType installType, String channelUrl,
@@ -345,7 +346,7 @@ public class LibraryController {
     return deps;
   }
 
-  public void addOngoingOperations(Project project) throws ServiceException {
+  public Project addOngoingOperations(Project project) throws ServiceException {
     Collection<CondaCommands> commands = project.getCondaCommandsCollection();
     for(CondaCommands condaCommand: commands) {
       if(condaCommand.getInstallType().equals(CondaInstallType.ENVIRONMENT))
@@ -364,6 +365,28 @@ public class LibraryController {
         project.getPythonDepCollection().add(pythonDep);
       }
     }
-    projectFacade.update(project);
+    return projectFacade.update(project);
+  }
+
+  /**
+   * For each library in the conda environment figure out if it should be marked as unmutable.
+   *
+   * @param pyDepsInImage
+   * @return
+   */
+  public Collection<PythonDep> persistAndMarkImmutable(Collection<PythonDep> pyDepsInImage) {
+    Collection<PythonDep> deps = new ArrayList();
+    for (PythonDep dep: pyDepsInImage) {
+      String libraryName = dep.getDependency();
+      if (settings.getImmutablePythonLibraryNames().contains(libraryName)) {
+        PythonDep pyDep = libraryFacade.getOrCreateDep(dep.getRepoUrl(), dep.getInstallType(), libraryName,
+            dep.getVersion(), true, true);
+        deps.add(pyDep);
+      } else {
+        PythonDep pyDep = libraryFacade.getOrCreateDep(dep);
+        deps.add(pyDep);
+      }
+    }
+    return deps;
   }
 }

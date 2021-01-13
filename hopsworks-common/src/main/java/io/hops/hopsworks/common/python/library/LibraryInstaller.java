@@ -32,6 +32,7 @@ import io.hops.hopsworks.common.util.ProcessResult;
 import io.hops.hopsworks.common.util.ProjectUtils;
 import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.ProjectException;
+import io.hops.hopsworks.exceptions.PythonException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.exceptions.UserException;
 import io.hops.hopsworks.persistence.entity.command.SystemCommand;
@@ -41,6 +42,7 @@ import io.hops.hopsworks.persistence.entity.python.CondaCommands;
 import io.hops.hopsworks.persistence.entity.python.CondaInstallType;
 import io.hops.hopsworks.persistence.entity.python.CondaOp;
 import io.hops.hopsworks.persistence.entity.python.CondaStatus;
+import io.hops.hopsworks.persistence.entity.python.PythonDep;
 import io.hops.hopsworks.restutils.RESTCodes;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -65,6 +67,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +76,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -189,7 +193,7 @@ public class LibraryInstaller {
     }
   }
 
-  private void condaCommandHandler(List<CondaCommands> projectCondaCommands){
+  private void condaCommandHandler(List<CondaCommands> projectCondaCommands) {
     projectCondaCommands.sort(ASC_COMPARATOR);
     for (final CondaCommands cc : projectCondaCommands) {
       // Remove operations are handled differently, as we it needs to take an exclusive lock on all operations
@@ -211,6 +215,9 @@ public class LibraryInstaller {
                 break;
               case EXPORT:
                 exportLibraries(cc);
+                break;
+              case SYNC_BASE_ENV:
+                syncBaseLibraries(cc);
                 break;
               default:
                 throw new UnsupportedOperationException("conda command unknown: " + cc.getOp());
@@ -307,12 +314,15 @@ public class LibraryInstaller {
             + " out: " + processResult.getStdout() + "\n err: " + processResult.getStderr() + "||\n";
         throw new IOException(errorMsg);
       } else {
+        project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+            RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
         project.setDockerImage(initialDockerImage);
-        projectFacade.update(project);
+        project = projectFacade.update(project);
         projectFacade.flushEm();
+        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
       }
-    } catch (ServiceException | ProjectException e) {
+    } catch (ServiceException | ProjectException | PythonException e) {
       LOG.log(Level.SEVERE, "Failed to persist python deps", e);
     } finally {
       FileUtils.deleteDirectory(baseDir);
@@ -324,7 +334,8 @@ public class LibraryInstaller {
   }
 
   private void installLibrary(CondaCommands cc)
-      throws IOException, ServiceException, ServiceDiscoveryException, ProjectException, UserException {
+      throws IOException, ServiceException, ServiceDiscoveryException, ProjectException, UserException,
+      PythonException {
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
     Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
@@ -445,9 +456,12 @@ public class LibraryInstaller {
           throw new IOException(errorMsg);
         }
       } else {
+        project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+            RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
         project.setDockerImage(nextDockerImageName);
-        projectFacade.update(project);
+        project = projectFacade.update(project);
         projectFacade.flushEm();
+        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
       }
     } finally {
@@ -456,7 +470,7 @@ public class LibraryInstaller {
   }
   
   private void uninstallLibrary(CondaCommands cc)
-      throws IOException, ServiceDiscoveryException, ProjectException, ServiceException {
+      throws IOException, ServiceDiscoveryException, ProjectException, ServiceException, PythonException {
 
     File baseDir = new File("/tmp/docker/" + cc.getProjectId().getName());
     baseDir.mkdirs();
@@ -511,8 +525,9 @@ public class LibraryInstaller {
         project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
           RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
         project.setDockerImage(nextDockerImageName);
-        projectFacade.update(project);
+        project = projectFacade.update(project);
         projectFacade.flushEm();
+        setPipConflicts(project);
         environmentController.updateInstalledDependencies(project);
       }
     } finally {
@@ -528,6 +543,40 @@ public class LibraryInstaller {
     } finally {
       if (dfso != null) {
         dfso.close();
+      }
+    }
+  }
+
+  private void setPipConflicts(Project project) throws IOException, ServiceDiscoveryException, ServiceException,
+      PythonException {
+
+    String conflictStr = environmentController.getPipConflicts(project);
+
+    if(Strings.isNullOrEmpty(conflictStr)) {
+      project.getPythonEnvironment().setJupyterConflicts(false);
+      project.getPythonEnvironment().setConflicts(null);
+      return;
+    }
+
+    ArrayList<String> conflicts = new ArrayList<>();
+    String[] lines = conflictStr.split("\n");
+    for(String conflictLine: lines) {
+      conflicts.add(conflictLine.split("\\s+")[0].trim());
+    }
+    List<String> intersect = settings.getJupyterDependencies().stream()
+        .filter(conflicts::contains)
+        .collect(Collectors.toList());
+
+    if(conflicts.isEmpty()) {
+      project.getPythonEnvironment().setJupyterConflicts(false);
+      project.getPythonEnvironment().setConflicts(null);
+    } else {
+      project.getPythonEnvironment().setConflicts(
+          conflictStr.substring(0, Math.min(conflictStr.length(), 12000)));
+      if(intersect != null && intersect.size() > 0) {
+        project.getPythonEnvironment().setJupyterConflicts(true);
+      } else {
+        project.getPythonEnvironment().setJupyterConflicts(false);
       }
     }
   }
@@ -557,6 +606,17 @@ public class LibraryInstaller {
     }
   }
 
+  public void syncBaseLibraries(CondaCommands cc)
+      throws ServiceException, ServiceDiscoveryException, ProjectException {
+    Project project = projectFacade.findById(cc.getProjectId().getId()).orElseThrow(() -> new ProjectException(
+        RESTCodes.ProjectErrorCode.PROJECT_NOT_FOUND, Level.FINE, "projectId: " + cc.getProjectId().getId()));
+    Collection<PythonDep> projectDeps = libraryController.listLibraries(
+        projectUtils.getFullDockerImageName(project, true));
+    projectDeps = libraryController.persistAndMarkImmutable(projectDeps);
+    project.setPythonDepCollection(projectDeps);
+    projectFacade.update(project);
+  }
+
   private String getNextDockerImageName(Project project) {
     String dockerImage = ProjectUtils.getDockerImageName(project, settings, false);
     int indexOfLastDigit = dockerImage.lastIndexOf(".");
@@ -571,7 +631,7 @@ public class LibraryInstaller {
       // If it is a command of a project that has been deleted, delete the command (do not delete an environment
       //"REMOVE" command as it needs to be processed even after the project has been deleted
       if (condacommand.getOp() != CondaOp.REMOVE &&
-        (condacommand.getProjectId() == null || !condacommand.getProjectId().getConda())) {
+        (condacommand.getProjectId() == null || condacommand.getProjectId().getPythonEnvironment() == null)) {
         LOG.log(Level.FINEST, "Removing condacommand: " + condacommand);
         condaCommandFacade.remove(condacommand);
       } else {

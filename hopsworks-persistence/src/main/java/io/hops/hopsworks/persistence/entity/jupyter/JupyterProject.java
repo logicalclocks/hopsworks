@@ -133,7 +133,6 @@ public class JupyterProject implements Serializable {
   @Transient
   private long minutesUntilExpiration;
 
-
   public JupyterProject() {
   }
 
@@ -197,13 +196,20 @@ public class JupyterProject implements Serializable {
     this.token = token;
   }
 
-
   public Project getProjectId() {
     return projectId;
   }
 
   public void setProjectId(Project projectId) {
     this.projectId = projectId;
+  }
+
+  public String getCid() {
+    return cid;
+  }
+
+  public void setCid(String cid) {
+    this.cid = cid;
   }
 
   public long getMinutesUntilExpiration() {
@@ -239,14 +245,4 @@ public class JupyterProject implements Serializable {
     return "io.hops.hopsworks.persistence.entity.jupyter.JupyterProject[ port=" + port
             + " ]";
   }
-
-  public String getCid() {
-    return cid;
-  }
-
-  public void setCid(String cid) {
-    this.cid = cid;
-  }
-
-
 }

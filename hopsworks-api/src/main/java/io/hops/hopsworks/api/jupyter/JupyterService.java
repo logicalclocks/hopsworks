@@ -302,7 +302,7 @@ public class JupyterService {
       }
     }
     
-    if (!project.getConda()) {
+    if (project.getPythonEnvironment() == null) {
       throw new ProjectException(RESTCodes.ProjectErrorCode.ANACONDA_NOT_ENABLED, Level.FINE);
     }
 

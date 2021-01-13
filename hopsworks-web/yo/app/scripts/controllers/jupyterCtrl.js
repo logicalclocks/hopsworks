@@ -56,7 +56,6 @@ angular.module('hopsWorksApp')
             var statusMsgs = ['stopped    ', "running    ", 'stopping...', 'restarting...'];
             self.ui = "";
             self.condaEnabled = true;
-            self.jupyterInstalled = true;
             $scope.sessions = null;
             self.jupyterSettings = {};
             $scope.tgState = true;
@@ -75,6 +74,13 @@ angular.module('hopsWorksApp')
             self.shutdownLevelSelected;
             self.timeLeftInMinutes = 0;
             self.addShutdownHours;
+
+            self.jupyterConflicts = false;
+
+            self.showConflicts = function () {
+                ModalService.conflicts('lg', 'Environment conflicts', self.projectId, self.pythonVersion, '?filter_by=service:JUPYTER')
+                            .then(function (success) {}, function (error) {});
+            };
 
             self.job = {
                 'type': '',
@@ -200,19 +206,8 @@ angular.module('hopsWorksApp')
 
             };
 
-            self.checkCondaEnabled = function() {
-                PythonService.enabled(self.projectId).then(
-                    function(success) {
-                        self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
-                        self.condaEnabled = true;
-                    },
-                    function(error) {
-                        self.condaEnabled = false;
-                    });
-            };
-
             var getCondaCommands = function() {
-                PythonService.getEnvironments(self.projectId).then(
+                PythonService.getEnvironments(self.projectId, '').then(
                     function (success) {
                         var envs = success.data.items;
                         var count = success.data.count;
@@ -233,18 +228,28 @@ angular.module('hopsWorksApp')
             getCondaCommands();
 
             var checkJupyterInstalled = function() {
-                // Use hdfscontents as a proxy to now if jupyter has been installed correctly or not
-                PythonService.getEnvironments(self.projectId).then(
+
+            PythonService.enabled(self.projectId).then(
+                function(success) {
+                    self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
+                    self.condaEnabled = true;
+                },
+                function(error) {
+                    self.condaEnabled = false;
+                });
+
+                PythonService.getEnvironments(self.projectId, '?expand=commands').then(
                     function (success) {
-                        self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion : "0.0";
-                        PythonService.getLibrary(self.projectId, self.pythonVersion, "hdfscontents").then(
-                            function(success) {
-                                self.jupyterInstalled = true;
+                        self.pythonVersion = success.data.count > 0? success.data.items[0].pythonVersion: "0.0";
+                        PythonService.getEnvironmentConflicts(self.projectId, self.pythonVersion, "?filter_by=service:JUPYTER").then(
+                            function (success) {
+                                if(success.data.items) {
+                                  self.jupyterConflicts = true;
+                                }
                             },
-                            function(error) {
-                                self.jupyterInstalled = false;
-                            }
-                        );
+                            function (error) {
+
+                        });
                     }, function (error) {
 
                     });
@@ -543,8 +548,8 @@ angular.module('hopsWorksApp')
 
             init();
 
-            var navigateToPython = function() {
-                $location.path('/#!/project/' + self.projectId + '/python');
+            self.navigateToPython = function() {
+                $location.path('project/' + self.projectId + '/python');
             };
 
             self.git_error = "";

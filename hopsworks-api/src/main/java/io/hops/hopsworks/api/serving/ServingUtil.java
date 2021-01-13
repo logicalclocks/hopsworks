@@ -116,7 +116,7 @@ public class ServingUtil {
     }
     
     //Check that python environment is activated
-    if(!project.getConda()){
+    if(project.getPythonEnvironment() == null){
       throw new ServingException(RESTCodes.ServingErrorCode.PYTHON_ENVIRONMENT_NOT_ENABLED, Level.SEVERE, null);
     }
   }
