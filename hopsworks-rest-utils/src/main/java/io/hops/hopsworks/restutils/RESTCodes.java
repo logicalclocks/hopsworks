@@ -1508,7 +1508,10 @@ public class RESTCodes {
       Response.Status.INTERNAL_SERVER_ERROR),
     ILLEGAL_FILTER_ARGUMENTS(139, "Malformed filter conditions for Query", Response.Status.BAD_REQUEST),
     ILLEGAL_ON_DEMAND_DATA_FORMAT(140, "Illegal on-demand feature group data format",
-        Response.Status.BAD_REQUEST);
+        Response.Status.BAD_REQUEST),
+    ERROR_JOB_SETUP(141, "Error setting up feature store job", Response.Status.INTERNAL_SERVER_ERROR),
+    LABEL_NOT_FOUND(142, "Could not find label in training dataset schema", Response.Status.NOT_FOUND);
+
 
     private int code;
     private String message;

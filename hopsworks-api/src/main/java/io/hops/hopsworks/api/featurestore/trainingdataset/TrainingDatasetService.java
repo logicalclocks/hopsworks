@@ -26,9 +26,13 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
+import io.hops.hopsworks.api.jobs.JobDTO;
+import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
 import io.hops.hopsworks.api.provenance.ProvArtifactResource;
 import io.hops.hopsworks.common.dataset.DatasetController;
+import io.hops.hopsworks.common.featurestore.OptionDTO;
+import io.hops.hopsworks.common.featurestore.app.FsJobManagerController;
 import io.hops.hopsworks.common.featurestore.query.FsQueryDTO;
 import io.hops.hopsworks.common.featurestore.tag.TrainingDatasetTagControllerIface;
 import io.hops.hopsworks.common.api.ResourceRequest;
@@ -41,6 +45,7 @@ import io.hops.hopsworks.common.util.Settings;
 import io.hops.hopsworks.exceptions.DatasetException;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.GenericException;
+import io.hops.hopsworks.exceptions.JobException;
 import io.hops.hopsworks.exceptions.MetadataException;
 import io.hops.hopsworks.exceptions.ProjectException;
 import io.hops.hopsworks.exceptions.ProvenanceException;
@@ -49,6 +54,7 @@ import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
 import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.activity.ActivityFlag;
@@ -85,6 +91,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /**
  * A Stateless RESTful service for the training datasets in a featurestore on Hopsworks.
@@ -119,6 +126,10 @@ public class TrainingDatasetService {
   private DatasetController datasetController;
   @Inject
   private FeaturestoreKeywordResource featurestoreKeywordResource;
+  @EJB
+  private FsJobManagerController fsJobManagerController;
+  @EJB
+  private JobsBuilder jobsBuilder;
 
   private Project project;
   private Featurestore featurestore;
@@ -492,30 +503,41 @@ public class TrainingDatasetService {
     FsQueryDTO fsQueryDTO = fsQueryBuilder.build(uriInfo, project, user, featurestore, trainingdatasetid, withLabel);
     return Response.ok().entity(fsQueryDTO).build();
   }
-  
-  /**
-   * Verify that the user id was provided as a path param
-   *
-   * @param trainingDatasetId the training dataset id to verify
-   */
-  private void verifyIdProvided(Integer trainingDatasetId) {
-    if (trainingDatasetId == null) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
+
+  @POST
+  @Path("/{trainingDatasetId}/compute")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @ApiOperation(value = "Setup a job to compute and write a training dataset", response = JobDTO.class)
+  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
+  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  @ApiKeyRequired(acceptedScopes = {ApiScope.DATASET_VIEW, ApiScope.FEATURESTORE},
+      allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
+  public Response compute(@Context UriInfo uriInfo,
+                          @Context SecurityContext sc,
+                          @PathParam("trainingDatasetId") Integer trainingDatasetId,
+                          TrainingDatasetJobConf trainingDatasetJobConf)
+      throws FeaturestoreException, ServiceException, JobException, ProjectException, GenericException {
+    verifyIdProvided(trainingDatasetId);
+    Users user = jWTHelper.getUserPrincipal(sc);
+    TrainingDataset trainingDataset = trainingDatasetController.getTrainingDatasetById(featurestore, trainingDatasetId);
+
+    Map<String, String> writeOptions = null;
+    if (trainingDatasetJobConf.getWriteOptions() != null) {
+      writeOptions = trainingDatasetJobConf.getWriteOptions()
+          .stream().collect(Collectors.toMap(OptionDTO::getName, OptionDTO::getValue));
     }
+
+    Jobs job = fsJobManagerController.setupTrainingDatasetJob(project, user, trainingDataset,
+        trainingDatasetJobConf.getQuery(),
+        trainingDatasetJobConf.getOverwrite(),
+        writeOptions,
+        trainingDatasetJobConf.getSparkJobConfiguration());
+    JobDTO jobDTO = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
+
+    return Response.created(jobDTO.getHref()).entity(jobDTO).build();
   }
 
-   /**
-   * Verify that the name was provided as a path param
-   *
-   * @param trainingDatasetName the training dataset id to verify
-   */
-  private void verifyNameProvided(String trainingDatasetName) {
-    if (Strings.isNullOrEmpty(trainingDatasetName)) {
-      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
-          TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
-    }
-  }
-  
   @Path("/{trainingDatasetId}/provenance")
   public ProvArtifactResource provenance(@PathParam("trainingDatasetId") Integer trainingDatasetId)
     throws FeaturestoreException, GenericException {
@@ -540,6 +562,29 @@ public class TrainingDatasetService {
     this.featurestoreKeywordResource.setFeaturestore(featurestore);
     this.featurestoreKeywordResource.setTrainingDatasetId(trainingDatasetId);
     return featurestoreKeywordResource;
+  }
+
+  /**
+   * Verify that the user id was provided as a path param
+   *
+   * @param trainingDatasetId the training dataset id to verify
+   */
+  private void verifyIdProvided(Integer trainingDatasetId) {
+    if (trainingDatasetId == null) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ID_NOT_PROVIDED.getMessage());
+    }
+  }
+
+  /**
+   * Verify that the name was provided as a path param
+   *
+   * @param trainingDatasetName the training dataset id to verify
+   */
+  private void verifyNameProvided(String trainingDatasetName) {
+    if (Strings.isNullOrEmpty(trainingDatasetName)) {
+      throw new IllegalArgumentException(RESTCodes.FeaturestoreErrorCode.
+          TRAINING_DATASET_NAME_NOT_PROVIDED.getMessage());
+    }
   }
 }
 

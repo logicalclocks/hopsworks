@@ -1605,7 +1605,7 @@ describe "On #{ENV['OS']}" do
         query = JSON.parse(json_result)
         expect(query.key?("onDemandFeatureGroups")).to be true
 
-        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`\n" +
+        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`, `fg0`.`testfeature`\n" +
         "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
         "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`")
       end
@@ -1655,7 +1655,7 @@ describe "On #{ENV['OS']}" do
         query = JSON.parse(json_result)
         expect(query.key?("onDemandFeatureGroups")).to be true
 
-        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`\n" +
+        expect(query['query']).to eql("SELECT `fg1`.`anotherfeature`, `fg0`.`testfeature`\n" +
                                           "FROM `#{featurestore_name}`.`#{fg_name}_1` `fg1`\n" +
                                           "INNER JOIN `fg0` ON `fg1`.`testfeature` = `fg0`.`testfeature`\n" +
                                           "WHERE `fg1`.`anotherfeature` = 10 AND `fg0`.`testfeature` = 10")

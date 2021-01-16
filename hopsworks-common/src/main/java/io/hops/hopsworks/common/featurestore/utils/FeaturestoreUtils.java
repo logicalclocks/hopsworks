@@ -30,18 +30,12 @@ import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.common.constants.auth.AllowedRoles;
 import io.hops.hopsworks.common.dao.project.team.ProjectTeamFacade;
-import io.hops.hopsworks.common.hdfs.DistributedFileSystemOps;
-import io.hops.hopsworks.common.hdfs.DistributedFsService;
-import io.hops.hopsworks.common.hdfs.HdfsUsersController;
 import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.restutils.RESTCodes;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -50,10 +44,6 @@ import java.util.logging.Level;
 @Stateless
 public class FeaturestoreUtils {
 
-  @EJB
-  private HdfsUsersController hdfsUsersController;
-  @EJB
-  private DistributedFsService distributedFsService;
   @EJB
   private ProjectTeamFacade projectTeamFacade;
   @EJB
@@ -80,31 +70,6 @@ public class FeaturestoreUtils {
           "project: " + project.getName() + ", featurestoreId: " + featurestore.getId() +
               ", Training dataset: " + trainingDataset.getName() + ", userRole:" + userRole +
               ", creator of the featuregroup: " + trainingDataset.getCreator().getEmail());
-    }
-  }
-
-  /**
-   * Writes a string to a new file in HDFS
-   *
-   * @param project              project of the user
-   * @param user                 user making the request
-   * @param filePath             path of the file we want to write
-   * @param content              the content to write
-   * @throws IOException
-   */
-  public void writeToHDFS(Project project, Users user, Path filePath, String content) throws IOException {
-    DistributedFileSystemOps udfso = null;
-    try {
-      String hdfsUsername = hdfsUsersController.getHdfsUserName(project, user);
-      udfso = distributedFsService.getDfsOps(hdfsUsername);
-      try (FSDataOutputStream outStream = udfso.create(filePath)) {
-        outStream.writeBytes(content);
-        outStream.hflush();
-      }
-    } finally {
-      if (udfso != null) {
-        distributedFsService.closeDfsClient(udfso);
-      }
     }
   }
 

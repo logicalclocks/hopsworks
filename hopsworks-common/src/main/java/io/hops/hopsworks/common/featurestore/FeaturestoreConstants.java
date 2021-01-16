@@ -74,13 +74,6 @@ public class FeaturestoreConstants {
     "MAP <INT, ARRAY <FLOAT> >",
     "STRUCT < label: STRING, index: INT >", "UNIONTYPE < STRING, INT>"
   });
-  public static final String FEATURESTORE_UTIL_4J_MAIN_CLASS = "io.hops.examples.featurestore_util4j.Main";
-  public static final String FEATURESTORE_UTIL_4J_ARGS_DATASET = "Resources";
-  public static final String FEATURESTORE_UTIL_PYTHON_MAIN_CLASS = "org.apache.spark.deploy.PythonRunner";
-  public static final String FEATURESTORE_UTIL_4J_EXECUTABLE =
-    "/user/spark/hops-examples-featurestore-util4j-1.0.0-SNAPSHOT.jar";
-  public static final String FEATURESTORE_UTIL_PYTHON_EXECUTABLE =
-    "/user/spark/featurestore_util.py";
   public static final String S3_BUCKET_TRAINING_DATASETS_FOLDER = "TRAINING_DATASETS";
   public static final List<String> FEATURE_IMPORT_CONNECTORS
       = Arrays.asList(new String[]{S3_CONNECTOR_TYPE, JDBC_CONNECTOR_TYPE, REDSHIFT_CONNECTOR_TYPE});

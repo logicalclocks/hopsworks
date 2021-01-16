@@ -1,6 +1,6 @@
 /*
  * This file is part of Hopsworks
- * Copyright (C) 2019, Logical Clocks AB. All rights reserved
+ * Copyright (C) 2020, Logical Clocks AB. All rights reserved
  *
  * Hopsworks is free software: you can redistribute it and/or modify it under the terms of
  * the GNU Affero General Public License as published by the Free Software Foundation,
@@ -14,26 +14,35 @@
  * If not, see <https://www.gnu.org/licenses/>.
  */
 
-package io.hops.hopsworks.common.featurestore.importjob;
+package io.hops.hopsworks.common.featurestore.featuregroup;
 
-import com.google.gson.annotations.SerializedName;
+import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 
-import javax.xml.bind.annotation.XmlEnum;
+public class IngestionJob {
 
-@XmlEnum
-public enum ImportType {
-  @SerializedName("s3")
-  S3("s3"),
-  @SerializedName("redshift")
-  REDSHIFT("redshift");
+  private String dataPath;
+  private Jobs job;
 
-  private final String importType;
+  public IngestionJob() {};
 
-  ImportType(String importType) {
-    this.importType = importType;
+  public IngestionJob(String dataPath, Jobs job) {
+    this.dataPath = dataPath;
+    this.job = job;
   }
 
-  public String toString() {
-    return importType;
+  public String getDataPath() {
+    return dataPath;
+  }
+
+  public void setDataPath(String dataPath) {
+    this.dataPath = dataPath;
+  }
+
+  public Jobs getJob() {
+    return job;
+  }
+
+  public void setJob(Jobs job) {
+    this.job = job;
   }
 }

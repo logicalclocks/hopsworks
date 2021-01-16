@@ -189,6 +189,7 @@ public class ResourceRequest {
     COMMITS,
     CLOUD,
     KEYWORDS,
+    INGESTION,
     CONFLICTS;
 
     public static Name fromString(String name) {

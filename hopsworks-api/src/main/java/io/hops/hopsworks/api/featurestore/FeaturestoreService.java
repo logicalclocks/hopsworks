@@ -24,24 +24,16 @@ import io.hops.hopsworks.api.filter.AllowedProjectRoles;
 import io.hops.hopsworks.api.filter.Audience;
 import io.hops.hopsworks.api.filter.NoCacheResponse;
 import io.hops.hopsworks.api.filter.apiKey.ApiKeyRequired;
-import io.hops.hopsworks.api.jobs.JobDTO;
-import io.hops.hopsworks.api.jobs.JobsBuilder;
 import io.hops.hopsworks.api.jwt.JWTHelper;
-import io.hops.hopsworks.common.api.ResourceRequest;
 import io.hops.hopsworks.common.dao.project.ProjectFacade;
 import io.hops.hopsworks.common.featurestore.FeaturestoreController;
 import io.hops.hopsworks.common.featurestore.FeaturestoreDTO;
-import io.hops.hopsworks.common.featurestore.ImportControllerIface;
 import io.hops.hopsworks.common.featurestore.app.FeaturestoreMetadataDTO;
-import io.hops.hopsworks.common.featurestore.app.FeaturestoreUtilJobDTO;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupController;
 import io.hops.hopsworks.common.featurestore.featuregroup.FeaturegroupDTO;
-import io.hops.hopsworks.common.featurestore.importjob.FeaturegroupImportJobDTO;
 import io.hops.hopsworks.common.featurestore.settings.FeaturestoreClientSettingsDTO;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorController;
 import io.hops.hopsworks.common.featurestore.storageconnectors.FeaturestoreStorageConnectorDTO;
-import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobControllerIface;
-import io.hops.hopsworks.common.featurestore.trainingdatasetjob.TrainingDatasetJobDTO;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetController;
 import io.hops.hopsworks.common.featurestore.trainingdatasets.TrainingDatasetDTO;
 import io.hops.hopsworks.common.util.Settings;
@@ -49,11 +41,9 @@ import io.hops.hopsworks.exceptions.FeaturestoreException;
 import io.hops.hopsworks.exceptions.ServiceException;
 import io.hops.hopsworks.jwt.annotation.JWTRequired;
 import io.hops.hopsworks.persistence.entity.featurestore.Featurestore;
-import io.hops.hopsworks.persistence.entity.jobs.description.Jobs;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.persistence.entity.user.Users;
 import io.hops.hopsworks.persistence.entity.user.security.apiKey.ApiScope;
-import io.hops.hopsworks.restutils.JsonResponse;
 import io.hops.hopsworks.restutils.RESTCodes;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,10 +54,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -76,9 +63,6 @@ import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBException;
 import java.util.List;
 
 /**
@@ -114,12 +98,6 @@ public class FeaturestoreService {
   private FeaturestoreStorageConnectorService featurestoreStorageConnectorService;
   @EJB
   private DataValidationResource dataValidationService;
-  @Inject
-  private ImportControllerIface importControllerIface;
-  @Inject
-  private TrainingDatasetJobControllerIface trainingDatasetJobControllerIface;
-  @EJB
-  private JobsBuilder jobsBuilder;
   @Inject
   private FsQueryConstructorResource fsQueryConstructorResource;
 
@@ -197,13 +175,6 @@ public class FeaturestoreService {
     response = FeaturestoreClientSettingsDTO.class)
   public Response getFeaturestoreSettings(@Context SecurityContext sc) {
     FeaturestoreClientSettingsDTO featurestoreClientSettingsDTO = new FeaturestoreClientSettingsDTO();
-    featurestoreClientSettingsDTO.setFeaturestoreUtil4jExecutable("hdfs:///user" + org.apache.hadoop.fs.Path.SEPARATOR
-      + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
-      + settings.getHopsExamplesFeaturestoreUtil4JFilename());
-    featurestoreClientSettingsDTO.setFeaturestoreUtilPythonExecutable("hdfs:///user"
-      + org.apache.hadoop.fs.Path.SEPARATOR
-      + settings.getSparkUser() + org.apache.hadoop.fs.Path.SEPARATOR
-      + settings.getHopsExamplesFeaturestoreUtilPythonFilename());
     featurestoreClientSettingsDTO.setOnlineFeaturestoreEnabled(settings.isOnlineFeaturestore());
     featurestoreClientSettingsDTO.setS3IAMRole(settings.isIAMRoleConfigured());
     GenericEntity<FeaturestoreClientSettingsDTO> featurestoreClientSettingsDTOGeneric =
@@ -346,91 +317,6 @@ public class FeaturestoreService {
     }
     featurestoreStorageConnectorService.setFeaturestoreId(featurestoreId);
     return featurestoreStorageConnectorService;
-  }
-
-  /**
-   * Endpoint for uploading job-arguments to hdfs for featurestore utility jobs
-   **
-   * @return HDFS path to the uploaded arguments
-   */
-  @POST
-  @Path("/util")
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @JWTRequired(acceptedTokens = {Audience.API}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Upload json input for featurestore-util jobs")
-  public Response newFeaturestoreUtil(@Context SecurityContext sc, FeaturestoreUtilJobDTO featurestoreUtilJobDTO)
-      throws FeaturestoreException, JAXBException {
-    if(featurestoreUtilJobDTO == null){
-      throw new IllegalArgumentException("Input JSON for creating a new Feature Store Util Job cannot be null");
-    }
-    Users user = jWTHelper.getUserPrincipal(sc);
-    String hdfsPath = featurestoreController.writeUtilArgsToHdfs(user, project, featurestoreUtilJobDTO);
-    JsonResponse jsonResponse = noCacheResponse.buildJsonResponse(Response.Status.OK, hdfsPath);
-    return noCacheResponse.getNoCacheResponseBuilder(Response.Status.OK).entity(jsonResponse).build();
-  }
-
-
-  /**
-   * Endpoint for creating a job to import a feature group from external sources
-   *
-   * @param featuregroupImportJobDTO JSON to configure the job
-   * @return
-   */
-  @Path("/importjob")
-  @PUT
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Configure job to import featuregroup", response = JobDTO.class)
-  public Response createOrUpdateImportJob(@Context SecurityContext sc, @Context UriInfo uriInfo,
-      @ApiParam(value = "Job configuration", required = true) FeaturegroupImportJobDTO featuregroupImportJobDTO)
-      throws FeaturestoreException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    if (featuregroupImportJobDTO == null) {
-      throw new IllegalArgumentException("Job specification not provided");
-    }
-    if (Strings.isNullOrEmpty(featuregroupImportJobDTO.getFeaturegroup())) {
-      throw new IllegalArgumentException("Featuregroup name not provided");
-    }
-    Jobs job = importControllerIface.createImportJob(user, project, featuregroupImportJobDTO);
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(dto).build();
-  }
-  
-  /**
-   * Endpoint for creating a job to create a training dataset from a featurestore
-   *
-   * @param trainingDatasetJobDTO JSON to configure the job
-   * @return
-   */
-  @Path("/trainingdatasetjob")
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @AllowedProjectRoles({AllowedProjectRoles.DATA_OWNER, AllowedProjectRoles.DATA_SCIENTIST})
-  @ApiKeyRequired( acceptedScopes = {ApiScope.FEATURESTORE}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @JWTRequired(acceptedTokens = {Audience.API, Audience.JOB}, allowedUserRoles = {"HOPS_ADMIN", "HOPS_USER"})
-  @ApiOperation(value = "Configure job to create training dataset", response = JobDTO.class)
-  public Response createOrUpdateTrainingDatasetJob(@Context SecurityContext sc, @Context UriInfo uriInfo,
-    @ApiParam(value = "Job configuration", required = true) TrainingDatasetJobDTO trainingDatasetJobDTO)
-      throws FeaturestoreException, JAXBException, ServiceException {
-    Users user = jWTHelper.getUserPrincipal(sc);
-    if (trainingDatasetJobDTO == null) {
-      throw new IllegalArgumentException("Job specification not provided");
-    }
-    if (Strings.isNullOrEmpty(trainingDatasetJobDTO.getTrainingDataset())) {
-      throw new IllegalArgumentException("Training dataset name not provided");
-    }
-    Jobs job = trainingDatasetJobControllerIface.createTrainingDatasetJob(user, project, trainingDatasetJobDTO);
-    JobDTO dto = jobsBuilder.build(uriInfo, new ResourceRequest(ResourceRequest.Name.JOBS), job);
-    UriBuilder builder = uriInfo.getAbsolutePathBuilder().path(Integer.toString(dto.getId()));
-    return Response.created(builder.build()).entity(dto).build();
   }
 
   @Path("/query")

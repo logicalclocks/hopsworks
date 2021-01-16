@@ -218,13 +218,21 @@ public class TrainingDatasetController {
       throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_ALREADY_EXISTS, Level.FINE,
           "Training Dataset: " + trainingDatasetDTO.getName() + ", version: " + trainingDatasetDTO.getVersion());
     }
+
+    // If the training dataset is constructed from a query, verify that it compiles correctly
+    Query query = null;
+    if (trainingDatasetDTO.getQueryDTO() != null) {
+      query = constructQuery(trainingDatasetDTO.getQueryDTO(), project, user);
+    } else if (trainingDatasetDTO.getFeatures() == null) {
+      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_SCHEMA,
+          Level.FINE, "The training dataset doesn't have any feature");
+    }
   
     // Verify input
-    verifyTrainingDatasetInput(trainingDatasetDTO);
-  
+    verifyTrainingDatasetInput(trainingDatasetDTO, query);
+
     Inode inode = null;
     FeaturestoreConnector featurestoreConnector;
-
     if(trainingDatasetDTO.getTrainingDatasetType() == TrainingDatasetType.HOPSFS_TRAINING_DATASET) {
       if (trainingDatasetDTO.getStorageConnector() == null) {
         String connectorName =
@@ -254,8 +262,7 @@ public class TrainingDatasetController {
 
         inode = inodeController.getInodeAtPath(trainingDatasetPath);
         TrainingDatasetDTO completeTrainingDatasetDTO =
-            createTrainingDatasetMetadata(project, user, featurestore,
-                trainingDatasetDTO, featurestoreConnector, inode);
+            createTrainingDatasetMetadata(user, featurestore, trainingDatasetDTO, query, featurestoreConnector, inode);
         fsProvenanceController.trainingDatasetAttachXAttr(trainingDatasetPath, completeTrainingDatasetDTO, udfso);
         return completeTrainingDatasetDTO;
       } finally {
@@ -273,25 +280,17 @@ public class TrainingDatasetController {
           .findByIdType(trainingDatasetDTO.getStorageConnector().getId(), FeaturestoreConnectorType.S3)
           .orElseThrow(() -> new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.S3_CONNECTOR_NOT_FOUND,
               Level.FINE, "S3 connector: " + trainingDatasetDTO.getStorageConnector().getId()));
-      return createTrainingDatasetMetadata(project, user, featurestore,
-          trainingDatasetDTO, featurestoreConnector, inode);
+      return createTrainingDatasetMetadata(user, featurestore, trainingDatasetDTO, query, featurestoreConnector, null);
     }
   }
 
   /**
    * Creates the metadata structure in DB for the training dataset
-   *
-   * @param user                     the user creating the dataset
-   * @param featurestore             the featurestore linked to the training dataset
-   * @param trainingDatasetDTO       user input data
-   * @param inode                    for hopsfs training dataset the inode where the training
-   * @return JSON/XML DTO of the trainingDataset
    */
   @TransactionAttribute(TransactionAttributeType.REQUIRED)
-  private TrainingDatasetDTO createTrainingDatasetMetadata(Project project, Users user, Featurestore featurestore,
-                                                           TrainingDatasetDTO trainingDatasetDTO,
-                                                           FeaturestoreConnector featurestoreConnector,
-                                                           Inode inode)
+  private TrainingDatasetDTO createTrainingDatasetMetadata(Users user, Featurestore featurestore,
+                                                           TrainingDatasetDTO trainingDatasetDTO, Query query,
+                                                           FeaturestoreConnector featurestoreConnector, Inode inode)
       throws FeaturestoreException, ServiceException {
     //Create specific dataset type
     HopsfsTrainingDataset hopsfsTrainingDataset = null;
@@ -330,8 +329,14 @@ public class TrainingDatasetController {
         Collectors.toList()));
 
     // set features/query
-    setTrainingDatasetFeatures(trainingDatasetDTO, trainingDataset, project, user);
+    trainingDataset.setQuery(trainingDatasetDTO.getQueryDTO() != null);
+    if (trainingDataset.isQuery()) {
+      setTrainingDatasetQuery(query, trainingDatasetDTO.getFeatures(), trainingDataset);
+    } else {
+      trainingDataset.setFeatures(getTrainingDatasetFeatures(trainingDatasetDTO.getFeatures(), trainingDataset));
+    }
 
+    // write to the database
     trainingDatasetFacade.persist(trainingDataset);
   
     //Get jobs
@@ -345,39 +350,23 @@ public class TrainingDatasetController {
         trainingDataset.getVersion());
   }
 
-  private void setTrainingDatasetFeatures(TrainingDatasetDTO trainingDatasetDTO, TrainingDataset trainingDataset,
-    Project project, Users user) throws FeaturestoreException {
-    if (trainingDatasetDTO.getQueryDTO() != null) {
-      // The user has created a training dataset from a query object. Stored it so that it can be reused later
-      setTrainingDatasetQuery(trainingDatasetDTO.getQueryDTO(), trainingDatasetDTO.getFeatures(), trainingDataset,
-        project, user);
-    } else if (trainingDatasetDTO.getFeatures() != null && !trainingDatasetDTO.getFeatures().isEmpty()) {
-      // The user has created a training dataset from a dataframe. We can't make any assumption on the content of it
-      // just store the schema (feature name + type)
-      trainingDataset.setFeatures(getTrainingDatasetFeaturesDTO(trainingDatasetDTO.getFeatures(), trainingDataset));
-    } else {
-      // The user didn't specify a query nor a valid set of features. throw an exception
-      throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.TRAINING_DATASET_NO_SCHEMA,
-          Level.FINE, "The training dataset doesn't have any feature");
-    }
-  }
-
-  private void setTrainingDatasetQuery(QueryDTO queryDTO, List<TrainingDatasetFeatureDTO> features,
-                                       TrainingDataset trainingDataset, Project project, Users user)
-      throws FeaturestoreException {
+  private Query constructQuery(QueryDTO queryDTO, Project project, Users user) throws FeaturestoreException {
     // Convert the queryDTO to the internal representation
     Map<Integer, String> fgAliasLookup = new HashMap<>();
     Map<Integer, Featuregroup> fgLookup = new HashMap<>();
     Map<Integer, List<Feature>> availableFeatureLookup = new HashMap<>();
-  
+
     constructorController.populateFgLookupTables(queryDTO, 0, fgAliasLookup, fgLookup, availableFeatureLookup,
-      project, user);
-    Query query = constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
-    trainingDataset.setQuery(true);
+        project, user);
+    return constructorController.convertQueryDTO(queryDTO, fgAliasLookup, fgLookup, availableFeatureLookup);
+  }
+
+  private void setTrainingDatasetQuery(Query query,
+                                       List<TrainingDatasetFeatureDTO> features,
+                                       TrainingDataset trainingDataset) {
     // Convert the joins from the query object into training dataset joins
     List<TrainingDatasetJoin> tdJoins = collectJoins(query, trainingDataset);
     trainingDataset.setJoins(tdJoins);
-
     trainingDataset.setFeatures(collectFeatures(query, features, trainingDataset, 0, tdJoins, 0));
   }
 
@@ -455,8 +444,8 @@ public class TrainingDatasetController {
         .collect(Collectors.toList());
   }
 
-  private List<TrainingDatasetFeature> getTrainingDatasetFeaturesDTO(List<TrainingDatasetFeatureDTO> featureList,
-                                                                     TrainingDataset trainingDataset) {
+  private List<TrainingDatasetFeature> getTrainingDatasetFeatures(List<TrainingDatasetFeatureDTO> featureList,
+                                                                  TrainingDataset trainingDataset) {
     List<TrainingDatasetFeature> trainingDatasetFeatureList = new ArrayList<>();
     int index = 0;
     for (TrainingDatasetFeatureDTO f : featureList) {
@@ -735,21 +724,53 @@ public class TrainingDatasetController {
       }
     }
   }
+
+  // Collect Features for verification
+  private List<Feature> collectFeatures(Query query) {
+    List<Feature> features = new ArrayList<>(query.getFeatures());
+    if (query.getJoins() != null) {
+      for (Join join : query.getJoins()) {
+        features.addAll(collectFeatures(join.getRightQuery()));
+      }
+    }
+
+    return features;
+  }
+
+  private void verifyFeatures(Query query, List<TrainingDatasetFeatureDTO> featuresDTOs) throws FeaturestoreException {
+    if (query == null || featuresDTOs == null) {
+      // If the query is null the features are taken from the featuresDTO, so we are guarantee that the label
+      // features exists
+      // if the featuresDTOs is null and the query is not, the the user didn't specify a label object, no validation
+      // needed.
+      return;
+    }
+
+    List<TrainingDatasetFeatureDTO> labels = featuresDTOs.stream()
+        .filter(TrainingDatasetFeatureDTO::getLabel)
+        .collect(Collectors.toList());
+    List<Feature> features = collectFeatures(query);
+
+    for (TrainingDatasetFeatureDTO label : labels) {
+      if (features.stream().noneMatch(f -> f.getName().equals(label.getName()))) {
+        throw new FeaturestoreException(RESTCodes.FeaturestoreErrorCode.LABEL_NOT_FOUND, Level.FINE,
+            "Label: " + label.getName() + " is missing");
+      }
+    }
+  }
   
   /**
    * Verify training dataset specific input
-   *
-   * @param trainingDatasetDTO the provided user input
-   * @throws FeaturestoreException
    */
-  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO)
-    throws FeaturestoreException {
+  private void verifyTrainingDatasetInput(TrainingDatasetDTO trainingDatasetDTO, Query query)
+      throws FeaturestoreException {
     // Verify general entity related information
     featurestoreInputValidation.verifyUserInput(trainingDatasetDTO);
     verifyTrainingDatasetType(trainingDatasetDTO.getTrainingDatasetType());
     verifyTrainingDatasetVersion(trainingDatasetDTO.getVersion());
     verifyTrainingDatasetDataFormat(trainingDatasetDTO.getDataFormat());
     verifyTrainingDatasetSplits(trainingDatasetDTO.getSplits());
+    verifyFeatures(query, trainingDatasetDTO.getFeatures());
   }
 
 

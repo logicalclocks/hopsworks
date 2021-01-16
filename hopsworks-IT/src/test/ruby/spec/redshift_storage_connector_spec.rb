@@ -319,7 +319,7 @@ describe "On #{ENV['OS']}" do
         copyConnector = @connector.clone
         copyConnector[:name] = "updated_connector_name"
         update_redshift_connector(@p1[:id], @featurestore1["featurestoreId"], copyConnector[:name], copyConnector)
-        expect_status_details(400)
+        expect_status_details(404)
         get_storage_connector(@p1[:id], @featurestore1["featurestoreId"], @connector[:name])
         expect_status_details(200)
         expect(json_body[:name]).to eq @connector[:name]

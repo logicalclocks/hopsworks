@@ -123,6 +123,7 @@ public class JobController {
       ActivityFlag.JOB);
     return job;
   }
+
   @TransactionAttribute(TransactionAttributeType.NEVER)
   public void updateSchedule(Project project, Jobs job, ScheduleDTO schedule, Users user) throws JobException {
     boolean isScheduleUpdated = jobFacade.updateJobSchedule(job.getId(), schedule);

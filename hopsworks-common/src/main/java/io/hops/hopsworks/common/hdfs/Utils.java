@@ -43,6 +43,7 @@ import com.google.common.base.CharMatcher;
 import io.hops.hopsworks.persistence.entity.dataset.Dataset;
 import io.hops.hopsworks.persistence.entity.dataset.DatasetType;
 import io.hops.hopsworks.persistence.entity.featurestore.featuregroup.Featuregroup;
+import io.hops.hopsworks.persistence.entity.featurestore.trainingdataset.TrainingDataset;
 import io.hops.hopsworks.persistence.entity.jobs.configuration.JobType;
 import io.hops.hopsworks.persistence.entity.project.Project;
 import io.hops.hopsworks.common.util.Settings;
@@ -67,24 +68,6 @@ public final class Utils {
     int lastSlash = path.lastIndexOf("/");
     int startName = (lastSlash > -1) ? lastSlash + 1 : 0;
     return path.substring(startName);
-  }
-
-  public static String getExtension(String filename) {
-    int lastDot = filename.lastIndexOf(".");
-    if (lastDot < 0) {
-      return "";
-    } else {
-      return filename.substring(lastDot);
-    }
-  }
-
-  public static String stripExtension(String filename) {
-    int lastDot = filename.lastIndexOf(".");
-    if (lastDot < 0) {
-      return filename;
-    } else {
-      return filename.substring(0, lastDot);
-    }
   }
 
   public static String getDirectoryPart(String path) {
@@ -149,18 +132,15 @@ public final class Utils {
   }
 
   public static String getFeaturegroupName(Featuregroup featuregroup) {
-    return getFeaturegroupName(featuregroup.getName(), featuregroup.getVersion());
-  }
-  
-  public static String getFeaturegroupName(String featuregroupName, Integer version) {
-    return featuregroupName + "_" + version.toString();
+    return getFeatureStoreEntityName(featuregroup.getName(), featuregroup.getVersion());
   }
 
-  public static String ensurePathEndsInSlash(String path) {
-    if (!path.endsWith(File.separator)) {
-      return path + File.separator;
-    }
-    return path;
+  public static String getTrainingDatasetName(TrainingDataset trainingDataset) {
+    return getFeatureStoreEntityName(trainingDataset.getName(), trainingDataset.getVersion());
+  }
+  
+  public static String getFeatureStoreEntityName(String entityName, Integer version) {
+    return entityName + "_" + version.toString();
   }
 
   /**
